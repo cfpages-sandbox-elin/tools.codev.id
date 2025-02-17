@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>URL to PDF & Upload App</title>
+<style>
+  /* Basic CSS Styling here */
+  body { font-family: sans-serif; }
+  textarea { width: 100%; height: 150px; margin-bottom: 10px; }
+  button { padding: 10px 20px; cursor: pointer; }
+  #status { margin-top: 20px; }
+  #sitemapUrl, #printfriendlyApiKey, #issuuBearerToken, #issuuClientId, #issuuClientSecret { width: 100%; margin-bottom: 10px; padding: 8px; box-sizing: border-box; }
+  .api-key-input { margin-bottom: 15px; }
+</style>
+</head>
+<body>
+
+  <h1>URL to PDF & Upload App</h1>
+
+  <div class="api-key-input">
+    <label for="printfriendlyApiKey">PrintFriendly API Key:</label>
+    <input type="text" id="printfriendlyApiKey" placeholder="Enter PrintFriendly API Key">
+  </div>
+
+  <div class="api-key-input">
+    <label for="issuuBearerToken">Issuu Bearer Token:</label>
+    <input type="text" id="issuuBearerToken" placeholder="Enter Issuu Bearer Token (OAuth)">
+  </div>
+
+  <div class="api-key-input">
+    <label for="issuuClientId">Issuu Client ID:</label>
+    <input type="text" id="issuuClientId" placeholder="Enter Issuu Client ID (OAuth)">
+  </div>
+
+  <div class="api-key-input">
+    <label for="issuuClientSecret">Issuu Client Secret:</label>
+    <input type="text" id="issuuClientSecret" placeholder="Enter Issuu Client Secret (OAuth)">
+  </div>
+
+
+  <textarea id="urlList" placeholder="Enter URLs here, one per line"></textarea>
+
+  <div>
+    <input type="url" id="sitemapUrl" placeholder="Enter Sitemap URL (optional)">
+    <button id="parseSitemapButton">Parse Sitemap URLs</button>
+  </div>
+
+  <button id="convertButton">Convert to PDFs & Upload</button>
+
+  <div id="status">
+    <!-- Status messages will appear here -->
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Load API keys from local storage on page load
+      loadApiKeys();
+
+      // Event listeners for API key input changes to save to local storage
+      document.getElementById('printfriendlyApiKey').addEventListener('input', savePrintFriendlyApiKey);
+      document.getElementById('issuuBearerToken').addEventListener('input', saveIssuuBearerToken);
+      document.getElementById('issuuClientId').addEventListener('input', saveIssuuClientId);
+      document.getElementById('issuuClientSecret').addEventListener('input', saveIssuuClientSecret);
+    });
+
+    function loadApiKeys() {
+      const printfriendlyKey = localStorage.getItem('printfriendlyApiKey');
+      const issuuBearerToken = localStorage.getItem('issuuBearerToken');
+      const issuuClientId = localStorage.getItem('issuuClientId');
+      const issuuClientSecret = localStorage.getItem('issuuClientSecret');
+
+      if (printfriendlyKey) {
+        document.getElementById('printfriendlyApiKey').value = printfriendlyKey;
+      }
+      if (issuuBearerToken) {
+        document.getElementById('issuuBearerToken').value = issuuBearerToken;
+      }
+      if (issuuClientId) {
+        document.getElementById('issuuClientId').value = issuuClientId;
+      }
+      if (issuuClientSecret) {
+        document.getElementById('issuuClientSecret').value = issuuClientSecret;
+      }
+    }
+
+    function savePrintFriendlyApiKey(event) {
+      localStorage.setItem('printfriendlyApiKey', event.target.value);
+    }
+
+    function saveIssuuBearerToken(event) {
+      localStorage.setItem('issuuBearerToken', event.target.value);
+    }
+
+    function saveIssuuClientId(event) {
+      localStorage.setItem('issuuClientId', event.target.value);
+    }
+
+    function saveIssuuClientSecret(event) {
+      localStorage.setItem('issuuClientSecret', event.target.value);
+    }
+
+
+    document.getElementById('convertButton').addEventListener('click', async () => {
+      const urls = document.getElementById('urlList').value.trim().split('\n').filter(url => url);
+      const statusDiv = document.getElementById('status');
+      statusDiv.innerHTML = ""; // Clear previous status
+
+      if (urls.length === 0) {
+        statusDiv.textContent = "Please enter URLs or parse from a sitemap.";
+        return;
+      }
+
+      const printfriendlyApiKey = document.getElementById('printfriendlyApiKey').value.trim();
+      const issuuBearerToken = document.getElementById('issuuBearerToken').value.trim();
+      const issuuClientId = document.getElementById('issuuClientId').value.trim();
+      const issuuClientSecret = document.getElementById('issuuClientSecret').value.trim();
+
+
+      if (!printfriendlyApiKey) {
+        statusDiv.textContent = "Please enter your PrintFriendly API Key.";
+        return;
+      }
+
+      if (!issuuBearerToken) {
+        statusDiv.textContent = "Please enter your Issuu Bearer Token.";
+        return;
+      }
+
+      if (!issuuClientId) {
+        statusDiv.textContent = "Please enter your Issuu Client ID.";
+        return;
+      }
+
+      if (!issuuClientSecret) {
+        statusDiv.textContent = "Please enter your Issuu Client Secret.";
+        return;
+      }
+
+
+      for (const url of urls) {
+        statusDiv.innerHTML += `<p>Processing URL: ${url}...</p>`;
+        try {
+          // 1. Convert URL to PDF (using PrintFriendly)
+          statusDiv.innerHTML += `<p>Converting ${url} to PDF using PrintFriendly...</p>`;
+          const pdfBlob = await convertUrlToPdf(url, printfriendlyApiKey); // Pass API Key
+
+          if (pdfBlob) {
+            statusDiv.innerHTML += `<p>PDF generated successfully for ${url}.</p>`;
+
+            // 2. Upload PDF to Issuu (using their API)
+            statusDiv.innerHTML += `<p>Uploading PDF for ${url} to Issuu...</p>`;
+            const uploadSuccess = await uploadPdfToIssuu(pdfBlob, url, issuuBearerToken, issuuClientId, issuuClientSecret); // Pass Issuu credentials
+
+            if (uploadSuccess) {
+              statusDiv.innerHTML += `<p style="color: green;">Successfully uploaded and published PDF for ${url} to Issuu!</p>`;
+            } else {
+              statusDiv.innerHTML += `<p style="color: red;">Failed to upload PDF for ${url} to Issuu.</p>`;
+            }
+          } else {
+            statusDiv.innerHTML += `<p style="color: red;">Failed to convert ${url} to PDF.</p>`;
+          }
+
+        } catch (error) {
+          statusDiv.innerHTML += `<p style="color: red;">Error processing ${url}: ${error.message || error}</p>`;
+          console.error("Error processing URL:", url, error);
+        }
+      }
+
+      statusDiv.innerHTML += "<p>Processing complete.</p>";
+    });
+
+    document.getElementById('parseSitemapButton').addEventListener('click', async () => {
+      const sitemapUrl = document.getElementById('sitemapUrl').value.trim();
+      const statusDiv = document.getElementById('status');
+      if (!sitemapUrl) {
+        statusDiv.textContent = "Please enter a Sitemap URL.";
+        return;
+      }
+      statusDiv.innerHTML = "<p>Parsing sitemap...</p>";
+      try {
+        const urlsFromSitemap = await parseSitemapUrls(sitemapUrl);
+        if (urlsFromSitemap && urlsFromSitemap.length > 0) {
+          document.getElementById('urlList').value = urlsFromSitemap.join('\n');
+          statusDiv.innerHTML = `<p>Found ${urlsFromSitemap.length} URLs from sitemap and populated the URL list.</p>`;
+        } else {
+          statusDiv.innerHTML = "<p>No URLs found in the sitemap or error parsing sitemap.</p>";
+        }
+      } catch (error) {
+        statusDiv.innerHTML = `<p style="color: red;">Error parsing sitemap: ${error.message || error}</p>`;
+        console.error("Error parsing sitemap:", error);
+      }
+    });
+
+
+    // --------------------  JavaScript Functions  --------------------
+
+    async function convertUrlToPdf(url, apiKey) { // API Key as parameter
+      const printFriendlyApiKey = apiKey;
+      const printFriendlyApiUrl = `https://api.printfriendly.com/v2/pdf/create?api_key=${printFriendlyApiKey}`;
+
+      try {
+        const response = await fetch(printFriendlyApiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
+          },
+          body: `page_url=${encodeURIComponent(url)}`
+        });
+
+        if (!response.ok) {
+          if (response.status === 429) {
+            throw new Error(`PrintFriendly API error: Too Many Requests (Rate Limit). Please wait and try again.`);
+          }
+          const errorData = await response.json();
+          throw new Error(`PrintFriendly API error: ${response.status} ${response.statusText} - ${errorData?.message || 'Unknown error'}`);
+        }
+
+        const data = await response.json();
+        if (data.status === "success" && data.file_url) {
+          const pdfResponse = await fetch(data.file_url);
+          if (!pdfResponse.ok) {
+            throw new Error(`Error fetching PDF from PrintFriendly URL: ${pdfResponse.status} ${pdfResponse.statusText}`);
+          }
+          const pdfBlob = await pdfResponse.blob();
+          return pdfBlob;
+        } else {
+          throw new Error(`PrintFriendly API failed to generate PDF: ${data?.message || 'Unknown error'}`);
+        }
+
+      } catch (error) {
+        console.error("Error converting to PDF using PrintFriendly:", error);
+        return null;
+      }
+    }
+
+
+    async function uploadPdfToIssuu(pdfBlob, url, bearerToken, clientId, clientSecret) { // Issuu OAuth parameters
+      const issuuApiBearerToken = bearerToken;
+      const issuuApiDraftsUrl = "https://api.issuu.com/v2/drafts";
+
+      try {
+        // 1. Create a Draft
+        const createDraftResponse = await fetch(issuuApiDraftsUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${issuuApiBearerToken}`
+          },
+          body: JSON.stringify({
+            "confirmCopyright": true, // Assuming you confirm copyright
+            "info": {
+              "access": "PUBLIC", // Or "PRIVATE", etc.
+              "title": await getPageTitle(url) || `Document from ${url}`, // Get title from page or default
+              "description": await getPageDescription(url) || `PDF document converted from ${url}`, // Get description or default
+              "type": "editorial", // Or other type as needed
+              "downloadable": true // Allow downloads
+            }
+          })
+        });
+
+        if (!createDraftResponse.ok) {
+          const errorData = await createDraftResponse.json();
+          throw new Error(`Issuu API - Create Draft failed: ${createDraftResponse.status} ${createDraftResponse.statusText} - ${errorData?.message || 'Unknown error'}`);
+        }
+
+        const draftData = await createDraftResponse.json();
+        const draftSlug = draftData.slug; // Assuming slug is directly available in response. Check Issuu API response structure.
+
+        if (!draftSlug) {
+          throw new Error("Issuu API - Draft slug not found in response.");
+        }
+
+        // 2. Upload Document to Draft
+        const uploadUrl = `https://api.issuu.com/v2/drafts/${draftSlug}/upload`;
+        const formData = new FormData();
+        formData.append('file', pdfBlob, `document_${Date.now()}.pdf`);
+        formData.append('confirmCopyright', 'true'); // Again, confirm copyright
+
+        const uploadResponse = await fetch(uploadUrl, {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${issuuApiBearerToken}`
+          },
+          body: formData
+        });
+
+        if (!uploadResponse.ok) {
+          const errorData = await uploadResponse.json();
+          throw new Error(`Issuu API - Upload Document failed: ${uploadResponse.status} ${uploadResponse.statusText} - ${errorData?.message || 'Unknown error'}`);
+        }
+
+        let uploadStatus = "PENDING";
+        let fileInfo;
+        // Polling to check conversion status - Issuu API needs time to process.
+        while (uploadStatus !== "DONE") {
+          await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before checking again
+          const getDraftResponse = await fetch(`https://api.issuu.com/v2/drafts/${draftSlug}`, {
+            headers: { 'Authorization': `Bearer ${issuuApiBearerToken}` }
+          });
+          if (!getDraftResponse.ok) {
+             throw new Error(`Issuu API - Get Draft Status failed: ${getDraftResponse.status} ${getDraftResponse.statusText}`);
+          }
+          const getDraftData = await getDraftResponse.json();
+          fileInfo = getDraftData.fileInfo;
+          uploadStatus = fileInfo?.conversionStatus;
+          if (uploadStatus === "FAILED") {
+              throw new Error(`Issuu API - Document conversion failed on Issuu's side.`);
+          }
+        }
+
+        // 3. Publish Draft
+        const publishUrl = `https://api.issuu.com/v2/drafts/${draftSlug}/publish`;
+        const publishResponse = await fetch(publishUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${issuuApiBearerToken}`
+          },
+          body: JSON.stringify({}) // desiredName can be added if needed, but not required for basic publish
+        });
+
+        if (!publishResponse.ok) {
+          const errorData = await publishResponse.json();
+          throw new Error(`Issuu API - Publish Draft failed: ${publishResponse.status} ${publishResponse.statusText} - ${errorData?.message || 'Unknown error'}`);
+        }
+
+        return true; // Full Issuu upload and publish process successful
+
+      } catch (error) {
+        console.error("Error uploading to Issuu:", error);
+        return false;
+      }
+    }
+
+    async function getPageTitle(url) {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) return null;
+        const text = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(text, 'text/html');
+        const titleTag = doc.querySelector('title');
+        return titleTag ? titleTag.textContent : null;
+      } catch (error) {
+        console.error("Error fetching page title:", error);
+        return null;
+      }
+    }
+
+    async function getPageDescription(url) {
+      try {
+        const response = await fetch(url);
+        if (!response.ok) return null;
+        const text = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(text, 'text/html');
+        const metaDescription = doc.querySelector('meta[name="description"]');
+        return metaDescription ? metaDescription.getAttribute('content') : null;
+      } catch (error) {
+        console.error("Error fetching page description:", error);
+        return null;
+      }
+    }
+
+    async function parseSitemapUrls(sitemapUrl) {
+      try {
+        const response = await fetch(sitemapUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch sitemap: ${response.status} ${response.statusText}`);
+        }
+        const xmlText = await response.text();
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+        const urlElements = xmlDoc.querySelectorAll('loc');
+        const urls = Array.from(urlElements).map(element => element.textContent);
+        return urls;
+      } catch (error) {
+        console.error("Error parsing sitemap:", error);
+        return null;
+      }
+    }
+
+  </script>
+
+</body>
+</html>
