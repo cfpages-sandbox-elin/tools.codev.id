@@ -5,16 +5,32 @@
 <style>
   /* Basic CSS Styling here */
   body { font-family: sans-serif; }
-  textarea { width: 100%; height: 150px; margin-bottom: 10px; }
+  textarea { width: 100%; height: 150px; margin-bottom: 10px; box-sizing: border-box; }
   button { padding: 10px 20px; cursor: pointer; }
-  #status { margin-top: 20px; }
-  #sitemapUrl, #printfriendlyApiKey, #issuuBearerToken, #issuuClientId, #issuuClientSecret { width: 100%; margin-bottom: 10px; padding: 8px; box-sizing: border-box; }
+  #status { margin-top: 20px; white-space: pre-wrap; height: 150px; overflow-y: scroll; border: 1px solid #ccc; padding: 8px; box-sizing: border-box; font-family: monospace; }
+  #sitemapUrl, #printfriendlyApiKey, #issuuBearerToken, #issuuClientId, #issuuClientSecret, #urlFilter { width: 100%; margin-bottom: 10px; padding: 8px; box-sizing: border-box; }
   .api-key-input { margin-bottom: 15px; }
+  .sitemap-parser { display: flex; margin-bottom: 10px; }
+  .sitemap-parser input { flex-grow: 1; margin-right: 10px; }
+  .url-area { display: flex; }
+  .url-area textarea { flex-grow: 2; margin-right: 10px; }
+  .url-filter-area { flex-grow: 1; }
+  .results-area { margin-top: 20px; display: flex; }
+  .results-area textarea { flex: 1; height: 150px; margin-right: 10px; box-sizing: border-box; }
+  .progress-area { margin-bottom: 10px; }
+  .progress-bar { width: 100%; height: 20px; background-color: #eee; border-radius: 5px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; width: 0%; background-color: #4CAF50; border-radius: 5px; transition: width 0.3s ease-in-out; }
+  .cors-info { background-color: #f0f0f0; padding: 10px; border: 1px solid #ccc; margin-bottom: 15px; }
 </style>
 </head>
 <body>
 
-  <h1>URL to PDF & Upload App</h1>
+  <h1>URL to PDF & Upload App v.1.01</h1>
+
+  <div class="cors-info">
+    <p><strong>Important:</strong> To use this app effectively, you may need to install a CORS unblock extension for your browser. This helps to avoid potential cross-origin issues when fetching data from external URLs.</p>
+    <a href="https://chromewebstore.google.com/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" target="_blank">Install CORS Unblock Chrome Extension</a> (or search for "CORS Unblock" for other browsers).
+  </div>
 
   <div class="api-key-input">
     <label for="printfriendlyApiKey">PrintFriendly API Key:</label>
@@ -36,30 +52,67 @@
     <input type="text" id="issuuClientSecret" placeholder="Enter Issuu Client Secret (OAuth)">
   </div>
 
-
-  <textarea id="urlList" placeholder="Enter URLs here, one per line"></textarea>
-
-  <div>
-    <input type="url" id="sitemapUrl" placeholder="Enter Sitemap URL (optional)">
+  <div class="sitemap-parser">
+    <input type="url" id="sitemapUrl" placeholder="Enter Sitemap URL">
     <button id="parseSitemapButton">Parse Sitemap URLs</button>
   </div>
 
+  <div class="url-area">
+    <textarea id="urlList" placeholder="Enter URLs here, one per line"></textarea>
+    <div class="url-filter-area">
+      <textarea id="urlFilter" placeholder="Filter URLs (keywords, one per line)" placeholder="Filter URLs (keywords, one per line)">contact
+privacy policy
+terms of service
+tos
+about us
+about me</textarea>
+      <p>URL Count: <span id="urlCount">0</span></p>
+    </div>
+  </div>
+
+
   <button id="convertButton">Convert to PDFs & Upload</button>
 
-  <div id="status">
-    <!-- Status messages will appear here -->
+  <div class="progress-area">
+    <div class="progress-bar">
+      <div class="progress-bar-fill" id="progressBarFill"></div>
+    </div>
+    <p id="progressInfo">Progress: 0/0 URLs | PDF: 0/0 | Uploaded: 0/0 | Published: 0/0 | Est. Time: --</p>
   </div>
+  <p id="statusSummary">Status Summary: Pending...</p>
+  <textarea id="status" readonly placeholder="Status messages will appear here"></textarea>
+
+
+  <div class="results-area">
+    <div>
+      <textarea id="successUrls" readonly placeholder="Successful Issuu URLs"></textarea>
+      <button id="copySuccessButton">Copy Success URLs</button>
+    </div>
+    <div>
+      <textarea id="failedUrls" readonly placeholder="Failed URLs"></textarea>
+      <button id="retryFailedButton">Retry Failed URLs</button>
+    </div>
+  </div>
+
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       // Load API keys from local storage on page load
       loadApiKeys();
+      updateUrlCount();
+      applyUrlFilter();
 
       // Event listeners for API key input changes to save to local storage
       document.getElementById('printfriendlyApiKey').addEventListener('input', savePrintFriendlyApiKey);
       document.getElementById('issuuBearerToken').addEventListener('input', saveIssuuBearerToken);
       document.getElementById('issuuClientId').addEventListener('input', saveIssuuClientId);
       document.getElementById('issuuClientSecret').addEventListener('input', saveIssuuClientSecret);
+      document.getElementById('urlList').addEventListener('input', updateUrlCount);
+      document.getElementById('urlFilter').addEventListener('input', applyUrlFilter);
+      document.getElementById('copySuccessButton').addEventListener('click', copySuccessUrls);
+      document.getElementById('retryFailedButton').addEventListener('click', retryFailedUrls);
+
+
     });
 
     function loadApiKeys() {
@@ -98,14 +151,55 @@
       localStorage.setItem('issuuClientSecret', event.target.value);
     }
 
+    function updateStatus(message) {
+      const statusTextarea = document.getElementById('status');
+      statusTextarea.value += message + '\n';
+      statusTextarea.scrollTop = statusTextarea.scrollHeight; // Auto-scroll to bottom
+    }
+
+    function updateStatusSummary(summary) {
+      document.getElementById('statusSummary').textContent = 'Status Summary: ' + summary;
+    }
+
+    function updateProgressBar(percentage) {
+      document.getElementById('progressBarFill').style.width = `${percentage}%`;
+    }
+
+    function updateProgressInfo(processed, total, pdfGenerated, uploaded, published, estimatedTime) {
+      document.getElementById('progressInfo').textContent = `Progress: ${processed}/${total} URLs | PDF: ${pdfGenerated}/${total} | Uploaded: ${uploaded}/${total} | Published: ${published}/${total} | Est. Time: ${estimatedTime}`;
+    }
+
+    function updateUrlCount() {
+      const urls = document.getElementById('urlList').value.trim().split('\n').filter(url => url);
+      document.getElementById('urlCount').textContent = urls.length;
+    }
+
+    function applyUrlFilter() {
+      let urls = document.getElementById('urlList').value.trim().split('\n');
+      const filterKeywords = document.getElementById('urlFilter').value.trim().split('\n').filter(keyword => keyword.trim() !== '');
+      if (filterKeywords.length > 0) {
+        urls = urls.filter(url => {
+          const lowerUrl = url.toLowerCase();
+          return !filterKeywords.some(keyword => lowerUrl.includes(keyword.toLowerCase().trim()));
+        });
+      }
+      document.getElementById('urlList').value = urls.join('\n');
+      updateUrlCount();
+    }
+
 
     document.getElementById('convertButton').addEventListener('click', async () => {
-      const urls = document.getElementById('urlList').value.trim().split('\n').filter(url => url);
-      const statusDiv = document.getElementById('status');
-      statusDiv.innerHTML = ""; // Clear previous status
+      let urls = document.getElementById('urlList').value.trim().split('\n').filter(url => url);
+      const statusTextarea = document.getElementById('status');
+      statusTextarea.value = ""; // Clear previous status
+      const successUrlsTextarea = document.getElementById('successUrls');
+      successUrlsTextarea.value = "";
+      const failedUrlsTextarea = document.getElementById('failedUrls');
+      failedUrlsTextarea.value = "";
 
       if (urls.length === 0) {
-        statusDiv.textContent = "Please enter URLs or parse from a sitemap.";
+        updateStatus("Please enter URLs or parse from a sitemap.");
+        updateStatusSummary("URLs missing.");
         return;
       }
 
@@ -114,84 +208,197 @@
       const issuuClientId = document.getElementById('issuuClientId').value.trim();
       const issuuClientSecret = document.getElementById('issuuClientSecret').value.trim();
 
-
       if (!printfriendlyApiKey) {
-        statusDiv.textContent = "Please enter your PrintFriendly API Key.";
+        updateStatus("Please enter your PrintFriendly API Key.");
+        updateStatusSummary("PrintFriendly API Key missing.");
         return;
       }
 
       if (!issuuBearerToken) {
-        statusDiv.textContent = "Please enter your Issuu Bearer Token.";
+        updateStatus("Please enter your Issuu Bearer Token.");
+        updateStatusSummary("Issuu Bearer Token missing.");
         return;
       }
 
       if (!issuuClientId) {
-        statusDiv.textContent = "Please enter your Issuu Client ID.";
+        updateStatus("Please enter your Issuu Client ID.");
+        updateStatusSummary("Issuu Client ID missing.");
         return;
       }
 
       if (!issuuClientSecret) {
-        statusDiv.textContent = "Please enter your Issuu Client Secret.";
+        updateStatus("Please enter your Issuu Client Secret.");
+        updateStatusSummary("Issuu Client Secret missing.");
         return;
       }
 
+      const totalUrls = urls.length;
+      let processedUrlsCount = 0;
+      let pdfGeneratedCount = 0;
+      let uploadedCount = 0;
+      let publishedCount = 0;
+      let startTime = new Date().getTime();
+      const estimatedTimePerUrl = 15000; // Initial estimate in milliseconds (adjust as needed)
+      let failedUrlList = [];
+      let successIssuuUrls = [];
 
-      for (const url of urls) {
-        statusDiv.innerHTML += `<p>Processing URL: ${url}...</p>`;
-        try {
-          // 1. Convert URL to PDF (using PrintFriendly)
-          statusDiv.innerHTML += `<p>Converting ${url} to PDF using PrintFriendly...</p>`;
-          const pdfBlob = await convertUrlToPdf(url, printfriendlyApiKey); // Pass API Key
+      updateStatusSummary(`Processing ${totalUrls} URLs...`);
 
-          if (pdfBlob) {
-            statusDiv.innerHTML += `<p>PDF generated successfully for ${url}.</p>`;
 
-            // 2. Upload PDF to Issuu (using their API)
-            statusDiv.innerHTML += `<p>Uploading PDF for ${url} to Issuu...</p>`;
-            const uploadSuccess = await uploadPdfToIssuu(pdfBlob, url, issuuBearerToken, issuuClientId, issuuClientSecret); // Pass Issuu credentials
+      for (let i = 0; i < urls.length; i++) {
+        let url = urls[i];
+        let retryCount = 0;
+        const maxRetries = 3;
+        let currentStage = "pdf"; // pdf, upload, publish
 
-            if (uploadSuccess) {
-              statusDiv.innerHTML += `<p style="color: green;">Successfully uploaded and published PDF for ${url} to Issuu!</p>`;
-            } else {
-              statusDiv.innerHTML += `<p style="color: red;">Failed to upload PDF for ${url} to Issuu.</p>`;
+        while (retryCount <= maxRetries) {
+          try {
+            updateStatus(`Processing URL ${processedUrlsCount + 1}/${totalUrls}: ${url} (Attempt ${retryCount + 1})...`);
+            updateProgressInfo(processedUrlsCount, totalUrls, pdfGeneratedCount, uploadedCount, publishedCount, calculateEstimatedTime(startTime, processedUrlsCount, totalUrls, estimatedTimePerUrl));
+
+            if (currentStage === "pdf") {
+              updateStatus(`  > Converting to PDF using PrintFriendly...`);
+              const pdfBlob = await convertUrlToPdfWithRateLimit(url, printfriendlyApiKey); // Rate limited PDF conversion
+
+              if (pdfBlob) {
+                updateStatus(`  > PDF generated successfully.`);
+                pdfGeneratedCount++;
+                currentStage = "upload";
+              } else {
+                updateStatus(`<span style="color: red;">  > Failed to convert to PDF.</span>`);
+                currentStage = "pdf"; // Retry PDF conversion
+                throw new Error("PDF Conversion Failed"); // For retry logic
+              }
             }
-          } else {
-            statusDiv.innerHTML += `<p style="color: red;">Failed to convert ${url} to PDF.</p>`;
+
+            if (currentStage === "upload") {
+              updateStatus(`  > Uploading PDF to Issuu...`);
+              const uploadSuccess = await uploadPdfToIssuu(pdfBlob, url, issuuBearerToken, issuuClientId, issuuClientSecret);
+
+              if (uploadSuccess) {
+                updateStatus(`  > PDF uploaded successfully.`);
+                uploadedCount++;
+                currentStage = "publish";
+              } else {
+                updateStatus(`<span style="color: red;">  > Failed to upload PDF to Issuu.</span>`);
+                currentStage = "upload"; // Retry Upload
+                throw new Error("PDF Upload Failed"); // For retry logic
+              }
+            }
+
+            if (currentStage === "publish") {
+              updateStatus(`  > Publishing on Issuu and retrieving URL...`);
+              const issuuPublicationUrl = await getIssuuPublicationUrlBySlug(url, issuuBearerToken);
+
+              if (issuuPublicationUrl) {
+                updateStatus(`  > Published on Issuu. Publication URL: ${issuuPublicationUrl}`);
+                publishedCount++;
+                successUrlsTextarea.value += issuuPublicationUrl + '\n';
+                successIssuuUrls.push({url: url, issuuUrl: issuuPublicationUrl});
+                break; // Success, move to next URL
+              } else {
+                updateStatus(`<span style="color: red;">  > Failed to publish or retrieve Issuu URL.</span>`);
+                currentStage = "publish"; // Retry Publish/Get URL
+                throw new Error("Issuu Publication Failed or URL retrieval failed"); // For retry logic
+              }
+            }
+
+
+          } catch (error) {
+            console.error(`Error processing URL: ${url} (Attempt ${retryCount + 1})`, error);
+            updateStatus(`<span style="color: red;">  > Error: ${error.message || error}</span>`);
+            retryCount++;
+            if (retryCount <= maxRetries) {
+              const waitTime = Math.random() * 3000 + 1000; // Random wait 1-4 seconds
+              updateStatus(`  > Retrying in ${waitTime/1000} seconds...`);
+              await new Promise(resolve => setTimeout(resolve, waitTime));
+            } else {
+              updateStatus(`<span style="color: red;">  > Max retries reached for ${url}. Processing failed.</span>`);
+              failedUrlsTextarea.value += url + '\n';
+              failedUrlList.push(url);
+              break; // Max retries, move to next URL
+            }
           }
+        } // end while retry loop
 
-        } catch (error) {
-          statusDiv.innerHTML += `<p style="color: red;">Error processing ${url}: ${error.message || error}</p>`;
-          console.error("Error processing URL:", url, error);
-        }
-      }
+        processedUrlsCount++;
+        updateProgressBar((processedUrlsCount / totalUrls) * 100);
+        updateProgressInfo(processedUrlsCount, totalUrls, pdfGeneratedCount, uploadedCount, publishedCount, calculateEstimatedTime(startTime, processedUrlsCount, totalUrls, estimatedTimePerUrl));
 
-      statusDiv.innerHTML += "<p>Processing complete.</p>";
+      } // end for url loop
+
+
+      const endTime = new Date().getTime();
+      const totalTimeSeconds = (endTime - startTime) / 1000;
+      updateStatusSummary(`Processing completed in ${totalTimeSeconds.toFixed(1)} seconds.  ${totalUrls} URLs, PDF Generated: ${pdfGeneratedCount}, Uploaded: ${uploadedCount}, Published: ${publishedCount}. Failed: ${failedUrlList.length}.`);
+      updateProgressInfo(totalUrls, totalUrls, pdfGeneratedCount, uploadedCount, publishedCount, "Done");
+
     });
 
     document.getElementById('parseSitemapButton').addEventListener('click', async () => {
       const sitemapUrl = document.getElementById('sitemapUrl').value.trim();
-      const statusDiv = document.getElementById('status');
+      const statusTextarea = document.getElementById('status');
       if (!sitemapUrl) {
-        statusDiv.textContent = "Please enter a Sitemap URL.";
+        updateStatus("Please enter a Sitemap URL.");
         return;
       }
-      statusDiv.innerHTML = "<p>Parsing sitemap...</p>";
+      updateStatus("Parsing sitemap...");
       try {
         const urlsFromSitemap = await parseSitemapUrls(sitemapUrl);
         if (urlsFromSitemap && urlsFromSitemap.length > 0) {
           document.getElementById('urlList').value = urlsFromSitemap.join('\n');
-          statusDiv.innerHTML = `<p>Found ${urlsFromSitemap.length} URLs from sitemap and populated the URL list.</p>`;
+          applyUrlFilter(); // Re-apply filter after sitemap parse
+          updateUrlCount();
+          updateStatus(`Found ${urlsFromSitemap.length} URLs from sitemap and populated the URL list.`);
         } else {
-          statusDiv.innerHTML = "<p>No URLs found in the sitemap or error parsing sitemap.</p>";
+          updateStatus("No URLs found in the sitemap or error parsing sitemap.");
         }
       } catch (error) {
-        statusDiv.innerHTML = `<p style="color: red;">Error parsing sitemap: ${error.message || error}</p>`;
+        updateStatus(`<span style="color: red;">Error parsing sitemap: ${error.message || error}</span>`);
         console.error("Error parsing sitemap:", error);
       }
     });
 
 
     // --------------------  JavaScript Functions  --------------------
+
+    const printfriendlyRequestQueue = [];
+    let printfriendlyRequestsThisMinute = 0;
+    let lastMinuteStart = Date.now();
+
+    async function convertUrlToPdfWithRateLimit(url, apiKey) {
+      return new Promise((resolve, reject) => {
+        printfriendlyRequestQueue.push({ url, apiKey, resolve, reject });
+        processPrintFriendlyQueue();
+      });
+    }
+
+    async function processPrintFriendlyQueue() {
+      if (printfriendlyRequestQueue.length === 0) return;
+
+      const now = Date.now();
+      if (now - lastMinuteStart >= 60000) {
+        printfriendlyRequestsThisMinute = 0;
+        lastMinuteStart = now;
+      }
+
+      if (printfriendlyRequestsThisMinute < 60) {
+        printfriendlyRequestsThisMinute++;
+        const requestItem = printfriendlyRequestQueue.shift();
+        try {
+          const pdfBlob = await convertUrlToPdf(requestItem.url, requestItem.apiKey);
+          requestItem.resolve(pdfBlob);
+        } catch (error) {
+          requestItem.reject(error);
+        } finally {
+          processPrintFriendlyQueue(); // Process next item in queue
+        }
+      } else {
+        // Rate limit hit, wait and retry
+        setTimeout(processPrintFriendlyQueue, 1000); // Wait 1 second and try again
+      }
+    }
+
 
     async function convertUrlToPdf(url, apiKey) { // API Key as parameter
       const printFriendlyApiKey = apiKey;
@@ -306,30 +513,38 @@
               throw new Error(`Issuu API - Document conversion failed on Issuu's side.`);
           }
         }
-
-        // 3. Publish Draft
-        const publishUrl = `https://api.issuu.com/v2/drafts/${draftSlug}/publish`;
-        const publishResponse = await fetch(publishUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${issuuApiBearerToken}`
-          },
-          body: JSON.stringify({}) // desiredName can be added if needed, but not required for basic publish
-        });
-
-        if (!publishResponse.ok) {
-          const errorData = await publishResponse.json();
-          throw new Error(`Issuu API - Publish Draft failed: ${publishResponse.status} ${publishResponse.statusText} - ${errorData?.message || 'Unknown error'}`);
-        }
-
-        return true; // Full Issuu upload and publish process successful
+        return draftSlug; // Return slug for publication URL retrieval
 
       } catch (error) {
         console.error("Error uploading to Issuu:", error);
-        return false;
+        return null;
       }
     }
+
+    async function getIssuuPublicationUrlBySlug(url, bearerToken) {
+      try {
+        const draftSlug = await uploadPdfToIssuu(await convertUrlToPdfWithRateLimit(url, document.getElementById('printfriendlyApiKey').value.trim()), url, bearerToken, document.getElementById('issuuClientId').value.trim(), document.getElementById('issuuClientSecret').value.trim());
+        if (!draftSlug) return null;
+
+        const issuuApiPublicationReaderUrl = `https://api.issuu.com/v2/publications/${draftSlug}/reader`;
+        const response = await fetch(issuuApiPublicationReaderUrl, {
+          headers: { 'Authorization': `Bearer ${bearerToken}` }
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`Issuu API - Get Publication Reader URL failed: ${response.status} ${response.statusText} - ${errorData?.message || 'Unknown error'}`);
+        }
+
+        const data = await response.json();
+        return data.url; // Publication reader URL
+
+      } catch (error) {
+        console.error("Error getting Issuu Publication URL:", error);
+        return null;
+      }
+    }
+
 
     async function getPageTitle(url) {
       try {
@@ -378,6 +593,35 @@
         return null;
       }
     }
+
+    function calculateEstimatedTime(startTime, processedCount, totalCount, estPerItem) {
+      if (processedCount === 0) return "--";
+      const elapsed = new Date().getTime() - startTime;
+      const avgTimePerItem = elapsed / processedCount;
+      const remainingItems = totalCount - processedCount;
+      const estimatedRemainingTimeMs = remainingItems * avgTimePerItem;
+
+      if (estimatedRemainingTimeMs < 0 ) return "Calculating...";
+
+      const minutes = Math.floor(estimatedRemainingTimeMs / 60000);
+      const seconds = Math.floor((estimatedRemainingTimeMs % 60000) / 1000);
+      return `${minutes}m ${seconds}s`;
+    }
+
+    function copySuccessUrls() {
+      const successUrlsTextarea = document.getElementById('successUrls');
+      successUrlsTextarea.select();
+      document.execCommand('copy');
+    }
+
+    function retryFailedUrls() {
+      const failedUrlsTextarea = document.getElementById('failedUrls');
+      const failedUrls = failedUrlsTextarea.value.trim().split('\n').filter(url => url);
+      document.getElementById('urlList').value = failedUrls.join('\n');
+      failedUrlsTextarea.value = ""; // Clear failed URLs textarea
+      document.getElementById('convertButton').click(); // Trigger conversion for failed URLs
+    }
+
 
   </script>
 
