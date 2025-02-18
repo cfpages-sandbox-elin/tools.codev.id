@@ -29,7 +29,9 @@ jobs:
           echo "$FILES"
 
       - name: Generate HTML List and Update Index
-        run: |  # Explicit multiline indicator
+        run: |
+          set -x # Enable shell debugging
+
           FILE_LIST="${{ steps.list_files.outputs.files_output }}"
           echo "FILE_LIST content: $FILE_LIST"
           HTML_LIST=""
@@ -42,14 +44,17 @@ jobs:
           done
 
           echo "HTML_LIST content: $HTML_LIST"
+          echo "index.html content before replacement:"
+          cat index.html
 
-          # Replace placeholder in index.html with the generated list
-          sed -i "s|<!-- TOOL_LIST_HERE -->|$HTML_LIST|" index.html
+          echo "Running sed command to replace TOOL_LIST_HERE"
+          sed -i "s|<!-- TOOL_LIST_HERE -->|$HTML_LIST|" index.html # Simplified sed
           echo "index.html after TOOL_LIST_HERE replacement:"
           cat index.html
 
-          # Update title tag
-          sed -i "s|<title>CODEV.ID \\| Jasa Buat Website Professional #1</title>|<title>Tools</title>|" index.html
+
+          echo "Running sed command to update title"
+          sed -i "s|<title>CODEV.ID.*</title>|<title>Tools</title>|" index.html # More general title sed
           echo "index.html after title replacement:"
           cat index.html
 
