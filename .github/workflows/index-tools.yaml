@@ -2,7 +2,7 @@ name: Update Tools Index
 
 on:
   push:
-    branches: [ "main" ] # Trigger on push to main branch
+    branches: [ "main" ]
   workflow_dispatch: # Manual trigger
 
 jobs:
@@ -12,31 +12,46 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: List Files in Root
+      - name: Debug Working Directory
+        run: pwd
+
+      - name: List Files in Root (Debug Output)
+        run: ls -al
+
+      - name: List Files
         id: list_files
         run: |
           FILES=$(ls -F | grep -v '/$') # List files, exclude directories
-          echo "files_output<<EOF" >> $GITHUB_OUTPUT
-          echo "$FILES" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "files_output<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$FILES" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+          echo "File list output for debugging:"
+          echo "$FILES"
 
       - name: Generate HTML List and Update Index
-        run: |
-          FILE_LIST="${{ steps.list_files.outputs.files_output }}" # Get output from list_files step
+        run: |  # Explicit multiline indicator
+          FILE_LIST="${{ steps.list_files.outputs.files_output }}"
+          echo "FILE_LIST content: $FILE_LIST"
           HTML_LIST=""
-          IFS=$'\n' read -r -d '' -a FILES_ARRAY <<< "$FILE_LIST" # Split files into array by newline
+          IFS=$'\n' read -r -d '' -a FILES_ARRAY <<< "$FILE_LIST"
           for file in "${FILES_ARRAY[@]}"; do
-            if [[ "$file" != "index.html" && "$file" != ".github" ]]; then # Exclude index.html and .github directory
+            if [[ "$file" != "index.html" && "$file" != ".github" ]]; then
               FILENAME=$(basename "$file")
               HTML_LIST+="<li><a href=\"./$FILENAME\">$FILENAME</a></li>"
             fi
           done
 
+          echo "HTML_LIST content: $HTML_LIST"
+
           # Replace placeholder in index.html with the generated list
           sed -i "s|<!-- TOOL_LIST_HERE -->|$HTML_LIST|" index.html
+          echo "index.html after TOOL_LIST_HERE replacement:"
+          cat index.html
 
           # Update title tag
           sed -i "s|<title>CODEV.ID \\| Jasa Buat Website Professional #1</title>|<title>Tools</title>|" index.html
+          echo "index.html after title replacement:"
+          cat index.html
 
       - name: Commit and Push changes
         uses: actions/checkout@v3
