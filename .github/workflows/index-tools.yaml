@@ -1,0 +1,52 @@
+name: Update Tools Index
+
+on:
+  push:
+    branches: [ "main" ] # or your main branch name
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: List Files
+        id: list-files
+        run: |
+          FILES=$(ls -F | grep -v '/$') # List files, exclude directories, and store in FILES variable
+          echo "FILES_OUTPUT<<EOF" >> $GITHUB_OUTPUT
+          echo "$FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Generate HTML List and Update Index
+        run: |
+          FILE_LIST="${{ steps.list-files.outputs.FILES_OUTPUT }}"
+          HTML_LIST=""
+          IFS=$'\n' read -r -d '' -a FILES_ARRAY <<< "$FILE_LIST" # Split files into array by newline
+          for file in "${FILES_ARRAY[@]}"; do
+            if [[ "$file" != "index.html" && "$file" != ".github" ]]; then # Exclude index.html and .github directory
+              FILENAME=$(basename "$file")
+              HTML_LIST+="<li><a href=\"./$FILENAME\">$FILENAME</a></li>"
+            fi
+          done
+
+          # Replace placeholder in index.html with the generated list
+          sed -i "s|<!-- TOOL_LIST_HERE -->|$HTML_LIST|" index.html
+
+          # Update title tag
+          sed -i "s|<title>CODEV.ID \\| Jasa Buat Website Professional #1</title>|<title>Tools</title>|" index.html
+
+      - name: Commit and Push changes
+        uses: actions/checkout@v3
+        with:
+          ref: main # or your main branch name
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Commit and Push changes
+        run: |
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
+          git add index.html
+          git commit -m "feat: Update tools index.html with file list"
+          git push origin main # or your main branch name
