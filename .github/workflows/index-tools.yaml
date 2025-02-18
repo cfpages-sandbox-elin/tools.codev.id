@@ -25,18 +25,21 @@ jobs:
           echo "files_output<<EOF" >> "$GITHUB_OUTPUT"
           echo "$FILES" >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
-          echo "File list output for debugging:"
-          echo "$FILES"
+          echo "File list output (from ls -F):"
+          ls -F | grep -v '/$' # Redoing the command to see output directly
 
       - name: Generate HTML List and Update Index
         run: |
-          set -x # Enable shell debugging
-          FILE_LIST="${{ steps.list_files.outputs.files_output }}"
-          echo "FILE_LIST content (raw):"
-          echo "$FILE_LIST" | cat -vET # Show non-printing chars
+          FILE_LIST="${{ steps.list_files.outputs.files_output }}" # Get output from list_files step
+          echo "FILE_LIST content (before read):"
+          echo "$FILE_LIST" | cat -vET
 
           HTML_LIST=""
-          IFS=$'\n' read -r -d '' -a FILES_ARRAY <<< "$FILE_LIST"
+
+          # --- Try Simplified read Command (Solution 2) ---
+          # IFS=$'\n' read -r -d '' -a FILES_ARRAY <<< "$FILE_LIST" # Original read command - might be problematic
+          IFS=$'\n' read -r -a FILES_ARRAY <<< "$FILE_LIST"      # Simplified read command
+
           echo "FILES_ARRAY length: ${#FILES_ARRAY[@]}"
 
           for file in "${FILES_ARRAY[@]}"; do
@@ -53,16 +56,25 @@ jobs:
           echo "HTML_LIST content:"
           echo "$HTML_LIST"
 
+          # --- Alternative Loop Approach (Solution 3 - Debug Output Only for now) ---
+          echo "Alternative Loop Approach (Debug Output):"
+          ls -F | grep -v '/$' | while read -r file; do
+              if [[ "$file" != "index.html" && "$file" != ".github" ]]; then
+                  FILENAME=$(basename "$file")
+                  echo "  Alt Loop - Processing file: '$FILENAME'"
+              fi
+          done
+
+
           # Replace placeholder in index.html with the generated list
-          sed -i "s|<!-- TOOL_LIST_HERE -->|$HTML_LIST|" index.html || true # Added || true for error robustness
+          sed -i "s|<!-- TOOL_LIST_HERE -->|$HTML_LIST|" index.html || true # Keep || true temporarily for robustness
           echo "index.html after TOOL_LIST_HERE replacement:"
           cat index.html
 
           # Update title tag
-          sed -i "s|<title>CODEV.ID \\| Jasa Buat Website Professional #1</title>|<title>Tools</title>|" index.html || true # Added || true for error robustness
+          sed -i "s|<title>CODEV.ID \\| Jasa Buat Website Professional #1</title>|<title>Tools</title>|" index.html || true # Keep || true temporarily for robustness
           echo "index.html after title replacement:"
           cat index.html
-          set +x # Disable shell debugging
 
       - name: Commit and Push changes
         uses: actions/checkout@v3
