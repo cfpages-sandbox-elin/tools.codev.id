@@ -26,20 +26,18 @@ jobs:
           echo "$FILES" >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
           echo "File list output (from ls -F):"
-          ls -F | grep -v '/$' # Redoing the command to see output directly
+          ls -F | grep -v '/$'
 
       - name: Generate HTML List and Update Index
         run: |
-          set -x # Enable shell debugging - VERY IMPORTANT for detailed logs
-
-          FILE_LIST="${{ steps.list_files.outputs.files_output }}" # Get output from list_files step
+          set -x # Enable shell debugging
+          FILE_LIST="${{ steps.list_files.outputs.files_output }}"
           echo "FILE_LIST content (raw):"
-          echo "$FILE_LIST" | cat -vET # Show non-printing chars
+          echo "$FILE_LIST" | cat -vET
 
           HTML_LIST=""
+          IFS=$'\n' read -r -d '' -a FILES_ARRAY <<< "$FILE_LIST"
 
-          # --- Simplified read Command ---
-          IFS=$'\n' read -r -a FILES_ARRAY <<< "$FILE_LIST"      # Simplified read command
           echo "FILES_ARRAY length: ${#FILES_ARRAY[@]}"
 
           for file in "${FILES_ARRAY[@]}"; do
@@ -56,21 +54,30 @@ jobs:
           echo "HTML_LIST content:"
           echo "$HTML_LIST"
 
+          # Backup index.html
+          cp index.html index.html.bak
+
+          # --- Debugging SED command for TOOL_LIST_HERE ---
+          echo "Checking for placeholder before replacement:"
+          grep "<!-- TOOL_LIST_HERE -->" index.html
+
           # Replace placeholder in index.html with the generated list
-          echo "Before SED - index.html content:"
-          cat index.html # Show index.html content before SED
-          sed -i "s|<!-- TOOL_LIST_HERE -->|$HTML_LIST|" index.html || true # Keep || true temporarily
-          echo "index.html after TOOL_LIST_HERE replacement:"
-          cat index.html
+          sed -i "s|<!-- TOOL_LIST_HERE -->|$HTML_LIST|" index.html || true
+          echo "Diff after TOOL_LIST_HERE replacement:"
+          diff index.html.bak index.html
+
+          # Backup index.html again for title replacement diff
+          mv index.html index.html.bak
 
           # Update title tag
-          sed -i "s|<title>CODEV.ID \\| Jasa Buat Website Professional #1</title>|<title>Tools</title>|" index.html || true # Keep || true
-          echo "index.html after title replacement:"
-          cat index.html
+          sed -i "s|<title>CODEV.ID \\| Jasa Buat Website Professional #1</title>|<title>Tools</title>|" index.html || true
+          echo "Diff after title replacement:"
+          diff index.html.bak index.html
 
           set +x # Disable shell debugging
 
-      - name: Checkout again for commit (for permissions?)
+
+      - name: Commit and Push changes
         uses: actions/checkout@v3
         with:
           ref: main
