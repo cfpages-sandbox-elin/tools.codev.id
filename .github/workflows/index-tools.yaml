@@ -26,58 +26,60 @@ jobs:
           echo "$FILES" >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
           echo "File list output (from ls -F):"
-          echo "$FILES"
+          ls -F | grep -v '/$' # Redoing the command to see output directly
 
       - name: Generate HTML List and Update Index
         run: |
-          FILE_LIST="${{ steps.list_files.outputs.files_output }}"
-          echo "FILE_LIST content: $FILE_LIST"
+          set -x # Enable shell debugging - VERY IMPORTANT for detailed logs
+
+          FILE_LIST="${{ steps.list_files.outputs.files_output }}" # Get output from list_files step
+          echo "FILE_LIST content (raw):"
+          echo "$FILE_LIST" | cat -vET # Show non-printing chars
+
           HTML_LIST=""
-          IFS=$'\n' read -r -d '' -a FILES_ARRAY <<< "$FILE_LIST"
+
+          # --- Simplified read Command ---
+          IFS=$'\n' read -r -a FILES_ARRAY <<< "$FILE_LIST"      # Simplified read command
+          echo "FILES_ARRAY length: ${#FILES_ARRAY[@]}"
+
           for file in "${FILES_ARRAY[@]}"; do
+            echo "Processing file: '$file'"
             if [[ "$file" != "index.html" && "$file" != ".github" ]]; then
               FILENAME=$(basename "$file")
               HTML_LIST+="<li><a href=\"./$FILENAME\">$FILENAME</a></li>"
+              echo "  Added to HTML_LIST: $FILENAME"
+            else
+              echo "  Skipping: $file"
             fi
           done
 
-          echo "HTML_LIST content: $HTML_LIST"
-
-          # --- Debug: Print index.html content BEFORE replacement ---
-          echo "index.html content BEFORE replacement:"
-          cat index.html
+          echo "HTML_LIST content:"
+          echo "$HTML_LIST"
 
           # Replace placeholder in index.html with the generated list
-          sed -i "s|<!-- TOOL_LIST_HERE -->|$HTML_LIST|" index.html || true # Added || true for error robustness
+          echo "Before SED - index.html content:"
+          cat index.html # Show index.html content before SED
+          sed -i "s|<!-- TOOL_LIST_HERE -->|$HTML_LIST|" index.html || true # Keep || true temporarily
           echo "index.html after TOOL_LIST_HERE replacement:"
           cat index.html
 
           # Update title tag
-          sed -i "s|<title>CODEV.ID \\| Jasa Buat Website Professional #1</title>|<title>Tools</title>|" index.html || true # Added || true for error robustness
+          sed -i "s|<title>CODEV.ID \\| Jasa Buat Website Professional #1</title>|<title>Tools</title>|" index.html || true # Keep || true
           echo "index.html after title replacement:"
           cat index.html
-          # --- Debug: Print index.html content AFTER replacement ---
-          echo "index.html content AFTER replacements:"
-          cat index.html
 
+          set +x # Disable shell debugging
 
-      - name: Commit and Push changes
+      - name: Checkout again for commit (for permissions?)
         uses: actions/checkout@v3
         with:
           ref: main
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Commit and Push updated index.html (Conditional)
+      - name: Commit and Push updated index.html
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions Bot"
-
-          # Check if there are any changes to commit
-          if ! git diff --quiet --exit-code index.html; then
-            echo "Changes detected in index.html, committing..."
-            git add index.html
-            git commit -m "feat: Update tools index.html with file list"
-            git push origin main
-          else
-            echo "No changes in index.html, skipping commit and push."
-          fi
+          git add index.html
+          git commit -m "feat: Update tools index.html with file list"
+          git push origin main
