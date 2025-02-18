@@ -26,55 +26,40 @@ jobs:
           echo "$FILES" >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
           echo "File list output (from ls -F):"
-          ls -F | grep -v '/$' # Redoing the command to see output directly
+          echo "$FILES"
 
       - name: Generate HTML List and Update Index
         run: |
-          FILE_LIST="${{ steps.list_files.outputs.files_output }}" # Get output from list_files step
-          echo "FILE_LIST content (before read):"
-          echo "$FILE_LIST" | cat -vET
-
+          FILE_LIST="${{ steps.list_files.outputs.files_output }}"
+          echo "FILE_LIST content: $FILE_LIST"
           HTML_LIST=""
-
-          # --- Try Simplified read Command (Solution 2) ---
-          # IFS=$'\n' read -r -d '' -a FILES_ARRAY <<< "$FILE_LIST" # Original read command - might be problematic
-          IFS=$'\n' read -r -a FILES_ARRAY <<< "$FILE_LIST"      # Simplified read command
-
-          echo "FILES_ARRAY length: ${#FILES_ARRAY[@]}"
-
+          IFS=$'\n' read -r -d '' -a FILES_ARRAY <<< "$FILE_LIST"
           for file in "${FILES_ARRAY[@]}"; do
-            echo "Processing file: '$file'"
             if [[ "$file" != "index.html" && "$file" != ".github" ]]; then
               FILENAME=$(basename "$file")
               HTML_LIST+="<li><a href=\"./$FILENAME\">$FILENAME</a></li>"
-              echo "  Added to HTML_LIST: $FILENAME"
-            else
-              echo "  Skipping: $file"
             fi
           done
 
-          echo "HTML_LIST content:"
-          echo "$HTML_LIST"
+          echo "HTML_LIST content: $HTML_LIST"
 
-          # --- Alternative Loop Approach (Solution 3 - Debug Output Only for now) ---
-          echo "Alternative Loop Approach (Debug Output):"
-          ls -F | grep -v '/$' | while read -r file; do
-              if [[ "$file" != "index.html" && "$file" != ".github" ]]; then
-                  FILENAME=$(basename "$file")
-                  echo "  Alt Loop - Processing file: '$FILENAME'"
-              fi
-          done
-
+          # --- Debug: Print index.html content BEFORE replacement ---
+          echo "index.html content BEFORE replacement:"
+          cat index.html
 
           # Replace placeholder in index.html with the generated list
-          sed -i "s|<!-- TOOL_LIST_HERE -->|$HTML_LIST|" index.html || true # Keep || true temporarily for robustness
+          sed -i "s|<!-- TOOL_LIST_HERE -->|$HTML_LIST|" index.html || true # Added || true for error robustness
           echo "index.html after TOOL_LIST_HERE replacement:"
           cat index.html
 
           # Update title tag
-          sed -i "s|<title>CODEV.ID \\| Jasa Buat Website Professional #1</title>|<title>Tools</title>|" index.html || true # Keep || true temporarily for robustness
+          sed -i "s|<title>CODEV.ID \\| Jasa Buat Website Professional #1</title>|<title>Tools</title>|" index.html || true # Added || true for error robustness
           echo "index.html after title replacement:"
           cat index.html
+          # --- Debug: Print index.html content AFTER replacement ---
+          echo "index.html content AFTER replacements:"
+          cat index.html
+
 
       - name: Commit and Push changes
         uses: actions/checkout@v3
@@ -82,10 +67,17 @@ jobs:
           ref: main
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Commit and Push updated index.html
+      - name: Commit and Push updated index.html (Conditional)
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions Bot"
-          git add index.html
-          git commit -m "feat: Update tools index.html with file list"
-          git push origin main
+
+          # Check if there are any changes to commit
+          if ! git diff --quiet --exit-code index.html; then
+            echo "Changes detected in index.html, committing..."
+            git add index.html
+            git commit -m "feat: Update tools index.html with file list"
+            git push origin main
+          else
+            echo "No changes in index.html, skipping commit and push."
+          fi
