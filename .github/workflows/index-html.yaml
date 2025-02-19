@@ -18,12 +18,12 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v4 # Keep Python setup, might be useful later or for other workflows
+        uses: actions/setup-python@v4 # Keep Python setup, might be useful later
         with:
           python-version: '3.9'
 
-      - name: Install pandoc # Install pandoc - NEW STEP
-        run: sudo apt-get update && sudo apt-get install -y pandoc 
+      - name: Install pandoc
+        run: sudo apt-get update && sudo apt-get install -y pandoc
 
       - name: Check if index.md exists
         run: |
@@ -47,7 +47,7 @@ jobs:
         run: |
           MARKDOWN_CONTENT="${{ steps.read_markdown.outputs.markdown_content }}"
           # --- Convert entire index.md content to HTML using pandoc ---
-          HTML_CONTENT=$(echo "$MARKDOWN_CONTENT" | pandoc -f markdown -t html --no-wrap)
+          HTML_CONTENT=$(echo "$MARKDOWN_CONTENT" | pandoc -f markdown -t html --wrap=none) # Changed --no-wrap to --wrap=none
           echo "html_content_output<<EOF" >> "$GITHUB_OUTPUT"
           echo "$HTML_CONTENT" >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
