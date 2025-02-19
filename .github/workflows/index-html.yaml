@@ -34,28 +34,42 @@ jobs:
           echo "index.md content (debug):"
           cat index.md
 
-      - name: Convert Markdown to HTML and Update index.html
+      - name: Convert Entire index.md to HTML
+        id: convert_markdown
         run: |
           MARKDOWN_CONTENT="${{ steps.read_markdown.outputs.markdown_content }}"
-          # --- Use 'sed' to crudely convert markdown list to HTML list ---
-          HTML_LIST=$(echo "$MARKDOWN_CONTENT" | sed -n '/## Available Tools:/,$p' | sed '1,2d' | sed 's/^- //g' | sed 's/\[\(.*\)\](\(.*\)) - \(.*\)/<li><a href="\2">\1<\/a> - \3<\/li>/')
+          # --- Convert entire index.md content to HTML ---
+          HTML_CONTENT=$(echo "$MARKDOWN_CONTENT" | pandoc -f markdown -t html --no-wrap) # Using pandoc for full markdown conversion
+          echo "html_content_output<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$HTML_CONTENT" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+          echo "Generated HTML Content (debug):"
+          echo "$HTML_CONTENT"
+
+      - name: Replace index.html Content Section
+        run: |
+          HTML_CONTENT="${{ steps.convert_markdown.outputs.html_content_output }}"
+          # Replace content BETWEEN the div tags - simpler replacement
+          sed -i 's#<div class="entry-content single-content">.*<\/div>#<div class="entry-content single-content">\\'$HTML_CONTENT'\\<\/div>#gs' index.html
 
 
-          echo "Generated HTML from Markdown (debug):"
-          echo "$HTML_LIST"
-
-          sed -i "s|<!-- TOOL_LIST_MARKDOWN_HERE -->|$HTML_LIST|" index.html
-          echo "index.html after TOOL_LIST_MARKDOWN_HERE replacement:"
+          echo "index.html after content replacement:"
           cat index.html
 
       - name: Update index.html title
         run: |
           sed -i "s|<title>CODEV.ID.*</title>|<title>Tools</title>|" index.html
 
-      - name: Commit and Push updated index.html # Corrected Commit Step - No checkout here!
+      - name: Commit and Push updated index.html
+        uses: actions/checkout@v3
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit and Push updated index.html
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions Bot"
-          git add index.html
-          git commit -m "feat: Update index.html from index.md"
+          git add index.html index.md # Add index.md to commit as well
+          git commit -m "feat: Update index.html content from index.md"
           git push origin main
