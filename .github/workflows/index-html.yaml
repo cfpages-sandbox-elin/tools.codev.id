@@ -54,20 +54,21 @@ jobs:
           echo "Generated HTML Content (debug):"
           echo "$HTML_CONTENT"
 
-      - name: Replace index.html Content Section (Robust Quoting + Newline Escape)
+      - name: Replace index.html Content Section (Using awk) # Replaced sed with awk
         run: |
           HTML_CONTENT="${{ steps.convert_markdown.outputs.html_content_output }}"
+          
+          # Use awk to replace content section
+          awk -v html_content="$HTML_CONTENT" '
+          /<div class="entry-content single-content">/ { 
+              print
+              print html_content
+              getline
+          }
+          { print }
+          ' index.html > temp_index.html && mv temp_index.html index.html
 
-          # 1. Escape single quotes, double quotes, forward slashes, ampersands 
-          ESCAPED_HTML_CONTENT=$(printf '%s' "$HTML_CONTENT" | sed 's/[\/&]/\\&/g; s/"/\\"/g; s/'"'"/'\\\'/g')
-          # 2. Escape newlines - NEW!
-          ESCAPED_HTML_CONTENT=$(echo "$ESCAPED_HTML_CONTENT" | sed ':a;N;$!ba;s/\n/\\n/g')
-
-
-          # Use double quotes for sed command and insert doubly escaped content
-          sed -i "s#<div class=\"entry-content single-content\">.*<\/div>#<div class=\"entry-content single-content\">\\'$ESCAPED_HTML_CONTENT'\\<\/div>#gs" index.html
-
-          echo "index.html after content replacement:"
+          echo "index.html after content replacement (awk):"
           cat index.html
 
       - name: Update index.html title
