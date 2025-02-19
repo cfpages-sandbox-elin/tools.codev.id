@@ -53,23 +53,31 @@ jobs:
           echo "Generated HTML Content (debug):"
           echo "$HTML_CONTENT"
 
-      - name: Replace index.html Content Section (Using awk - Syntax Fix) # Refined awk syntax
+      - name: Replace index.html Content Section (Using Simple awk - Debugging) # Simpler awk, more debug
         run: |
           HTML_CONTENT="${{ steps.convert_markdown.outputs.html_content_output }}"
+          
+          # Debug: Print HTML_CONTENT to see if it's causing issues
+          echo "HTML_CONTENT for awk:"
+          echo "$HTML_CONTENT"
 
-          # Use printf for safe escaping - keep this
-          ESCAPED_HTML_CONTENT=$(printf '%s' "$HTML_CONTENT" | sed 's/[\/&]/\\&/g; s/"/\\"/g; s/'"'"/'\\\'/g')
-          ESCAPED_HTML_CONTENT=$(echo "$ESCAPED_HTML_CONTENT" | sed ':a;N;$!ba;s/\n/\\n/g')
-
-          # Corrected awk script with brace alignment and formatting
-          awk -v html_content="$ESCAPED_HTML_CONTENT" '
-          /<div class="entry-content single-content">/ {
-              print; 
-              print html_content;
-              getline;
-              next; # Skip default print for this line
+          # Simplified awk script - basic replacement - MORE DEBUGGING INSIDE AWK
+          awk -v html_content="$HTML_CONTENT" '
+          BEGIN { 
+              print "AWK script started"; # Debug inside awk
           }
-          { print }
+          /<div class="entry-content single-content">/ {
+              print "Found opening div"; # Debug inside awk
+              print
+              print html_content; 
+              getline; 
+              print "Skipped original closing div line"; # Debug inside awk
+              next;
+          }
+          { print } # Default print action
+          END {
+              print "AWK script finished"; # Debug inside awk
+          }
           ' index.html > temp_index.html && mv temp_index.html index.html
 
           echo "index.html after content replacement (awk):"
