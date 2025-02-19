@@ -41,13 +41,7 @@ jobs:
           print(index_md_content)
           EOF
 
-      - name: Commit and Push index.md
-        uses: actions/checkout@v3
-        with:
-          ref: main
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Commit and Push index.md
+      - name: Commit and Push index.md (Commands) # Corrected Commit Step - No checkout here!
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions Bot"
