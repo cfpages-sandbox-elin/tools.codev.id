@@ -14,7 +14,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code # <--- ONLY CHECKOUT STEP SHOULD BE HERE - AT THE BEGINNING
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Set up Python
@@ -53,16 +53,21 @@ jobs:
           echo "Generated HTML Content (debug):"
           echo "$HTML_CONTENT"
 
-      - name: Replace index.html Content Section (Using awk)
+      - name: Replace index.html Content Section (Using awk - Syntax Fix) # Refined awk syntax
         run: |
           HTML_CONTENT="${{ steps.convert_markdown.outputs.html_content_output }}"
+
+          # Use printf for safe escaping - keep this
           ESCAPED_HTML_CONTENT=$(printf '%s' "$HTML_CONTENT" | sed 's/[\/&]/\\&/g; s/"/\\"/g; s/'"'"/'\\\'/g')
           ESCAPED_HTML_CONTENT=$(echo "$ESCAPED_HTML_CONTENT" | sed ':a;N;$!ba;s/\n/\\n/g')
+
+          # Corrected awk script with brace alignment and formatting
           awk -v html_content="$ESCAPED_HTML_CONTENT" '
-          /<div class="entry-content single-content">/ { 
-              print
-              print html_content
-              getline
+          /<div class="entry-content single-content">/ {
+              print; 
+              print html_content;
+              getline;
+              next; # Skip default print for this line
           }
           { print }
           ' index.html > temp_index.html && mv temp_index.html index.html
@@ -74,7 +79,13 @@ jobs:
         run: |
           sed -i "s|<title>CODEV.ID.*</title>|<title>Tools</title>|" index.html
 
-      - name: Commit and Push updated index.html # <--- CORRECT COMMIT STEP - NO CHECKOUT
+      - name: Commit and Push updated index.html
+        uses: actions/checkout@v3
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit and Push updated index.html
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions Bot"
