@@ -14,7 +14,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout code # <--- ONLY CHECKOUT STEP SHOULD BE HERE - AT THE BEGINNING
         uses: actions/checkout@v3
 
       - name: Set up Python
@@ -46,7 +46,6 @@ jobs:
         id: convert_markdown
         run: |
           MARKDOWN_CONTENT="${{ steps.read_markdown.outputs.markdown_content }}"
-          # --- Convert entire index.md content to HTML using pandoc ---
           HTML_CONTENT=$(echo "$MARKDOWN_CONTENT" | pandoc -f markdown -t html --wrap=none)
           echo "html_content_output<<EOF" >> "$GITHUB_OUTPUT"
           echo "$HTML_CONTENT" >> "$GITHUB_OUTPUT"
@@ -54,12 +53,12 @@ jobs:
           echo "Generated HTML Content (debug):"
           echo "$HTML_CONTENT"
 
-      - name: Replace index.html Content Section (Using awk) # Replaced sed with awk
+      - name: Replace index.html Content Section (Using awk)
         run: |
           HTML_CONTENT="${{ steps.convert_markdown.outputs.html_content_output }}"
-          
-          # Use awk to replace content section
-          awk -v html_content="$HTML_CONTENT" '
+          ESCAPED_HTML_CONTENT=$(printf '%s' "$HTML_CONTENT" | sed 's/[\/&]/\\&/g; s/"/\\"/g; s/'"'"/'\\\'/g')
+          ESCAPED_HTML_CONTENT=$(echo "$ESCAPED_HTML_CONTENT" | sed ':a;N;$!ba;s/\n/\\n/g')
+          awk -v html_content="$ESCAPED_HTML_CONTENT" '
           /<div class="entry-content single-content">/ { 
               print
               print html_content
@@ -75,13 +74,7 @@ jobs:
         run: |
           sed -i "s|<title>CODEV.ID.*</title>|<title>Tools</title>|" index.html
 
-      - name: Commit and Push updated index.html
-        uses: actions/checkout@v3
-        with:
-          ref: main
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Commit and Push updated index.html
+      - name: Commit and Push updated index.html # <--- CORRECT COMMIT STEP - NO CHECKOUT
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions Bot"
