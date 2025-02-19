@@ -7,7 +7,7 @@ on:
     paths:
       - 'index.md' # Trigger only when index.md is modified
 
-permissions: # Grant write permission for contents - FIX for push error
+permissions:
   contents: write
 
 jobs:
@@ -52,13 +52,7 @@ jobs:
         run: |
           sed -i "s|<title>CODEV.ID.*</title>|<title>Tools</title>|" index.html
 
-      - name: Commit and Push updated index.html
-        uses: actions/checkout@v3
-        with:
-          ref: main
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Commit and Push updated index.html
+      - name: Commit and Push updated index.html # Corrected Commit Step - No checkout here!
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions Bot"
