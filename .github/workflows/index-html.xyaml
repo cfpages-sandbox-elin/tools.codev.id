@@ -1,0 +1,60 @@
+name: Update index.html from index.md
+
+on:
+  workflow_dispatch: # Manual trigger (can be triggered manually after index.md is updated)
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Check if index.md exists
+        run: |
+          if [ ! -f index.md ]; then
+            echo "Error: index.md not found. Workflow cannot proceed."
+            exit 1
+          fi
+
+      - name: Read index.md content
+        id: read_markdown
+        run: |
+          MARKDOWN_CONTENT=$(cat index.md)
+          echo "markdown_content<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$MARKDOWN_CONTENT" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+          echo "index.md content (debug):"
+          cat index.md
+
+      - name: Convert Markdown to HTML and Update index.html
+        run: |
+          MARKDOWN_CONTENT="${{ steps.read_markdown.outputs.markdown_content }}"
+          # --- Use 'sed' to crudely convert markdown list to HTML list ---
+          HTML_LIST=$(echo "$MARKDOWN_CONTENT" | sed -n '/## Available Tools:/,$p' | sed '1,2d' | sed 's/^- //g' | sed 's/\[\(.*\)\](\(.*\)) - \(.*\)/<li><a href="\2">\1<\/a> - \3<\/li>/')
+
+
+          echo "Generated HTML from Markdown (debug):"
+          echo "$HTML_LIST"
+
+          sed -i "s|<!-- TOOL_LIST_MARKDOWN_HERE -->|$HTML_LIST|" index.html
+          echo "index.html after TOOL_LIST_MARKDOWN_HERE replacement:"
+          cat index.html
+
+      - name: Update index.html title
+        run: |
+          sed -i "s|<title>CODEV.ID.*</title>|<title>Tools</title>|" index.html
+
+      - name: Commit and Push updated index.html
+        uses: actions/checkout@v3
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit and Push updated index.html
+        run: |
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions Bot"
+          git add index.html
+          git commit -m "feat: Update index.html from index.md"
+          git push origin main
