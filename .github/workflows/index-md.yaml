@@ -5,6 +5,9 @@ on:
     branches: [ "main" ]
   workflow_dispatch: # Manual trigger
 
+permissions: # Explicitly grant write permission
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -41,7 +44,7 @@ jobs:
           print(index_md_content)
           EOF
 
-      - name: Commit and Push index.md (Commands) # Corrected Commit Step - No checkout here!
+      - name: Commit and Push index.md (Commands)
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions Bot"
