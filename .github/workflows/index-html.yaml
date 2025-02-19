@@ -17,6 +17,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Set up Python
+        uses: actions/setup-python@v4 # Keep Python setup, might be useful later or for other workflows
+        with:
+          python-version: '3.9'
+
+      - name: Install pandoc # Install pandoc - NEW STEP
+        run: sudo apt-get update && sudo apt-get install -y pandoc 
+
       - name: Check if index.md exists
         run: |
           if [ ! -f index.md ]; then
@@ -38,8 +46,8 @@ jobs:
         id: convert_markdown
         run: |
           MARKDOWN_CONTENT="${{ steps.read_markdown.outputs.markdown_content }}"
-          # --- Convert entire index.md content to HTML ---
-          HTML_CONTENT=$(echo "$MARKDOWN_CONTENT" | pandoc -f markdown -t html --no-wrap) # Using pandoc for full markdown conversion
+          # --- Convert entire index.md content to HTML using pandoc ---
+          HTML_CONTENT=$(echo "$MARKDOWN_CONTENT" | pandoc -f markdown -t html --no-wrap)
           echo "html_content_output<<EOF" >> "$GITHUB_OUTPUT"
           echo "$HTML_CONTENT" >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
@@ -70,6 +78,6 @@ jobs:
         run: |
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions Bot"
-          git add index.html index.md # Add index.md to commit as well
+          git add index.html
           git commit -m "feat: Update index.html content from index.md"
           git push origin main
