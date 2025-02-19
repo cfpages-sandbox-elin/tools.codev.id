@@ -1,9 +1,12 @@
 name: Generate index.md (Python)
 
 on:
+  workflow_dispatch: # Manual trigger
   push:
     branches: [ "main" ]
-  workflow_dispatch: # Manual trigger
+    paths:
+      - '*.html'
+      - '!index.html'
 
 permissions: # Explicitly grant write permission
   contents: write
