@@ -4,9 +4,10 @@ on:
   workflow_dispatch: # Manual trigger
   push:
     branches: [ "main" ]
-    paths:
-      - '*.html'
-      - '!index.html'
+    paths-ignore: # Use paths-ignore instead of paths to trigger ONLY on additions/removals
+      - 'index.md'       # Don't trigger on changes to index.md itself
+      - '.github/**'   # Don't trigger on changes in .github directory (workflow files)
+      - '**/*.!(html)' # Ignore changes to files that are NOT .html files
 
 permissions: # Explicitly grant write permission
   contents: write
