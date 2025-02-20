@@ -8,11 +8,12 @@
         /* Basic CSS Styling here */
         body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; }
         h1 { color: #333; text-align: center; margin-bottom: 20px; }
-        label { font-weight: bold; display: block; margin-bottom: 5px; color: #555; }
+        label { font-weight: bold; display: block; margin-bottom: 5px; color: #555; font-size: 0.9em; } /* Reduced label font size */
         p { color: #777; margin-bottom: 8px; }
         input[type="text"], textarea { width: calc(100% - 18px); padding: 8px; margin-bottom: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; font-family: inherit; }
         textarea { height: 100px; resize: vertical; }
-        button { padding: 10px 20px; cursor: pointer; border-radius: 5px; background-color: #f0f0f0; border: 1px solid #ccc; font-family: inherit; }
+        input[type="text"] { height: 30px; } /* Adjusted text input height */
+        button { padding: 8px 16px; cursor: pointer; border-radius: 5px; background-color: #f0f0f0; border: 1px solid #ccc; font-family: inherit; } /* Reduced button padding */
         button:hover { background-color: #e0e0e0; }
         #api-key-area, #keyword-area, #progress-area, #cards-container { margin-bottom: 20px; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         #api-key-area label, #keyword-area label, #progress-area label { margin-bottom: 10px; display: block; }
@@ -27,16 +28,22 @@
         #cards-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
         .card { background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 5px; padding: 15px; }
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .card-header h3 { margin: 0; font-size: 1.2em; color: #333; }
-        .regenerate-btn { background: none; border: none; font-size: 1.2em; cursor: pointer; margin-left: 10px; }
-        .card textarea { width: calc(100% - 18px); height: 80px; margin-bottom: 5px; }
+        .card-header h3 { margin: 0; font-size: 1.1em; color: #333; } /* Slightly smaller topic header */
+        .regenerate-btn { background: none; border: none; font-size: 1em; cursor: pointer; margin-left: 5px; } /* Smaller regenerate button */
+        .card textarea, .card input[type="text"] { width: calc(100% - 18px); margin-bottom: 5px; }
+        .card textarea { height: 70px; } /* Reduced textarea height */
         .article-content-area { position: relative; }
-        .article-content-area textarea { height: 150px; font-family: monospace; }
-        .toggle-format-btn { position: absolute; top: 5px; right: 5px; padding: 5px 10px; font-size: 0.8em; }
+        .article-content-area textarea { height: 120px; } /* Reduced article textarea height */
+        .toggle-format-btn { position: absolute; top: 5px; right: 5px; padding: 5px 8px; font-size: 0.7em; } /* Smaller toggle button */
         .emoji-label { display: flex; align-items: center; gap: 5px; }
-        .emoji { font-size: 1.2em; }
+        .emoji { font-size: 1em; } /* Smaller emoji size */
         .hidden { display: none !important; }
         .status-area { margin-top: 10px; white-space: pre-wrap; height: 100px; overflow-y: scroll; border: 1px solid #ccc; padding: 8px; box-sizing: border-box; font-family: monospace; border-radius: 5px; background-color: #f9f9f9; font-size: 0.8em; }
+        .input-row { display: flex; align-items: center; margin-bottom: 5px; }
+        .input-row label { margin-right: 5px; margin-bottom: 0; }
+        .input-row > div { flex: 1; display: flex; align-items: center; }
+        .input-row > div input[type="text"], .input-row > div textarea { margin-bottom: 0; }
+        .textarea-container { display: flex; align-items: center; }
     </style>
 </head>
 <body>
@@ -65,7 +72,7 @@
         <div id="progress-bar-container">
             <div id="progress-bar"></div>
         </div>
-        <p id="progress-text">Waiting for keywords...</p>
+        <p id="progress-text">Waiting for keywords and API key...</p>
     </div>
 
     <div id="cards-container">
@@ -86,18 +93,46 @@
         let apiKey = localStorage.getItem('geminiApiKey') || '';
         apiKeyInput.value = apiKey;
 
+        const models = {
+            'Gemini 2.0 Flash-Lite Preview': { rpm: 30, tpm: 1000000, rpd: 1500, usageRPM: 0, usageTPM: 0, usageRPD: 0, lastReset: localStorage.getItem('usageResetDate_Gemini 2.0 Flash-Lite Preview') },
+            'Gemini 2.0 Flash': { rpm: 15, tpm: 1000000, rpd: 1500, usageRPM: 0, usageTPM: 0, usageRPD: 0, lastReset: localStorage.getItem('usageResetDate_Gemini 2.0 Flash') },
+            'Gemini 2.0 Flash Thinking Experimental 01-21': { rpm: 10, tpm: 4000000, rpd: 1500, usageRPM: 0, usageTPM: 0, usageRPD: 0, lastReset: localStorage.getItem('usageResetDate_Gemini 2.0 Flash Thinking Experimental 01-21') },
+            'Gemini 2.0 Pro Experimental 02-05': { rpm: 2, tpm: 1000000, rpd: 50, usageRPM: 0, usageTPM: 0, usageRPD: 0, lastReset: localStorage.getItem('usageResetDate_Gemini 2.0 Pro Experimental 02-05') }
+        };
+
+        const modelNames = Object.keys(models);
+        let currentModelName = 'Gemini 2.0 Flash-Lite Preview'; // Default model
+
+        loadUsageData();
+        resetDailyUsageIfNeeded();
+
         apiKeyInput.addEventListener('change', (e) => {
             apiKey = e.target.value;
             localStorage.setItem('geminiApiKey', apiKey);
+            if (keywordsInput.value.trim() !== '') {
+                processKeywords(); // Auto-start if keywords are already present
+            }
         });
 
         keywordsInput.addEventListener('paste', handlePasteKeywords);
+        keywordsInput.addEventListener('input', () => {
+            if (apiKey && keywordsInput.value.trim() !== '') {
+                processKeywords(); // Auto-start if API key is already present
+            }
+        });
+
+        let pendingKeywords = null; // Store keywords if pasted before API key
 
         async function handlePasteKeywords(event) {
             event.preventDefault();
             const text = (event.clipboardData || window.clipboardData).getData('text');
             keywordsInput.value = text;
-            processKeywords();
+            if (apiKey) {
+                processKeywords();
+            } else {
+                pendingKeywords = text; // Store keywords to process later
+                alert("API Key needed. Please enter your Gemini API key to start generating.");
+            }
         }
 
         async function processKeywords() {
@@ -124,22 +159,22 @@
                 const card = createCard(keyword, i);
                 cardsContainer.appendChild(card);
 
-                const titleTextArea = card.querySelector('.article-title');
+                const titleInput = card.querySelector('.article-title'); // Changed to input
                 const outlineTextArea = card.querySelector('.article-outline');
                 const articleTextArea = card.querySelector('.article-content');
 
                 try {
-                    const title = await generateText('Generate catchy article title about: ' + keyword);
-                    titleTextArea.value = title;
+                    const title = await generateContentWithRateLimit('Generate catchy article title about: ' + keyword, 'title');
+                    titleInput.value = title;
                     progress.titles++;
                     updateProgress(progress, startTime);
 
-                    const outline = await generateText('Generate detailed article outline for title: ' + title + ' about: ' + keyword);
+                    const outline = await generateContentWithRateLimit('Generate detailed article outline for title: ' + title + ' about: ' + keyword, 'outline');
                     outlineTextArea.value = outline;
                     progress.outlines++;
                     updateProgress(progress, startTime);
 
-                    const article = await generateText('Write a full article in HTML format based on title: ' + title + ', outline: ' + outline + ', topic: ' + keyword + '. ' + customInstructionInput.value);
+                    const article = await generateContentWithRateLimit('Write a full article in HTML format based on title: ' + title + ', outline: ' + outline + ', topic: ' + keyword + '. ' + customInstructionInput.value, 'article');
                     articleTextArea.value = article;
                     articleTextArea.dataset.format = 'html'; // Store format
                     progress.articles++;
@@ -148,7 +183,7 @@
                 } catch (error) {
                     console.error("Error generating content:", error);
                     logStatus(`Error for keyword "${keyword}": ${error.message}`);
-                    titleTextArea.value = "Error generating title.";
+                    titleInput.value = "Error generating title.";
                     outlineTextArea.value = "Error generating outline.";
                     articleTextArea.value = "Error generating article.";
                 }
@@ -191,27 +226,33 @@
 
             card.innerHTML = `
                 <div class="card-header">
-                    <h3><span class="emoji">📌</span> Topic: ${keyword}</h3>
+                    <h3><span class="emoji">📌</span> ${keyword}</h3>
                 </div>
-                <div>
-                    <label for="title-${index}" class="emoji-label"><span class="emoji">📰</span> Article Title:</label>
-                    <div class="textarea-container">
-                        <textarea class="article-title" id="title-${index}"></textarea>
-                        <button class="regenerate-btn" data-type="title" aria-label="Regenerate Title">🔄</button>
+                <div class="input-row">
+                    <div>
+                        <label for="title-${index}" class="emoji-label"><span class="emoji">📰</span> Title:</label>
+                        <div class="textarea-container">
+                            <input type="text" class="article-title" id="title-${index}" placeholder="Article Title">
+                            <button class="regenerate-btn" data-type="title" aria-label="Regenerate Title">🔄</button>
+                        </div>
                     </div>
                 </div>
-                <div>
-                    <label for="outline-${index}" class="emoji-label"><span class="emoji">📝</span> Article Outline:</label>
-                    <div class="textarea-container">
-                        <textarea class="article-outline" id="outline-${index}"></textarea>
-                        <button class="regenerate-btn" data-type="outline" aria-label="Regenerate Outline">🔄</button>
+                <div class="input-row">
+                    <div>
+                        <label for="outline-${index}" class="emoji-label"><span class="emoji">📝</span> Outline:</label>
+                        <div class="textarea-container">
+                            <textarea class="article-outline" id="outline-${index}" placeholder="Article Outline"></textarea>
+                            <button class="regenerate-btn" data-type="outline" aria-label="Regenerate Outline">🔄</button>
+                        </div>
                     </div>
                 </div>
-                <div>
-                    <label for="article-${index}" class="emoji-label"><span class="emoji">✍️</span> Article Content:</label>
-                    <div class="article-content-area">
-                        <textarea class="article-content" id="article-${index}"></textarea>
-                        <button class="toggle-format-btn" data-target="article-${index}">HTML</button>
+                <div class="input-row">
+                    <div>
+                        <label for="article-${index}" class="emoji-label"><span class="emoji">✍️</span> Content:</label>
+                        <div class="article-content-area">
+                            <textarea class="article-content" id="article-${index}" placeholder="Article Content"></textarea>
+                            <button class="toggle-format-btn" data-target="article-${index}">HTML</button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -227,24 +268,24 @@
         }
 
         async function regenerateContent(card, contentType) {
-            const keyword = card.querySelector('.card-header h3').textContent.replace('📌 Topic: ', '');
-            const titleTextArea = card.querySelector('.article-title');
+            const keyword = card.querySelector('.card-header h3').textContent.replace('📌 ', '');
+            const titleInput = card.querySelector('.article-title'); // Changed to input
             const outlineTextArea = card.querySelector('.article-outline');
             const articleTextArea = card.querySelector('.article-content');
-            const currentTitle = titleTextArea.value;
+            const currentTitle = titleInput.value;
             const currentOutline = outlineTextArea.value;
 
             try {
                 if (contentType === 'title') {
-                    const newTitle = await generateText('Generate catchy article title about: ' + keyword);
-                    titleTextArea.value = newTitle;
-                    outlineTextArea.value = await generateText('Generate detailed article outline for title: ' + newTitle + ' about: ' + keyword);
+                    const newTitle = await generateContentWithRateLimit('Generate catchy article title about: ' + keyword, 'title');
+                    titleInput.value = newTitle;
+                    outlineTextArea.value = await generateContentWithRateLimit('Generate detailed article outline for title: ' + newTitle + ' about: ' + keyword, 'outline');
                 } else if (contentType === 'outline') {
-                    const newOutline = await generateText('Generate detailed article outline for title: ' + currentTitle + ' about: ' + keyword);
+                    const newOutline = await generateContentWithRateLimit('Generate detailed article outline for title: ' + currentTitle + ' about: ' + keyword, 'outline');
                     outlineTextArea.value = newOutline;
                 }
                 if (contentType === 'title' || contentType === 'outline') { // Regenerate article if title or outline is regenerated
-                    const newArticle = await generateText('Write a full article in HTML format based on title: ' + titleTextArea.value + ', outline: ' + outlineTextArea.value + ', topic: ' + keyword + '. ' + customInstructionInput.value);
+                    const newArticle = await generateContentWithRateLimit('Write a full article in HTML format based on title: ' + titleInput.value + ', outline: ' + outlineTextArea.value + ', topic: ' + keyword + '. ' + customInstructionInput.value, 'article');
                     articleTextArea.value = newArticle;
                     articleTextArea.dataset.format = 'html';
                     card.querySelector('.toggle-format-btn').textContent = 'HTML';
@@ -252,43 +293,68 @@
             } catch (error) {
                 console.error(`Error regenerating ${contentType}:`, error);
                 logStatus(`Error regenerating ${contentType} for keyword "${keyword}": ${error.message}`);
-                if (contentType === 'title') titleTextArea.value = "Error generating title.";
+                if (contentType === 'title') titleInput.value = "Error generating title.";
                 if (contentType === 'outline') outlineTextArea.value = "Error generating outline.";
                 if (contentType === 'article') articleTextArea.value = "Error generating article.";
             }
         }
 
 
-        async function generateText(promptText) {
-            logStatus(`Generating text with prompt: ${promptText.substring(0, 50)}...`); // Log prompt start
-            const geminiAPIUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+        async function generateContentWithRateLimit(promptText, contentType) {
+            let modelToUse = selectModel();
+            if (!modelToUse) {
+                logStatus("All models rate limited. Please wait.");
+                throw new Error("Rate limit reached for all models."); // Stop processing if all models are limited
+            }
+
+            const modelDetails = models[modelToUse];
+            const geminiAPIUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToUse.toLowerCase().replace(/ /g, '-')}:generateContent?key=${apiKey}`;
+
+            incrementUsage(modelToUse, 'rpm'); // Assume each call counts as 1 RPM and TPM for simplicity
+            incrementUsage(modelToUse, 'tpm');
+
+            logStatus(`[${modelToUse}] Generating ${contentType} with prompt: ${promptText.substring(0, 50)}...`);
+
             const requestBody = {
                 contents: [{
                     parts: [{ text: promptText + ' ' + customInstructionInput.value }]
                 }]
             };
 
-            const response = await fetch(geminiAPIUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestBody)
-            });
+            try {
+                const response = await fetch(geminiAPIUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody)
+                });
 
-            if (!response.ok) {
-                const errorDetails = await response.json();
-                logStatus(`API Error: ${response.status} - ${response.statusText} - ${JSON.stringify(errorDetails)}`);
-                throw new Error(`HTTP error! status: ${response.status}, details: ${JSON.stringify(errorDetails)}`);
+                if (!response.ok) {
+                    if (response.status === 429) {
+                        logStatus(`[${modelToUse}] Rate limit hit! Status: ${response.status} - ${response.statusText}`);
+                        resetUsage(modelToUse, 'rpm'); // Reset RPM for immediate retry in simple implementation. For real app, implement proper retry/backoff.
+                        // In a more robust app, you would implement a retry mechanism with backoff and potentially switch to another model here if available.
+                        throw new Error(`[${modelToUse}] Rate limit error! Status: ${response.status}`);
+                    } else {
+                        const errorDetails = await response.json();
+                        logStatus(`[${modelToUse}] API Error: ${response.status} - ${response.statusText} - ${JSON.stringify(errorDetails)}`);
+                        throw new Error(`[${modelToUse}] HTTP error! status: ${response.status}, details: ${JSON.stringify(errorDetails)}`);
+                    }
+                }
+
+                const data = await response.json();
+                if (!data.candidates || !data.candidates[0].content || !data.candidates[0].content.parts || !data.candidates[0].content.parts[0].text) {
+                    logStatus(`[${modelToUse}] Unexpected API response format: ${JSON.stringify(data)}`);
+                    throw new Error(`[${modelToUse}] Unexpected API response format`);
+                }
+
+                const generatedText = data.candidates[0].content.parts[0].text.trim();
+                logStatus(`[${modelToUse}] Generated ${contentType}: ${generatedText.substring(0, 100)}...`);
+                return generatedText;
+
+            } catch (error) {
+                console.error("Error in generateContentWithRateLimit:", error);
+                throw error; // Re-throw to be caught in processKeywords/regenerateContent
             }
-
-            const data = await response.json();
-            if (!data.candidates || !data.candidates[0].content || !data.candidates[0].content.parts || !data.candidates[0].content.parts[0].text) {
-                logStatus(`Unexpected API response format: ${JSON.stringify(data)}`);
-                throw new Error('Unexpected API response format');
-            }
-
-            const generatedText = data.candidates[0].content.parts[0].text.trim();
-            logStatus(`Generated text: ${generatedText.substring(0, 100)}...`); // Log generated text start
-            return generatedText;
         }
 
 
@@ -301,22 +367,85 @@
             textArea.dataset.format = newFormat;
             button.textContent = newFormat.toUpperCase();
 
-            // Basic toggle - in real app, you'd convert HTML to MD and vice versa more robustly.
-            // For this example, just changing text content.
             if (newFormat === 'md') {
-                // Very basic HTML to MD (replace <p> with new lines, remove tags - improve this for real use)
                 textArea.value = textArea.value.replace(/<p>/g, '\n').replace(/<\/p>/g, '').replace(/<[^>]*>/g, '');
             } else {
-                // Very basic MD to HTML (replace new lines with <p> - improve this for real use)
                 textArea.value = textArea.value.replace(/\n/g, '<p>');
             }
         }
 
         function logStatus(message) {
-            statusLog.style.display = 'block'; // Show log area when logging
+            statusLog.style.display = 'block';
             statusLog.textContent += message + '\n';
-            statusLog.scrollTop = statusLog.scrollHeight; // Auto-scroll to bottom
+            statusLog.scrollTop = statusLog.scrollHeight;
         }
+
+        function selectModel() {
+            // Simple model selection: prioritize 'Flash-Lite Preview', then 'Flash', then 'Thinking Experimental', then 'Pro Experimental'
+            const priorityOrder = ['Gemini 2.0 Flash-Lite Preview', 'Gemini 2.0 Flash', 'Gemini 2.0 Flash Thinking Experimental 01-21', 'Gemini 2.0 Pro Experimental 02-05'];
+            for (const modelName of priorityOrder) {
+                if (models[modelName].usageRPM < models[modelName].rpm && models[modelName].usageRPD < models[modelName].rpd) {
+                    return modelName;
+                }
+            }
+            return null; // All models are rate limited
+        }
+
+
+        function incrementUsage(modelName, dimension) {
+            if (dimension === 'rpm') models[modelName].usageRPM++;
+            if (dimension === 'tpm') models[modelName].usageTPM++;
+            if (dimension === 'rpd') models[modelName].usageRPD++;
+            saveUsageData();
+        }
+
+        function resetUsage(modelName, dimension) {
+            if (dimension === 'rpm') models[modelName].usageRPM = 0;
+            if (dimension === 'tpm') models[modelName].usageTPM = 0;
+            if (dimension === 'rpd') models[modelName].usageRPD = 0;
+            saveUsageData();
+        }
+
+        function saveUsageData() {
+            modelNames.forEach(modelName => {
+                localStorage.setItem(`usageRPM_${modelName}`, models[modelName].usageRPM);
+                localStorage.setItem(`usageTPM_${modelName}`, models[modelName].usageTPM);
+                localStorage.setItem(`usageRPD_${modelName}`, models[modelName].usageRPD);
+            });
+        }
+
+        function loadUsageData() {
+            modelNames.forEach(modelName => {
+                models[modelName].usageRPM = parseInt(localStorage.getItem(`usageRPM_${modelName}`) || '0');
+                models[modelName].usageTPM = parseInt(localStorage.getItem(`usageTPM_${modelName}`) || '0');
+                models[modelName].usageRPD = parseInt(localStorage.getItem(`usageRPD_${modelName}`) || '0');
+            });
+        }
+
+        function resetDailyUsageIfNeeded() {
+            const today = new Date().toDateString();
+            modelNames.forEach(modelName => {
+                const lastResetDate = models[modelName].lastReset;
+                if (lastResetDate !== today) {
+                    models[modelName].usageRPM = 0;
+                    models[modelName].usageTPM = 0;
+                    models[modelName].usageRPD = 0;
+                    models[modelName].lastReset = today;
+                    localStorage.setItem('usageResetDate_' + modelName, today);
+                    localStorage.setItem(`usageRPM_${modelName}`, '0');
+                    localStorage.setItem(`usageTPM_${modelName}`, '0');
+                    localStorage.setItem(`usageRPD_${modelName}`, '0');
+                    logStatus(`Daily usage reset for ${modelName}`);
+                }
+            });
+        }
+
+
+        if (pendingKeywords) { // Process stored keywords if API key is now available on load
+            processKeywords();
+            pendingKeywords = null;
+        }
+
 
     </script>
 </body>
