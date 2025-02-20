@@ -14,7 +14,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code # <---- ONLY ONE CHECKOUT STEP - RIGHT AT THE BEGINNING
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Set up Python
@@ -53,28 +53,24 @@ jobs:
           echo "Generated HTML Content (debug):"
           echo "$HTML_CONTENT"
 
-      - name: Replace index.html Content Section (Using Simple awk - Debugging)
+      - name: Replace index.html Content Section (Using awk - Targeting Comment) # AWK now targets comment
         run: |
           HTML_CONTENT="${{ steps.convert_markdown.outputs.html_content_output }}"
-          echo "HTML_CONTENT for awk:"
-          echo "$HTML_CONTENT"
 
+          # Use awk to replace content section - now targeting <!-- .entry-content --> closing comment
           awk -v html_content="$HTML_CONTENT" '
-          BEGIN { 
-              print "AWK script started"; 
-          }
           /<div class="entry-content single-content">/ {
-              print "Found opening div"; 
               print;
-              print html_content; 
-              getline; 
-              print "Skipped original closing div line";
-              next;
+              print html_content;
+              while (getline line < "index.html") { # Read lines from index.html
+                if (line ~ /<!-- \.entry-content -->/) { # Check for closing comment
+                  print line; # Print the closing comment line
+                  break;      # Stop reading after finding closing comment
+                }
+              }
+              next; # Skip default print action
           }
-          { print } 
-          END {
-              print "AWK script finished"; 
-          }
+          { print }
           ' index.html > temp_index.html && mv temp_index.html index.html
 
           echo "index.html after content replacement (awk):"
