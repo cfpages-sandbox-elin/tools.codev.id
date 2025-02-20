@@ -399,12 +399,12 @@
                 throw new Error("Rate limit reached for all models.");
             }
             currentModelName = modelToUse;
-            if (currentModelDisplay) { // Null check here
+            if (currentModelDisplay) {
                 currentModelDisplay.textContent = models[currentModelName].displayName;
             }
             updateRateLimitDisplay();
 
-            const modelDetails = models[currentModelName];
+            const modelDetails = models[modelToUse];
             const geminiAPIUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${apiKey}`;
             let promptText = '';
 
@@ -433,14 +433,23 @@
 
                 if (!response.ok) {
                     if (response.status === 429) {
-                        logStatus(`[${models[currentModelName].displayName}] Rate limit hit for "${keyword}" - ${contentType}! Status: ${response.status} - ${response.statusText}`);
-                        resetUsage(modelToUse, 'rpm');
+                        logStatus(`[${models[modelToUse].displayName}] Rate limit hit for "${keyword}" - ${contentType}! Status: ${response.status} - ${response.statusText}`);
+                        resetUsage(modelToUse, 'rpm'); //  <-- REMOVE THIS LINE - we will MAX OUT usage instead
+                        resetUsage(modelToUse, 'tpm'); //  <-- REMOVE THIS LINE - we will MAX OUT usage instead
+
+
+                        // MAX OUT usage counts for the current model upon 429 error
+                        models[modelToUse].usageRPM = models[modelToUse].rpm;
+                        models[modelToUse].usageRPD = models[modelToUse].rpd;
+                        saveUsageData(); // Immediately save the updated usage
+                        updateRateLimitDisplay(); // Update the UI to reflect maxed out usage
+
 
                         if (retryAttempt < 2) { // Limit retries to 2 (for example)
                             const nextModelName = selectNextModel(modelToUse);
                             if (nextModelName) {
                                 currentModelName = nextModelName;
-                                if (currentModelDisplay) { // Null check here
+                                if (currentModelDisplay) {
                                     currentModelDisplay.textContent = models[currentModelName].displayName;
                                 }
                                 updateRateLimitDisplay();
@@ -463,19 +472,19 @@
 
                     } else {
                         const errorDetails = await response.json();
-                        logStatus(`[${models[currentModelName].displayName}] API Error for "${keyword}" - ${contentType}: ${response.status} - ${response.statusText} - ${JSON.stringify(errorDetails)}`);
-                        throw new Error(`[${models[currentModelName].displayName}] HTTP error for "${keyword}" - ${contentType}! status: ${response.status}, details: ${JSON.stringify(errorDetails)}`);
+                        logStatus(`[${models[modelToUse].displayName}] API Error for "${keyword}" - ${contentType}: ${response.status} - ${response.statusText} - ${JSON.stringify(errorDetails)}`);
+                        throw new Error(`[${models[modelToUse].displayName}] HTTP error for "${keyword}" - ${contentType}! status: ${response.status}, details: ${JSON.stringify(errorDetails)}`);
                     }
                 }
 
                 const data = await response.json();
                 if (!data.candidates || !data.candidates[0].content || !data.candidates[0].content.parts || !data.candidates[0].content.parts[0].text) {
-                    logStatus(`[${models[currentModelName].displayName}] Unexpected API response format for "${keyword}" - ${contentType}: ${JSON.stringify(data)}`);
-                    throw new Error(`[${models[currentModelName].displayName}] Unexpected API response format for "${keyword}" - ${contentType}`);
+                    logStatus(`[${models[modelToUse].displayName}] Unexpected API response format for "${keyword}" - ${contentType}: ${JSON.stringify(data)}`);
+                    throw new Error(`[${models[modelToUse].displayName}] Unexpected API response format for "${keyword}" - ${contentType}`);
                 }
 
                 const generatedText = data.candidates[0].content.parts[0].text.trim();
-                logStatus(`[${models[currentModelName].displayName}] Generated ${contentType} for "${keyword}": ${generatedText.substring(0, 100)}...`);
+                logStatus(`[${models[modelToUse].displayName}] Generated ${contentType} for "${keyword}": ${generatedText.substring(0, 100)}...`);
                 return generatedText;
 
             } catch (error) {
