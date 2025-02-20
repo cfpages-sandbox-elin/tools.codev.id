@@ -53,19 +53,19 @@ jobs:
           echo "Generated HTML Content (debug):"
           echo "$HTML_CONTENT"
 
-      - name: Replace index.html Content Section (Using awk - Targeting Comment) # AWK now targets comment
+      - name: Replace index.html Content Section (Using awk - Finalized) # Finalized awk, targeting combined closing tag
         run: |
           HTML_CONTENT="${{ steps.convert_markdown.outputs.html_content_output }}"
 
-          # Use awk to replace content section - now targeting <!-- .entry-content --> closing comment
+          # Use awk to replace content section - targeting </div><!-- .entry-content --> closing tag
           awk -v html_content="$HTML_CONTENT" '
           /<div class="entry-content single-content">/ {
               print;
               print html_content;
               while (getline line < "index.html") { # Read lines from index.html
-                if (line ~ /<!-- \.entry-content -->/) { # Check for closing comment
-                  print line; # Print the closing comment line
-                  break;      # Stop reading after finding closing comment
+                if (line ~ /<\/div><!-- \.entry-content -->/) { # Check for combined closing tag+comment
+                  print line; # Print the combined closing tag+comment line
+                  break;      # Stop reading after finding closing tag
                 }
               }
               next; # Skip default print action
