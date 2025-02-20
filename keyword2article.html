@@ -114,9 +114,6 @@
         const rateLimitInfoDiv = document.getElementById('model-rate-limits');
         const currentModelDisplay = document.getElementById('current-model-display');
         const modelSelect = document.getElementById('model-select');
-        const rpmLimitInput = document.getElementById('rpm-limit'); // Get input elements here
-        const tpmLimitInput = document.getElementById('tpm-limit');
-        const rpdLimitInput = document.getElementById('rpd-limit');
 
 
         let apiKey = localStorage.getItem('geminiApiKey') || '';
@@ -184,11 +181,6 @@
             }
             updateRateLimitDisplay(); // Update rate limit display on model change
         });
-
-        // Event listeners for rate limit inputs - attached once here
-        rpmLimitInput.addEventListener('change', updateCustomRateLimits);
-        tpmLimitInput.addEventListener('change', updateCustomRateLimits);
-        rpdLimitInput.addEventListener('change', updateCustomRateLimits);
 
 
         let pendingKeywords = null;
@@ -412,7 +404,7 @@
             }
             updateRateLimitDisplay();
 
-            const modelDetails = models[modelToUse];
+            const modelDetails = models[currentModelName];
             const geminiAPIUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${apiKey}`;
             let promptText = '';
 
@@ -441,7 +433,7 @@
 
                 if (!response.ok) {
                     if (response.status === 429) {
-                        logStatus(`[${models[modelToUse].displayName}] Rate limit hit for "${keyword}" - ${contentType}! Status: ${response.status} - ${response.statusText}`);
+                        logStatus(`[${models[currentModelName].displayName}] Rate limit hit for "${keyword}" - ${contentType}! Status: ${response.status} - ${response.statusText}`);
                         resetUsage(modelToUse, 'rpm');
 
                         if (retryAttempt < 2) { // Limit retries to 2 (for example)
@@ -471,19 +463,19 @@
 
                     } else {
                         const errorDetails = await response.json();
-                        logStatus(`[${models[modelToUse].displayName}] API Error for "${keyword}" - ${contentType}: ${response.status} - ${response.statusText} - ${JSON.stringify(errorDetails)}`);
-                        throw new Error(`[${models[modelToUse].displayName}] HTTP error for "${keyword}" - ${contentType}! status: ${response.status}, details: ${JSON.stringify(errorDetails)}`);
+                        logStatus(`[${models[currentModelName].displayName}] API Error for "${keyword}" - ${contentType}: ${response.status} - ${response.statusText} - ${JSON.stringify(errorDetails)}`);
+                        throw new Error(`[${models[currentModelName].displayName}] HTTP error for "${keyword}" - ${contentType}! status: ${response.status}, details: ${JSON.stringify(errorDetails)}`);
                     }
                 }
 
                 const data = await response.json();
                 if (!data.candidates || !data.candidates[0].content || !data.candidates[0].content.parts || !data.candidates[0].content.parts[0].text) {
-                    logStatus(`[${models[modelToUse].displayName}] Unexpected API response format for "${keyword}" - ${contentType}: ${JSON.stringify(data)}`);
-                    throw new Error(`[${models[modelToUse].displayName}] Unexpected API response format for "${keyword}" - ${contentType}`);
+                    logStatus(`[${models[currentModelName].displayName}] Unexpected API response format for "${keyword}" - ${contentType}: ${JSON.stringify(data)}`);
+                    throw new Error(`[${models[currentModelName].displayName}] Unexpected API response format for "${keyword}" - ${contentType}`);
                 }
 
                 const generatedText = data.candidates[0].content.parts[0].text.trim();
-                logStatus(`[${models[modelToUse].displayName}] Generated ${contentType} for "${keyword}": ${generatedText.substring(0, 100)}...`);
+                logStatus(`[${models[currentModelName].displayName}] Generated ${contentType} for "${keyword}": ${generatedText.substring(0, 100)}...`);
                 return generatedText;
 
             } catch (error) {
@@ -619,9 +611,20 @@
                 <p class="rate-limit-model-info">Usage TPM: <span>${modelInfo.usageTPM} / ${modelInfo.tpm}</span></p>
                 <p class="rate-limit-model-info">Usage RPD: <span>${modelInfo.usageRPD} / ${modelInfo.rpd}</span></p>
             `;
+
+            const rpmLimitInput = document.getElementById('rpm-limit'); // Get input elements here AGAIN inside this function scope
+            const tpmLimitInput = document.getElementById('tpm-limit');
+            const rpdLimitInput = document.getElementById('rpd-limit');
+
+            rpmLimitInput.addEventListener('change', updateCustomRateLimits);
+            tpmLimitInput.addEventListener('change', updateCustomRateLimits);
+            rpdLimitInput.addEventListener('change', updateCustomRateLimits);
         }
 
         function updateCustomRateLimits() {
+            const rpmLimitInput = document.getElementById('rpm-limit'); // Get input elements here AGAIN inside this function scope
+            const tpmLimitInput = document.getElementById('tpm-limit');
+            const rpdLimitInput = document.getElementById('rpd-limit');
             const modelInfo = models[currentModelName];
             modelInfo.rpm = Math.min(parseInt(rpmLimitInput.value), modelInfo.maxRpm);
             modelInfo.tpm = Math.min(parseInt(tpmLimitInput.value), modelInfo.maxTpm);
