@@ -15,9 +15,12 @@
         input[type="text"] { height: 30px; }
         button { padding: 8px 16px; cursor: pointer; border-radius: 5px; background-color: #f0f0f0; border: 1px solid #ccc; font-family: inherit; }
         button:hover { background-color: #e0e0e0; }
-        #api-key-area, #keyword-area, #progress-area, #cards-container, #rate-limit-info { margin-bottom: 20px; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        #api-key-area label, #keyword-area label, #progress-area label, #rate-limit-info label { margin-bottom: 10px; display: block; }
+        #api-key-area-container { display: flex; gap: 20px; margin-bottom: 20px; } /* Container for inline API key and rate limit */
+        #api-key-area, #rate-limit-info { flex: 1; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        #api-key-area label, #rate-limit-info label { margin-bottom: 10px; display: block; }
         #api-key { width: calc(100% - 18px); padding: 8px; margin-bottom: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; font-family: monospace; }
+        #keyword-area, #progress-area, #cards-container { margin-bottom: 20px; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        #keyword-area label, #progress-area label { margin-bottom: 10px; display: block; }
         #keywords { width: calc(100% - 18px); height: 150px; margin-bottom: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; padding: 8px; font-family: monospace; }
         #custom-instruction { width: calc(100% - 18px); padding: 8px; margin-bottom: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; font-family: inherit; }
         .keyword-input-row { display: flex; align-items: flex-start; gap: 15px; }
@@ -29,7 +32,8 @@
         .card { background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 5px; padding: 15px; }
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .card-header h3 { margin: 0; font-size: 1.1em; color: #333; }
-        .regenerate-btn { background: none; border: none; font-size: 1em; cursor: pointer; margin-left: 5px; }
+        .regenerate-btn { background: none; border: none; font-size: 1em; cursor: pointer; margin-left: 5px; position: absolute; top: 5px; right: 5px; opacity: 0.5; transition: opacity 0.3s; } /* Floating button, initially semi-transparent */
+        .regenerate-btn:hover { opacity: 1; } /* Full opacity on hover */
         .card textarea, .card input[type="text"] { width: calc(100% - 18px); margin-bottom: 5px; }
         .card textarea { height: 70px; }
         .article-content-area { position: relative; }
@@ -39,8 +43,7 @@
         .emoji { font-size: 1em; }
         .hidden { display: none !important; }
         .status-area { margin-top: 10px; white-space: pre-wrap; height: 100px; overflow-y: scroll; border: 1px solid #ccc; padding: 8px; box-sizing: border-box; font-family: monospace; border-radius: 5px; background-color: #f9f9f9; font-size: 0.8em; }
-        .input-row { display: flex; align-items: center; margin-bottom: 5px; }
-        .input-row label { margin-right: 5px; margin-bottom: 0; }
+        .input-row { display: flex; align-items: center; margin-bottom: 5px; position: relative; } /* Relative positioning for input rows */
         .input-row > div { flex: 1; display: flex; align-items: center; }
         .input-row > div input[type="text"], .input-row > div textarea { margin-bottom: 0; }
         .textarea-container { display: flex; align-items: center; }
@@ -51,15 +54,17 @@
 <body>
     <h1>AI Article Generator ✍️</h1>
 
-    <div id="api-key-area">
-        <label for="api-key" class="emoji-label"><span class="emoji">🔑</span> Gemini API Key:</label>
-        <input type="text" id="api-key" placeholder="Enter your Gemini API key">
-    </div>
+    <div id="api-key-area-container">
+        <div id="api-key-area">
+            <label for="api-key" class="emoji-label"><span class="emoji">🔑</span> Gemini API Key:</label>
+            <input type="text" id="api-key" placeholder="Enter your Gemini API key">
+        </div>
 
-    <div id="rate-limit-info">
-        <label class="emoji-label"><span class="emoji">🚦</span> Rate Limit Information (Current Model: <span id="current-model-display"></span>):</label>
-        <div id="model-rate-limits">
-            <!-- Rate limit info for the current model will be displayed here -->
+        <div id="rate-limit-info">
+            <label class="emoji-label"><span class="emoji">🚦</span> Rate Limit (<span id="current-model-display"></span>):</label>
+            <div id="model-rate-limits">
+                <!-- Rate limit info for the current model will be displayed here -->
+            </div>
         </div>
     </div>
 
@@ -106,10 +111,10 @@
         apiKeyInput.value = apiKey;
 
         const models = {
-            'gemini-2.0-flash-lite-preview-02-05': { displayName: 'Gemini 2.0 Flash-Lite Preview', rpm: 30, tpm: 1000000, rpd: 1500, usageRPM: 0, usageTPM: 0, usageRPD: 0, lastReset: localStorage.getItem('usageResetDate_gemini-2.0-flash-lite-preview-02-05') },
-            'gemini-2.0-flash': { displayName: 'Gemini 2.0 Flash', rpm: 15, tpm: 1000000, rpd: 1500, usageRPM: 0, usageTPM: 0, usageRPD: 0, lastReset: localStorage.getItem('usageResetDate_gemini-2.0-flash') },
-            'gemini-2.0-flash-thinking-exp-01-21': { displayName: 'Gemini 2.0 Flash Thinking Experimental', rpm: 10, tpm: 4000000, rpd: 1500, usageRPM: 0, usageTPM: 0, usageRPD: 0, lastReset: localStorage.getItem('usageResetDate_gemini-2.0-flash-thinking-exp-01-21') },
-            'gemini-2.0-pro-exp-02-05': { displayName: 'Gemini 2.0 Pro Experimental', rpm: 2, tpm: 1000000, rpd: 50, usageRPM: 0, usageTPM: 0, usageRPD: 0, lastReset: localStorage.getItem('usageResetDate_gemini-2.0-pro-exp-02-05') }
+            'gemini-2.0-flash-lite-preview-02-05': { displayName: 'Flash-Lite Preview', rpm: 30, tpm: 1000000, rpd: 1500, usageRPM: 0, usageTPM: 0, usageRPD: 0, lastReset: localStorage.getItem('usageResetDate_gemini-2.0-flash-lite-preview-02-05') },
+            'gemini-2.0-flash': { displayName: 'Flash', rpm: 15, tpm: 1000000, rpd: 1500, usageRPM: 0, usageTPM: 0, usageRPD: 0, lastReset: localStorage.getItem('usageResetDate_gemini-2.0-flash') },
+            'gemini-2.0-flash-thinking-exp-01-21': { displayName: 'Flash Thinking Experimental', rpm: 10, tpm: 4000000, rpd: 1500, usageRPM: 0, usageTPM: 0, usageRPD: 0, lastReset: localStorage.getItem('usageResetDate_gemini-2.0-flash-thinking-exp-01-21') },
+            'gemini-2.0-pro-exp-02-05': { displayName: 'Pro Experimental', rpm: 2, tpm: 1000000, rpd: 50, usageRPM: 0, usageTPM: 0, usageRPD: 0, lastReset: localStorage.getItem('usageResetDate_gemini-2.0-pro-exp-02-05') }
         };
 
         const modelNames = Object.keys(models);
@@ -203,20 +208,20 @@
                 titleInput.value = title;
                 progress.titles++;
                 updateProgress(progress, startTime);
-                await delay(calculateDelay()); // Delay after title generation
+                await delay(calculateDelay());
 
                 const outline = await generateContentWithRateLimit('Generate detailed article outline for title: ' + title + ' about: ' + keyword, 'outline');
                 outlineTextArea.value = outline;
                 progress.outlines++;
                 updateProgress(progress, startTime);
-                await delay(calculateDelay()); // Delay after outline generation
+                await delay(calculateDelay());
 
                 const article = await generateContentWithRateLimit('Write a full article in HTML format based on title: ' + title + ', outline: ' + outline + ', topic: ' + keyword + '. ' + customInstructionInput.value, 'article');
                 articleTextArea.value = article;
                 articleTextArea.dataset.format = 'html';
                 progress.articles++;
                 updateProgress(progress, startTime);
-                await delay(calculateDelay()); // Delay after article generation
+                await delay(calculateDelay());
 
 
             } catch (error) {
@@ -226,14 +231,14 @@
                 outlineTextArea.value = "Error generating outline.";
                 articleTextArea.value = "Error generating article.";
             } finally {
-                processNextInQueue(progress, startTime); // Process next keyword in queue
+                processNextInQueue(progress, startTime);
             }
         }
 
         function calculateDelay() {
             const currentModel = models[currentModelName];
-            const minDelay = 60000 / currentModel.rpm; // milliseconds per request based on RPM
-            return minDelay; // You might want to add a bit more buffer, e.g., minDelay * 1.1
+            const minDelay = (60000 / currentModel.rpm) * 1.1; // Add 10% buffer
+            return minDelay;
         }
 
         function delay(ms) {
@@ -254,7 +259,7 @@
 
             progressBar.style.width = `${overallPercent}%`;
             const elapsedTimeSeconds = (Date.now() - startTime) / 1000;
-            const estimatedTotalTimeSeconds = (generatedArticles > 0) ? (elapsedTimeSeconds / (generatedArticles / totalKeywords)) * totalKeywords : 'Estimating...'; // Corrected estimation
+            const estimatedTotalTimeSeconds = (generatedArticles > 0) ? (elapsedTimeSeconds / (generatedArticles / totalKeywords)) * totalKeywords : 'Estimating...';
             const estimatedRemainingTime = isNaN(estimatedTotalTimeSeconds) || estimatedTotalTimeSeconds === 'Estimating...' ? 'Estimating...' : formatTime(Math.max(0, estimatedTotalTimeSeconds - elapsedTimeSeconds));
 
 
@@ -277,27 +282,23 @@
                 <div class="card-header">
                     <h3><span class="emoji">📌</span> ${keyword}</h3>
                 </div>
-                <div class="input-row">
+                <div class="input-row" title="Article Title">
                     <div>
-                        <label for="title-${index}" class="emoji-label"><span class="emoji">📰</span> Title:</label>
-                        <div class="textarea-container">
-                            <input type="text" class="article-title" id="title-${index}" placeholder="Article Title">
-                            <button class="regenerate-btn" data-type="title" aria-label="Regenerate Title">🔄</button>
-                        </div>
+                        <span class="emoji" title="Article Title">📰</span>
+                        <input type="text" class="article-title" id="title-${index}" placeholder="Article Title">
+                        <button class="regenerate-btn" data-type="title" aria-label="Regenerate Title">🔄</button>
                     </div>
                 </div>
-                <div class="input-row">
+                <div class="input-row" title="Article Outline">
                     <div>
-                        <label for="outline-${index}" class="emoji-label"><span class="emoji">📝</span> Outline:</label>
-                        <div class="textarea-container">
-                            <textarea class="article-outline" id="outline-${index}" placeholder="Article Outline"></textarea>
-                            <button class="regenerate-btn" data-type="outline" aria-label="Regenerate Outline">🔄</button>
-                        </div>
+                        <span class="emoji" title="Article Outline">📝</span>
+                        <textarea class="article-outline" id="outline-${index}" placeholder="Article Outline"></textarea>
+                        <button class="regenerate-btn" data-type="outline" aria-label="Regenerate Outline">🔄</button>
                     </div>
                 </div>
-                <div class="input-row">
+                <div class="input-row" title="Article Content">
                     <div>
-                        <label for="article-${index}" class="emoji-label"><span class="emoji">✍️</span> Content:</label>
+                        <span class="emoji" title="Article Content">✍️</span>
                         <div class="article-content-area">
                             <textarea class="article-content" id="article-${index}" placeholder="Article Content"></textarea>
                             <button class="toggle-format-btn" data-target="article-${index}">HTML</button>
@@ -349,16 +350,15 @@
         }
 
 
-        async function generateContentWithRateLimit(promptText, contentType) {
+        async function generateContentWithRateLimit(promptText, contentType, retryCount = 0) {
             let modelToUse = selectModel();
             if (!modelToUse) {
                 logStatus("All models rate limited. Please wait.");
                 throw new Error("Rate limit reached for all models.");
             }
-            currentModelName = modelToUse; // Update current model name
+            currentModelName = modelToUse;
             currentModelDisplay.textContent = models[currentModelName].displayName;
             updateRateLimitDisplay();
-
 
             const modelDetails = models[modelToUse];
             const geminiAPIUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${apiKey}`;
@@ -385,7 +385,19 @@
                     if (response.status === 429) {
                         logStatus(`[${models[modelToUse].displayName}] Rate limit hit! Status: ${response.status} - ${response.statusText}`);
                         resetUsage(modelToUse, 'rpm');
-                        throw new Error(`[${models[modelToUse].displayName}] Rate limit error! Status: ${response.status}`);
+
+                        const nextModelName = selectNextModel(modelToUse); // Select the next model
+                        if (nextModelName) {
+                            currentModelName = nextModelName; // Switch to the next model
+                            currentModelDisplay.textContent = models[currentModelName].displayName;
+                            updateRateLimitDisplay();
+                            logStatus(`Switched to model: ${models[currentModelName].displayName}, retrying request.`);
+                            return await generateContentWithRateLimit(promptText, contentType, retryCount + 1); // Retry with the new model
+                        } else {
+                            logStatus("All models rate limited, cannot switch.");
+                            throw new Error("Rate limit reached for all models."); // No more models to try
+                        }
+
                     } else {
                         const errorDetails = await response.json();
                         logStatus(`[${models[modelToUse].displayName}] API Error: ${response.status} - ${response.statusText} - ${JSON.stringify(errorDetails)}`);
@@ -442,13 +454,25 @@
             return null; // All models rate limited
         }
 
+        function selectNextModel(currentModel) {
+            const priorityOrder = ['gemini-2.0-flash-lite-preview-02-05', 'gemini-2.0-flash', 'gemini-2.0-flash-thinking-exp-01-21', 'gemini-2.0-pro-exp-02-05'];
+            const currentIndex = priorityOrder.indexOf(currentModel);
+            for (let i = currentIndex + 1; i < priorityOrder.length; i++) {
+                const modelName = priorityOrder[i];
+                if (models[modelName].usageRPM < models[modelName].rpm && models[modelName].usageRPD < models[modelName].rpd) {
+                    return modelName;
+                }
+            }
+            return null; // No next model available
+        }
+
 
         function incrementUsage(modelName, dimension) {
             if (dimension === 'rpm') models[modelName].usageRPM++;
             if (dimension === 'tpm') models[modelName].usageTPM++;
             if (dimension === 'rpd') models[modelName].usageRPD++;
             saveUsageData();
-            updateRateLimitDisplay(); // Update display after usage change
+            updateRateLimitDisplay();
         }
 
         function resetUsage(modelName, dimension) {
@@ -456,7 +480,7 @@
             if (dimension === 'tpm') models[modelName].usageTPM = 0;
             if (dimension === 'rpd') models[modelName].usageRPD = 0;
             saveUsageData();
-            updateRateLimitDisplay(); // Update display after reset
+            updateRateLimitDisplay();
         }
 
         function saveUsageData() {
@@ -499,9 +523,9 @@
 
             rateLimitInfoDiv.innerHTML = `
                 <p class="rate-limit-model-info">Model: <span>${modelInfo.displayName}</span></p>
-                <p class="rate-limit-model-info">RPM Limit: <span>${modelInfo.rpm}</span>, Usage: <span>${modelInfo.usageRPM}</span></p>
-                <p class="rate-limit-model-info">TPM Limit: <span>${modelInfo.tpm}</span>, Usage: <span>${modelInfo.usageTPM}</span></p>
-                <p class="rate-limit-model-info">RPD Limit: <span>${modelInfo.rpd}</span>, Usage: <span>${modelInfo.usageRPD}</span></p>
+                <p class="rate-limit-model-info">RPM: <span>${modelInfo.usageRPM} / ${modelInfo.rpm}</span></p>
+                <p class="rate-limit-model-info">TPM: <span>${modelInfo.usageTPM} / ${modelInfo.tpm}</span></p>
+                <p class="rate-limit-model-info">RPD: <span>${modelInfo.usageRPD} / ${modelInfo.rpd}</span></p>
             `;
         }
 
