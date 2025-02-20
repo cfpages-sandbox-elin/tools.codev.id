@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Article Generator ✍️</title>
+    <style>
+        /* Basic CSS Styling here */
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; }
+        h1 { color: #333; text-align: center; margin-bottom: 20px; }
+        label { font-weight: bold; display: block; margin-bottom: 5px; color: #555; }
+        p { color: #777; margin-bottom: 8px; }
+        input[type="text"], textarea { width: calc(100% - 18px); padding: 8px; margin-bottom: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; font-family: inherit; }
+        textarea { height: 100px; resize: vertical; }
+        button { padding: 10px 20px; cursor: pointer; border-radius: 5px; background-color: #f0f0f0; border: 1px solid #ccc; font-family: inherit; }
+        button:hover { background-color: #e0e0e0; }
+        #api-key-area, #keyword-area, #progress-area, #cards-container { margin-bottom: 20px; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        #api-key-area label, #keyword-area label, #progress-area label { margin-bottom: 10px; display: block; }
+        #api-key { width: calc(100% - 18px); padding: 8px; margin-bottom: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; font-family: monospace; }
+        #keywords { width: calc(100% - 18px); height: 150px; margin-bottom: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; padding: 8px; font-family: monospace; }
+        #custom-instruction { width: calc(100% - 18px); padding: 8px; margin-bottom: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; font-family: inherit; }
+        .keyword-input-row { display: flex; align-items: flex-start; gap: 15px; }
+        .keyword-input-row > div { flex: 1; }
+        #progress-bar-container { width: 100%; height: 20px; background-color: #eee; border-radius: 5px; overflow: hidden; margin-bottom: 10px; }
+        #progress-bar { height: 100%; width: 0%; background-color: #4CAF50; border-radius: 5px; transition: width 0.3s ease-in-out; }
+        #progress-text { text-align: center; font-size: 0.9em; color: #555; }
+        #cards-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .card { background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 5px; padding: 15px; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .card-header h3 { margin: 0; font-size: 1.2em; color: #333; }
+        .regenerate-btn { background: none; border: none; font-size: 1.2em; cursor: pointer; margin-left: 10px; }
+        .card textarea { width: calc(100% - 18px); height: 80px; margin-bottom: 5px; }
+        .article-content-area { position: relative; }
+        .article-content-area textarea { height: 150px; font-family: monospace; }
+        .toggle-format-btn { position: absolute; top: 5px; right: 5px; padding: 5px 10px; font-size: 0.8em; }
+        .emoji-label { display: flex; align-items: center; gap: 5px; }
+        .emoji { font-size: 1.2em; }
+        .hidden { display: none !important; }
+        .status-area { margin-top: 10px; white-space: pre-wrap; height: 100px; overflow-y: scroll; border: 1px solid #ccc; padding: 8px; box-sizing: border-box; font-family: monospace; border-radius: 5px; background-color: #f9f9f9; font-size: 0.8em; }
+    </style>
+</head>
+<body>
+    <h1>AI Article Generator ✍️</h1>
+
+    <div id="api-key-area">
+        <label for="api-key" class="emoji-label"><span class="emoji">🔑</span> Gemini API Key:</label>
+        <input type="text" id="api-key" placeholder="Enter your Gemini API key">
+    </div>
+
+    <div id="keyword-area">
+        <div class="keyword-input-row">
+            <div>
+                <label for="keywords" class="emoji-label"><span class="emoji">📝</span> Keywords (one per line):</label>
+                <textarea id="keywords" placeholder="Enter keywords here, one per line"></textarea>
+            </div>
+            <div>
+                <label for="custom-instruction" class="emoji-label"><span class="emoji">⚙️</span> Custom Instructions (optional):</label>
+                <textarea id="custom-instruction" placeholder="e.g., Write in a professional tone, target audience are beginners, etc."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div id="progress-area">
+        <label class="emoji-label"><span class="emoji">📊</span> Generation Progress:</label>
+        <div id="progress-bar-container">
+            <div id="progress-bar"></div>
+        </div>
+        <p id="progress-text">Waiting for keywords...</p>
+    </div>
+
+    <div id="cards-container">
+        <!-- Cards will be generated here -->
+    </div>
+
+    <div class="status-area" id="status-log" style="display: none;"></div>
+
+    <script>
+        const apiKeyInput = document.getElementById('api-key');
+        const keywordsInput = document.getElementById('keywords');
+        const customInstructionInput = document.getElementById('custom-instruction');
+        const cardsContainer = document.getElementById('cards-container');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const statusLog = document.getElementById('status-log');
+
+        let apiKey = localStorage.getItem('geminiApiKey') || '';
+        apiKeyInput.value = apiKey;
+
+        apiKeyInput.addEventListener('change', (e) => {
+            apiKey = e.target.value;
+            localStorage.setItem('geminiApiKey', apiKey);
+        });
+
+        keywordsInput.addEventListener('paste', handlePasteKeywords);
+
+        async function handlePasteKeywords(event) {
+            event.preventDefault();
+            const text = (event.clipboardData || window.clipboardData).getData('text');
+            keywordsInput.value = text;
+            processKeywords();
+        }
+
+        async function processKeywords() {
+            const keywords = keywordsInput.value.trim().split('\n').filter(keyword => keyword.trim() !== '');
+            if (!keywords.length) {
+                alert("Please enter keywords.");
+                return;
+            }
+            if (!apiKey) {
+                alert("Please enter your Gemini API Key.");
+                return;
+            }
+
+            cardsContainer.innerHTML = '';
+            progressText.textContent = `Generating...`;
+            progressBar.style.width = '0%';
+            let progress = { keywords: keywords.length, titles: 0, outlines: 0, articles: 0 };
+            let startTime = Date.now();
+
+            for (let i = 0; i < keywords.length; i++) {
+                const keyword = keywords[i].trim();
+                if (!keyword) continue;
+
+                const card = createCard(keyword, i);
+                cardsContainer.appendChild(card);
+
+                const titleTextArea = card.querySelector('.article-title');
+                const outlineTextArea = card.querySelector('.article-outline');
+                const articleTextArea = card.querySelector('.article-content');
+
+                try {
+                    const title = await generateText('Generate catchy article title about: ' + keyword);
+                    titleTextArea.value = title;
+                    progress.titles++;
+                    updateProgress(progress, startTime);
+
+                    const outline = await generateText('Generate detailed article outline for title: ' + title + ' about: ' + keyword);
+                    outlineTextArea.value = outline;
+                    progress.outlines++;
+                    updateProgress(progress, startTime);
+
+                    const article = await generateText('Write a full article in HTML format based on title: ' + title + ', outline: ' + outline + ', topic: ' + keyword + '. ' + customInstructionInput.value);
+                    articleTextArea.value = article;
+                    articleTextArea.dataset.format = 'html'; // Store format
+                    progress.articles++;
+                    updateProgress(progress, startTime);
+
+                } catch (error) {
+                    console.error("Error generating content:", error);
+                    logStatus(`Error for keyword "${keyword}": ${error.message}`);
+                    titleTextArea.value = "Error generating title.";
+                    outlineTextArea.value = "Error generating outline.";
+                    articleTextArea.value = "Error generating article.";
+                }
+            }
+
+            progressText.textContent = `Generation complete!`;
+        }
+
+        function updateProgress(progress, startTime) {
+            const totalKeywords = progress.keywords;
+            const generatedTitles = progress.titles;
+            const generatedOutlines = progress.outlines;
+            const generatedArticles = progress.articles;
+
+            const percentTitles = (generatedTitles / totalKeywords) * 100;
+            const percentOutlines = (generatedOutlines / totalKeywords) * 100;
+            const percentArticles = (generatedArticles / totalKeywords) * 100;
+            const overallPercent = ((percentTitles + percentOutlines + percentArticles) / 3);
+
+            progressBar.style.width = `${overallPercent}%`;
+            const elapsedTimeSeconds = (Date.now() - startTime) / 1000;
+            const estimatedTotalTimeSeconds = (generatedArticles > 0) ? (elapsedTimeSeconds / (generatedArticles / totalKeywords)) : 'Estimating...';
+            const estimatedRemainingTime = isNaN(estimatedTotalTimeSeconds) || estimatedTotalTimeSeconds === 'Estimating...' ? 'Estimating...' : formatTime(Math.max(0, estimatedTotalTimeSeconds - elapsedTimeSeconds));
+
+
+            progressText.textContent = `${totalKeywords} keywords | ${generatedTitles} / ${totalKeywords} titles | ${generatedOutlines} / ${totalKeywords} outlines | ${generatedArticles} / ${totalKeywords} articles | Remaining time: ${estimatedRemainingTime}`;
+        }
+
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = Math.floor(seconds % 60);
+            return `${minutes}m ${remainingSeconds}s`;
+        }
+
+
+        function createCard(keyword, index) {
+            const card = document.createElement('div');
+            card.classList.add('card');
+            card.dataset.keywordIndex = index;
+
+            card.innerHTML = `
+                <div class="card-header">
+                    <h3><span class="emoji">📌</span> Topic: ${keyword}</h3>
+                </div>
+                <div>
+                    <label for="title-${index}" class="emoji-label"><span class="emoji">📰</span> Article Title:</label>
+                    <div class="textarea-container">
+                        <textarea class="article-title" id="title-${index}"></textarea>
+                        <button class="regenerate-btn" data-type="title" aria-label="Regenerate Title">🔄</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="outline-${index}" class="emoji-label"><span class="emoji">📝</span> Article Outline:</label>
+                    <div class="textarea-container">
+                        <textarea class="article-outline" id="outline-${index}"></textarea>
+                        <button class="regenerate-btn" data-type="outline" aria-label="Regenerate Outline">🔄</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="article-${index}" class="emoji-label"><span class="emoji">✍️</span> Article Content:</label>
+                    <div class="article-content-area">
+                        <textarea class="article-content" id="article-${index}"></textarea>
+                        <button class="toggle-format-btn" data-target="article-${index}">HTML</button>
+                    </div>
+                </div>
+            `;
+
+            card.querySelectorAll('.regenerate-btn').forEach(button => {
+                button.addEventListener('click', regenerateContent.bind(null, card, button.dataset.type));
+            });
+
+            const toggleButton = card.querySelector('.toggle-format-btn');
+            toggleButton.addEventListener('click', toggleArticleFormat);
+
+            return card;
+        }
+
+        async function regenerateContent(card, contentType) {
+            const keyword = card.querySelector('.card-header h3').textContent.replace('📌 Topic: ', '');
+            const titleTextArea = card.querySelector('.article-title');
+            const outlineTextArea = card.querySelector('.article-outline');
+            const articleTextArea = card.querySelector('.article-content');
+            const currentTitle = titleTextArea.value;
+            const currentOutline = outlineTextArea.value;
+
+            try {
+                if (contentType === 'title') {
+                    const newTitle = await generateText('Generate catchy article title about: ' + keyword);
+                    titleTextArea.value = newTitle;
+                    outlineTextArea.value = await generateText('Generate detailed article outline for title: ' + newTitle + ' about: ' + keyword);
+                } else if (contentType === 'outline') {
+                    const newOutline = await generateText('Generate detailed article outline for title: ' + currentTitle + ' about: ' + keyword);
+                    outlineTextArea.value = newOutline;
+                }
+                if (contentType === 'title' || contentType === 'outline') { // Regenerate article if title or outline is regenerated
+                    const newArticle = await generateText('Write a full article in HTML format based on title: ' + titleTextArea.value + ', outline: ' + outlineTextArea.value + ', topic: ' + keyword + '. ' + customInstructionInput.value);
+                    articleTextArea.value = newArticle;
+                    articleTextArea.dataset.format = 'html';
+                    card.querySelector('.toggle-format-btn').textContent = 'HTML';
+                }
+            } catch (error) {
+                console.error(`Error regenerating ${contentType}:`, error);
+                logStatus(`Error regenerating ${contentType} for keyword "${keyword}": ${error.message}`);
+                if (contentType === 'title') titleTextArea.value = "Error generating title.";
+                if (contentType === 'outline') outlineTextArea.value = "Error generating outline.";
+                if (contentType === 'article') articleTextArea.value = "Error generating article.";
+            }
+        }
+
+
+        async function generateText(promptText) {
+            logStatus(`Generating text with prompt: ${promptText.substring(0, 50)}...`); // Log prompt start
+            const geminiAPIUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
+            const requestBody = {
+                contents: [{
+                    parts: [{ text: promptText + ' ' + customInstructionInput.value }]
+                }]
+            };
+
+            const response = await fetch(geminiAPIUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody)
+            });
+
+            if (!response.ok) {
+                const errorDetails = await response.json();
+                logStatus(`API Error: ${response.status} - ${response.statusText} - ${JSON.stringify(errorDetails)}`);
+                throw new Error(`HTTP error! status: ${response.status}, details: ${JSON.stringify(errorDetails)}`);
+            }
+
+            const data = await response.json();
+            if (!data.candidates || !data.candidates[0].content || !data.candidates[0].content.parts || !data.candidates[0].content.parts[0].text) {
+                logStatus(`Unexpected API response format: ${JSON.stringify(data)}`);
+                throw new Error('Unexpected API response format');
+            }
+
+            const generatedText = data.candidates[0].content.parts[0].text.trim();
+            logStatus(`Generated text: ${generatedText.substring(0, 100)}...`); // Log generated text start
+            return generatedText;
+        }
+
+
+        function toggleArticleFormat(event) {
+            const button = event.target;
+            const targetTextAreaId = button.dataset.target;
+            const textArea = document.getElementById(targetTextAreaId);
+            let currentFormat = textArea.dataset.format || 'html';
+            let newFormat = currentFormat === 'html' ? 'md' : 'html';
+            textArea.dataset.format = newFormat;
+            button.textContent = newFormat.toUpperCase();
+
+            // Basic toggle - in real app, you'd convert HTML to MD and vice versa more robustly.
+            // For this example, just changing text content.
+            if (newFormat === 'md') {
+                // Very basic HTML to MD (replace <p> with new lines, remove tags - improve this for real use)
+                textArea.value = textArea.value.replace(/<p>/g, '\n').replace(/<\/p>/g, '').replace(/<[^>]*>/g, '');
+            } else {
+                // Very basic MD to HTML (replace new lines with <p> - improve this for real use)
+                textArea.value = textArea.value.replace(/\n/g, '<p>');
+            }
+        }
+
+        function logStatus(message) {
+            statusLog.style.display = 'block'; // Show log area when logging
+            statusLog.textContent += message + '\n';
+            statusLog.scrollTop = statusLog.scrollHeight; // Auto-scroll to bottom
+        }
+
+    </script>
+</body>
+</html>
