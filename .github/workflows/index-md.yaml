@@ -6,6 +6,7 @@ on:
     branches: [ "main" ]
     paths-ignore: # Use paths-ignore instead of paths to trigger ONLY on additions/removals
       - 'index.md'       # Don't trigger on changes to index.md itself
+      - 'index.html'       # Don't trigger on changes to index.html
       - '.github/**'   # Don't trigger on changes in .github directory (workflow files)
       - '**/*.!(html)' # Ignore changes to files that are NOT .html files
 
