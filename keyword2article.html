@@ -8,15 +8,15 @@
         /* Basic CSS Styling here */
         body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; }
         h1 { color: #333; text-align: center; margin-bottom: 20px; }
-        label { font-weight: bold; display: block; margin-bottom: 5px; color: #555; font-size: 0.9em; } /* Reduced label font size */
+        label { font-weight: bold; display: block; margin-bottom: 5px; color: #555; font-size: 0.9em; }
         p { color: #777; margin-bottom: 8px; }
         input[type="text"], textarea { width: calc(100% - 18px); padding: 8px; margin-bottom: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; font-family: inherit; }
         textarea { height: 100px; resize: vertical; }
-        input[type="text"] { height: 30px; } /* Adjusted text input height */
-        button { padding: 8px 16px; cursor: pointer; border-radius: 5px; background-color: #f0f0f0; border: 1px solid #ccc; font-family: inherit; } /* Reduced button padding */
+        input[type="text"] { height: 30px; }
+        button { padding: 8px 16px; cursor: pointer; border-radius: 5px; background-color: #f0f0f0; border: 1px solid #ccc; font-family: inherit; }
         button:hover { background-color: #e0e0e0; }
-        #api-key-area, #keyword-area, #progress-area, #cards-container { margin-bottom: 20px; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        #api-key-area label, #keyword-area label, #progress-area label { margin-bottom: 10px; display: block; }
+        #api-key-area, #keyword-area, #progress-area, #cards-container, #rate-limit-info { margin-bottom: 20px; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        #api-key-area label, #keyword-area label, #progress-area label, #rate-limit-info label { margin-bottom: 10px; display: block; }
         #api-key { width: calc(100% - 18px); padding: 8px; margin-bottom: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; font-family: monospace; }
         #keywords { width: calc(100% - 18px); height: 150px; margin-bottom: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; padding: 8px; font-family: monospace; }
         #custom-instruction { width: calc(100% - 18px); padding: 8px; margin-bottom: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; font-family: inherit; }
@@ -28,15 +28,15 @@
         #cards-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
         .card { background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 5px; padding: 15px; }
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .card-header h3 { margin: 0; font-size: 1.1em; color: #333; } /* Slightly smaller topic header */
-        .regenerate-btn { background: none; border: none; font-size: 1em; cursor: pointer; margin-left: 5px; } /* Smaller regenerate button */
+        .card-header h3 { margin: 0; font-size: 1.1em; color: #333; }
+        .regenerate-btn { background: none; border: none; font-size: 1em; cursor: pointer; margin-left: 5px; }
         .card textarea, .card input[type="text"] { width: calc(100% - 18px); margin-bottom: 5px; }
-        .card textarea { height: 70px; } /* Reduced textarea height */
+        .card textarea { height: 70px; }
         .article-content-area { position: relative; }
-        .article-content-area textarea { height: 120px; } /* Reduced article textarea height */
-        .toggle-format-btn { position: absolute; top: 5px; right: 5px; padding: 5px 8px; font-size: 0.7em; } /* Smaller toggle button */
+        .article-content-area textarea { height: 120px; }
+        .toggle-format-btn { position: absolute; top: 5px; right: 5px; padding: 5px 8px; font-size: 0.7em; }
         .emoji-label { display: flex; align-items: center; gap: 5px; }
-        .emoji { font-size: 1em; } /* Smaller emoji size */
+        .emoji { font-size: 1em; }
         .hidden { display: none !important; }
         .status-area { margin-top: 10px; white-space: pre-wrap; height: 100px; overflow-y: scroll; border: 1px solid #ccc; padding: 8px; box-sizing: border-box; font-family: monospace; border-radius: 5px; background-color: #f9f9f9; font-size: 0.8em; }
         .input-row { display: flex; align-items: center; margin-bottom: 5px; }
@@ -44,6 +44,8 @@
         .input-row > div { flex: 1; display: flex; align-items: center; }
         .input-row > div input[type="text"], .input-row > div textarea { margin-bottom: 0; }
         .textarea-container { display: flex; align-items: center; }
+        .rate-limit-model-info { font-size: 0.8em; color: #777; margin-bottom: 5px; }
+        .rate-limit-model-info span { font-weight: bold; }
     </style>
 </head>
 <body>
@@ -53,6 +55,14 @@
         <label for="api-key" class="emoji-label"><span class="emoji">🔑</span> Gemini API Key:</label>
         <input type="text" id="api-key" placeholder="Enter your Gemini API key">
     </div>
+
+    <div id="rate-limit-info">
+        <label class="emoji-label"><span class="emoji">🚦</span> Rate Limit Information (Current Model: <span id="current-model-display"></span>):</label>
+        <div id="model-rate-limits">
+            <!-- Rate limit info for the current model will be displayed here -->
+        </div>
+    </div>
+
 
     <div id="keyword-area">
         <div class="keyword-input-row">
@@ -89,39 +99,46 @@
         const progressBar = document.getElementById('progress-bar');
         const progressText = document.getElementById('progress-text');
         const statusLog = document.getElementById('status-log');
+        const rateLimitInfoDiv = document.getElementById('model-rate-limits');
+        const currentModelDisplay = document.getElementById('current-model-display');
 
         let apiKey = localStorage.getItem('geminiApiKey') || '';
         apiKeyInput.value = apiKey;
 
         const models = {
-            'Gemini 2.0 Flash-Lite Preview': { rpm: 30, tpm: 1000000, rpd: 1500, usageRPM: 0, usageTPM: 0, usageRPD: 0, lastReset: localStorage.getItem('usageResetDate_Gemini 2.0 Flash-Lite Preview') },
-            'Gemini 2.0 Flash': { rpm: 15, tpm: 1000000, rpd: 1500, usageRPM: 0, usageTPM: 0, usageRPD: 0, lastReset: localStorage.getItem('usageResetDate_Gemini 2.0 Flash') },
-            'Gemini 2.0 Flash Thinking Experimental 01-21': { rpm: 10, tpm: 4000000, rpd: 1500, usageRPM: 0, usageTPM: 0, usageRPD: 0, lastReset: localStorage.getItem('usageResetDate_Gemini 2.0 Flash Thinking Experimental 01-21') },
-            'Gemini 2.0 Pro Experimental 02-05': { rpm: 2, tpm: 1000000, rpd: 50, usageRPM: 0, usageTPM: 0, usageRPD: 0, lastReset: localStorage.getItem('usageResetDate_Gemini 2.0 Pro Experimental 02-05') }
+            'gemini-2.0-flash-lite-preview-02-05': { displayName: 'Gemini 2.0 Flash-Lite Preview', rpm: 30, tpm: 1000000, rpd: 1500, usageRPM: 0, usageTPM: 0, usageRPD: 0, lastReset: localStorage.getItem('usageResetDate_gemini-2.0-flash-lite-preview-02-05') },
+            'gemini-2.0-flash': { displayName: 'Gemini 2.0 Flash', rpm: 15, tpm: 1000000, rpd: 1500, usageRPM: 0, usageTPM: 0, usageRPD: 0, lastReset: localStorage.getItem('usageResetDate_gemini-2.0-flash') },
+            'gemini-2.0-flash-thinking-exp-01-21': { displayName: 'Gemini 2.0 Flash Thinking Experimental', rpm: 10, tpm: 4000000, rpd: 1500, usageRPM: 0, usageTPM: 0, usageRPD: 0, lastReset: localStorage.getItem('usageResetDate_gemini-2.0-flash-thinking-exp-01-21') },
+            'gemini-2.0-pro-exp-02-05': { displayName: 'Gemini 2.0 Pro Experimental', rpm: 2, tpm: 1000000, rpd: 50, usageRPM: 0, usageTPM: 0, usageRPD: 0, lastReset: localStorage.getItem('usageResetDate_gemini-2.0-pro-exp-02-05') }
         };
 
         const modelNames = Object.keys(models);
-        let currentModelName = 'Gemini 2.0 Flash-Lite Preview'; // Default model
+        let currentModelName = 'gemini-2.0-flash-lite-preview-02-05'; // Default model
+        let processQueue = [];
+        let isProcessing = false;
 
         loadUsageData();
         resetDailyUsageIfNeeded();
+        updateRateLimitDisplay();
+        currentModelDisplay.textContent = models[currentModelName].displayName;
+
 
         apiKeyInput.addEventListener('change', (e) => {
             apiKey = e.target.value;
             localStorage.setItem('geminiApiKey', apiKey);
             if (keywordsInput.value.trim() !== '') {
-                processKeywords(); // Auto-start if keywords are already present
+                processKeywords();
             }
         });
 
         keywordsInput.addEventListener('paste', handlePasteKeywords);
         keywordsInput.addEventListener('input', () => {
             if (apiKey && keywordsInput.value.trim() !== '') {
-                processKeywords(); // Auto-start if API key is already present
+                processKeywords();
             }
         });
 
-        let pendingKeywords = null; // Store keywords if pasted before API key
+        let pendingKeywords = null;
 
         async function handlePasteKeywords(event) {
             event.preventDefault();
@@ -130,7 +147,7 @@
             if (apiKey) {
                 processKeywords();
             } else {
-                pendingKeywords = text; // Store keywords to process later
+                pendingKeywords = text;
                 alert("API Key needed. Please enter your Gemini API key to start generating.");
             }
         }
@@ -147,50 +164,82 @@
             }
 
             cardsContainer.innerHTML = '';
-            progressText.textContent = `Generating...`;
+            progressText.textContent = `Queuing keywords for generation...`;
             progressBar.style.width = '0%';
             let progress = { keywords: keywords.length, titles: 0, outlines: 0, articles: 0 };
             let startTime = Date.now();
+            processQueue = []; // Clear any existing queue
 
-            for (let i = 0; i < keywords.length; i++) {
-                const keyword = keywords[i].trim();
-                if (!keyword) continue;
-
-                const card = createCard(keyword, i);
-                cardsContainer.appendChild(card);
-
-                const titleInput = card.querySelector('.article-title'); // Changed to input
-                const outlineTextArea = card.querySelector('.article-outline');
-                const articleTextArea = card.querySelector('.article-content');
-
-                try {
-                    const title = await generateContentWithRateLimit('Generate catchy article title about: ' + keyword, 'title');
-                    titleInput.value = title;
-                    progress.titles++;
-                    updateProgress(progress, startTime);
-
-                    const outline = await generateContentWithRateLimit('Generate detailed article outline for title: ' + title + ' about: ' + keyword, 'outline');
-                    outlineTextArea.value = outline;
-                    progress.outlines++;
-                    updateProgress(progress, startTime);
-
-                    const article = await generateContentWithRateLimit('Write a full article in HTML format based on title: ' + title + ', outline: ' + outline + ', topic: ' + keyword + '. ' + customInstructionInput.value, 'article');
-                    articleTextArea.value = article;
-                    articleTextArea.dataset.format = 'html'; // Store format
-                    progress.articles++;
-                    updateProgress(progress, startTime);
-
-                } catch (error) {
-                    console.error("Error generating content:", error);
-                    logStatus(`Error for keyword "${keyword}": ${error.message}`);
-                    titleInput.value = "Error generating title.";
-                    outlineTextArea.value = "Error generating outline.";
-                    articleTextArea.value = "Error generating article.";
+            keywords.forEach((keyword, index) => {
+                if (keyword.trim()) {
+                    const card = createCard(keyword.trim(), index);
+                    cardsContainer.appendChild(card);
+                    processQueue.push({ keyword: keyword.trim(), card, progressIndex: index });
                 }
-            }
+            });
 
-            progressText.textContent = `Generation complete!`;
+            if (!isProcessing) {
+                processNextInQueue(progress, startTime);
+            }
         }
+
+
+        async function processNextInQueue(progress, startTime) {
+            if (processQueue.length === 0) {
+                isProcessing = false;
+                progressText.textContent = `Generation complete!`;
+                return;
+            }
+            isProcessing = true;
+            const task = processQueue.shift();
+            const { keyword, card, progressIndex } = task;
+
+            const titleInput = card.querySelector('.article-title');
+            const outlineTextArea = card.querySelector('.article-outline');
+            const articleTextArea = card.querySelector('.article-content');
+
+            try {
+                const title = await generateContentWithRateLimit('Generate catchy article title about: ' + keyword, 'title');
+                titleInput.value = title;
+                progress.titles++;
+                updateProgress(progress, startTime);
+                await delay(calculateDelay()); // Delay after title generation
+
+                const outline = await generateContentWithRateLimit('Generate detailed article outline for title: ' + title + ' about: ' + keyword, 'outline');
+                outlineTextArea.value = outline;
+                progress.outlines++;
+                updateProgress(progress, startTime);
+                await delay(calculateDelay()); // Delay after outline generation
+
+                const article = await generateContentWithRateLimit('Write a full article in HTML format based on title: ' + title + ', outline: ' + outline + ', topic: ' + keyword + '. ' + customInstructionInput.value, 'article');
+                articleTextArea.value = article;
+                articleTextArea.dataset.format = 'html';
+                progress.articles++;
+                updateProgress(progress, startTime);
+                await delay(calculateDelay()); // Delay after article generation
+
+
+            } catch (error) {
+                console.error("Error generating content:", error);
+                logStatus(`Error for keyword "${keyword}": ${error.message}`);
+                titleInput.value = "Error generating title.";
+                outlineTextArea.value = "Error generating outline.";
+                articleTextArea.value = "Error generating article.";
+            } finally {
+                processNextInQueue(progress, startTime); // Process next keyword in queue
+            }
+        }
+
+        function calculateDelay() {
+            const currentModel = models[currentModelName];
+            const minDelay = 60000 / currentModel.rpm; // milliseconds per request based on RPM
+            return minDelay; // You might want to add a bit more buffer, e.g., minDelay * 1.1
+        }
+
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
 
         function updateProgress(progress, startTime) {
             const totalKeywords = progress.keywords;
@@ -205,7 +254,7 @@
 
             progressBar.style.width = `${overallPercent}%`;
             const elapsedTimeSeconds = (Date.now() - startTime) / 1000;
-            const estimatedTotalTimeSeconds = (generatedArticles > 0) ? (elapsedTimeSeconds / (generatedArticles / totalKeywords)) : 'Estimating...';
+            const estimatedTotalTimeSeconds = (generatedArticles > 0) ? (elapsedTimeSeconds / (generatedArticles / totalKeywords)) * totalKeywords : 'Estimating...'; // Corrected estimation
             const estimatedRemainingTime = isNaN(estimatedTotalTimeSeconds) || estimatedTotalTimeSeconds === 'Estimating...' ? 'Estimating...' : formatTime(Math.max(0, estimatedTotalTimeSeconds - elapsedTimeSeconds));
 
 
@@ -269,7 +318,7 @@
 
         async function regenerateContent(card, contentType) {
             const keyword = card.querySelector('.card-header h3').textContent.replace('📌 ', '');
-            const titleInput = card.querySelector('.article-title'); // Changed to input
+            const titleInput = card.querySelector('.article-title');
             const outlineTextArea = card.querySelector('.article-outline');
             const articleTextArea = card.querySelector('.article-content');
             const currentTitle = titleInput.value;
@@ -284,7 +333,7 @@
                     const newOutline = await generateContentWithRateLimit('Generate detailed article outline for title: ' + currentTitle + ' about: ' + keyword, 'outline');
                     outlineTextArea.value = newOutline;
                 }
-                if (contentType === 'title' || contentType === 'outline') { // Regenerate article if title or outline is regenerated
+                if (contentType === 'title' || contentType === 'outline') {
                     const newArticle = await generateContentWithRateLimit('Write a full article in HTML format based on title: ' + titleInput.value + ', outline: ' + outlineTextArea.value + ', topic: ' + keyword + '. ' + customInstructionInput.value, 'article');
                     articleTextArea.value = newArticle;
                     articleTextArea.dataset.format = 'html';
@@ -304,16 +353,20 @@
             let modelToUse = selectModel();
             if (!modelToUse) {
                 logStatus("All models rate limited. Please wait.");
-                throw new Error("Rate limit reached for all models."); // Stop processing if all models are limited
+                throw new Error("Rate limit reached for all models.");
             }
+            currentModelName = modelToUse; // Update current model name
+            currentModelDisplay.textContent = models[currentModelName].displayName;
+            updateRateLimitDisplay();
+
 
             const modelDetails = models[modelToUse];
-            const geminiAPIUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToUse.toLowerCase().replace(/ /g, '-')}:generateContent?key=${apiKey}`;
+            const geminiAPIUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${apiKey}`;
 
-            incrementUsage(modelToUse, 'rpm'); // Assume each call counts as 1 RPM and TPM for simplicity
+            incrementUsage(modelToUse, 'rpm');
             incrementUsage(modelToUse, 'tpm');
 
-            logStatus(`[${modelToUse}] Generating ${contentType} with prompt: ${promptText.substring(0, 50)}...`);
+            logStatus(`[${models[modelToUse].displayName}] Generating ${contentType} with prompt: ${promptText.substring(0, 50)}...`);
 
             const requestBody = {
                 contents: [{
@@ -330,30 +383,29 @@
 
                 if (!response.ok) {
                     if (response.status === 429) {
-                        logStatus(`[${modelToUse}] Rate limit hit! Status: ${response.status} - ${response.statusText}`);
-                        resetUsage(modelToUse, 'rpm'); // Reset RPM for immediate retry in simple implementation. For real app, implement proper retry/backoff.
-                        // In a more robust app, you would implement a retry mechanism with backoff and potentially switch to another model here if available.
-                        throw new Error(`[${modelToUse}] Rate limit error! Status: ${response.status}`);
+                        logStatus(`[${models[modelToUse].displayName}] Rate limit hit! Status: ${response.status} - ${response.statusText}`);
+                        resetUsage(modelToUse, 'rpm');
+                        throw new Error(`[${models[modelToUse].displayName}] Rate limit error! Status: ${response.status}`);
                     } else {
                         const errorDetails = await response.json();
-                        logStatus(`[${modelToUse}] API Error: ${response.status} - ${response.statusText} - ${JSON.stringify(errorDetails)}`);
-                        throw new Error(`[${modelToUse}] HTTP error! status: ${response.status}, details: ${JSON.stringify(errorDetails)}`);
+                        logStatus(`[${models[modelToUse].displayName}] API Error: ${response.status} - ${response.statusText} - ${JSON.stringify(errorDetails)}`);
+                        throw new Error(`[${models[modelToUse].displayName}] HTTP error! status: ${response.status}, details: ${JSON.stringify(errorDetails)}`);
                     }
                 }
 
                 const data = await response.json();
                 if (!data.candidates || !data.candidates[0].content || !data.candidates[0].content.parts || !data.candidates[0].content.parts[0].text) {
-                    logStatus(`[${modelToUse}] Unexpected API response format: ${JSON.stringify(data)}`);
-                    throw new Error(`[${modelToUse}] Unexpected API response format`);
+                    logStatus(`[${models[modelToUse].displayName}] Unexpected API response format: ${JSON.stringify(data)}`);
+                    throw new Error(`[${models[modelToUse].displayName}] Unexpected API response format`);
                 }
 
                 const generatedText = data.candidates[0].content.parts[0].text.trim();
-                logStatus(`[${modelToUse}] Generated ${contentType}: ${generatedText.substring(0, 100)}...`);
+                logStatus(`[${models[modelToUse].displayName}] Generated ${contentType}: ${generatedText.substring(0, 100)}...`);
                 return generatedText;
 
             } catch (error) {
                 console.error("Error in generateContentWithRateLimit:", error);
-                throw error; // Re-throw to be caught in processKeywords/regenerateContent
+                throw error;
             }
         }
 
@@ -381,14 +433,13 @@
         }
 
         function selectModel() {
-            // Simple model selection: prioritize 'Flash-Lite Preview', then 'Flash', then 'Thinking Experimental', then 'Pro Experimental'
-            const priorityOrder = ['Gemini 2.0 Flash-Lite Preview', 'Gemini 2.0 Flash', 'Gemini 2.0 Flash Thinking Experimental 01-21', 'Gemini 2.0 Pro Experimental 02-05'];
+            const priorityOrder = ['gemini-2.0-flash-lite-preview-02-05', 'gemini-2.0-flash', 'gemini-2.0-flash-thinking-exp-01-21', 'gemini-2.0-pro-exp-02-05'];
             for (const modelName of priorityOrder) {
                 if (models[modelName].usageRPM < models[modelName].rpm && models[modelName].usageRPD < models[modelName].rpd) {
                     return modelName;
                 }
             }
-            return null; // All models are rate limited
+            return null; // All models rate limited
         }
 
 
@@ -397,6 +448,7 @@
             if (dimension === 'tpm') models[modelName].usageTPM++;
             if (dimension === 'rpd') models[modelName].usageRPD++;
             saveUsageData();
+            updateRateLimitDisplay(); // Update display after usage change
         }
 
         function resetUsage(modelName, dimension) {
@@ -404,6 +456,7 @@
             if (dimension === 'tpm') models[modelName].usageTPM = 0;
             if (dimension === 'rpd') models[modelName].usageRPD = 0;
             saveUsageData();
+            updateRateLimitDisplay(); // Update display after reset
         }
 
         function saveUsageData() {
@@ -435,17 +488,28 @@
                     localStorage.setItem(`usageRPM_${modelName}`, '0');
                     localStorage.setItem(`usageTPM_${modelName}`, '0');
                     localStorage.setItem(`usageRPD_${modelName}`, '0');
-                    logStatus(`Daily usage reset for ${modelName}`);
+                    logStatus(`Daily usage reset for ${models[modelName].displayName}`);
                 }
             });
         }
 
+        function updateRateLimitDisplay() {
+            const modelInfo = models[currentModelName];
+            if (!modelInfo) return;
 
-        if (pendingKeywords) { // Process stored keywords if API key is now available on load
+            rateLimitInfoDiv.innerHTML = `
+                <p class="rate-limit-model-info">Model: <span>${modelInfo.displayName}</span></p>
+                <p class="rate-limit-model-info">RPM Limit: <span>${modelInfo.rpm}</span>, Usage: <span>${modelInfo.usageRPM}</span></p>
+                <p class="rate-limit-model-info">TPM Limit: <span>${modelInfo.tpm}</span>, Usage: <span>${modelInfo.usageTPM}</span></p>
+                <p class="rate-limit-model-info">RPD Limit: <span>${modelInfo.rpd}</span>, Usage: <span>${modelInfo.usageRPD}</span></p>
+            `;
+        }
+
+
+        if (pendingKeywords) {
             processKeywords();
             pendingKeywords = null;
         }
-
 
     </script>
 </body>
