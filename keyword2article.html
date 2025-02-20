@@ -10,7 +10,7 @@
         h1 { color: #333; text-align: center; margin-bottom: 20px; }
         label { font-weight: bold; display: block; margin-bottom: 5px; color: #555; font-size: 0.9em; }
         p { color: #777; margin-bottom: 8px; }
-        input[type="text"], textarea { width: calc(100% - 18px); padding: 8px; margin-bottom: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; font-family: inherit; }
+        input[type="text"], textarea, select { width: calc(100% - 18px); padding: 8px; margin-bottom: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; font-family: inherit; }
         textarea { height: 100px; resize: vertical; }
         input[type="text"] { height: 30px; }
         button { padding: 8px 16px; cursor: pointer; border-radius: 5px; background-color: #f0f0f0; border: 1px solid #ccc; font-family: inherit; }
@@ -47,8 +47,12 @@
         .input-row > div { flex: 1; display: flex; align-items: center; }
         .input-row > div input[type="text"], .input-row > div textarea { margin-bottom: 0; }
         .textarea-container { display: flex; align-items: center; }
-        .rate-limit-model-info { font-size: 0.8em; color: #777; margin-bottom: 5px; }
+        .rate-limit-model-info { font-size: 0.8em; color: #777; margin-bottom: 3px; }
         .rate-limit-model-info span { font-weight: bold; }
+        #model-select { width: 100%; margin-bottom: 10px; }
+        .rate-limit-input { width: calc(50% - 5px); padding: 5px; margin-bottom: 5px; box-sizing: border-box; border-radius: 3px; border: 1px solid #ccc; font-size: 0.8em; } /* Smaller input fields for rate limits */
+        .rate-limit-pair { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .rate-limit-pair label { margin-bottom: 0; font-size: 0.8em; } /* Smaller labels for rate limits */
     </style>
 </head>
 <body>
@@ -61,9 +65,12 @@
         </div>
 
         <div id="rate-limit-info">
-            <label class="emoji-label"><span class="emoji">🚦</span> Rate Limit (<span id="current-model-display"></span>):</label>
+            <label for="model-select" class="emoji-label"><span class="emoji">🚦</span> Rate Limit Model:</label>
+            <select id="model-select">
+                <!-- Model options will be populated here -->
+            </select>
             <div id="model-rate-limits">
-                <!-- Rate limit info for the current model will be displayed here -->
+                <!-- Rate limit info for the selected model will be displayed here -->
             </div>
         </div>
     </div>
@@ -106,25 +113,45 @@
         const statusLog = document.getElementById('status-log');
         const rateLimitInfoDiv = document.getElementById('model-rate-limits');
         const currentModelDisplay = document.getElementById('current-model-display');
+        const modelSelect = document.getElementById('model-select');
 
         let apiKey = localStorage.getItem('geminiApiKey') || '';
         apiKeyInput.value = apiKey;
 
-        const models = {
-            'gemini-2.0-flash-lite-preview-02-05': { displayName: 'Flash-Lite Preview', rpm: 30, tpm: 1000000, rpd: 1500, usageRPM: 0, usageTPM: 0, usageRPD: 0, lastReset: localStorage.getItem('usageResetDate_gemini-2.0-flash-lite-preview-02-05') },
-            'gemini-2.0-flash': { displayName: 'Flash', rpm: 15, tpm: 1000000, rpd: 1500, usageRPM: 0, usageTPM: 0, usageRPD: 0, lastReset: localStorage.getItem('usageResetDate_gemini-2.0-flash') },
-            'gemini-2.0-flash-thinking-exp-01-21': { displayName: 'Flash Thinking Experimental', rpm: 10, tpm: 4000000, rpd: 1500, usageRPM: 0, usageTPM: 0, usageRPD: 0, lastReset: localStorage.getItem('usageResetDate_gemini-2.0-flash-thinking-exp-01-21') },
-            'gemini-2.0-pro-exp-02-05': { displayName: 'Pro Experimental', rpm: 2, tpm: 1000000, rpd: 50, usageRPM: 0, usageTPM: 0, usageRPD: 0, lastReset: localStorage.getItem('usageResetDate_gemini-2.0-pro-exp-02-05') }
+        const defaultModels = { // Max limits from documentation
+            'gemini-2.0-flash-lite-preview-02-05': { displayName: 'Flash-Lite Preview', maxRpm: 30, maxTpm: 1000000, maxRpd: 1500 },
+            'gemini-2.0-flash': { displayName: 'Flash', maxRpm: 15, maxTpm: 1000000, maxRpd: 1500 },
+            'gemini-2.0-flash-thinking-exp-01-21': { displayName: 'Flash Thinking Experimental', maxRpm: 10, maxTpm: 4000000, maxRpd: 1500 },
+            'gemini-2.0-pro-exp-02-05': { displayName: 'Pro Experimental', maxRpm: 2, maxTpm: 1000000, maxRpd: 50 }
         };
 
-        const modelNames = Object.keys(models);
-        let currentModelName = 'gemini-2.0-flash-lite-preview-02-05'; // Default model
+        const models = {}; // Current/Customizable models
+        const modelNames = Object.keys(defaultModels);
+        let currentModelName = localStorage.getItem('currentModelName') || 'gemini-2.0-flash-lite-preview-02-05'; // Load last selected or default
+
+        modelNames.forEach(modelName => { // Initialize models with loaded or default limits
+            models[modelName] = {
+                ...defaultModels[modelName],
+                rpm: parseInt(localStorage.getItem(`rpm_${modelName}`) || defaultModels[modelName].maxRpm),
+                tpm: parseInt(localStorage.getItem(`tpm_${modelName}`) || defaultModels[modelName].maxTpm),
+                rpd: parseInt(localStorage.getItem(`rpd_${modelName}`) || defaultModels[modelName].maxRpd),
+                usageRPM: parseInt(localStorage.getItem(`usageRPM_${modelName}`) || '0'),
+                usageTPM: parseInt(localStorage.getItem(`usageTPM_${modelName}`) || '0'),
+                usageRPD: parseInt(localStorage.getItem(`usageRPD_${modelName}`) || '0'),
+                lastReset: localStorage.getItem(`usageResetDate_${modelName}`)
+            };
+        });
+
+
         let processQueue = [];
         let isProcessing = false;
+        let retryCounts = {}; // Track retry counts per request
 
+        populateModelSelect();
         loadUsageData();
         resetDailyUsageIfNeeded();
         updateRateLimitDisplay();
+        modelSelect.value = currentModelName; // Set selected option after populating
         currentModelDisplay.textContent = models[currentModelName].displayName;
 
 
@@ -142,6 +169,14 @@
                 processKeywords();
             }
         });
+
+        modelSelect.addEventListener('change', function() {
+            currentModelName = this.value;
+            localStorage.setItem('currentModelName', currentModelName);
+            currentModelDisplay.textContent = models[currentModelName].displayName;
+            updateRateLimitDisplay();
+        });
+
 
         let pendingKeywords = null;
 
@@ -174,12 +209,14 @@
             let progress = { keywords: keywords.length, titles: 0, outlines: 0, articles: 0 };
             let startTime = Date.now();
             processQueue = []; // Clear any existing queue
+            retryCounts = {}; // Reset retry counts
 
             keywords.forEach((keyword, index) => {
                 if (keyword.trim()) {
                     const card = createCard(keyword.trim(), index);
                     cardsContainer.appendChild(card);
                     processQueue.push({ keyword: keyword.trim(), card, progressIndex: index });
+                    retryCounts[keyword.trim()] = { title: 0, outline: 0, article: 0 }; // Initialize retry counts for each keyword
                 }
             });
 
@@ -204,19 +241,19 @@
             const articleTextArea = card.querySelector('.article-content');
 
             try {
-                const title = await generateContentWithRateLimit('Generate catchy article title about: ' + keyword, 'title');
+                const title = await generateContentWithRateLimit(keyword, 'title', retryCounts[keyword].title);
                 titleInput.value = title;
                 progress.titles++;
                 updateProgress(progress, startTime);
                 await delay(calculateDelay());
 
-                const outline = await generateContentWithRateLimit('Generate detailed article outline for title: ' + title + ' about: ' + keyword, 'outline');
+                const outline = await generateContentWithRateLimit(keyword, 'outline', retryCounts[keyword].outline, title);
                 outlineTextArea.value = outline;
                 progress.outlines++;
                 updateProgress(progress, startTime);
                 await delay(calculateDelay());
 
-                const article = await generateContentWithRateLimit('Write a full article in HTML format based on title: ' + title + ', outline: ' + outline + ', topic: ' + keyword + '. ' + customInstructionInput.value, 'article');
+                const article = await generateContentWithRateLimit(keyword, 'article', retryCounts[keyword].article, title, outlineTextArea.value);
                 articleTextArea.value = article;
                 articleTextArea.dataset.format = 'html';
                 progress.articles++;
@@ -231,7 +268,7 @@
                 outlineTextArea.value = "Error generating outline.";
                 articleTextArea.value = "Error generating article.";
             } finally {
-                processNextInQueue(progress, startTime);
+                processNextInQueue(progress, startTime); // Process next keyword in queue
             }
         }
 
@@ -327,15 +364,15 @@
 
             try {
                 if (contentType === 'title') {
-                    const newTitle = await generateContentWithRateLimit('Generate catchy article title about: ' + keyword, 'title');
+                    const newTitle = await generateContentWithRateLimit(keyword, 'title', retryCounts[keyword].title);
                     titleInput.value = newTitle;
-                    outlineTextArea.value = await generateContentWithRateLimit('Generate detailed article outline for title: ' + newTitle + ' about: ' + keyword, 'outline');
+                    outlineTextArea.value = await generateContentWithRateLimit(keyword, 'outline', retryCounts[keyword].outline, newTitle);
                 } else if (contentType === 'outline') {
-                    const newOutline = await generateContentWithRateLimit('Generate detailed article outline for title: ' + currentTitle + ' about: ' + keyword, 'outline');
+                    const newOutline = await generateContentWithRateLimit(keyword, 'outline', retryCounts[keyword].outline, currentTitle);
                     outlineTextArea.value = newOutline;
                 }
                 if (contentType === 'title' || contentType === 'outline') {
-                    const newArticle = await generateContentWithRateLimit('Write a full article in HTML format based on title: ' + titleInput.value + ', outline: ' + outlineTextArea.value + ', topic: ' + keyword + '. ' + customInstructionInput.value, 'article');
+                    const newArticle = await generateContentWithRateLimit(keyword, 'article', retryCounts[keyword].article, titleInput.value, outlineTextArea.value);
                     articleTextArea.value = newArticle;
                     articleTextArea.dataset.format = 'html';
                     card.querySelector('.toggle-format-btn').textContent = 'HTML';
@@ -350,7 +387,7 @@
         }
 
 
-        async function generateContentWithRateLimit(promptText, contentType, retryCount = 0) {
+        async function generateContentWithRateLimit(keyword, contentType, retryAttempt, currentTitle = '', currentOutline = '') {
             let modelToUse = selectModel();
             if (!modelToUse) {
                 logStatus("All models rate limited. Please wait.");
@@ -362,11 +399,17 @@
 
             const modelDetails = models[modelToUse];
             const geminiAPIUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${apiKey}`;
+            let promptText = '';
+
+            if (contentType === 'title') promptText = 'Generate catchy article title about: ' + keyword;
+            else if (contentType === 'outline') promptText = 'Generate detailed article outline for title: ' + currentTitle + ' about: ' + keyword;
+            else if (contentType === 'article') promptText = 'Write a full article in HTML format based on title: ' + currentTitle + ', outline: ' + currentOutline + ', topic: ' + keyword + '. ' + customInstructionInput.value;
+
 
             incrementUsage(modelToUse, 'rpm');
             incrementUsage(modelToUse, 'tpm');
 
-            logStatus(`[${models[modelToUse].displayName}] Generating ${contentType} with prompt: ${promptText.substring(0, 50)}...`);
+            logStatus(`[${models[modelToUse].displayName}] Generating ${contentType} for "${keyword}" (Attempt ${retryAttempt + 1}) with prompt: ${promptText.substring(0, 50)}...`);
 
             const requestBody = {
                 contents: [{
@@ -383,36 +426,47 @@
 
                 if (!response.ok) {
                     if (response.status === 429) {
-                        logStatus(`[${models[modelToUse].displayName}] Rate limit hit! Status: ${response.status} - ${response.statusText}`);
+                        logStatus(`[${models[modelToUse].displayName}] Rate limit hit for "${keyword}" - ${contentType}! Status: ${response.status} - ${response.statusText}`);
                         resetUsage(modelToUse, 'rpm');
 
-                        const nextModelName = selectNextModel(modelToUse); // Select the next model
-                        if (nextModelName) {
-                            currentModelName = nextModelName; // Switch to the next model
-                            currentModelDisplay.textContent = models[currentModelName].displayName;
-                            updateRateLimitDisplay();
-                            logStatus(`Switched to model: ${models[currentModelName].displayName}, retrying request.`);
-                            return await generateContentWithRateLimit(promptText, contentType, retryCount + 1); // Retry with the new model
+                        if (retryAttempt < 2) { // Limit retries to 2 (for example)
+                            const nextModelName = selectNextModel(modelToUse);
+                            if (nextModelName) {
+                                currentModelName = nextModelName;
+                                currentModelDisplay.textContent = models[currentModelName].displayName;
+                                updateRateLimitDisplay();
+                                logStatus(`Switched to model: ${models[currentModelName].displayName}, retrying ${contentType} for "${keyword}" (Attempt ${retryAttempt + 2}).`);
+
+                                if (contentType === 'title') retryCounts[keyword].title++;
+                                else if (contentType === 'outline') retryCounts[keyword].outline++;
+                                else if (contentType === 'article') retryCounts[keyword].article++;
+
+                                return await generateContentWithRateLimit(keyword, contentType, retryAttempt + 1, currentTitle, currentOutline); // Recursive retry
+                            } else {
+                                logStatus(`All models rate limited for "${keyword}" - ${contentType}, cannot switch.`);
+                                throw new Error(`Rate limit reached for all models for "${keyword}" - ${contentType}.`);
+                            }
                         } else {
-                            logStatus("All models rate limited, cannot switch.");
-                            throw new Error("Rate limit reached for all models."); // No more models to try
+                            logStatus(`Max retries reached for "${keyword}" - ${contentType}.`);
+                            throw new Error(`Max retries reached for "${keyword}" - ${contentType}.`); // Stop retrying after max attempts
                         }
+
 
                     } else {
                         const errorDetails = await response.json();
-                        logStatus(`[${models[modelToUse].displayName}] API Error: ${response.status} - ${response.statusText} - ${JSON.stringify(errorDetails)}`);
-                        throw new Error(`[${models[modelToUse].displayName}] HTTP error! status: ${response.status}, details: ${JSON.stringify(errorDetails)}`);
+                        logStatus(`[${models[modelToUse].displayName}] API Error for "${keyword}" - ${contentType}: ${response.status} - ${response.statusText} - ${JSON.stringify(errorDetails)}`);
+                        throw new Error(`[${models[modelToUse].displayName}] HTTP error for "${keyword}" - ${contentType}! status: ${response.status}, details: ${JSON.stringify(errorDetails)}`);
                     }
                 }
 
                 const data = await response.json();
                 if (!data.candidates || !data.candidates[0].content || !data.candidates[0].content.parts || !data.candidates[0].content.parts[0].text) {
-                    logStatus(`[${models[modelToUse].displayName}] Unexpected API response format: ${JSON.stringify(data)}`);
-                    throw new Error(`[${models[modelToUse].displayName}] Unexpected API response format`);
+                    logStatus(`[${models[modelToUse].displayName}] Unexpected API response format for "${keyword}" - ${contentType}: ${JSON.stringify(data)}`);
+                    throw new Error(`[${models[modelToUse].displayName}] Unexpected API response format for "${keyword}" - ${contentType}`);
                 }
 
                 const generatedText = data.candidates[0].content.parts[0].text.trim();
-                logStatus(`[${models[modelToUse].displayName}] Generated ${contentType}: ${generatedText.substring(0, 100)}...`);
+                logStatus(`[${models[modelToUse].displayName}] Generated ${contentType} for "${keyword}": ${generatedText.substring(0, 100)}...`);
                 return generatedText;
 
             } catch (error) {
@@ -485,6 +539,9 @@
 
         function saveUsageData() {
             modelNames.forEach(modelName => {
+                localStorage.setItem(`rpm_${modelName}`, models[modelName].rpm); // Save current (customized) RPM
+                localStorage.setItem(`tpm_${modelName}`, models[modelName].tpm); // Save current (customized) TPM
+                localStorage.setItem(`rpd_${modelName}`, models[modelName].rpd); // Save current (customized) RPD
                 localStorage.setItem(`usageRPM_${modelName}`, models[modelName].usageRPM);
                 localStorage.setItem(`usageTPM_${modelName}`, models[modelName].usageTPM);
                 localStorage.setItem(`usageRPD_${modelName}`, models[modelName].usageRPD);
@@ -508,7 +565,7 @@
                     models[modelName].usageTPM = 0;
                     models[modelName].usageRPD = 0;
                     models[modelName].lastReset = today;
-                    localStorage.setItem('usageResetDate_' + modelName, today);
+                    localStorage.setItem(`usageResetDate_${modelName}`, today);
                     localStorage.setItem(`usageRPM_${modelName}`, '0');
                     localStorage.setItem(`usageTPM_${modelName}`, '0');
                     localStorage.setItem(`usageRPD_${modelName}`, '0');
@@ -522,11 +579,52 @@
             if (!modelInfo) return;
 
             rateLimitInfoDiv.innerHTML = `
+                <div class="rate-limit-pair">
+                    <label for="rpm-limit">RPM Limit:</label>
+                    <div>
+                        <input type="number" id="rpm-limit" class="rate-limit-input" value="${modelInfo.rpm}" min="1" max="${modelInfo.maxRpm}"> / ${modelInfo.maxRpm}
+                    </div>
+                </div>
+                <div class="rate-limit-pair">
+                    <label for="tpm-limit">TPM Limit:</label>
+                    <div>
+                        <input type="number" id="tpm-limit" class="rate-limit-input" value="${modelInfo.tpm}" min="1" max="${modelInfo.maxTpm}"> / ${modelInfo.maxTpm}
+                    </div>
+                </div>
+                <div class="rate-limit-pair">
+                    <label for="rpd-limit">RPD Limit:</label>
+                    <div>
+                        <input type="number" id="rpd-limit" class="rate-limit-input" value="${modelInfo.rpd}" min="1" max="${modelInfo.maxRpd}"> / ${modelInfo.maxRpd}
+                    </div>
+                </div>
                 <p class="rate-limit-model-info">Model: <span>${modelInfo.displayName}</span></p>
-                <p class="rate-limit-model-info">RPM: <span>${modelInfo.usageRPM} / ${modelInfo.rpm}</span></p>
-                <p class="rate-limit-model-info">TPM: <span>${modelInfo.usageTPM} / ${modelInfo.tpm}</span></p>
-                <p class="rate-limit-model-info">RPD: <span>${modelInfo.usageRPD} / ${modelInfo.rpd}</span></p>
+                <p class="rate-limit-model-info">Usage RPM: <span>${modelInfo.usageRPM} / ${modelInfo.rpm}</span></p>
+                <p class="rate-limit-model-info">Usage TPM: <span>${modelInfo.usageTPM} / ${modelInfo.tpm}</span></p>
+                <p class="rate-limit-model-info">Usage RPD: <span>${modelInfo.usageRPD} / ${modelInfo.rpd}</span></p>
             `;
+
+            document.getElementById('rpm-limit').addEventListener('change', updateCustomRateLimits);
+            document.getElementById('tpm-limit').addEventListener('change', updateCustomRateLimits);
+            document.getElementById('rpd-limit').addEventListener('change', updateCustomRateLimits);
+        }
+
+        function updateCustomRateLimits() {
+            const modelInfo = models[currentModelName];
+            modelInfo.rpm = Math.min(parseInt(document.getElementById('rpm-limit').value), modelInfo.maxRpm);
+            modelInfo.tpm = Math.min(parseInt(document.getElementById('tpm-limit').value), modelInfo.maxTpm);
+            modelInfo.rpd = Math.min(parseInt(document.getElementById('rpd-limit').value), modelInfo.maxRpd);
+            saveUsageData(); // Save updated limits
+            updateRateLimitDisplay(); // Refresh display to reflect changes
+        }
+
+
+        function populateModelSelect() {
+            modelNames.forEach(modelName => {
+                const option = document.createElement('option');
+                option.value = modelName;
+                option.textContent = defaultModels[modelName].displayName;
+                modelSelect.appendChild(option);
+            });
         }
 
 
