@@ -114,6 +114,10 @@
         const rateLimitInfoDiv = document.getElementById('model-rate-limits');
         const currentModelDisplay = document.getElementById('current-model-display');
         const modelSelect = document.getElementById('model-select');
+        const rpmLimitInput = document.getElementById('rpm-limit'); // Get input elements here
+        const tpmLimitInput = document.getElementById('tpm-limit');
+        const rpdLimitInput = document.getElementById('rpd-limit');
+
 
         let apiKey = localStorage.getItem('geminiApiKey') || '';
         apiKeyInput.value = apiKey;
@@ -152,7 +156,9 @@
         resetDailyUsageIfNeeded();
         updateRateLimitDisplay();
         modelSelect.value = currentModelName; // Set selected option after populating
-        currentModelDisplay.textContent = models[currentModelName].displayName;
+        if (currentModelDisplay) { // Null check here
+            currentModelDisplay.textContent = models[currentModelName].displayName;
+        }
 
 
         apiKeyInput.addEventListener('change', (e) => {
@@ -173,9 +179,16 @@
         modelSelect.addEventListener('change', function() {
             currentModelName = this.value;
             localStorage.setItem('currentModelName', currentModelName);
-            currentModelDisplay.textContent = models[currentModelName].displayName;
-            updateRateLimitDisplay();
+            if (currentModelDisplay) { // Null check here
+                currentModelDisplay.textContent = models[currentModelName].displayName;
+            }
+            updateRateLimitDisplay(); // Update rate limit display on model change
         });
+
+        // Event listeners for rate limit inputs - attached once here
+        rpmLimitInput.addEventListener('change', updateCustomRateLimits);
+        tpmLimitInput.addEventListener('change', updateCustomRateLimits);
+        rpdLimitInput.addEventListener('change', updateCustomRateLimits);
 
 
         let pendingKeywords = null;
@@ -394,7 +407,9 @@
                 throw new Error("Rate limit reached for all models.");
             }
             currentModelName = modelToUse;
-            currentModelDisplay.textContent = models[currentModelName].displayName;
+            if (currentModelDisplay) { // Null check here
+                currentModelDisplay.textContent = models[currentModelName].displayName;
+            }
             updateRateLimitDisplay();
 
             const modelDetails = models[modelToUse];
@@ -433,7 +448,9 @@
                             const nextModelName = selectNextModel(modelToUse);
                             if (nextModelName) {
                                 currentModelName = nextModelName;
-                                currentModelDisplay.textContent = models[currentModelName].displayName;
+                                if (currentModelDisplay) { // Null check here
+                                    currentModelDisplay.textContent = models[currentModelName].displayName;
+                                }
                                 updateRateLimitDisplay();
                                 logStatus(`Switched to model: ${models[currentModelName].displayName}, retrying ${contentType} for "${keyword}" (Attempt ${retryAttempt + 2}).`);
 
@@ -602,17 +619,13 @@
                 <p class="rate-limit-model-info">Usage TPM: <span>${modelInfo.usageTPM} / ${modelInfo.tpm}</span></p>
                 <p class="rate-limit-model-info">Usage RPD: <span>${modelInfo.usageRPD} / ${modelInfo.rpd}</span></p>
             `;
-
-            document.getElementById('rpm-limit').addEventListener('change', updateCustomRateLimits);
-            document.getElementById('tpm-limit').addEventListener('change', updateCustomRateLimits);
-            document.getElementById('rpd-limit').addEventListener('change', updateCustomRateLimits);
         }
 
         function updateCustomRateLimits() {
             const modelInfo = models[currentModelName];
-            modelInfo.rpm = Math.min(parseInt(document.getElementById('rpm-limit').value), modelInfo.maxRpm);
-            modelInfo.tpm = Math.min(parseInt(document.getElementById('tpm-limit').value), modelInfo.maxTpm);
-            modelInfo.rpd = Math.min(parseInt(document.getElementById('rpd-limit').value), modelInfo.maxRpd);
+            modelInfo.rpm = Math.min(parseInt(rpmLimitInput.value), modelInfo.maxRpm);
+            modelInfo.tpm = Math.min(parseInt(tpmLimitInput.value), modelInfo.maxTpm);
+            modelInfo.rpd = Math.min(parseInt(rpdLimitInput.value), modelInfo.maxRpd);
             saveUsageData(); // Save updated limits
             updateRateLimitDisplay(); // Refresh display to reflect changes
         }
