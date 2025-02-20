@@ -1,13 +1,9 @@
-name: Generate index.md (Python)
+name: Generate index.md (Python - Trigger on Add/Remove HTML)
 
 on:
   workflow_dispatch: # Manual trigger
   push:
     branches: [ "main" ]
-    paths-ignore: # Use paths-ignore instead of paths to trigger ONLY on additions/removals
-      - 'index.md'       # Don't trigger on changes to index.md itself
-      - '.github/**'   # Don't trigger on changes in .github directory (workflow files)
-      - '**/*.!(html)' # Ignore changes to files that are NOT .html files
 
 permissions: # Explicitly grant write permission
   contents: write
@@ -18,11 +14,32 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 2 # Need full history for diff
 
-      - name: Set up Python
+      - name: Check for Added or Removed HTML Files (Trigger Condition)
+        id: check_changes
+        run: |
+          # Get list of changed files, filter for .html (excluding index.html), and get change type
+          CHANGED_HTML_FILES=$(git diff --name-status --diff-filter=ADR --no-renames HEAD^ HEAD | grep '\.html$' | grep -v 'index\.html')
+
+          if [[ -n "$CHANGED_HTML_FILES" ]]; then
+            echo "::set-output name=trigger_workflow::true" # Set output to trigger workflow
+            echo "HTML files added or removed:"
+            echo "$CHANGED_HTML_FILES"
+          else
+            echo "::set-output name=trigger_workflow::false" # Set output to NOT trigger workflow
+            echo "No HTML files added or removed. Skipping workflow."
+          fi
+
+      - name: Skip workflow if no HTML files added or removed
+        if: steps.check_changes.outputs.trigger_workflow == 'false'
+        run: echo "Workflow skipped because no HTML files were added or removed." && exit 0
+
+      - name: Set up Python # (Rest of your workflow - Python script, commit, push - remains the same)
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9' # Or any Python 3 version
+          python-version: '3.9'
 
       - name: Generate index.md content with Python
         run: |
@@ -36,7 +53,7 @@ jobs:
               markdown_list = "- No tools available yet."
           else:
               for filename in html_files:
-                  tool_name = filename[:-5].replace('-', '_').upper() # Remove .html, format title
+                  tool_name = filename[:-5].replace('-', '_').upper()
                   markdown_list += f"- [{tool_name}]({filename}) - Description for {filename}\\n"
 
           index_md_content = f"# Tools Directory\\n\\nThis is a directory of tools hosted on this subdomain. Click on the links below to access them.\\n\\n## Available Tools:\\n{markdown_list}"
