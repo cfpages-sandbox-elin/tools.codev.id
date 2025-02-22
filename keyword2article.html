@@ -15,15 +15,32 @@
         input[type="text"] { height: 30px; }
         button { padding: 8px 16px; cursor: pointer; border-radius: 5px; background-color: #f0f0f0; border: 1px solid #ccc; font-family: inherit; }
         button:hover { background-color: #e0e0e0; }
-        #api-provider-area, #api-key-area-container { margin-bottom: 20px; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        #api-provider-area label, #api-key-area-container label { margin-bottom: 10px; display: block; }
+
+        /* Inline Areas Container */
+        .inline-areas-container {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .inline-area {
+            flex: 1;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+
+        #api-provider-area, #keyword-area, #progress-area, #cards-container { margin-bottom: 20px; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        #api-provider-area label, #keyword-area label, #progress-area label { margin-bottom: 10px; display: block; }
         .api-key-input-area { margin-bottom: 15px; }
         .api-key-input-area label { margin-bottom: 5px; }
         .api-key-input { width: calc(100% - 18px); padding: 8px; margin-bottom: 5px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; font-family: monospace; }
         .api-key-status { font-size: 0.8em; margin-top: 2px; margin-bottom: 10px; display: block; }
         .api-key-status.success { color: green; }
         .api-key-status.error { color: red; }
-        #keyword-area, #progress-area, #cards-container { margin-bottom: 20px; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+
         #keyword-area label, #progress-area label { margin-bottom: 10px; display: block; }
         #keywords { width: calc(100% - 18px); height: 150px; margin-bottom: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; padding: 8px; font-family: monospace; }
         #custom-instruction { width: calc(100% - 18px); padding: 8px; margin-bottom: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; font-family: inherit; }
@@ -53,10 +70,54 @@
         .textarea-container { display: flex; align-items: center; }
         .checkbox-row { display: flex; align-items: center; margin-bottom: 5px; font-size: 0.9em; }
         .checkbox-row input[type="checkbox"] { width: auto; margin-right: 5px; }
+
+        /* Rate Limit Area Styles */
+        .rate-limit-area {
+            display: flex;
+            flex-direction: column;
+        }
+
+        #model-rate-limits-settings, #model-rate-limits-usage {
+            margin-top: 10px;
+        }
+
+        .rate-limit-model-info {
+            font-size: 0.8em;
+            color: #777;
+            margin-bottom: 3px;
+        }
+
+        .rate-limit-model-info span {
+            font-weight: bold;
+        }
+
+        .rate-limit-pair {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            align-items: center; /* Vertically align labels and inputs */
+        }
+
+        .rate-limit-pair label {
+            margin-bottom: 0;
+            font-size: 0.8em;
+            margin-right: 10px; /* Add some spacing between label and input */
+            white-space: nowrap; /* Prevent label text from wrapping */
+        }
+
+        .rate-limit-input {
+            width: 80px; /* Adjust width as needed */
+            padding: 5px;
+            margin-bottom: 0; /* Remove bottom margin to align in flex container */
+            box-sizing: border-box;
+            border-radius: 3px;
+            border: 1px solid #ccc;
+            font-size: 0.8em;
+        }
     </style>
 </head>
 <body>
-    <h1>✍️ AI Article Generator v2.0</h1>
+    <h1>✍️ AI Article Generator v2.1</h1>
 
     <div id="api-provider-area">
         <label for="api-provider-select" class="emoji-label"><span class="emoji">🤖</span> Select AI Provider:</label>
@@ -69,41 +130,59 @@
         </select>
     </div>
 
-    <div id="api-key-area-container">
-        <div id="gemini-api-key-area" class="api-key-input-area">
-            <label for="gemini-api-key" class="emoji-label"><span class="emoji">🔑</span> Gemini API Key:</label>
-            <input type="text" id="gemini-api-key" class="api-key-input" placeholder="Enter your Gemini API key">
-            <span id="gemini-api-key-status" class="api-key-status"></span>
-        </div>
+    <div id="inline-areas-container" class="inline-areas-container"> <div id="provider-api-key-area" class="inline-area api-key-area-container">
+            <div id="api-key-area">
+                <div id="gemini-api-key-area" class="api-key-input-area">
+                    <label for="gemini-api-key" class="emoji-label"><span class="emoji">🔑</span> Gemini API Key:</label>
+                    <input type="text" id="gemini-api-key" class="api-key-input" placeholder="Enter your Gemini API key">
+                    <span id="gemini-api-key-status" class="api-key-status"></span>
+                </div>
 
-        <div id="openai-api-key-area" class="api-key-input-area hidden">
-            <label for="openai-api-key" class="emoji-label"><span class="emoji">🔑</span> OpenAI API Key:</label>
-            <input type="text" id="openai-api-key" class="api-key-input" placeholder="Enter your OpenAI API key">
-            <div class="checkbox-row">
-                <input type="checkbox" id="openai-batch-api-enabled">
-                <label for="openai-batch-api-enabled" class="emoji-label"><span class="emoji">📦</span> Batch API Enabled (OpenAI)</label>
+                <div id="openai-api-key-area" class="api-key-input-area hidden">
+                    <label for="openai-api-key" class="emoji-label"><span class="emoji">🔑</span> OpenAI API Key:</label>
+                    <input type="text" id="openai-api-key" class="api-key-input" placeholder="Enter your OpenAI API key">
+                    <div class="checkbox-row">
+                        <input type="checkbox" id="openai-batch-api-enabled">
+                        <label for="openai-batch-api-enabled" class="emoji-label"><span class="emoji">📦</span> Batch API Enabled (OpenAI)</label>
+                    </div>
+                    <span id="openai-api-key-status" class="api-key-status"></span>
+                </div>
+
+                <div id="grok-api-key-area" class="api-key-input-area hidden">
+                    <label for="grok-api-key" class="emoji-label"><span class="emoji">🔑</span> Grok API Key:</label>
+                    <input type="text" id="grok-api-key" class="api-key-input" placeholder="Enter your Grok API key">
+                    <span id="grok-api-key-status" class="api-key-status"></span>
+                </div>
+
+                <div id="claude-api-key-area" class="api-key-input-area hidden">
+                    <label for="claude-api-key" class="emoji-label"><span class="emoji">🔑</span> Claude API Key:</label>
+                    <input type="text" id="claude-api-key" class="api-key-input" placeholder="Enter your Claude API key">
+                    <span id="claude-api-key-status" class="api-key-status"></span>
+                </div>
+
+                <div id="deepseek-api-key-area" class="api-key-input-area hidden">
+                    <label for="deepseek-api-key" class="emoji-label"><span class="emoji">🔑</span> DeepSeek API Key:</label>
+                    <input type="text" id="deepseek-api-key" class="api-key-input" placeholder="Enter your DeepSeek API key">
+                    <span id="deepseek-api-key-status" class="api-key-status"></span>
+                </div>
             </div>
-            <span id="openai-api-key-status" class="api-key-status"></span>
         </div>
 
-        <div id="grok-api-key-area" class="api-key-input-area hidden">
-            <label for="grok-api-key" class="emoji-label"><span class="emoji">🔑</span> Grok API Key:</label>
-            <input type="text" id="grok-api-key" class="api-key-input" placeholder="Enter your Grok API key">
-            <span id="grok-api-key-status" class="api-key-status"></span>
+        <div id="rate-limit-settings-area" class="inline-area rate-limit-area">
+            <label class="emoji-label"><span class="emoji">⚙️</span> Rate Limit Settings (<span id="current-model-settings-display"></span>):</label>
+            <div id="model-rate-limits-settings">
+                <!-- Rate limit settings input fields will be displayed here -->
+            </div>
         </div>
 
-        <div id="claude-api-key-area" class="api-key-input-area hidden">
-            <label for="claude-api-key" class="emoji-label"><span class="emoji">🔑</span> Claude API Key:</label>
-            <input type="text" id="claude-api-key" class="api-key-input" placeholder="Enter your Claude API key">
-            <span id="claude-api-key-status" class="api-key-status"></span>
-        </div>
-
-        <div id="deepseek-api-key-area" class="api-key-input-area hidden">
-            <label for="deepseek-api-key" class="emoji-label"><span class="emoji">🔑</span> DeepSeek API Key:</label>
-            <input type="text" id="deepseek-api-key" class="api-key-input" placeholder="Enter your DeepSeek API key">
-            <span id="deepseek-api-key-status" class="api-key-status"></span>
+        <div id="rate-limit-usage-area" class="inline-area rate-limit-area">
+            <label class="emoji-label"><span class="emoji">📊</span> Rate Limit Usage (<span id="current-model-usage-display"></span>):</label>
+            <div id="model-rate-limits-usage">
+                <!-- Rate limit usage info will be displayed here -->
+            </div>
         </div>
     </div>
+
 
     <div id="keyword-area">
         <div class="keyword-input-row">
@@ -166,6 +245,12 @@
         const progressText = document.getElementById('progress-text');
         const statusLog = document.getElementById('status-log');
 
+        const rateLimitSettingsDiv = document.getElementById('model-rate-limits-settings'); // NEW
+        const rateLimitUsageDiv = document.getElementById('model-rate-limits-usage'); // NEW
+        const currentModelSettingsDisplay = document.getElementById('current-model-settings-display'); // NEW
+        const currentModelUsageDisplay = document.getElementById('current-model-usage-display'); // NEW
+
+
         let currentProvider = localStorage.getItem('currentProvider') || 'gemini';
         apiProviderSelect.value = currentProvider;
         showApiKeyInputArea(currentProvider);
@@ -184,9 +269,9 @@
         apiKeyInputs.claude.value = apiKeys.claude;
         apiKeyInputs.deepseek.value = apiKeys.deepseek;
 
-        const models = {
+        const defaultModels = { // Max limits from documentation - unchanged
             gemini: {
-                'gemini-2.0-flash-lite-preview-02-05': { displayName: 'Flash-Lite Preview', maxRpm: 30, maxTpm: 1000000, rpd: 1500, modelId: 'gemini-2.0-flash-lite-preview-02-05', priority: 1 },
+                'gemini-2.0-flash-lite-preview-02-05': { displayName: 'Flash-Lite Preview', maxRpm: 30, maxTpm: 1000000, maxRpd: 1500, modelId: 'gemini-2.0-flash-lite-preview-02-05', priority: 1 },
                 'gemini-2.0-flash': { displayName: 'Flash', maxRpm: 15, maxTpm: 1000000, rpd: 1500, modelId: 'gemini-2.0-flash', priority: 2 }
             },
             openai: {
@@ -203,6 +288,24 @@
             }
         };
 
+        const models = {}; // Current/Customizable models - updated below to load usage per model
+        const modelNames = Object.keys(defaultModels);
+
+        modelNames.forEach(providerName => { // Deeper nested loop for provider and models
+            models[providerName] = {};
+            const providerDefaultModels = defaultModels[providerName];
+            Object.keys(providerDefaultModels).forEach(modelName => {
+                models[providerName][modelName] = {
+                    ...providerDefaultModels[modelName],
+                    usageRPM: parseInt(localStorage.getItem(`usageRPM_${providerName}_${modelName}`) || '0'), // Usage now tracked per provider AND model
+                    usageTPM: parseInt(localStorage.getItem(`usageTPM_${providerName}_${modelName}`) || '0'),
+                    usageRPD: parseInt(localStorage.getItem(`usageRPD_${providerName}_${modelName}`) || '0'),
+                    lastReset: localStorage.getItem(`usageResetDate_${providerName}_${modelName}`)
+                };
+            });
+        });
+
+
         let processQueue = [];
         let isProcessing = false;
         let retryCounts = {};
@@ -212,6 +315,8 @@
             currentProvider = this.value;
             localStorage.setItem('currentProvider', currentProvider);
             showApiKeyInputArea(currentProvider);
+            updateRateLimitSettingsDisplay(currentProvider); // Call both update functions on provider change
+            updateRateLimitUsageDisplay(currentProvider);
         });
 
         function showApiKeyInputArea(provider) {
@@ -459,7 +564,6 @@
             return `${minutes}m ${remainingSeconds}s`;
         }
 
-
         function createCard(keyword, index) {
             const card = document.createElement('div');
             card.classList.add('card');
@@ -676,7 +780,6 @@
             return bestModel;
         }
 
-
         function selectNextModel(currentModelId, provider) {
             const providerModels = models[provider];
             if (!providerModels) return null;
@@ -698,30 +801,120 @@
             return nextBestModel;
         }
 
-
         function incrementUsage(provider, modelName, dimension, value = 1, isFailure = false) {
             if (!models[provider] || !models[provider][modelName]) return;
 
             if (dimension === 'rpm') models[provider][modelName].usageRPM += value;
             if (dimension === 'tpm') models[provider][modelName].usageTPM += value;
             if (dimension === 'rpd') models[provider][modelName].usageRPD += value;
+            saveUsageData(); // Save usage after increment
+            updateRateLimitUsageDisplay(provider); // Update usage display after increment
         }
 
-        function resetUsage(modelName, dimension) {
-            // (No implementation yet)
+        function resetUsage(provider, modelName, dimension) {
+            if (!models[provider] || !models[provider][modelName]) return;
+
+            if (dimension === 'rpm') models[provider][modelName].usageRPM = 0;
+            if (dimension === 'tpm') models[provider][modelName].usageTPM = 0;
+            if (dimension === 'rpd') models[provider][modelName].usageRPD = 0;
+            saveUsageData(); // Save usage after reset
+            updateRateLimitUsageDisplay(provider); // Update usage display after reset
         }
+
         function saveUsageData() {
-            // (No implementation yet)
-        }
-        function loadUsageData() {
-            // (No implementation yet)
-        }
-        function resetDailyUsageIfNeeded() {
-            // (No implementation yet)
+            modelNames.forEach(providerName => {
+                const providerModels = models[providerName];
+                Object.keys(providerModels).forEach(modelName => {
+                    localStorage.setItem(`usageRPM_${providerName}_${modelName}`, models[providerName][modelName].usageRPM); // Save usage per provider AND model
+                    localStorage.setItem(`usageTPM_${providerName}_${modelName}`, models[providerName][modelName].usageTPM);
+                    localStorage.setItem(`usageRPD_${providerName}_${modelName}`, models[providerName][modelName].usageRPD);
+                });
+            });
         }
 
+        function loadUsageData() {
+            modelNames.forEach(providerName => {
+                const providerModels = models[providerName];
+                Object.keys(providerModels).forEach(modelName => {
+                    models[providerName][modelName].usageRPM = parseInt(localStorage.getItem(`usageRPM_${providerName}_${modelName}`) || '0'); // Load usage per provider AND model
+                    models[providerName][modelName].usageTPM = parseInt(localStorage.getItem(`usageTPM_${providerName}_${modelName}`) || '0');
+                    models[providerName][modelName].usageRPD = parseInt(localStorage.getItem(`usageRPD_${providerName}_${modelName}`) || '0');
+                });
+            });
+        }
+
+        function resetDailyUsageIfNeeded() {
+            const today = new Date().toDateString();
+            modelNames.forEach(providerName => {
+                const providerModels = models[providerName];
+                Object.keys(providerModels).forEach(modelName => {
+                    if (models[providerName][modelName].lastReset !== today) {
+                        models[providerName][modelName].usageRPM = 0;
+                        models[providerName][modelName].usageTPM = 0;
+                        models[providerName][modelName].usageRPD = 0;
+                        models[providerName][modelName].lastReset = today;
+                        localStorage.setItem(`usageResetDate_${providerName}_${modelName}`, today); // Reset date per provider AND model
+                        localStorage.setItem(`usageRPM_${providerName}_${modelName}`, '0');
+                        localStorage.setItem(`usageTPM_${providerName}_${modelName}`, '0');
+                        localStorage.setItem(`usageRPD_${providerName}_${modelName}`, '0');
+                        logStatus(`Daily usage reset for ${providerName} - ${modelName}`);
+                    }
+                });
+            });
+        }
+
+        function updateRateLimitSettingsDisplay(provider) {
+            const modelConfig = models[provider]?.[Object.keys(models[provider])[0]]; // Get default model config
+            currentModelSettingsDisplay.textContent = modelConfig ? modelConfig.displayName : 'No Model Selected';
+
+            if (!modelConfig) {
+                rateLimitSettingsDiv.innerHTML = '<p>No rate limit settings available for this provider.</p>';
+                return;
+            }
+
+            rateLimitSettingsDiv.innerHTML = `
+                <div class="rate-limit-pair">
+                    <label for="rpm-limit">RPM Limit:</label>
+                    <div>
+                        <input type="number" id="rpm-limit" class="rate-limit-input" value="${modelConfig.maxRpm}" min="1" max="${modelConfig.maxRpm}" disabled> / ${modelConfig.maxRpm}
+                    </div>
+                </div>
+                <div class="rate-limit-pair">
+                    <label for="tpm-limit">TPM Limit:</label>
+                    <div>
+                        <input type="number" id="tpm-limit" class="rate-limit-input" value="${modelConfig.maxTpm}" min="1" max="${modelConfig.maxTpm}" disabled> / ${modelConfig.maxTpm}
+                    </div>
+                </div>
+                <div class="rate-limit-pair">
+                    <label for="rpd-limit">RPD Limit:</label>
+                    <div>
+                        <input type="number" id="rpd-limit" class="rate-limit-input" value="${modelConfig.rpd}" min="1" max="${modelConfig.rpd}" disabled> / ${modelConfig.rpd}
+                    </div>
+                </div>
+            `;
+        }
+
+
+        function updateRateLimitUsageDisplay(provider) {
+            const modelConfig = models[provider]?.[Object.keys(models[provider])[0]]; // Get default model config
+            currentModelUsageDisplay.textContent = modelConfig ? modelConfig.displayName : 'No Model Selected';
+
+
+            if (!modelConfig) {
+                rateLimitUsageDiv.innerHTML = '<p>No rate limit usage available for this provider.</p>';
+                return;
+            }
+
+            rateLimitUsageDiv.innerHTML = `
+                <p class="rate-limit-model-info">Usage RPM: <span>${modelConfig.usageRPM} / ${modelConfig.rpm}</span></p>
+                <p class="rate-limit-model-info">Usage TPM: <span>${modelConfig.usageTPM} / ${modelConfig.tpm}</span></p>
+                <p class="rate-limit-model-info">Usage RPD: <span>${modelConfig.usageRPD} / ${modelConfig.rpd}</span></p>
+            `;
+        }
 
         resetDailyUsageIfNeeded();
+        updateRateLimitSettingsDisplay(currentProvider); // Initial call to set rate limit UI
+        updateRateLimitUsageDisplay(currentProvider); // Initial call to set rate limit UI
     </script>
 
 </body>
