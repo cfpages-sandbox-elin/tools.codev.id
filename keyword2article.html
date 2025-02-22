@@ -15,10 +15,14 @@
         input[type="text"] { height: 30px; }
         button { padding: 8px 16px; cursor: pointer; border-radius: 5px; background-color: #f0f0f0; border: 1px solid #ccc; font-family: inherit; }
         button:hover { background-color: #e0e0e0; }
-        #api-key-area-container { display: flex; gap: 20px; margin-bottom: 20px; } /* Container for inline API key and rate limit */
-        #api-key-area, #rate-limit-info { flex: 1; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        #api-key-area label, #rate-limit-info label { margin-bottom: 10px; display: block; }
-        #api-key { width: calc(100% - 18px); padding: 8px; margin-bottom: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; font-family: monospace; }
+        #api-provider-area, #api-key-area-container { margin-bottom: 20px; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        #api-provider-area label, #api-key-area-container label { margin-bottom: 10px; display: block; }
+        .api-key-input-area { margin-bottom: 15px; }
+        .api-key-input-area label { margin-bottom: 5px; }
+        .api-key-input { width: calc(100% - 18px); padding: 8px; margin-bottom: 5px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; font-family: monospace; }
+        .api-key-status { font-size: 0.8em; margin-top: 2px; margin-bottom: 10px; display: block; }
+        .api-key-status.success { color: green; }
+        .api-key-status.error { color: red; }
         #keyword-area, #progress-area, #cards-container { margin-bottom: 20px; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         #keyword-area label, #progress-area label { margin-bottom: 10px; display: block; }
         #keywords { width: calc(100% - 18px); height: 150px; margin-bottom: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; padding: 8px; font-family: monospace; }
@@ -47,34 +51,59 @@
         .input-row > div { flex: 1; display: flex; align-items: center; }
         .input-row > div input[type="text"], .input-row > div textarea { margin-bottom: 0; }
         .textarea-container { display: flex; align-items: center; }
-        .rate-limit-model-info { font-size: 0.8em; color: #777; margin-bottom: 3px; }
-        .rate-limit-model-info span { font-weight: bold; }
-        #model-select { width: 100%; margin-bottom: 10px; }
-        .rate-limit-input { width: calc(50% - 5px); padding: 5px; margin-bottom: 5px; box-sizing: border-box; border-radius: 3px; border: 1px solid #ccc; font-size: 0.8em; } /* Smaller input fields for rate limits */
-        .rate-limit-pair { display: flex; justify-content: space-between; margin-bottom: 5px; }
-        .rate-limit-pair label { margin-bottom: 0; font-size: 0.8em; } /* Smaller labels for rate limits */
+        .checkbox-row { display: flex; align-items: center; margin-bottom: 5px; font-size: 0.9em; }
+        .checkbox-row input[type="checkbox"] { width: auto; margin-right: 5px; }
     </style>
 </head>
 <body>
-    <h1>AI Article Generator ✍️</h1>
+    <h1>✍️ AI Article Generator v2.0</h1>
 
-    <div id="api-key-area-container">
-        <div id="api-key-area">
-            <label for="api-key" class="emoji-label"><span class="emoji">🔑</span> Gemini API Key:</label>
-            <input type="text" id="api-key" placeholder="Enter your Gemini API key">
-        </div>
-
-        <div id="rate-limit-info">
-            <label for="model-select" class="emoji-label"><span class="emoji">🚦</span> Rate Limit Model:</label>
-            <select id="model-select">
-                <!-- Model options will be populated here -->
-            </select>
-            <div id="model-rate-limits">
-                <!-- Rate limit info for the selected model will be displayed here -->
-            </div>
-        </div>
+    <div id="api-provider-area">
+        <label for="api-provider-select" class="emoji-label"><span class="emoji">🤖</span> Select AI Provider:</label>
+        <select id="api-provider-select">
+            <option value="gemini">Gemini</option>
+            <option value="openai">OpenAI</option>
+            <option value="grok">Grok</option>
+            <option value="claude">Claude</option>
+            <option value="deepseek">DeepSeek</option>
+        </select>
     </div>
 
+    <div id="api-key-area-container">
+        <div id="gemini-api-key-area" class="api-key-input-area">
+            <label for="gemini-api-key" class="emoji-label"><span class="emoji">🔑</span> Gemini API Key:</label>
+            <input type="text" id="gemini-api-key" class="api-key-input" placeholder="Enter your Gemini API key">
+            <span id="gemini-api-key-status" class="api-key-status"></span>
+        </div>
+
+        <div id="openai-api-key-area" class="api-key-input-area hidden">
+            <label for="openai-api-key" class="emoji-label"><span class="emoji">🔑</span> OpenAI API Key:</label>
+            <input type="text" id="openai-api-key" class="api-key-input" placeholder="Enter your OpenAI API key">
+            <div class="checkbox-row">
+                <input type="checkbox" id="openai-batch-api-enabled">
+                <label for="openai-batch-api-enabled" class="emoji-label"><span class="emoji">📦</span> Batch API Enabled (OpenAI)</label>
+            </div>
+            <span id="openai-api-key-status" class="api-key-status"></span>
+        </div>
+
+        <div id="grok-api-key-area" class="api-key-input-area hidden">
+            <label for="grok-api-key" class="emoji-label"><span class="emoji">🔑</span> Grok API Key:</label>
+            <input type="text" id="grok-api-key" class="api-key-input" placeholder="Enter your Grok API key">
+            <span id="grok-api-key-status" class="api-key-status"></span>
+        </div>
+
+        <div id="claude-api-key-area" class="api-key-input-area hidden">
+            <label for="claude-api-key" class="emoji-label"><span class="emoji">🔑</span> Claude API Key:</label>
+            <input type="text" id="claude-api-key" class="api-key-input" placeholder="Enter your Claude API key">
+            <span id="claude-api-key-status" class="api-key-status"></span>
+        </div>
+
+        <div id="deepseek-api-key-area" class="api-key-input-area hidden">
+            <label for="deepseek-api-key" class="emoji-label"><span class="emoji">🔑</span> DeepSeek API Key:</label>
+            <input type="text" id="deepseek-api-key" class="api-key-input" placeholder="Enter your DeepSeek API key">
+            <span id="deepseek-api-key-status" class="api-key-status"></span>
+        </div>
+    </div>
 
     <div id="keyword-area">
         <div class="keyword-input-row">
@@ -103,99 +132,159 @@
 
     <div class="status-area" id="status-log" style="display: none;"></div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@latest/browser.js"></script>
+    <script src="https://cdn.openai.com/openai-js/4/openai-beta.mjs"></script>
     <script>
-        const apiKeyInput = document.getElementById('api-key');
+        const apiProviderSelect = document.getElementById('api-provider-select');
+        const apiKeyInputAreas = {
+            gemini: document.getElementById('gemini-api-key-area'),
+            openai: document.getElementById('openai-api-key-area'),
+            grok: document.getElementById('grok-api-key-area'),
+            claude: document.getElementById('claude-api-key-area'),
+            deepseek: document.getElementById('deepseek-api-key-area')
+        };
+        const apiKeyInputs = {
+            gemini: document.getElementById('gemini-api-key'),
+            openai: document.getElementById('openai-api-key'),
+            grok: document.getElementById('grok-api-key'),
+            claude: document.getElementById('claude-api-key'),
+            deepseek: document.getElementById('deepseek-api-key')
+        };
+        const apiKeyStatuses = {
+            gemini: document.getElementById('gemini-api-key-status'),
+            openai: document.getElementById('openai-api-key-status'),
+            grok: document.getElementById('grok-api-key-status'),
+            claude: document.getElementById('claude-api-key-status'),
+            deepseek: document.getElementById('deepseek-api-key-status')
+        };
+        const openaiBatchApiEnabledCheckbox = document.getElementById('openai-batch-api-enabled');
+
         const keywordsInput = document.getElementById('keywords');
         const customInstructionInput = document.getElementById('custom-instruction');
         const cardsContainer = document.getElementById('cards-container');
         const progressBar = document.getElementById('progress-bar');
         const progressText = document.getElementById('progress-text');
         const statusLog = document.getElementById('status-log');
-        const rateLimitInfoDiv = document.getElementById('model-rate-limits');
-        const currentModelDisplay = document.getElementById('current-model-display');
-        const modelSelect = document.getElementById('model-select');
 
+        let currentProvider = localStorage.getItem('currentProvider') || 'gemini';
+        apiProviderSelect.value = currentProvider;
+        showApiKeyInputArea(currentProvider);
 
-        let apiKey = localStorage.getItem('geminiApiKey') || '';
-        apiKeyInput.value = apiKey;
-
-        const defaultModels = { // Max limits from documentation
-            'gemini-2.0-flash-lite-preview-02-05': { displayName: 'Flash-Lite Preview', maxRpm: 30, maxTpm: 1000000, maxRpd: 1500 },
-            'gemini-2.0-flash': { displayName: 'Flash', maxRpm: 15, maxTpm: 1000000, maxRpd: 1500 },
-            'gemini-2.0-flash-thinking-exp-01-21': { displayName: 'Flash Thinking Experimental', maxRpm: 10, maxTpm: 4000000, maxRpd: 1500 },
-            'gemini-2.0-pro-exp-02-05': { displayName: 'Pro Experimental', maxRpm: 2, maxTpm: 1000000, maxRpd: 50 }
+        let apiKeys = {
+            gemini: localStorage.getItem('geminiApiKey') || '',
+            openai: localStorage.getItem('openaiApiKey') || '',
+            grok: localStorage.getItem('grokApiKey') || '',
+            claude: localStorage.getItem('claudeApiKey') || '',
+            deepseek: localStorage.getItem('deepseekApiKey') || ''
         };
 
-        const models = {}; // Current/Customizable models
-        const modelNames = Object.keys(defaultModels);
-        let currentModelName = localStorage.getItem('currentModelName') || 'gemini-2.0-flash-lite-preview-02-05'; // Load last selected or default
+        apiKeyInputs.gemini.value = apiKeys.gemini;
+        apiKeyInputs.openai.value = apiKeys.openai;
+        apiKeyInputs.grok.value = apiKeys.grok;
+        apiKeyInputs.claude.value = apiKeys.claude;
+        apiKeyInputs.deepseek.value = apiKeys.deepseek;
 
-        modelNames.forEach(modelName => { // Initialize models with loaded or default limits
-            models[modelName] = {
-                ...defaultModels[modelName],
-                rpm: parseInt(localStorage.getItem(`rpm_${modelName}`) || defaultModels[modelName].maxRpm),
-                tpm: parseInt(localStorage.getItem(`tpm_${modelName}`) || defaultModels[modelName].maxTpm),
-                rpd: parseInt(localStorage.getItem(`rpd_${modelName}`) || defaultModels[modelName].maxRpd),
-                usageRPM: parseInt(localStorage.getItem(`usageRPM_${modelName}`) || '0'),
-                usageTPM: parseInt(localStorage.getItem(`usageTPM_${modelName}`) || '0'),
-                usageRPD: parseInt(localStorage.getItem(`usageRPD_${modelName}`) || '0'),
-                lastReset: localStorage.getItem(`usageResetDate_${modelName}`)
-            };
-        });
-
+        const models = {
+            gemini: {
+                'gemini-2.0-flash-lite-preview-02-05': { displayName: 'Flash-Lite Preview', maxRpm: 30, maxTpm: 1000000, rpd: 1500, modelId: 'gemini-2.0-flash-lite-preview-02-05', priority: 1 },
+                'gemini-2.0-flash': { displayName: 'Flash', maxRpm: 15, maxTpm: 1000000, rpd: 1500, modelId: 'gemini-2.0-flash', priority: 2 }
+            },
+            openai: {
+                'gpt-4o-mini': { displayName: 'GPT-4o Mini', maxRpm: 500, maxTpm: 30000, modelId: 'gpt-4o-mini', priority: 1 }
+            },
+            grok: {
+                'grok-2-latest': { displayName: 'Grok-2', maxRpm: 100, modelId: 'grok-2-latest', priority: 1 }
+            },
+            claude: {
+                'claude-3-5-sonnet-20241022': { displayName: 'Claude 3.5 Sonnet', maxRpm: 100, modelId: 'claude-3-5-sonnet-20241022', priority: 1 }
+            },
+            deepseek: {
+                'deepseek-chat': { displayName: 'DeepSeek Chat', maxRpm: 999999, modelId: 'deepseek-chat', priority: 1 }
+            }
+        };
 
         let processQueue = [];
         let isProcessing = false;
-        let retryCounts = {}; // Track retry counts per request
+        let retryCounts = {};
+        let batchJobId = null;
 
-        populateModelSelect();
-        loadUsageData();
-        resetDailyUsageIfNeeded();
-        updateRateLimitDisplay();
-        modelSelect.value = currentModelName; // Set selected option after populating
-        if (currentModelDisplay) { // Null check here
-            currentModelDisplay.textContent = models[currentModelName].displayName;
+        apiProviderSelect.addEventListener('change', function() {
+            currentProvider = this.value;
+            localStorage.setItem('currentProvider', currentProvider);
+            showApiKeyInputArea(currentProvider);
+        });
+
+        function showApiKeyInputArea(provider) {
+            Object.keys(apiKeyInputAreas).forEach(key => {
+                apiKeyInputAreas[key].classList.add('hidden');
+            });
+            apiKeyInputAreas[provider].classList.remove('hidden');
+            testApiKey(provider);
         }
 
-
-        apiKeyInput.addEventListener('change', (e) => {
-            apiKey = e.target.value;
-            localStorage.setItem('geminiApiKey', apiKey);
-            if (keywordsInput.value.trim() !== '') {
-                processKeywords();
-            }
+        Object.keys(apiKeyInputs).forEach(provider => {
+            apiKeyInputs[provider].addEventListener('change', (e) => {
+                apiKeys[provider] = e.target.value;
+                localStorage.setItem(`${provider}ApiKey`, apiKeys[provider]);
+                testApiKey(provider);
+                if (keywordsInput.value.trim() !== '') {
+                    processKeywords();
+                }
+            });
         });
 
-        keywordsInput.addEventListener('paste', handlePasteKeywords);
-        keywordsInput.addEventListener('input', () => {
-            if (apiKey && keywordsInput.value.trim() !== '') {
-                processKeywords();
+        async function testApiKey(provider) {
+            const apiKey = apiKeys[provider];
+            const statusElement = apiKeyStatuses[provider];
+            if (!apiKey) {
+                statusElement.textContent = 'API key not entered.';
+                statusElement.className = 'api-key-status error';
+                return;
             }
-        });
 
-        modelSelect.addEventListener('change', function() {
-            currentModelName = this.value;
-            localStorage.setItem('currentModelName', currentModelName);
-            if (currentModelDisplay) { // Null check here
-                currentModelDisplay.textContent = models[currentModelName].displayName;
-            }
-            updateRateLimitDisplay(); // Update rate limit display on model change
-        });
+            statusElement.textContent = 'Testing API key...';
+            statusElement.className = 'api-key-status';
+
+            let testResult = false;
+            let errorMessage = 'Error testing API key.';
+
+            try {
+                let response;
+                if (provider === 'gemini') {
+                    response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: "Are you ready? answer promptly" }] }] }) });
+                } else if (provider === 'openai') {
+                    const openai = new OpenAI({ apiKey: apiKey, dangerouslyAllowBrowser: true }); //`dangerouslyAllowBrowser: true` is needed for browser environment
+                    const completion = await openai.chat.completions.create({ model: "gpt-4o-mini", messages: [{ role: "user", content: "Are you ready? answer promptly" }], max_tokens: 5 });
+                    if (completion.choices && completion.choices.length > 0) testResult = true;
+                } else if (provider === 'grok') {
+                    response = await fetch('https://api.x.ai/v1/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, body: JSON.stringify({ messages: [{ role: "user", content: "Are you ready? answer promptly" }], model: "grok-2-latest", stream: false, temperature: 0 }) });
+                } else if (provider === 'claude') {
+                    const anthropic = new Anthropic({ apiKey: apiKey, dangerouslyAllowBrowser: true }); //`dangerouslyAllowBrowser: true` is needed for browser environment
+                    const msg = await anthropic.messages.create({ model: "claude-3-5-sonnet-20241022", max_tokens: 5, messages: [{ role: "user", content: "Are you ready? answer promptly" }] });
+                    if (msg.content && msg.content.length > 0) testResult = true;
+                } else if (provider === 'deepseek') {
+                    response = await fetch('https://api.deepseek.com/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, body: JSON.stringify({ model: "deepseek-chat", messages: [{ role: "user", content: "Are you ready? answer promptly" }], stream: false }) });
+                }
+
+                if (response && response.ok) {
+                    testResult = true;
+                } else if (response) {
+                    const errorData = await response.json();
+                    errorMessage = `${provider.charAt(0).toUpperCase() + provider.slice(1)} API test failed: ${response.status} ${response.statusText} - ${errorData.error?.message || JSON.stringify(errorData)}`;
+                }
+
+            } catch (error) { errorMessage = `${provider.charAt(0).toUpperCase() + provider.slice(1)} API test error: ${error.message || error.toString()}`; }
 
 
-        let pendingKeywords = null;
-
-        async function handlePasteKeywords(event) {
-            event.preventDefault();
-            const text = (event.clipboardData || window.clipboardData).getData('text');
-            keywordsInput.value = text;
-            if (apiKey) {
-                processKeywords();
+            if (testResult) {
+                statusElement.textContent = 'API key is valid. ✅';
+                statusElement.className = 'api-key-status success';
             } else {
-                pendingKeywords = text;
-                alert("API Key needed. Please enter your Gemini API key to start generating.");
+                statusElement.textContent = errorMessage;
+                statusElement.className = 'api-key-status error';
             }
         }
+
 
         async function processKeywords() {
             const keywords = keywordsInput.value.trim().split('\n').filter(keyword => keyword.trim() !== '');
@@ -203,8 +292,8 @@
                 alert("Please enter keywords.");
                 return;
             }
-            if (!apiKey) {
-                alert("Please enter your Gemini API Key.");
+            if (!apiKeys[currentProvider]) {
+                alert(`Please enter your ${currentProvider.charAt(0).toUpperCase() + currentProvider.slice(1)} API Key.`);
                 return;
             }
 
@@ -213,20 +302,75 @@
             progressBar.style.width = '0%';
             let progress = { keywords: keywords.length, titles: 0, outlines: 0, articles: 0 };
             let startTime = Date.now();
-            processQueue = []; // Clear any existing queue
-            retryCounts = {}; // Reset retry counts
+            processQueue = [];
+            retryCounts = {};
+            batchJobId = null;
 
-            keywords.forEach((keyword, index) => {
-                if (keyword.trim()) {
-                    const card = createCard(keyword.trim(), index);
-                    cardsContainer.appendChild(card);
-                    processQueue.push({ keyword: keyword.trim(), card, progressIndex: index });
-                    retryCounts[keyword.trim()] = { title: 0, outline: 0, article: 0 }; // Initialize retry counts for each keyword
+            if (currentProvider === 'openai' && openaiBatchApiEnabledCheckbox.checked) {
+                await processKeywordsBatchOpenAI(keywords, progress, startTime);
+            } else {
+                keywords.forEach((keyword, index) => {
+                    if (keyword.trim()) {
+                        const card = createCard(keyword.trim(), index);
+                        cardsContainer.appendChild(card);
+                        processQueue.push({ keyword: keyword.trim(), card, progressIndex: index });
+                        retryCounts[keyword.trim()] = { title: 0, outline: 0, article: 0 };
+                    }
+                });
+
+                if (!isProcessing) {
+                    processNextInQueue(progress, startTime);
                 }
-            });
+            }
+        }
 
-            if (!isProcessing) {
-                processNextInQueue(progress, startTime);
+        async function processKeywordsBatchOpenAI(keywords, progress, startTime) {
+            logStatus("Preparing OpenAI Batch API request...");
+            progressText.textContent = `Preparing OpenAI Batch API request...`;
+            const batchRequests = keywords.map((keyword, index) => ({
+                custom_id: `request-${index + 1}`,
+                method: "POST",
+                url: "/v1/chat/completions",
+                body: {
+                    model: models.openai['gpt-4o-mini'].modelId, // Use gpt-4o-mini for batch API
+                    messages: [
+                        { role: "user", content: `Generate article title, outline, and article for keyword: ${keyword}. Custom instructions: ${customInstructionInput.value}` }
+                    ],
+                    max_tokens: 1500 // Adjust max_tokens as needed
+                }
+            }));
+
+            const jsonlData = batchRequests.map(request => JSON.stringify(request)).join('\n');
+            const blob = new Blob([jsonlData], { type: 'application/jsonl' });
+            const file = new File([blob], "batch_input.jsonl");
+
+            try {
+                logStatus("Uploading batch input file to OpenAI...");
+                progressText.textContent = `Uploading batch input file to OpenAI...`;
+                const openai = new OpenAI({ apiKey: apiKeys.openai, dangerouslyAllowBrowser: true });
+                const fileResponse = await openai.files.create({ file: file, purpose: "batch" });
+                const fileId = fileResponse.id;
+
+                logStatus(`File uploaded successfully, file ID: ${fileId}. Creating batch...`);
+                progressText.textContent = `Creating batch job...`;
+                const batchResponse = await openai.batches.create({
+                    input_file_id: fileId,
+                    endpoint: "/v1/chat/completions",
+                    completion_window: "24h"
+                });
+                batchJobId = batchResponse.id;
+                localStorage.setItem('openaiBatchJobId', batchJobId);
+                logStatus(`Batch job created successfully, Batch ID: ${batchJobId}. OpenAI is processing in the background. You can close this app and check back later using the Batch ID.`);
+                progressText.textContent = `OpenAI Batch Job ID: ${batchJobId}. Processing in background.`;
+                alert(`OpenAI Batch Job started with ID: ${batchJobId}. Results will be available later. You can close this app.`);
+
+            } catch (error) {
+                console.error("Error processing OpenAI Batch API:", error);
+                logStatus(`Error processing OpenAI Batch API: ${error.message}`);
+                progressText.textContent = `Error creating OpenAI Batch Job. See status log.`;
+                alert(`Error creating OpenAI Batch Job. See status log for details.`);
+            } finally {
+                isProcessing = false;
             }
         }
 
@@ -273,13 +417,14 @@
                 outlineTextArea.value = "Error generating outline.";
                 articleTextArea.value = "Error generating article.";
             } finally {
-                processNextInQueue(progress, startTime); // Process next keyword in queue
+                processNextInQueue(progress, startTime);
             }
         }
 
         function calculateDelay() {
-            const currentModel = models[currentModelName];
-            const minDelay = (60000 / currentModel.rpm) * 1.1; // Add 10% buffer
+            const currentModel = models[currentProvider]?.[Object.keys(models[currentProvider])[0]];
+            const rpm = currentModel?.maxRpm || 30;
+            const minDelay = (60000 / rpm) * 1.1;
             return minDelay;
         }
 
@@ -393,99 +538,93 @@
 
 
         async function generateContentWithRateLimit(keyword, contentType, retryAttempt, currentTitle = '', currentOutline = '') {
-            let modelToUse = selectModel();
-            if (!modelToUse) {
-                logStatus("All models rate limited. Please wait.");
-                throw new Error("Rate limit reached for all models.");
+            const provider = currentProvider;
+            const apiKey = apiKeys[provider];
+            const modelConfig = selectModelForProvider(provider);
+            if (!modelConfig) {
+                logStatus(`No model available for provider: ${provider}`);
+                throw new Error(`No model available for provider: ${provider}`);
             }
-            currentModelName = modelToUse;
-            if (currentModelDisplay) {
-                currentModelDisplay.textContent = models[currentModelName].displayName;
-            }
-            updateRateLimitDisplay();
+            const modelId = modelConfig.modelId;
 
-            const modelDetails = models[modelToUse];
-            const geminiAPIUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${apiKey}`;
-            let promptText = '';
+            let geminiAPIUrl, openaiAPIUrl, grokAPIUrl, claudeAPIUrl, deepseekAPIUrl, requestBody, promptText = '';
 
             if (contentType === 'title') promptText = 'Generate catchy article title about: ' + keyword;
             else if (contentType === 'outline') promptText = 'Generate detailed article outline for title: ' + currentTitle + ' about: ' + keyword;
             else if (contentType === 'article') promptText = 'Write a full article in HTML format based on title: ' + currentTitle + ', outline: ' + currentOutline + ', topic: ' + keyword + '. ' + customInstructionInput.value;
 
 
-            incrementUsage(modelToUse, 'rpm');
-            incrementUsage(modelToUse, 'tpm');
+            incrementUsage(provider, modelId, 'rpm');
 
-            logStatus(`[${models[modelToUse].displayName}] Generating ${contentType} for "${keyword}" (Attempt ${retryAttempt + 1}) with prompt: ${promptText.substring(0, 50)}...`);
-
-            const requestBody = {
-                contents: [{
-                    parts: [{ text: promptText + ' ' + customInstructionInput.value }]
-                }]
-            };
+            logStatus(`[${provider.toUpperCase()}-${modelConfig.displayName}] Generating ${contentType} for "${keyword}" (Attempt ${retryAttempt + 1}) with prompt: ${promptText.substring(0, 50)}...`);
 
             try {
-                const response = await fetch(geminiAPIUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(requestBody)
-                });
+                let response;
+                if (provider === 'gemini') {
+                    geminiAPIUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`;
+                    requestBody = { contents: [{ parts: [{ text: promptText + ' ' + customInstructionInput.value }] }] };
+                    response = await fetch(geminiAPIUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(requestBody) });
 
-                if (!response.ok) {
+                } else if (provider === 'openai') {
+                    openaiAPIUrl = `https://api.openai.com/v1/chat/completions`;
+                    const openai = new OpenAI({ apiKey: apiKey, dangerouslyAllowBrowser: true });
+                    const completion = await openai.chat.completions.create({ model: modelId, messages: [{ role: "user", content: promptText + ' ' + customInstructionInput.value }], max_tokens: 1000 });
+                    incrementUsage(provider, modelId, 'tpm', completion.usage.total_tokens);
+                    return completion.choices[0].message.content.trim();
+
+
+                } else if (provider === 'grok') {
+                    grokAPIUrl = `https://api.x.ai/v1/chat/completions`;
+                    requestBody = { messages: [{ role: "user", content: promptText + ' ' + customInstructionInput.value }], model: modelId, stream: false, temperature: 0 };
+                    response = await fetch(grokAPIUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, body: JSON.stringify(requestBody) });
+
+                } else if (provider === 'claude') {
+                    claudeAPIUrl = `https://api.anthropic.com/v1/messages`;
+                    const anthropic = new Anthropic({ apiKey: apiKey, dangerouslyAllowBrowser: true });
+                    const msg = await anthropic.messages.create({ model: modelId, max_tokens: 8192, messages: [{ role: "user", content: promptText + ' ' + customInstructionInput.value }] });
+                    incrementUsage(provider, modelId, 'tpm');
+                    return msg.content[0].text.trim();
+
+
+                } else if (provider === 'deepseek') {
+                    deepseekAPIUrl = `https://api.deepseek.com/chat/completions`;
+                    requestBody = { model: modelId, messages: [{ role: "user", content: promptText + ' ' + customInstructionInput.value }], stream: false };
+                    response = await fetch(deepseekAPIUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, body: JSON.stringify(requestBody) });
+                }
+
+
+                if (response && response.ok) {
+                    if (provider !== 'openai' && provider !== 'claude') {
+                        const data = await response.json();
+                        let generatedText = '';
+                        if (provider === 'gemini') generatedText = data.candidates[0].content.parts[0].text.trim();
+                        else if (provider === 'grok') generatedText = data.choices[0].message.content.trim();
+                        else if (provider === 'deepseek') generatedText = data.choices[0].message.content.trim();
+
+                        logStatus(`[${provider.toUpperCase()}-${modelConfig.displayName}] Generated ${contentType} for "${keyword}": ${generatedText.substring(0, 100)}...`);
+                        return generatedText;
+                    }
+
+                } else if (response) {
+                    incrementUsage(provider, modelId, 'rpm', 1, true);
                     if (response.status === 429) {
-                        logStatus(`[${models[modelToUse].displayName}] Rate limit hit for "${keyword}" - ${contentType}! Status: ${response.status} - ${response.statusText}`);
-                        resetUsage(modelToUse, 'rpm'); //  <-- REMOVE THIS LINE - we will MAX OUT usage instead
-                        resetUsage(modelToUse, 'tpm'); //  <-- REMOVE THIS LINE - we will MAX OUT usage instead
-
-
-                        // MAX OUT usage counts for the current model upon 429 error
-                        models[modelToUse].usageRPM = models[modelToUse].rpm;
-                        models[modelToUse].usageRPD = models[modelToUse].rpd;
-                        saveUsageData(); // Immediately save the updated usage
-                        updateRateLimitDisplay(); // Update the UI to reflect maxed out usage
-
-
-                        if (retryAttempt < 2) { // Limit retries to 2 (for example)
-                            const nextModelName = selectNextModel(modelToUse);
-                            if (nextModelName) {
-                                currentModelName = nextModelName;
-                                if (currentModelDisplay) {
-                                    currentModelDisplay.textContent = models[currentModelName].displayName;
-                                }
-                                updateRateLimitDisplay();
-                                logStatus(`Switched to model: ${models[currentModelName].displayName}, retrying ${contentType} for "${keyword}" (Attempt ${retryAttempt + 2}).`);
-
-                                if (contentType === 'title') retryCounts[keyword].title++;
-                                else if (contentType === 'outline') retryCounts[keyword].outline++;
-                                else if (contentType === 'article') retryCounts[keyword].article++;
-
-                                return await generateContentWithRateLimit(keyword, contentType, retryAttempt + 1, currentTitle, currentOutline); // Recursive retry
-                            } else {
-                                logStatus(`All models rate limited for "${keyword}" - ${contentType}, cannot switch.`);
-                                throw new Error(`Rate limit reached for all models for "${keyword}" - ${contentType}.`);
-                            }
+                        logStatus(`[${provider.toUpperCase()}-${modelConfig.displayName}] Rate limit hit for "${keyword}" - ${contentType}! Status: ${response.status} - ${response.statusText}`);
+                        const nextModelConfig = selectNextModel(modelId, provider);
+                        if (nextModelConfig) {
+                            logStatus(`Switching model to ${nextModelConfig.displayName}`);
+                            return await generateContentWithRateLimit(keyword, contentType, retryAttempt + 1, currentTitle, currentOutline);
                         } else {
-                            logStatus(`Max retries reached for "${keyword}" - ${contentType}.`);
-                            throw new Error(`Max retries reached for "${keyword}" - ${contentType}.`); // Stop retrying after max attempts
+                            logStatus(`No more models available for provider ${provider} or all are rate limited.`);
+                            throw new Error(`Rate limit reached for all models for provider ${provider}.`);
                         }
-
 
                     } else {
                         const errorDetails = await response.json();
-                        logStatus(`[${models[modelToUse].displayName}] API Error for "${keyword}" - ${contentType}: ${response.status} - ${response.statusText} - ${JSON.stringify(errorDetails)}`);
-                        throw new Error(`[${models[modelToUse].displayName}] HTTP error for "${keyword}" - ${contentType}! status: ${response.status}, details: ${JSON.stringify(errorDetails)}`);
+                        logStatus(`[${provider.toUpperCase()}-${modelConfig.displayName}] API Error for "${keyword}" - ${contentType}: ${response.status} - ${response.statusText} - ${JSON.stringify(errorDetails)}`);
+                        throw new Error(`HTTP error! status: ${response.status}, details: ${JSON.stringify(errorDetails)}`);
                     }
                 }
 
-                const data = await response.json();
-                if (!data.candidates || !data.candidates[0].content || !data.candidates[0].content.parts || !data.candidates[0].content.parts[0].text) {
-                    logStatus(`[${models[modelToUse].displayName}] Unexpected API response format for "${keyword}" - ${contentType}: ${JSON.stringify(data)}`);
-                    throw new Error(`[${models[modelToUse].displayName}] Unexpected API response format for "${keyword}" - ${contentType}`);
-                }
-
-                const generatedText = data.candidates[0].content.parts[0].text.trim();
-                logStatus(`[${models[modelToUse].displayName}] Generated ${contentType} for "${keyword}": ${generatedText.substring(0, 100)}...`);
-                return generatedText;
 
             } catch (error) {
                 console.error("Error in generateContentWithRateLimit:", error);
@@ -516,148 +655,74 @@
             statusLog.scrollTop = statusLog.scrollHeight;
         }
 
-        function selectModel() {
-            const priorityOrder = ['gemini-2.0-flash-lite-preview-02-05', 'gemini-2.0-flash', 'gemini-2.0-flash-thinking-exp-01-21', 'gemini-2.0-pro-exp-02-05'];
-            for (const modelName of priorityOrder) {
-                if (models[modelName].usageRPM < models[modelName].rpm && models[modelName].usageRPD < models[modelName].rpd) {
-                    return modelName;
+
+        function selectModelForProvider(provider) {
+            const providerModels = models[provider];
+            if (!providerModels) return null;
+
+            const modelKeys = Object.keys(providerModels);
+            if (modelKeys.length === 0) return null;
+
+            let bestModel = null;
+            let bestPriority = Infinity;
+
+            for (const modelName of modelKeys) {
+                const model = providerModels[modelName];
+                if (model.usageRPM < model.maxRpm && model.priority < bestPriority) {
+                    bestModel = model;
+                    bestPriority = model.priority;
                 }
             }
-            return null; // All models rate limited
+            return bestModel;
         }
 
-        function selectNextModel(currentModel) {
-            const priorityOrder = ['gemini-2.0-flash-lite-preview-02-05', 'gemini-2.0-flash', 'gemini-2.0-flash-thinking-exp-01-21', 'gemini-2.0-pro-exp-02-05'];
-            const currentIndex = priorityOrder.indexOf(currentModel);
-            for (let i = currentIndex + 1; i < priorityOrder.length; i++) {
-                const modelName = priorityOrder[i];
-                if (models[modelName].usageRPM < models[modelName].rpm && models[modelName].usageRPD < models[modelName].rpd) {
-                    return modelName;
+
+        function selectNextModel(currentModelId, provider) {
+            const providerModels = models[provider];
+            if (!providerModels) return null;
+
+            const modelKeys = Object.keys(providerModels);
+            const currentModelPriority = providerModels[currentModelId]?.priority;
+            if (currentModelPriority === undefined) return null;
+
+            let nextBestModel = null;
+            let nextBestPriority = Infinity;
+
+            for (const modelName of modelKeys) {
+                const model = providerModels[modelName];
+                if (model.priority > currentModelPriority && model.priority < nextBestPriority && model.usageRPM < model.maxRpm) {
+                    nextBestModel = model;
+                    nextBestPriority = model.priority;
                 }
             }
-            return null; // No next model available
+            return nextBestModel;
         }
 
 
-        function incrementUsage(modelName, dimension) {
-            if (dimension === 'rpm') models[modelName].usageRPM++;
-            if (dimension === 'tpm') models[modelName].usageTPM++;
-            if (dimension === 'rpd') models[modelName].usageRPD++;
-            saveUsageData();
-            updateRateLimitDisplay();
+        function incrementUsage(provider, modelName, dimension, value = 1, isFailure = false) {
+            if (!models[provider] || !models[provider][modelName]) return;
+
+            if (dimension === 'rpm') models[provider][modelName].usageRPM += value;
+            if (dimension === 'tpm') models[provider][modelName].usageTPM += value;
+            if (dimension === 'rpd') models[provider][modelName].usageRPD += value;
         }
 
         function resetUsage(modelName, dimension) {
-            if (dimension === 'rpm') models[modelName].usageRPM = 0;
-            if (dimension === 'tpm') models[modelName].usageTPM = 0;
-            if (dimension === 'rpd') models[modelName].usageRPD = 0;
-            saveUsageData();
-            updateRateLimitDisplay();
+            // (No implementation yet)
         }
-
         function saveUsageData() {
-            modelNames.forEach(modelName => {
-                localStorage.setItem(`rpm_${modelName}`, models[modelName].rpm); // Save current (customized) RPM
-                localStorage.setItem(`tpm_${modelName}`, models[modelName].tpm); // Save current (customized) TPM
-                localStorage.setItem(`rpd_${modelName}`, models[modelName].rpd); // Save current (customized) RPD
-                localStorage.setItem(`usageRPM_${modelName}`, models[modelName].usageRPM);
-                localStorage.setItem(`usageTPM_${modelName}`, models[modelName].usageTPM);
-                localStorage.setItem(`usageRPD_${modelName}`, models[modelName].usageRPD);
-            });
+            // (No implementation yet)
         }
-
         function loadUsageData() {
-            modelNames.forEach(modelName => {
-                models[modelName].usageRPM = parseInt(localStorage.getItem(`usageRPM_${modelName}`) || '0');
-                models[modelName].usageTPM = parseInt(localStorage.getItem(`usageTPM_${modelName}`) || '0');
-                models[modelName].usageRPD = parseInt(localStorage.getItem(`usageRPD_${modelName}`) || '0');
-            });
+            // (No implementation yet)
         }
-
         function resetDailyUsageIfNeeded() {
-            const today = new Date().toDateString();
-            modelNames.forEach(modelName => {
-                const lastResetDate = models[modelName].lastReset;
-                if (lastResetDate !== today) {
-                    models[modelName].usageRPM = 0;
-                    models[modelName].usageTPM = 0;
-                    models[modelName].usageRPD = 0;
-                    models[modelName].lastReset = today;
-                    localStorage.setItem(`usageResetDate_${modelName}`, today);
-                    localStorage.setItem(`usageRPM_${modelName}`, '0');
-                    localStorage.setItem(`usageTPM_${modelName}`, '0');
-                    localStorage.setItem(`usageRPD_${modelName}`, '0');
-                    logStatus(`Daily usage reset for ${models[modelName].displayName}`);
-                }
-            });
-        }
-
-        function updateRateLimitDisplay() {
-            const modelInfo = models[currentModelName];
-            if (!modelInfo) return;
-
-            rateLimitInfoDiv.innerHTML = `
-                <div class="rate-limit-pair">
-                    <label for="rpm-limit">RPM Limit:</label>
-                    <div>
-                        <input type="number" id="rpm-limit" class="rate-limit-input" value="${modelInfo.rpm}" min="1" max="${modelInfo.maxRpm}"> / ${modelInfo.maxRpm}
-                    </div>
-                </div>
-                <div class="rate-limit-pair">
-                    <label for="tpm-limit">TPM Limit:</label>
-                    <div>
-                        <input type="number" id="tpm-limit" class="rate-limit-input" value="${modelInfo.tpm}" min="1" max="${modelInfo.maxTpm}"> / ${modelInfo.maxTpm}
-                    </div>
-                </div>
-                <div class="rate-limit-pair">
-                    <label for="rpd-limit">RPD Limit:</label>
-                    <div>
-                        <input type="number" id="rpd-limit" class="rate-limit-input" value="${modelInfo.rpd}" min="1" max="${modelInfo.maxRpd}"> / ${modelInfo.maxRpd}
-                    </div>
-                </div>
-                <p class="rate-limit-model-info">Model: <span>${modelInfo.displayName}</span></p>
-                <p class="rate-limit-model-info">Usage RPM: <span>${modelInfo.usageRPM} / ${modelInfo.rpm}</span></p>
-                <p class="rate-limit-model-info">Usage TPM: <span>${modelInfo.usageTPM} / ${modelInfo.tpm}</span></p>
-                <p class="rate-limit-model-info">Usage RPD: <span>${modelInfo.usageRPD} / ${modelInfo.rpd}</span></p>
-            `;
-
-            const rpmLimitInput = document.getElementById('rpm-limit'); // Get input elements here AGAIN inside this function scope
-            const tpmLimitInput = document.getElementById('tpm-limit');
-            const rpdLimitInput = document.getElementById('rpd-limit');
-
-            rpmLimitInput.addEventListener('change', updateCustomRateLimits);
-            tpmLimitInput.addEventListener('change', updateCustomRateLimits);
-            rpdLimitInput.addEventListener('change', updateCustomRateLimits);
-        }
-
-        function updateCustomRateLimits() {
-            const rpmLimitInput = document.getElementById('rpm-limit'); // Get input elements here AGAIN inside this function scope
-            const tpmLimitInput = document.getElementById('tpm-limit');
-            const rpdLimitInput = document.getElementById('rpd-limit');
-            const modelInfo = models[currentModelName];
-            modelInfo.rpm = Math.min(parseInt(rpmLimitInput.value), modelInfo.maxRpm);
-            modelInfo.tpm = Math.min(parseInt(tpmLimitInput.value), modelInfo.maxTpm);
-            modelInfo.rpd = Math.min(parseInt(rpdLimitInput.value), modelInfo.maxRpd);
-            saveUsageData(); // Save updated limits
-            updateRateLimitDisplay(); // Refresh display to reflect changes
+            // (No implementation yet)
         }
 
 
-        function populateModelSelect() {
-            modelNames.forEach(modelName => {
-                const option = document.createElement('option');
-                option.value = modelName;
-                option.textContent = defaultModels[modelName].displayName;
-                modelSelect.appendChild(option);
-            });
-        }
-
-
-        if (pendingKeywords) {
-            processKeywords();
-            pendingKeywords = null;
-        }
-
+        resetDailyUsageIfNeeded();
     </script>
+
 </body>
 </html>
