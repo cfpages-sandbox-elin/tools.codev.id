@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RJPP - Rencana Jangka Panjang Perusahaan</title>
+    <style>
+        body { font-family: sans-serif; }
+        textarea { width: 100%; height: 150px; margin-bottom: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; padding: 8px; }
+        button { padding: 10px 20px; cursor: pointer; border-radius: 5px; background-color: #f0f0f0; border: 1px solid #ccc; }
+        button:hover { background-color: #e0e0e0; }
+        #status { margin-top: 10px; white-space: pre-wrap; height: 150px; overflow-y: scroll; border: 1px solid #ccc; padding: 8px; box-sizing: border-box; font-family: monospace; border-radius: 5px; background-color: #f9f9f9; }
+        #sitemapUrl, #printfriendlyApiKey, #issuuBearerToken, #issuuClientId, #issuuClientSecret, #urlFilter, .additional-api-key { width: 100%; margin-bottom: 8px; padding: 8px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; }
+        .api-key-input, .sitemap-parser, .url-area, .results-area, .progress-area, .cors-info { margin-bottom: 15px; padding: 10px; border-radius: 8px; background-color: #fff; border: 1px solid #ddd; }
+        .sitemap-parser { display: flex; }
+        .sitemap-parser input { flex-grow: 1; margin-right: 10px; }
+        .url-area { display: flex; }
+        .url-area textarea { flex-grow: 2; margin-right: 10px; }
+        .url-filter-area { flex-grow: 1; }
+        .results-area { margin-top: 10px; display: flex; }
+        .results-area textarea { flex: 1; height: 150px; margin-right: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; padding: 8px; }
+        .progress-area { margin-bottom: 10px; }
+        .progress-bar { width: 100%; height: 20px; background-color: #eee; border-radius: 5px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; width: 0%; background-color: #4CAF50; border-radius: 5px; transition: width 0.3s ease-in-out; }
+        .cors-info { background-color: #f0f0f0; padding: 10px; border: 1px solid #ccc; margin-bottom: 15px; border-radius: 5px; }
+        .issuu-creds { display: flex; align-items: center; }
+        .issuu-creds label { margin-right: 10px; white-space: nowrap; }
+        .issuu-creds input { margin-right: 10px; flex: 1; }
+        .api-keys-container { display: flex; flex-direction: column; }
+        .additional-keys-container { display: flex; flex-wrap: wrap; align-items: center; margin-top: 5px; }
+        .additional-keys-container label { margin-right: 10px; white-space: nowrap; margin-bottom: 5px; }
+        .additional-keys-container input { flex: 1 1 200px; margin-right: 10px; margin-bottom: 5px; }
+        h1 { color: #333; }
+        label { font-weight: bold; display: block; margin-bottom: 5px; color: #555; }
+        p { color: #777; margin-bottom: 8px; }
+        .url-filter-area p { margin-top: 5px; font-style: italic; color: #999; }
+        .results-area button { margin-top: 10px; }
+      
+        /* Card Specific Styling (Keep existing card styles and adjust if needed) */
+        .card {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            opacity: 1;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+            transform: translateY(0);
+        }
+      
+        .card.hidden {
+            opacity: 0;
+            transform: translateY(20px);
+            pointer-events: none; /* Prevent interaction when hidden */
+        }
+      
+        .card-header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+      
+        .card-analysis, .card-topic {
+            font-size: 0.9em;
+            color: #777;
+        }
+      
+        .card-question {
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+      
+        /* Keep existing progress bar styles */
+        .progress-container {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+      
+        .progress-bar-info {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+      
+        .progress-bar {
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            height: 10px;
+            width: 100%;
+            position: relative;
+            overflow: hidden; /* Ensure rounded corners are visible */
+        }
+      
+        .progress-bar-fill {
+            background-color: #4caf50;
+            height: 100%;
+            width: 0%; /* Will be updated by JS */
+            border-radius: 5px;
+            transition: width 0.3s ease; /* Smooth transition for progress */
+        }
+        .progress-bar-segments {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            display: flex;
+            justify-content: flex-start; /* or space-around, space-between, etc. */
+            align-items: center;
+            pointer-events: none; /* Make sure clicks pass through to the bar */
+        }
+      
+        .progress-segment {
+            height: 100%;
+            background-color: #4caf50;
+            flex-grow: 1; /* Equal distribution of segments */
+            border-right: 1px solid #e0e0e0; /* Segment separator */
+            box-sizing: border-box; /* Include border in width calculation */
+        }
+      
+        .progress-segment:last-child {
+            border-right: none; /* No border on the last segment */
+        }
+      
+        .progress-segment.unanswered {
+            background-color: #ccc; /* Grey for unanswered segments */
+        }
+      
+      
+        /* Controls Styling */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+        }
+      
+        .controls button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #f0f0f0; /* Updated to match new style */
+            border: 1px solid #ccc; /* Updated to match new style */
+            color: black; /* Set text color to black for better readability */
+            cursor: pointer;
+            font-size: 1em;
+        }
+      
+        .controls button:hover {
+            background-color: #e0e0e0; /* Hover effect */
+        }
+      
+        .controls button:disabled {
+            background-color: #eee; /* Disabled state background */
+            color: #999;         /* Disabled state text color */
+            cursor: default;
+            border: 1px solid #ddd; /* Optional: slightly different border for disabled */
+        }
+      
+      
+        /* Report Section Styling - Keep as is unless you want to change */
+        .report-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+      
+        .user-info-section, .answers-section {
+            margin-bottom: 20px;
+        }
+      
+        .user-info-section h3, .answers-section h3 {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+      
+        .user-info-item, .answer-item {
+            margin-bottom: 10px;
+        }
+      
+        .answer-item .question-text {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+      
+      
+        /* Initial User Info Form Styling - Keep as is unless you want to change */
+        .user-info-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+      
+        .user-info-form label {
+            font-weight: bold;
+        }
+      
+        .user-info-form input, .user-info-form select {
+            padding: 8px; /* Slightly reduced padding to match new style */
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+      
+        .user-info-form button {
+            align-self: flex-start; /* Align button to the start of the flex container */
+            background-color: #f0f0f0; /* Updated to match new style */
+            border: 1px solid #ccc; /* Updated to match new style */
+            color: black;         /* Text color to black */
+        }
+      
+        .user-info-form button:hover {
+            background-color: #e0e0e0; /* Hover effect */
+        }
+      
+      
+        /* New Checkbox and Button Container Styling */
+        .answer-confirmation {
+            display: flex;
+            flex-direction: column; /* Stack checkbox and button vertically */
+            align-items: flex-start; /* Align items to the start */
+            margin-top: 15px; /* Add some space above the checkbox */
+        }
+      
+        .answer-confirmation label {
+            display: inline-flex; /* Align checkbox and label text in one line */
+            align-items: center; /* Vertically align checkbox and text */
+            margin-bottom: 10px; /* Space between checkbox and button */
+        }
+      
+        .answer-confirmation input[type="checkbox"] {
+            margin-right: 8px; /* Space between checkbox and label text */
+        }
+      
+        .answer-confirmation button {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            background-color: #f0f0f0; /* Style to match other buttons */
+            border: 1px solid #ccc;
+        }
+      
+        .answer-confirmation button:hover {
+            background-color: #e0e0e0; /* Hover effect */
+        }
+      
+        .answer-confirmation button:disabled {
+            background-color: #eee; /* Disabled state */
+            color: #999;
+            cursor: default;
+            border: 1px solid #ddd;
+        }
+      
+      </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RJPP - Rencana Jangka Panjang Perusahaan</h1>
+
+        <div id="user-info-form-section">
+            <h2>Informasi Perusahaan dan Pengguna</h2>
+            <form id="user-info-form" class="user-info-form">
+                <label for="fullName">Nama Lengkap:</label>
+                <input type="text" id="fullName" name="fullName" required>
+
+                <label for="companyName">Nama Perusahaan:</label>
+                <input type="text" id="companyName" name="companyName" required>
+
+                <label for="position">Jabatan:</label>
+                <input type="text" id="position" name="position" required>
+
+                <label for="industry">Industri Perusahaan:</label>
+                <input type="text" id="industry" name="industry" required>
+
+                <label for="productService">Produk/Jasa Perusahaan:</label>
+                <input type="text" id="productService" name="productService" required>
+
+                <label for="companySize">Ukuran Perusahaan:</label>
+                <select id="companySize" name="companySize" required>
+                    <option value="">Pilih Ukuran</option>
+                    <option value="small">Kecil</option>
+                    <option value="medium">Menengah</option>
+                    <option value="large">Besar</option>
+                </select>
+
+                <button type="submit">Mulai Analisis</button>
+            </form>
+        </div>
+
+
+        <div id="question-section" style="display: none;">
+            <div class="progress-container">
+                <div class="progress-bar-info">
+                    <span id="question-number"></span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-bar-segments" id="progress-segments"></div>
+                    <div class="progress-bar-fill" id="progress-fill"></div>
+                </div>
+            </div>
+
+            <div id="question-card" class="card">
+                <div class="card-header">
+                    <div class="card-analysis" id="card-analysis-title">Analisis: [Nama Analisis]</div>
+                    <div class="card-topic" id="card-topic-title">Topik: [Nama Topik]</div>
+                </div>
+                <div class="card-question" id="card-question-text">[Pertanyaan akan muncul di sini]</div>
+                <textarea id="answer-textarea" placeholder="Jawaban Anda"></textarea>
+            </div>
+
+            <textarea id="answer-textarea" placeholder="Jawaban Anda"></textarea>
+
+            <div class="answer-confirmation">
+                <label>
+                    <input type="checkbox" id="confirm-answer-checkbox"> Saya yakin dengan jawaban ini
+                </label>
+                <button id="next-btn-question" disabled>Pertanyaan Selanjutnya</button>
+            </div>
+
+            <div class="controls">
+                <button id="prev-btn">Sebelumnya</button>
+                <!--  "Pertanyaan Selanjutnya" button is now in answer-confirmation div -->
+                <!-- <button id="next-btn" disabled>Selanjutnya</button> -->
+            </div>
+        </div>
+
+        <div id="report-section" class="report-section" style="display: none;">
+            <h2>Laporan RJPP</h2>
+            <div class="user-info-section">
+                <h3>Informasi Perusahaan dan Pengguna</h3>
+                <div id="report-user-info"></div>
+            </div>
+            <div class="answers-section">
+                <h3>Jawaban Analisis</h3>
+                <div id="report-answers"></div>
+            </div>
+            <button id="download-pdf-btn">Download PDF (Coming Soon)</button>
+        </div>
+    </div>
+
+    <script>
+        const userInfoFormSection = document.getElementById('user-info-form-section');
+        const userInfoForm = document.getElementById('user-info-form');
+        const questionSection = document.getElementById('question-section');
+        const questionCard = document.getElementById('question-card');
+        const cardAnalysisTitle = document.getElementById('card-analysis-title');
+        const cardTopicTitle = document.getElementById('card-topic-title');
+        const cardQuestionText = document.getElementById('card-question-text');
+        const answerTextarea = document.getElementById('answer-textarea');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const questionNumberDisplay = document.getElementById('question-number');
+        const progressBarFill = document.getElementById('progress-fill');
+        const progressBarSegments = document.getElementById('progress-segments');
+        const reportSection = document.getElementById('report-section');
+        const reportUserInfoDiv = document.getElementById('report-user-info');
+        const reportAnswersDiv = document.getElementById('report-answers');
+
+
+        // --- Question Data (Placeholder - Replace with your actual data) ---
+        const questionsData = {
+            "Analisis Porter's 5 Forces": {
+                "Ancaman Pendatang Baru": [
+                    { question: "Seberapa mudah bagi perusahaan baru untuk masuk ke industri ini?", answerKey: "porters_entrants_q1" },
+                    { question: "Apa saja hambatan masuk yang ada (misalnya, modal awal, regulasi, akses distribusi)?", answerKey: "porters_entrants_q2" },
+                    { question: "Seberapa besar kemungkinan perusahaan yang sudah ada akan merespons dengan agresif terhadap pendatang baru?", answerKey: "porters_entrants_q3" }
+                ],
+                "Daya Tawar Pemasok": [
+                    { question: "Seberapa terkonsentrasi industri pemasok?", answerKey: "porters_supplier_q1" },
+                    { question: "Seberapa penting input yang disediakan oleh pemasok bagi perusahaan?", answerKey: "porters_supplier_q2" }
+                ]
+            },
+            "Analisis PESTEL": {
+                "Politik": [
+                    { question: "Bagaimana stabilitas politik di negara tempat perusahaan beroperasi?", answerKey: "pestel_politik_q1" },
+                    { question: "Apakah ada perubahan kebijakan pemerintah yang dapat mempengaruhi industri dan perusahaan?", answerKey: "pestel_politik_q2" }
+                ]
+            }
+        };
+
+
+        let currentAnalysisKeys = Object.keys(questionsData);
+        let currentAnalysisIndex = 0;
+        let currentTopicKeys = Object.keys(questionsData[currentAnalysisKeys[currentAnalysisIndex]]);
+        let currentTopicIndex = 0;
+        let currentQuestionIndex = 0;
+        let currentQuestions = questionsData[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicIndex]];
+
+
+        let userData = {
+            fullName: "",
+            companyName: "",
+            position: "",
+            industry: "",
+            productService: "",
+            companySize: ""
+        };
+        let answers = {};
+
+
+        // --- Local Storage Functions ---
+        function loadUserData() {
+            const storedUserData = localStorage.getItem('rjppUserData');
+            if (storedUserData) {
+                userData = JSON.parse(storedUserData);
+                document.getElementById('fullName').value = userData.fullName || "";
+                document.getElementById('companyName').value = userData.companyName || "";
+                document.getElementById('position').value = userData.position || "";
+                document.getElementById('industry').value = userData.industry || "";
+                document.getElementById('productService').value = userData.productService || "";
+                document.getElementById('companySize').value = userData.companySize || "";
+            }
+        }
+
+        function saveUserData() {
+            localStorage.setItem('rjppUserData', JSON.stringify(userData));
+        }
+
+        function loadAnswers() {
+            const storedAnswers = localStorage.getItem('rjppAnswers');
+            if (storedAnswers) {
+                answers = JSON.parse(storedAnswers);
+            }
+        }
+
+        function saveAnswers() {
+            localStorage.setItem('rjppAnswers', JSON.stringify(answers));
+        }
+
+        function clearLocalStorageData() {
+            localStorage.removeItem('rjppUserData');
+            localStorage.removeItem('rjppAnswers');
+        }
+
+
+        // --- Function to Initialize and Display Questions ---
+        function startAnalysis() {
+            userInfoFormSection.style.display = 'none';
+            questionSection.style.display = 'block';
+            loadAnswers(); // Load previous answers if any
+            displayQuestion();
+        }
+
+
+        function displayQuestion() {
+            const analysisName = currentAnalysisKeys[currentAnalysisIndex];
+            const topicName = currentTopicKeys[currentTopicIndex];
+            const questionData = currentQuestions[currentQuestionIndex];
+
+            cardAnalysisTitle.textContent = `Analisis: ${analysisName}`;
+            cardTopicTitle.textContent = `Topik: ${topicName}`;
+            cardQuestionText.textContent = questionData.question;
+
+            answerTextarea.value = answers[questionData.answerKey] || ''; // Load saved answer
+            confirmAnswerCheckbox.checked = answers[questionData.answerKey] ? true : false; // Set checkbox based on saved answer
+            updateProgress();
+            updateButtonStates();
+            answerTextarea.focus(); // Automatically focus on textarea
+
+            // Simple "shuffle" animation by fading out and in
+            questionCard.classList.add('hidden');
+            setTimeout(() => {
+                questionCard.classList.remove('hidden');
+            }, 100); // Small delay before showing
+        }
+
+        function updateProgress() {
+            const totalQuestionsInTopic = currentQuestions.length;
+            const currentQuestionNumber = currentQuestionIndex + 1;
+            questionNumberDisplay.textContent = `Pertanyaan ${currentQuestionNumber} / ${totalQuestionsInTopic}`;
+
+            const answeredQuestionsInTopic = currentQuestions.reduce((count, q, index) => {
+                return answers[q.answerKey] ? count + 1 : count;
+            }, 0);
+            const progressPercentage = (answeredQuestionsInTopic / totalQuestionsInTopic) * 100;
+            progressBarFill.style.width = `${progressPercentage}%`;
+
+
+            // Update progress bar segments
+            progressBarSegments.innerHTML = ''; // Clear existing segments
+            for (let i = 0; i < totalQuestionsInTopic; i++) {
+                const segment = document.createElement('div');
+                segment.classList.add('progress-segment');
+                if (!answers[currentQuestions[i].answerKey]) {
+                    segment.classList.add('unanswered');
+                }
+                progressBarSegments.appendChild(segment);
+            }
+        }
+
+
+        function updateButtonStates() {
+            prevBtn.disabled = currentQuestionIndex === 0;
+            // nextBtn.disabled = !answerTextarea.value.trim(); // Original next button disable logic - REMOVE THIS LINE
+            nextBtnQuestion.disabled = !confirmAnswerCheckbox.checked; // Disable "Pertanyaan Selanjutnya" if checkbox not checked
+        }
+
+        function goToPreviousQuestion() {
+            if (currentQuestionIndex > 0) {
+                saveAnswer();
+                currentQuestionIndex--;
+                displayQuestion();
+            } else if (currentTopicIndex > 0) {
+                saveAnswer();
+                currentTopicIndex--;
+                currentQuestions = questionsData[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicIndex]];
+                currentQuestionIndex = currentQuestions.length - 1; // Go to last question of prev topic
+                displayQuestion();
+            } else if (currentAnalysisIndex > 0) {
+                saveAnswer();
+                currentAnalysisIndex--;
+                currentTopicKeys = Object.keys(questionsData[currentAnalysisKeys[currentAnalysisIndex]]);
+                currentTopicIndex = currentTopicKeys.length - 1; // Go to last topic of prev analysis
+                currentQuestions = questionsData[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicIndex]];
+                currentQuestionIndex = currentQuestions.length - 1; // Go to last question of last topic
+                displayQuestion();
+            }
+        }
+
+
+        function goToNextQuestion() {
+            if (!confirmAnswerCheckbox.checked) { // Optional: Add check here as well for extra safety
+                alert("Mohon centang 'Saya yakin dengan jawaban ini' sebelum melanjutkan.");
+                return;
+            }
+            if (currentQuestionIndex < currentQuestions.length - 1) {
+                saveAnswer();
+                currentQuestionIndex++;
+                displayQuestion();
+            } else if (currentTopicIndex < currentTopicKeys.length - 1) {
+                saveAnswer();
+                currentTopicIndex++;
+                currentQuestions = questionsData[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicIndex]];
+                currentQuestionIndex = 0; // Go to first question of next topic
+                displayQuestion();
+            } else if (currentAnalysisIndex < currentAnalysisKeys.length - 1) {
+                saveAnswer();
+                currentAnalysisIndex++;
+                currentAnalysisKeys = Object.keys(questionsData); // Re-fetch analysis keys in case of dynamic changes
+                currentTopicKeys = Object.keys(questionsData[currentAnalysisKeys[currentAnalysisIndex]]);
+                currentTopicIndex = 0; // Go to first topic of next analysis
+                currentQuestions = questionsData[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicIndex]];
+                currentQuestionIndex = 0; // Go to first question of first topic
+                displayQuestion();
+            } else {
+                saveAnswer();
+                showReport(); // If no more questions, show report
+            }
+        }
+
+
+        function saveAnswer() {
+            const currentQuestion = currentQuestions[currentQuestionIndex];
+            answers[currentQuestion.answerKey] = answerTextarea.value;
+            saveAnswers();
+        }
+
+
+        function showReport() {
+            questionSection.style.display = 'none';
+            reportSection.style.display = 'block';
+
+            // Display User Info in Report
+            let userInfoHTML = '';
+            for (const key in userData) {
+                userInfoHTML += `<div class="user-info-item"><strong>${key}:</strong> ${userData[key]}</div>`;
+            }
+            reportUserInfoDiv.innerHTML = userInfoHTML;
+
+            // Display Answers in Report
+            let answersHTML = '';
+            for (const analysisKey in questionsData) {
+                answersHTML += `<h3>${analysisKey}</h3>`;
+                for (const topicKey in questionsData[analysisKey]) {
+                    answersHTML += `<h4>${topicKey}</h4>`;
+                    questionsData[analysisKey][topicKey].forEach(qData => {
+                        answersHTML += `<div class="answer-item"><div class="question-text">${qData.question}</div><div>${answers[qData.answerKey] || '<i>Tidak dijawab</i>'}</div></div>`;
+                    });
+                }
+            }
+            reportAnswersDiv.innerHTML = answersHTML;
+        }
+
+        const confirmAnswerCheckbox = document.getElementById('confirm-answer-checkbox');
+        const nextBtnQuestion = document.getElementById('next-btn-question'); // Renamed button
+
+        // --- Event Listeners ---
+        userInfoForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            userData = {
+                fullName: document.getElementById('fullName').value,
+                companyName: document.getElementById('companyName').value,
+                position: document.getElementById('position').value,
+                industry: document.getElementById('industry').value,
+                productService: document.getElementById('productService').value,
+                companySize: document.getElementById('companySize').value
+            };
+            saveUserData();
+            startAnalysis();
+        });
+
+
+        nextBtn.addEventListener('click', goToNextQuestion);
+        prevBtn.addEventListener('click', goToPreviousQuestion);
+
+        confirmAnswerCheckbox.addEventListener('change', function() {
+            updateButtonStates(); // Update button state when checkbox is toggled
+        });
+
+        // nextBtn.addEventListener('click', goToNextQuestion); // REMOVE THIS LINE
+        nextBtnQuestion.addEventListener('click', goToNextQuestion); // Use the renamed button
+
+        answerTextarea.addEventListener('input', function() {
+            // updateButtonStates(); // REMOVE THIS LINE - Checkbox now controls next button
+            if (!confirmAnswerCheckbox.checked) {
+                confirmAnswerCheckbox.checked = true; // Automatically check checkbox when user types
+                updateButtonStates(); // Update button state
+            }
+        });
+
+        // --- Initialization ---
+        loadUserData(); // Load user data on page load
+        if (Object.values(userData).some(value => value)) { // Check if user data is filled
+            userInfoFormSection.style.display = 'none';
+            questionSection.style.display = 'block';
+            loadAnswers();
+            displayQuestion();
+        } else {
+            userInfoFormSection.style.display = 'block';
+            questionSection.style.display = 'none';
+            reportSection.style.display = 'none';
+        }
+
+
+    </script>
+</body>
+</html>
