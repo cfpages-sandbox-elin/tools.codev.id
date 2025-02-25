@@ -983,7 +983,13 @@
                     currentTopicIndex = storedState.currentTopicIndex || 0;
                     currentQuestionIndex = storedState.currentQuestionIndex || 0;
                     currentAnalysisKeys = storedState.currentAnalysisKeys || Object.keys(questionsData);
-                    currentTopicKeys = storedState.currentTopicKeys || Object.keys(questionsData[currentAnalysisKeys[currentAnalysisIndex]]);
+
+                    // --- ADD THESE CONSOLE LOGS RIGHT HERE ---
+                    console.log("loadAnswers - currentAnalysisKeys:", currentAnalysisKeys);
+                    console.log("loadAnswers - currentAnalysisIndex:", currentAnalysisIndex);
+                    // --- END CONSOLE LOGS ---
+
+                    currentTopicKeys = Object.keys(questionsData[currentAnalysisKeys[currentAnalysisIndex]]); // Line causing error
                     currentQuestions = questionsData[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicIndex]] || [];
 
                     // --- NEW LOGIC: Find first unanswered question ---
