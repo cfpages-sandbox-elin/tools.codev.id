@@ -299,6 +299,21 @@
             border: 1px solid #ddd;
         }
 
+        /* User Info Display in Question Card */
+        .card-user-info {
+            text-align: left;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        .card-user-info p {
+            margin: 5px 0;
+        }
+
     </style>
 </head>
 <body>
@@ -359,6 +374,9 @@
             </div>
 
             <div id="question-card" class="card">
+                <div class="card-user-info" id="card-user-info-display">
+                    <!-- User info will be displayed here -->
+                </div>
                 <div class="card-header">
                     <div class="card-analysis" id="card-analysis-title">Analisis: [Nama Analisis] </div>
                     <div class="card-topic" id="card-topic-title">Topik: [Nama Topik] </div>
@@ -1004,8 +1022,14 @@
             const topicName = currentTopicKeys[currentTopicIndex];
             const questionData = currentQuestions[currentQuestionIndex];
 
-            cardAnalysisTitle.textContent = `Analisis: ${analysisName}`;
-            cardTopicTitle.textContent = `Topik: ${topicName}`;
+            // Display User Info in Question Card
+            let userInfoHTML = `<p>🧑 <strong>${userData.fullName}</strong>, 🏢 <strong>${userData.companyName}</strong></p>`;
+            userInfoHTML += `<p>💼 <strong>${userData.position}</strong>, 🏭 <strong>${userData.industry}</strong></p>`;
+            userInfoHTML += `<p>📦 <strong>${userData.productService}</strong>, 📏 <strong>Ukuran: ${userData.companySize}</strong></p>`;
+            document.getElementById('card-user-info-display').innerHTML = userInfoHTML;
+
+            cardAnalysisTitle.textContent = `Analisis: ${analysisName} `;
+            cardTopicTitle.textContent = `Topik: ${topicName} `;
             cardQuestionText.textContent = questionData.question + ' 🤔';
 
             answerTextarea.value = answers[questionData.answerKey] || ''; // Load saved answer
