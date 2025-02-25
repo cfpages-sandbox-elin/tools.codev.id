@@ -5,7 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RJPP - Rencana Jangka Panjang Perusahaan</title>
     <style>
-        body { font-family: sans-serif; }
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center body content horizontally */
+        }
+
+        .container {
+            width: 80%;
+            max-width: 800px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;          /* Enable flexbox for container */
+            flex-direction: column; /* Stack content vertically in container */
+            align-items: center;     /* Center content horizontally within container */
+        }
+
         textarea { width: 100%; height: 150px; margin-bottom: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; padding: 8px; }
         button { padding: 10px 20px; cursor: pointer; border-radius: 5px; background-color: #f0f0f0; border: 1px solid #ccc; }
         button:hover { background-color: #e0e0e0; }
@@ -30,7 +51,10 @@
         .additional-keys-container { display: flex; flex-wrap: wrap; align-items: center; margin-top: 5px; }
         .additional-keys-container label { margin-right: 10px; white-space: nowrap; margin-bottom: 5px; }
         .additional-keys-container input { flex: 1 1 200px; margin-right: 10px; margin-bottom: 5px; }
-        h1 { color: #333; }
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
         label { font-weight: bold; display: block; margin-bottom: 5px; color: #555; }
         p { color: #777; margin-bottom: 8px; }
         .url-filter-area p { margin-top: 5px; font-style: italic; color: #999; }
@@ -155,7 +179,6 @@
             border: 1px solid #ddd; /* Optional: slightly different border for disabled */
         }
       
-      
         /* Report Section Styling - Keep as is unless you want to change */
         .report-section {
             margin-top: 30px;
@@ -185,37 +208,61 @@
         }
       
       
-        /* Initial User Info Form Styling - Keep as is unless you want to change */
+        /* --- Updated User Info Form Styling --- */
         .user-info-form {
             display: flex;
-            flex-direction: column;
-            gap: 15px;
+            flex-direction: column; /* Stack rows vertically */
+            gap: 10px;             /* Space between rows */
             margin-bottom: 20px;
+            width: 100%;           /* Ensure form takes container width */
+            align-items: center;     /* Center form elements horizontally */
         }
-      
+
+        .user-info-row {
+            display: flex;          /* Arrange items in row */
+            gap: 15px;             /* Space between items in row */
+            width: 100%;           /* Row takes full form width */
+            justify-content: space-around; /* Distribute space evenly */
+            align-items: flex-start; /* Align items to the start of the row (top alignment) */
+        }
+
+        .user-info-item-inline {
+            display: flex;
+            flex-direction: column; /* Stack label and input vertically in each item */
+            flex: 1;               /* Distribute space equally among items in row */
+            min-width: 0;          /* Allow items to shrink if needed */
+        }
+
         .user-info-form label {
             font-weight: bold;
+            margin-bottom: 5px;     /* Space between label and input */
+            text-align: left;       /* Align label text to the left */
+            display: block;         /* Ensure label is block for text-align to work */
         }
-      
+
         .user-info-form input, .user-info-form select {
-            padding: 8px; /* Slightly reduced padding to match new style */
+            padding: 8px;
             border: 1px solid #ccc;
             border-radius: 5px;
             box-sizing: border-box;
+            width: 100%;           /* Input takes full width of its container */
         }
-      
+
         .user-info-form button {
-            align-self: flex-start; /* Align button to the start of the flex container */
-            background-color: #f0f0f0; /* Updated to match new style */
-            border: 1px solid #ccc; /* Updated to match new style */
-            color: black;         /* Text color to black */
+            align-self: center;      /* Center button in the form */
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            color: black;
+            margin-top: 15px;       /* Add some space above the button */
         }
-      
+
         .user-info-form button:hover {
-            background-color: #e0e0e0; /* Hover effect */
+            background-color: #e0e0e0;
         }
-      
-      
+
         /* New Checkbox and Button Container Styling */
         .answer-confirmation {
             display: flex;
@@ -262,33 +309,44 @@
         <div id="user-info-form-section">
             <h2>Informasi Perusahaan dan Pengguna</h2>
             <form id="user-info-form" class="user-info-form">
-                <label for="fullName">Nama Lengkap:</label>
-                <input type="text" id="fullName" name="fullName" required>
+                <div class="user-info-row">
+                    <div class="user-info-item-inline">
+                        <label for="fullName">Nama Lengkap:</label>
+                        <input type="text" id="fullName" name="fullName" required>
+                    </div>
+                    <div class="user-info-item-inline">
+                        <label for="companyName">Nama Perusahaan:</label>
+                        <input type="text" id="companyName" name="companyName" required>
+                    </div>
+                    <div class="user-info-item-inline">
+                        <label for="position">Jabatan:</label>
+                        <input type="text" id="position" name="position" required>
+                    </div>
+                </div>
 
-                <label for="companyName">Nama Perusahaan:</label>
-                <input type="text" id="companyName" name="companyName" required>
-
-                <label for="position">Jabatan:</label>
-                <input type="text" id="position" name="position" required>
-
-                <label for="industry">Industri Perusahaan:</label>
-                <input type="text" id="industry" name="industry" required>
-
-                <label for="productService">Produk/Jasa Perusahaan:</label>
-                <input type="text" id="productService" name="productService" required>
-
-                <label for="companySize">Ukuran Perusahaan:</label>
-                <select id="companySize" name="companySize" required>
-                    <option value="">Pilih Ukuran</option>
-                    <option value="small">Kecil</option>
-                    <option value="medium">Menengah</option>
-                    <option value="large">Besar</option>
-                </select>
+                <div class="user-info-row">
+                    <div class="user-info-item-inline">
+                        <label for="industry">Industri Perusahaan:</label>
+                        <input type="text" id="industry" name="industry" required>
+                    </div>
+                    <div class="user-info-item-inline">
+                        <label for="productService">Produk/Jasa Perusahaan:</label>
+                        <input type="text" id="productService" name="productService" required>
+                    </div>
+                    <div class="user-info-item-inline">
+                        <label for="companySize">Ukuran Perusahaan:</label>
+                        <select id="companySize" name="companySize" required>
+                            <option value="">Pilih Ukuran</option>
+                            <option value="small">Kecil</option>
+                            <option value="medium">Menengah</option>
+                            <option value="large">Besar</option>
+                        </select>
+                    </div>
+                </div>
 
                 <button type="submit">Mulai Analisis</button>
             </form>
         </div>
-
 
         <div id="question-section" style="display: none;">
             <div class="progress-container">
