@@ -12,7 +12,7 @@
             background-color: #f4f4f4;
             display: flex;
             flex-direction: column;
-            align-items: center; /* Center body content horizontally */
+            align-items: center;
         }
 
         .container {
@@ -22,9 +22,9 @@
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            display: flex;          /* Enable flexbox for container */
-            flex-direction: column; /* Stack content vertically in container */
-            align-items: center;     /* Center content horizontally within container */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         textarea { width: 100%; height: 150px; margin-bottom: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; padding: 8px; }
@@ -59,7 +59,7 @@
         p { color: #777; margin-bottom: 8px; }
         .url-filter-area p { margin-top: 5px; font-style: italic; color: #999; }
         .results-area button { margin-top: 10px; }
-      
+
         /* Card Specific Styling (Keep existing card styles and adjust if needed) */
         .card {
             background-color: #fff;
@@ -71,41 +71,41 @@
             transition: opacity 0.5s ease, transform 0.5s ease;
             transform: translateY(0);
         }
-      
+
         .card.hidden {
             opacity: 0;
             transform: translateY(20px);
             pointer-events: none; /* Prevent interaction when hidden */
         }
-      
+
         .card-header {
             text-align: center;
             margin-bottom: 15px;
         }
-      
+
         .card-analysis, .card-topic {
             font-size: 0.9em;
             color: #777;
         }
-      
+
         .card-question {
             font-weight: bold;
             margin-bottom: 10px;
             text-align: center;
         }
-      
+
         /* Keep existing progress bar styles */
         .progress-container {
             margin-bottom: 20px;
             text-align: center;
         }
-      
+
         .progress-bar-info {
             font-size: 0.9em;
             color: #666;
             margin-bottom: 5px;
         }
-      
+
         .progress-bar {
             background-color: #e0e0e0;
             border-radius: 5px;
@@ -114,7 +114,7 @@
             position: relative;
             overflow: hidden; /* Ensure rounded corners are visible */
         }
-      
+
         .progress-bar-fill {
             background-color: #4caf50;
             height: 100%;
@@ -133,7 +133,7 @@
             align-items: center;
             pointer-events: none; /* Make sure clicks pass through to the bar */
         }
-      
+
         .progress-segment {
             height: 100%;
             background-color: #4caf50;
@@ -141,22 +141,22 @@
             border-right: 1px solid #e0e0e0; /* Segment separator */
             box-sizing: border-box; /* Include border in width calculation */
         }
-      
+
         .progress-segment:last-child {
             border-right: none; /* No border on the last segment */
         }
-      
+
         .progress-segment.unanswered {
             background-color: #ccc; /* Grey for unanswered segments */
         }
-      
-      
+
+
         /* Controls Styling */
         .controls {
             display: flex;
             justify-content: space-between;
         }
-      
+
         .controls button {
             padding: 10px 20px;
             border: none;
@@ -167,18 +167,18 @@
             cursor: pointer;
             font-size: 1em;
         }
-      
+
         .controls button:hover {
             background-color: #e0e0e0; /* Hover effect */
         }
-      
+
         .controls button:disabled {
             background-color: #eee; /* Disabled state background */
             color: #999;         /* Disabled state text color */
             cursor: default;
             border: 1px solid #ddd; /* Optional: slightly different border for disabled */
         }
-      
+
         /* Report Section Styling - Keep as is unless you want to change */
         .report-section {
             margin-top: 30px;
@@ -187,57 +187,56 @@
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-      
+
         .user-info-section, .answers-section {
             margin-bottom: 20px;
         }
-      
+
         .user-info-section h3, .answers-section h3 {
             border-bottom: 1px solid #eee;
             padding-bottom: 10px;
             margin-bottom: 15px;
         }
-      
+
         .user-info-item, .answer-item {
             margin-bottom: 10px;
         }
-      
+
         .answer-item .question-text {
             font-weight: bold;
             margin-bottom: 5px;
         }
-      
-      
-        /* --- Updated User Info Form Styling --- */
+
+        /* Initial User Info Form Styling - Keep as is unless you want to change */
         .user-info-form {
             display: flex;
-            flex-direction: column; /* Stack rows vertically */
-            gap: 10px;             /* Space between rows */
+            flex-direction: column;
+            gap: 10px;
             margin-bottom: 20px;
-            width: 100%;           /* Ensure form takes container width */
-            align-items: center;     /* Center form elements horizontally */
+            width: 100%;
+            align-items: center;
         }
 
         .user-info-row {
-            display: flex;          /* Arrange items in row */
-            gap: 15px;             /* Space between items in row */
-            width: 100%;           /* Row takes full form width */
-            justify-content: space-around; /* Distribute space evenly */
-            align-items: flex-start; /* Align items to the start of the row (top alignment) */
+            display: flex;
+            gap: 15px;
+            width: 100%;
+            justify-content: space-around;
+            align-items: flex-start;
         }
 
         .user-info-item-inline {
             display: flex;
-            flex-direction: column; /* Stack label and input vertically in each item */
-            flex: 1;               /* Distribute space equally among items in row */
-            min-width: 0;          /* Allow items to shrink if needed */
+            flex-direction: column;
+            flex: 1;
+            min-width: 0;
         }
 
         .user-info-form label {
             font-weight: bold;
-            margin-bottom: 5px;     /* Space between label and input */
-            text-align: left;       /* Align label text to the left */
-            display: block;         /* Ensure label is block for text-align to work */
+            margin-bottom: 5px;
+            text-align: left;
+            display: block;
         }
 
         .user-info-form input, .user-info-form select {
@@ -245,18 +244,18 @@
             border: 1px solid #ccc;
             border-radius: 5px;
             box-sizing: border-box;
-            width: 100%;           /* Input takes full width of its container */
+            width: 100%;
         }
 
         .user-info-form button {
-            align-self: center;      /* Center button in the form */
+            align-self: center;
             padding: 10px 20px;
             cursor: pointer;
             border-radius: 5px;
             background-color: #f0f0f0;
             border: 1px solid #ccc;
             color: black;
-            margin-top: 15px;       /* Add some space above the button */
+            margin-top: 15px;
         }
 
         .user-info-form button:hover {
@@ -270,17 +269,17 @@
             align-items: flex-start; /* Align items to the start */
             margin-top: 15px; /* Add some space above the checkbox */
         }
-      
+
         .answer-confirmation label {
             display: inline-flex; /* Align checkbox and label text in one line */
             align-items: center; /* Vertically align checkbox and text */
             margin-bottom: 10px; /* Space between checkbox and button */
         }
-      
+
         .answer-confirmation input[type="checkbox"] {
             margin-right: 8px; /* Space between checkbox and label text */
         }
-      
+
         .answer-confirmation button {
             padding: 10px 20px;
             cursor: pointer;
@@ -288,53 +287,53 @@
             background-color: #f0f0f0; /* Style to match other buttons */
             border: 1px solid #ccc;
         }
-      
+
         .answer-confirmation button:hover {
             background-color: #e0e0e0; /* Hover effect */
         }
-      
+
         .answer-confirmation button:disabled {
             background-color: #eee; /* Disabled state */
             color: #999;
             cursor: default;
             border: 1px solid #ddd;
         }
-      
-      </style>
+
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1>RJPP - Rencana Jangka Panjang Perusahaan</h1>
+        <h1>RJPP - Rencana Jangka Panjang Perusahaan 🚀</h1>
 
         <div id="user-info-form-section">
-            <h2>Informasi Perusahaan dan Pengguna</h2>
+            <h2>Informasi Perusahaan dan Pengguna 👤🏢</h2>
             <form id="user-info-form" class="user-info-form">
                 <div class="user-info-row">
                     <div class="user-info-item-inline">
-                        <label for="fullName">Nama Lengkap:</label>
+                        <label for="fullName">Nama Lengkap 🧑:</label>
                         <input type="text" id="fullName" name="fullName" required>
                     </div>
                     <div class="user-info-item-inline">
-                        <label for="companyName">Nama Perusahaan:</label>
+                        <label for="companyName">Nama Perusahaan 🏢:</label>
                         <input type="text" id="companyName" name="companyName" required>
                     </div>
                     <div class="user-info-item-inline">
-                        <label for="position">Jabatan:</label>
+                        <label for="position">Jabatan 💼:</label>
                         <input type="text" id="position" name="position" required>
                     </div>
                 </div>
 
                 <div class="user-info-row">
                     <div class="user-info-item-inline">
-                        <label for="industry">Industri Perusahaan:</label>
+                        <label for="industry">Industri 🏭:</label>
                         <input type="text" id="industry" name="industry" required>
                     </div>
                     <div class="user-info-item-inline">
-                        <label for="productService">Produk/Jasa Perusahaan:</label>
+                        <label for="productService">Produk / Jasa 📦:</label>
                         <input type="text" id="productService" name="productService" required>
                     </div>
                     <div class="user-info-item-inline">
-                        <label for="companySize">Ukuran Perusahaan:</label>
+                        <label for="companySize">Ukuran Perusahaan 📏:</label>
                         <select id="companySize" name="companySize" required>
                             <option value="">Pilih Ukuran</option>
                             <option value="small">Kecil</option>
@@ -344,14 +343,14 @@
                     </div>
                 </div>
 
-                <button type="submit">Mulai Analisis</button>
+                <button type="submit">Mulai Analisis 🚀</button>
             </form>
         </div>
 
         <div id="question-section" style="display: none;">
             <div class="progress-container">
                 <div class="progress-bar-info">
-                    <span id="question-number"></span>
+                    <span id="question-number"></span> 📊
                 </div>
                 <div class="progress-bar">
                     <div class="progress-bar-segments" id="progress-segments"></div>
@@ -361,42 +360,43 @@
 
             <div id="question-card" class="card">
                 <div class="card-header">
-                    <div class="card-analysis" id="card-analysis-title">Analisis: [Nama Analisis]</div>
-                    <div class="card-topic" id="card-topic-title">Topik: [Nama Topik]</div>
+                    <div class="card-analysis" id="card-analysis-title">Analisis: [Nama Analisis] </div>
+                    <div class="card-topic" id="card-topic-title">Topik: [Nama Topik] </div>
                 </div>
-                <div class="card-question" id="card-question-text">[Pertanyaan akan muncul di sini]</div>
+                <div class="card-question" id="card-question-text">[Pertanyaan akan muncul di sini] 🤔</div>
                 <textarea id="answer-textarea" placeholder="Jawaban Anda"></textarea>
             </div>
 
             <div class="answer-confirmation">
                 <label>
-                    <input type="checkbox" id="confirm-answer-checkbox"> Saya yakin dengan jawaban ini
+                    <input type="checkbox" id="confirm-answer-checkbox"> ✅ Saya yakin dengan jawaban ini
                 </label>
-                <button id="next-btn-question" disabled>Pertanyaan Selanjutnya</button>
+                <button id="next-btn-question" disabled>Pertanyaan Selanjutnya ➡️</button>
             </div>
 
             <div class="controls">
-                <button id="prev-btn">Sebelumnya</button>
+                <button id="prev-btn">⬅️ Sebelumnya</button>
                 <!--  "Pertanyaan Selanjutnya" button is now in answer-confirmation div -->
                 <!-- <button id="next-btn" disabled>Selanjutnya</button> -->
             </div>
         </div>
 
         <div id="report-section" class="report-section" style="display: none;">
-            <h2>Laporan RJPP</h2>
+            <h2>Laporan RJPP 📝</h2>
             <div class="user-info-section">
-                <h3>Informasi Perusahaan dan Pengguna</h3>
+                <h3>Informasi Perusahaan dan Pengguna 👤🏢</h3>
                 <div id="report-user-info"></div>
             </div>
             <div class="answers-section">
-                <h3>Jawaban Analisis</h3>
+                <h3>Jawaban Analisis 💡</h3>
                 <div id="report-answers"></div>
             </div>
-            <button id="download-pdf-btn">Download PDF (Coming Soon)</button>
+            <button id="download-pdf-btn">Unduh PDF ⬇️ (Coming Soon)</button>
         </div>
     </div>
 
     <script>
+        // ... (rest of your JavaScript - keep all JavaScript from previous step) ...
         const userInfoFormSection = document.getElementById('user-info-form-section');
         const userInfoForm = document.getElementById('user-info-form');
         const questionSection = document.getElementById('question-section');
@@ -406,7 +406,7 @@
         const cardQuestionText = document.getElementById('card-question-text');
         const answerTextarea = document.getElementById('answer-textarea');
         const prevBtn = document.getElementById('prev-btn');
-        const nextBtn = document.getElementById('next-btn');
+        const nextBtn = document.getElementById('next-btn-question');
         const questionNumberDisplay = document.getElementById('question-number');
         const progressBarFill = document.getElementById('progress-fill');
         const progressBarSegments = document.getElementById('progress-segments');
@@ -525,7 +525,7 @@
 
             cardAnalysisTitle.textContent = `Analisis: ${analysisName}`;
             cardTopicTitle.textContent = `Topik: ${topicName}`;
-            cardQuestionText.textContent = questionData.question;
+            cardQuestionText.textContent = questionData.question + ' 🤔';
 
             answerTextarea.value = answers[questionData.answerKey] || ''; // Load saved answer
             confirmAnswerCheckbox.checked = answers[questionData.answerKey] ? true : false; // Set checkbox based on saved answer
@@ -543,7 +543,7 @@
         function updateProgress() {
             const totalQuestionsInTopic = currentQuestions.length;
             const currentQuestionNumber = currentQuestionIndex + 1;
-            questionNumberDisplay.textContent = `Pertanyaan ${currentQuestionNumber} / ${totalQuestionsInTopic}`;
+            questionNumberDisplay.textContent = `Pertanyaan ${currentQuestionNumber} / ${totalQuestionsInTopic} 📊`;
 
             const answeredQuestionsInTopic = currentQuestions.reduce((count, q, index) => {
                 return answers[q.answerKey] ? count + 1 : count;
@@ -563,7 +563,6 @@
                 progressBarSegments.appendChild(segment);
             }
         }
-
 
         function updateButtonStates() {
             prevBtn.disabled = currentQuestionIndex === 0;
