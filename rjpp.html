@@ -318,7 +318,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>RJPP - Rencana Jangka Panjang Perusahaan 🚀</h1>
+        <h1>RJPP v1.1<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
 
         <div id="user-info-form-section">
             <h2>Informasi Perusahaan dan Pengguna 👤🏢</h2>
@@ -1027,6 +1027,7 @@
                     // --- End NEW LOGIC ---
                 }
             }
+            console.log("loadAnswers - answers object loaded from localStorage:", answers); // ADD THIS LINE
         }
 
         function saveAnswers() {
@@ -1039,6 +1040,7 @@
                 currentTopicKeys: currentTopicKeys
             };
             localStorage.setItem('rjppAnswers', JSON.stringify(stateToSave));
+            console.log("saveAnswers - answers object saved to localStorage:", stateToSave); // ADD THIS LINE
         }
 
         function clearLocalStorageData() {
@@ -1172,6 +1174,7 @@
         function saveAnswer() {
             const currentQuestion = currentQuestions[currentQuestionIndex];
             answers[currentQuestion.answerKey] = answerTextarea.value;
+            console.log("saveAnswer - answerKey:", currentQuestion.answerKey, "answerValue:", answerTextarea.value); // ADD THIS LINE
             saveAnswers();
         }
 
