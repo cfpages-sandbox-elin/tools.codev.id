@@ -936,12 +936,12 @@
             }
         };
 
-        let currentAnalysisKeys = Object.keys(questionsData);
+        let currentAnalysisKeys = Object.keys(questionsData); // Initialize RIGHT HERE, outside functions
         let currentAnalysisIndex = 0;
-        let currentTopicKeys = Object.keys(questionsData[currentAnalysisKeys[currentAnalysisIndex]]);
+        let currentTopicKeys; // Declare, but don't initialize yet
         let currentTopicIndex = 0;
         let currentQuestionIndex = 0;
-        let currentQuestions = questionsData[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicIndex]];
+        let currentQuestions; // Declare, but don't initialize yet
 
 
         let userData = {
@@ -972,13 +972,6 @@
         function saveUserData() {
             localStorage.setItem('rjppUserData', JSON.stringify(userData));
         }
-
-        let currentAnalysisKeys = Object.keys(questionsData); // Initialize RIGHT HERE, outside functions
-        let currentAnalysisIndex = 0;
-        let currentTopicKeys; // Declare, but don't initialize yet
-        let currentTopicIndex = 0;
-        let currentQuestionIndex = 0;
-        let currentQuestions; // Declare, but don't initialize yet
 
         function loadAnswers() {
             const storedAnswers = localStorage.getItem('rjppAnswers');
