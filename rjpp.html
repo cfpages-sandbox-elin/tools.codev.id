@@ -977,7 +977,7 @@
             const storedAnswers = localStorage.getItem('rjppAnswers');
             if (storedAnswers) {
                 answers = JSON.parse(storedAnswers);
-                const storedState = JSON.parse(storedAnswers); // Try to parse state from answers storage
+                const storedState = JSON.parse(storedAnswers);
                 if (storedState) {
                     currentAnalysisIndex = storedState.currentAnalysisIndex || 0;
                     currentTopicIndex = storedState.currentTopicIndex || 0;
@@ -985,6 +985,40 @@
                     currentAnalysisKeys = storedState.currentAnalysisKeys || Object.keys(questionsData);
                     currentTopicKeys = storedState.currentTopicKeys || Object.keys(questionsData[currentAnalysisKeys[currentAnalysisIndex]]);
                     currentQuestions = questionsData[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicIndex]] || [];
+
+                    // --- NEW LOGIC: Find first unanswered question ---
+                    let foundUnanswered = false;
+                    for (let analysisIndex = 0; analysisIndex < currentAnalysisKeys.length; analysisIndex++) {
+                        const analysisKey = currentAnalysisKeys[analysisIndex];
+                        const topicKeys = Object.keys(questionsData[analysisKey]);
+                        for (let topicIndex = 0; topicIndex < topicKeys.length; topicIndex++) {
+                            const topicKey = topicKeys[topicIndex];
+                            const questions = questionsData[analysisKey][topicKey];
+                            for (let questionIndex = 0; questionIndex < questions.length; questionIndex++) {
+                                const question = questions[questionIndex];
+                                if (!answers[question.answerKey]) {
+                                    currentAnalysisIndex = analysisIndex;
+                                    currentTopicIndex = topicIndex;
+                                    currentQuestionIndex = questionIndex;
+                                    currentTopicKeys = Object.keys(questionsData[currentAnalysisKeys[currentAnalysisIndex]]); // Update topic keys
+                                    currentQuestions = questionsData[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicIndex]]; // Update current questions
+                                    foundUnanswered = true;
+                                    break; // Found first unanswered, break inner loop
+                                }
+                            }
+                            if (foundUnanswered) break; // Break topic loop if unanswered found
+                        }
+                        if (foundUnanswered) break; // Break analysis loop if unanswered found
+                    }
+                    if (!foundUnanswered) {
+                        // All questions answered, go to report (or last question)
+                        currentAnalysisIndex = currentAnalysisKeys.length - 1;
+                        currentTopicKeys = Object.keys(questionsData[currentAnalysisKeys[currentAnalysisIndex]]);
+                        currentTopicIndex = currentTopicKeys.length - 1;
+                        currentQuestions = questionsData[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicIndex]];
+                        currentQuestionIndex = currentQuestions.length - 1;
+                    }
+                    // --- End NEW LOGIC ---
                 }
             }
         }
@@ -1140,14 +1174,17 @@
             questionSection.style.display = 'none';
             reportSection.style.display = 'block';
 
-            // Display User Info in Report
+            // Display User Info in Report - UPDATED FORMATTING
             let userInfoHTML = '';
-            for (const key in userData) {
-                userInfoHTML += `<div class="user-info-item"><strong>${key}:</strong> ${userData[key]}</div>`;
-            }
+            userInfoHTML += `<div class="user-info-item"><strong>🧑 Nama Lengkap:</strong> ${userData.fullName}</div>`;
+            userInfoHTML += `<div class="user-info-item"><strong>🏢 Nama Perusahaan:</strong> ${userData.companyName}</div>`;
+            userInfoHTML += `<div class="user-info-item"><strong>💼 Jabatan:</strong> ${userData.position}</div>`;
+            userInfoHTML += `<div class="user-info-item"><strong>🏭 Industri:</strong> ${userData.industry}</div>`;
+            userInfoHTML += `<div class="user-info-item"><strong>📦 Produk/Jasa:</strong> ${userData.productService}</div>`;
+            userInfoHTML += `<div class="user-info-item"><strong>📏 Ukuran Perusahaan:</strong> ${userData.companySize}</div>`;
             reportUserInfoDiv.innerHTML = userInfoHTML;
 
-            // Display Answers in Report
+            // Display Answers in Report - No changes needed here
             let answersHTML = '';
             for (const analysisKey in questionsData) {
                 answersHTML += `<h3>${analysisKey}</h3>`;
@@ -1214,12 +1251,11 @@
 
         // --- Initialization ---
         loadUserData(); // Load user data on page load
-        loadAnswers();  // Load answers and question state on page load
-
-        if (Object.values(userData).some(value => value)) { // Check if user data is filled
+        loadAnswers(); // Load answers and now will determine starting question
+        if (Object.values(userData).some(value => value)) {
             userInfoFormSection.style.display = 'none';
             questionSection.style.display = 'block';
-            displayQuestion(); // Directly display question if user info is present
+            displayQuestion(); // Now will display the correct starting question
         } else {
             userInfoFormSection.style.display = 'block';
             questionSection.style.display = 'none';
