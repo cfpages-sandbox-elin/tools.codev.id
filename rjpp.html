@@ -973,6 +973,13 @@
             localStorage.setItem('rjppUserData', JSON.stringify(userData));
         }
 
+        let currentAnalysisKeys = Object.keys(questionsData); // Initialize RIGHT HERE, outside functions
+        let currentAnalysisIndex = 0;
+        let currentTopicKeys; // Declare, but don't initialize yet
+        let currentTopicIndex = 0;
+        let currentQuestionIndex = 0;
+        let currentQuestions; // Declare, but don't initialize yet
+
         function loadAnswers() {
             const storedAnswers = localStorage.getItem('rjppAnswers');
             if (storedAnswers) {
@@ -982,14 +989,14 @@
                     currentAnalysisIndex = storedState.currentAnalysisIndex || 0;
                     currentTopicIndex = storedState.currentTopicIndex || 0;
                     currentQuestionIndex = storedState.currentQuestionIndex || 0;
-                    currentAnalysisKeys = storedState.currentAnalysisKeys || Object.keys(questionsData);
+                    // currentAnalysisKeys = storedState.currentAnalysisKeys || Object.keys(questionsData);
 
                     // --- ADD THESE CONSOLE LOGS RIGHT HERE ---
                     console.log("loadAnswers - currentAnalysisKeys:", currentAnalysisKeys);
                     console.log("loadAnswers - currentAnalysisIndex:", currentAnalysisIndex);
                     // --- END CONSOLE LOGS ---
 
-                    currentTopicKeys = Object.keys(questionsData[currentAnalysisKeys[currentAnalysisIndex]]); // Line causing error
+                    currentTopicKeys = Object.keys(questionsData[currentAnalysisKeys[currentAnalysisIndex]]) || []; 
                     currentQuestions = questionsData[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicIndex]] || [];
 
                     // --- NEW LOGIC: Find first unanswered question ---
@@ -1006,8 +1013,8 @@
                                     currentAnalysisIndex = analysisIndex;
                                     currentTopicIndex = topicIndex;
                                     currentQuestionIndex = questionIndex;
-                                    currentTopicKeys = Object.keys(questionsData[currentAnalysisKeys[currentAnalysisIndex]]); // Update topic keys
-                                    currentQuestions = questionsData[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicIndex]]; // Update current questions
+                                    currentTopicKeys = Object.keys(questionsData[currentAnalysisKeys[currentAnalysisIndex]]);
+                                    currentQuestions = questionsData[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicIndex]];
                                     foundUnanswered = true;
                                     break; // Found first unanswered, break inner loop
                                 }
@@ -1256,7 +1263,10 @@
 
 
         // --- Initialization ---
-        loadUserData(); // Load user data on page load
+        currentTopicKeys = Object.keys(questionsData[currentAnalysisKeys[currentAnalysisIndex]]); // Initialize currentTopicKeys HERE, after currentAnalysisKeys is set
+        currentQuestions = questionsData[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicIndex]]; // Initialize currentQuestions HERE
+
+        loadUserData();
         loadAnswers(); // Load answers and now will determine starting question
         if (Object.values(userData).some(value => value)) {
             userInfoFormSection.style.display = 'none';
