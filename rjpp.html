@@ -478,11 +478,28 @@
             const storedAnswers = localStorage.getItem('rjppAnswers');
             if (storedAnswers) {
                 answers = JSON.parse(storedAnswers);
+                const storedState = JSON.parse(storedAnswers); // Try to parse state from answers storage
+                if (storedState) {
+                    currentAnalysisIndex = storedState.currentAnalysisIndex || 0;
+                    currentTopicIndex = storedState.currentTopicIndex || 0;
+                    currentQuestionIndex = storedState.currentQuestionIndex || 0;
+                    currentAnalysisKeys = storedState.currentAnalysisKeys || Object.keys(questionsData);
+                    currentTopicKeys = storedState.currentTopicKeys || Object.keys(questionsData[currentAnalysisKeys[currentAnalysisIndex]]);
+                    currentQuestions = questionsData[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicIndex]] || [];
+                }
             }
         }
 
         function saveAnswers() {
-            localStorage.setItem('rjppAnswers', JSON.stringify(answers));
+            const stateToSave = { // Save current state along with answers
+                answers: answers,
+                currentAnalysisIndex: currentAnalysisIndex,
+                currentTopicIndex: currentTopicIndex,
+                currentQuestionIndex: currentQuestionIndex,
+                currentAnalysisKeys: currentAnalysisKeys,
+                currentTopicKeys: currentTopicKeys
+            };
+            localStorage.setItem('rjppAnswers', JSON.stringify(stateToSave));
         }
 
         function clearLocalStorageData() {
@@ -495,7 +512,8 @@
         function startAnalysis() {
             userInfoFormSection.style.display = 'none';
             questionSection.style.display = 'block';
-            loadAnswers(); // Load previous answers if any
+            saveUserData(); // Save user data right before starting analysis
+            loadAnswers(); // Load previous answers and progress if any
             displayQuestion();
         }
 
@@ -653,42 +671,56 @@
                 productService: document.getElementById('productService').value,
                 companySize: document.getElementById('companySize').value
             };
-            saveUserData();
+            // saveUserData(); // Removed from submit, now saved on input change
             startAnalysis();
         });
 
 
-        nextBtn.addEventListener('click', goToNextQuestion);
+        nextBtnQuestion.addEventListener('click', goToNextQuestion);
         prevBtn.addEventListener('click', goToPreviousQuestion);
 
         confirmAnswerCheckbox.addEventListener('change', function() {
-            updateButtonStates(); // Update button state when checkbox is toggled
+            updateButtonStates();
         });
 
-        // nextBtn.addEventListener('click', goToNextQuestion); // REMOVE THIS LINE
-        nextBtnQuestion.addEventListener('click', goToNextQuestion); // Use the renamed button
 
         answerTextarea.addEventListener('input', function() {
-            // updateButtonStates(); // REMOVE THIS LINE - Checkbox now controls next button
             if (!confirmAnswerCheckbox.checked) {
-                confirmAnswerCheckbox.checked = true; // Automatically check checkbox when user types
-                updateButtonStates(); // Update button state
+                confirmAnswerCheckbox.checked = true;
+                updateButtonStates();
             }
         });
 
+
+        // --- Save User Data on Input Change ---
+        document.querySelectorAll('.user-info-form input, .user-info-form select').forEach(input => {
+            input.addEventListener('input', function() {
+                userData = {
+                    fullName: document.getElementById('fullName').value,
+                    companyName: document.getElementById('companyName').value,
+                    position: document.getElementById('position').value,
+                    industry: document.getElementById('industry').value,
+                    productService: document.getElementById('productService').value,
+                    companySize: document.getElementById('companySize').value
+                };
+                saveUserData(); // Save on every input change
+            });
+        });
+
+
         // --- Initialization ---
         loadUserData(); // Load user data on page load
+        loadAnswers();  // Load answers and question state on page load
+
         if (Object.values(userData).some(value => value)) { // Check if user data is filled
             userInfoFormSection.style.display = 'none';
             questionSection.style.display = 'block';
-            loadAnswers();
-            displayQuestion();
+            displayQuestion(); // Directly display question if user info is present
         } else {
             userInfoFormSection.style.display = 'block';
             questionSection.style.display = 'none';
             reportSection.style.display = 'none';
         }
-
 
     </script>
 </body>
