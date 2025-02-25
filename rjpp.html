@@ -417,25 +417,506 @@
 
         // --- Question Data (Placeholder - Replace with your actual data) ---
         const questionsData = {
-            "Analisis Porter's 5 Forces": {
+            "Kerangka Porter's Diamond (Diamond Strategy)": {
+                "Kondisi Faktor Produksi": [
+                    { question: "Apakah negara memiliki sumber daya alam yang melimpah dan relevan dengan industri perusahaan anda?", answerKey: "diamond_factor_conditions_resources" },
+                    { question: "Bagaimana kualitas infrastruktur di negara ini (misalnya, transportasi, komunikasi, energi)?", answerKey: "diamond_factor_conditions_infrastructure" },
+                    { question: "Apakah ada lembaga pendidikan dan pelatihan yang berkualitas untuk menghasilkan tenaga kerja terampil?", answerKey: "diamond_factor_conditions_education" },
+                    { question: "Seberapa mudah akses terhadap modal dan teknologi?", answerKey: "diamond_factor_conditions_capital_tech" },
+                    { question: "Apakah ada iklim investasi yang kondusif?", answerKey: "diamond_factor_conditions_investment_climate" }
+                ],
+                "Kondisi Permintaan": [
+                    { question: "Seberapa besar pasar domestik untuk produk/jasa perusahaan anda?", answerKey: "diamond_demand_conditions_market_size" },
+                    { question: "Seberapa cepat pertumbuhan pasar domestik untuk produk/jasa perusahaan anda?", answerKey: "diamond_demand_conditions_market_growth" },
+                    { question: "Apakah konsumen domestik memiliki preferensi yang unik atau menuntut yang dapat mendorong inovasi?", answerKey: "diamond_demand_conditions_consumer_preference" },
+                    { question: "Apakah ada segmen pasar domestik yang belum terlayani atau memiliki kebutuhan khusus?", answerKey: "diamond_demand_conditions_untapped_segment" },
+                    { question: "Bagaimana tingkat kesadaran dan permintaan terhadap produk/jasa perusahaan anda di pasar domestik?", answerKey: "diamond_demand_conditions_market_awareness" }
+                ],
+                "Industri Terkait dan Pendukung": [
+                    { question: "Apakah ada industri terkait yang kuat dan kompetitif di negara ini?", answerKey: "diamond_related_supporting_strong_related_industry" },
+                    { question: "Apakah ada industri pendukung yang menyediakan input, teknologi, atau layanan yang berkualitas?", answerKey: "diamond_related_supporting_quality_support_industry" },
+                    { question: "Apakah ada klaster industri yang terintegrasi dan saling mendukung?", answerKey: "diamond_related_supporting_industry_cluster" },
+                    { question: "Seberapa kuat jaringan kerjasama antar perusahaan anda dalam industri?", answerKey: "diamond_related_supporting_industry_network" }
+                ],
+                "Strategi, Struktur, dan Persaingan Perusahaan": [
+                    { question: "Bagaimana tingkat persaingan di antara perusahaan anda domestik dalam industri ini?", answerKey: "diamond_firm_strategy_domestic_competition_level" },
+                    { question: "Bagaimana perusahaan anda domestik bersaing?", answerKey: "diamond_firm_strategy_domestic_competition_style" },
+                    { question: "Apakah perusahaan anda domestik memiliki strategi dan struktur yang inovatif dan efisien?", answerKey: "diamond_firm_strategy_innovative_efficient_strategy" },
+                    { question: "Apakah ada budaya persaingan yang sehat dan mendorong inovasi?", answerKey: "diamond_firm_strategy_healthy_competition_culture" },
+                    { question: "Apa saja faktor-faktor yang mendorong persaingan di pasar domestik?", answerKey: "diamond_firm_strategy_competition_drivers" }
+                ],
+                "Kebijakan Pemerintah": [
+                    { question: "Apakah kebijakan pemerintah mendukung pengembangan industri ini?", answerKey: "diamond_government_policy_industry_support" },
+                    { question: "Apakah ada insentif atau subsidi yang diberikan pemerintah kepada perusahaan anda dalam industri ini?", answerKey: "diamond_government_policy_incentives_subsidies" },
+                    { question: "Bagaimana regulasi pemerintah mempengaruhi industri ini?", answerKey: "diamond_government_policy_regulations_impact" },
+                    { question: "Apakah pemerintah mendorong investasi dalam riset dan pengembangan?", answerKey: "diamond_government_policy_rd_investment" }
+                ],
+                "Kebetulan": [
+                    { question: "Apakah ada peristiwa tak terduga yang dapat menciptakan peluang atau ancaman bagi industri ini?", answerKey: "diamond_chance_unexpected_events_impact" },
+                    { question: "Bagaimana perusahaan anda dapat mengantisipasi dan merespons peristiwa tersebut?", answerKey: "diamond_chance_unexpected_events_response" },
+                    { question: "Apakah perusahaan anda memiliki rencana kontingensi untuk menghadapi kejadian tak terduga?", answerKey: "diamond_chance_contingency_plan" }
+                ]
+            },
+            "Balanced Scorecard": {
+                "Keuangan": [
+                    { question: "Bagaimana kinerja keuangan perusahaan anda saat ini (misalnya, pendapatan, profitabilitas, arus kas)?", answerKey: "balanced_scorecard_financial_current_performance" },
+                    { question: "Apa tujuan keuangan jangka panjang perusahaan anda?", answerKey: "balanced_scorecard_financial_long_term_goals" },
+                    { question: "Bagaimana perusahaan anda dapat meningkatkan kinerja keuangan?", answerKey: "balanced_scorecard_financial_improve_performance" },
+                    { question: "Bagaimana perusahaan anda dapat mencapai tujuan keuangan jangka panjang?", answerKey: "balanced_scorecard_financial_achieve_long_term_goals" },
+                    { question: "Apa saja indikator kinerja keuangan kunci yang relevan?", answerKey: "balanced_scorecard_financial_key_indicators" }
+                ],
+                "Pelanggan": [
+                    { question: "Bagaimana tingkat kepuasan pelanggan saat ini?", answerKey: "balanced_scorecard_customer_current_satisfaction" },
+                    { question: "Apa yang diharapkan pelanggan dari perusahaan anda?", answerKey: "balanced_scorecard_customer_expectations" },
+                    { question: "Bagaimana perusahaan anda dapat meningkatkan kepuasan pelanggan?", answerKey: "balanced_scorecard_customer_improve_satisfaction" },
+                    { question: "Bagaimana perusahaan anda dapat membangun loyalitas pelanggan?", answerKey: "balanced_scorecard_customer_build_loyalty" },
+                    { question: "Apa saja indikator kinerja pelanggan kunci yang relevan (misalnya, pangsa pasar, retensi pelanggan, akuisisi pelanggan)?", answerKey: "balanced_scorecard_customer_key_indicators" }
+                ],
+                "Proses Internal": [
+                    { question: "Bagaimana efisiensi dan efektivitas proses internal perusahaan anda?", answerKey: "balanced_scorecard_internal_process_efficiency_effectiveness" },
+                    { question: "Apakah ada area di mana perusahaan anda dapat meningkatkan proses internal?", answerKey: "balanced_scorecard_internal_process_improvement_areas" },
+                    { question: "Bagaimana perusahaan anda dapat mengoptimalkan rantai nilai?", answerKey: "balanced_scorecard_internal_process_value_chain_optimization" },
+                    { question: "Bagaimana perusahaan anda dapat menciptakan nilai tambah?", answerKey: "balanced_scorecard_internal_process_value_creation" },
+                    { question: "Apa saja proses internal kunci yang perlu diunggulkan untuk mencapai tujuan perusahaan anda?", answerKey: "balanced_scorecard_internal_process_key_processes" }
+                ],
+                "Pembelajaran & Pertumbuhan": [
+                    { question: "Bagaimana perusahaan anda dapat meningkatkan kompetensi dan kemampuan karyawan?", answerKey: "balanced_scorecard_learning_growth_improve_competency" },
+                    { question: "Apakah ada program pelatihan dan pengembangan yang efektif?", answerKey: "balanced_scorecard_learning_growth_effective_training_programs" },
+                    { question: "Bagaimana perusahaan anda dapat mendorong inovasi dan pembelajaran organisasi?", answerKey: "balanced_scorecard_learning_growth_foster_innovation" },
+                    { question: "Apa saja faktor pendorong pembelajaran dan pertumbuhan yang perlu ditingkatkan?", answerKey: "balanced_scorecard_learning_growth_improvement_drivers" }
+                ]
+            },
+            "Blue Ocean Strategy": {
+                "Batasan Pasar yang Ada": [
+                    { question: "Apa saja batasan pasar yang ada saat ini di industri ini?", answerKey: "blue_ocean_market_boundaries_current_boundaries" },
+                    { question: "Apa saja asumsi yang mendasari persaingan di pasar ini?", answerKey: "blue_ocean_market_boundaries_competition_assumptions" },
+                    { question: "Bagaimana perusahaan anda dan pesaing mendefinisikan produk/jasa dan target pasar?", answerKey: "blue_ocean_market_boundaries_product_definition" }
+                ],
+                "Faktor Persaingan Utama": [
+                    { question: "Apa saja faktor-faktor yang menjadi dasar persaingan di pasar ini?", answerKey: "blue_ocean_competition_factors_basis_of_competition" },
+                    { question: "Bagaimana perusahaan anda dan pesaing bersaing dalam faktor-faktor tersebut?", answerKey: "blue_ocean_competition_factors_competition_style" },
+                    { question: "Apakah ada faktor-faktor yang dianggap penting tetapi sebenarnya tidak memberikan nilai tambah bagi pelanggan?", answerKey: "blue_ocean_competition_factors_non_value_added_factors" }
+                ],
+                "Nilai Tambah bagi Pelanggan": [
+                    { question: "Apa saja nilai tambah yang diharapkan pelanggan dari produk/jasa di industri ini?", answerKey: "blue_ocean_customer_value_expected_value" },
+                    { question: "Bagaimana perusahaan anda dan pesaing memberikan nilai tambah kepada pelanggan?", answerKey: "blue_ocean_customer_value_delivered_value" },
+                    { question: "Apakah ada kebutuhan pelanggan yang belum terpenuhi atau terabaikan?", answerKey: "blue_ocean_customer_value_unmet_needs" }
+                ],
+                "Non-Pelanggan": [
+                    { question: "Siapa saja non-pelanggan yang mungkin tertarik dengan produk/jasa yang baru?", answerKey: "blue_ocean_non_customers_potential_non_customers" },
+                    { question: "Apa saja kebutuhan dan harapan non-pelanggan?", answerKey: "blue_ocean_non_customers_non_customer_needs" },
+                    { question: "Bagaimana perusahaan anda dapat menjangkau dan menarik non-pelanggan?", answerKey: "blue_ocean_non_customers_reach_non_customers" }
+                ],
+                "Kerangka Empat Tindakan": [
+                    { question: "Faktor-faktor apa yang dapat dihilangkan dari standar industri?", answerKey: "blue_ocean_four_actions_eliminate" },
+                    { question: "Faktor-faktor apa yang dapat dikurangi di bawah standar industri?", answerKey: "blue_ocean_four_actions_reduce" },
+                    { question: "Faktor-faktor apa yang dapat ditingkatkan di atas standar industri?", answerKey: "blue_ocean_four_actions_raise" },
+                    { question: "Faktor-faktor apa yang dapat diciptakan yang belum pernah ada di industri ini?", answerKey: "blue_ocean_four_actions_create" }
+                ],
+                "Kurva Nilai Baru": [
+                    { question: "Bagaimana kurva nilai produk/jasa yang baru dibandingkan dengan kurva nilai produk/jasa yang ada?", answerKey: "blue_ocean_value_curve_new_vs_existing" },
+                    { question: "Bagaimana kurva nilai yang baru dapat menciptakan nilai tambah yang signifikan bagi pelanggan dan non-pelanggan?", answerKey: "blue_ocean_value_curve_new_value_creation" }
+                ],
+                "Model Bisnis yang Baru": [
+                    { question: "Bagaimana model bisnis yang baru dapat mendukung penciptaan blue ocean?", answerKey: "blue_ocean_business_model_support_blue_ocean" },
+                    { question: "Bagaimana perusahaan anda dapat menghasilkan keuntungan dari blue ocean yang diciptakan?", answerKey: "blue_ocean_business_model_profitability" },
+                    { question: "Bagaimana perusahaan anda dapat mempertahankan keunggulan kompetitif di blue ocean?", answerKey: "blue_ocean_business_model_competitive_advantage" }
+                ]
+            },
+            "Daya Tarik Daya Saing (Industry and Competitive Analysis)": {
+                "Pangsa Pasar": [
+                    { question: "Berapa pangsa pasar perusahaan anda saat ini?", answerKey: "competitive_analysis_market_share_current_share" },
+                    { question: "Bagaimana pangsa pasar perusahaan anda dibandingkan dengan pesaing utama?", answerKey: "competitive_analysis_market_share_vs_competitors" },
+                    { question: "Bagaimana tren pangsa pasar perusahaan anda dari waktu ke waktu?", answerKey: "competitive_analysis_market_share_market_share_trend" }
+                ],
+                "Pertumbuhan Pasar": [
+                    { question: "Seberapa cepat pertumbuhan pasar di industri ini?", answerKey: "competitive_analysis_market_growth_growth_rate" },
+                    { question: "Apa faktor-faktor yang mendorong atau menghambat pertumbuhan pasar?", answerKey: "competitive_analysis_market_growth_growth_drivers" },
+                    { question: "Bagaimana proyeksi pertumbuhan pasar di masa depan?", answerKey: "competitive_analysis_market_growth_future_projection" }
+                ],
+                "Profitabilitas": [
+                    { question: "Seberapa menguntungkan industri ini secara keseluruhan?", answerKey: "competitive_analysis_profitability_industry_profitability" },
+                    { question: "Bagaimana profitabilitas perusahaan anda dibandingkan dengan pesaing utama?", answerKey: "competitive_analysis_profitability_company_vs_competitors" },
+                    { question: "Apa faktor-faktor yang mempengaruhi profitabilitas di industri ini?", answerKey: "competitive_analysis_profitability_profitability_drivers" }
+                ],
+                "Intensitas Persaingan": [
+                    { question: "Seberapa intens persaingan di industri ini?", answerKey: "competitive_analysis_competition_intensity_intensity_level" },
+                    { question: "Apa saja strategi yang digunakan oleh pesaing utama?", answerKey: "competitive_analysis_competition_intensity_competitor_strategies" },
+                    { question: "Bagaimana tingkat konsentrasi pasar di industri ini?", answerKey: "competitive_analysis_competition_intensity_market_concentration" }
+                ],
+                "Struktur Biaya": [
+                    { question: "Bagaimana struktur biaya di industri ini?", answerKey: "competitive_analysis_cost_structure_industry_cost_structure" },
+                    { question: "Apakah ada peluang untuk mencapai skala ekonomi atau efisiensi biaya?", answerKey: "competitive_analysis_cost_structure_economies_of_scale" },
+                    { question: "Bagaimana perusahaan anda dapat mengoptimalkan struktur biaya?", answerKey: "competitive_analysis_cost_structure_cost_optimization" }
+                ],
+                "Tingkat Diferensiasi Produk": [
+                    { question: "Seberapa mudah produk/jasa di industri ini dibedakan?", answerKey: "competitive_analysis_product_differentiation_differentiation_level" },
+                    { question: "Apa saja faktor-faktor yang mendorong diferensiasi produk?", answerKey: "competitive_analysis_product_differentiation_differentiation_drivers" },
+                    { question: "Bagaimana perusahaan anda dapat menciptakan dan mempertahankan diferensiasi produk?", answerKey: "competitive_analysis_product_differentiation_achieve_differentiation" }
+                ],
+                "Hambatan Masuk dan Keluar": [
+                    { question: "Seberapa mudah bagi perusahaan anda baru untuk masuk atau keluar dari industri ini?", answerKey: "competitive_analysis_entry_barriers_ease_of_entry" },
+                    { question: "Apa saja hambatan masuk dan keluar yang ada?", answerKey: "competitive_analysis_entry_barriers_specific_barriers" },
+                    { question: "Bagaimana perusahaan anda dapat memanfaatkan hambatan masuk untuk melindungi posisinya?", answerKey: "competitive_analysis_entry_barriers_leverage_barriers" }
+                ],
+                "Pengaruh Faktor Eksternal": [
+                    { question: "Bagaimana pengaruh faktor-faktor eksternal, seperti peraturan pemerintah, teknologi, dan kondisi ekonomi, terhadap industri ini?", answerKey: "competitive_analysis_external_factors_external_impact" },
+                    { question: "Bagaimana perusahaan anda dapat mengantisipasi dan merespons perubahan faktor eksternal?", answerKey: "competitive_analysis_external_factors_respond_external_changes" }
+                ]
+            },
+            "Teknologi dan Digitalisasi": {
+                "Tren Teknologi": [
+                    { question: "Apa saja tren teknologi terbaru yang relevan dengan industri dan perusahaan anda?", answerKey: "tech_digital_tech_trends_relevant_trends" },
+                    { question: "Bagaimana tren teknologi ini dapat mempengaruhi bisnis perusahaan anda di masa depan?", answerKey: "tech_digital_tech_trends_future_impact" },
+                    { question: "Apakah perusahaan anda mengikuti perkembangan teknologi terbaru?", answerKey: "tech_digital_tech_trends_tech_adoption" },
+                    { question: "Bagaimana perusahaan anda dapat memanfaatkan tren teknologi untuk menciptakan keunggulan kompetitif?", answerKey: "tech_digital_tech_trends_competitive_advantage" }
+                ],
+                "Infrastruktur Teknologi": [
+                    { question: "Bagaimana infrastruktur teknologi perusahaan anda saat ini?", answerKey: "tech_digital_tech_infrastructure_current_infrastructure" },
+                    { question: "Apakah infrastruktur teknologi perusahaan anda cukup kuat dan andal untuk mendukung operasional bisnis?", answerKey: "tech_digital_tech_infrastructure_infrastructure_strength" },
+                    { question: "Apakah ada kebutuhan untuk meningkatkan infrastruktur teknologi perusahaan anda?", answerKey: "tech_digital_tech_infrastructure_improvement_needs" },
+                    { question: "Bagaimana infrastruktur teknologi perusahaan anda dibandingkan dengan pesaing utama?", answerKey: "tech_digital_tech_infrastructure_vs_competitors" }
+                ],
+                "Digitalisasi Proses Bisnis": [
+                    { question: "Bagaimana perusahaan anda memanfaatkan teknologi digital untuk meningkatkan efisiensi dan efektivitas proses bisnis?", answerKey: "tech_digital_digital_process_digital_adoption" },
+                    { question: "Apakah ada proses bisnis yang dapat diotomatisasi atau didigitalisasi?", answerKey: "tech_digital_digital_process_automation_potential" },
+                    { question: "Bagaimana perusahaan anda mengintegrasikan teknologi digital ke dalam operasional bisnisnya?", answerKey: "tech_digital_digital_process_integration" },
+                    { question: "Bagaimana digitalisasi proses bisnis perusahaan anda dibandingkan dengan pesaing utama?", answerKey: "tech_digital_digital_process_vs_competitors" }
+                ],
+                "Data dan Analitik": [
+                    { question: "Bagaimana perusahaan anda mengumpulkan, mengelola, dan menganalisis data?", answerKey: "tech_digital_data_analytics_data_management" },
+                    { question: "Apakah perusahaan anda memanfaatkan data untuk pengambilan keputusan bisnis?", answerKey: "tech_digital_data_analytics_data_driven_decisions" },
+                    { question: "Apakah perusahaan anda memiliki kemampuan analitik yang memadai?", answerKey: "tech_digital_data_analytics_analytical_capabilities" },
+                    { question: "Bagaimana pemanfaatan data dan analitik perusahaan anda dibandingkan dengan pesaing utama?", answerKey: "tech_digital_data_analytics_vs_competitors" }
+                ],
+                "Keamanan Siber": [
+                    { question: "Bagaimana perusahaan anda melindungi data dan sistemnya dari ancaman keamanan siber?", answerKey: "tech_digital_cyber_security_security_measures" },
+                    { question: "Apakah perusahaan anda memiliki kebijakan dan prosedur keamanan siber yang memadai?", answerKey: "tech_digital_cyber_security_security_policies" },
+                    { question: "Apakah perusahaan anda memiliki tim keamanan siber yang kompeten?", answerKey: "tech_digital_cyber_security_security_team" },
+                    { question: "Bagaimana keamanan siber perusahaan anda dibandingkan dengan pesaing utama?", answerKey: "tech_digital_cyber_security_vs_competitors" }
+                ],
+                "Inovasi Digital": [
+                    { question: "Bagaimana perusahaan anda mendorong inovasi digital?", answerKey: "tech_digital_digital_innovation_innovation_strategy" },
+                    { question: "Apakah perusahaan anda memiliki budaya inovasi yang kuat?", answerKey: "tech_digital_digital_innovation_innovation_culture" },
+                    { question: "Apakah perusahaan anda berinvestasi dalam penelitian dan pengembangan teknologi digital?", answerKey: "tech_digital_digital_innovation_rd_investment" },
+                    { question: "Bagaimana inovasi digital perusahaan anda dibandingkan dengan pesaing utama?", answerKey: "tech_digital_digital_innovation_vs_competitors" }
+                ]
+            },
+            "Desain Organisasi yang Adaptif": {
+                "Struktur Organisasi": [
+                    { question: "Bagaimana struktur organisasi perusahaan anda saat ini?", answerKey: "adaptive_org_design_org_structure_current_structure" },
+                    { question: "Apakah struktur organisasi saat ini mendukung pencapaian tujuan strategis perusahaan anda?", answerKey: "adaptive_org_design_org_structure_strategic_alignment" },
+                    { question: "Apakah ada kebutuhan untuk mengubah struktur organisasi agar lebih adaptif dan responsif terhadap perubahan lingkungan bisnis?", answerKey: "adaptive_org_design_org_structure_need_for_change" },
+                    { question: "Bagaimana struktur organisasi perusahaan anda dibandingkan dengan pesaing utama?", answerKey: "adaptive_org_design_org_structure_vs_competitors" }
+                ],
+                "Budaya Organisasi": [
+                    { question: "Bagaimana budaya organisasi perusahaan anda saat ini?", answerKey: "adaptive_org_design_org_culture_current_culture" },
+                    { question: "Apakah budaya organisasi saat ini mendukung inovasi, kolaborasi, dan pembelajaran?", answerKey: "adaptive_org_design_org_culture_culture_alignment" },
+                    { question: "Apakah ada kebutuhan untuk mengubah budaya organisasi agar lebih adaptif dan responsif terhadap perubahan lingkungan bisnis?", answerKey: "adaptive_org_design_org_culture_need_for_change" },
+                    { question: "Bagaimana budaya organisasi perusahaan anda dibandingkan dengan pesaing utama?", answerKey: "adaptive_org_design_org_culture_vs_competitors" }
+                ],
+                "Proses Pengambilan Keputusan": [
+                    { question: "Bagaimana proses pengambilan keputusan di perusahaan anda saat ini?", answerKey: "adaptive_org_design_decision_process_current_process" },
+                    { question: "Apakah proses pengambilan keputusan saat ini cukup cepat dan efektif?", answerKey: "adaptive_org_design_decision_process_effectiveness" },
+                    { question: "Apakah ada kebutuhan untuk mengubah proses pengambilan keputusan agar lebih adaptif dan responsif terhadap perubahan lingkungan bisnis?", answerKey: "adaptive_org_design_decision_process_need_for_change" },
+                    { question: "Bagaimana proses pengambilan keputusan perusahaan anda dibandingkan dengan pesaing utama?", answerKey: "adaptive_org_design_decision_process_vs_competitors" }
+                ],
+                "Komunikasi dan Kolaborasi": [
+                    { question: "Bagaimana komunikasi dan kolaborasi antar departemen dan tim di perusahaan anda saat ini?", answerKey: "adaptive_org_design_communication_collaboration_current_state" },
+                    { question: "Apakah komunikasi dan kolaborasi saat ini cukup efektif?", answerKey: "adaptive_org_design_communication_collaboration_effectiveness" },
+                    { question: "Apakah ada kebutuhan untuk meningkatkan komunikasi dan kolaborasi agar lebih adaptif dan responsif terhadap perubahan lingkungan bisnis?", answerKey: "adaptive_org_design_communication_collaboration_need_for_improvement" },
+                    { question: "Bagaimana komunikasi dan kolaborasi perusahaan anda dibandingkan dengan pesaing utama?", answerKey: "adaptive_org_design_communication_collaboration_vs_competitors" }
+                ],
+                "Manajemen Perubahan": [
+                    { question: "Bagaimana perusahaan anda mengelola perubahan saat ini?", answerKey: "adaptive_org_design_change_management_current_approach" },
+                    { question: "Apakah perusahaan anda memiliki kemampuan untuk mengelola perubahan dengan efektif?", answerKey: "adaptive_org_design_change_management_effectiveness" },
+                    { question: "Apakah ada kebutuhan untuk meningkatkan kemampuan manajemen perubahan perusahaan anda?", answerKey: "adaptive_org_design_change_management_improvement_needs" },
+                    { question: "Bagaimana manajemen perubahan perusahaan anda dibandingkan dengan pesaing utama?", answerKey: "adaptive_org_design_change_management_vs_competitors" }
+                ],
+                "Pengembangan Karyawan": [
+                    { question: "Bagaimana perusahaan anda mengembangkan karyawan saat ini?", answerKey: "adaptive_org_design_employee_development_current_programs" },
+                    { question: "Apakah program pengembangan karyawan saat ini efektif?", answerKey: "adaptive_org_design_employee_development_program_effectiveness" },
+                    { question: "Apakah ada kebutuhan untuk meningkatkan program pengembangan karyawan agar lebih adaptif dan responsif terhadap perubahan lingkungan bisnis?", answerKey: "adaptive_org_design_employee_development_improvement_needs" },
+                    { question: "Bagaimana pengembangan karyawan perusahaan anda dibandingkan dengan pesaing utama?", answerKey: "adaptive_org_design_employee_development_vs_competitors" }
+                ]
+            },
+            "Analisis Value Chain": {
+                "Inbound Logistics (Logistik Masuk)": [
+                    { question: "Bagaimana perusahaan anda menerima, menyimpan, dan mendistribusikan bahan baku/input?", answerKey: "value_chain_inbound_logistics_processes" },
+                    { question: "Seberapa efisien proses logistik masuk?", answerKey: "value_chain_inbound_logistics_efficiency" },
+                    { question: "Apakah ada peluang untuk meningkatkan efisiensi dan mengurangi biaya logistik?", answerKey: "value_chain_inbound_logistics_improvement_opportunities" },
+                    { question: "Bagaimana perusahaan anda memastikan kualitas bahan baku/input?", answerKey: "value_chain_inbound_logistics_quality_assurance" },
+                    { question: "Bagaimana perusahaan anda mengelola hubungan dengan pemasok?", answerKey: "value_chain_inbound_logistics_supplier_relations" }
+                ],
+                "Operations (Operasi)": [
+                    { question: "Bagaimana perusahaan anda mengubah bahan baku/input menjadi produk/jasa akhir?", answerKey: "value_chain_operations_processes" },
+                    { question: "Seberapa efisien proses produksi/operasi?", answerKey: "value_chain_operations_efficiency" },
+                    { question: "Apakah ada peluang untuk meningkatkan produktivitas dan mengurangi biaya produksi?", answerKey: "value_chain_operations_improvement_opportunities" },
+                    { question: "Bagaimana perusahaan anda memastikan kualitas produk/jasa?", answerKey: "value_chain_operations_quality_assurance" },
+                    { question: "Bagaimana perusahaan anda mengelola kapasitas produksi?", answerKey: "value_chain_operations_capacity_management" }
+                ],
+                "Outbound Logistics (Logistik Keluar)": [
+                    { question: "Bagaimana perusahaan anda menyimpan, mendistribusikan, dan mengirimkan produk/jasa ke pelanggan?", answerKey: "value_chain_outbound_logistics_processes" },
+                    { question: "Seberapa efisien proses logistik keluar?", answerKey: "value_chain_outbound_logistics_efficiency" },
+                    { question: "Apakah ada peluang untuk meningkatkan kecepatan dan keandalan pengiriman?", answerKey: "value_chain_outbound_logistics_improvement_opportunities" },
+                    { question: "Bagaimana perusahaan anda mengelola inventori produk jadi?", answerKey: "value_chain_outbound_logistics_inventory_management" },
+                    { question: "Bagaimana perusahaan anda mengelola hubungan dengan distributor dan pengecer?", answerKey: "value_chain_outbound_logistics_distributor_relations" }
+                ],
+                "Marketing and Sales (Pemasaran dan Penjualan)": [
+                    { question: "Bagaimana perusahaan anda mempromosikan dan menjual produk/jasanya?", answerKey: "value_chain_marketing_sales_promotion_sales" },
+                    { question: "Seberapa efektif strategi pemasaran dan penjualan?", answerKey: "value_chain_marketing_sales_strategy_effectiveness" },
+                    { question: "Bagaimana perusahaan anda menjangkau target pasar?", answerKey: "value_chain_marketing_sales_target_market_reach" },
+                    { question: "Bagaimana perusahaan anda membangun merek dan citra positif?", answerKey: "value_chain_marketing_sales_brand_building" },
+                    { question: "Bagaimana perusahaan anda mengelola hubungan dengan pelanggan?", answerKey: "value_chain_marketing_sales_customer_relations" }
+                ],
+                "Service (Layanan)": [
+                    { question: "Bagaimana perusahaan anda memberikan layanan purna jual kepada pelanggan?", answerKey: "value_chain_service_after_sales_service" },
+                    { question: "Seberapa puas pelanggan dengan layanan yang diberikan?", answerKey: "value_chain_service_customer_satisfaction" },
+                    { question: "Bagaimana perusahaan anda menangani keluhan pelanggan?", answerKey: "value_chain_service_complaint_handling" },
+                    { question: "Bagaimana perusahaan anda membangun loyalitas pelanggan melalui layanan?", answerKey: "value_chain_service_loyalty_building" },
+                    { question: "Apakah ada peluang untuk meningkatkan kualitas layanan dan menciptakan nilai tambah bagi pelanggan?", answerKey: "value_chain_service_improvement_opportunities" }
+                ],
+                "Procurement (Pengadaan) - Aktivitas Pendukung": [
+                    { question: "Bagaimana perusahaan anda memilih dan mengelola pemasok?", answerKey: "value_chain_procurement_supplier_selection_management" }
+                ],
+                "Technology Development (Pengembangan Teknologi) - Aktivitas Pendukung": [
+                    { question: "Bagaimana perusahaan anda mengembangkan dan menerapkan teknologi baru?", answerKey: "value_chain_tech_development_tech_innovation" }
+                ],
+                "Human Resource Management (Manajemen Sumber Daya Manusia) - Aktivitas Pendukung": [
+                    { question: "Bagaimana perusahaan anda merekrut, melatih, dan mengembangkan karyawan?", answerKey: "value_chain_hrm_employee_management" }
+                ],
+                "Firm Infrastructure (Infrastruktur Perusahaan) - Aktivitas Pendukung": [
+                    { question: "Bagaimana perusahaan anda mengelola infrastruktur dan sistem pendukung (misalnya, keuangan, hukum, IT)?", answerKey: "value_chain_firm_infrastructure_infrastructure_management" }
+                ]
+            },
+            "Porter's 5 Forces": {
                 "Ancaman Pendatang Baru": [
-                    { question: "Seberapa mudah bagi perusahaan baru untuk masuk ke industri ini?", answerKey: "porters_entrants_q1" },
-                    { question: "Apa saja hambatan masuk yang ada (misalnya, modal awal, regulasi, akses distribusi)?", answerKey: "porters_entrants_q2" },
-                    { question: "Seberapa besar kemungkinan perusahaan yang sudah ada akan merespons dengan agresif terhadap pendatang baru?", answerKey: "porters_entrants_q3" }
+                    { question: "Seberapa mudah bagi perusahaan anda baru untuk masuk ke industri ini?", answerKey: "porters_new_entrants_ease_of_entry" },
+                    { question: "Apa saja hambatan masuk yang ada (misalnya, modal awal, regulasi, akses distribusi)?", answerKey: "porters_new_entrants_entry_barriers" },
+                    { question: "Seberapa besar kemungkinan perusahaan anda yang sudah ada akan merespons dengan agresif terhadap pendatang baru?", answerKey: "porters_new_entrants_incumbent_response" },
+                    { question: "Apakah ada inovasi atau teknologi baru yang dapat memudahkan perusahaan anda baru untuk masuk?", answerKey: "porters_new_entrants_innovation_threat" },
+                    { question: "Bagaimana perusahaan anda dapat memperkuat hambatan masuk dan mempertahankan posisi pasarnya?", answerKey: "porters_new_entrants_strengthen_barriers" }
                 ],
                 "Daya Tawar Pemasok": [
-                    { question: "Seberapa terkonsentrasi industri pemasok?", answerKey: "porters_supplier_q1" },
-                    { question: "Seberapa penting input yang disediakan oleh pemasok bagi perusahaan?", answerKey: "porters_supplier_q2" }
+                    { question: "Seberapa terkonsentrasi industri pemasok?", answerKey: "porters_supplier_power_supplier_concentration" },
+                    { question: "Seberapa penting input yang disediakan oleh pemasok bagi perusahaan anda?", answerKey: "porters_supplier_power_input_importance" },
+                    { question: "Apakah ada alternatif pemasok yang tersedia?", answerKey: "porters_supplier_power_supplier_alternatives" },
+                    { question: "Seberapa mudah bagi perusahaan anda untuk beralih ke pemasok lain?", answerKey: "porters_supplier_power_switching_cost" },
+                    { question: "Seberapa besar pengaruh pemasok terhadap harga dan kualitas produk/jasa perusahaan anda?", answerKey: "porters_supplier_power_price_quality_impact" },
+                    { question: "Bagaimana perusahaan anda dapat membangun hubungan yang kuat dengan pemasok dan mengurangi ketergantungan pada satu pemasok?", answerKey: "porters_supplier_power_supplier_relations" }
+                ],
+                "Daya Tawar Pembeli": [
+                    { question: "Seberapa terkonsentrasi industri pembeli?", answerKey: "porters_buyer_power_buyer_concentration" },
+                    { question: "Seberapa penting produk/jasa perusahaan anda bagi pembeli?", answerKey: "porters_buyer_power_product_importance_to_buyer" },
+                    { question: "Apakah ada alternatif produk/jasa yang tersedia bagi pembeli?", answerKey: "porters_buyer_power_buyer_alternatives" },
+                    { question: "Seberapa mudah bagi pembeli untuk beralih ke produk/jasa lain?", answerKey: "porters_buyer_power_buyer_switching_cost" },
+                    { question: "Seberapa sensitif pembeli terhadap harga?", answerKey: "porters_buyer_power_price_sensitivity" },
+                    { question: "Bagaimana perusahaan anda dapat meningkatkan nilai produk/jasanya bagi pembeli dan membangun loyalitas pelanggan?", answerKey: "porters_buyer_power_increase_buyer_value" }
+                ],
+                "Ancaman Produk/Jasa Pengganti": [
+                    { question: "Apakah ada produk/jasa pengganti yang tersedia di pasar?", answerKey: "porters_substitute_threat_substitute_availability" },
+                    { question: "Seberapa besar ancaman dari produk/jasa pengganti tersebut?", answerKey: "porters_substitute_threat_substitute_threat_level" },
+                    { question: "Seberapa mudah bagi pelanggan untuk beralih ke produk/jasa pengganti?", answerKey: "porters_substitute_threat_substitute_switching_cost" },
+                    { question: "Apa keunggulan dan kelemahan produk/jasa pengganti dibandingkan dengan produk/jasa perusahaan anda?", answerKey: "porters_substitute_threat_substitute_advantages_disadvantages" },
+                    { question: "Bagaimana perusahaan anda dapat membedakan produk/jasanya dan mengurangi ancaman dari produk/jasa pengganti?", answerKey: "porters_substitute_threat_differentiate_product" }
+                ],
+                "Persaingan di antara Perusahaan yang Sudah Ada": [
+                    { question: "Seberapa intens persaingan di antara perusahaan anda yang sudah ada di industri ini?", answerKey: "porters_industry_rivalry_rivalry_intensity" },
+                    { question: "Apa saja faktor-faktor yang mendorong persaingan (misalnya, pertumbuhan industri, diferensiasi produk, hambatan keluar)?", answerKey: "porters_industry_rivalry_rivalry_drivers" },
+                    { question: "Bagaimana strategi perusahaan anda dibandingkan dengan pesaing utamanya?", answerKey: "porters_industry_rivalry_company_strategy_vs_competitors" },
+                    { question: "Apa keunggulan kompetitif perusahaan anda?", answerKey: "porters_industry_rivalry_competitive_advantage" },
+                    { question: "Bagaimana perusahaan anda dapat memperkuat keunggulan kompetitifnya dan memenangkan persaingan?", answerKey: "porters_industry_rivalry_strengthen_advantage" }
+                ]
+            },
+            "Analisis SWOT yang Mendalam": {
+                "Strengths (Kekuatan)": [
+                    { question: "Apa saja keunggulan kompetitif utama perusahaan anda?", answerKey: "swot_strengths_core_competencies" },
+                    { question: "Apa saja sumber daya dan kapabilitas unik yang dimiliki perusahaan anda?", answerKey: "swot_strengths_unique_resources" },
+                    { question: "Apa saja hal-hal yang dilakukan perusahaan anda dengan sangat baik?", answerKey: "swot_strengths_company_achievements" },
+                    { question: "Bagaimana perusahaan anda dapat memanfaatkan kekuatan-kekuatan ini untuk mencapai tujuan strategisnya?", answerKey: "swot_strengths_leverage_strengths" },
+                    { question: "Bagaimana kekuatan-kekuatan ini dibandingkan dengan pesaing utama?", answerKey: "swot_strengths_strengths_vs_competitors" }
+                ],
+                "Weaknesses (Kelemahan)": [
+                    { question: "Apa saja kelemahan internal perusahaan anda?", answerKey: "swot_weaknesses_internal_weaknesses" },
+                    { question: "Apa saja keterbatasan internal perusahaan anda?", answerKey: "swot_weaknesses_internal_limitations" },
+                    { question: "Apa saja area di mana perusahaan anda perlu meningkatkan kinerja?", answerKey: "swot_weaknesses_improvement_areas" },
+                    { question: "Apa saja faktor-faktor yang menghambat perusahaan anda dalam mencapai tujuannya?", answerKey: "swot_weaknesses_hindering_factors" },
+                    { question: "Bagaimana perusahaan anda dapat mengatasi kelemahan-kelemahan ini?", answerKey: "swot_weaknesses_overcome_weaknesses" },
+                    { question: "Bagaimana kelemahan-kelemahan ini dibandingkan dengan pesaing utama?", answerKey: "swot_weaknesses_weaknesses_vs_competitors" }
+                ],
+                "Opportunities (Peluang)": [
+                    { question: "Apa saja tren eksternal yang dapat dimanfaatkan perusahaan anda?", answerKey: "swot_opportunities_external_trends" },
+                    { question: "Apa saja peluang eksternal yang dapat dimanfaatkan perusahaan anda?", answerKey: "swot_opportunities_external_opportunities" },
+                    { question: "Apa saja perubahan lingkungan bisnis yang dapat menciptakan peluang baru?", answerKey: "swot_opportunities_environmental_changes" },
+                    { question: "Apa saja segmen pasar baru yang dapat dimasuki perusahaan anda?", answerKey: "swot_opportunities_new_market_segments" },
+                    { question: "Bagaimana perusahaan anda dapat memanfaatkan peluang-peluang ini untuk mencapai pertumbuhan dan kesuksesan?", answerKey: "swot_opportunities_leverage_opportunities" },
+                    { question: "Bagaimana peluang-peluang ini dibandingkan dengan pesaing utama?", answerKey: "swot_opportunities_opportunities_vs_competitors" }
+                ],
+                "Threats (Ancaman)": [
+                    { question: "Apa saja ancaman eksternal yang dihadapi perusahaan anda?", answerKey: "swot_threats_external_threats" },
+                    { question: "Apa saja tantangan eksternal yang dihadapi perusahaan anda?", answerKey: "swot_threats_external_challenges" },
+                    { question: "Apa saja perubahan lingkungan bisnis yang dapat mengancam perusahaan anda?", answerKey: "swot_threats_environmental_threats" },
+                    { question: "Apa saja risiko yang perlu diwaspadai perusahaan anda?", answerKey: "swot_threats_potential_risks" },
+                    { question: "Bagaimana perusahaan anda dapat mengatasi ancaman-ancaman ini?", answerKey: "swot_threats_mitigate_threats" },
+                    { question: "Bagaimana ancaman-ancaman ini dibandingkan dengan pesaing utama?", answerKey: "swot_threats_threats_vs_competitors" }
+                ]
+            },
+            "Analisis Skenario": {
+                "Faktor-faktor Ketidakpastian": [
+                    { question: "Apa saja faktor-faktor eksternal yang paling tidak pasti dan dapat mempengaruhi perusahaan anda secara signifikan?", answerKey: "scenario_analysis_uncertainties_key_uncertainties" },
+                    { question: "Bagaimana tingkat ketidakpastian dari masing-masing faktor tersebut?", answerKey: "scenario_analysis_uncertainties_uncertainty_level" },
+                    { question: "Apa saja kemungkinan perkembangan dari faktor-faktor tersebut di masa depan?", answerKey: "scenario_analysis_uncertainties_future_developments" },
+                    { question: "Bagaimana perusahaan anda dapat memantau dan mengantisipasi perubahan dalam faktor-faktor tersebut?", answerKey: "scenario_analysis_uncertainties_monitor_anticipate_changes" }
+                ],
+                "Tren Utama": [
+                    { question: "Apa saja tren utama yang sedang terjadi di industri dan lingkungan bisnis secara umum?", answerKey: "scenario_analysis_key_trends_current_trends" },
+                    { question: "Bagaimana tren tersebut dapat mempengaruhi perusahaan anda di masa depan?", answerKey: "scenario_analysis_key_trends_trend_impact" },
+                    { question: "Apakah ada tren yang baru muncul atau yang diperkirakan akan muncul di masa depan?", answerKey: "scenario_analysis_key_trends_emerging_trends" },
+                    { question: "Bagaimana perusahaan anda dapat memanfaatkan tren tersebut untuk menciptakan peluang baru?", answerKey: "scenario_analysis_key_trends_leverage_trends" }
+                ],
+                "Potensi Disrupsi": [
+                    { question: "Apa saja potensi disrupsi yang dapat terjadi di industri (misalnya, teknologi baru, perubahan regulasi, perubahan perilaku konsumen)?", answerKey: "scenario_analysis_potential_disruptions_potential_disruptions" },
+                    { question: "Seberapa besar kemungkinan disrupsi tersebut terjadi?", answerKey: "scenario_analysis_potential_disruptions_disruption_likelihood" },
+                    { question: "Apa dampak potensial dari disrupsi tersebut terhadap perusahaan anda?", answerKey: "scenario_analysis_potential_disruptions_disruption_impact" },
+                    { question: "Bagaimana perusahaan anda dapat mengantisipasi dan merespons disrupsi tersebut?", answerKey: "scenario_analysis_potential_disruptions_disruption_response" }
+                ],
+                "Skenario Alternatif": [
+                    { question: "Skenario alternatif 1: Deskripsi singkat?", answerKey: "scenario_analysis_alternative_scenarios_scenario_1_description" },
+                    { question: "Skenario alternatif 2: Deskripsi singkat?", answerKey: "scenario_analysis_alternative_scenarios_scenario_2_description" },
+                    { question: "Skenario alternatif 3: Deskripsi singkat?", answerKey: "scenario_analysis_alternative_scenarios_scenario_3_description" },
+                    { question: "Bagaimana kondisi bisnis dan lingkungan persaingan dalam skenario 1?", answerKey: "scenario_analysis_alternative_scenarios_scenario_1_business_conditions" },
+                    { question: "Bagaimana kondisi bisnis dan lingkungan persaingan dalam skenario 2?", answerKey: "scenario_analysis_alternative_scenarios_scenario_2_business_conditions" },
+                    { question: "Bagaimana kondisi bisnis dan lingkungan persaingan dalam skenario 3?", answerKey: "scenario_analysis_alternative_scenarios_scenario_3_business_conditions" },
+                    { question: "Apa implikasi dari skenario 1 terhadap strategi dan operasional perusahaan anda?", answerKey: "scenario_analysis_alternative_scenarios_scenario_1_strategic_implications" },
+                    { question: "Apa implikasi dari skenario 2 terhadap strategi dan operasional perusahaan anda?", answerKey: "scenario_analysis_alternative_scenarios_scenario_2_strategic_implications" },
+                    { question: "Apa implikasi dari skenario 3 terhadap strategi dan operasional perusahaan anda?", answerKey: "scenario_analysis_alternative_scenarios_scenario_3_strategic_implications" }
+                ],
+                "Strategi Adaptif": [
+                    { question: "Bagaimana perusahaan anda dapat mengembangkan strategi yang fleksibel dan adaptif untuk menghadapi berbagai skenario yang mungkin terjadi?", answerKey: "scenario_analysis_adaptive_strategy_develop_adaptive_strategy" },
+                    { question: "Apa saja opsi strategis yang tersedia bagi perusahaan anda dalam setiap skenario?", answerKey: "scenario_analysis_adaptive_strategy_strategic_options" },
+                    { question: "Bagaimana perusahaan anda dapat mempersiapkan diri untuk menghadapi perubahan dan ketidakpastian?", answerKey: "scenario_analysis_adaptive_strategy_prepare_for_uncertainty" }
                 ]
             },
             "Analisis PESTEL": {
                 "Politik": [
-                    { question: "Bagaimana stabilitas politik di negara tempat perusahaan beroperasi?", answerKey: "pestel_politik_q1" },
-                    { question: "Apakah ada perubahan kebijakan pemerintah yang dapat mempengaruhi industri dan perusahaan?", answerKey: "pestel_politik_q2" }
+                    { question: "Bagaimana stabilitas politik di negara tempat perusahaan anda beroperasi?", answerKey: "pestel_political_stability" },
+                    { question: "Apakah ada perubahan kebijakan pemerintah yang dapat mempengaruhi industri dan perusahaan anda (misalnya, perpajakan, regulasi, kebijakan perdagangan)?", answerKey: "pestel_government_policy_changes" },
+                    { question: "Apakah ada risiko politik yang perlu dipertimbangkan (misalnya, korupsi, ketidakstabilan sosial)?", answerKey: "pestel_political_risks" },
+                    { question: "Bagaimana perusahaan anda dapat membangun hubungan yang baik dengan pemerintah dan stakeholder politik?", answerKey: "pestel_government_relations" }
+                ],
+                "Ekonomi": [
+                    { question: "Bagaimana kondisi ekonomi makro saat ini dan di masa depan (misalnya, pertumbuhan ekonomi, inflasi, suku bunga, nilai tukar)?", answerKey: "pestel_economic_conditions" },
+                    { question: "Bagaimana tren ekonomi tersebut dapat mempengaruhi daya beli konsumen dan permintaan terhadap produk/jasa perusahaan anda?", answerKey: "pestel_economic_trends_consumer_impact" },
+                    { question: "Apakah ada faktor ekonomi global yang dapat mempengaruhi perusahaan anda (misalnya, krisis ekonomi global, perubahan harga komoditas)?", answerKey: "pestel_global_economic_factors" },
+                    { question: "Bagaimana perusahaan anda dapat mengelola risiko ekonomi dan memanfaatkan peluang ekonomi?", answerKey: "pestel_economic_risk_management" }
+                ],
+                "Sosial": [
+                    { question: "Bagaimana tren demografi (misalnya, pertumbuhan penduduk, usia, distribusi pendapatan)?", answerKey: "pestel_demographic_trends" },
+                    { question: "Bagaimana perubahan gaya hidup, nilai-nilai sosial, dan budaya masyarakat?", answerKey: "pestel_social_cultural_changes" },
+                    { question: "Bagaimana tren sosial tersebut dapat mempengaruhi preferensi konsumen dan permintaan terhadap produk/jasa perusahaan anda?", answerKey: "pestel_social_trends_consumer_preference_impact" },
+                    { question: "Bagaimana perusahaan anda dapat menyesuaikan produk/jasanya dengan perubahan sosial dan budaya?", answerKey: "pestel_social_cultural_adaptation" }
+                ],
+                "Teknologi": [
+                    { question: "Apa saja perkembangan teknologi terbaru yang relevan dengan industri dan perusahaan anda?", answerKey: "pestel_technological_advancements" },
+                    { question: "Bagaimana teknologi dapat mempengaruhi proses produksi, distribusi, pemasaran, dan layanan pelanggan?", answerKey: "pestel_technology_impact_business_processes" },
+                    { question: "Apakah ada potensi disrupsi teknologi yang dapat mengancam perusahaan anda?", answerKey: "pestel_technological_disruptions" },
+                    { question: "Bagaimana perusahaan anda dapat memanfaatkan teknologi untuk meningkatkan efisiensi, inovasi, dan keunggulan kompetitif?", answerKey: "pestel_technology_leverage_competitive_advantage" }
+                ],
+                "Lingkungan": [
+                    { question: "Apa saja isu lingkungan yang relevan dengan industri dan perusahaan anda (misalnya, perubahan iklim, polusi, kelangkaan sumber daya)?", answerKey: "pestel_environmental_issues" },
+                    { question: "Bagaimana regulasi lingkungan dan kesadaran masyarakat terhadap isu lingkungan dapat mempengaruhi perusahaan anda?", answerKey: "pestel_environmental_regulations_awareness" },
+                    { question: "Bagaimana perusahaan anda dapat mengurangi dampak negatif terhadap lingkungan?", answerKey: "pestel_environmental_impact_reduction" },
+                    { question: "Bagaimana perusahaan anda dapat menerapkan praktik bisnis yang berkelanjutan?", answerKey: "pestel_sustainability_practices" }
+                ],
+                "Hukum": [
+                    { question: "Apa saja peraturan perundang-undangan yang relevan dengan industri dan perusahaan anda (misalnya, hukum ketenagakerjaan, hukum perlindungan konsumen, hukum persaingan usaha)?", answerKey: "pestel_legal_regulations_relevant_laws_combined" },
+                    { question: "Apakah ada hukum ketenagakerjaan yang kiranya relevan dengan industri dan perusahaan anda?", answerKey: "pestel_legal_regulations_labor_law" },
+                    { question: "Apakah ada hukum perlindungan konsumen yang kiranya relevan dengan perusahaan anda dan industri?", answerKey: "pestel_legal_regulations_consumer_protection_law" },
+                    { question: "Apakah ada hukum persaingan usaha yang kiranya relevan dengan industri dan perusahaan anda?", answerKey: "pestel_legal_regulations_competition_law" },
+                    { question: "Apa ada hukum dan peraturan perundang-undangan lain yang kiranya relevan dengan industri dan perusahaan anda?", answerKey: "pestel_legal_regulations_other_relevant_laws" },
+                     { question: "Apakah ada perubahan regulasi yang akan datang atau yang sedang diusulkan?", answerKey: "pestel_legal_regulations_upcoming_changes" },
+                    { question: "Bagaimana perusahaan anda dapat memastikan kepatuhan terhadap hukum dan regulasi?", answerKey: "pestel_legal_regulations_compliance" }
                 ]
-            }
-        };
-
+            },
+            "Penggunaan Data dan Analitik": {
+                "Pengumpulan Data": [
+                    { question: "Data apa saja yang dikumpulkan perusahaan anda saat ini?", answerKey: "data_analytics_data_collection_current_data" },
+                    { question: "Bagaimana perusahaan anda mengumpulkan data dari berbagai sumber?", answerKey: "data_analytics_data_collection_data_sources" },
+                    { question: "Apakah data yang dikumpulkan relevan dengan kebutuhan bisnis?", answerKey: "data_analytics_data_collection_data_relevance" },
+                    { question: "Apakah data yang dikumpulkan berkualitas tinggi dan akurat?", answerKey: "data_analytics_data_collection_data_quality" }
+                ],
+                "Penyimpanan dan Pengelolaan Data": [
+                    { question: "Bagaimana perusahaan anda menyimpan dan mengelola data?", answerKey: "data_analytics_data_management_data_storage" },
+                    { question: "Apakah perusahaan anda memiliki infrastruktur penyimpanan data yang memadai?", answerKey: "data_analytics_data_management_infrastructure" },
+                    { question: "Apakah data perusahaan anda aman dan terlindungi dari akses yang tidak sah?", answerKey: "data_analytics_data_management_data_security" },
+                    { question: "Apakah data perusahaan anda mudah diakses dan digunakan oleh pihak yang berwenang?", answerKey: "data_analytics_data_management_data_accessibility" }
+                ],
+                "Analisis Data": [
+                    { question: "Bagaimana perusahaan anda menganalisis data untuk mendukung pengambilan keputusan bisnis?", answerKey: "data_analytics_data_analysis_business_decisions" },
+                    { question: "Apakah perusahaan anda memiliki kemampuan analitik yang memadai?", answerKey: "data_analytics_data_analysis_analytical_capabilities" },
+                    { question: "Apakah perusahaan anda menggunakan alat dan teknik analitik yang tepat?", answerKey: "data_analytics_data_analysis_analytical_tools" },
+                    { question: "Apakah perusahaan anda memanfaatkan data untuk mengidentifikasi tren dan peluang bisnis?", answerKey: "data_analytics_data_analysis_trend_identification" }
+                ],
+                "Visualisasi Data": [
+                    { question: "Bagaimana perusahaan anda memvisualisasikan data untuk memudahkan pemahaman dan komunikasi?", answerKey: "data_analytics_data_visualization_communication" },
+                    { question: "Apakah perusahaan anda menggunakan alat visualisasi data yang efektif?", answerKey: "data_analytics_data_visualization_tools_effectiveness" },
+                    { question: "Apakah visualisasi data perusahaan anda mudah dipahami dan informatif?", answerKey: "data_analytics_data_visualization_clarity_informativeness" },
+                    { question: "Apakah visualisasi data perusahaan anda mendukung pengambilan keputusan yang lebih baik?", answerKey: "data_analytics_data_visualization_decision_support" }
+                ],
+                "Pemanfaatan Data dalam Pengambilan Keputusan": [
+                    { question: "Bagaimana perusahaan anda memanfaatkan data dalam pengambilan keputusan strategis dan operasional?", answerKey: "data_analytics_data_utilization_strategic_operational_decisions" },
+                    { question: "Apakah data digunakan untuk mengukur kinerja bisnis dan mengidentifikasi area yang perlu ditingkatkan?", answerKey: "data_analytics_data_utilization_performance_measurement" },
+                    { question: "Apakah data digunakan untuk mengembangkan strategi bisnis yang lebih efektif?", answerKey: "data_analytics_data_utilization_strategy_development" },
+                    { question: "Apakah data digunakan untuk mengidentifikasi dan mengelola risiko bisnis?", answerKey: "data_analytics_data_utilization_risk_management" }
+                ],
+                "Budaya Data": [
+                    { question: "Apakah perusahaan anda memiliki budaya data yang kuat?", answerKey: "data_analytics_data_culture_data_driven_culture" },
+                    { question: "Apakah karyawan perusahaan anda memahami pentingnya data dan analitik?", answerKey: "data_analytics_data_culture_employee_awareness" },
+                    { question: "Apakah karyawan perusahaan anda memiliki kemampuan untuk menggunakan data dan analitik dalam pekerjaan mereka?", answerKey: "data_analytics_data_culture_employee_skills" },
+                    { question: "Apakah perusahaan anda mendorong kolaborasi dan berbagi pengetahuan terkait data?", answerKey: "data_analytics_data_culture_data_sharing_collaboration" }
+                ]
+            },
+            "Keberlanjutan (Sustainability)": {
+                "Dampak Lingkungan": [
+                    { question: "Apa saja dampak lingkungan dari operasional bisnis perusahaan anda?", answerKey: "sustainability_environmental_impact_business_operations" },
+                    { question: "Bagaimana perusahaan anda mengelola limbah dan emisi?", answerKey: "sustainability_environmental_impact_waste_emission_management" },
+                    { question: "Apakah perusahaan anda menggunakan sumber daya alam secara efisien?", answerKey: "sustainability_environmental_impact_resource_efficiency" },
+                    { question: "Bagaimana perusahaan anda berkontribusi terhadap perubahan iklim?", answerKey: "sustainability_environmental_impact_climate_change_contribution" },
+                    { question: "Apakah ada regulasi lingkungan yang relevan dengan bisnis perusahaan anda?", answerKey: "sustainability_environmental_impact_environmental_regulations" }
+                ],
+                "Tanggung Jawab Sosial": [
+                    { question: "Bagaimana perusahaan anda berkontribusi terhadap masyarakat?", answerKey: "sustainability_social_responsibility_community_contribution" },
+                    { question: "Bagaimana perusahaan anda memperlakukan karyawan?", answerKey: "sustainability_social_responsibility_employee_treatment" },
+                    { question: "Bagaimana perusahaan anda memperlakukan komunitas lokal?", answerKey: "sustainability_social_responsibility_local_community_treatment" },
+            { question: "Apakah perusahaan anda memiliki kebijakan dan program tanggung jawab sosial yang efektif?", answerKey: "sustainability_social_responsibility_csr_programs" },
+            { question: "Bagaimana perusahaan anda membangun hubungan yang baik dengan pemangku kepentingan?", answerKey: "sustainability_social_responsibility_stakeholder_relations" }
+        ],
+        "Tata Kelola Perusahaan": [
+            { question: "Bagaimana struktur tata kelola perusahaan anda?", answerKey: "sustainability_corporate_governance_governance_structure" },
+            { question: "Apakah perusahaan anda memiliki kebijakan dan prosedur tata kelola yang transparan?", answerKey: "sustainability_corporate_governance_transparency_policies" },
+            { question: "Apakah perusahaan anda memiliki kebijakan dan prosedur tata kelola yang akuntabel?", answerKey: "sustainability_corporate_governance_accountability_policies" },
+            { question: "Bagaimana perusahaan anda mengelola risiko dan kepatuhan?", answerKey: "sustainability_corporate_governance_risk_compliance_management" },
+            { question: "Apakah perusahaan anda memiliki budaya etika yang kuat?", answerKey: "sustainability_corporate_governance_ethical_culture" }
+        ],
+        "Integrasi ESG dalam Strategi Bisnis": [
+            { question: "Bagaimana perusahaan anda mengintegrasikan aspek Lingkungan (Environmental) dalam strategi bisnisnya?", answerKey: "sustainability_esg_integration_environmental_integration" },
+            { question: "Bagaimana perusahaan anda mengintegrasikan aspek Sosial (Social) dalam strategi bisnisnya?", answerKey: "sustainability_esg_integration_social_integration" },
+            { question: "Bagaimana perusahaan anda mengintegrasikan aspek Tata Kelola (Governance) dalam strategi bisnisnya?", answerKey: "sustainability_esg_integration_governance_integration" },
+            { question: "Bagaimana perusahaan anda secara keseluruhan mengintegrasikan aspek ESG ke dalam strategi bisnisnya?", answerKey: "sustainability_esg_integration_overall_esg_integration" },
+            { question: "Apakah perusahaan anda memiliki target kinerja ESG yang terukur?", answerKey: "sustainability_esg_integration_measurable_esg_targets" },
+            { question: "Apakah perusahaan anda memiliki indikator kinerja ESG yang terukur?", answerKey: "sustainability_esg_integration_measurable_esg_indicators" },
+            { question: "Bagaimana perusahaan anda mengkomunikasikan kinerja ESG kepada pemangku kepentingan?", answerKey: "sustainability_esg_integration_esg_communication" },
+            { question: "Bagaimana perusahaan anda mengukur dampak ESG terhadap kinerja keuangan?", answerKey: "sustainability_esg_integration_esg_financial_impact" }
+        ],
+        "Inovasi Berkelanjutan": [
+            { question: "Bagaimana perusahaan anda mendorong inovasi berkelanjutan?", answerKey: "sustainability_sustainable_innovation_foster_innovation" },
+            { question: "Apakah perusahaan anda mengembangkan produk dan layanan yang ramah lingkungan?", answerKey: "sustainability_sustainable_innovation_eco_friendly_products" },
+            { question: "Apakah perusahaan anda mengembangkan produk dan layanan yang ramah sosial?", answerKey: "sustainability_sustainable_innovation_socially_responsible_products" },
+            { question: "Apakah perusahaan anda berinvestasi dalam teknologi dan praktik bisnis yang berkelanjutan?", answerKey: "sustainability_sustainable_innovation_investment_sustainable_tech" },
+            { question: "Bagaimana perusahaan anda berkolaborasi dengan pemangku kepentingan untuk menciptakan solusi berkelanjutan?", answerKey: "sustainability_sustainable_innovation_stakeholder_collaboration" }
+        ]
+    }
+};
 
         let currentAnalysisKeys = Object.keys(questionsData);
         let currentAnalysisIndex = 0;
