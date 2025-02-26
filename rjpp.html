@@ -314,11 +314,21 @@
             margin: 5px 0;
         }
 
+        #clear-data-btn {
+            background-color: #f9d9d9; /* Light red background */
+            color: #8a0000;         /* Darker red text */
+            border: 1px solid #e0b0b0; /* Light red border */
+        }
+        
+        #clear-data-btn:hover {
+            background-color: #f0c0c0; /* Slightly darker red on hover */
+        }
+
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>RJPP v1.1<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
+        <h1>RJPP v1.2<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
 
         <div id="user-info-form-section">
             <h2>Informasi Perusahaan dan Pengguna 👤🏢</h2>
@@ -411,6 +421,7 @@
             </div>
             <button id="download-pdf-btn">Unduh PDF ⬇️ (Coming Soon)</button>
         </div>
+        <button id="clear-data-btn">🗑️ Remove All Data</button>
     </div>
 
     <script>
@@ -1048,6 +1059,27 @@
             localStorage.removeItem('rjppAnswers');
         }
 
+        const clearDataBtn = document.getElementById('clear-data-btn'); // Get the button element
+
+        clearDataBtn.addEventListener('click', function() {
+            const confirmClear = window.confirm("⚠️ Are you sure you want to remove all saved data?\n\nThis will delete all your answers and progress. This action cannot be undone.");
+            if (confirmClear) {
+                clearLocalStorageData(); // Call the function to clear local storage
+                alert("✅ All data has been removed. You will be redirected to the start.");
+
+                // Reset UI to initial state:
+                userInfoFormSection.style.display = 'block';
+                questionSection.style.display = 'none';
+                reportSection.style.display = 'none';
+
+                // Option 1: Reload the page for a full reset (more thorough)
+                // window.location.reload();
+
+                // Option 2: (Alternative - if you don't want full reload) - Clear input fields if needed
+                document.getElementById('user-info-form').reset(); // Reset user info form fields if you want to clear them too
+
+            }
+        });
 
         // --- Function to Initialize and Display Questions ---
         function startAnalysis() {
