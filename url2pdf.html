@@ -6,9 +6,9 @@
   /* Basic CSS Styling here */
   body { font-family: sans-serif; }
   textarea { width: 100%; height: 150px; margin-bottom: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; padding: 8px; }
-  button, .ctrl-button { padding: 10px 20px; cursor: pointer; border-radius: 5px; background-color: #f0f0f0; border: 1px solid #ccc; margin-right: 5px; }
-  button:hover, .ctrl-button:hover { background-color: #e0e0e0; }
-  button:disabled, .ctrl-button:disabled { background-color: #ddd; cursor: default; }
+  button, .ctrl-button, .api-key-button { padding: 10px 20px; cursor: pointer; border-radius: 5px; background-color: #f0f0f0; border: 1px solid #ccc; margin-right: 5px; }
+  button:hover, .ctrl-button:hover, .api-key-button:hover { background-color: #e0e0e0; }
+  button:disabled, .ctrl-button:disabled, .api-key-button:disabled { background-color: #ddd; cursor: default; }
   #status, #cleanupStatus { margin-top: 10px; white-space: pre-wrap; height: 150px; overflow-y: scroll; border: 1px solid #ccc; padding: 8px; box-sizing: border-box; font-family: monospace; border-radius: 5px; background-color: #f9f9f9; }
   #sitemapUrl, #printfriendlyApiKey, #issuuBearerToken, #issuuClientId, #issuuClientSecret, #urlFilter, .additional-api-key { width: 100%; margin-bottom: 8px; padding: 8px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; }
   .api-key-input, .sitemap-parser, .url-area, .results-area, .progress-area, .cors-info, .cleanup-area { margin-bottom: 15px; padding: 10px; border-radius: 8px; background-color: #fff; border: 1px solid #ddd; }
@@ -43,11 +43,13 @@
   .tab button.active { background-color: #ccc; }
   .tabcontent { display: none; padding: 6px 12px; border: 1px solid #ccc; border-top: none; border-bottom-left-radius: 5px; border-bottom-right-radius: 5px; }
   .tabcontent.active { display: block; }
+  .api-key-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+  .api-key-header button { margin-left: 10px; padding: 5px 10px; font-size: 0.9em; }
 </style>
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v3.5 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v3.6 🚀</h1>
 
   <div class="cors-info">
     <p>⚠️ <strong>Important:</strong> To use this app effectively, you may need to install a <a href="https://chromewebstore.google.com/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" target="_blank">CORS Unblock</a> browser extension 🧩.</p>
@@ -55,7 +57,10 @@
 
   <div class="api-keys-container">
     <div class="api-key-input">
-      <label for="printfriendlyApiKey">PrintFriendly API Key 🔑:</label>
+      <div class="api-key-header">
+        <label for="printfriendlyApiKey">PrintFriendly API Key(s) 🔑:</label>
+        <button type="button" id="addApiKeyButton" class="api-key-button">+</button>
+      </div>
       <input type="text" id="printfriendlyApiKey" placeholder="Enter PrintFriendly API Key">
       <div class="additional-keys-container" id="additionalPrintFriendlyKeys">
         <!-- Additional API key inputs will be added here -->
@@ -149,16 +154,22 @@ about me</textarea>
       initializeUrlHandling();
       updateUrlCountDisplay();
       applyUrlFilter();
+      updateAdditionalApiKeyFields(); // Initial API key fields based on loaded URLs
 
       // Event listeners for API key input changes to save to local storage
       document.getElementById('printfriendlyApiKey').addEventListener('input', savePrintFriendlyApiKey);
+      document.querySelectorAll('.additional-api-key').forEach(input => { // Attach to existing additional keys on load
+          input.addEventListener('input', savePrintFriendlyApiKey);
+      });
       document.getElementById('issuuBearerToken').addEventListener('input', saveIssuuBearerToken);
       document.getElementById('issuuClientId').addEventListener('input', saveIssuuClientId);
       document.getElementById('issuuClientSecret').addEventListener('input', saveIssuuClientSecret);
       document.getElementById('urlList').addEventListener('input', updateUrlCountDisplay);
+      document.getElementById('urlList').addEventListener('input', updateAdditionalApiKeyFields); // Update API key fields on URL change
       document.getElementById('urlFilter').addEventListener('input', applyUrlFilter);
       document.getElementById('copySuccessButton').addEventListener('click', copySuccessUrls);
       document.getElementById('retryFailedButton').addEventListener('click', retryFailedUrls);
+      document.getElementById('addApiKeyButton').addEventListener('click', addNewApiKeyField); // Event for "+" button
 
 
       // Tab functionality
@@ -192,6 +203,7 @@ about me</textarea>
       const issuuBearerToken = localStorage.getItem('issuuBearerToken');
       const issuuClientId = localStorage.getItem('issuuClientId');
       const issuuClientSecret = localStorage.getItem('issuuClientSecret');
+      const additionalKeys = JSON.parse(localStorage.getItem('additionalPrintFriendlyKeys') || '[]'); // Load additional keys
 
       if (printfriendlyKey) {
         document.getElementById('printfriendlyApiKey').value = printfriendlyKey;
@@ -205,12 +217,30 @@ about me</textarea>
       if (issuuClientSecret) {
         document.getElementById('issuuClientSecret').value = issuuClientSecret;
       }
+      // Load additional keys into input fields
+      const additionalKeysContainer = document.getElementById('additionalPrintFriendlyKeys');
+      additionalKeys.forEach((key, index) => {
+          addNewApiKeyField(key, additionalKeysContainer, index + 1);
+      });
     }
 
     function savePrintFriendlyApiKey(event) {
-      localStorage.setItem('printfriendlyApiKey', event.target.value);
+      if (event.target.id === 'printfriendlyApiKey') {
+          localStorage.setItem('printfriendlyApiKey', event.target.value);
+      } else if (event.target.classList.contains('additional-api-key')) {
+          saveAdditionalApiKeys(); // Save all additional keys if any field changes
+      }
       updateAdditionalApiKeyFields(); // Update fields on key change
     }
+
+    function saveAdditionalApiKeys() {
+        const additionalKeys = [];
+        document.querySelectorAll('.additional-api-key').forEach(input => {
+            additionalKeys.push(input.value);
+        });
+        localStorage.setItem('additionalPrintFriendlyKeys', JSON.stringify(additionalKeys));
+    }
+
 
     function saveIssuuBearerToken(event) {
       localStorage.setItem('issuuBearerToken', event.target.value);
@@ -279,6 +309,7 @@ about me</textarea>
         document.getElementById('urlList').value = filteredUrls.join('\n');
         document.getElementById('urlCount').textContent = originalUrls.length;
         document.getElementById('filteredUrlCount').textContent = filteredUrls.length;
+        updateAdditionalApiKeyFields(); // Update API key fields when URL list changes
     }
 
 
@@ -317,14 +348,14 @@ about me</textarea>
       const issuuClientSecret = document.getElementById('issuuClientSecret').value.trim();
 
       if (!printfriendlyApiKeys[0]) {
-        updateStatus("Please enter your PrintFriendly API Key.");
+        updateStatus("Please enter at least one PrintFriendly API Key.");
         updateStatusSummary("PrintFriendly API Key missing.");
         resetButtonsAfterProcess();
         return;
       }
 
       if (filteredUrls.length > printfriendlyApiKeys.length * 200) {
-        updateStatus(`Please provide ${Math.ceil(filteredUrls.length / 200)} PrintFriendly API Keys.`);
+        updateStatus(`Please provide ${Math.ceil(filteredUrls.length / 200)} PrintFriendly API Keys to process ${filteredUrls.length} URLs.`);
         updateStatusSummary("Insufficient PrintFriendly API Keys.");
         resetButtonsAfterProcess();
         return;
@@ -423,7 +454,8 @@ about me</textarea>
 
             if (currentStage === "pdf") {
               updateStatus(`  > Converting to PDF using PrintFriendly...`);
-              pdfBlob = await convertUrlToPdfWithRateLimit(url, printfriendlyApiKeys[apiKeyIndex]); // Rate limited PDF conversion
+              const currentApiKeyIndex = Math.floor(processedUrlsCount / 200); // Determine API key index based on processed count
+              pdfBlob = await convertUrlToPdfWithRateLimit(url, printfriendlyApiKeys[currentApiKeyIndex]); // Rate limited PDF conversion
 
               if (pdfBlob) {
                 updateStatus(`  > ✅ PDF generated successfully.`);
@@ -497,6 +529,7 @@ about me</textarea>
         processedUrlsCount++;
         if (processedUrlsCount % 200 === 0 && apiKeyIndex < printfriendlyApiKeys.length - 1) {
             apiKeyIndex++; // Move to the next API key after every 200 URLs
+            updateStatus(`🔑 Switched to PrintFriendly API Key ${apiKeyIndex + 1} (Key rotation).`); // Inform user of key rotation
         }
         updateProgressBar((processedUrlsCount / totalUrls) * 100);
         updateProgressInfo(processedUrlsCount, totalUrls, pdfGeneratedCount, uploadedCount, publishedCount, calculateEstimatedTime(startTime, processedUrlsCount, totalUrls, estimatedTimePerUrl));
@@ -559,39 +592,44 @@ about me</textarea>
       }
     });
 
+    function addNewApiKeyField(initialValue = '', container = document.getElementById('additionalPrintFriendlyKeys'), keyIndex = document.querySelectorAll('.additional-api-key').length + 1) {
+        const keyInput = document.createElement('div');
+        keyInput.classList.add('additional-keys-container');
+        keyInput.innerHTML = `
+            <label for="printfriendlyApiKey${keyIndex}">Additional API Key ${keyIndex} 🔑:</label>
+            <input type="text" id="printfriendlyApiKey${keyIndex}" class="additional-api-key" placeholder="Enter Additional API Key" value="${initialValue}">
+        `;
+        container.appendChild(keyInput);
+        const newInput = keyInput.querySelector('input');
+        newInput.addEventListener('input', savePrintFriendlyApiKey); // Attach event listener to new input
+        return newInput; // Return the newly created input element
+    }
 
-    // --------------------  JavaScript Functions  --------------------
+
     function getPrintFriendlyApiKeys() {
         const keys = [document.getElementById('printfriendlyApiKey').value];
         const additionalKeyInputs = document.querySelectorAll('.additional-api-key');
         additionalKeyInputs.forEach(input => {
             keys.push(input.value);
         });
-        return keys;
+        return keys.filter(key => key.trim() !== ''); // Filter out empty keys
     }
 
     function updateAdditionalApiKeyFields() {
         const urlCount = document.getElementById('urlList').value.trim().split('\n').filter(url => url).length;
         const requiredKeys = Math.ceil(urlCount / 200);
         const existingKeyCount = document.querySelectorAll('.additional-api-key').length + 1; // +1 for the default key
-
         const additionalKeysContainer = document.getElementById('additionalPrintFriendlyKeys');
 
+        // Add required fields
         if (requiredKeys > existingKeyCount) {
             for (let i = existingKeyCount; i < requiredKeys; i++) {
-                const keyInput = document.createElement('div');
-                keyInput.classList.add('additional-keys-container');
-                keyInput.innerHTML = `
-                    <label for="printfriendlyApiKey${i + 1}">Additional API Key ${i + 1} 🔑:</label>
-                    <input type="text" id="printfriendlyApiKey${i + 1}" class="additional-api-key" placeholder="Enter Additional API Key">
-                `;
-                additionalKeysContainer.appendChild(keyInput);
+                addNewApiKeyField('', additionalKeysContainer, i + 1);
             }
-        } else if (requiredKeys < existingKeyCount) {
-            // Remove extra fields if URL count decreases
-            while (document.querySelectorAll('.additional-api-key').length > requiredKeys - 1 && document.querySelectorAll('.additional-api-key').length > 0) {
-                additionalKeysContainer.removeChild(additionalKeysContainer.lastChild);
-            }
+        }
+        // Remove extra fields if URL count decreases (but keep at least one additional field if there were any added manually)
+        while (document.querySelectorAll('.additional-api-key').length > Math.max(requiredKeys - 1, 0) && document.querySelectorAll('.additional-api-key').length > (localStorage.getItem('additionalPrintFriendlyKeys') ? JSON.parse(localStorage.getItem('additionalPrintFriendlyKeys')).length : 0 )) {
+            additionalKeysContainer.removeChild(additionalKeysContainer.lastChild);
         }
     }
 
@@ -943,134 +981,6 @@ about me</textarea>
     }
 
 
-    async function cleanOutIssuu() {
-      const issuuBearerToken = document.getElementById('issuuBearerToken').value.trim();
-      const cleanupStatusTextarea = document.getElementById('cleanupStatus');
-      cleanupStatusTextarea.value = ""; // Clear cleanup status
-
-      if (!issuuBearerToken) {
-        updateCleanupStatus("Please enter your Issuu Bearer Token in API Keys tab.");
-        return;
-      }
-
-      updateCleanupStatus("Starting Issuu Cleanup Process...");
-
-      const publications = await listIssuuDocuments('publications', issuuBearerToken);
-      const drafts = await listIssuuDocuments('drafts', issuuBearerToken);
-
-      if (!publications || !drafts) {
-        updateCleanupStatus("Cleanup process aborted due to errors fetching documents.");
-        return;
-      }
-
-      const documentsByTitle = {};
-
-      // Group publications by title
-      publications.forEach(pub => {
-        let title = pub.info?.title; // Try to get title from pub.info.title first
-
-        if (!title) {
-          title = pub.title; // **Fallback: Try to get title directly from pub.title**
-        }
-
-
-        if (!title) {
-          console.warn("Publication missing 'info.title' and 'title', skipping for grouping:", pub);
-          return; // Skip if no title found
-        }
-        if (!documentsByTitle[title]) {
-          documentsByTitle[title] = { publications: [], drafts: [] };
-        }
-        documentsByTitle[title].publications.push(pub);
-      });
-
-      // Group drafts by title
-      drafts.forEach(draft => {
-        let title = draft.changes?.title; // Try to get title from draft.changes.title first
-
-        if (!title) {
-          title = draft.info?.title; // **Fallback: Try to get title from draft.info.title (less likely for drafts, but just in case)**
-        }
-        if (!title) {
-          title = draft.title; // **Fallback: Try to get title directly from draft.title (even less likely for drafts, but just in case)**
-        }
-
-
-        if (!title) {
-          console.warn("Draft missing 'changes.title', 'info.title', and 'title', skipping for grouping:", draft);
-          return; // Skip if no title found
-        }
-        if (!documentsByTitle[title]) {
-          documentsByTitle[title] = { publications: [], drafts: [] };
-        }
-        documentsByTitle[title].drafts.push(draft);
-      });
-
-      let deletedDraftCount = 0;
-      let deletedPublicationCount = 0;
-      let publishedDraftCount = 0;
-
-      for (const title in documentsByTitle) {
-        const docGroup = documentsByTitle[title];
-        if (docGroup.publications.length > 0) {
-          if (docGroup.drafts.length > 0) {
-            updateCleanupStatus(`> Found Publication(s) and Draft(s) with title: "${title}". Deleting drafts...`);
-            for (let i = 0; i < docGroup.drafts.length; i++) {
-              const draft = docGroup.drafts[i];
-              if (i < docGroup.drafts.length - 1) { // Keep one draft just in case, deleting the rest.
-                 const deleteSuccess = await deleteIssuuDocument('drafts', draft.slug, issuuBearerToken);
-                 if (deleteSuccess) {
-                    deletedDraftCount++;
-                 }
-              }
-            }
-          }
-          // Keep one publication, delete others if multiple exist (though unlikely in this scenario).
-          if (docGroup.publications.length > 1) {
-             updateCleanupStatus(`> Found multiple Publications with title: "${title}". Keeping one, deleting others...`);
-             for (let i = 1; i < docGroup.publications.length; i++) { // Keep first publication, delete the rest.
-                const pub = docGroup.publications[i];
-                const deleteSuccess = await deleteIssuuDocument('publications', pub.slug, issuuBearerToken);
-                if (deleteSuccess) {
-                   deletedPublicationCount++;
-                }
-             }
-          }
-
-        } else if (docGroup.drafts.length > 0) {
-          updateCleanupStatus(`> Only Draft(s) found with title: "${title}". Publishing one draft and deleting others...`);
-          let draftToPublish = null;
-          for (let i = 0; i < docGroup.drafts.length; i++) {
-            const draft = docGroup.drafts[i];
-            if (i < docGroup.drafts.length - 1) { // Keep one draft to publish, deleting the rest.
-               const deleteSuccess = await deleteIssuuDocument('drafts', draft.slug, issuuBearerToken);
-               if (deleteSuccess) {
-                  deletedDraftCount++;
-               }
-            } else {
-              draftToPublish = draft; // Keep the last draft to publish
-            }
-          }
-          if (draftToPublish) {
-            const publishSuccess = await publishDraft(draftToPublish.slug, issuuBearerToken);
-            if (publishSuccess) {
-              publishedDraftCount++;
-              updateCleanupStatus(`  > Published draft with title "${title}", URL: ${publishSuccess}`);
-            } else {
-              updateCleanupStatus(`  > ❌ Failed to publish draft with title "${title}".`);
-            }
-          }
-        }
-      }
-
-      updateCleanupStatus(`✅ Issuu Cleanup Completed.`);
-      updateCleanupStatus(`  > Drafts Deleted: ${deletedDraftCount}`);
-      updateCleanupStatus(`  > Publications Deleted: ${deletedPublicationCount}`);
-      updateCleanupStatus(`  > Drafts Published: ${publishedDraftCount}`);
-      updateCleanupStatus("⚠️ Please manually check your Issuu dashboard to ensure cleanup is as expected, especially for edge cases.");
-    }
-
-
     async function checkExistingUrlsInIssuu(urls, bearerToken) {
       const existingUrls = new Set();
       const publications = await listIssuuDocuments('publications', bearerToken);
@@ -1100,7 +1010,7 @@ about me</textarea>
           let description = draft.info?.description; // Try to get description from draft.info?.description first
 
           if (!description) {
-            description = draft.changes?.description; // **Fallback: Try to get description from draft.changes?.description (less likely, but in case)**
+            description = draft.changes?.description; // **Fallback: Try to get description from draft.changes?.description (less likely)**
           }
           if (!description) {
             description = draft.description; // **Fallback: Try to get description directly from draft.description (even less likely)**
