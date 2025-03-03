@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>URL to PDF & Upload App 🚀</title>
+<title>URL to PDF & Issuu Uploader v2.0 🚀</title>
 <style>
   /* Basic CSS Styling here */
   body { font-family: sans-serif; }
   textarea { width: 100%; height: 150px; margin-bottom: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; padding: 8px; }
-  button { padding: 10px 20px; cursor: pointer; border-radius: 5px; background-color: #f0f0f0; border: 1px solid #ccc; }
-  button:hover { background-color: #e0e0e0; }
+  button, .ctrl-button { padding: 10px 20px; cursor: pointer; border-radius: 5px; background-color: #f0f0f0; border: 1px solid #ccc; margin-right: 5px; }
+  button:hover, .ctrl-button:hover { background-color: #e0e0e0; }
+  button:disabled, .ctrl-button:disabled { background-color: #ddd; cursor: default; }
   #status { margin-top: 10px; white-space: pre-wrap; height: 150px; overflow-y: scroll; border: 1px solid #ccc; padding: 8px; box-sizing: border-box; font-family: monospace; border-radius: 5px; background-color: #f9f9f9; }
   #sitemapUrl, #printfriendlyApiKey, #issuuBearerToken, #issuuClientId, #issuuClientSecret, #urlFilter, .additional-api-key { width: 100%; margin-bottom: 8px; padding: 8px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; }
   .api-key-input, .sitemap-parser, .url-area, .results-area, .progress-area, .cors-info { margin-bottom: 15px; padding: 10px; border-radius: 8px; background-color: #fff; border: 1px solid #ddd; }
@@ -34,11 +35,12 @@
   p { color: #777; margin-bottom: 8px; }
   .url-filter-area p { margin-top: 5px; font-style: italic; color: #999; }
   .results-area button { margin-top: 10px; }
+  .controls { display: flex; align-items: center; margin-bottom: 10px; }
 </style>
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v2.0 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v2.1 🚀</h1>
 
   <div class="cors-info">
     <p>⚠️ <strong>Important:</strong> To use this app effectively, you may need to install a <a href="https://chromewebstore.google.com/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" target="_blank">CORS Unblock</a> browser extension 🧩.</p>
@@ -81,13 +83,18 @@ privacy policy
 terms of service
 tos
 about us
-about me</textarea>
+about me
+admin
+contoh</textarea>
       <p>URLs: <span id="urlCount">0</span> / <span id="filteredUrlCount">0</span> (Filtered/Total)</p>
     </div>
   </div>
 
-
-  <button id="convertButton">Convert to PDFs & Upload 🚀</button>
+  <div class="controls">
+    <button id="convertButton">Convert to PDFs & Upload 🚀</button>
+    <button id="pauseButton" class="ctrl-button" disabled>Pause ⏸️</button>
+    <button id="resumeButton" class="ctrl-button" disabled>Resume ▶️</button>
+  </div>
 
   <div class="progress-area">
     <div class="progress-bar">
@@ -220,8 +227,21 @@ about me</textarea>
         document.getElementById('filteredUrlCount').textContent = filteredUrls.length;
     }
 
+    let isPaused = false;
+    let processingActive = false; // To prevent multiple clicks
 
     document.getElementById('convertButton').addEventListener('click', async () => {
+      if (processingActive) {
+        updateStatus("Processing is already active. Please wait or pause/resume.");
+        return;
+      }
+      processingActive = true;
+      isPaused = false;
+      document.getElementById('pauseButton').disabled = false;
+      document.getElementById('resumeButton').disabled = true;
+      document.getElementById('convertButton').disabled = true; // Disable Convert button during processing
+
+
       filteredUrls = document.getElementById('urlList').value.trim().split('\n').filter(url => url); // Use filtered URLs for processing
       const statusTextarea = document.getElementById('status');
       statusTextarea.value = ""; // Clear previous status
@@ -233,6 +253,7 @@ about me</textarea>
       if (filteredUrls.length === 0) {
         updateStatus("Please enter URLs or parse from a sitemap.");
         updateStatusSummary("URLs missing.");
+        resetButtonsAfterProcess();
         return;
       }
 
@@ -244,17 +265,20 @@ about me</textarea>
       if (!printfriendlyApiKeys[0]) {
         updateStatus("Please enter your PrintFriendly API Key.");
         updateStatusSummary("PrintFriendly API Key missing.");
+        resetButtonsAfterProcess();
         return;
       }
 
       if (filteredUrls.length > printfriendlyApiKeys.length * 200) {
         updateStatus(`Please provide ${Math.ceil(filteredUrls.length / 200)} PrintFriendly API Keys.`);
         updateStatusSummary("Insufficient PrintFriendly API Keys.");
+        resetButtonsAfterProcess();
         return;
       }
       if (printfriendlyApiKeys.some(key => !key.trim())) {
           updateStatus("Please fill in all PrintFriendly API Key fields.");
           updateStatusSummary("Missing PrintFriendly API Keys.");
+          resetButtonsAfterProcess();
           return;
       }
 
@@ -262,20 +286,33 @@ about me</textarea>
       if (!issuuBearerToken) {
         updateStatus("Please enter your Issuu Bearer Token.");
         updateStatusSummary("Issuu Bearer Token missing.");
+        resetButtonsAfterProcess();
         return;
       }
 
       if (!issuuClientId) {
         updateStatus("Please enter your Issuu Client ID.");
         updateStatusSummary("Issuu Client ID missing.");
+        resetButtonsAfterProcess();
         return;
       }
 
       if (!issuuClientSecret) {
         updateStatus("Please enter your Issuu Client Secret.");
         updateStatusSummary("Issuu Client Secret missing.");
+        resetButtonsAfterProcess();
         return;
       }
+
+      // ** CORS Check before processing **
+      const corsCheckPassed = await checkCORS();
+      if (!corsCheckPassed) {
+        updateStatus("⚠️ CORS might be blocking requests. Please enable a CORS unblock extension or check your browser settings. Processing stopped.");
+        updateStatusSummary("CORS Blocked - Processing Stopped.");
+        resetButtonsAfterProcess();
+        return;
+      }
+
 
       const totalUrls = filteredUrls.length;
       let processedUrlsCount = 0;
@@ -292,10 +329,19 @@ about me</textarea>
 
 
       for (let i = 0; i < filteredUrls.length; i++) {
+        if (isPaused) {
+          updateStatus("⏸️ Processing paused. Click 'Resume' to continue.");
+          updateStatusSummary("Paused");
+          document.getElementById('pauseButton').disabled = true;
+          document.getElementById('resumeButton').disabled = false;
+          return; // Exit the loop to pause
+        }
+
         let url = filteredUrls[i];
         let retryCount = 0;
         const maxRetries = 3;
         let currentStage = "pdf"; // pdf, upload, publish
+        let pdfBlob; // Define pdfBlob here so it's accessible in the loop
 
         while (retryCount <= maxRetries) {
           try {
@@ -303,22 +349,22 @@ about me</textarea>
             updateProgressInfo(processedUrlsCount, totalUrls, pdfGeneratedCount, uploadedCount, publishedCount, calculateEstimatedTime(startTime, processedUrlsCount, totalUrls, estimatedTimePerUrl));
 
             if (currentStage === "pdf") {
-              updateStatus(`  > 📄 Converting to PDF using PrintFriendly...`);
-              const pdfBlob = await convertUrlToPdfWithRateLimit(url, printfriendlyApiKeys[apiKeyIndex]); // Rate limited PDF conversion
+              updateStatus(`  > Converting to PDF using PrintFriendly...`);
+              pdfBlob = await convertUrlToPdfWithRateLimit(url, printfriendlyApiKeys[apiKeyIndex]); // Rate limited PDF conversion
 
               if (pdfBlob) {
                 updateStatus(`  > ✅ PDF generated successfully.`);
                 pdfGeneratedCount++;
                 currentStage = "upload";
               } else {
-                updateStatus(`<span style="color: red;">  > ❌ Failed to convert to PDF.</span>`);
+                updateStatus(`  > ❌ Failed to convert to PDF.`); // Removed HTML formatting
                 currentStage = "pdf"; // Retry PDF conversion
                 throw new Error("PDF Conversion Failed"); // For retry logic
               }
             }
 
             if (currentStage === "upload") {
-              updateStatus(`  > 📤 Uploading PDF to Issuu...`);
+              updateStatus(`  > Uploading PDF to Issuu...`);
               const uploadSuccess = await uploadPdfToIssuu(pdfBlob, url, issuuBearerToken, issuuClientId, issuuClientSecret);
 
               if (uploadSuccess) {
@@ -326,14 +372,14 @@ about me</textarea>
                 uploadedCount++;
                 currentStage = "publish";
               } else {
-                updateStatus(`<span style="color: red;">  > ❌ Failed to upload PDF to Issuu.</span>`);
+                updateStatus(`  > ❌ Failed to upload PDF to Issuu.`); // Removed HTML formatting
                 currentStage = "upload"; // Retry Upload
                 throw new Error("PDF Upload Failed"); // For retry logic
               }
             }
 
             if (currentStage === "publish") {
-              updateStatus(`  > 🚀 Publishing on Issuu and retrieving URL...`);
+              updateStatus(`  > Publishing on Issuu and retrieving URL...`);
               const issuuPublicationUrl = await getIssuuPublicationUrlBySlug(url, issuuBearerToken);
 
               if (issuuPublicationUrl) {
@@ -343,7 +389,7 @@ about me</textarea>
                 successIssuuUrls.push({url: url, issuuUrl: issuuPublicationUrl});
                 break; // Success, move to next URL
               } else {
-                updateStatus(`<span style="color: red;">  > ❌ Failed to publish or retrieve Issuu URL.</span>`);
+                updateStatus(`  > ❌ Failed to publish or retrieve Issuu URL.`); // Removed HTML formatting
                 currentStage = "publish"; // Retry Publish/Get URL
                 throw new Error("Issuu Publication Failed or URL retrieval failed"); // For retry logic
               }
@@ -352,14 +398,14 @@ about me</textarea>
 
           } catch (error) {
             console.error(`Error processing URL: ${url} (Attempt ${retryCount + 1})`, error);
-            updateStatus(`<span style="color: red;">  > ⚠️ Error: ${error.message || error}</span>`);
+            updateStatus(`  > ⚠️ Error: ${error.message || error}`); // Removed HTML formatting
             retryCount++;
             if (retryCount <= maxRetries) {
               const waitTime = Math.random() * 3000 + 1000; // Random wait 1-4 seconds
               updateStatus(`  > ⏳ Retrying in ${waitTime/1000} seconds...`);
               await new Promise(resolve => setTimeout(resolve, waitTime));
             } else {
-              updateStatus(`<span style="color: red;">  > ⛔ Max retries reached for ${url}. Processing failed.</span>`);
+              updateStatus(`  > ⛔ Max retries reached for ${url}. Processing failed.`); // Removed HTML formatting
               failedUrlsTextarea.value += url + '\n';
               failedUrlList.push(url);
               break; // Max retries, move to next URL
@@ -381,8 +427,32 @@ about me</textarea>
       const totalTimeSeconds = (endTime - startTime) / 1000;
       updateStatusSummary(`✅ Processing completed in ${totalTimeSeconds.toFixed(1)} seconds.  ${totalUrls} URLs, PDF Generated: ${pdfGeneratedCount}, Uploaded: ${uploadedCount}, Published: ${publishedCount}. Failed: ${failedUrlList.length}.`);
       updateProgressInfo(totalUrls, totalUrls, pdfGeneratedCount, uploadedCount, publishedCount, "Done");
+      resetButtonsAfterProcess();
 
     });
+
+    function resetButtonsAfterProcess() {
+        document.getElementById('convertButton').disabled = false; // Enable Convert button after processing is done or stopped
+        document.getElementById('pauseButton').disabled = true;
+        document.getElementById('resumeButton').disabled = true;
+        processingActive = false;
+    }
+
+    document.getElementById('pauseButton').addEventListener('click', () => {
+      isPaused = true;
+      document.getElementById('pauseButton').disabled = true;
+      document.getElementById('resumeButton').disabled = false;
+      document.getElementById('convertButton').disabled = true; // Keep convert button disabled while paused
+    });
+
+    document.getElementById('resumeButton').addEventListener('click', () => {
+      isPaused = false;
+      document.getElementById('pauseButton').disabled = false;
+      document.getElementById('resumeButton').disabled = true;
+      document.getElementById('convertButton').disabled = true; // Keep convert button disabled while processing
+      document.getElementById('convertButton').click(); // Re-trigger the convert process to continue
+    });
+
 
     document.getElementById('parseSitemapButton').addEventListener('click', async () => {
       const sitemapUrl = document.getElementById('sitemapUrl').value.trim();
@@ -403,7 +473,7 @@ about me</textarea>
           updateStatus("⚠️ No URLs found in the sitemap or error parsing sitemap.");
         }
       } catch (error) {
-        updateStatus(`<span style="color: red;">❌ Error parsing sitemap: ${error.message || error}</span>`);
+        updateStatus(`❌ Error parsing sitemap: ${error.message || error}`);
         console.error("Error parsing sitemap:", error);
       }
     });
@@ -606,7 +676,11 @@ about me</textarea>
 
     async function getIssuuPublicationUrlBySlug(url, bearerToken) {
       try {
-        const draftSlug = await uploadPdfToIssuu(await convertUrlToPdfWithRateLimit(url, getPrintFriendlyApiKeys()[0]), url, bearerToken, document.getElementById('issuuClientId').value.trim(), document.getElementById('issuuClientSecret').value.trim());
+        // **Corrected order: Get PDF first, then upload/publish**
+        const pdfBlob = await convertUrlToPdfWithRateLimit(url, getPrintFriendlyApiKeys()[0]); // Get PDF Blob
+        if (!pdfBlob) return null; // If PDF conversion failed, stop here
+
+        const draftSlug = await uploadPdfToIssuu(pdfBlob, url, bearerToken, document.getElementById('issuuClientId').value.trim(), document.getElementById('issuuClientSecret').value.trim());
         if (!draftSlug) return null;
 
         const issuuApiPublicationReaderUrl = `https://api.issuu.com/v2/publications/${draftSlug}/reader`;
@@ -704,6 +778,17 @@ about me</textarea>
       applyUrlFilter(); // Re-apply filter
       failedUrlsTextarea.value = ""; // Clear failed URLs textarea
       document.getElementById('convertButton').click(); // Trigger conversion for failed URLs
+    }
+
+    async function checkCORS() {
+      try {
+        const testUrl = 'https://api.printfriendly.com/v2/pdf/create?api_key=TEST_KEY'; // Use a test endpoint, API key doesn't matter for CORS check
+        await fetch(testUrl, { method: 'POST', mode: 'cors' }); // Try a POST request which is more likely to trigger CORS issues
+        return true; // CORS is likely not blocking (or is allowed)
+      } catch (error) {
+        console.error("CORS check failed:", error);
+        return false; // CORS is likely blocking
+      }
     }
 
 
