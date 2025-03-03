@@ -49,7 +49,7 @@
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v3.8 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v3.9 🚀</h1>
 
   <div class="cors-info">
     <p>⚠️ <strong>Important:</strong> To use this app effectively, you may need to install a <a href="https://chromewebstore.google.com/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" target="_blank">CORS Unblock</a> browser extension 🧩.</p>
@@ -77,10 +77,6 @@
         <label for="issuuClientSecret">Client Secret:</label>
         <input type="text" id="issuuClientSecret" placeholder="Enter Issuu Client Secret">
       </div>
-    </div>
-    <div class="api-key-input">
-        <label for="speedyIndexApiKey">SpeedyIndex API Key 🚀:</label>
-        <input type="text" id="speedyIndexApiKey" placeholder="Enter SpeedyIndex API Key">
     </div>
   </div>
 
@@ -1018,6 +1014,110 @@ wp</textarea>
       }
     }
 
+
+    async function cleanOutIssuu() {
+      const issuuBearerToken = document.getElementById('issuuBearerToken').value.trim();
+      const cleanupStatusTextarea = document.getElementById('cleanupStatus');
+      cleanupStatusTextarea.value = ""; // Clear cleanup status
+
+      if (!issuuBearerToken) {
+        updateCleanupStatus("Please enter your Issuu Bearer Token in API Keys tab.");
+        return;
+      }
+
+      updateCleanupStatus("Starting Issuu Cleanup Process...");
+
+      const publications = await listIssuuDocuments('publications', issuuBearerToken);
+      const drafts = await listIssuuDocuments('drafts', issuuBearerToken);
+
+      if (!publications || !drafts) {
+        updateCleanupStatus("Cleanup process aborted due to errors fetching documents.");
+        return;
+      }
+
+      const documentsByTitle = {};
+
+      // Group publications by title
+      publications.forEach(pub => {
+        const title = pub.info.title;
+        if (!documentsByTitle[title]) {
+          documentsByTitle[title] = { publications: [], drafts: [] };
+        }
+        documentsByTitle[title].publications.push(pub);
+      });
+
+      // Group drafts by title
+      drafts.forEach(draft => {
+        const title = draft.info.title;
+        if (!documentsByTitle[title]) {
+          documentsByTitle[title] = { publications: [], drafts: [] };
+        }
+        documentsByTitle[title].drafts.push(draft);
+      });
+
+      let deletedDraftCount = 0;
+      let deletedPublicationCount = 0;
+      let publishedDraftCount = 0;
+
+      for (const title in documentsByTitle) {
+        const docGroup = documentsByTitle[title];
+        if (docGroup.publications.length > 0) {
+          if (docGroup.drafts.length > 0) {
+            updateCleanupStatus(`> Found Publication(s) and Draft(s) with title: "${title}". Deleting drafts...`);
+            for (let i = 0; i < docGroup.drafts.length; i++) {
+              const draft = docGroup.drafts[i];
+              if (i < docGroup.drafts.length - 1) { // Keep one draft just in case, deleting the rest.
+                 const deleteSuccess = await deleteIssuuDocument('drafts', draft.slug, issuuBearerToken);
+                 if (deleteSuccess) {
+                    deletedDraftCount++;
+                 }
+              }
+            }
+          }
+          // Keep one publication, delete others if multiple exist (though unlikely in this scenario).
+          if (docGroup.publications.length > 1) {
+             updateCleanupStatus(`> Found multiple Publications with title: "${title}". Keeping one, deleting others...`);
+             for (let i = 1; i < docGroup.publications.length; i++) { // Keep first publication, delete the rest.
+                const pub = docGroup.publications[i];
+                const deleteSuccess = await deleteIssuuDocument('publications', pub.slug, issuuBearerToken);
+                if (deleteSuccess) {
+                   deletedPublicationCount++;
+                }
+             }
+          }
+
+        } else if (docGroup.drafts.length > 0) {
+          updateCleanupStatus(`> Only Draft(s) found with title: "${title}". Publishing one draft and deleting others...`);
+          let draftToPublish = null;
+          for (let i = 0; i < docGroup.drafts.length; i++) {
+            const draft = docGroup.drafts[i];
+            if (i < docGroup.drafts.length - 1) { // Keep one draft to publish, deleting the rest.
+               const deleteSuccess = await deleteIssuuDocument('drafts', draft.slug, issuuBearerToken);
+               if (deleteSuccess) {
+                  deletedDraftCount++;
+               }
+            } else {
+              draftToPublish = draft; // Keep the last draft to publish
+            }
+          }
+          if (draftToPublish) {
+            const publishSuccess = await publishDraft(draftToPublish.slug, issuuBearerToken);
+            if (publishSuccess) {
+              publishedDraftCount++;
+              updateCleanupStatus(`  > Published draft with title "${title}", URL: ${publishSuccess}`);
+            } else {
+              updateCleanupStatus(`  > ❌ Failed to publish draft with title "${title}".`);
+            }
+          }
+        }
+      }
+
+      updateCleanupStatus(`✅ Issuu Cleanup Completed.`);
+      updateCleanupStatus(`  > Drafts Deleted: ${deletedDraftCount}`);
+      updateCleanupStatus(`  > Publications Deleted: ${deletedPublicationCount}`);
+      updateCleanupStatus(`  > Drafts Published: ${publishedDraftCount}`);
+      updateCleanupStatus("⚠️ Please manually check your Issuu dashboard to ensure cleanup is as expected, especially for edge cases.");
+    }
 
     async function checkExistingUrlsInIssuu(urls, bearerToken) {
       const existingUrls = new Set();
