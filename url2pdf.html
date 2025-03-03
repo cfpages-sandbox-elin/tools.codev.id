@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>URL to PDF & Issuu Uploader 🚀</title>
+<title>URL to PDF & Issuu Uploader v3.0 🚀</title>
 <style>
   /* Basic CSS Styling here */
   body { font-family: sans-serif; }
@@ -9,9 +9,9 @@
   button, .ctrl-button { padding: 10px 20px; cursor: pointer; border-radius: 5px; background-color: #f0f0f0; border: 1px solid #ccc; margin-right: 5px; }
   button:hover, .ctrl-button:hover { background-color: #e0e0e0; }
   button:disabled, .ctrl-button:disabled { background-color: #ddd; cursor: default; }
-  #status { margin-top: 10px; white-space: pre-wrap; height: 150px; overflow-y: scroll; border: 1px solid #ccc; padding: 8px; box-sizing: border-box; font-family: monospace; border-radius: 5px; background-color: #f9f9f9; }
+  #status, #cleanupStatus { margin-top: 10px; white-space: pre-wrap; height: 150px; overflow-y: scroll; border: 1px solid #ccc; padding: 8px; box-sizing: border-box; font-family: monospace; border-radius: 5px; background-color: #f9f9f9; }
   #sitemapUrl, #printfriendlyApiKey, #issuuBearerToken, #issuuClientId, #issuuClientSecret, #urlFilter, .additional-api-key { width: 100%; margin-bottom: 8px; padding: 8px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; }
-  .api-key-input, .sitemap-parser, .url-area, .results-area, .progress-area, .cors-info { margin-bottom: 15px; padding: 10px; border-radius: 8px; background-color: #fff; border: 1px solid #ddd; }
+  .api-key-input, .sitemap-parser, .url-area, .results-area, .progress-area, .cors-info, .cleanup-area { margin-bottom: 15px; padding: 10px; border-radius: 8px; background-color: #fff; border: 1px solid #ddd; }
   .sitemap-parser { display: flex; }
   .sitemap-parser input { flex-grow: 1; margin-right: 10px; }
   .url-area { display: flex; }
@@ -36,11 +36,18 @@
   .url-filter-area p { margin-top: 5px; font-style: italic; color: #999; }
   .results-area button { margin-top: 10px; }
   .controls { display: flex; align-items: center; margin-bottom: 10px; }
+  /* Tabs Styling */
+  .tab { overflow: hidden; border-bottom: 1px solid #ccc; margin-bottom: 15px; }
+  .tab button { background-color: inherit; border: none; outline: none; cursor: pointer; padding: 10px 16px; transition: 0.3s; float: left; border-top-left-radius: 5px; border-top-right-radius: 5px; }
+  .tab button:hover { background-color: #ddd; }
+  .tab button.active { background-color: #ccc; }
+  .tabcontent { display: none; padding: 6px 12px; border: 1px solid #ccc; border-top: none; border-bottom-left-radius: 5px; border-bottom-right-radius: 5px; }
+  .tabcontent.active { display: block; }
 </style>
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v2.4 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v3.0 🚀</h1>
 
   <div class="cors-info">
     <p>⚠️ <strong>Important:</strong> To use this app effectively, you may need to install a <a href="https://chromewebstore.google.com/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" target="_blank">CORS Unblock</a> browser extension 🧩.</p>
@@ -68,52 +75,65 @@
     </div>
   </div>
 
-
-  <div class="sitemap-parser">
-    <input type="url" id="sitemapUrl" placeholder="Enter Sitemap URL 🌐">
-    <button id="parseSitemapButton">Parse Sitemap URLs 🗺️</button>
+  <div class="tab">
+    <button class="tablinks active" onclick="openTab(event, 'uploadTab')">URL 2 PDF 2 Upload</button>
+    <button class="tablinks" onclick="openTab(event, 'cleanupTab')">Clean Out Issuu</button>
   </div>
 
-  <div class="url-area">
-    <textarea id="urlList" placeholder="Enter URLs here, one per line"></textarea>
-    <div class="url-filter-area">
-      <textarea id="urlFilter" title="Enter keywords to filter out URLs containing these keywords. One keyword per line. URLs containing any of these keywords will be excluded." placeholder="Filter URLs (keywords, one per line) 🔍️
+  <div id="uploadTab" class="tabcontent active">
+    <div class="sitemap-parser">
+      <input type="url" id="sitemapUrl" placeholder="Enter Sitemap URL 🌐">
+      <button id="parseSitemapButton">Parse Sitemap URLs 🗺️</button>
+    </div>
+
+    <div class="url-area">
+      <textarea id="urlList" placeholder="Enter URLs here, one per line"></textarea>
+      <div class="url-filter-area">
+        <textarea id="urlFilter" title="Enter keywords to filter out URLs containing these keywords. One keyword per line. URLs containing any of these keywords will be excluded." placeholder="Filter URLs (keywords, one per line) 🔍️
 (e.g., contact, privacy policy, tos)">contact
 privacy policy
 terms of service
 tos
 about us
-about me
-admin
-contoh</textarea>
-      <p>URLs: <span id="urlCount">0</span> / <span id="filteredUrlCount">0</span> (Filtered/Total)</p>
+about me</textarea>
+        <p>URLs: <span id="urlCount">0</span> / <span id="filteredUrlCount">0</span> (Filtered/Total)</p>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button id="convertButton">Convert to PDFs & Upload 🚀</button>
+      <button id="pauseButton" class="ctrl-button" disabled>Pause ⏸️</button>
+      <button id="resumeButton" class="ctrl-button" disabled>Resume ▶️</button>
+    </div>
+
+    <div class="progress-area">
+      <div class="progress-bar">
+        <div class="progress-bar-fill" id="progressBarFill"></div>
+      </div>
+      <p id="progressInfo">Progress: 0/0 URLs | PDF: 0/0 | Uploaded: 0/0 | Published: 0/0 | Est. Time: --</p>
+    </div>
+    <p id="statusSummary">Status Summary: Pending...</p>
+    <textarea id="status" readonly placeholder="Status messages will appear here"></textarea>
+
+    <div class="results-area">
+      <div>
+        <textarea id="successUrls" readonly placeholder="✅ Successful Issuu URLs"></textarea>
+        <button id="copySuccessButton">Copy Success URLs 📋</button>
+      </div>
+      <div>
+        <textarea id="failedUrls" readonly placeholder="❌ Failed URLs"></textarea>
+        <button id="retryFailedButton">Retry Failed URLs 🔄</button>
+      </div>
+      <div>
+        <textarea id="skippedUrls" readonly placeholder="⏭️ Skipped URLs (already on Issuu)"></textarea>
+      </div>
     </div>
   </div>
 
-  <div class="controls">
-    <button id="convertButton">Convert to PDFs & Upload 🚀</button>
-    <button id="pauseButton" class="ctrl-button" disabled>Pause ⏸️</button>
-    <button id="resumeButton" class="ctrl-button" disabled>Resume ▶️</button>
-  </div>
-
-  <div class="progress-area">
-    <div class="progress-bar">
-      <div class="progress-bar-fill" id="progressBarFill"></div>
-    </div>
-    <p id="progressInfo">Progress: 0/0 URLs | PDF: 0/0 | Uploaded: 0/0 | Published: 0/0 | Est. Time: --</p>
-  </div>
-  <p id="statusSummary">Status Summary: Pending...</p>
-  <textarea id="status" readonly placeholder="Status messages will appear here"></textarea>
-
-
-  <div class="results-area">
-    <div>
-      <textarea id="successUrls" readonly placeholder="✅ Successful Issuu URLs"></textarea>
-      <button id="copySuccessButton">Copy Success URLs 📋</button>
-    </div>
-    <div>
-      <textarea id="failedUrls" readonly placeholder="❌ Failed URLs"></textarea>
-      <button id="retryFailedButton">Retry Failed URLs 🔄</button>
+  <div id="cleanupTab" class="tabcontent">
+    <div class="cleanup-area">
+      <button id="cleanIssuuButton">Clean Out Issuu 🧹</button>
+      <textarea id="cleanupStatus" readonly placeholder="Cleanup status messages will appear here"></textarea>
     </div>
   </div>
 
@@ -141,7 +161,31 @@ contoh</textarea>
       document.getElementById('retryFailedButton').addEventListener('click', retryFailedUrls);
 
 
+      // Tab functionality
+      document.querySelectorAll('.tablinks').forEach(tab => {
+        tab.addEventListener('click', (event) => {
+          openTab(event, event.target.textContent === "URL 2 PDF 2 Upload" ? 'uploadTab' : 'cleanupTab');
+        });
+      });
+
+      document.getElementById('cleanIssuuButton').addEventListener('click', cleanOutIssuu); // Event listener for Clean Out Issuu button
+
     });
+
+    function openTab(evt, tabName) {
+      let i, tabcontent, tablinks;
+      tabcontent = document.querySelectorAll(".tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].classList.remove("active");
+      }
+      tablinks = document.querySelectorAll(".tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].classList.remove("active");
+      }
+      document.getElementById(tabName).classList.add("active");
+      evt.currentTarget.classList.add("active");
+    }
+
 
     function loadApiKeys() {
       const printfriendlyKey = localStorage.getItem('printfriendlyApiKey');
@@ -182,6 +226,12 @@ contoh</textarea>
 
     function updateStatus(message) {
       const statusTextarea = document.getElementById('status');
+      statusTextarea.value += message + '\n';
+      statusTextarea.scrollTop = statusTextarea.scrollHeight; // Auto-scroll to bottom
+    }
+
+    function updateCleanupStatus(message) {
+      const statusTextarea = document.getElementById('cleanupStatus');
       statusTextarea.value += message + '\n';
       statusTextarea.scrollTop = statusTextarea.scrollHeight; // Auto-scroll to bottom
     }
@@ -251,6 +301,8 @@ contoh</textarea>
       successUrlsTextarea.value = "";
       const failedUrlsTextarea = document.getElementById('failedUrls');
       failedUrlsTextarea.value = "";
+      const skippedUrlsTextarea = document.getElementById('skippedUrls');
+      skippedUrlsTextarea.value = "";
 
       if (filteredUrls.length === 0) {
         updateStatus("Please enter URLs or parse from a sitemap.");
@@ -314,6 +366,24 @@ contoh</textarea>
         resetButtonsAfterProcess();
         return;
       }
+
+      updateStatus("Checking for existing URLs on Issuu...");
+      const existingIssuuUrls = await checkExistingUrlsInIssuu(filteredUrls, issuuBearerToken);
+      const urlsToProcess = filteredUrls.filter(url => !existingIssuuUrls.has(url));
+      const skippedUrls = filteredUrls.filter(url => existingIssuuUrls.has(url));
+
+      if (skippedUrls.length > 0) {
+          skippedUrlsTextarea.value = skippedUrls.join('\n');
+          updateStatus(`⏭️ Skipped ${skippedUrls.length} URLs already found on Issuu.`);
+      }
+
+      if (urlsToProcess.length === 0) {
+          updateStatus("No new URLs to process. All URLs are already on Issuu or were filtered.");
+          updateStatusSummary("No new URLs to process.");
+          resetButtonsAfterProcess();
+          return;
+      }
+      filteredUrls = urlsToProcess; // Process only the new URLs
 
 
       const totalUrls = filteredUrls.length;
@@ -436,7 +506,7 @@ contoh</textarea>
 
       const endTime = new Date().getTime();
       const totalTimeSeconds = (endTime - startTime) / 1000;
-      updateStatusSummary(`✅ Processing completed in ${totalTimeSeconds.toFixed(1)} seconds.  ${totalUrls} URLs, PDF Generated: ${pdfGeneratedCount}, Uploaded: ${uploadedCount}, Published: ${publishedCount}. Failed: ${failedUrlList.length}.`);
+      updateStatusSummary(`✅ Processing completed in ${totalTimeSeconds.toFixed(1)} seconds.  ${totalUrls} URLs, PDF Generated: ${pdfGeneratedCount}, Uploaded: ${uploadedCount}, Published: ${publishedCount}. Failed: ${failedUrlList.length}. Skipped: ${skippedUrls.length}`);
       updateProgressInfo(totalUrls, totalUrls, pdfGeneratedCount, uploadedCount, publishedCount, "Done");
       resetButtonsAfterProcess();
 
@@ -621,7 +691,7 @@ contoh</textarea>
             "info": {
               "access": "PUBLIC", // Or "PRIVATE", etc.
               "title": await getPageTitle(url) || `Document from ${url}`, // Get title from page or default
-              "description": await getPageDescription(url) || `PDF document converted from ${url}`, // Get description or default
+              "description": url, // Description is now set to the URL for checking duplicates
               "type": "editorial", // Or other type as needed
               "downloadable": true // Allow downloads
             }
@@ -803,6 +873,207 @@ contoh</textarea>
         console.error("CORS check failed:", error);
         return false; // CORS is likely blocking
       }
+    }
+
+    async function listIssuuDocuments(documentType, bearerToken) {
+      const issuuApiListUrl = `https://api.issuu.com/v2/${documentType}`; // documentType will be 'publications' or 'drafts'
+      let allDocuments = [];
+      let page = 1;
+      let hasNextPage = true;
+
+      updateCleanupStatus(`Fetching Issuu ${documentType}...`);
+
+      while (hasNextPage) {
+        try {
+          const response = await fetch(`${issuuApiListUrl}?size=100&page=${page}`, { // Fetch 100 per page
+            headers: { 'Authorization': `Bearer ${bearerToken}` }
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`Issuu API - List ${documentType} failed: ${response.status} ${response.statusText} - ${errorData?.message || 'Unknown error'}`);
+          }
+
+          const data = await response.json();
+          if (data.results && Array.isArray(data.results)) {
+            allDocuments = allDocuments.concat(data.results);
+          }
+
+          const links = data.links;
+          if (links && links.next && links.next.href) {
+            page++;
+            hasNextPage = true; // More pages to fetch
+          } else {
+            hasNextPage = false; // No more 'next' link, end pagination
+          }
+
+        } catch (error) {
+          console.error(`Error listing Issuu ${documentType}:`, error);
+          updateCleanupStatus(`❌ Error fetching Issuu ${documentType}: ${error.message || error}`);
+          return null; // Indicate failure
+        }
+      }
+      updateCleanupStatus(`✅ Fetched ${allDocuments.length} Issuu ${documentType}.`);
+      return allDocuments;
+    }
+
+    async function deleteIssuuDocument(documentType, slug, bearerToken) {
+      const issuuApiDeleteUrl = `https://api.issuu.com/v2/${documentType}/${slug}`; // documentType: 'drafts' or 'publications'
+
+      try {
+        const response = await fetch(issuuApiDeleteUrl, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${bearerToken}` }
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(`Issuu API - Delete ${documentType} failed: ${response.status} ${response.statusText} - ${errorData?.message || 'Unknown error'}`);
+        }
+        console.log(`Successfully deleted Issuu ${documentType} with slug: ${slug}`);
+        return true; // Deletion successful
+
+      } catch (error) {
+        console.error(`Error deleting Issuu ${documentType} with slug ${slug}:`, error);
+        updateCleanupStatus(`❌ Error deleting Issuu ${documentType} slug ${slug}: ${error.message || error}`);
+        return false; // Deletion failed
+      }
+    }
+
+
+    async function cleanOutIssuu() {
+      const issuuBearerToken = document.getElementById('issuuBearerToken').value.trim();
+      const cleanupStatusTextarea = document.getElementById('cleanupStatus');
+      cleanupStatusTextarea.value = ""; // Clear cleanup status
+
+      if (!issuuBearerToken) {
+        updateCleanupStatus("Please enter your Issuu Bearer Token in API Keys tab.");
+        return;
+      }
+
+      updateCleanupStatus("Starting Issuu Cleanup Process...");
+
+      const publications = await listIssuuDocuments('publications', issuuBearerToken);
+      const drafts = await listIssuuDocuments('drafts', issuuBearerToken);
+
+      if (!publications || !drafts) {
+        updateCleanupStatus("Cleanup process aborted due to errors fetching documents.");
+        return;
+      }
+
+      const documentsByTitle = {};
+
+      // Group publications by title
+      publications.forEach(pub => {
+        const title = pub.info.title;
+        if (!documentsByTitle[title]) {
+          documentsByTitle[title] = { publications: [], drafts: [] };
+        }
+        documentsByTitle[title].publications.push(pub);
+      });
+
+      // Group drafts by title
+      drafts.forEach(draft => {
+        const title = draft.info.title;
+        if (!documentsByTitle[title]) {
+          documentsByTitle[title] = { publications: [], drafts: [] };
+        }
+        documentsByTitle[title].drafts.push(draft);
+      });
+
+      let deletedDraftCount = 0;
+      let deletedPublicationCount = 0;
+      let publishedDraftCount = 0;
+
+      for (const title in documentsByTitle) {
+        const docGroup = documentsByTitle[title];
+        if (docGroup.publications.length > 0) {
+          if (docGroup.drafts.length > 0) {
+            updateCleanupStatus(`> Found Publication(s) and Draft(s) with title: "${title}". Deleting drafts...`);
+            for (let i = 0; i < docGroup.drafts.length; i++) {
+              const draft = docGroup.drafts[i];
+              if (i < docGroup.drafts.length - 1) { // Keep one draft just in case, deleting the rest.
+                 const deleteSuccess = await deleteIssuuDocument('drafts', draft.slug, issuuBearerToken);
+                 if (deleteSuccess) {
+                    deletedDraftCount++;
+                 }
+              }
+            }
+          }
+          // Keep one publication, delete others if multiple exist (though unlikely in this scenario).
+          if (docGroup.publications.length > 1) {
+             updateCleanupStatus(`> Found multiple Publications with title: "${title}". Keeping one, deleting others...`);
+             for (let i = 1; i < docGroup.publications.length; i++) { // Keep first publication, delete the rest.
+                const pub = docGroup.publications[i];
+                const deleteSuccess = await deleteIssuuDocument('publications', pub.slug, issuuBearerToken);
+                if (deleteSuccess) {
+                   deletedPublicationCount++;
+                }
+             }
+          }
+
+        } else if (docGroup.drafts.length > 0) {
+          updateCleanupStatus(`> Only Draft(s) found with title: "${title}". Publishing one draft and deleting others...`);
+          let draftToPublish = null;
+          for (let i = 0; i < docGroup.drafts.length; i++) {
+            const draft = docGroup.drafts[i];
+            if (i < docGroup.drafts.length - 1) { // Keep one draft to publish, deleting the rest.
+               const deleteSuccess = await deleteIssuuDocument('drafts', draft.slug, issuuBearerToken);
+               if (deleteSuccess) {
+                  deletedDraftCount++;
+               }
+            } else {
+              draftToPublish = draft; // Keep the last draft to publish
+            }
+          }
+          if (draftToPublish) {
+            const publishSuccess = await publishDraft(draftToPublish.slug, issuuBearerToken);
+            if (publishSuccess) {
+              publishedDraftCount++;
+              updateCleanupStatus(`  > Published draft with title "${title}", URL: ${publishSuccess}`);
+            } else {
+              updateCleanupStatus(`  > ❌ Failed to publish draft with title "${title}".`);
+            }
+          }
+        }
+      }
+
+      updateCleanupStatus(`✅ Issuu Cleanup Completed.`);
+      updateCleanupStatus(`  > Drafts Deleted: ${deletedDraftCount}`);
+      updateCleanupStatus(`  > Publications Deleted: ${deletedPublicationCount}`);
+      updateCleanupStatus(`  > Drafts Published: ${publishedDraftCount}`);
+      updateCleanupStatus("⚠️ Please manually check your Issuu dashboard to ensure cleanup is as expected, especially for edge cases.");
+    }
+
+
+    async function checkExistingUrlsInIssuu(urls, bearerToken) {
+      const existingUrls = new Set();
+      const publications = await listIssuuDocuments('publications', bearerToken);
+      const drafts = await listIssuuDocuments('drafts', bearerToken);
+
+      if (publications) {
+        publications.forEach(pub => {
+          if (pub.info.description) {
+            urls.forEach(url => {
+              if (pub.info.description.includes(url)) {
+                existingUrls.add(url);
+              }
+            });
+          }
+        });
+      }
+      if (drafts) {
+        drafts.forEach(draft => {
+          if (draft.info.description) {
+            urls.forEach(url => {
+              if (draft.info.description.includes(url)) {
+                existingUrls.add(url);
+              }
+            });
+          }
+        });
+      }
+      return existingUrls;
     }
 
 
