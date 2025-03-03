@@ -49,7 +49,7 @@
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v4.6 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v4.7 🚀</h1>
 
   <div class="cors-info">
     <p>⚠️ <strong>Important:</strong> To use this app effectively, you may need to install a <a href="https://chromewebstore.google.com/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" target="_blank">CORS Unblock</a> browser extension 🧩.</p>
@@ -1172,7 +1172,7 @@ wp</textarea>
 
     async function getSpeedyIndexBalance() {
       try {
-        const response = await fetch('/api/speedyindex-api?action=get-balance'); // Added "?action=get-balance"
+        const response = await fetch('/speedyindex-api?action=get-balance'); 
         if (!response.ok) {
           console.error("Error fetching SpeedyIndex balance from Function:", response.status, response.statusText);
           return "Error";
@@ -1211,8 +1211,8 @@ wp</textarea>
 
     async function indexUrlsWithSpeedyIndex(urls) {
       try {
-        const response = await fetch('/api/speedyindex-api?action=index-urls', { // Added "?action=index-urls"
-          method: 'POST', // Explicitly set method to POST
+        const response = await fetch('/speedyindex-api?action=index-urls', { 
+          method: 'POST', 
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ urls: urls })
         });
