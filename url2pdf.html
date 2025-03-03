@@ -40,7 +40,7 @@
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v2.3 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v2.4 🚀</h1>
 
   <div class="cors-info">
     <p>⚠️ <strong>Important:</strong> To use this app effectively, you may need to install a <a href="https://chromewebstore.google.com/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" target="_blank">CORS Unblock</a> browser extension 🧩.</p>
@@ -390,8 +390,9 @@ contoh</textarea>
             }
 
             if (currentStage === "publish") {
-              updateStatus(`  > 🚀 Publishing on Issuu and retrieving URL...`);
-              const issuuPublicationUrl = await getIssuuPublicationUrlBySlug(url, currentDraftSlug, issuuBearerToken); // Pass draftSlug
+              updateStatus(`  > 🚀 Publishing Draft on Issuu and retrieving URL...`);
+              const issuuPublicationUrl = await publishDraft(currentDraftSlug, issuuBearerToken); // Call publishDraft
+
               if (issuuPublicationUrl) {
                 updateStatus(`  > ✅ Published on Issuu. Publication URL: ${issuuPublicationUrl}`);
                 publishedCount++;
@@ -400,7 +401,7 @@ contoh</textarea>
                 break; // Success, move to next URL
               } else {
                 updateStatus(`  > ❌ Failed to publish or retrieve Issuu URL.`); // Removed HTML formatting
-                currentStage = "publish"; // Retry Publish/Get URL
+                currentStage = "publish"; // Retry Publish
                 throw new Error("Issuu Publication Failed or URL retrieval failed"); // For retry logic
               }
             }
@@ -684,60 +685,33 @@ contoh</textarea>
       }
     }
 
-    async function getIssuuPublicationUrlBySlug(url, draftSlug, bearerToken) { // Added draftSlug parameter
-      const maxRetries = 5; // Retry up to 5 times
-      let retryCount = 0;
+    async function publishDraft(draftSlug, bearerToken) {
+      const issuuApiPublishDraftUrl = `https://api.issuu.com/v2/drafts/${draftSlug}/publish`;
 
       try {
-        // **No need to get PDF here anymore, it's already uploaded and we have draftSlug**
+        updateStatus(`  > 🚀 Publishing Draft on Issuu...`);
+        const response = await fetch(issuuApiPublishDraftUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json', // Important: Content-Type should be application/json even if body is empty
+            'Authorization': `Bearer ${bearerToken}`
+          },
+          body: JSON.stringify({}) // Empty JSON body as per doc example (or omit body entirely - testing needed)
+        });
 
-        console.log("Draft Slug received for URL:", url, draftSlug); // Debugging log
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("Issuu API - Publish Draft failed response:", response.status, response.statusText, errorData);
+          console.error("  Details:", JSON.stringify(errorData?.details)); // Log details of error
+          throw new Error(`Issuu API - Publish Draft failed: ${response.status} ${response.statusText} - ${errorData?.message || 'Unknown error'} - Details: ${JSON.stringify(errorData?.details)}`);
+        }
 
-        // Add initial delay before getting reader URL
-        updateStatus(`  > ⏳ Waiting 10 seconds before fetching Publication URL...`);
-        await new Promise(resolve => setTimeout(resolve, 10000)); // 10 seconds delay
-
-        while (retryCount < maxRetries) {
-          retryCount++;
-          const issuuApiPublicationReaderUrl = `https://api.issuu.com/v2/publications/${draftSlug}/reader`;
-          console.log(`Fetching Publication Reader URL (Attempt ${retryCount}):`, issuuApiPublicationReaderUrl); // Debugging log
-          try {
-            const response = await fetch(issuuApiPublicationReaderUrl, {
-              headers: { 'Authorization': `Bearer ${bearerToken}` }
-            });
-
-            if (response.ok) {
-              const data = await response.json();
-              console.log("Issuu API - Get Publication Reader URL success response (Attempt ${retryCount}):", data); // Success response log
-              return data.url; // Publication reader URL
-            } else {
-              const errorData = await response.json();
-              console.warn(`Issuu API - Get Publication Reader URL failed (Attempt ${retryCount}):`, response.status, response.statusText, errorData); // Warning log for retries
-              console.warn("  Details:", JSON.stringify(errorData?.details)); // Log details of 422 error
-              if (retryCount < maxRetries) {
-                updateStatus(`  > ⏳ Retrying Publication URL retrieval (Attempt ${retryCount}/${maxRetries}) in 3 seconds...`);
-                await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds before retrying
-              } else {
-                console.error("Issuu API - Get Publication Reader URL failed after max retries:", response.status, response.statusText, errorData);
-                console.error("  Details:", JSON.stringify(errorData?.details)); // Log details on final failure
-                throw new Error(`Issuu API - Get Publication Reader URL failed after max retries: ${response.status} ${response.statusText} - ${errorData?.message || 'Unknown error'} - Details: ${JSON.stringify(errorData?.details)}`); // Include details in error message
-              }
-            }
-          } catch (fetchError) {
-            console.error("Fetch error during Publication URL retrieval (Attempt ${retryCount}):", fetchError);
-            if (retryCount < maxRetries) {
-              updateStatus(`  > ⏳ Retrying Publication URL retrieval (Attempt ${retryCount}/${maxRetries}) in 3 seconds... (Fetch Error)`);
-              await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds before retrying
-            } else {
-              throw new Error(`Fetch error during Publication URL retrieval after max retries: ${fetchError.message || fetchError}`);
-            }
-          }
-        } // end retry loop for publication URL
-
-        return null; // If all retries fail to get URL
+        const data = await response.json();
+        console.log("Issuu API - Publish Draft success response:", data);
+        return data.publicLocation; // Publication URL should be in publicLocation
 
       } catch (error) {
-        console.error("Error getting Issuu Publication URL:", error);
+        console.error("Error publishing draft to Issuu:", error);
         return null;
       }
     }
