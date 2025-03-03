@@ -47,7 +47,7 @@
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v3.2 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v3.3 🚀</h1>
 
   <div class="cors-info">
     <p>⚠️ <strong>Important:</strong> To use this app effectively, you may need to install a <a href="https://chromewebstore.google.com/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" target="_blank">CORS Unblock</a> browser extension 🧩.</p>
@@ -967,10 +967,16 @@ about me</textarea>
 
       // Group publications by title
       publications.forEach(pub => {
-        const title = pub.info?.title; // **Use optional chaining ?. to safely access title**
+        let title = pub.info?.title; // Try to get title from pub.info.title first
+
         if (!title) {
-          console.warn("Publication missing 'info.title', skipping for grouping:", pub);
-          return; // Skip if no title
+          title = pub.title; // **Fallback: Try to get title directly from pub.title**
+        }
+
+
+        if (!title) {
+          console.warn("Publication missing 'info.title' and 'title', skipping for grouping:", pub);
+          return; // Skip if no title found
         }
         if (!documentsByTitle[title]) {
           documentsByTitle[title] = { publications: [], drafts: [] };
@@ -980,10 +986,19 @@ about me</textarea>
 
       // Group drafts by title
       drafts.forEach(draft => {
-        const title = draft.changes?.title; // **Use optional chaining ?. and check 'changes.title' for drafts**
+        let title = draft.changes?.title; // Try to get title from draft.changes.title first
+
         if (!title) {
-          console.warn("Draft missing 'changes.title', skipping for grouping:", draft);
-          return; // Skip if no title
+          title = draft.info?.title; // **Fallback: Try to get title from draft.info.title (less likely for drafts, but just in case)**
+        }
+        if (!title) {
+          title = draft.title; // **Fallback: Try to get title directly from draft.title (even less likely for drafts, but just in case)**
+        }
+
+
+        if (!title) {
+          console.warn("Draft missing 'changes.title', 'info.title', and 'title', skipping for grouping:", draft);
+          return; // Skip if no title found
         }
         if (!documentsByTitle[title]) {
           documentsByTitle[title] = { publications: [], drafts: [] };
