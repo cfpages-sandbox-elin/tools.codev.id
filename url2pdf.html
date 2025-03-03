@@ -47,7 +47,7 @@
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v3.0 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v3.1 🚀</h1>
 
   <div class="cors-info">
     <p>⚠️ <strong>Important:</strong> To use this app effectively, you may need to install a <a href="https://chromewebstore.google.com/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" target="_blank">CORS Unblock</a> browser extension 🧩.</p>
@@ -895,6 +895,8 @@ about me</textarea>
           }
 
           const data = await response.json();
+          console.log(`Issuu API - List ${documentType} response (page ${page}):`, data); // **DEBUGGING LOG - Inspect the response data**
+
           if (data.results && Array.isArray(data.results)) {
             allDocuments = allDocuments.concat(data.results);
           }
@@ -965,6 +967,10 @@ about me</textarea>
 
       // Group publications by title
       publications.forEach(pub => {
+        if (!pub.info) { // **FIX: Check if pub.info exists**
+          console.warn("Publication object missing 'info' property:", pub); // **DEBUGGING LOG - Warn about missing info**
+          return; // Skip this publication if info is missing
+        }
         const title = pub.info.title;
         if (!documentsByTitle[title]) {
           documentsByTitle[title] = { publications: [], drafts: [] };
@@ -974,6 +980,10 @@ about me</textarea>
 
       // Group drafts by title
       drafts.forEach(draft => {
+        if (!draft.info) { // **FIX: Check if draft.info exists**
+          console.warn("Draft object missing 'info' property:", draft); // **DEBUGGING LOG - Warn about missing info**
+          return; // Skip this draft if info is missing
+        }
         const title = draft.info.title;
         if (!documentsByTitle[title]) {
           documentsByTitle[title] = { publications: [], drafts: [] };
