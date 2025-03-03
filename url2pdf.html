@@ -49,7 +49,7 @@
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v3.6 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v3.7 🚀</h1>
 
   <div class="cors-info">
     <p>⚠️ <strong>Important:</strong> To use this app effectively, you may need to install a <a href="https://chromewebstore.google.com/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" target="_blank">CORS Unblock</a> browser extension 🧩.</p>
@@ -320,6 +320,7 @@ about me</textarea>
       }
       processingActive = true;
       isPaused = false;
+      waitingForApiKey = false; // Reset the waiting for API key flag
       document.getElementById('pauseButton').disabled = false;
       document.getElementById('resumeButton').disabled = true;
       document.getElementById('convertButton').disabled = true; // Disable Convert button during processing
@@ -342,7 +343,7 @@ about me</textarea>
         return;
       }
 
-      const printfriendlyApiKeys = getPrintFriendlyApiKeys(); // Get all API keys
+      let printfriendlyApiKeys = getPrintFriendlyApiKeys(); // Get initial API keys
       const issuuBearerToken = document.getElementById('issuuBearerToken').value.trim();
       const issuuClientId = document.getElementById('issuuClientId').value.trim();
       const issuuClientSecret = document.getElementById('issuuClientSecret').value.trim();
@@ -432,9 +433,9 @@ about me</textarea>
 
 
       for (let i = 0; i < filteredUrls.length; i++) {
-        if (isPaused) {
-          updateStatus("⏸️ Processing paused. Click 'Resume' to continue.");
-          updateStatusSummary("Paused");
+        if (isPaused || waitingForApiKey) { // Check waitingForApiKey flag as well
+          updateStatus(isPaused ? "⏸️ Processing paused. Click 'Resume' to continue." : "⏳ Waiting for PrintFriendly API Key. Please add a new key and click 'Resume'.");
+          updateStatusSummary(isPaused ? "Paused" : "Waiting for API Key");
           document.getElementById('pauseButton').disabled = true;
           document.getElementById('resumeButton').disabled = false;
           return; // Exit the loop to pause
@@ -512,6 +513,17 @@ about me</textarea>
           } catch (error) {
             console.error(`Error processing URL: ${url} (Attempt ${retryCount + 1})`, error);
             updateStatus(`  > ⚠️ Error: ${error.message || error}`); // Removed HTML formatting
+            if (error.message.includes("API Key Exhausted") || error.message.includes("Unauthorized")) { // Check for API key exhaustion error
+              updateStatus(`<span style="color: red;">  > ⛔ PrintFriendly API Key Exhausted or Invalid. Please add a new API key below and click 'Resume'.</span>`);
+              addNewApiKeyField(); // Add a new API key input field
+              waitingForApiKey = true; // Set the flag to pause processing loop
+              document.getElementById('pauseButton').disabled = true; // Disable pause button while waiting for API key
+              document.getElementById('resumeButton').disabled = false; // Enable resume button
+              updateStatusSummary("Waiting for API Key");
+              return; // Exit the function to pause processing loop
+            }
+
+
             retryCount++;
             if (retryCount <= maxRetries) {
               const waitTime = Math.random() * 3000 + 1000; // Random wait 1-4 seconds
@@ -543,6 +555,15 @@ about me</textarea>
       updateProgressInfo(totalUrls, totalUrls, pdfGeneratedCount, uploadedCount, publishedCount, "Done");
       resetButtonsAfterProcess();
 
+    });
+
+    document.getElementById('resumeButton').addEventListener('click', () => {
+      isPaused = false;
+      waitingForApiKey = false; // Reset waiting for API key flag on resume
+      document.getElementById('pauseButton').disabled = false;
+      document.getElementById('resumeButton').disabled = true;
+      document.getElementById('convertButton').disabled = true; // Keep convert button disabled while processing
+      document.getElementById('convertButton').click(); // Re-trigger the convert process to continue
     });
 
     function resetButtonsAfterProcess() {
@@ -686,8 +707,11 @@ about me</textarea>
         });
 
         if (!response.ok) {
-          if (response.status === 429) {
-            throw new Error(`PrintFriendly API error: Too Many Requests (Rate Limit). Please wait and try again.`);
+          if (response.status === 429 || response.status === 401) { // Check for 429 (Too Many Requests) and 401 (Unauthorized - potentially key issue)
+            const errorData = await response.json();
+            const errorMessage = `PrintFriendly API error: ${response.status} ${response.statusText} - ${errorData?.message || 'Unknown error'}`;
+            console.error(errorMessage);
+            throw new Error(errorMessage + " - API Key Exhausted or Invalid"); // Indicate API key issue in error message
           }
           const errorData = await response.json();
           throw new Error(`PrintFriendly API error: ${response.status} ${response.statusText} - ${errorData?.message || 'Unknown error'}`);
