@@ -49,7 +49,7 @@
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v4.4 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v4.5 🚀</h1>
 
   <div class="cors-info">
     <p>⚠️ <strong>Important:</strong> To use this app effectively, you may need to install a <a href="https://chromewebstore.google.com/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" target="_blank">CORS Unblock</a> browser extension 🧩.</p>
@@ -1179,24 +1179,16 @@ wp</textarea>
     }
 
     async function getSpeedyIndexBalance() {
-      const { speedyIndexKey } = await response.json();
-      const apiKey = speedyIndexKey;
-      if (!apiKey) {
-        return "N/A"; // No API key in environment variable
-      }
-      const apiUrl = 'https://api.speedyindex.com/v2/account';
       try {
-        const response = await fetch(apiUrl, {
-          headers: { 'Authorization': apiKey }
-        });
+        const response = await fetch('/api/speedyindex-api/get-balance'); // Call your Cloudflare Function endpoint
         if (!response.ok) {
-          console.error("SpeedyIndex API - Get Balance failed:", response.status, response.statusText);
+          console.error("Error fetching SpeedyIndex balance from Function:", response.status, response.statusText);
           return "Error";
         }
         const data = await response.json();
-        return data.balance?.indexer || "Error";
+        return data.balance || "Error"; // Balance is now in data.balance from Function response
       } catch (error) {
-        console.error("Error fetching SpeedyIndex balance:", error);
+        console.error("Error fetching SpeedyIndex balance from Function:", error);
         return "Error";
       }
     }
@@ -1208,12 +1200,6 @@ wp</textarea>
     }
 
     async function indexSuccessUrls() {
-      const { speedyIndexKey } = await response.json();
-      const apiKey = speedyIndexKey;
-      if (!apiKey) {
-        updateStatus("SpeedyIndex API Key is not set in environment variables.");
-        return;
-      }
       const successUrlsTextarea = document.getElementById('successUrls');
       const urls = successUrlsTextarea.value.trim().split('\n').filter(url => url);
       if (urls.length === 0) {
@@ -1221,46 +1207,41 @@ wp</textarea>
         return;
       }
 
-      updateStatus("Starting SpeedyIndex indexing process...");
-      const indexStatus = await indexUrlsWithSpeedyIndex(apiKey, urls);
+      updateStatus("Starting SpeedyIndex indexing process (via Function)...");
+      const indexStatus = await indexUrlsWithSpeedyIndex(urls); // Call client-side indexUrlsWithSpeedyIndex (modified below)
       if (indexStatus) {
-        updateStatus("SpeedyIndex indexing process completed.");
+        updateStatus("SpeedyIndex indexing process completed (via Function).");
       } else {
-        updateStatus("SpeedyIndex indexing process failed. Check console for errors.");
+        updateStatus("SpeedyIndex indexing process failed (via Function). Check console for errors.");
       }
       await displaySpeedyIndexBalance(); // Update balance after indexing attempt
     }
 
-    async function indexUrlsWithSpeedyIndex(apiKey, urls) {
-      const apiUrl = 'https://api.speedyindex.com/v2/task/google/indexer/create';
-      const taskTitle = `Issuu_Index_${Date.now()}`;
+    async function indexUrlsWithSpeedyIndex(urls) {
       try {
-        const response = await fetch(apiUrl, {
+        const response = await fetch('/api/speedyindex-api/index-urls', { // Call your Cloudflare Function endpoint
           method: 'POST',
-          headers: {
-            'Authorization': apiKey,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ title: taskTitle, urls: urls })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ urls: urls }) // Send URLs in the request body
         });
 
         if (!response.ok) {
           const errorData = await response.json();
-          updateStatus(`SpeedyIndex API - Task creation failed: ${response.status} ${response.statusText} - ${errorData?.message || 'Unknown error'}`);
-          console.error("SpeedyIndex API - Task creation failed:", response.status, response.statusText, errorData);
+          updateStatus(`SpeedyIndex API - Task creation via Function failed: ${response.status} ${response.statusText} - ${errorData?.error || 'Unknown error'}`); // Error is in data.error now
+          console.error("SpeedyIndex API - Task creation via Function failed:", response.status, response.statusText, errorData);
           return false;
         }
 
-        const data = await response.json();
-        updateStatus(`SpeedyIndex API - Task created successfully.`);
-        updateStatus(`  > Task ID: ${data.task_id}`);
+        const data = await response.json(); // Data from Function response
+        updateStatus(`SpeedyIndex API - Task created successfully (via Function).`);
+        updateStatus(`  > Task ID: ${data.task_id}`); // Access properties from Function response
         updateStatus(`  > Task Type: ${data.type}`);
         updateStatus(`  > Status Code: ${data.code}`);
         return true;
 
       } catch (error) {
-        updateStatus(`Error calling SpeedyIndex API: ${error.message || error}`);
-        console.error("Error calling SpeedyIndex API:", error);
+        updateStatus(`Error calling SpeedyIndex Function: ${error.message || error}`);
+        console.error("Error calling SpeedyIndex Function:", error);
         return false;
       }
     }
