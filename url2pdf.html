@@ -47,7 +47,7 @@
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v3.3 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v3.4 🚀</h1>
 
   <div class="cors-info">
     <p>⚠️ <strong>Important:</strong> To use this app effectively, you may need to install a <a href="https://chromewebstore.google.com/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" target="_blank">CORS Unblock</a> browser extension 🧩.</p>
@@ -1078,23 +1078,29 @@ about me</textarea>
 
       if (publications) {
         publications.forEach(pub => {
-          if (pub.info.description) {
+          const description = pub.info?.description; // Use optional chaining for pub.info?.description
+          if (description) {
             urls.forEach(url => {
-              if (pub.info.description.includes(url)) {
+              if (description.includes(url)) {
                 existingUrls.add(url);
               }
             });
+          } else {
+            console.warn("Publication missing 'info.description', skipping URL check for this publication:", pub); // Debugging log
           }
         });
       }
       if (drafts) {
         drafts.forEach(draft => {
-          if (draft.info.description) {
+          const description = draft.info?.description; // Use optional chaining for draft.info?.description
+          if (description) {
             urls.forEach(url => {
-              if (draft.info.description.includes(url)) {
+              if (description.includes(url)) {
                 existingUrls.add(url);
               }
             });
+          } else {
+            console.warn("Draft missing 'info.description', skipping URL check for this draft:", draft); // Debugging log
           }
         });
       }
