@@ -40,7 +40,7 @@
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v2.2 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v2.3 🚀</h1>
 
   <div class="cors-info">
     <p>⚠️ <strong>Important:</strong> To use this app effectively, you may need to install a <a href="https://chromewebstore.google.com/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" target="_blank">CORS Unblock</a> browser extension 🧩.</p>
@@ -119,6 +119,10 @@ contoh</textarea>
 
 
   <script>
+    let draftSlugs = {}; // Object to track draft slugs, URL -> draftSlug
+    let isPaused = false;
+    let processingActive = false; // To prevent multiple clicks
+
     document.addEventListener('DOMContentLoaded', () => {
       // Load API keys from local storage on page load
       loadApiKeys();
@@ -227,8 +231,6 @@ contoh</textarea>
         document.getElementById('filteredUrlCount').textContent = filteredUrls.length;
     }
 
-    let isPaused = false;
-    let processingActive = false; // To prevent multiple clicks
 
     document.getElementById('convertButton').addEventListener('click', async () => {
       if (processingActive) {
@@ -342,6 +344,7 @@ contoh</textarea>
         const maxRetries = 3;
         let currentStage = "pdf"; // pdf, upload, publish
         let pdfBlob; // Define pdfBlob here so it's accessible in the loop
+        let currentDraftSlug; // To store draft slug for the current URL
 
         while (retryCount <= maxRetries) {
           try {
@@ -364,24 +367,31 @@ contoh</textarea>
             }
 
             if (currentStage === "upload") {
-              updateStatus(`  > Uploading PDF to Issuu...`);
-              const uploadSuccess = await uploadPdfToIssuu(pdfBlob, url, issuuBearerToken, issuuClientId, issuuClientSecret);
-
-              if (uploadSuccess) {
-                updateStatus(`  > ✅ PDF uploaded successfully.`);
-                uploadedCount++;
-                currentStage = "publish";
+              // Check if we already have a draftSlug for this URL
+              if (draftSlugs[url]) {
+                updateStatus(`  > ♻️ Reusing existing Draft Slug for URL: ${url}`);
+                currentDraftSlug = draftSlugs[url]; // Use existing slug
+                currentStage = "publish"; // Skip upload, go to publish
               } else {
-                updateStatus(`  > ❌ Failed to upload PDF to Issuu.`); // Removed HTML formatting
-                currentStage = "upload"; // Retry Upload
-                throw new Error("PDF Upload Failed"); // For retry logic
+                updateStatus(`  > 📤 Uploading PDF to Issuu...`);
+                currentDraftSlug = await uploadPdfToIssuu(pdfBlob, url, issuuBearerToken, issuuClientId, issuuClientSecret); // Upload and get slug
+
+                if (currentDraftSlug) {
+                  updateStatus(`  > ✅ PDF uploaded successfully, Draft Slug: ${currentDraftSlug}`);
+                  uploadedCount++;
+                  draftSlugs[url] = currentDraftSlug; // Store the draft slug for future reuse
+                  currentStage = "publish";
+                } else {
+                  updateStatus(`  > ❌ Failed to upload PDF to Issuu.`); // Removed HTML formatting
+                  currentStage = "upload"; // Retry Upload
+                  throw new Error("PDF Upload Failed"); // For retry logic
+                }
               }
             }
 
             if (currentStage === "publish") {
-              updateStatus(`  > Publishing on Issuu and retrieving URL...`);
-              const issuuPublicationUrl = await getIssuuPublicationUrlBySlug(url, issuuBearerToken);
-
+              updateStatus(`  > 🚀 Publishing on Issuu and retrieving URL...`);
+              const issuuPublicationUrl = await getIssuuPublicationUrlBySlug(url, currentDraftSlug, issuuBearerToken); // Pass draftSlug
               if (issuuPublicationUrl) {
                 updateStatus(`  > ✅ Published on Issuu. Publication URL: ${issuuPublicationUrl}`);
                 publishedCount++;
@@ -674,25 +684,18 @@ contoh</textarea>
       }
     }
 
-    async function getIssuuPublicationUrlBySlug(url, bearerToken) {
+    async function getIssuuPublicationUrlBySlug(url, draftSlug, bearerToken) { // Added draftSlug parameter
       const maxRetries = 5; // Retry up to 5 times
       let retryCount = 0;
 
       try {
-        // **Corrected order: Get PDF first, then upload/publish**
-        const pdfBlob = await convertUrlToPdfWithRateLimit(url, getPrintFriendlyApiKeys()[0]); // Get PDF Blob
-        if (!pdfBlob) {
-          console.log("PDF Blob is null, aborting getIssuuPublicationUrlBySlug"); // Debugging log
-          return null; // If PDF conversion failed, stop here
-        }
+        // **No need to get PDF here anymore, it's already uploaded and we have draftSlug**
 
-        const draftSlug = await uploadPdfToIssuu(pdfBlob, url, bearerToken, document.getElementById('issuuClientId').value.trim(), document.getElementById('issuuClientSecret').value.trim());
-        if (!draftSlug) {
-          console.log("Draft Slug is null after uploadPdfToIssuu, aborting getIssuuPublicationUrlBySlug"); // Debugging log
-          return null;
-        }
-        console.log("Draft Slug received:", draftSlug); // Debugging log
+        console.log("Draft Slug received for URL:", url, draftSlug); // Debugging log
 
+        // Add initial delay before getting reader URL
+        updateStatus(`  > ⏳ Waiting 10 seconds before fetching Publication URL...`);
+        await new Promise(resolve => setTimeout(resolve, 10000)); // 10 seconds delay
 
         while (retryCount < maxRetries) {
           retryCount++;
@@ -710,12 +713,14 @@ contoh</textarea>
             } else {
               const errorData = await response.json();
               console.warn(`Issuu API - Get Publication Reader URL failed (Attempt ${retryCount}):`, response.status, response.statusText, errorData); // Warning log for retries
+              console.warn("  Details:", JSON.stringify(errorData?.details)); // Log details of 422 error
               if (retryCount < maxRetries) {
                 updateStatus(`  > ⏳ Retrying Publication URL retrieval (Attempt ${retryCount}/${maxRetries}) in 3 seconds...`);
                 await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds before retrying
               } else {
                 console.error("Issuu API - Get Publication Reader URL failed after max retries:", response.status, response.statusText, errorData);
-                throw new Error(`Issuu API - Get Publication Reader URL failed after max retries: ${response.status} ${response.statusText} - ${errorData?.message || 'Unknown error'}`);
+                console.error("  Details:", JSON.stringify(errorData?.details)); // Log details on final failure
+                throw new Error(`Issuu API - Get Publication Reader URL failed after max retries: ${response.status} ${response.statusText} - ${errorData?.message || 'Unknown error'} - Details: ${JSON.stringify(errorData?.details)}`); // Include details in error message
               }
             }
           } catch (fetchError) {
