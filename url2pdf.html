@@ -1180,7 +1180,7 @@ wp</textarea>
 
     async function getSpeedyIndexBalance() {
       try {
-        const response = await fetch('/api/speedyindex-api/get-balance'); // Call your Cloudflare Function endpoint
+        const response = await fetch('/speedyindex-api/get-balance'); // Call your Cloudflare Function endpoint
         if (!response.ok) {
           console.error("Error fetching SpeedyIndex balance from Function:", response.status, response.statusText);
           return "Error";
@@ -1219,7 +1219,7 @@ wp</textarea>
 
     async function indexUrlsWithSpeedyIndex(urls) {
       try {
-        const response = await fetch('/api/speedyindex-api/index-urls', { // Call your Cloudflare Function endpoint
+        const response = await fetch('/speedyindex-api/index-urls', { // Call your Cloudflare Function endpoint
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ urls: urls }) // Send URLs in the request body
