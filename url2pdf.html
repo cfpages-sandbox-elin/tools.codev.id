@@ -49,7 +49,7 @@
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v4.1 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v4.2 🚀</h1>
 
   <div class="cors-info">
     <p>⚠️ <strong>Important:</strong> To use this app effectively, you may need to install a <a href="https://chromewebstore.google.com/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" target="_blank">CORS Unblock</a> browser extension 🧩.</p>
@@ -1170,7 +1170,7 @@ wp</textarea>
     }
 
     async function getSpeedyIndexBalance() {
-      const apiKey = import.meta.env.SPEEDYINDEX_APIKEY;
+      const apiKey = context.env.SPEEDYINDEX_APIKEY;
       if (!apiKey) {
         return "N/A"; // No API key in environment variable
       }
@@ -1198,7 +1198,7 @@ wp</textarea>
     }
 
     async function indexSuccessUrls() {
-      const apiKey = import.meta.env.SPEEDYINDEX_APIKEY;
+      const apiKey = context.env.SPEEDYINDEX_APIKEY;
       if (!apiKey) {
         updateStatus("SpeedyIndex API Key is not set in environment variables.");
         return;
