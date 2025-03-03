@@ -49,7 +49,7 @@
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v3.7 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v3.8 🚀</h1>
 
   <div class="cors-info">
     <p>⚠️ <strong>Important:</strong> To use this app effectively, you may need to install a <a href="https://chromewebstore.google.com/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" target="_blank">CORS Unblock</a> browser extension 🧩.</p>
@@ -78,6 +78,10 @@
         <input type="text" id="issuuClientSecret" placeholder="Enter Issuu Client Secret">
       </div>
     </div>
+    <div class="api-key-input">
+        <label for="speedyIndexApiKey">SpeedyIndex API Key 🚀:</label>
+        <input type="text" id="speedyIndexApiKey" placeholder="Enter SpeedyIndex API Key">
+    </div>
   </div>
 
   <div class="tab">
@@ -100,7 +104,9 @@ privacy policy
 terms of service
 tos
 about us
-about me</textarea>
+about me
+contoh
+wp</textarea>
         <p>URLs: <span id="urlCount">0</span> / <span id="filteredUrlCount">0</span> (Filtered/Total)</p>
       </div>
     </div>
@@ -123,7 +129,10 @@ about me</textarea>
     <div class="results-area">
       <div>
         <textarea id="successUrls" readonly placeholder="✅ Successful Issuu URLs"></textarea>
-        <button id="copySuccessButton">Copy Success URLs 📋</button>
+        <div style="display: flex; align-items: center;">
+          <button id="copySuccessButton">Copy Success URLs 📋</button>
+          <button id="indexIssuuButton">Index Issuu (N/A)</button>
+        </div>
       </div>
       <div>
         <textarea id="failedUrls" readonly placeholder="❌ Failed URLs"></textarea>
@@ -144,32 +153,34 @@ about me</textarea>
 
 
   <script>
-    let draftSlugs = {}; // Object to track draft slugs, URL -> draftSlug
+    let draftSlugs = {};
     let isPaused = false;
-    let processingActive = false; // To prevent multiple clicks
+    let processingActive = false;
+    let waitingForApiKey = false;
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
       // Load API keys from local storage on page load
       loadApiKeys();
       initializeUrlHandling();
       updateUrlCountDisplay();
       applyUrlFilter();
-      updateAdditionalApiKeyFields(); // Initial API key fields based on loaded URLs
+      updateAdditionalApiKeyFields();
 
       // Event listeners for API key input changes to save to local storage
       document.getElementById('printfriendlyApiKey').addEventListener('input', savePrintFriendlyApiKey);
-      document.querySelectorAll('.additional-api-key').forEach(input => { // Attach to existing additional keys on load
+      document.querySelectorAll('.additional-api-key').forEach(input => {
           input.addEventListener('input', savePrintFriendlyApiKey);
       });
       document.getElementById('issuuBearerToken').addEventListener('input', saveIssuuBearerToken);
       document.getElementById('issuuClientId').addEventListener('input', saveIssuuClientId);
       document.getElementById('issuuClientSecret').addEventListener('input', saveIssuuClientSecret);
       document.getElementById('urlList').addEventListener('input', updateUrlCountDisplay);
-      document.getElementById('urlList').addEventListener('input', updateAdditionalApiKeyFields); // Update API key fields on URL change
+      document.getElementById('urlList').addEventListener('input', updateAdditionalApiKeyFields);
       document.getElementById('urlFilter').addEventListener('input', applyUrlFilter);
       document.getElementById('copySuccessButton').addEventListener('click', copySuccessUrls);
       document.getElementById('retryFailedButton').addEventListener('click', retryFailedUrls);
-      document.getElementById('addApiKeyButton').addEventListener('click', addNewApiKeyField); // Event for "+" button
+      document.getElementById('addApiKeyButton').addEventListener('click', addNewApiKeyField);
+      document.getElementById('indexIssuuButton').addEventListener('click', indexSuccessUrls);
 
 
       // Tab functionality
@@ -179,7 +190,10 @@ about me</textarea>
         });
       });
 
-      document.getElementById('cleanIssuuButton').addEventListener('click', cleanOutIssuu); // Event listener for Clean Out Issuu button
+      document.getElementById('cleanIssuuButton').addEventListener('click', cleanOutIssuu);
+
+      // Fetch and display SpeedyIndex balance on load
+      await displaySpeedyIndexBalance();
 
     });
 
@@ -203,7 +217,7 @@ about me</textarea>
       const issuuBearerToken = localStorage.getItem('issuuBearerToken');
       const issuuClientId = localStorage.getItem('issuuClientId');
       const issuuClientSecret = localStorage.getItem('issuuClientSecret');
-      const additionalKeys = JSON.parse(localStorage.getItem('additionalPrintFriendlyKeys') || '[]'); // Load additional keys
+      const additionalKeys = JSON.parse(localStorage.getItem('additionalPrintFriendlyKeys') || '[]');
 
       if (printfriendlyKey) {
         document.getElementById('printfriendlyApiKey').value = printfriendlyKey;
@@ -217,7 +231,7 @@ about me</textarea>
       if (issuuClientSecret) {
         document.getElementById('issuuClientSecret').value = issuuClientSecret;
       }
-      // Load additional keys into input fields
+
       const additionalKeysContainer = document.getElementById('additionalPrintFriendlyKeys');
       additionalKeys.forEach((key, index) => {
           addNewApiKeyField(key, additionalKeysContainer, index + 1);
@@ -228,9 +242,9 @@ about me</textarea>
       if (event.target.id === 'printfriendlyApiKey') {
           localStorage.setItem('printfriendlyApiKey', event.target.value);
       } else if (event.target.classList.contains('additional-api-key')) {
-          saveAdditionalApiKeys(); // Save all additional keys if any field changes
+          saveAdditionalApiKeys();
       }
-      updateAdditionalApiKeyFields(); // Update fields on key change
+      updateAdditionalApiKeyFields();
     }
 
     function saveAdditionalApiKeys() {
@@ -278,8 +292,8 @@ about me</textarea>
       document.getElementById('progressInfo').textContent = `Progress: ${processed}/${total} URLs | PDF: ${pdfGenerated}/${total} | Uploaded: ${uploaded}/${total} | Published: ${published}/${total} | Est. Time: ${estimatedTime}`;
     }
 
-    let originalUrls = []; // Store the original URL list
-    let filteredUrls = [];   // Store the filtered URL list
+    let originalUrls = [];
+    let filteredUrls = [];
 
     function initializeUrlHandling() {
         originalUrls = document.getElementById('urlList').value.trim().split('\n').filter(url => url);
@@ -1055,6 +1069,90 @@ about me</textarea>
       return existingUrls;
     }
 
+    async function getSpeedyIndexBalance() {
+      const apiKey = process.env.SPEEDYINDEX_APIKEY; // Get API Key from environment variable
+      if (!apiKey) {
+        return "N/A"; // No API key in environment variable
+      }
+      const apiUrl = 'https://api.speedyindex.com/v2/account';
+      try {
+        const response = await fetch(apiUrl, {
+          headers: { 'Authorization': apiKey }
+        });
+        if (!response.ok) {
+          console.error("SpeedyIndex API - Get Balance failed:", response.status, response.statusText);
+          return "Error";
+        }
+        const data = await response.json();
+        return data.balance?.indexer || "Error";
+      } catch (error) {
+        console.error("Error fetching SpeedyIndex balance:", error);
+        return "Error";
+      }
+    }
+
+    async function displaySpeedyIndexBalance() {
+      const balance = await getSpeedyIndexBalance();
+      const buttonText = balance === "Error" || balance === "N/A" ? `Index Issuu (${balance})` : `Index Issuu (${balance})`;
+      document.getElementById('indexIssuuButton').textContent = buttonText;
+    }
+
+    async function indexSuccessUrls() {
+      const apiKey = process.env.SPEEDYINDEX_APIKEY; // Get API Key from environment variable
+      if (!apiKey) {
+        updateStatus("SpeedyIndex API Key is not set in environment variables.");
+        return;
+      }
+      const successUrlsTextarea = document.getElementById('successUrls');
+      const urls = successUrlsTextarea.value.trim().split('\n').filter(url => url);
+      if (urls.length === 0) {
+        updateStatus("No successful Issuu URLs to index.");
+        return;
+      }
+
+      updateStatus("Starting SpeedyIndex indexing process...");
+      const indexStatus = await indexUrlsWithSpeedyIndex(apiKey, urls);
+      if (indexStatus) {
+        updateStatus("SpeedyIndex indexing process completed.");
+      } else {
+        updateStatus("SpeedyIndex indexing process failed. Check console for errors.");
+      }
+      await displaySpeedyIndexBalance(); // Update balance after indexing attempt
+    }
+
+    async function indexUrlsWithSpeedyIndex(apiKey, urls) {
+      const apiUrl = 'https://api.speedyindex.com/v2/task/google/indexer/create';
+      const taskTitle = `Issuu_Index_${Date.now()}`;
+      try {
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Authorization': apiKey,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ title: taskTitle, urls: urls })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          updateStatus(`SpeedyIndex API - Task creation failed: ${response.status} ${response.statusText} - ${errorData?.message || 'Unknown error'}`);
+          console.error("SpeedyIndex API - Task creation failed:", response.status, response.statusText, errorData);
+          return false;
+        }
+
+        const data = await response.json();
+        updateStatus(`SpeedyIndex API - Task created successfully.`);
+        updateStatus(`  > Task ID: ${data.task_id}`);
+        updateStatus(`  > Task Type: ${data.type}`);
+        updateStatus(`  > Status Code: ${data.code}`);
+        return true;
+
+      } catch (error) {
+        updateStatus(`Error calling SpeedyIndex API: ${error.message || error}`);
+        console.error("Error calling SpeedyIndex API:", error);
+        return false;
+      }
+    }
 
   </script>
 
