@@ -47,7 +47,7 @@
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v3.4 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v3.5 🚀</h1>
 
   <div class="cors-info">
     <p>⚠️ <strong>Important:</strong> To use this app effectively, you may need to install a <a href="https://chromewebstore.google.com/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" target="_blank">CORS Unblock</a> browser extension 🧩.</p>
@@ -1078,7 +1078,12 @@ about me</textarea>
 
       if (publications) {
         publications.forEach(pub => {
-          const description = pub.info?.description; // Use optional chaining for pub.info?.description
+          let description = pub.info?.description; // Try to get description from pub.info?.description first
+
+          if (!description) {
+            description = pub.description; // **Fallback: Try to get description directly from pub.description**
+          }
+
           if (description) {
             urls.forEach(url => {
               if (description.includes(url)) {
@@ -1086,13 +1091,22 @@ about me</textarea>
               }
             });
           } else {
-            console.warn("Publication missing 'info.description', skipping URL check for this publication:", pub); // Debugging log
+            console.warn("Publication missing 'info.description' and 'description', skipping URL check for this publication:", pub); // Debugging log
           }
         });
       }
       if (drafts) {
         drafts.forEach(draft => {
-          const description = draft.info?.description; // Use optional chaining for draft.info?.description
+          let description = draft.info?.description; // Try to get description from draft.info?.description first
+
+          if (!description) {
+            description = draft.changes?.description; // **Fallback: Try to get description from draft.changes?.description (less likely, but in case)**
+          }
+          if (!description) {
+            description = draft.description; // **Fallback: Try to get description directly from draft.description (even less likely)**
+          }
+
+
           if (description) {
             urls.forEach(url => {
               if (description.includes(url)) {
@@ -1100,7 +1114,7 @@ about me</textarea>
               }
             });
           } else {
-            console.warn("Draft missing 'info.description', skipping URL check for this draft:", draft); // Debugging log
+            console.warn("Draft missing 'info.description', 'changes.description', and 'description', skipping URL check for this draft:", draft); // Debugging log
           }
         });
       }
