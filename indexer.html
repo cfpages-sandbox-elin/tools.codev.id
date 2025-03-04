@@ -201,12 +201,38 @@
             border-radius: 5px;
             overflow-x: auto; /* Enable horizontal scroll if content is too wide */
         }
-        #task-detail-content h3 {
+        #task-detail-content h2, #task-detail-content h3 {
             margin-top: 0;
             color: #333;
+        }
+
+        #task-detail-content h3 {
             border-bottom: 1px solid #ddd;
             padding-bottom: 5px;
             margin-bottom: 10px;
+        }
+
+        #task-detail-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        #task-detail-table th, #task-detail-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        #task-detail-table th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+        #task-detail-table td a {
+            color: #007bff; /* Link color */
+            text-decoration: none;
+        }
+        #task-detail-table td a:hover {
+            text-decoration: underline;
         }
 
 
@@ -214,12 +240,12 @@
 </head>
 <body>
     <div class="container">
-        <h1>🚀 SpeedyIndex Tool v1.5</h1>
+        <h1>🚀 SpeedyIndex Tool v1.6</h1>
 
         <div class="tab-container">
             <button class="tab-button active" data-tab="indexer">Indexer</button>
             <button class="tab-button" data-tab="past-tasks">Past Tasks 📜</button>
-            <button class="tab-button hidden" data-tab="task-detail" id="task-detail-tab-button">Task Detail 🔍</button> <!-- Hidden initially -->
+            <button class="tab-button hidden" data-tab="task-detail" id="task-detail-tab-button">Task Detail 🔍</button>
         </div>
 
         <div id="indexer" class="tab-content">
@@ -272,7 +298,7 @@
                             <th>Indexed</th>
                             <th>Completed</th>
                             <th>Created At</th>
-                            <th>Details</th> <!-- New Details Column -->
+                            <th>Details</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -331,6 +357,7 @@
         refreshTasksButton.addEventListener('click', fetchPastTasks);
         taskListTableBody.addEventListener('click', handleTaskDetailClick); // Event listener for task detail links
 
+
         // Tab switching logic
         document.querySelectorAll('.tab-button').forEach(button => {
             button.addEventListener('click', function() {
@@ -367,7 +394,7 @@
                 for (const filter of filterTextLines) {
                     if (urlLower.includes(filter)) {
                         shouldInclude = false;
-                        break; // If any filter matches, exclude the URL
+                        break;
                     }
                 }
                 if (shouldInclude) {
@@ -375,17 +402,17 @@
                 }
             });
             urlsTextarea.value = filteredUrls.trim();
-            updateUrlCountAndCost(); // Recalculate count and cost after filtering
+            updateUrlCountAndCost();
         }
 
 
-        async function fetchBalance() { // API Key not needed as parameter anymore
+        async function fetchBalance() {
             indexerBalanceDisplay.textContent = 'Loading...';
             checkerBalanceDisplay.textContent = 'Loading...';
-            const apiUrl = '/speedyindex-api?action=get-balance'; // Path to Cloudflare Function with action
+            const apiUrl = '/speedyindex-api?action=get-balance';
 
             try {
-                const response = await fetch(apiUrl); // No API Key in headers
+                const response = await fetch(apiUrl);
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -433,7 +460,7 @@
                 for (const filter of filterTextLines) {
                     if (urlLower.includes(filter)) {
                         shouldInclude = false;
-                        break; // If any filter matches, exclude the URL
+                        break;
                     }
                 }
                 return shouldInclude;
@@ -450,9 +477,9 @@
             submitUrlsButton.disabled = true;
             taskStatusDiv.textContent = 'Submitting URLs for indexing...';
 
-            const apiUrl = '/speedyindex-api?action=index-urls'; // Path to Cloudflare Function with action
+            const apiUrl = '/speedyindex-api?action=index-urls';
             const requestBody = JSON.stringify({
-                "urls": filteredUrls // Use filtered URLs for submission
+                "urls": filteredUrls
             });
 
             try {
@@ -468,9 +495,9 @@
 
                 if (data.code === 0) {
                     taskStatusDiv.textContent = `URLs submitted successfully! Task ID: ${data.task_id}`;
-                    urlsTextarea.value = ''; // Clear textarea after successful submission
-                    urlFilterInput.value = ''; // Clear filter textarea too after submission
-                    updateUrlCountAndCost(); // Reset count and cost
+                    urlsTextarea.value = '';
+                    urlFilterInput.value = '';
+                    updateUrlCountAndCost();
                 } else if (data.code === 1) {
                     taskStatusDiv.textContent = 'Error: Top up balance needed.';
                 } else if (data.code === -2) {
@@ -499,7 +526,7 @@
             refreshLoadingIndicator.classList.add('active');
             refreshTasksButton.disabled = true;
 
-            const apiUrl = '/speedyindex-api?action=list-tasks'; // Path to Cloudflare Function with action
+            const apiUrl = '/speedyindex-api?action=list-tasks';
 
             try {
                 const response = await fetch(apiUrl);
@@ -511,7 +538,7 @@
                 const data = await response.json();
                 if (data.code === 0 && data.result && data.result.length > 0) {
                     pastTasksStatusDiv.textContent = '';
-                    taskListTableBody.innerHTML = ''; // Clear loading row
+                    taskListTableBody.innerHTML = '';
                     data.result.forEach(task => {
                         const row = taskListTableBody.insertRow();
                         row.insertCell().textContent = task.id;
@@ -521,12 +548,11 @@
                         row.insertCell().textContent = task.indexed_count;
                         row.insertCell().textContent = task.is_completed ? 'Yes' : 'No';
                         row.insertCell().textContent = new Date(task.created_at).toLocaleString();
-                        // Add "Details" link with task ID
                         const detailsCell = row.insertCell();
                         const detailsLink = document.createElement('a');
-                        detailsLink.href = '#task-detail'; // Link to task detail tab (will be prevented by JS)
+                        detailsLink.href = '#task-detail';
                         detailsLink.textContent = '🔍 Details';
-                        detailsLink.dataset.taskId = task.id; // Store task ID in data attribute
+                        detailsLink.dataset.taskId = task.id;
                         detailsCell.appendChild(detailsLink);
 
                     });
@@ -554,19 +580,18 @@
         }
     }
 
-    async function fetchTaskReport(taskId) { // Renamed function to fetch report
+    async function fetchTaskReport(taskId) {
         taskDetailContentDiv.textContent = 'Loading task report...';
-        taskDetailTabButton.classList.remove('hidden'); // Show task detail tab button
-        // Programmatically switch to task detail tab
+        taskDetailTabButton.classList.remove('hidden');
         document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
         taskDetailTabButton.classList.add('active');
         taskDetailTabContent.classList.remove('hidden');
 
 
-        const apiUrl = '/speedyindex-api?action=get-task-report'; // Path to Cloudflare Function with action
+        const apiUrl = '/speedyindex-api?action=get-task-report';
         const requestBody = JSON.stringify({
-            "task_id": taskId // Send task_id
+            "task_id": taskId
         });
 
         try {
@@ -584,14 +609,45 @@
 
             const data = await response.json();
             if (data.result) {
+                const report = data.result;
+                const indexedLinksHTML = report.indexed_links.map(url => `
+                    <tr>
+                        <td><a href="${url}" target="_blank">${url}</a></td>
+                        <td>✅ Indexed</td>
+                    </tr>`).join('');
+                const unindexedLinksHTML = report.unindexed_links.map(url => `
+                    <tr>
+                        <td><a href="${url}" target="_blank">${url}</a></td>
+                        <td>❌ Unindexed</td>
+                    </tr>`).join('');
+
                 taskDetailContentDiv.innerHTML = `
-                  <h3>Task Report (JSON)</h3>
-                  <pre style="overflow-x: auto; padding: 10px; background-color: #eee; border-radius: 5px;">${JSON.stringify(data.result, null, 2)}</pre>
+                    <h2>Task Report Details 🔍</h2>
+                    <p><strong>Task ID:</strong> ${report.id}</p>
+                    <p><strong>Type:</strong> ${report.type}</p>
+                    <p><strong>Title:</strong> ${report.title || 'N/A'}</p>
+                    <p><strong>Size:</strong> ${report.size}</p>
+                    <p><strong>Processed Count:</strong> ${report.processed_count}</p>
+                    <p><strong>Created At:</strong> ${new Date(report.created_at).toLocaleString()}</p>
+
+                    <h3>URL Status</h3>
+                    <table id="task-detail-table">
+                        <thead>
+                            <tr>
+                                <th>URL</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${indexedLinksHTML}
+                            ${unindexedLinksHTML}
+                        </tbody>
+                    </table>
                 `;
             } else if (data.error) {
-              taskDetailContentDiv.textContent = `Error fetching task report: ${data.error}`;
-            } 
-              else {
+                taskDetailContentDiv.textContent = `Error fetching task report: ${data.error}`;
+            }
+             else {
                 taskDetailContentDiv.textContent = 'Task report not found.';
             }
 
@@ -604,10 +660,10 @@
 
     function handleTaskDetailClick(event) {
         if (event.target.tagName === 'A' && event.target.textContent === '🔍 Details') {
-            event.preventDefault(); // Prevent default link behavior (hash navigation)
+            event.preventDefault();
             const taskId = event.target.dataset.taskId;
             if (taskId) {
-                fetchTaskReport(taskId); // Call fetchTaskReport instead of fetchTaskDetail
+                fetchTaskReport(taskId);
             }
         }
     }
