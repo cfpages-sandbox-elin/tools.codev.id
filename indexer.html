@@ -214,7 +214,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🚀 SpeedyIndex Tool v1.4</h1>
+        <h1>🚀 SpeedyIndex Tool v1.5</h1>
 
         <div class="tab-container">
             <button class="tab-button active" data-tab="indexer">Indexer</button>
@@ -554,8 +554,8 @@
         }
     }
 
-    async function fetchTaskDetail(taskId) {
-        taskDetailContentDiv.textContent = 'Loading task details...';
+    async function fetchTaskReport(taskId) { // Renamed function to fetch report
+        taskDetailContentDiv.textContent = 'Loading task report...';
         taskDetailTabButton.classList.remove('hidden'); // Show task detail tab button
         // Programmatically switch to task detail tab
         document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
@@ -564,9 +564,9 @@
         taskDetailTabContent.classList.remove('hidden');
 
 
-        const apiUrl = '/speedyindex-api?action=get-task-detail'; // Path to Cloudflare Function with action
+        const apiUrl = '/speedyindex-api?action=get-task-report'; // Path to Cloudflare Function with action
         const requestBody = JSON.stringify({
-            "task_ids": [taskId]
+            "task_id": taskId // Send task_id
         });
 
         try {
@@ -583,37 +583,22 @@
             }
 
             const data = await response.json();
-            if (data.result && data.result.length > 0) {
-                const taskDetail = data.result[0]; // Assuming only one task detail is requested
+            if (data.result) {
                 taskDetailContentDiv.innerHTML = `
-                    <h3>Task ID: ${taskDetail.id}</h3>
-                    <p><strong>Type:</strong> ${taskDetail.type}</p>
-                    <p><strong>Title:</strong> ${taskDetail.title || 'N/A'}</p>
-                    <p><strong>Size:</strong> ${taskDetail.size}</p>
-                    <p><strong>Processed Count:</strong> ${taskDetail.processed_count}</p>
-                    <p><strong>Indexed Count:</strong> ${taskDetail.indexed_count}</p>
-                    <p><strong>Is Completed:</strong> ${taskDetail.is_completed ? 'Yes' : 'No'}</p>
-                    <p><strong>Created At:</strong> ${new Date(taskDetail.created_at).toLocaleString()}</p>
-                    ${taskDetail.indexed_links ? `
-                        <h3>Indexed Links:</h3>
-                        <textarea rows="5" readonly style="width:100%; font-family: monospace;">${taskDetail.indexed_links.join('\n')}</textarea>
-                    ` : ''}
-                    ${taskDetail.unindexed_links ? `
-                        <h3>Unindexed Links:</h3>
-                        <textarea rows="5" readonly style="width:100%; font-family: monospace;">${taskDetail.unindexed_links.join('\n')}</textarea>
-                    ` : ''}
-                `; // Display task details
+                  <h3>Task Report (JSON)</h3>
+                  <pre style="overflow-x: auto; padding: 10px; background-color: #eee; border-radius: 5px;">${JSON.stringify(data.result, null, 2)}</pre>
+                `;
             } else if (data.error) {
-                taskDetailContentDiv.textContent = `Error fetching task detail: ${data.error}`;
-            }
-             else {
-                taskDetailContentDiv.textContent = 'Task detail not found.';
+              taskDetailContentDiv.textContent = `Error fetching task report: ${data.error}`;
+            } 
+              else {
+                taskDetailContentDiv.textContent = 'Task report not found.';
             }
 
 
         } catch (error) {
-            console.error("Error fetching task detail:", error);
-            taskDetailContentDiv.textContent = 'Failed to fetch task detail. Check network.';
+            console.error("Error fetching task report:", error);
+            taskDetailContentDiv.textContent = 'Failed to fetch task report. Check network.';
         }
     }
 
@@ -622,7 +607,7 @@
             event.preventDefault(); // Prevent default link behavior (hash navigation)
             const taskId = event.target.dataset.taskId;
             if (taskId) {
-                fetchTaskDetail(taskId);
+                fetchTaskReport(taskId); // Call fetchTaskReport instead of fetchTaskDetail
             }
         }
     }
