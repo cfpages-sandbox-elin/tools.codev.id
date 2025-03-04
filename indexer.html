@@ -243,45 +243,45 @@
         const refreshTasksButton = document.getElementById('refresh-tasks-btn');
         const pastTasksStatusDiv = document.getElementById('past-tasks-status');
         const taskListTableBody = document.querySelector('#task-list tbody');
-
+    
         const apiKeyLocalStorageKey = 'speedyindex-api-key';
         const pricePerLink = 0.0075; // Price per link for indexing
-
+    
         let currentApiKey = localStorage.getItem(apiKeyLocalStorageKey);
         if (currentApiKey) {
             apiKeyInput.value = currentApiKey;
             fetchBalance(currentApiKey);
         }
-
+    
         apiKeyInput.addEventListener('change', function() {
             currentApiKey = apiKeyInput.value;
             localStorage.setItem(apiKeyLocalStorageKey, currentApiKey);
             fetchBalance(currentApiKey);
         });
-
+    
         urlsTextarea.addEventListener('input', updateUrlCountAndCost);
         urlFilterInput.addEventListener('input', filterUrls);
-
+    
         submitUrlsButton.addEventListener('click', submitUrlsForIndexing);
         refreshTasksButton.addEventListener('click', fetchPastTasks);
-
+    
         // Tab switching logic
         document.querySelectorAll('.tab-button').forEach(button => {
             button.addEventListener('click', function() {
                 document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
                 document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
-
+    
                 button.classList.add('active');
                 const tabId = button.getAttribute('data-tab');
                 document.getElementById(tabId).classList.remove('hidden');
-
+    
                 if (tabId === 'past-tasks') {
                     fetchPastTasks(); // Fetch tasks when Past Tasks tab is opened
                 }
             });
         });
-
-
+    
+    
         function updateUrlCountAndCost() {
             const urls = urlsTextarea.value.trim();
             const urlList = urls.split('\n').filter(url => url.trim() !== '');
@@ -290,7 +290,7 @@
             const estimatedCost = (count * pricePerLink).toFixed(2);
             estimatedCostDisplay.textContent = estimatedCost;
         }
-
+    
         function filterUrls() {
             const filterText = urlFilterInput.value.toLowerCase();
             const originalUrls = urlsTextarea.value.split('\n');
@@ -303,27 +303,27 @@
             urlsTextarea.value = filteredUrls.trim();
             updateUrlCountAndCost(); // Recalculate count and cost after filtering
         }
-
-
+    
+    
         async function fetchBalance(apiKey) {
             if (!apiKey) {
                 indexerBalanceDisplay.textContent = 'N/A';
                 checkerBalanceDisplay.textContent = 'N/A';
                 return;
             }
-            const apiUrl = 'https://api.speedyindex.com/v2/account';
-
+            const apiUrl = '/functions/speedyindex-proxy/v2/account'; // Path to Cloudflare Function
+    
             try {
                 const response = await fetch(apiUrl, {
                     headers: {
                         'Authorization': apiKey
                     }
                 });
-
+    
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-
+    
                 const data = await response.json();
                 if (data.code === 0) {
                     indexerBalanceDisplay.textContent = data.balance.indexer;
@@ -333,7 +333,7 @@
                     checkerBalanceDisplay.textContent = 'Error';
                     taskStatusDiv.textContent = `Balance Error: ${data.code} - ${data.message || 'Unknown error'}`;
                 }
-
+    
             } catch (error) {
                 console.error("Could not fetch balance:", error);
                 indexerBalanceDisplay.textContent = 'Error';
@@ -341,34 +341,34 @@
                 taskStatusDiv.textContent = 'Failed to fetch balance. Check API key and network.';
             }
         }
-
+    
         async function submitUrlsForIndexing() {
             if (!currentApiKey) {
                 taskStatusDiv.textContent = 'API Key is required to submit URLs.';
                 return;
             }
-
+    
             const urls = urlsTextarea.value.trim().split('\n').filter(url => url.trim() !== '');
             if (urls.length === 0) {
                 taskStatusDiv.textContent = 'Please enter URLs to index.';
                 return;
             }
-
+    
             if (urls.length > 10000) {
                 taskStatusDiv.textContent = 'Maximum 10,000 URLs per task.';
                 return;
             }
-
+    
             submitLoadingIndicator.classList.add('active');
             submitUrlsButton.disabled = true;
             taskStatusDiv.textContent = 'Submitting URLs for indexing...';
-
-            const apiUrl = 'https://api.speedyindex.com/v2/task/google/indexer/create';
+    
+            const apiUrl = '/functions/speedyindex-proxy/v2/task/google/indexer/create'; // Path to Cloudflare Function
             const requestBody = JSON.stringify({
                 "title": "indexer_task_" + new Date().toISOString(), // Optional title
                 "urls": urls
             });
-
+    
             try {
                 const response = await fetch(apiUrl, {
                     method: 'POST',
@@ -378,9 +378,9 @@
                     },
                     body: requestBody
                 });
-
+    
                 const data = await response.json();
-
+    
                 if (data.code === 0) {
                     taskStatusDiv.textContent = `URLs submitted successfully! Task ID: ${data.task_id}`;
                     urlsTextarea.value = ''; // Clear textarea after successful submission
@@ -393,8 +393,8 @@
                  else {
                     taskStatusDiv.textContent = `Error submitting URLs: ${data.code} - ${data.message || 'Unknown error'}`;
                 }
-
-
+    
+    
             } catch (error) {
                 console.error("Error submitting URLs:", error);
                 taskStatusDiv.textContent = 'Failed to submit URLs. Check network and API key.';
@@ -403,32 +403,32 @@
                 submitUrlsButton.disabled = false;
             }
         }
-
+    
         async function fetchPastTasks() {
             if (!currentApiKey) {
                 pastTasksStatusDiv.textContent = 'API Key is required to fetch tasks.';
                 return;
             }
-
+    
             refreshLoadingIndicator.classList.add('active');
             refreshTasksButton.disabled = true;
             pastTasksStatusDiv.textContent = 'Fetching past tasks...';
             taskListTableBody.innerHTML = '<tr><td colspan="7">Loading tasks...</td></tr>';
-
-
-            const apiUrl = 'https://api.speedyindex.com/v2/task/google/indexer/list/0'; // Page 0
-
+    
+    
+            const apiUrl = '/functions/speedyindex-proxy/v2/task/google/indexer/list/0'; // Path to Cloudflare Function
+    
             try {
                 const response = await fetch(apiUrl, {
                     headers: {
                         'Authorization': currentApiKey
                     }
                 });
-
+    
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-
+    
                 const data = await response.json();
                 if (data.code === 0 && data.result && data.result.length > 0) {
                     pastTasksStatusDiv.textContent = '';
@@ -451,8 +451,8 @@
                     pastTasksStatusDiv.textContent = `Error fetching tasks: ${data.code} - ${data.message || 'Unknown error'}`;
                     taskListTableBody.innerHTML = '<tr><td colspan="7">Error loading tasks.</td></tr>';
                 }
-
-
+    
+    
             } catch (error) {
                 console.error("Error fetching past tasks:", error);
                 pastTasksStatusDiv.textContent = 'Failed to fetch tasks. Check network and API key.';
@@ -462,7 +462,7 @@
                 refreshTasksButton.disabled = false;
             }
         }
-
+    
 
     </script>
 </body>
