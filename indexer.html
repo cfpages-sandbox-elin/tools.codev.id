@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpeedyIndexer v2</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 900px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tab-container {
+            display: flex;
+            margin-bottom: 10px;
+        }
+
+        .tab-button {
+            padding: 10px 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px 5px 0 0;
+            background-color: #f0f0f0;
+            cursor: pointer;
+            border-bottom: none;
+        }
+
+        .tab-button.active {
+            background-color: white;
+            font-weight: bold;
+        }
+
+        .tab-content {
+            border: 1px solid #ccc;
+            border-radius: 0 5px 5px 5px;
+            padding: 20px;
+        }
+
+        .tab-content.hidden {
+            display: none;
+        }
+
+        .api-key-area, .url-area, .filter-area, .balance-area, .task-list-area, .status-area {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            height: 150px;
+        }
+
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+        }
+
+        button:hover {
+            background-color: #e0e0e0;
+        }
+
+        #balance-display {
+            font-weight: bold;
+        }
+
+        #task-status {
+            white-space: pre-wrap;
+            font-family: monospace;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            height: 100px;
+            overflow-y: scroll;
+        }
+
+        .url-count-cost {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #777;
+        }
+
+        .task-list-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .task-list-table th, .task-list-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .task-list-table th {
+            background-color: #f0f0f0;
+        }
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: black;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        .loading-indicator {
+            display: none;
+            margin-left: 10px;
+        }
+        .loading-indicator.active {
+            display: inline-block;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 SpeedyIndex Tool</h1>
+
+        <div class="tab-container">
+            <button class="tab-button active" data-tab="indexer">Indexer</button>
+            <button class="tab-button" data-tab="past-tasks">Past Tasks 📜</button>
+        </div>
+
+        <div id="indexer" class="tab-content">
+            <div class="api-key-area">
+                <label for="api-key" class="tooltip">SpeedyIndex API Key <span class="tooltiptext">Enter your SpeedyIndex API key to check balance and submit tasks. Key is stored locally.</span></label>
+                <input type="text" id="api-key" placeholder="Your API Key">
+            </div>
+
+            <div class="balance-area">
+                <label>Balance:</label>
+                <div id="balance-display">Indexer: <span id="indexer-balance"></span>, Checker: <span id="checker-balance"></span></div>
+            </div>
+
+            <div class="url-area">
+                <label for="urls" class="tooltip">URLs to Index <span class="tooltiptext">Enter URLs to be indexed, one URL per line (max 10,000 per task).</span></label>
+                <textarea id="urls" placeholder="https://example.com/page1\nhttps://example.com/page2"></textarea>
+                <div class="url-count-cost">URLs: <span id="url-count">0</span>, Estimated Cost: <span id="estimated-cost">0.00</span> $</div>
+            </div>
+
+            <div class="filter-area">
+                <label for="url-filter" class="tooltip">Filter URLs <span class="tooltiptext">Filter URLs in the textarea (non-destructive).</span></label>
+                <input type="text" id="url-filter" placeholder="Filter keywords">
+            </div>
+
+
+            <div class="status-area">
+                <label>Task Status:</label>
+                <div id="task-status"></div>
+            </div>
+
+            <button id="submit-urls-btn">Submit URLs for Indexing <span class="loading-indicator" id="submit-loading-indicator">🔄</span></button>
+        </div>
+
+        <div id="past-tasks" class="tab-content hidden">
+            <div class="task-list-area">
+                <h2>Past Tasks</h2>
+                <button id="refresh-tasks-btn">Refresh Tasks <span class="loading-indicator" id="refresh-loading-indicator">🔄</span></button>
+                <div id="past-tasks-status"></div>
+                <table class="task-list-table" id="task-list">
+                    <thead>
+                        <tr>
+                            <th>Task ID</th>
+                            <th>Type</th>
+                            <th>Size</th>
+                            <th>Processed</th>
+                            <th>Indexed</th>
+                            <th>Completed</th>
+                            <th>Created At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="7">No tasks yet.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiKeyInput = document.getElementById('api-key');
+        const indexerBalanceDisplay = document.getElementById('indexer-balance');
+        const checkerBalanceDisplay = document.getElementById('checker-balance');
+        const urlsTextarea = document.getElementById('urls');
+        const urlFilterInput = document.getElementById('url-filter');
+        const urlCountDisplay = document.getElementById('url-count');
+        const estimatedCostDisplay = document.getElementById('estimated-cost');
+        const submitUrlsButton = document.getElementById('submit-urls-btn');
+        const taskStatusDiv = document.getElementById('task-status');
+        const submitLoadingIndicator = document.getElementById('submit-loading-indicator');
+        const refreshLoadingIndicator = document.getElementById('refresh-loading-indicator');
+        const refreshTasksButton = document.getElementById('refresh-tasks-btn');
+        const pastTasksStatusDiv = document.getElementById('past-tasks-status');
+        const taskListTableBody = document.querySelector('#task-list tbody');
+
+        const apiKeyLocalStorageKey = 'speedyindex-api-key';
+        const pricePerLink = 0.0075; // Price per link for indexing
+
+        let currentApiKey = localStorage.getItem(apiKeyLocalStorageKey);
+        if (currentApiKey) {
+            apiKeyInput.value = currentApiKey;
+            fetchBalance(currentApiKey);
+        }
+
+        apiKeyInput.addEventListener('change', function() {
+            currentApiKey = apiKeyInput.value;
+            localStorage.setItem(apiKeyLocalStorageKey, currentApiKey);
+            fetchBalance(currentApiKey);
+        });
+
+        urlsTextarea.addEventListener('input', updateUrlCountAndCost);
+        urlFilterInput.addEventListener('input', filterUrls);
+
+        submitUrlsButton.addEventListener('click', submitUrlsForIndexing);
+        refreshTasksButton.addEventListener('click', fetchPastTasks);
+
+        // Tab switching logic
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', function() {
+                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+
+                button.classList.add('active');
+                const tabId = button.getAttribute('data-tab');
+                document.getElementById(tabId).classList.remove('hidden');
+
+                if (tabId === 'past-tasks') {
+                    fetchPastTasks(); // Fetch tasks when Past Tasks tab is opened
+                }
+            });
+        });
+
+
+        function updateUrlCountAndCost() {
+            const urls = urlsTextarea.value.trim();
+            const urlList = urls.split('\n').filter(url => url.trim() !== '');
+            const count = urlList.length;
+            urlCountDisplay.textContent = count;
+            const estimatedCost = (count * pricePerLink).toFixed(2);
+            estimatedCostDisplay.textContent = estimatedCost;
+        }
+
+        function filterUrls() {
+            const filterText = urlFilterInput.value.toLowerCase();
+            const originalUrls = urlsTextarea.value.split('\n');
+            let filteredUrls = '';
+            originalUrls.forEach(url => {
+                if (url.toLowerCase().includes(filterText) || filterText === '') {
+                    filteredUrls += url + '\n';
+                }
+            });
+            urlsTextarea.value = filteredUrls.trim();
+            updateUrlCountAndCost(); // Recalculate count and cost after filtering
+        }
+
+
+        async function fetchBalance(apiKey) {
+            if (!apiKey) {
+                indexerBalanceDisplay.textContent = 'N/A';
+                checkerBalanceDisplay.textContent = 'N/A';
+                return;
+            }
+            const apiUrl = 'https://api.speedyindex.com/v2/account';
+
+            try {
+                const response = await fetch(apiUrl, {
+                    headers: {
+                        'Authorization': apiKey
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data.code === 0) {
+                    indexerBalanceDisplay.textContent = data.balance.indexer;
+                    checkerBalanceDisplay.textContent = data.balance.checker;
+                } else {
+                    indexerBalanceDisplay.textContent = 'Error';
+                    checkerBalanceDisplay.textContent = 'Error';
+                    taskStatusDiv.textContent = `Balance Error: ${data.code} - ${data.message || 'Unknown error'}`;
+                }
+
+            } catch (error) {
+                console.error("Could not fetch balance:", error);
+                indexerBalanceDisplay.textContent = 'Error';
+                checkerBalanceDisplay.textContent = 'Error';
+                taskStatusDiv.textContent = 'Failed to fetch balance. Check API key and network.';
+            }
+        }
+
+        async function submitUrlsForIndexing() {
+            if (!currentApiKey) {
+                taskStatusDiv.textContent = 'API Key is required to submit URLs.';
+                return;
+            }
+
+            const urls = urlsTextarea.value.trim().split('\n').filter(url => url.trim() !== '');
+            if (urls.length === 0) {
+                taskStatusDiv.textContent = 'Please enter URLs to index.';
+                return;
+            }
+
+            if (urls.length > 10000) {
+                taskStatusDiv.textContent = 'Maximum 10,000 URLs per task.';
+                return;
+            }
+
+            submitLoadingIndicator.classList.add('active');
+            submitUrlsButton.disabled = true;
+            taskStatusDiv.textContent = 'Submitting URLs for indexing...';
+
+            const apiUrl = 'https://api.speedyindex.com/v2/task/google/indexer/create';
+            const requestBody = JSON.stringify({
+                "title": "indexer_task_" + new Date().toISOString(), // Optional title
+                "urls": urls
+            });
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': currentApiKey,
+                        'Content-Type': 'application/json'
+                    },
+                    body: requestBody
+                });
+
+                const data = await response.json();
+
+                if (data.code === 0) {
+                    taskStatusDiv.textContent = `URLs submitted successfully! Task ID: ${data.task_id}`;
+                    urlsTextarea.value = ''; // Clear textarea after successful submission
+                    updateUrlCountAndCost(); // Reset count and cost
+                } else if (data.code === 1) {
+                    taskStatusDiv.textContent = 'Error: Top up balance needed.';
+                } else if (data.code === -2) {
+                    taskStatusDiv.textContent = 'Error: Server overloaded. Please try again later.';
+                }
+                 else {
+                    taskStatusDiv.textContent = `Error submitting URLs: ${data.code} - ${data.message || 'Unknown error'}`;
+                }
+
+
+            } catch (error) {
+                console.error("Error submitting URLs:", error);
+                taskStatusDiv.textContent = 'Failed to submit URLs. Check network and API key.';
+            } finally {
+                submitLoadingIndicator.classList.remove('active');
+                submitUrlsButton.disabled = false;
+            }
+        }
+
+        async function fetchPastTasks() {
+            if (!currentApiKey) {
+                pastTasksStatusDiv.textContent = 'API Key is required to fetch tasks.';
+                return;
+            }
+
+            refreshLoadingIndicator.classList.add('active');
+            refreshTasksButton.disabled = true;
+            pastTasksStatusDiv.textContent = 'Fetching past tasks...';
+            taskListTableBody.innerHTML = '<tr><td colspan="7">Loading tasks...</td></tr>';
+
+
+            const apiUrl = 'https://api.speedyindex.com/v2/task/google/indexer/list/0'; // Page 0
+
+            try {
+                const response = await fetch(apiUrl, {
+                    headers: {
+                        'Authorization': currentApiKey
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data.code === 0 && data.result && data.result.length > 0) {
+                    pastTasksStatusDiv.textContent = '';
+                    taskListTableBody.innerHTML = ''; // Clear loading row
+                    data.result.forEach(task => {
+                        const row = taskListTableBody.insertRow();
+                        row.insertCell().textContent = task.id;
+                        row.insertCell().textContent = task.type;
+                        row.insertCell().textContent = task.size;
+                        row.insertCell().textContent = task.processed_count;
+                        row.insertCell().textContent = task.indexed_count;
+                        row.insertCell().textContent = task.is_completed ? 'Yes' : 'No';
+                        row.insertCell().textContent = new Date(task.created_at).toLocaleString();
+                    });
+                } else if (data.code === 0 && (!data.result || data.result.length === 0)) {
+                    pastTasksStatusDiv.textContent = 'No tasks found.';
+                    taskListTableBody.innerHTML = '<tr><td colspan="7">No tasks yet.</td></tr>';
+                }
+                 else {
+                    pastTasksStatusDiv.textContent = `Error fetching tasks: ${data.code} - ${data.message || 'Unknown error'}`;
+                    taskListTableBody.innerHTML = '<tr><td colspan="7">Error loading tasks.</td></tr>';
+                }
+
+
+            } catch (error) {
+                console.error("Error fetching past tasks:", error);
+                pastTasksStatusDiv.textContent = 'Failed to fetch tasks. Check network and API key.';
+                taskListTableBody.innerHTML = '<tr><td colspan="7">Failed to load tasks.</td></tr>';
+            } finally {
+                refreshLoadingIndicator.classList.remove('active');
+                refreshTasksButton.disabled = false;
+            }
+        }
+
+
+    </script>
+</body>
+</html>
