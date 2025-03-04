@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🚀 SpeedyIndexer v2</title>
+    <title>🚀 SpeedyIndex Tool v1.4</title>
     <style>
         body {
             font-family: sans-serif;
@@ -16,8 +16,8 @@
         }
 
         .container {
-            width: 95%; /* Increased width */
-            max-width: 1200px; /* Increased max-width */
+            width: 95%;
+            max-width: 1200px;
             background-color: white;
             padding: 20px;
             border-radius: 8px;
@@ -49,27 +49,27 @@
             border: 1px solid #ccc;
             border-radius: 0 5px 5px 5px;
             padding: 20px;
-            display: flex; /* Enable flexbox for tab content */
-            flex-direction: column; /* Stack elements vertically inside tab content */
+            display: flex;
+            flex-direction: column;
         }
 
         .tab-content.hidden {
             display: none;
         }
 
-        .api-key-area, .balance-area, .status-area, .task-list-area {
+        .api-key-area, .balance-area, .status-area, .task-list-area, .task-detail-area {
             margin-bottom: 15px;
         }
 
-        .url-filter-container { /* Container for URL and Filter side-by-side */
+        .url-filter-container {
             display: flex;
-            gap: 15px; /* Spacing between URL and Filter areas */
+            gap: 15px;
             margin-bottom: 15px;
         }
 
         .url-area, .filter-area {
-            flex: 1; /* Equal width for URL and Filter areas */
-            min-width: 0; /* Ensure they can shrink if needed */
+            flex: 1;
+            min-width: 0;
         }
 
 
@@ -87,12 +87,12 @@
             border: 1px solid #ccc;
             border-radius: 5px;
             box-sizing: border-box;
-            font-family: monospace; /* Monospace font for textareas */
+            font-family: monospace;
             font-size: 14px;
         }
 
         textarea {
-            height: 200px; /* Increased textarea height */
+            height: 200px;
         }
 
         button {
@@ -109,13 +109,13 @@
 
         #balance-display {
             font-weight: bold;
-            display: flex; /* Flex for alignment */
-            align-items: center; /* Center align items vertically */
-            gap: 10px; /* Spacing between items */
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         #balance-display span {
-            font-weight: normal; /* Make balance numbers normal weight */
+            font-weight: normal;
         }
 
 
@@ -128,7 +128,7 @@
             background-color: #f9f9f9;
             height: 100px;
             overflow-y: scroll;
-            margin-top: 10px; /* Spacing above task status */
+            margin-top: 10px;
         }
 
         .url-count-cost {
@@ -152,6 +152,10 @@
             background-color: #f0f0f0;
         }
 
+        .task-list-table td a {
+            text-decoration: none; /* Remove underline from links */
+        }
+
         .tooltip {
             position: relative;
             display: inline-block;
@@ -159,20 +163,20 @@
 
         .tooltip .tooltiptext {
             visibility: hidden;
-            width: 250px; /* Increased tooltip width */
+            width: 250px;
             background-color: black;
             color: #fff;
-            text-align: left; /* Left align tooltip text */
+            text-align: left;
             border-radius: 6px;
-            padding: 8px; /* Increased tooltip padding */
+            padding: 8px;
             position: absolute;
             z-index: 1;
             bottom: 125%;
             left: 50%;
-            margin-left: -125px; /* Adjusted margin for wider tooltip */
+            margin-left: -125px;
             opacity: 0;
             transition: opacity 0.3s;
-            font-size: 0.9em; /* Slightly smaller tooltip font */
+            font-size: 0.9em;
         }
 
         .tooltip:hover .tooltiptext {
@@ -187,15 +191,35 @@
             display: inline-block;
         }
 
+        /* Task Detail Styling */
+        #task-detail-content {
+            font-family: monospace;
+            white-space: pre-wrap;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto; /* Enable horizontal scroll if content is too wide */
+        }
+        #task-detail-content h3 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+
+
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🚀 SpeedyIndex Tool v1.3</h1>
+        <h1>🚀 SpeedyIndex Tool v1.4</h1>
 
         <div class="tab-container">
             <button class="tab-button active" data-tab="indexer">Indexer</button>
             <button class="tab-button" data-tab="past-tasks">Past Tasks 📜</button>
+            <button class="tab-button hidden" data-tab="task-detail" id="task-detail-tab-button">Task Detail 🔍</button> <!-- Hidden initially -->
         </div>
 
         <div id="indexer" class="tab-content">
@@ -203,6 +227,7 @@
                 <label for="api-key" class="tooltip">🔑 SpeedyIndex API Key <span class="tooltiptext">This tool uses your SpeedyIndex API key to check balance and submit indexing tasks. The API key is securely stored server-side and is not visible in the client-side code.</span></label>
                 <input type="text" id="api-key" placeholder="Your API Key" disabled>
             </div>
+
             <div class="balance-area">
                 <label>💰 Balance:</label>
                 <div id="balance-display">
@@ -247,12 +272,22 @@
                             <th>Indexed</th>
                             <th>Completed</th>
                             <th>Created At</th>
+                            <th>Details</th> <!-- New Details Column -->
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td colspan="7">No tasks yet.</td></tr>
+                        <tr><td colspan="8">No tasks yet.</td></tr>
                     </tbody>
                 </table>
+            </div>
+        </div>
+
+        <div id="task-detail" class="tab-content hidden">
+            <div class="task-detail-area">
+                <h2>Task Detail 🔍</h2>
+                <div id="task-detail-content">
+                    <p>Select a task from the "Past Tasks" tab to view its details here.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -273,6 +308,10 @@
         const refreshTasksButton = document.getElementById('refresh-tasks-btn');
         const pastTasksStatusDiv = document.getElementById('past-tasks-status');
         const taskListTableBody = document.querySelector('#task-list tbody');
+        const taskDetailTabButton = document.getElementById('task-detail-tab-button');
+        const taskDetailTabContent = document.getElementById('task-detail');
+        const taskDetailContentDiv = document.getElementById('task-detail-content');
+
 
         const apiKeyLocalStorageKey = 'speedyindex-api-key';
         const pricePerLink = 0.0075; // Price per link for indexing
@@ -290,6 +329,7 @@
 
         submitUrlsButton.addEventListener('click', submitUrlsForIndexing);
         refreshTasksButton.addEventListener('click', fetchPastTasks);
+        taskListTableBody.addEventListener('click', handleTaskDetailClick); // Event listener for task detail links
 
         // Tab switching logic
         document.querySelectorAll('.tab-button').forEach(button => {
@@ -455,7 +495,7 @@
 
         async function fetchPastTasks() {
             pastTasksStatusDiv.textContent = 'Fetching past tasks...';
-            taskListTableBody.innerHTML = '<tr><td colspan="7">Loading tasks...</td></tr>';
+            taskListTableBody.innerHTML = '<tr><td colspan="8">Loading tasks...</td></tr>';
             refreshLoadingIndicator.classList.add('active');
             refreshTasksButton.disabled = true;
 
@@ -481,30 +521,113 @@
                         row.insertCell().textContent = task.indexed_count;
                         row.insertCell().textContent = task.is_completed ? 'Yes' : 'No';
                         row.insertCell().textContent = new Date(task.created_at).toLocaleString();
+                        // Add "Details" link with task ID
+                        const detailsCell = row.insertCell();
+                        const detailsLink = document.createElement('a');
+                        detailsLink.href = '#task-detail'; // Link to task detail tab (will be prevented by JS)
+                        detailsLink.textContent = '🔍 Details';
+                        detailsLink.dataset.taskId = task.id; // Store task ID in data attribute
+                        detailsCell.appendChild(detailsLink);
+
                     });
                 } else if (data.code === 0 && (!data.result || data.result.length === 0)) {
                     pastTasksStatusDiv.textContent = 'No tasks found.';
-                    taskListTableBody.innerHTML = '<tr><td colspan="7">No tasks yet.</td></tr>';
+                    taskListTableBody.innerHTML = '<tr><td colspan="8">No tasks yet.</td></tr>';
                 }
                   else if (data.error) {
                     pastTasksStatusDiv.textContent = `Error fetching tasks: ${data.error}`;
-                    taskListTableBody.innerHTML = '<tr><td colspan="7">Error loading tasks.</td></tr>';
+                    taskListTableBody.innerHTML = '<tr><td colspan="8">Error loading tasks.</td></tr>';
                 }
                 else {
                     pastTasksStatusDiv.textContent = `Error fetching tasks. Code: ${data.code}, Message: ${data.message}`;
-                    taskListTableBody.innerHTML = '<tr><td colspan="7">Error loading tasks.</td></tr>';
+                    taskListTableBody.innerHTML = '<tr><td colspan="8">Error loading tasks.</td></tr>';
                 }
 
 
             } catch (error) {
                 console.error("Error fetching past tasks:", error);
                 pastTasksStatusDiv.textContent = 'Failed to fetch tasks. Check network.';
-                taskListTableBody.innerHTML = '<tr><td colspan="7">Failed to load tasks.</td></tr>';
+                taskListTableBody.innerHTML = '<tr><td colspan="8">Failed to load tasks.</td></tr>';
         } finally {
             refreshLoadingIndicator.classList.remove('active');
             refreshTasksButton.disabled = false;
         }
     }
+
+    async function fetchTaskDetail(taskId) {
+        taskDetailContentDiv.textContent = 'Loading task details...';
+        taskDetailTabButton.classList.remove('hidden'); // Show task detail tab button
+        // Programmatically switch to task detail tab
+        document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+        taskDetailTabButton.classList.add('active');
+        taskDetailTabContent.classList.remove('hidden');
+
+
+        const apiUrl = '/speedyindex-api?action=get-task-detail'; // Path to Cloudflare Function with action
+        const requestBody = JSON.stringify({
+            "task_ids": [taskId]
+        });
+
+        try {
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: requestBody
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (data.result && data.result.length > 0) {
+                const taskDetail = data.result[0]; // Assuming only one task detail is requested
+                taskDetailContentDiv.innerHTML = `
+                    <h3>Task ID: ${taskDetail.id}</h3>
+                    <p><strong>Type:</strong> ${taskDetail.type}</p>
+                    <p><strong>Title:</strong> ${taskDetail.title || 'N/A'}</p>
+                    <p><strong>Size:</strong> ${taskDetail.size}</p>
+                    <p><strong>Processed Count:</strong> ${taskDetail.processed_count}</p>
+                    <p><strong>Indexed Count:</strong> ${taskDetail.indexed_count}</p>
+                    <p><strong>Is Completed:</strong> ${taskDetail.is_completed ? 'Yes' : 'No'}</p>
+                    <p><strong>Created At:</strong> ${new Date(taskDetail.created_at).toLocaleString()}</p>
+                    ${taskDetail.indexed_links ? `
+                        <h3>Indexed Links:</h3>
+                        <textarea rows="5" readonly style="width:100%; font-family: monospace;">${taskDetail.indexed_links.join('\n')}</textarea>
+                    ` : ''}
+                    ${taskDetail.unindexed_links ? `
+                        <h3>Unindexed Links:</h3>
+                        <textarea rows="5" readonly style="width:100%; font-family: monospace;">${taskDetail.unindexed_links.join('\n')}</textarea>
+                    ` : ''}
+                `; // Display task details
+            } else if (data.error) {
+                taskDetailContentDiv.textContent = `Error fetching task detail: ${data.error}`;
+            }
+             else {
+                taskDetailContentDiv.textContent = 'Task detail not found.';
+            }
+
+
+        } catch (error) {
+            console.error("Error fetching task detail:", error);
+            taskDetailContentDiv.textContent = 'Failed to fetch task detail. Check network.';
+        }
+    }
+
+    function handleTaskDetailClick(event) {
+        if (event.target.tagName === 'A' && event.target.textContent === '🔍 Details') {
+            event.preventDefault(); // Prevent default link behavior (hash navigation)
+            const taskId = event.target.dataset.taskId;
+            if (taskId) {
+                fetchTaskDetail(taskId);
+            }
+        }
+    }
+
+
       }); // <-- Closing DOMContentLoaded event listener
     </script>
 </body>

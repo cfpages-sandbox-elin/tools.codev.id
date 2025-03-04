@@ -19,6 +19,8 @@ export async function onRequest({ request, env }) { // Single onRequest function
     response = await handleIndexUrls(request, apiKey); // Call separate index URLs handler
   } else if (action === 'list-tasks') { // New action for listing tasks
     response = await handleListTasks(apiKey); // New handler for listing tasks
+  } else if (action === 'get-task-detail') { // New action for getting task detail
+    response = await handleGetTaskDetail(request, apiKey); // New handler for getting task detail
   }
   else {
     response = new Response(JSON.stringify({ error: "Invalid action parameter." }), {
@@ -100,6 +102,37 @@ async function handleListTasks(apiKey) { // New function to handle listing tasks
   } catch (error) {
     console.error("Error in handleListTasks:", error);
     return new Response(JSON.stringify({ error: "Error retrieving task list." }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+  }
+}
+
+async function handleGetTaskDetail(request, apiKey) { // New function to handle getting task detail
+  if (request.method !== 'POST') {
+      return new Response("Method Not Allowed", { status: 405 });
+  }
+  try {
+      const requestData = await request.json();
+      const taskIds = requestData.task_ids; // Expect task_ids in request body
+      const apiUrl = 'https://api.speedyindex.com/v2/task/google/indexer/status';
+
+      const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+              'Authorization': apiKey,
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ task_ids: taskIds })
+      });
+
+      if (!response.ok) {
+          console.error("SpeedyIndex API - Get Task Detail failed:", response.status, response.statusText);
+          return new Response(JSON.stringify({ error: "Error fetching task detail from SpeedyIndex API." }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+      }
+      const data = await response.json();
+      return new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json' } });
+
+  } catch (error) {
+      console.error("Error in handleGetTaskDetail:", error);
+      return new Response(JSON.stringify({ error: "Error retrieving task detail." }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 }
 
