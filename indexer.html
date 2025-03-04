@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🚀 SpeedyIndex Tool v1.4</title>
+    <title>🚀 SpeedyIndex Tool v1.7</title>
     <style>
         body {
             font-family: sans-serif;
@@ -153,7 +153,7 @@
         }
 
         .task-list-table td a {
-            text-decoration: none; /* Remove underline from links */
+            text-decoration: none;
         }
 
         .tooltip {
@@ -199,7 +199,7 @@
             border: 1px solid #ccc;
             padding: 15px;
             border-radius: 5px;
-            overflow-x: auto; /* Enable horizontal scroll if content is too wide */
+            overflow-x: auto;
         }
         #task-detail-content h2, #task-detail-content h3 {
             margin-top: 0;
@@ -228,11 +228,30 @@
             font-weight: bold;
         }
         #task-detail-table td a {
-            color: #007bff; /* Link color */
+            color: #007bff;
             text-decoration: none;
         }
         #task-detail-table td a:hover {
             text-decoration: underline;
+        }
+
+        .task-info-inline {
+            display: flex;
+            flex-wrap: wrap; /* Allow items to wrap to the next line */
+            gap: 15px 20px; /* Row and column gap */
+            margin-bottom: 10px;
+            align-items: baseline; /* Align items to the baseline of text */
+        }
+
+        .task-info-item {
+            display: flex;
+            align-items: baseline; /* Align emoji and text */
+            gap: 5px;
+        }
+        .task-info-item strong {
+            font-weight: bold;
+            color: #555;
+            margin-right: 3px; /* Add a little space after the label */
         }
 
 
@@ -240,7 +259,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🚀 SpeedyIndex Tool v1.6</h1>
+        <h1>🚀 SpeedyIndex Tool v1.7</h1>
 
         <div class="tab-container">
             <button class="tab-button active" data-tab="indexer">Indexer</button>
@@ -610,25 +629,16 @@
             const data = await response.json();
             if (data.result) {
                 const report = data.result;
-                const indexedLinksHTML = report.indexed_links.map(url => `
-                    <tr>
-                        <td><a href="${url}" target="_blank">${url}</a></td>
-                        <td>✅ Indexed</td>
-                    </tr>`).join('');
-                const unindexedLinksHTML = report.unindexed_links.map(url => `
-                    <tr>
-                        <td><a href="${url}" target="_blank">${url}</a></td>
-                        <td>❌ Unindexed</td>
-                    </tr>`).join('');
 
                 taskDetailContentDiv.innerHTML = `
-                    <h2>Task Report Details 🔍</h2>
-                    <p><strong>Task ID:</strong> ${report.id}</p>
-                    <p><strong>Type:</strong> ${report.type}</p>
-                    <p><strong>Title:</strong> ${report.title || 'N/A'}</p>
-                    <p><strong>Size:</strong> ${report.size}</p>
-                    <p><strong>Processed Count:</strong> ${report.processed_count}</p>
-                    <p><strong>Created At:</strong> ${new Date(report.created_at).toLocaleString()}</p>
+                    <div class="task-info-inline">
+                        <div class="task-info-item"><strong>🆔 Task ID:</strong> <span>${report.id}</span></div>
+                        <div class="task-info-item"><strong>🏷️ Type:</strong> <span>${report.type}</span></div>
+                        <div class="task-info-item"><strong>📝 Title:</strong> <span>${report.title || 'N/A'}</span></div>
+                        <div class="task-info-item"><strong>📏 Size:</strong> <span>${report.size}</span></div>
+                        <div class="task-info-item"><strong>✅ Processed Count:</strong> <span>${report.processed_count}</span></div>
+                        <div class="task-info-item"><strong>📅 Created At:</strong> <span>${new Date(report.created_at).toLocaleString()}</span></div>
+                    </div>
 
                     <h3>URL Status</h3>
                     <table id="task-detail-table">
@@ -639,8 +649,16 @@
                             </tr>
                         </thead>
                         <tbody>
-                            ${indexedLinksHTML}
-                            ${unindexedLinksHTML}
+                            ${report.indexed_links.map(url => `
+                                <tr>
+                                    <td><a href="${url}" target="_blank">${url}</a></td>
+                                    <td>✅ Indexed</td>
+                                </tr>`).join('')}
+                            ${report.unindexed_links.map(url => `
+                                <tr>
+                                    <td><a href="${url}" target="_blank">${url}</a></td>
+                                    <td>❌ Unindexed</td>
+                                </tr>`).join('')}
                         </tbody>
                     </table>
                 `;
