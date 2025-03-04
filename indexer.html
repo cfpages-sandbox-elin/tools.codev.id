@@ -165,7 +165,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🚀 SpeedyIndex Tool</h1>
+        <h1>🚀 SpeedyIndex Tool v1.1</h1>
 
         <div class="tab-container">
             <button class="tab-button active" data-tab="indexer">Indexer</button>
@@ -173,11 +173,6 @@
         </div>
 
         <div id="indexer" class="tab-content">
-            <div class="api-key-area">
-                <label for="api-key" class="tooltip">SpeedyIndex API Key <span class="tooltiptext">Enter your SpeedyIndex API key to check balance and submit tasks. Key is stored locally.</span></label>
-                <input type="text" id="api-key" placeholder="Your API Key">
-            </div>
-
             <div class="balance-area">
                 <label>Balance:</label>
                 <div id="balance-display">Indexer: <span id="indexer-balance"></span>, Checker: <span id="checker-balance"></span></div>
@@ -228,8 +223,8 @@
         </div>
     </div>
 
-    <script>
-        const apiKeyInput = document.getElementById('api-key');
+    <script type="module">
+        const apiKeyInput = document.getElementById('api-key'); // Keep for potential future use or instructions
         const indexerBalanceDisplay = document.getElementById('indexer-balance');
         const checkerBalanceDisplay = document.getElementById('checker-balance');
         const urlsTextarea = document.getElementById('urls');
@@ -247,17 +242,13 @@
         const apiKeyLocalStorageKey = 'speedyindex-api-key';
         const pricePerLink = 0.0075; // Price per link for indexing
     
-        let currentApiKey = localStorage.getItem(apiKeyLocalStorageKey);
-        if (currentApiKey) {
-            apiKeyInput.value = currentApiKey;
-            fetchBalance(currentApiKey);
-        }
+        // API Key input is now mostly for show/instructions as API key is server-side
+        let currentApiKey = "Server-Side API Key"; // Indicate API key is server-side
+        apiKeyInput.value = currentApiKey; // Display "Server-Side API Key" or similar
     
-        apiKeyInput.addEventListener('change', function() {
-            currentApiKey = apiKeyInput.value;
-            localStorage.setItem(apiKeyLocalStorageKey, currentApiKey);
-            fetchBalance(currentApiKey);
-        });
+        apiKeyInput.disabled = true; // Disable API Key input as it's server-side
+    
+        fetchBalance(); // Fetch balance on page load
     
         urlsTextarea.addEventListener('input', updateUrlCountAndCost);
         urlFilterInput.addEventListener('input', filterUrls);
@@ -305,49 +296,42 @@
         }
     
     
-        async function fetchBalance(apiKey) {
-            if (!apiKey) {
-                indexerBalanceDisplay.textContent = 'N/A';
-                checkerBalanceDisplay.textContent = 'N/A';
-                return;
-            }
-            const apiUrl = '/functions/speedyindex-proxy/v2/account'; // Path to Cloudflare Function
+        async function fetchBalance() { // API Key not needed as parameter anymore
+            indexerBalanceDisplay.textContent = 'Loading...';
+            checkerBalanceDisplay.textContent = 'Loading...';
+            const apiUrl = '/speedyindex-api?action=get-balance'; // Path to Cloudflare Function with action
     
             try {
-                const response = await fetch(apiUrl, {
-                    headers: {
-                        'Authorization': apiKey
-                    }
-                });
+                const response = await fetch(apiUrl); // No API Key in headers
     
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
     
                 const data = await response.json();
-                if (data.code === 0) {
+                if (data.balance) {
                     indexerBalanceDisplay.textContent = data.balance.indexer;
                     checkerBalanceDisplay.textContent = data.balance.checker;
-                } else {
+                } else if (data.error) {
                     indexerBalanceDisplay.textContent = 'Error';
                     checkerBalanceDisplay.textContent = 'Error';
-                    taskStatusDiv.textContent = `Balance Error: ${data.code} - ${data.message || 'Unknown error'}`;
+                    taskStatusDiv.textContent = `Balance Error: ${data.error}`;
+                }
+                 else {
+                    indexerBalanceDisplay.textContent = 'Error';
+                    checkerBalanceDisplay.textContent = 'Error';
+                    taskStatusDiv.textContent = 'Error fetching balance.';
                 }
     
             } catch (error) {
                 console.error("Could not fetch balance:", error);
                 indexerBalanceDisplay.textContent = 'Error';
                 checkerBalanceDisplay.textContent = 'Error';
-                taskStatusDiv.textContent = 'Failed to fetch balance. Check API key and network.';
+                taskStatusDiv.textContent = 'Failed to fetch balance. Check network.';
             }
         }
     
         async function submitUrlsForIndexing() {
-            if (!currentApiKey) {
-                taskStatusDiv.textContent = 'API Key is required to submit URLs.';
-                return;
-            }
-    
             const urls = urlsTextarea.value.trim().split('\n').filter(url => url.trim() !== '');
             if (urls.length === 0) {
                 taskStatusDiv.textContent = 'Please enter URLs to index.';
@@ -363,9 +347,8 @@
             submitUrlsButton.disabled = true;
             taskStatusDiv.textContent = 'Submitting URLs for indexing...';
     
-            const apiUrl = '/functions/speedyindex-proxy/v2/task/google/indexer/create'; // Path to Cloudflare Function
+            const apiUrl = '/speedyindex-api?action=index-urls'; // Path to Cloudflare Function with action
             const requestBody = JSON.stringify({
-                "title": "indexer_task_" + new Date().toISOString(), // Optional title
                 "urls": urls
             });
     
@@ -373,7 +356,6 @@
                 const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: {
-                        'Authorization': currentApiKey,
                         'Content-Type': 'application/json'
                     },
                     body: requestBody
@@ -390,14 +372,17 @@
                 } else if (data.code === -2) {
                     taskStatusDiv.textContent = 'Error: Server overloaded. Please try again later.';
                 }
+                 else if (data.error) {
+                    taskStatusDiv.textContent = `Error submitting URLs: ${data.error}`;
+                }
                  else {
-                    taskStatusDiv.textContent = `Error submitting URLs: ${data.code} - ${data.message || 'Unknown error'}`;
+                    taskStatusDiv.textContent = `Error submitting URLs. Code: ${data.code}, Message: ${data.message}`;
                 }
     
     
             } catch (error) {
                 console.error("Error submitting URLs:", error);
-                taskStatusDiv.textContent = 'Failed to submit URLs. Check network and API key.';
+                taskStatusDiv.textContent = 'Failed to submit URLs. Check network.';
             } finally {
                 submitLoadingIndicator.classList.remove('active');
                 submitUrlsButton.disabled = false;
@@ -405,25 +390,15 @@
         }
     
         async function fetchPastTasks() {
-            if (!currentApiKey) {
-                pastTasksStatusDiv.textContent = 'API Key is required to fetch tasks.';
-                return;
-            }
-    
-            refreshLoadingIndicator.classList.add('active');
-            refreshTasksButton.disabled = true;
             pastTasksStatusDiv.textContent = 'Fetching past tasks...';
             taskListTableBody.innerHTML = '<tr><td colspan="7">Loading tasks...</td></tr>';
+            refreshLoadingIndicator.classList.add('active');
+            refreshTasksButton.disabled = true;
     
-    
-            const apiUrl = '/functions/speedyindex-proxy/v2/task/google/indexer/list/0'; // Path to Cloudflare Function
+            const apiUrl = '/speedyindex-api?action=list-tasks'; // Path to Cloudflare Function with action
     
             try {
-                const response = await fetch(apiUrl, {
-                    headers: {
-                        'Authorization': currentApiKey
-                    }
-                });
+                const response = await fetch(apiUrl);
     
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -447,15 +422,19 @@
                     pastTasksStatusDiv.textContent = 'No tasks found.';
                     taskListTableBody.innerHTML = '<tr><td colspan="7">No tasks yet.</td></tr>';
                 }
-                 else {
-                    pastTasksStatusDiv.textContent = `Error fetching tasks: ${data.code} - ${data.message || 'Unknown error'}`;
+                 else if (data.error) {
+                    pastTasksStatusDiv.textContent = `Error fetching tasks: ${data.error}`;
+                    taskListTableBody.innerHTML = '<tr><td colspan="7">Error loading tasks.</td></tr>';
+                }
+                else {
+                    pastTasksStatusDiv.textContent = `Error fetching tasks. Code: ${data.code}, Message: ${data.message}`;
                     taskListTableBody.innerHTML = '<tr><td colspan="7">Error loading tasks.</td></tr>';
                 }
     
     
             } catch (error) {
                 console.error("Error fetching past tasks:", error);
-                pastTasksStatusDiv.textContent = 'Failed to fetch tasks. Check network and API key.';
+                pastTasksStatusDiv.textContent = 'Failed to fetch tasks. Check network.';
                 taskListTableBody.innerHTML = '<tr><td colspan="7">Failed to load tasks.</td></tr>';
             } finally {
                 refreshLoadingIndicator.classList.remove('active');
