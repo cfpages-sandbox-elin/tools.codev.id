@@ -640,12 +640,12 @@
                         <div class="task-info-item"><strong>📅 Created At:</strong> <span>${new Date(report.created_at).toLocaleString()}</span></div>
                     </div>
 
-                    <h3>URL Status</h3>
                     <table id="task-detail-table">
                         <thead>
                             <tr>
                                 <th>URL</th>
                                 <th>Status</th>
+                                <th>🔍 Check in Google</th> <!-- New column header -->
                             </tr>
                         </thead>
                         <tbody>
@@ -653,11 +653,13 @@
                                 <tr>
                                     <td><a href="${url}" target="_blank">${url}</a></td>
                                     <td>✅ Indexed</td>
+                                    <td><a href="https://www.google.com/search?q=site%3A${encodeURIComponent(url)}" target="_blank">🔎 Google</a></td> <!-- New column data -->
                                 </tr>`).join('')}
                             ${report.unindexed_links.map(url => `
                                 <tr>
                                     <td><a href="${url}" target="_blank">${url}</a></td>
                                     <td>❌ Unindexed</td>
+                                    <td><a href="https://www.google.com/search?q=site%3A${encodeURIComponent(url)}" target="_blank">🔎 Google</a></td> <!-- New column data -->
                                 </tr>`).join('')}
                         </tbody>
                     </table>
@@ -665,7 +667,7 @@
             } else if (data.error) {
                 taskDetailContentDiv.textContent = `Error fetching task report: ${data.error}`;
             }
-             else {
+              else {
                 taskDetailContentDiv.textContent = 'Task report not found.';
             }
 
