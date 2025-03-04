@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SpeedyIndexer v2</title>
+    <title>🚀 SpeedyIndexer v2</title>
     <style>
         body {
             font-family: sans-serif;
@@ -16,8 +16,8 @@
         }
 
         .container {
-            width: 90%;
-            max-width: 900px;
+            width: 95%; /* Increased width */
+            max-width: 1200px; /* Increased max-width */
             background-color: white;
             padding: 20px;
             border-radius: 8px;
@@ -49,15 +49,29 @@
             border: 1px solid #ccc;
             border-radius: 0 5px 5px 5px;
             padding: 20px;
+            display: flex; /* Enable flexbox for tab content */
+            flex-direction: column; /* Stack elements vertically inside tab content */
         }
 
         .tab-content.hidden {
             display: none;
         }
 
-        .api-key-area, .url-area, .filter-area, .balance-area, .task-list-area, .status-area {
+        .api-key-area, .balance-area, .status-area, .task-list-area {
             margin-bottom: 15px;
         }
+
+        .url-filter-container { /* Container for URL and Filter side-by-side */
+            display: flex;
+            gap: 15px; /* Spacing between URL and Filter areas */
+            margin-bottom: 15px;
+        }
+
+        .url-area, .filter-area {
+            flex: 1; /* Equal width for URL and Filter areas */
+            min-width: 0; /* Ensure they can shrink if needed */
+        }
+
 
         label {
             display: block;
@@ -73,10 +87,12 @@
             border: 1px solid #ccc;
             border-radius: 5px;
             box-sizing: border-box;
+            font-family: monospace; /* Monospace font for textareas */
+            font-size: 14px;
         }
 
         textarea {
-            height: 150px;
+            height: 200px; /* Increased textarea height */
         }
 
         button {
@@ -93,7 +109,15 @@
 
         #balance-display {
             font-weight: bold;
+            display: flex; /* Flex for alignment */
+            align-items: center; /* Center align items vertically */
+            gap: 10px; /* Spacing between items */
         }
+
+        #balance-display span {
+            font-weight: normal; /* Make balance numbers normal weight */
+        }
+
 
         #task-status {
             white-space: pre-wrap;
@@ -104,6 +128,7 @@
             background-color: #f9f9f9;
             height: 100px;
             overflow-y: scroll;
+            margin-top: 10px; /* Spacing above task status */
         }
 
         .url-count-cost {
@@ -134,19 +159,20 @@
 
         .tooltip .tooltiptext {
             visibility: hidden;
-            width: 200px;
+            width: 250px; /* Increased tooltip width */
             background-color: black;
             color: #fff;
-            text-align: center;
+            text-align: left; /* Left align tooltip text */
             border-radius: 6px;
-            padding: 5px;
+            padding: 8px; /* Increased tooltip padding */
             position: absolute;
             z-index: 1;
             bottom: 125%;
             left: 50%;
-            margin-left: -100px;
+            margin-left: -125px; /* Adjusted margin for wider tooltip */
             opacity: 0;
             transition: opacity 0.3s;
+            font-size: 0.9em; /* Slightly smaller tooltip font */
         }
 
         .tooltip:hover .tooltiptext {
@@ -165,7 +191,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🚀 SpeedyIndex Tool v1.2</h1>
+        <h1>🚀 SpeedyIndex Tool v1.3</h1>
 
         <div class="tab-container">
             <button class="tab-button active" data-tab="indexer">Indexer</button>
@@ -174,38 +200,42 @@
 
         <div id="indexer" class="tab-content">
             <div class="api-key-area">
-                <label for="api-key" class="tooltip">SpeedyIndex API Key <span class="tooltiptext">Enter your SpeedyIndex API key to check balance and submit tasks. Key is stored locally.</span></label>
-                <input type="text" id="api-key" placeholder="Your API Key">
+                <label for="api-key" class="tooltip">🔑 SpeedyIndex API Key <span class="tooltiptext">This tool uses your SpeedyIndex API key to check balance and submit indexing tasks. The API key is securely stored server-side and is not visible in the client-side code.</span></label>
+                <input type="text" id="api-key" placeholder="Your API Key" disabled>
             </div>
             <div class="balance-area">
-                <label>Balance:</label>
-                <div id="balance-display">Indexer: <span id="indexer-balance"></span>, Checker: <span id="checker-balance"></span></div>
+                <label>💰 Balance:</label>
+                <div id="balance-display">
+                    <span>Indexer:</span> <span id="indexer-balance"></span> <span title="Balance for Google link indexing service">🔗</span>,
+                    <span>Checker:</span> <span id="checker-balance"></span> <span title="Balance for Google link indexation check service">✅</span>
+                </div>
             </div>
 
-            <div class="url-area">
-                <label for="urls" class="tooltip">URLs to Index <span class="tooltiptext">Enter URLs to be indexed, one URL per line (max 10,000 per task).</span></label>
-                <textarea id="urls" placeholder="https://example.com/page1\nhttps://example.com/page2"></textarea>
-                <div class="url-count-cost">URLs: <span id="url-count">0</span>, Estimated Cost: <span id="estimated-cost">0.00</span> $</div>
+            <div class="url-filter-container">
+                <div class="url-area">
+                    <label for="urls" class="tooltip">🔗 URLs to Index <span class="tooltiptext">Enter URLs to be indexed, one URL per line (maximum 10,000 per task). Newlines in the textarea will be correctly interpreted as line breaks.</span></label>
+                    <textarea id="urls" placeholder="https://example.com/page1\nhttps://example.com/page2"></textarea>
+                    <div class="url-count-cost">URLs: <span id="url-count">0</span>, Estimated Cost: <span id="estimated-cost">0.00</span> $</div>
+                </div>
+
+                <div class="filter-area">
+                    <label for="url-filter" class="tooltip"> 🚫 Filter URLs (Optional) <span class="tooltiptext">Enter keywords or phrases to filter out URLs from the indexing task. URLs containing any of these filters will be excluded. Enter each filter term on a new line. Filtering is non-destructive and only affects the current submission.</span></label>
+                    <textarea id="url-filter" placeholder="keyword1\nphrase to exclude\nanother keyword"></textarea>
+                </div>
             </div>
 
-            <div class="filter-area">
-                <label for="url-filter" class="tooltip">Filter URLs <span class="tooltiptext">Filter URLs in the textarea (non-destructive).</span></label>
-                <input type="text" id="url-filter" placeholder="Filter keywords">
-            </div>
 
-
+            <button id="submit-urls-btn">🚀 Submit URLs for Indexing <span class="loading-indicator" id="submit-loading-indicator">🔄</span></button>
             <div class="status-area">
-                <label>Task Status:</label>
+                <label>📜 Task Status:</label>
                 <div id="task-status"></div>
             </div>
-
-            <button id="submit-urls-btn">Submit URLs for Indexing <span class="loading-indicator" id="submit-loading-indicator">🔄</span></button>
         </div>
 
         <div id="past-tasks" class="tab-content hidden">
             <div class="task-list-area">
-                <h2>Past Tasks</h2>
-                <button id="refresh-tasks-btn">Refresh Tasks <span class="loading-indicator" id="refresh-loading-indicator">🔄</span></button>
+                <h2>📜 Past Tasks</h2>
+                <button id="refresh-tasks-btn">🔄 Refresh Tasks <span class="loading-indicator" id="refresh-loading-indicator">🔄</span></button>
                 <div id="past-tasks-status"></div>
                 <table class="task-list-table" id="task-list">
                     <thead>
@@ -249,7 +279,7 @@
 
         // API Key input is now mostly for show/instructions as API key is server-side
         let currentApiKey = "Server-Side API Key"; // Indicate API key is server-side
-        apiKeyInput.value = currentApiKey; // Display "Server-Side API Key" or similar <----- LINE 247 is now inside DOMContentLoaded
+        apiKeyInput.value = currentApiKey; // Display "Server-Side API Key" or similar
 
         apiKeyInput.disabled = true; // Disable API Key input as it's server-side
 
@@ -288,11 +318,19 @@
         }
 
         function filterUrls() {
-            const filterText = urlFilterInput.value.toLowerCase();
+            const filterTextLines = urlFilterInput.value.toLowerCase().split('\n').filter(line => line.trim() !== '');
             const originalUrls = urlsTextarea.value.split('\n');
             let filteredUrls = '';
             originalUrls.forEach(url => {
-                if (url.toLowerCase().includes(filterText) || filterText === '') {
+                const urlLower = url.toLowerCase();
+                let shouldInclude = true;
+                for (const filter of filterTextLines) {
+                    if (urlLower.includes(filter)) {
+                        shouldInclude = false;
+                        break; // If any filter matches, exclude the URL
+                    }
+                }
+                if (shouldInclude) {
                     filteredUrls += url + '\n';
                 }
             });
@@ -348,13 +386,33 @@
                 return;
             }
 
+            const filterTextLines = urlFilterInput.value.toLowerCase().split('\n').filter(line => line.trim() !== '');
+            const filteredUrls = urls.filter(url => {
+                const urlLower = url.toLowerCase();
+                let shouldInclude = true;
+                for (const filter of filterTextLines) {
+                    if (urlLower.includes(filter)) {
+                        shouldInclude = false;
+                        break; // If any filter matches, exclude the URL
+                    }
+                }
+                return shouldInclude;
+            });
+
+
+            if (filteredUrls.length === 0) {
+                taskStatusDiv.textContent = 'No URLs to index after applying filters.';
+                return;
+            }
+
+
             submitLoadingIndicator.classList.add('active');
             submitUrlsButton.disabled = true;
             taskStatusDiv.textContent = 'Submitting URLs for indexing...';
 
             const apiUrl = '/speedyindex-api?action=index-urls'; // Path to Cloudflare Function with action
             const requestBody = JSON.stringify({
-                "urls": urls
+                "urls": filteredUrls // Use filtered URLs for submission
             });
 
             try {
@@ -371,6 +429,7 @@
                 if (data.code === 0) {
                     taskStatusDiv.textContent = `URLs submitted successfully! Task ID: ${data.task_id}`;
                     urlsTextarea.value = ''; // Clear textarea after successful submission
+                    urlFilterInput.value = ''; // Clear filter textarea too after submission
                     updateUrlCountAndCost(); // Reset count and cost
                 } else if (data.code === 1) {
                     taskStatusDiv.textContent = 'Error: Top up balance needed.';
@@ -441,11 +500,11 @@
                 console.error("Error fetching past tasks:", error);
                 pastTasksStatusDiv.textContent = 'Failed to fetch tasks. Check network.';
                 taskListTableBody.innerHTML = '<tr><td colspan="7">Failed to load tasks.</td></tr>';
-            } finally {
-                refreshLoadingIndicator.classList.remove('active');
-                refreshTasksButton.disabled = false;
-            }
+        } finally {
+            refreshLoadingIndicator.classList.remove('active');
+            refreshTasksButton.disabled = false;
         }
+    }
       }); // <-- Closing DOMContentLoaded event listener
     </script>
 </body>
