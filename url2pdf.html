@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>URL to PDF & Issuu Uploader v5.0 🚀</title>
+<title>URL to PDF & Issuu Uploader v5.1 🚀</title>
 <style>
   /* Basic CSS Styling here */
   body { font-family: sans-serif; }
@@ -51,7 +51,7 @@
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v5.0 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v5.1 🚀</h1>
 
   <div class="api-keys-container">
     <div class="api-key-input">
@@ -611,19 +611,20 @@ wp</textarea>
       }
     });
 
-    function addNewApiKeyField(initialValue = '') { // Function now only accepts initialValue
-      const container = document.getElementById('additionalPrintFriendlyKeys'); // Get container inside the function
+    function addNewApiKeyField(initialValue = '') {
+      const container = document.getElementById('additionalPrintFriendlyKeys');
+      const keyIndex = document.querySelectorAll('.additional-api-key').length + 1;
       const keyInput = document.createElement('div');
       keyInput.classList.add('additional-keys-container');
       keyInput.innerHTML = `
-          <label for="printfriendlyApiKey${document.querySelectorAll('.additional-api-key').length + 1}" style="margin-right: 10px;">Additional API Key ${document.querySelectorAll('.additional-api-key').length + 1} 🔑:</label>
-          <input type="text" id="printfriendlyApiKey${document.querySelectorAll('.additional-api-key').length + 1}" class="additional-api-key" placeholder="Enter Additional API Key" value="${initialValue}" style="flex: 1;">
+          <label for="printfriendlyApiKey${keyIndex}" style="margin-right: 5px;" title="Additional PrintFriendly API Key" aria-label="Additional PrintFriendly API Key">🔑</label>
+          <input type="text" id="printfriendlyApiKey${keyIndex}" class="additional-api-key" placeholder="Enter Additional API Key" value="${initialValue}" style="flex: 1;">
       `;
       container.appendChild(keyInput);
       const newInput = keyInput.querySelector('input');
-      newInput.addEventListener('input', savePrintFriendlyApiKey); // Attach event listener to new input
-      return newInput; // Return the newly created input element
-  }
+      newInput.addEventListener('input', savePrintFriendlyApiKey);
+      return newInput;
+    }
 
 
     function getPrintFriendlyApiKeys() {
