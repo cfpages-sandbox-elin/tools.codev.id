@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>URL to PDF & Issuu Uploader v4.8 🚀</title>
+<title>URL to PDF & Issuu Uploader v5.0 🚀</title>
 <style>
   /* Basic CSS Styling here */
   body { font-family: sans-serif; }
@@ -43,23 +43,25 @@
   .tab button.active { background-color: #ccc; }
   .tabcontent { display: none; padding: 6px 12px; border: 1px solid #ccc; border-top: none; border-bottom-left-radius: 5px; border-bottom-right-radius: 5px; }
   .tabcontent.active { display: block; }
-  .api-key-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+  .api-key-header { align-items: center; }
+  .api-key-header label { margin-right: 10px; white-space: nowrap; }
+  .api-key-header input[type="text"] { flex: 1; margin-right: 10px; }
   .api-key-header button { margin-left: 10px; padding: 5px 10px; font-size: 0.9em; }
 </style>
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v4.9 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v5.0 🚀</h1>
 
   <div class="api-keys-container">
     <div class="api-key-input">
-      <div class="api-key-header">
-        <label for="printfriendlyApiKey">PrintFriendly API Key(s) 🔑:</label>
+      <div class="api-key-header" style="display: flex; align-items: center;">  
+        <label for="printfriendlyApiKey" style="margin-right: 10px;">PrintFriendly API Key(s) 🔑:</label> 
+        <input type="text" id="printfriendlyApiKey" placeholder="Enter PrintFriendly API Key" style="margin-right: 10px; flex: 1;"> 
+        <div id="additionalPrintFriendlyKeys" style="display: flex; flex-wrap: wrap; align-items: center;">
+          <!-- Additional API key inputs will be added here -->
+        </div>
         <button type="button" id="addApiKeyButton" class="api-key-button">+</button>
-      </div>
-      <input type="text" id="printfriendlyApiKey" placeholder="Enter PrintFriendly API Key">
-      <div class="additional-keys-container" id="additionalPrintFriendlyKeys">
-        <!-- Additional API key inputs will be added here -->
       </div>
     </div>
 
@@ -171,7 +173,7 @@ wp</textarea>
       document.getElementById('urlFilter').addEventListener('input', applyUrlFilter);
       document.getElementById('copySuccessButton').addEventListener('click', copySuccessUrls);
       document.getElementById('retryFailedButton').addEventListener('click', retryFailedUrls);
-      document.getElementById('addApiKeyButton').addEventListener('click', addNewApiKeyField);
+      document.getElementById('addApiKeyButton').addEventListener('click', (event) => { addNewApiKeyField(''); });
       document.getElementById('indexIssuuButton').addEventListener('click', indexSuccessUrls);
 
 
@@ -609,18 +611,19 @@ wp</textarea>
       }
     });
 
-    function addNewApiKeyField(initialValue = '', container = document.getElementById('additionalPrintFriendlyKeys'), keyIndex = document.querySelectorAll('.additional-api-key').length + 1) {
-        const keyInput = document.createElement('div');
-        keyInput.classList.add('additional-keys-container');
-        keyInput.innerHTML = `
-            <label for="printfriendlyApiKey${keyIndex}">Additional API Key ${keyIndex} 🔑:</label>
-            <input type="text" id="printfriendlyApiKey${keyIndex}" class="additional-api-key" placeholder="Enter Additional API Key" value="${initialValue}">
-        `;
-        container.appendChild(keyInput);
-        const newInput = keyInput.querySelector('input');
-        newInput.addEventListener('input', savePrintFriendlyApiKey); // Attach event listener to new input
-        return newInput; // Return the newly created input element
-    }
+    function addNewApiKeyField(initialValue = '') { // Function now only accepts initialValue
+      const container = document.getElementById('additionalPrintFriendlyKeys'); // Get container inside the function
+      const keyInput = document.createElement('div');
+      keyInput.classList.add('additional-keys-container');
+      keyInput.innerHTML = `
+          <label for="printfriendlyApiKey${document.querySelectorAll('.additional-api-key').length + 1}" style="margin-right: 10px;">Additional API Key ${document.querySelectorAll('.additional-api-key').length + 1} 🔑:</label> <--- Added inline style to label
+          <input type="text" id="printfriendlyApiKey${document.querySelectorAll('.additional-api-key').length + 1}" class="additional-api-key" placeholder="Enter Additional API Key" value="${initialValue}" style="flex: 1;"> <--- Added inline style to input
+      `;
+      container.appendChild(keyInput);
+      const newInput = keyInput.querySelector('input');
+      newInput.addEventListener('input', savePrintFriendlyApiKey); // Attach event listener to new input
+      return newInput; // Return the newly created input element
+  }
 
 
     function getPrintFriendlyApiKeys() {
