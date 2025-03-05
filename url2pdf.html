@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>URL to PDF & Issuu Uploader v5.1 🚀</title>
+<title>URL to PDF & Issuu Uploader v5.2 🚀</title>
 <style>
   /* Basic CSS Styling here */
   body { font-family: sans-serif; }
@@ -27,8 +27,8 @@
   .issuu-creds label { margin-right: 10px; white-space: nowrap; }
   .issuu-creds input { margin-right: 10px; flex: 1; }
   .api-keys-container { display: flex; flex-direction: column; }
-  .additional-keys-container { display: flex; flex-wrap: wrap; align-items: center; margin-top: 5px; }
-  .additional-keys-container label { margin-right: 10px; white-space: nowrap; margin-bottom: 5px; }
+  .additional-keys-container { display: flex; align-items: center; margin-right: 10px; }
+  .additional-keys-container label { margin-right: 10px; white-space: nowrap; margin-bottom: 5px; display: inline-flex; align-items: center; }
   .additional-keys-container input { flex: 1 1 200px; margin-right: 10px; margin-bottom: 5px; }
   h1 { color: #333; }
   label { font-weight: bold; display: block; margin-bottom: 5px; color: #555; }
@@ -43,22 +43,27 @@
   .tab button.active { background-color: #ccc; }
   .tabcontent { display: none; padding: 6px 12px; border: 1px solid #ccc; border-top: none; border-bottom-left-radius: 5px; border-bottom-right-radius: 5px; }
   .tabcontent.active { display: block; }
-  .api-key-header { align-items: center; }
+  .api-key-header { align-items: center; margin-bottom: 5px; }
   .api-key-header label { margin-right: 10px; white-space: nowrap; }
   .api-key-header input[type="text"] { flex: 1; margin-right: 10px; }
   .api-key-header button { margin-left: 10px; padding: 5px 10px; font-size: 0.9em; }
+  .api-key-main-label { display: block; margin-bottom: 5px; font-weight: bold; }
+  .api-key-main-input, .additional-keys-container input { padding: 8px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; min-width: 150px; }
+  .additional-keys-inline-container { display: flex; flex-wrap: wrap; align-items: center; }
 </style>
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v5.1 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v5.2 🚀</h1>
 
   <div class="api-keys-container">
     <div class="api-key-input">
-      <div class="api-key-header" style="display: flex; align-items: center;">  
-        <label for="printfriendlyApiKey" style="margin-right: 10px;">PrintFriendly API Key(s) 🔑:</label> 
-        <input type="text" id="printfriendlyApiKey" placeholder="Enter PrintFriendly API Key" style="margin-right: 10px; flex: 1;"> 
-        <div id="additionalPrintFriendlyKeys" style="display: flex; flex-wrap: wrap; align-items: center;">
+      <div class="api-key-header">
+        <label for="printfriendlyApiKey" class="api-key-main-label">PrintFriendly API Key(s) 🔑:</label>
+      </div>
+      <div style="display: flex; align-items: center;">
+        <input type="text" id="printfriendlyApiKey" placeholder="Enter PrintFriendly API Key" class="api-key-main-input">
+        <div id="additionalPrintFriendlyKeys" class="additional-keys-inline-container">
           <!-- Additional API key inputs will be added here -->
         </div>
         <button type="button" id="addApiKeyButton" class="api-key-button">+</button>
