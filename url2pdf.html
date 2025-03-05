@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>URL to PDF & Issuu Uploader v4.0 🚀</title>
+<title>URL to PDF & Issuu Uploader v4.8 🚀</title>
 <style>
   /* Basic CSS Styling here */
   body { font-family: sans-serif; }
@@ -49,7 +49,7 @@
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v4.7 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v4.8 🚀</h1>
 
   <div class="cors-info">
     <p>⚠️ <strong>Important:</strong> To use this app effectively, you may need to install a <a href="https://chromewebstore.google.com/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" target="_blank">CORS Unblock</a> browser extension 🧩.</p>
@@ -155,7 +155,6 @@ wp</textarea>
     let waitingForApiKey = false;
 
     document.addEventListener('DOMContentLoaded', async () => {
-      console.log("import.meta.env:", import.meta.env); // Add this line for debugging
       // Load API keys from local storage on page load
       loadApiKeys();
       initializeUrlHandling();
@@ -438,7 +437,7 @@ wp</textarea>
       const estimatedTimePerUrl = 15000; // Initial estimate in milliseconds (adjust as needed)
       let failedUrlList = [];
       let successIssuuUrls = [];
-      let apiKeyIndex = 0;
+      // let apiKeyIndex = 0;
 
       updateStatusSummary(`Processing ${totalUrls} URLs...`);
 
@@ -550,9 +549,8 @@ wp</textarea>
         } // end while retry loop
 
         processedUrlsCount++;
-        if (processedUrlsCount % 200 === 0 && apiKeyIndex < printfriendlyApiKeys.length - 1) {
-            apiKeyIndex++; // Move to the next API key after every 200 URLs
-            updateStatus(`🔑 Switched to PrintFriendly API Key ${apiKeyIndex + 1} (Key rotation).`); // Inform user of key rotation
+        if (processedUrlsCount % 200 === 0 && processedUrlsCount < filteredUrls.length) { // Check if there are more URLs to process after rotation
+            updateStatus(`🔑 Rotated to next PrintFriendly API Key after processing 200 URLs.`); // Inform user of key rotation
         }
         updateProgressBar((processedUrlsCount / totalUrls) * 100);
         updateProgressInfo(processedUrlsCount, totalUrls, pdfGeneratedCount, uploadedCount, publishedCount, calculateEstimatedTime(startTime, processedUrlsCount, totalUrls, estimatedTimePerUrl));
@@ -704,44 +702,21 @@ wp</textarea>
     }
 
 
-    async function convertUrlToPdf(url, apiKey) { // API Key as parameter
-      const printFriendlyApiKey = apiKey;
-      const printFriendlyApiUrl = `https://api.printfriendly.com/v2/pdf/create?api_key=${printFriendlyApiKey}`;
-
+    async function convertUrlToPdf(url, apiKey) { // apiKey parameter is now USED!
       try {
-        const response = await fetch(printFriendlyApiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8'
-          },
-          body: `page_url=${encodeURIComponent(url)}`
-        });
-
+        // ** Updated fetch call to pass API key as query parameter **
+        const proxyUrl = `/printfriendly-api?page_url=${encodeURIComponent(url)}&apikey=${encodeURIComponent(apiKey)}`; // Append apikey query parameter
+        const response = await fetch(proxyUrl); // Call PDF proxy Function with API key
         if (!response.ok) {
-          if (response.status === 429 || response.status === 401) { // Check for 429 (Too Many Requests) and 401 (Unauthorized - potentially key issue)
-            const errorData = await response.json();
-            const errorMessage = `PrintFriendly API error: ${response.status} ${response.statusText} - ${errorData?.message || 'Unknown error'}`;
-            console.error(errorMessage);
-            throw new Error(errorMessage + " - API Key Exhausted or Invalid"); // Indicate API key issue in error message
-          }
-          const errorData = await response.json();
-          throw new Error(`PrintFriendly API error: ${response.status} ${response.statusText} - ${errorData?.message || 'Unknown error'}`);
+          const errorData = await response.json(); // Assuming error response is JSON
+          throw new Error(`PDF Conversion Proxy error: ${response.status} ${response.statusText} - ${errorData?.error || 'Unknown error'}`);
         }
 
-        const data = await response.json();
-        if (data.status === "success" && data.file_url) {
-          const pdfResponse = await fetch(data.file_url);
-          if (!pdfResponse.ok) {
-            throw new Error(`Error fetching PDF from PrintFriendly URL: ${pdfResponse.status} ${pdfResponse.statusText}`);
-          }
-          const pdfBlob = await pdfResponse.blob();
-          return pdfBlob;
-        } else {
-          throw new Error(`PrintFriendly API failed to generate PDF: ${data?.message || 'Unknown error'}`);
-        }
-
+        // ** Get PDF Blob from the response (proxy function returns Blob)**
+        const pdfBlob = await response.blob();
+        return pdfBlob; // Return the Blob
       } catch (error) {
-        console.error("Error converting to PDF using PrintFriendly:", error);
+        console.error("Error converting to PDF using PDF Proxy Function:", error);
         return null;
       }
     }
@@ -1172,13 +1147,18 @@ wp</textarea>
 
     async function getSpeedyIndexBalance() {
       try {
-        const response = await fetch('/speedyindex-api?action=get-balance'); 
+        const response = await fetch('/speedyindex-api?action=get-balance');
         if (!response.ok) {
           console.error("Error fetching SpeedyIndex balance from Function:", response.status, response.statusText);
           return "Error";
         }
         const data = await response.json();
-        return data.balance || "Error";
+        if (data && data.balance && typeof data.balance.indexer !== 'undefined') {
+          return data.balance.indexer;
+        } else {
+          console.warn("SpeedyIndex balance data structure unexpected:", data);
+          return "N/A";
+        }
       } catch (error) {
         console.error("Error fetching SpeedyIndex balance from Function:", error);
         return "Error";
