@@ -27,11 +27,22 @@
   .issuu-creds input { margin-right: 10px; flex: 1; }
   .api-keys-container { display: flex; flex-direction: column; }
 
-  .additional-keys-container { /* Style for each additional key container (label + input) */
-      display: flex; /* Make each key container a flex container */
-      align-items: center; /* Vertically align label and input */
-      margin-right: 10px; /* Spacing between additional key containers */
-      margin-bottom: 5px; /* Spacing below inputs if they wrap */
+  .api-key-header { margin-bottom: 5px; }
+
+  .api-key-main-label { display: block; margin-bottom: 5px; font-weight: bold; }
+
+  .additional-keys-inline-container {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start; /* Align items to the start for better top alignment */
+      width: 100%; /* Ensure it takes full width */
+  }
+
+  .additional-keys-container {
+      display: flex;
+      align-items: center;
+      margin-right: 10px;
+      margin-bottom: 5px;
   }
 
   .additional-keys-container label {
@@ -42,13 +53,53 @@
   }
 
   .additional-keys-container input,
-  .api-key-main-input { /* Apply same style to additional inputs and main input */
+  .api-key-main-input {
       padding: 8px;
       border: 1px solid #ccc;
       border-radius: 5px;
       box-sizing: border-box;
-      min-width: 150px;
-      flex: 1 1 200px; /* Equal width and responsiveness */
+      margin-right: 5px;
+      margin-bottom: 5px;
+      flex: 1; /* Take available space, width will be controlled by container */
+      min-width: 0; /* Allow inputs to shrink below 200px if needed */
+  }
+
+  /* Dynamic width adjustments based on number of inputs */
+
+  .additional-keys-inline-container {
+      --input-width: 100%; /* Default for 1 input */
+  }
+
+  .additional-keys-inline-container:has(> *:nth-child(2)) { /* 2 inputs */
+      --input-width: 50%;
+  }
+
+  .additional-keys-inline-container:has(> *:nth-child(3)) { /* 3 inputs */
+      --input-width: 33.33%;
+  }
+
+  .additional-keys-inline-container:has(> *:nth-child(4)) { /* 4 inputs */
+      --input-width: 25%;
+  }
+
+  .additional-keys-inline-container:has(> *:nth-child(5)) { /* 5 inputs - first row 33.33% */
+      --input-width: 33.33%;
+  }
+
+  .additional-keys-inline-container:has(> *:nth-child(5)) .additional-keys-container:nth-child(4), /* 5 inputs - second row 50% */
+  .additional-keys-inline-container:has(> *:nth-child(5)) .additional-keys-container:nth-child(5),
+  .additional-keys-inline-container:has(> *:nth-child(5)) .api-key-main-input:nth-child(1) + div { /* target div after main input */
+      --input-width: 50%;
+  }
+  .additional-keys-inline-container:has(> *:nth-child(5)) .api-key-main-input { /* 5 inputs - main input on first row 33.33% */
+      --input-width: 33.33%;
+  }
+
+
+  .additional-keys-container input,
+  .api-key-main-input {
+      width: var(--input-width); /* Apply dynamic width */
+      max-width: var(--input-width); /* Limit max width to prevent overflow */
   }
 
 
@@ -68,14 +119,6 @@
   .api-key-header { align-items: center; margin-bottom: 5px; }
   .api-key-header label { margin-right: 10px; white-space: nowrap; }
   .api-key-header button { margin-left: 10px; padding: 5px 10px; font-size: 0.9em; }
-  .api-key-main-label { display: block; margin-bottom: 5px; font-weight: bold; }
-
-
-  .additional-keys-inline-container { /* Style for the inline container of additional keys */
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-  }
 </style>
 </head>
 <body>
