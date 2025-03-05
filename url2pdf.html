@@ -49,11 +49,7 @@
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v4.8 🚀</h1>
-
-  <div class="cors-info">
-    <p>⚠️ <strong>Important:</strong> To use this app effectively, you may need to install a <a href="https://chromewebstore.google.com/detail/cors-unblock/lfhmikememgdcahcdlaciloancbhjino" target="_blank">CORS Unblock</a> browser extension 🧩.</p>
-  </div>
+  <h1>URL to PDF & Issuu Uploader v4.9 🚀</h1>
 
   <div class="api-keys-container">
     <div class="api-key-input">
@@ -396,15 +392,6 @@ wp</textarea>
       if (!issuuClientSecret) {
         updateStatus("Please enter your Issuu Client Secret.");
         updateStatusSummary("Issuu Client Secret missing.");
-        resetButtonsAfterProcess();
-        return;
-      }
-
-      // ** CORS Check before processing **
-      const corsCheckPassed = await checkCORS();
-      if (!corsCheckPassed) {
-        updateStatus("⚠️ CORS might be blocking requests. Please enable a CORS unblock extension or check your browser settings. Processing stopped.");
-        updateStatusSummary("CORS Blocked - Processing Stopped.");
         resetButtonsAfterProcess();
         return;
       }
@@ -912,16 +899,6 @@ wp</textarea>
       document.getElementById('convertButton').click(); // Trigger conversion for failed URLs
     }
 
-    async function checkCORS() {
-      try {
-        const testUrl = 'https://api.printfriendly.com/v2/pdf/create?api_key=TEST_KEY'; // Use a test endpoint, API key doesn't matter for CORS check
-        await fetch(testUrl, { method: 'POST', mode: 'cors' }); // Try a POST request which is more likely to trigger CORS issues
-        return true; // CORS is likely not blocking (or is allowed)
-      } catch (error) {
-        console.error("CORS check failed:", error);
-        return false; // CORS is likely blocking
-      }
-    }
 
     async function listIssuuDocuments(documentType, bearerToken) {
       const issuuApiListUrl = `https://api.issuu.com/v2/${documentType}`; // documentType will be 'publications' or 'drafts'
@@ -1191,8 +1168,8 @@ wp</textarea>
 
     async function indexUrlsWithSpeedyIndex(urls) {
       try {
-        const response = await fetch('/speedyindex-api?action=index-urls', { 
-          method: 'POST', 
+        const response = await fetch('/speedyindex-api?action=index-urls', {
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ urls: urls })
         });
