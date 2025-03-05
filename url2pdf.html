@@ -616,8 +616,8 @@ wp</textarea>
       const keyInput = document.createElement('div');
       keyInput.classList.add('additional-keys-container');
       keyInput.innerHTML = `
-          <label for="printfriendlyApiKey${document.querySelectorAll('.additional-api-key').length + 1}" style="margin-right: 10px;">Additional API Key ${document.querySelectorAll('.additional-api-key').length + 1} 🔑:</label> <--- Added inline style to label
-          <input type="text" id="printfriendlyApiKey${document.querySelectorAll('.additional-api-key').length + 1}" class="additional-api-key" placeholder="Enter Additional API Key" value="${initialValue}" style="flex: 1;"> <--- Added inline style to input
+          <label for="printfriendlyApiKey${document.querySelectorAll('.additional-api-key').length + 1}" style="margin-right: 10px;">Additional API Key ${document.querySelectorAll('.additional-api-key').length + 1} 🔑:</label>
+          <input type="text" id="printfriendlyApiKey${document.querySelectorAll('.additional-api-key').length + 1}" class="additional-api-key" placeholder="Enter Additional API Key" value="${initialValue}" style="flex: 1;">
       `;
       container.appendChild(keyInput);
       const newInput = keyInput.querySelector('input');
