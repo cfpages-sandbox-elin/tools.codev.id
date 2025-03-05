@@ -36,13 +36,13 @@
       flex-wrap: wrap;
       align-items: flex-start;
       width: 100%;
-      gap: 5px; /* Add gap between input containers */
+      gap: 5px;
   }
 
   .additional-keys-container {
       display: flex;
       align-items: center;
-      margin-bottom: 5px; /* Keep vertical spacing */
+      margin-bottom: 5px;
   }
 
   .additional-keys-container label {
@@ -58,36 +58,42 @@
       border: 1px solid #ccc;
       border-radius: 5px;
       box-sizing: border-box;
-      margin-right: 0; /* Remove right margin from inputs themselves */
-      margin-bottom: 0; /* Remove bottom margin from inputs themselves */
-      flex-basis: 200px; /* Initial width for inputs */
-      flex-grow: 1;      /* Allow growth to fill row */
-      min-width: 150px;   /* Minimum width */
+      margin-right: 0;
+      margin-bottom: 0;
+      flex-grow: 1; /* Allow growth */
+      flex-basis: 0; /* Initial basis 0, let content and width rules determine size */
+      min-width: 100px; /* Minimum width to avoid collapsing */
   }
 
+  /* Dynamic width adjustments based on number of inputs (SIMPLIFIED) */
 
-  /* Simplified Dynamic Width Adjustments (Basic - Adjust as needed) */
+  /* Default: 1 input (or if count cannot be determined) - 100% width (already default flex behavior) */
 
-  .additional-keys-inline-container {
-      --input-width: 100%; /* Default width */
+  /* 2 Inputs */
+  .additional-keys-inline-container > *:nth-child(1):nth-last-child(2), /* Target first of 2 */
+  .additional-keys-inline-container > *:nth-child(2):nth-last-child(1) /* Target second of 2 */
+  {
+      width: calc(50% - 5px); /* Each 50% width minus gap */
+      max-width: calc(50% - 5px);
   }
 
-  .additional-keys-inline-container:has(> *:nth-child(2)) {
-      --input-width: calc(50% - 5px); /* Two inputs, subtract gap for each */
+  /* 3 Inputs */
+  .additional-keys-inline-container > *:nth-child(1):nth-last-child(3), /* Target first of 3 */
+  .additional-keys-inline-container > *:nth-child(2):nth-last-child(2), /* Target second of 3 */
+  .additional-keys-inline-container > *:nth-child(3):nth-last-child(1) /* Target third of 3 */
+  {
+      width: calc(33.33% - 5px); /* Each 33.33% width minus gap */
+      max-width: calc(33.33% - 5px);
   }
 
-  .additional-keys-inline-container:has(> *:nth-child(3)) {
-      --input-width: calc(33.33% - 5px); /* Three inputs, subtract gap */
-  }
-
-  .additional-keys-inline-container:has(> *:nth-child(4)) {
-      --input-width: calc(25% - 5px); /* Four inputs, subtract gap */
-  }
-
-  .additional-keys-container input,
-  .api-key-main-input {
-      width: var(--input-width);
-      max-width: var(--input-width);
+  /* 4 Inputs */
+  .additional-keys-inline-container > *:nth-child(1):nth-last-child(4), /* Target first of 4 */
+  .additional-keys-inline-container > *:nth-child(2):nth-last-child(3), /* Target second of 4 */
+  .additional-keys-inline-container > *:nth-child(3):nth-last-child(2), /* Target third of 4 */
+  .additional-keys-inline-container > *:nth-child(4):nth-last-child(1) /* Target fourth of 4 */
+  {
+      width: calc(25% - 5px); /* Each 25% width minus gap */
+      max-width: calc(25% - 5px);
   }
 
 
@@ -107,7 +113,6 @@
   .api-key-header { align-items: center; margin-bottom: 5px; }
   .api-key-header label { margin-right: 10px; white-space: nowrap; }
   .api-key-header button { margin-left: 10px; padding: 5px 10px; font-size: 0.9em; }
-  .api-key-main-label { display: block; margin-bottom: 5px; font-weight: bold; }
 
 
   .additional-keys-inline-container {
