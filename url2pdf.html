@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>URL to PDF & Issuu Uploader v5.2 🚀</title>
+<title>URL to PDF & Issuu Uploader v5.3 🚀</title>
 <style>
   body { font-family: sans-serif; }
   textarea { width: 100%; height: 150px; margin-bottom: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; padding: 8px; }
@@ -124,7 +124,7 @@
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v5.2 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v5.3 🚀</h1>
 
   <div class="api-keys-container">
     <div class="api-key-input">
@@ -1202,23 +1202,53 @@ wp</textarea>
     }
 
     async function getSpeedyIndexBalance() {
-      try {
-        const response = await fetch('/speedyindex-api?action=get-balance');
-        if (!response.ok) {
-          console.error("Error fetching SpeedyIndex balance from Function:", response.status, response.statusText);
-          return "Error";
+      let retryCount = 0;
+      const maxRetries = 2; // Retry up to 2 times
+      const retryDelayMs = 1000; // 1 second delay
+
+      while (retryCount <= maxRetries) {
+        try {
+          const response = await fetch('/speedyindex-api?action=get-balance');
+          if (response.ok) { // Check for successful response (status 200-299)
+            const data = await response.json();
+            if (data && data.balance && typeof data.balance.indexer !== 'undefined') {
+              return data.balance.indexer; // Return balance on success
+            } else {
+              console.warn("SpeedyIndex balance data structure unexpected:", data);
+              return "N/A";
+            }
+          } else {
+            // Check for 500 Internal Server Error
+            if (response.status === 500) {
+              console.warn(`SpeedyIndex balance - Received 500 error (Attempt ${retryCount + 1}/${maxRetries + 1}).`);
+              if (retryCount < maxRetries) {
+                retryCount++;
+                await new Promise(resolve => setTimeout(resolve, retryDelayMs)); // Wait before retry
+                continue; // Retry the fetch
+              } else {
+                console.error("SpeedyIndex balance - Max retries reached after 500 errors.");
+                return "Error"; // Return "Error" after max retries on 500
+              }
+            } else {
+              // For other non-OK statuses (not 500), do not retry, just log and return "Error"
+              console.error("Error fetching SpeedyIndex balance from Function:", response.status, response.statusText);
+              return "Error";
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching SpeedyIndex balance from Function (network error):", error);
+          if (retryCount < maxRetries) {
+            retryCount++;
+            await new Promise(resolve => setTimeout(resolve, retryDelayMs)); // Wait before retry
+            console.warn(`Retrying SpeedyIndex balance fetch (Attempt ${retryCount + 1}/${maxRetries + 1})...`);
+            continue; // Retry on network error as well (optional, based on your needs)
+          } else {
+            console.error("SpeedyIndex balance - Max retries reached after network errors.");
+            return "Error"; // Return "Error" after max retries on network error
+          }
         }
-        const data = await response.json();
-        if (data && data.balance && typeof data.balance.indexer !== 'undefined') {
-          return data.balance.indexer;
-        } else {
-          console.warn("SpeedyIndex balance data structure unexpected:", data);
-          return "N/A";
-        }
-      } catch (error) {
-        console.error("Error fetching SpeedyIndex balance from Function:", error);
-        return "Error";
       }
+      return "Error"; // Fallback return "Error" if loop exits without success
     }
 
     async function displaySpeedyIndexBalance() {
