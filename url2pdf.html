@@ -35,12 +35,11 @@
       display: flex;
       flex-wrap: wrap;
       align-items: flex-start;
-      width: 100%;
+      width: 100%; /* Keep width: 100% */
       gap: 7px;
       margin-bottom: 5px;
       margin-left: 10px;
-      flex-basis: 0; /*  <-- Set flex-basis to 0 by default */
-      max-width: 0; /*  <-- Set max-width to 0 by default */
+      flex-shrink: 1;
   }
 
   .additional-keys-container {
@@ -88,6 +87,10 @@
       display: flex; /* Keep display: flex; */
   }
 
+  .api-key-input > div[style="display: flex; align-items: center;"] {
+    width: 100%; /* Ensure flex container takes full width - IMPORTANT */
+  }
+
 
   h1 { color: #333; }
   label { font-weight: bold; display: block; margin-bottom: 5px; color: #555; }
@@ -116,7 +119,7 @@
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v5.4.2 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v5.4.3 🚀</h1>
 
   <div class="api-keys-container">
     <div class="api-key-input">
