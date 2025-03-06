@@ -39,20 +39,7 @@
       gap: 7px;
       margin-bottom: 5px;
       margin-left: 10px;
-      max-width: 0; /* <-- Keep max-width: 0; for collapse */
-      overflow: hidden; /* <-- ADD overflow: hidden to clip content */
-  }
-
-  /* Forcefully collapse when empty */
-  .additional-keys-inline-container:empty {
-      width: 0;       /* <-- Force width: 0 when empty */
-      max-width: 0;   /* <-- Keep max-width: 0 when empty */
-      flex-basis: auto; /* <-- Reset flex-basis to auto */
-      padding: 0;      /* <-- Remove padding */
-      margin: 0;       /* <-- Remove margin */
-      border: none;     /* <-- Remove border */
-      gap: 0;         /* <-- Remove gap */
-      overflow: hidden; /* <-- Keep overflow: hidden */
+      display: none; /*  <-- DEFAULT: Hide the container */
   }
 
 
@@ -89,22 +76,17 @@
       max-width: 100%;
   }
 
-  .additional-keys-inline-container:empty {
-    flex-basis: 0%;
-    max-width: 50%;
-    display: flex;
+  /* When additional keys container HAS children: */
+  .api-key-input:has(> div[style="display: flex; align-items: center;"] > .additional-keys-inline-container:not(:empty)) > div[style="display: flex; align-items: center;"] > .api-key-main-input, /* Target main input when sibling container has children */
+  .api-key-input:has(> div[style="display: flex; align-items: center;"] > .additional-keys-inline-container:not(:empty)) > div[style="display: flex; align-items: center;"] > .additional-keys-inline-container /* Target additional keys container when it has children */
+   {
+      flex-basis: 50%; /* Share width 50/50 */
+      max-width: 50%;
+      display: flex; /* Make sure additional keys container is flex */
   }
 
-  /* When additional keys container is NOT empty: */
-  .additional-keys-inline-container:not(:empty) > .api-key-main-input {
-      flex-basis: 50%;
-      max-width: 50%;
-  }
-
-  .additional-keys-inline-container:not(:empty) {
-      flex-basis: 50%;
-      max-width: 50%;
-      display: flex;
+  .api-key-input:has(> div[style="display: flex; align-items: center;"] > .additional-keys-inline-container:not(:empty)) > div[style="display: flex; align-items: center;"] > .additional-keys-inline-container {
+        display: flex; /* Re-ensure display flex for container itself */
   }
 
 
@@ -135,7 +117,7 @@
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v5.4.5 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v5.4.6 🚀</h1>
 
   <div class="api-keys-container">
     <div class="api-key-input">
