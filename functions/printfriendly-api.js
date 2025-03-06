@@ -1,29 +1,54 @@
-// functions/printfriendly-api.js
+// functions/printfriendly-api.js v1.1
 
 export async function onRequest({ request, env }) {
-  try { // Add top-level try block here
-    const apiKey = request.url.searchParams.get('apikey'); // Get API Key from query parameter
+  try {
+    // ** Check if request.url exists and is valid **
+    if (!request.url) {
+      console.error("Error: request.url is undefined.");
+      return new Response(JSON.stringify({ error: "Invalid request URL." }), {
+        status: 400, // Bad Request
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' }
+      });
+    }
+
+    let searchParams;
+    try {
+      // ** Try to create URL object and get searchParams, handle potential URL parsing errors **
+      const requestUrl = new URL(request.url); // Attempt to parse URL
+      searchParams = requestUrl.searchParams;
+    } catch (urlError) {
+      console.error("Error parsing request URL:", urlError);
+      return new Response(JSON.stringify({ error: "Error parsing request URL." }), {
+        status: 400, // Bad Request
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' }
+      });
+    }
+
+    // ** Check if searchParams is defined after URL parsing **
+    if (!searchParams) {
+      console.error("Error: request.url.searchParams is undefined after URL parsing.");
+      return new Response(JSON.stringify({ error: "Invalid request parameters." }), {
+        status: 400, // Bad Request
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' }
+      });
+    }
+
+    const apiKey = searchParams.get('apikey'); // Now safe to use searchParams.get
     if (!apiKey) {
       const response = new Response(JSON.stringify({ error: "PrintFriendly API Key missing in request." }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' }
       });
-      response.headers.set('Access-Control-Allow-Origin', '*');
-      response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-      response.headers.set('Access-Control-Allow-Headers', 'Content-Type');
       return response;
     }
 
-    const pageUrl = request.url.searchParams.get('page_url'); // Get the URL to convert from query parameter
+    const pageUrl = searchParams.get('page_url'); // Now safe to use searchParams.get
 
     if (!pageUrl) {
       const response = new Response(JSON.stringify({ error: "Missing 'page_url' parameter." }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' }
       });
-      response.headers.set('Access-Control-Allow-Origin', '*');
-      response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-      response.headers.set('Access-Control-Allow-Headers', 'Content-Type');
       return response;
     }
 
@@ -42,7 +67,7 @@ export async function onRequest({ request, env }) {
       if (!printFriendlyResponse.ok) {
         const errorData = await printFriendlyResponse.json();
         console.error("PrintFriendly API error (proxy):", printFriendlyResponse.status, printFriendlyResponse.statusText, errorData);
-        response = new Response(JSON.stringify({ error: `PrintFriendly API error: ${printFriendlyResponse.status} ${printFriendlyResponseResponse.statusText} - ${errorData?.message || 'Unknown error'}` }), {
+        response = new Response(JSON.stringify({ error: `PrintFriendly API error: ${printFriendlyResponse.status} ${printFriendlyResponse.statusText} - ${errorData?.message || 'Unknown error'}` }), {
           status: printFriendlyResponse.status, // Forward the PrintFriendly API status code
           headers: { 'Content-Type': 'application/json' }
         });
@@ -88,14 +113,12 @@ export async function onRequest({ request, env }) {
     console.error("Error in printfriendly-api Function (outer try - onRequest):", outerError); // Log outer error
     const errorResponse = new Response(JSON.stringify({ error: "Internal Server Error in PrintFriendly API Function." }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' },
     });
-    errorResponse.headers.set('Access-Control-Allow-Origin', '*'); // CORS for error response too
-    errorResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    errorResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type');
     return errorResponse; // Return a controlled 500 error response
   }
 }
+
 
 export function onRequestOptions() {
   const headers = new Headers();
