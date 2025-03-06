@@ -39,6 +39,8 @@
       gap: 7px;
       margin-bottom: 5px;
       margin-left: 10px;
+      flex-basis: 0; /*  <-- Set flex-basis to 0 by default */
+      max-width: 0; /*  <-- Set max-width to 0 by default */
   }
 
   .additional-keys-container {
@@ -63,27 +65,27 @@
       margin-right: 0;
       margin-bottom: 0;
       flex-grow: 1;
-      min-width: 200px; /* Set a reasonable min-width */
+      min-width: 200px;
   }
 
   /* --- Dynamic Width Adjustments (Corrected and Simplified) --- */
 
   /* Default: Main input takes 100% width when no additional keys */
   .api-key-main-input {
-      flex-basis: 100%; /* Initially take full width */
+      flex-basis: 100%;
       max-width: 100%;
   }
 
   /* When additional keys container is NOT empty: */
-  .additional-keys-inline-container:not(:empty) > .api-key-main-input { /* Target main input only when sibling container is not empty */
-      flex-basis: 50%; /* Share width 50/50 with additional keys container */
+  .additional-keys-inline-container:not(:empty) > .api-key-main-input {
+      flex-basis: 50%;
       max-width: 50%;
   }
 
-  .additional-keys-inline-container:not(:empty) { /* Target additional keys container when NOT empty */
-      flex-basis: 50%; /* Share width 50/50 with main input */
-      max-width: 50%;
-      display: flex; /* Ensure it's flex to layout additional keys inline */
+  .additional-keys-inline-container:not(:empty) {
+      flex-basis: 50%; /*  <-- Set flex-basis back to 50% when NOT empty */
+      max-width: 50%; /*  <-- Set max-width back to 50% when NOT empty */
+      display: flex; /* Keep display: flex; */
   }
 
 
@@ -114,7 +116,7 @@
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v5.4.1 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v5.4.2 🚀</h1>
 
   <div class="api-keys-container">
     <div class="api-key-input">
