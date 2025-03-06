@@ -35,12 +35,26 @@
       display: flex;
       flex-wrap: wrap;
       align-items: flex-start;
-      width: 100%; /* Keep width: 100% */
+      width: 100%;
       gap: 7px;
       margin-bottom: 5px;
       margin-left: 10px;
-      flex-shrink: 1;
+      max-width: 0; /* <-- Keep max-width: 0; for collapse */
+      overflow: hidden; /* <-- ADD overflow: hidden to clip content */
   }
+
+  /* Forcefully collapse when empty */
+  .additional-keys-inline-container:empty {
+      width: 0;       /* <-- Force width: 0 when empty */
+      max-width: 0;   /* <-- Keep max-width: 0 when empty */
+      flex-basis: auto; /* <-- Reset flex-basis to auto */
+      padding: 0;      /* <-- Remove padding */
+      margin: 0;       /* <-- Remove margin */
+      border: none;     /* <-- Remove border */
+      gap: 0;         /* <-- Remove gap */
+      overflow: hidden; /* <-- Keep overflow: hidden */
+  }
+
 
   .additional-keys-container {
       display: flex;
@@ -82,13 +96,9 @@
   }
 
   .additional-keys-inline-container:not(:empty) {
-      flex-basis: 50%; /*  <-- Set flex-basis back to 50% when NOT empty */
-      max-width: 50%; /*  <-- Set max-width back to 50% when NOT empty */
-      display: flex; /* Keep display: flex; */
-  }
-
-  .api-key-input > div[style="display: flex; align-items: center;"] {
-    width: 100%; /* Ensure flex container takes full width - IMPORTANT */
+      flex-basis: 50%;
+      max-width: 50%;
+      display: flex;
   }
 
 
@@ -119,7 +129,7 @@
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v5.4.3 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v5.4.4 🚀</h1>
 
   <div class="api-keys-container">
     <div class="api-key-input">
