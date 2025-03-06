@@ -39,9 +39,7 @@
       gap: 7px;
       margin-bottom: 5px;
       margin-left: 10px;
-      display: none; /*  <-- DEFAULT: Hide the container */
   }
-
 
   .additional-keys-container {
       display: flex;
@@ -76,17 +74,16 @@
       max-width: 100%;
   }
 
-  /* When additional keys container HAS children: */
-  .api-key-input:has(> div[style="display: flex; align-items: center;"] > .additional-keys-inline-container:not(:empty)) > div[style="display: flex; align-items: center;"] > .api-key-main-input, /* Target main input when sibling container has children */
-  .api-key-input:has(> div[style="display: flex; align-items: center;"] > .additional-keys-inline-container:not(:empty)) > div[style="display: flex; align-items: center;"] > .additional-keys-inline-container /* Target additional keys container when it has children */
-   {
-      flex-basis: 50%; /* Share width 50/50 */
+  /* When additional keys container DOES exist: */
+  .additional-keys-inline-container + div > .api-key-main-input {
+      flex-basis: 50%;
       max-width: 50%;
-      display: flex; /* Make sure additional keys container is flex */
   }
 
-  .api-key-input:has(> div[style="display: flex; align-items: center;"] > .additional-keys-inline-container:not(:empty)) > div[style="display: flex; align-items: center;"] > .additional-keys-inline-container {
-        display: flex; /* Re-ensure display flex for container itself */
+  .additional-keys-inline-container {
+      flex-basis: 50%;
+      max-width: 50%;
+      display: flex;
   }
 
 
@@ -117,7 +114,7 @@
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v5.4.6 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v5.5 🚀</h1>
 
   <div class="api-keys-container">
     <div class="api-key-input">
@@ -297,9 +294,13 @@ kontak</textarea>
       }
 
       const additionalKeysContainer = document.getElementById('additionalPrintFriendlyKeys');
-      additionalKeys.forEach((key, index) => {
-          addNewApiKeyField(key, additionalKeysContainer, index + 1);
-      });
+      if (additionalKeys.length > 0) { // **Create container only if there are keys to load**
+          createAdditionalKeysContainer();
+          const container = document.getElementById('additionalPrintFriendlyKeys');
+          additionalKeys.forEach((key, index) => {
+              addNewApiKeyField(key, container, index + 1);
+          });
+      }
     }
 
     function savePrintFriendlyApiKey(event) {
@@ -667,14 +668,14 @@ kontak</textarea>
       updateStatus("🗺️ Parsing sitemap...");
       try {
         const urlsFromSitemap = await parseSitemapUrls(sitemapUrl);
-        if (urlsFromSitemap && urlsFromSitemap.length > 0) {
-          originalUrls = urlsFromSitemap; // Update original URLs with sitemap URLs
-          applyUrlFilter(); // Re-apply filter to update filteredUrls and display
-          updateUrlCountDisplay();
-          updateStatus(`✅ Found ${urlsFromSitemap.length} URLs from sitemap and populated the URL list.`);
-        } else {
+        if (!urlsFromSitemap) {
           updateStatus("⚠️ No URLs found in the sitemap or error parsing sitemap.");
+          return;
         }
+        originalUrls = urlsFromSitemap; // Update original URLs with sitemap URLs
+        applyUrlFilter(); // Re-apply filter to update filteredUrls and display
+        updateUrlCountDisplay();
+        updateStatus(`✅ Found ${urlsFromSitemap.length} URLs from sitemap and populated the URL list.`);
       } catch (error) {
         updateStatus(`❌ Error parsing sitemap: ${error.message || error}`);
         console.error("Error parsing sitemap:", error);
@@ -682,7 +683,10 @@ kontak</textarea>
     });
 
     function addNewApiKeyField(initialValue = '') {
-      const container = document.getElementById('additionalPrintFriendlyKeys');
+      let container = document.getElementById('additionalPrintFriendlyKeys');
+      if (!container) {
+          container = createAdditionalKeysContainer();
+      }
       const keyIndex = document.querySelectorAll('.additional-api-key').length + 1;
       const keyInput = document.createElement('div');
       keyInput.classList.add('additional-keys-container');
@@ -696,6 +700,14 @@ kontak</textarea>
       return newInput;
     }
 
+    function createAdditionalKeysContainer() {
+      const apiKeyInputDiv = document.querySelector('.api-key-input > div[style="display: flex; align-items: center;"]');
+      const container = document.createElement('div');
+      container.id = 'additionalPrintFriendlyKeys';
+      container.classList.add('additional-keys-inline-container');
+      apiKeyInputDiv.insertBefore(container, document.getElementById('addApiKeyButton'));
+      return container;
+    }
 
     function getPrintFriendlyApiKeys() {
         const keys = [document.getElementById('printfriendlyApiKey').value];
@@ -703,24 +715,32 @@ kontak</textarea>
         additionalKeyInputs.forEach(input => {
             keys.push(input.value);
         });
-        return keys.filter(key => key.trim() !== ''); // Filter out empty keys
+        return keys.filter(key => key.trim() !== '');
     }
 
     function updateAdditionalApiKeyFields() {
         const urlCount = document.getElementById('urlList').value.trim().split('\n').filter(url => url).length;
         const requiredKeys = Math.ceil(urlCount / 200);
-        const existingKeyCount = document.querySelectorAll('.additional-api-key').length + 1; // +1 for the default key
-        const additionalKeysContainer = document.getElementById('additionalPrintFriendlyKeys');
+        const existingKeyCount = document.querySelectorAll('.additional-api-key').length + 1;
+        let additionalKeysContainer = document.getElementById('additionalPrintFriendlyKeys');
 
-        // Add required fields
         if (requiredKeys > existingKeyCount) {
+            if (!additionalKeysContainer) {
+                additionalKeysContainer = createAdditionalKeysContainer();
+            }
             for (let i = existingKeyCount; i < requiredKeys; i++) {
                 addNewApiKeyField('', additionalKeysContainer, i + 1);
             }
-        }
-        // Remove extra fields if URL count decreases (but keep at least one additional field if there were any added manually)
-        while (document.querySelectorAll('.additional-api-key').length > Math.max(requiredKeys - 1, 0) && document.querySelectorAll('.additional-api-key').length > (localStorage.getItem('additionalPrintFriendlyKeys') ? JSON.parse(localStorage.getItem('additionalPrintFriendlyKeys')).length : 0 )) {
-            additionalKeysContainer.removeChild(additionalKeysContainer.lastChild);
+        } else {
+            // Remove extra fields if URL count decreases (but keep at least one additional field if there were any added manually)
+            while (document.querySelectorAll('.additional-api-key').length > Math.max(requiredKeys - 1, 0) && document.querySelectorAll('.additional-api-key').length > (localStorage.getItem('additionalPrintFriendlyKeys') ? JSON.parse(localStorage.getItem('additionalPrintFriendlyKeys')).length : 0 )) {
+                if (additionalKeysContainer) {
+                    additionalKeysContainer.removeChild(additionalKeysContainer.lastChild);
+                }
+            }
+            if (requiredKeys <= 1 && additionalKeysContainer && additionalKeysContainer.children.length === 0 && !localStorage.getItem('additionalPrintFriendlyKeys')) {
+                additionalKeysContainer.remove();
+            }
         }
     }
 
