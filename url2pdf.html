@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>URL to PDF & Issuu Uploader v5.3 🚀</title>
+<title>URL to PDF & Issuu Uploader v5.4 🚀</title>
 <style>
   body { font-family: sans-serif; }
-  textarea { width: 100%; height: 150px; margin-bottom: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; padding: 8px; }
-  button, .ctrl-button, .api-key-button { padding: 10px 20px; cursor: pointer; border-radius: 5px; background-color: #f0f0f0; border: 1px solid #ccc; margin-right: 5px; }
+  textarea { width: 100%; height: 150px; margin-bottom: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; padding: 8px; box-sizing: border-box; font-family: monospace; border-radius: 5px; background-color: #f9f9f9; }
+  button, .ctrl-button, .api-key-button { padding: 7px 15px; cursor: pointer; border-radius: 5px; background-color: #f0f0f0; border: 1px solid #ccc; margin-right: 5px; }
   button:hover, .ctrl-button:hover, .api-key-button:hover { background-color: #e0e0e0; }
   button:disabled, .ctrl-button:disabled, .api-key-button:disabled { background-color: #ddd; cursor: default; }
   #status, #cleanupStatus { margin-top: 10px; white-space: pre-wrap; height: 150px; overflow-y: scroll; border: 1px solid #ccc; padding: 8px; box-sizing: border-box; font-family: monospace; border-radius: 5px; background-color: #f9f9f9; }
@@ -60,40 +60,15 @@
       box-sizing: border-box;
       margin-right: 0;
       margin-bottom: 0;
-      flex-grow: 1; /* Allow growth */
-      flex-basis: 0; /* Initial basis 0, let content and width rules determine size */
-      min-width: 100px; /* Minimum width to avoid collapsing */
+      flex-grow: 1;
+      /* Removed flex-basis: 0; - for experiment */
+      min-width: 250px;
+      /* Removed width and max-width */
   }
 
-  /* Dynamic width adjustments based on number of inputs (SIMPLIFIED) */
-
-  /* Default: 1 input (or if count cannot be determined) - 100% width (already default flex behavior) */
-
-  /* 2 Inputs */
-  .additional-keys-inline-container > *:nth-child(1):nth-last-child(2), /* Target first of 2 */
-  .additional-keys-inline-container > *:nth-child(2):nth-last-child(1) /* Target second of 2 */
-  {
-      width: calc(50% - 5px); /* Each 50% width minus gap */
-      max-width: calc(50% - 5px);
-  }
-
-  /* 3 Inputs */
-  .additional-keys-inline-container > *:nth-child(1):nth-last-child(3), /* Target first of 3 */
-  .additional-keys-inline-container > *:nth-child(2):nth-last-child(2), /* Target second of 3 */
-  .additional-keys-inline-container > *:nth-child(3):nth-last-child(1) /* Target third of 3 */
-  {
-      width: calc(33.33% - 5px); /* Each 33.33% width minus gap */
-      max-width: calc(33.33% - 5px);
-  }
-
-  /* 4 Inputs */
-  .additional-keys-inline-container > *:nth-child(1):nth-last-child(4), /* Target first of 4 */
-  .additional-keys-inline-container > *:nth-child(2):nth-last-child(3), /* Target second of 4 */
-  .additional-keys-inline-container > *:nth-child(3):nth-last-child(2), /* Target third of 4 */
-  .additional-keys-inline-container > *:nth-child(4):nth-last-child(1) /* Target fourth of 4 */
-  {
-      width: calc(25% - 5px); /* Each 25% width minus gap */
-      max-width: calc(25% - 5px);
+  /* Explicit width on the flex container itself */
+  .api-key-input > div[style="display: flex; align-items: center;"] {
+      width: 100%; /* Ensure flex container takes full width */
   }
 
 
@@ -124,7 +99,7 @@
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v5.3 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v5.4 🚀</h1>
 
   <div class="api-keys-container">
     <div class="api-key-input">
@@ -136,7 +111,7 @@
         <div id="additionalPrintFriendlyKeys" class="additional-keys-inline-container">
           <!-- Additional API key inputs will be added here -->
         </div>
-        <button type="button" id="addApiKeyButton" class="api-key-button">+</button>
+        <button type="button" id="addApiKeyButton" class="api-key-button">➕</button>
       </div>
     </div>
 
@@ -161,7 +136,7 @@
   <div id="uploadTab" class="tabcontent active">
     <div class="sitemap-parser">
       <input type="url" id="sitemapUrl" placeholder="Enter Sitemap URL 🌐">
-      <button id="parseSitemapButton">Parse Sitemap URLs 🗺️</button>
+      <button id="parseSitemapButton">Parse Sitemap 🗺️</button>
     </div>
 
     <div class="url-area">
@@ -175,7 +150,9 @@ tos
 about us
 about me
 contoh
-wp</textarea>
+wp
+2
+kontak</textarea>
         <p>URLs: <span id="urlCount">0</span> / <span id="filteredUrlCount">0</span> (Filtered/Total)</p>
       </div>
     </div>
