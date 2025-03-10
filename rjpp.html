@@ -395,7 +395,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>RJPP v1.61<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
+        <h1>RJPP v1.62<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
 
         <div id="user-info-form-section">
             <h2>Informasi Perusahaan dan Pengguna 👤🏢</h2>
@@ -1185,6 +1185,7 @@
 
                 for (const topicKey in analysisData) {
                     analysisData[topicKey].forEach(question => {
+                        console.log("displayCheckpointPage - Question Key Value:", question.answerKey); // Log question.answerKey itself
                         console.log(`displayCheckpointPage -  Analysis: ${analysisKey}, Topic: ${topicKey}, Question Key: ${question.answerKey}`);
                         console.log(`displayCheckpointPage -  answers[question.answerKey]:`, answers[question.answerKey]);
 
