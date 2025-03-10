@@ -328,7 +328,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>RJPP v1.2<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
+        <h1>RJPP v1.3<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
 
         <div id="user-info-form-section">
             <h2>Informasi Perusahaan dan Pengguna 👤🏢</h2>
@@ -423,27 +423,7 @@
         </div>
         <button id="clear-data-btn">🗑️ Remove All Data</button>
     </div>
-
     <script>
-        // ... (rest of your JavaScript - keep all JavaScript from previous step) ...
-        const userInfoFormSection = document.getElementById('user-info-form-section');
-        const userInfoForm = document.getElementById('user-info-form');
-        const questionSection = document.getElementById('question-section');
-        const questionCard = document.getElementById('question-card');
-        const cardAnalysisTitle = document.getElementById('card-analysis-title');
-        const cardTopicTitle = document.getElementById('card-topic-title');
-        const cardQuestionText = document.getElementById('card-question-text');
-        const answerTextarea = document.getElementById('answer-textarea');
-        const prevBtn = document.getElementById('prev-btn');
-        const nextBtn = document.getElementById('next-btn-question');
-        const questionNumberDisplay = document.getElementById('question-number');
-        const progressBarFill = document.getElementById('progress-fill');
-        const progressBarSegments = document.getElementById('progress-segments');
-        const reportSection = document.getElementById('report-section');
-        const reportUserInfoDiv = document.getElementById('report-user-info');
-        const reportAnswersDiv = document.getElementById('report-answers');
-
-
         // --- Question Data (Placeholder - Replace with your actual data) ---
         const questionsData = {
             "Kerangka Porter's Diamond (Diamond Strategy)": {
@@ -946,6 +926,27 @@
                 ]
             }
         };
+    </script>
+
+    <script>
+        // ... (rest of your JavaScript - keep all JavaScript from previous step) ...
+        const userInfoFormSection = document.getElementById('user-info-form-section');
+        const userInfoForm = document.getElementById('user-info-form');
+        const questionSection = document.getElementById('question-section');
+        const questionCard = document.getElementById('question-card');
+        const cardAnalysisTitle = document.getElementById('card-analysis-title');
+        const cardTopicTitle = document.getElementById('card-topic-title');
+        const cardQuestionText = document.getElementById('card-question-text');
+        const answerTextarea = document.getElementById('answer-textarea');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn-question');
+        const questionNumberDisplay = document.getElementById('question-number');
+        const progressBarFill = document.getElementById('progress-fill');
+        const progressBarSegments = document.getElementById('progress-segments');
+        const reportSection = document.getElementById('report-section');
+        const reportUserInfoDiv = document.getElementById('report-user-info');
+        const reportAnswersDiv = document.getElementById('report-answers');
+
 
         let currentAnalysisKeys = Object.keys(questionsData); // Initialize RIGHT HERE, outside functions
         let currentAnalysisIndex = 0;
@@ -1072,11 +1073,9 @@
                 questionSection.style.display = 'none';
                 reportSection.style.display = 'none';
 
-                // Option 1: Reload the page for a full reset (more thorough)
-                // window.location.reload();
-
-                // Option 2: (Alternative - if you don't want full reload) - Clear input fields if needed
-                document.getElementById('user-info-form').reset(); // Reset user info form fields if you want to clear them too
+                // Clear input field & reload the page for a full reset (more thorough)
+                document.getElementById('user-info-form').reset();
+                window.location.reload();
 
             }
         });
