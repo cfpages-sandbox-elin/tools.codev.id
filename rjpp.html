@@ -395,7 +395,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>RJPP v1.6<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
+        <h1>RJPP v1.61<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
 
         <div id="user-info-form-section">
             <h2>Informasi Perusahaan dan Pengguna 👤🏢</h2>
@@ -1167,14 +1167,14 @@
         }
 
         function displayCheckpointPage() {
-            checkpointSection.style.display = 'block'; // Make sure checkpoint section is visible
+            checkpointSection.style.display = 'block';
             questionSection.style.display = 'none';
             reportSection.style.display = 'none';
 
             const cardsContainer = document.getElementById('checkpoint-cards-container');
-            cardsContainer.innerHTML = ''; // Clear any existing cards
+            cardsContainer.innerHTML = '';
 
-            let allAnalysesCompleted = true; // Flag to check if all analyses are answered
+            let allAnalysesCompleted = true;
 
             for (const analysisKey of currentAnalysisKeys) {
                 const analysisData = questionsData[analysisKey];
@@ -1185,43 +1185,44 @@
 
                 for (const topicKey in analysisData) {
                     analysisData[topicKey].forEach(question => {
-                        if (answers[question.answerKey] !== undefined && answers[question.answerKey] !== null) { // Corrected check
+                        console.log(`displayCheckpointPage -  Analysis: ${analysisKey}, Topic: ${topicKey}, Question Key: ${question.answerKey}`);
+                        console.log(`displayCheckpointPage -  answers[question.answerKey]:`, answers[question.answerKey]);
+
+                        if (answers[question.answerKey] !== undefined && answers[question.answerKey] !== null) {
                             answeredQuestionsCount++;
                         }
                     });
                 }
 
-                console.log(`displayCheckpointPage - Analysis: ${analysisKey}`); // ADD THIS LINE
-                console.log(`displayCheckpointPage -   totalQuestionsInAnalysis: ${totalQuestionsInAnalysis}`); // ADD THIS LINE
-                console.log(`displayCheckpointPage -   answeredQuestionsCount: ${answeredQuestionsCount}`); // ADD THIS LINE
-
+                console.log(`displayCheckpointPage - Analysis: ${analysisKey}`);
+                console.log(`displayCheckpointPage -   totalQuestionsInAnalysis: ${totalQuestionsInAnalysis}`);
+                console.log(`displayCheckpointPage -   answeredQuestionsCount: ${answeredQuestionsCount}`);
+                console.log(`displayCheckpointPage -   analysisStatus: ${analysisStatus}`);
 
                 if (answeredQuestionsCount === totalQuestionsInAnalysis && totalQuestionsInAnalysis > 0) {
-                    analysisStatus = 'answered'; // Green status if all answered
+                    analysisStatus = 'answered';
                 } else if (answeredQuestionsCount > 0) {
-                    analysisStatus = 'partially-answered'; // Yellow if some answered
-                    allAnalysesCompleted = false; // Not all completed if partially answered
+                    analysisStatus = 'partially-answered';
+                    allAnalysesCompleted = false;
                 } else {
-                    analysisStatus = 'not-answered'; // Red if none answered
-                    allAnalysesCompleted = false; // Not all completed if not answered
+                    analysisStatus = 'not-answered';
+                    allAnalysesCompleted = false;
                 }
-
-                console.log(`displayCheckpointPage -   analysisStatus: ${analysisStatus}`); // ADD THIS LINE
 
                 const card = document.createElement('div');
                 card.className = `checkpoint-card status-${analysisStatus}`;
-                card.textContent = analysisKey; // Analysis name in card
+                card.textContent = analysisKey;
                 card.addEventListener('click', function() {
-                    startAnalysisTopic(analysisKey); // Function to start questions for this analysis
+                    startAnalysisTopic(analysisKey);
                 });
                 cardsContainer.appendChild(card);
             }
 
             const seeReportBtn = document.getElementById('see-report-btn');
-            if (allAnalysesCompleted && currentAnalysisKeys.length > 0) { // Check if all are completed AND there are analyses
-                seeReportBtn.style.display = 'block'; // Show "See Report" button if all done
+            if (allAnalysesCompleted && currentAnalysisKeys.length > 0) {
+                seeReportBtn.style.display = 'block';
             } else {
-                seeReportBtn.style.display = 'none'; // Hide if not all completed
+                seeReportBtn.style.display = 'none';
             }
         }
 
