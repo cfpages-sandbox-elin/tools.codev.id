@@ -324,11 +324,78 @@
             background-color: #f0c0c0; /* Slightly darker red on hover */
         }
 
+        /* --- Checkpoint Section Styling --- */
+        #checkpoint-section {
+            display: none; /* Initially hidden */
+            width: 100%;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .checkpoint-cards-container {
+            display: flex;
+            flex-wrap: wrap; /* Allow cards to wrap to the next line */
+            justify-content: center; /* Center cards horizontally */
+            gap: 20px; /* Spacing between cards */
+            margin-bottom: 20px;
+        }
+
+        .checkpoint-card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            width: 250px; /* Adjust card width as needed */
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 150px; /* Minimum height for cards */
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .checkpoint-card:hover {
+            transform: scale(1.05);
+        }
+
+        .checkpoint-card.status-answered {
+            background-color: #d4edda; /* Light green */
+            border: 2px solid #c3e6cb;
+        }
+
+        .checkpoint-card.status-partially-answered {
+            background-color: #fff3cd; /* Light yellow */
+            border: 2px solid #ffeeba;
+        }
+
+        .checkpoint-card.status-not-answered {
+            background-color: #f8d7da; /* Light red */
+            border: 2px solid #f5c6cb;
+        }
+
+        #see-report-btn {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: none; /* Initially hidden */
+            margin-top: 20px;
+        }
+
+        #see-report-btn:hover {
+            background-color: #45a049;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>RJPP v1.3<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
+        <h1>RJPP v1.4<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
 
         <div id="user-info-form-section">
             <h2>Informasi Perusahaan dan Pengguna 👤🏢</h2>
@@ -370,6 +437,14 @@
 
                 <button type="submit">Mulai Analisis 🚀</button>
             </form>
+        </div>
+
+        <div id="checkpoint-section" style="display: none;">
+            <h2>Pilih Analisis untuk Dilanjutkan 🗂️</h2>
+            <div id="checkpoint-cards-container" class="checkpoint-cards-container">
+                <!-- Analysis checkpoint cards will be generated here by JavaScript -->
+            </div>
+            <button id="see-report-btn" style="display: none;">Lihat Laporan RJPP 📝</button>
         </div>
 
         <div id="question-section" style="display: none;">
@@ -1083,12 +1158,80 @@
         // --- Function to Initialize and Display Questions ---
         function startAnalysis() {
             userInfoFormSection.style.display = 'none';
-            questionSection.style.display = 'block';
-            saveUserData(); // Save user data right before starting analysis
-            loadAnswers(); // Load previous answers and progress if any
-            displayQuestion();
+            checkpointSection.style.display = 'block'; // Show checkpoint section instead of question section
+            questionSection.style.display = 'none';
+            reportSection.style.display = 'none';
+            saveUserData();
+            loadAnswers();
+            displayCheckpointPage(); // Call new function to display checkpoint page
         }
 
+        function displayCheckpointPage() {
+            checkpointSection.style.display = 'block'; // Make sure checkpoint section is visible
+            questionSection.style.display = 'none';
+            reportSection.style.display = 'none';
+
+            const cardsContainer = document.getElementById('checkpoint-cards-container');
+            cardsContainer.innerHTML = ''; // Clear any existing cards
+
+            let allAnalysesCompleted = true; // Flag to check if all analyses are answered
+
+            for (const analysisKey of currentAnalysisKeys) {
+                const analysisData = questionsData[analysisKey];
+                let analysisStatus = 'not-answered'; // Default status
+
+                const totalQuestionsInAnalysis = Object.values(analysisData).flat().length;
+                let answeredQuestionsCount = 0;
+
+                for (const topicKey in analysisData) {
+                    analysisData[topicKey].forEach(question => {
+                        if (answers[question.answerKey]) {
+                            answeredQuestionsCount++;
+                        }
+                    });
+                }
+
+                if (answeredQuestionsCount === totalQuestionsInAnalysis && totalQuestionsInAnalysis > 0) {
+                    analysisStatus = 'answered'; // Green status if all answered
+                } else if (answeredQuestionsCount > 0) {
+                    analysisStatus = 'partially-answered'; // Yellow if some answered
+                    allAnalysesCompleted = false; // Not all completed if partially answered
+                } else {
+                    analysisStatus = 'not-answered'; // Red if none answered
+                    allAnalysesCompleted = false; // Not all completed if not answered
+                }
+
+
+                const card = document.createElement('div');
+                card.className = `checkpoint-card status-${analysisStatus}`;
+                card.textContent = analysisKey; // Analysis name in card
+                card.addEventListener('click', function() {
+                    startAnalysisTopic(analysisKey); // Function to start questions for this analysis
+                });
+                cardsContainer.appendChild(card);
+            }
+
+            const seeReportBtn = document.getElementById('see-report-btn');
+            if (allAnalysesCompleted && currentAnalysisKeys.length > 0) { // Check if all are completed AND there are analyses
+                seeReportBtn.style.display = 'block'; // Show "See Report" button if all done
+            } else {
+                seeReportBtn.style.display = 'none'; // Hide if not all completed
+            }
+        }
+
+        function startAnalysisTopic(analysisKey) {
+            checkpointSection.style.display = 'none';
+            questionSection.style.display = 'block';
+            reportSection.style.display = 'none';
+
+            currentAnalysisIndex = currentAnalysisKeys.indexOf(analysisKey); // Set current analysis index based on clicked card
+            currentTopicKeys = Object.keys(questionsData[analysisKey]);
+            currentTopicIndex = 0;
+            currentQuestions = questionsData[analysisKey][currentTopicKeys[currentTopicIndex]];
+            currentQuestionIndex = 0;
+
+            displayQuestion(); // Display the first question of the selected analysis
+        }
 
         function displayQuestion() {
             const analysisName = currentAnalysisKeys[currentAnalysisIndex];
@@ -1105,17 +1248,16 @@
             cardTopicTitle.textContent = `Topik: ${topicName} `;
             cardQuestionText.textContent = questionData.question + ' 🤔';
 
-            answerTextarea.value = answers[questionData.answerKey] || ''; // Load saved answer
-            confirmAnswerCheckbox.checked = answers[questionData.answerKey] ? true : false; // Set checkbox based on saved answer
+            answerTextarea.value = answers[questionData.answerKey] || '';
+            confirmAnswerCheckbox.checked = answers[questionData.answerKey] ? true : false;
             updateProgress();
             updateButtonStates();
-            answerTextarea.focus(); // Automatically focus on textarea
+            answerTextarea.focus();
 
-            // Simple "shuffle" animation by fading out and in
             questionCard.classList.add('hidden');
             setTimeout(() => {
                 questionCard.classList.remove('hidden');
-            }, 100); // Small delay before showing
+            }, 100);
         }
 
         function updateProgress() {
@@ -1172,7 +1314,7 @@
 
 
         function goToNextQuestion() {
-            if (!confirmAnswerCheckbox.checked) { // Optional: Add check here as well for extra safety
+            if (!confirmAnswerCheckbox.checked) {
                 alert("Mohon centang 'Saya yakin dengan jawaban ini' sebelum melanjutkan.");
                 return;
             }
@@ -1184,20 +1326,11 @@
                 saveAnswer();
                 currentTopicIndex++;
                 currentQuestions = questionsData[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicIndex]];
-                currentQuestionIndex = 0; // Go to first question of next topic
-                displayQuestion();
-            } else if (currentAnalysisIndex < currentAnalysisKeys.length - 1) {
-                saveAnswer();
-                currentAnalysisIndex++;
-                currentAnalysisKeys = Object.keys(questionsData); // Re-fetch analysis keys in case of dynamic changes
-                currentTopicKeys = Object.keys(questionsData[currentAnalysisKeys[currentAnalysisIndex]]);
-                currentTopicIndex = 0; // Go to first topic of next analysis
-                currentQuestions = questionsData[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicIndex]];
-                currentQuestionIndex = 0; // Go to first question of first topic
+                currentQuestionIndex = 0;
                 displayQuestion();
             } else {
                 saveAnswer();
-                showReport(); // If no more questions, show report
+                displayCheckpointPage(); // Return to checkpoint page after finishing analysis
             }
         }
 
@@ -1288,19 +1421,23 @@
             });
         });
 
+        const seeReportBtn = document.getElementById('see-report-btn'); // Get "See Report" button
+
+        seeReportBtn.addEventListener('click', showReport); // Event listener for "See Report" button
+
 
         // --- Initialization ---
-        currentTopicKeys = Object.keys(questionsData[currentAnalysisKeys[currentAnalysisIndex]]); // Initialize currentTopicKeys HERE, after currentAnalysisKeys is set
-        currentQuestions = questionsData[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicIndex]]; // Initialize currentQuestions HERE
+        currentTopicKeys = Object.keys(questionsData[currentAnalysisKeys[currentAnalysisIndex]]);
+        currentQuestions = questionsData[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicIndex]];
 
         loadUserData();
-        loadAnswers(); // Load answers and now will determine starting question
+        loadAnswers();
         if (Object.values(userData).some(value => value)) {
             userInfoFormSection.style.display = 'none';
-            questionSection.style.display = 'block';
-            displayQuestion(); // Now will display the correct starting question
+            displayCheckpointPage(); // Show checkpoint page on initialization if user data exists
         } else {
             userInfoFormSection.style.display = 'block';
+            checkpointSection.style.display = 'none';
             questionSection.style.display = 'none';
             reportSection.style.display = 'none';
         }
