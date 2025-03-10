@@ -395,7 +395,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>RJPP v1.4<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
+        <h1>RJPP v1.5<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
 
         <div id="user-info-form-section">
             <h2>Informasi Perusahaan dan Pengguna 👤🏢</h2>
@@ -1191,6 +1191,11 @@
                     });
                 }
 
+                console.log(`displayCheckpointPage - Analysis: ${analysisKey}`); // ADD THIS LINE
+                console.log(`displayCheckpointPage -   totalQuestionsInAnalysis: ${totalQuestionsInAnalysis}`); // ADD THIS LINE
+                console.log(`displayCheckpointPage -   answeredQuestionsCount: ${answeredQuestionsCount}`); // ADD THIS LINE
+
+
                 if (answeredQuestionsCount === totalQuestionsInAnalysis && totalQuestionsInAnalysis > 0) {
                     analysisStatus = 'answered'; // Green status if all answered
                 } else if (answeredQuestionsCount > 0) {
@@ -1201,6 +1206,7 @@
                     allAnalysesCompleted = false; // Not all completed if not answered
                 }
 
+                console.log(`displayCheckpointPage -   analysisStatus: ${analysisStatus}`); // ADD THIS LINE
 
                 const card = document.createElement('div');
                 card.className = `checkpoint-card status-${analysisStatus}`;
@@ -1237,6 +1243,9 @@
             const analysisName = currentAnalysisKeys[currentAnalysisIndex];
             const topicName = currentTopicKeys[currentTopicIndex];
             const questionData = currentQuestions[currentQuestionIndex];
+
+            console.log("displayQuestion - questionData.answerKey:", questionData.answerKey); // ADD THIS LINE
+            console.log("displayQuestion - answers[questionData.answerKey]:", answers[questionData.answerKey]); // ADD THIS LINE
 
             // Display User Info in Question Card
             let userInfoHTML = `<p>🧑 <strong>${userData.fullName}</strong>, 🏢 <strong>${userData.companyName}</strong></p>`;
