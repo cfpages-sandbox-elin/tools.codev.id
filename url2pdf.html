@@ -94,7 +94,7 @@
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v5.81 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v5.8 🚀</h1>
 
   <div class="api-keys-container">
     <div class="api-key-input">
@@ -291,60 +291,56 @@ kontak</textarea>
       const apiKeyInput = document.querySelector('.api-key-input > div'); // Simplified selector
       const mainApiKeyInput = document.querySelector('.api-key-main-input');
       const additionalKeysInlineContainer = document.getElementById('additionalPrintFriendlyKeys');
-      const additionalApiKeyContainer = document.querySelector('.additional-keys-container'); // Count containers, not inputs
-    
-      // More specific null checks and logging
-      if (!apiKeyInput) {
-          console.error("Error in adjustApiKeyInputWidths: apiKeyInput is null. Selector: .api-key-input > div");
-          return;
+      const additionalApiKeyContainers = document.querySelectorAll('.api-key-input .additional-keys-container'); // Select containers
+  
+      if (!mainApiKeyInput || !additionalKeysInlineContainer || !apiKeyInput) {
+          console.error("One or more key elements not found in adjustApiKeyInputWidths. Check DOM structure.");
+          return; // Exit if elements are not found
       }
-      if (!mainApiKeyInput) {
-          console.error("Error in adjustApiKeyInputWidths: mainApiKeyInput is null. Selector: .api-key-main-input");
-          return;
-      }
-      if (!additionalKeysInlineContainer) {
-          console.error("Error in adjustApiKeyInputWidths: additionalKeysInlineContainer is null. ID: additionalPrintFriendlyKeys");
-          return;
-      }
-    
-      const totalInputCount = 1 + additionalApiKeyContainer.length; // Main input + additional keys count
+  
+      const totalInputCount = 1 + additionalApiKeyContainers.length; // Main input + additional keys count
       let mainInputWidthPercentage = '100%';
-      let additionalKeysContainerWidthPercentage = '0%'; // Default to 0 if no additional keys
-      let additionalKeyInputWidthPercentage = '100%'; // Default for individual additional keys
-    
+      let additionalKeysInlineContainerWidthPercentage = '0%'; // Default to 0 if no additional keys
+      let additionalKeyContainerWidthPercentage = '100%'; // Default width for additional key containers
+  
       if (totalInputCount === 2) {
           mainInputWidthPercentage = '50%';
-          additionalKeysContainerWidthPercentage = '50%';
-          additionalKeyInputWidthPercentage = '100%'; // Each additional key input takes full width of its container
+          additionalKeysInlineContainerWidthPercentage = '50%';
+          additionalKeyContainerWidthPercentage = '100%'; // Each additional key container takes full width in 1-column layout when 2 total keys
       } else if (totalInputCount === 3) {
           mainInputWidthPercentage = '33.33%';
-          additionalKeysContainerWidthPercentage = '66.67%';
-          additionalKeyInputWidthPercentage = '50%'; // Each additional key input takes 50% width of its container in 2-column layout
+          additionalKeysInlineContainerWidthPercentage = '66.67%';
+          additionalKeyContainerWidthPercentage = '50%'; // Each additional key container takes 50% width in 2-column layout when 3 total keys
       } else if (totalInputCount >= 4) {
           mainInputWidthPercentage = '25%';
-          additionalKeysContainerWidthPercentage = '75%';
-          additionalKeyInputWidthPercentage = '33.33%'; // Each additional key input takes 33.33% width in 3-column layout
+          additionalKeysInlineContainerWidthPercentage = '75%';
+          additionalKeyContainerWidthPercentage = '33.33%'; // Each additional key container takes 33.33% width in 3-column layout (3 columns possible in a row, then wrap)
       }
-
+  
       // Apply widths to main input
-      if (mainApiKeyInput) { // Re-check before accessing style, just to be extra safe
-          mainApiKeyInput.style.width = mainInputWidthPercentage;
-          mainApiKeyInput.style.maxWidth = mainInputWidthPercentage;
-          mainApiKeyInput.style.flexBasis = mainInputWidthPercentage;
-      }
-
+      mainApiKeyInput.style.width = mainInputWidthPercentage;
+      mainApiKeyInput.style.maxWidth = mainInputWidthPercentage;
+      mainApiKeyInput.style.flexBasis = mainInputWidthPercentage;
+  
       // Apply widths to additional keys inline container
-      if (additionalKeysInlineContainer) { // Re-check before accessing style
-          additionalKeysInlineContainer.style.width = additionalKeysContainerWidthPercentage;
-          additionalKeysInlineContainer.style.maxWidth = additionalKeysContainerWidthPercentage;
-          additionalKeysInlineContainer.style.flexBasis = additionalKeysContainerWidthPercentage;
-      }
-
-      if (additionalApiKeyContainer) { // Re-check before accessing style
-        additionalApiKeyContainer.style.width = additionalKeyInputWidthPercentage;
-        additionalApiKeyContainer.style.maxWidth = additionalKeyInputWidthPercentage;
-        additionalApiKeyContainer.style.flexBasis = additionalKeyInputWidthPercentage;
-      }
+      additionalKeysInlineContainer.style.width = additionalKeysInlineContainerWidthPercentage;
+      additionalKeysInlineContainer.style.maxWidth = additionalKeysInlineContainerWidthPercentage;
+      additionalKeysInlineContainer.style.flexBasis = additionalKeysInlineContainerWidthPercentage;
+  
+      // Apply widths to individual additional API key containers (NOT the inputs directly)
+      additionalApiKeyContainers.forEach(keyContainer => {
+          keyContainer.style.width = additionalKeyContainerWidthPercentage;
+          keyContainer.style.maxWidth = additionalKeyContainerWidthPercentage;
+          keyContainer.style.flexBasis = additionalKeyContainerWidthPercentage;
+      });
+  
+      // Ensure input fields inside additional key containers are always 100% width
+      const additionalApiKeyInputs = document.querySelectorAll('.api-key-input .additional-api-key');
+      additionalApiKeyInputs.forEach(inputField => {
+          inputField.style.width = '100%';
+          inputField.style.maxWidth = '100%';
+          inputField.style.flexBasis = '100%';
+      });
     }
 
     function savePrintFriendlyApiKey(event) {
