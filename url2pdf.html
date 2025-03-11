@@ -94,7 +94,7 @@
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v5.7 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v5.8 🚀</h1>
 
   <div class="api-keys-container">
     <div class="api-key-input">
@@ -291,7 +291,7 @@ kontak</textarea>
       const apiKeyInput = document.querySelector('.api-key-input > div'); // Simplified selector
       const mainApiKeyInput = document.querySelector('.api-key-main-input');
       const additionalKeysInlineContainer = document.getElementById('additionalPrintFriendlyKeys');
-      const additionalApiKeyInputs = document.querySelectorAll('.api-key-input .additional-keys-container'); // Count containers, not inputs
+      const additionalApiKeyContainer = document.querySelectorAll('.additional-keys-container'); // Count containers, not inputs
     
       // More specific null checks and logging
       if (!apiKeyInput) {
@@ -307,7 +307,7 @@ kontak</textarea>
           return;
       }
     
-      const totalInputCount = 1 + additionalApiKeyInputs.length; // Main input + additional keys count
+      const totalInputCount = 1 + additionalApiKeyContainer.length; // Main input + additional keys count
       let mainInputWidthPercentage = '100%';
       let additionalKeysContainerWidthPercentage = '0%'; // Default to 0 if no additional keys
       let additionalKeyInputWidthPercentage = '100%'; // Default for individual additional keys
@@ -340,15 +340,11 @@ kontak</textarea>
           additionalKeysInlineContainer.style.flexBasis = additionalKeysContainerWidthPercentage;
       }
 
-      // Apply widths to individual additional API key inputs (inside their containers)
-      additionalApiKeyInputs.forEach(keyContainer => {
-          const inputField = keyContainer.querySelector('input[type="text"].additional-api-key');
-          if (inputField) {
-              inputField.style.width = additionalKeyInputWidthPercentage;
-              inputField.style.maxWidth = additionalKeyInputWidthPercentage;
-              inputField.style.flexBasis = additionalKeyInputWidthPercentage;
-          }
-      });
+      if (additionalApiKeyContainer) { // Re-check before accessing style
+        additionalApiKeyContainer.style.width = additionalKeyInputWidthPercentage;
+        additionalApiKeyContainer.style.maxWidth = additionalKeyInputWidthPercentage;
+        additionalApiKeyContainer.style.flexBasis = additionalKeyInputWidthPercentage;
+      }
     }
 
     function savePrintFriendlyApiKey(event) {
