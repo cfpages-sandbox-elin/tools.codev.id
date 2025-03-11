@@ -239,7 +239,7 @@ kontak</textarea>
 
     });
 
-    function openTab(evt, tabName) {
+    window.openTab = function(evt, tabName) { // Attach to window object
       let i, tabcontent, tablinks;
       tabcontent = document.querySelectorAll(".tabcontent");
       for (i = 0; i < tabcontent.length; i++) {
@@ -288,10 +288,15 @@ kontak</textarea>
     }
 
     function adjustApiKeyInputWidths() {
+      console.log("adjustApiKeyInputWidths: Function called"); // Log when the function starts
       const apiKeyInput = document.querySelector('.api-key-input > div');
+      console.log("adjustApiKeyInputWidths: apiKeyInput =", apiKeyInput); // Log apiKeyInput result
       const mainApiKeyInput = document.querySelector('.api-key-main-input');
+      console.log("adjustApiKeyInputWidths: mainApiKeyInput =", mainApiKeyInput); // Log mainApiKeyInput result
       const additionalKeysInlineContainer = document.getElementById('additionalPrintFriendlyKeys');
+      console.log("adjustApiKeyInputWidths: additionalKeysInlineContainer =", additionalKeysInlineContainer); // Log additionalKeysInlineContainer result
       const additionalApiKeyContainers = document.querySelectorAll('.api-key-input .additional-keys-container');
+      console.log("adjustApiKeyInputWidths: additionalApiKeyContainers =", additionalApiKeyContainers); // Log additionalApiKeyContainers result
   
       if (!mainApiKeyInput || !additionalKeysInlineContainer || !apiKeyInput) {
           console.error("Key elements not found in adjustApiKeyInputWidths. Check DOM.");
