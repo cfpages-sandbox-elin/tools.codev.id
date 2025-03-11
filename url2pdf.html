@@ -94,7 +94,7 @@
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v5.5 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v5.6 🚀</h1>
 
   <div class="api-keys-container">
     <div class="api-key-input">
@@ -254,18 +254,48 @@ kontak</textarea>
     }
 
     function adjustApiKeyInputWidths() {
-      const apiKeyInputFields = document.querySelectorAll('.api-key-input input[type="text"].api-key-main-input, .api-key-input .additional-keys-container input[type="text"].additional-api-key'); // Select all PrintFriendly API key inputs
-      const inputCount = apiKeyInputFields.length;
-      let widthPercentage = '100%'; // Default width for 1 input
+      const apiKeyInput = document.querySelector('.api-key-input > div[style="display: flex; align-items: center;"]'); // Flex container
+      const mainApiKeyInput = document.querySelector('.api-key-main-input');
+      const additionalKeysInlineContainer = document.getElementById('additionalPrintFriendlyKeys');
+      const additionalApiKeyInputs = document.querySelectorAll('.api-key-input .additional-keys-container'); // Count containers, not inputs
 
-      if (inputCount > 1) {
-          widthPercentage = `${(100 / inputCount)}%`; // Calculate width percentage for multiple inputs
+      const totalInputCount = 1 + additionalApiKeyInputs.length; // Main input + additional keys count
+      let mainInputWidthPercentage = '100%';
+      let additionalKeysContainerWidthPercentage = '0%'; // Default to 0 if no additional keys
+      let additionalKeyInputWidthPercentage = '100%'; // Default for individual additional keys
+
+      if (totalInputCount === 2) {
+          mainInputWidthPercentage = '50%';
+          additionalKeysContainerWidthPercentage = '50%';
+          additionalKeyInputWidthPercentage = '100%'; // Each additional key input takes full width of its container
+      } else if (totalInputCount === 3) {
+          mainInputWidthPercentage = '33.33%';
+          additionalKeysContainerWidthPercentage = '66.67%';
+          additionalKeyInputWidthPercentage = '50%'; // Each additional key input takes 50% width of its container in 2-column layout
+      } else if (totalInputCount >= 4) {
+          mainInputWidthPercentage = '25%';
+          additionalKeysContainerWidthPercentage = '75%';
+          additionalKeyInputWidthPercentage = '33.33%'; // Each additional key input takes 33.33% width in 3-column layout
       }
 
-      apiKeyInputFields.forEach(inputField => {
-          inputField.style.width = widthPercentage;
-          inputField.style.maxWidth = widthPercentage;
-          inputField.style.flexBasis = widthPercentage; // Optional, but good to set flex-basis for consistency in flex layout
+      // Apply widths to main input
+      mainApiKeyInput.style.width = mainInputWidthPercentage;
+      mainApiKeyInput.style.maxWidth = mainInputWidthPercentage;
+      mainApiKeyInput.style.flexBasis = mainInputWidthPercentage;
+
+      // Apply widths to additional keys inline container
+      additionalKeysInlineContainer.style.width = additionalKeysContainerWidthPercentage;
+      additionalKeysInlineContainer.style.maxWidth = additionalKeysContainerWidthPercentage;
+      additionalKeysInlineContainer.style.flexBasis = additionalKeysContainerWidthPercentage;
+
+      // Apply widths to individual additional API key inputs (inside their containers)
+      additionalApiKeyInputs.forEach(keyContainer => {
+          const inputField = keyContainer.querySelector('input[type="text"].additional-api-key');
+          if (inputField) {
+              inputField.style.width = additionalKeyInputWidthPercentage;
+              inputField.style.maxWidth = additionalKeyInputWidthPercentage;
+              inputField.style.flexBasis = additionalKeyInputWidthPercentage;
+          }
       });
     }
 
