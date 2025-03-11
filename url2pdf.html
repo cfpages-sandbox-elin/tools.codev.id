@@ -94,7 +94,7 @@
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v5.61 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v5.62 🚀</h1>
 
   <div class="api-keys-container">
     <div class="api-key-input">
@@ -258,6 +258,11 @@ kontak</textarea>
       const mainApiKeyInput = document.querySelector('.api-key-main-input');
       const additionalKeysInlineContainer = document.getElementById('additionalPrintFriendlyKeys');
       const additionalApiKeyInputs = document.querySelectorAll('.api-key-input .additional-keys-container'); // Count containers, not inputs
+
+      if (!mainApiKeyInput || !additionalKeysInlineContainer || !apiKeyInput) {
+          console.error("One or more key elements not found in adjustApiKeyInputWidths. Check DOM structure.");
+          return; // Exit the function if elements are not found
+      }
 
       const totalInputCount = 1 + additionalApiKeyInputs.length; // Main input + additional keys count
       let mainInputWidthPercentage = '100%';
