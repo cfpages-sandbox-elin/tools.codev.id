@@ -94,7 +94,7 @@
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v5.6 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v5.61 🚀</h1>
 
   <div class="api-keys-container">
     <div class="api-key-input">
@@ -254,7 +254,7 @@ kontak</textarea>
     }
 
     function adjustApiKeyInputWidths() {
-      const apiKeyInput = document.querySelector('.api-key-input > div[style="display: flex; align-items: center;"]'); // Flex container
+      const apiKeyInput = document.querySelector('.api-key-input > div'); // Simplified selector
       const mainApiKeyInput = document.querySelector('.api-key-main-input');
       const additionalKeysInlineContainer = document.getElementById('additionalPrintFriendlyKeys');
       const additionalApiKeyInputs = document.querySelectorAll('.api-key-input .additional-keys-container'); // Count containers, not inputs
