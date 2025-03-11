@@ -94,7 +94,7 @@
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v5.62 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v5.7 🚀</h1>
 
   <div class="api-keys-container">
     <div class="api-key-input">
@@ -206,7 +206,7 @@ kontak</textarea>
       updateUrlCountDisplay();
       applyUrlFilter();
       updateAdditionalApiKeyFields();
-      adjustApiKeyInputWidths();
+      setTimeout(adjustApiKeyInputWidths, 50);
 
       // Event listeners for API key input changes to save to local storage
       document.getElementById('printfriendlyApiKey').addEventListener('input', savePrintFriendlyApiKey);
@@ -253,57 +253,6 @@ kontak</textarea>
       evt.currentTarget.classList.add("active");
     }
 
-    function adjustApiKeyInputWidths() {
-      const apiKeyInput = document.querySelector('.api-key-input > div'); // Simplified selector
-      const mainApiKeyInput = document.querySelector('.api-key-main-input');
-      const additionalKeysInlineContainer = document.getElementById('additionalPrintFriendlyKeys');
-      const additionalApiKeyInputs = document.querySelectorAll('.api-key-input .additional-keys-container'); // Count containers, not inputs
-
-      if (!mainApiKeyInput || !additionalKeysInlineContainer || !apiKeyInput) {
-          console.error("One or more key elements not found in adjustApiKeyInputWidths. Check DOM structure.");
-          return; // Exit the function if elements are not found
-      }
-
-      const totalInputCount = 1 + additionalApiKeyInputs.length; // Main input + additional keys count
-      let mainInputWidthPercentage = '100%';
-      let additionalKeysContainerWidthPercentage = '0%'; // Default to 0 if no additional keys
-      let additionalKeyInputWidthPercentage = '100%'; // Default for individual additional keys
-
-      if (totalInputCount === 2) {
-          mainInputWidthPercentage = '50%';
-          additionalKeysContainerWidthPercentage = '50%';
-          additionalKeyInputWidthPercentage = '100%'; // Each additional key input takes full width of its container
-      } else if (totalInputCount === 3) {
-          mainInputWidthPercentage = '33.33%';
-          additionalKeysContainerWidthPercentage = '66.67%';
-          additionalKeyInputWidthPercentage = '50%'; // Each additional key input takes 50% width of its container in 2-column layout
-      } else if (totalInputCount >= 4) {
-          mainInputWidthPercentage = '25%';
-          additionalKeysContainerWidthPercentage = '75%';
-          additionalKeyInputWidthPercentage = '33.33%'; // Each additional key input takes 33.33% width in 3-column layout
-      }
-
-      // Apply widths to main input
-      mainApiKeyInput.style.width = mainInputWidthPercentage;
-      mainApiKeyInput.style.maxWidth = mainInputWidthPercentage;
-      mainApiKeyInput.style.flexBasis = mainInputWidthPercentage;
-
-      // Apply widths to additional keys inline container
-      additionalKeysInlineContainer.style.width = additionalKeysContainerWidthPercentage;
-      additionalKeysInlineContainer.style.maxWidth = additionalKeysContainerWidthPercentage;
-      additionalKeysInlineContainer.style.flexBasis = additionalKeysContainerWidthPercentage;
-
-      // Apply widths to individual additional API key inputs (inside their containers)
-      additionalApiKeyInputs.forEach(keyContainer => {
-          const inputField = keyContainer.querySelector('input[type="text"].additional-api-key');
-          if (inputField) {
-              inputField.style.width = additionalKeyInputWidthPercentage;
-              inputField.style.maxWidth = additionalKeyInputWidthPercentage;
-              inputField.style.flexBasis = additionalKeyInputWidthPercentage;
-          }
-      });
-    }
-
     function loadApiKeys() {
       const printfriendlyKey = localStorage.getItem('printfriendlyApiKey');
       const issuuBearerToken = localStorage.getItem('issuuBearerToken');
@@ -324,14 +273,82 @@ kontak</textarea>
         document.getElementById('issuuClientSecret').value = issuuClientSecret;
       }
 
-      const additionalKeysContainer = document.getElementById('additionalPrintFriendlyKeys');
-      if (additionalKeys.length > 0) { // **Create container only if there are keys to load**
-          createAdditionalKeysContainer();
-          const container = document.getElementById('additionalPrintFriendlyKeys');
+      let additionalKeysContainer = document.getElementById('additionalPrintFriendlyKeys');
+      if (!additionalKeysContainer) {
+          createAdditionalKeysContainer(); // Create it if it doesn't exist
+          additionalKeysContainer = document.getElementById('additionalPrintFriendlyKeys'); // Re-get it after creation
+      }
+    
+      if (additionalKeys.length > 0) {
+          const container = document.getElementById('additionalPrintFriendlyKeys'); // Now guaranteed to exist
           additionalKeys.forEach((key, index) => {
               addNewApiKeyField(key, container, index + 1);
           });
       }
+    }
+
+    function adjustApiKeyInputWidths() {
+      const apiKeyInput = document.querySelector('.api-key-input > div'); // Simplified selector
+      const mainApiKeyInput = document.querySelector('.api-key-main-input');
+      const additionalKeysInlineContainer = document.getElementById('additionalPrintFriendlyKeys');
+      const additionalApiKeyInputs = document.querySelectorAll('.api-key-input .additional-keys-container'); // Count containers, not inputs
+    
+      // More specific null checks and logging
+      if (!apiKeyInput) {
+          console.error("Error in adjustApiKeyInputWidths: apiKeyInput is null. Selector: .api-key-input > div");
+          return;
+      }
+      if (!mainApiKeyInput) {
+          console.error("Error in adjustApiKeyInputWidths: mainApiKeyInput is null. Selector: .api-key-main-input");
+          return;
+      }
+      if (!additionalKeysInlineContainer) {
+          console.error("Error in adjustApiKeyInputWidths: additionalKeysInlineContainer is null. ID: additionalPrintFriendlyKeys");
+          return;
+      }
+    
+      const totalInputCount = 1 + additionalApiKeyInputs.length; // Main input + additional keys count
+      let mainInputWidthPercentage = '100%';
+      let additionalKeysContainerWidthPercentage = '0%'; // Default to 0 if no additional keys
+      let additionalKeyInputWidthPercentage = '100%'; // Default for individual additional keys
+    
+      if (totalInputCount === 2) {
+          mainInputWidthPercentage = '50%';
+          additionalKeysContainerWidthPercentage = '50%';
+          additionalKeyInputWidthPercentage = '100%'; // Each additional key input takes full width of its container
+      } else if (totalInputCount === 3) {
+          mainInputWidthPercentage = '33.33%';
+          additionalKeysContainerWidthPercentage = '66.67%';
+          additionalKeyInputWidthPercentage = '50%'; // Each additional key input takes 50% width of its container in 2-column layout
+      } else if (totalInputCount >= 4) {
+          mainInputWidthPercentage = '25%';
+          additionalKeysContainerWidthPercentage = '75%';
+          additionalKeyInputWidthPercentage = '33.33%'; // Each additional key input takes 33.33% width in 3-column layout
+      }
+
+      // Apply widths to main input
+      if (mainApiKeyInput) { // Re-check before accessing style, just to be extra safe
+          mainApiKeyInput.style.width = mainInputWidthPercentage;
+          mainApiKeyInput.style.maxWidth = mainInputWidthPercentage;
+          mainApiKeyInput.style.flexBasis = mainInputWidthPercentage;
+      }
+
+      // Apply widths to additional keys inline container
+      if (additionalKeysInlineContainer) { // Re-check before accessing style
+          additionalKeysInlineContainer.style.width = additionalKeysContainerWidthPercentage;
+          additionalKeysInlineContainer.style.maxWidth = additionalKeysContainerWidthPercentage;
+          additionalKeysInlineContainer.style.flexBasis = additionalKeysContainerWidthPercentage;
+      }
+
+      // Apply widths to individual additional API key inputs (inside their containers)
+      additionalApiKeyInputs.forEach(keyContainer => {
+          const inputField = keyContainer.querySelector('input[type="text"].additional-api-key');
+          if (inputField) {
+              inputField.style.width = additionalKeyInputWidthPercentage;
+              inputField.style.maxWidth = additionalKeyInputWidthPercentage;
+              inputField.style.flexBasis = additionalKeyInputWidthPercentage;
+          }
+      });
     }
 
     function savePrintFriendlyApiKey(event) {
