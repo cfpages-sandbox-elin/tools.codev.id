@@ -295,18 +295,18 @@ kontak</textarea>
       if (apiKeyHeader) {
           apiKeyInput = apiKeyHeader.nextElementSibling;
       }
-      console.log("adjustApiKeyInputWidths: apiKeyInput =", apiKeyInput); // Log apiKeyInput result
+      console.log("adjustApiKeyInputWidths: apiKeyInput =", apiKeyInput);
       const mainApiKeyInput = document.querySelector('.api-key-main-input');
-      console.log("adjustApiKeyInputWidths: mainApiKeyInput =", mainApiKeyInput); // Log mainApiKeyInput result
+      console.log("adjustApiKeyInputWidths: mainApiKeyInput =", mainApiKeyInput);
       const additionalKeysInlineContainer = document.getElementById('additionalPrintFriendlyKeys');
-      console.log("adjustApiKeyInputWidths: additionalKeysInlineContainer =", additionalKeysInlineContainer); // Log additionalKeysInlineContainer result
+      console.log("adjustApiKeyInputWidths: additionalKeysInlineContainer =", additionalKeysInlineContainer);
       const additionalApiKeyContainers = document.querySelectorAll('.api-key-input .additional-keys-container');
-      console.log("adjustApiKeyInputWidths: additionalApiKeyContainers =", additionalApiKeyContainers); // Log additionalApiKeyContainers result
+      console.log("adjustApiKeyInputWidths: additionalApiKeyContainers =", additionalApiKeyContainers);
   
-  
-      if (!mainApiKeyInput || !additionalKeysInlineContainer || !apiKeyInput) {
-          console.error("Key elements not found in adjustApiKeyInputWidths. Check DOM.");
-          return;
+      // Check for essential elements (main input and API key input container)
+      if (!mainApiKeyInput || !apiKeyInput) {
+          console.error("Essential key elements not found in adjustApiKeyInputWidths. Check DOM.");
+          return; // Exit if essential elements are missing
       }
   
       const totalInputCount = 1 + additionalApiKeyContainers.length;
@@ -333,10 +333,11 @@ kontak</textarea>
       mainApiKeyInput.style.maxWidth = mainInputWidthPercentage;
       mainApiKeyInput.style.flexBasis = mainInputWidthPercentage;
   
-      // Apply widths to additional keys inline container
-      additionalKeysInlineContainer.style.width = additionalKeysInlineContainerWidthPercentage;
-      additionalKeysInlineContainer.style.maxWidth = additionalKeysInlineContainerWidthPercentage;
-      additionalKeysInlineContainer.style.flexBasis = additionalKeysInlineContainerWidthPercentage;
+      if (additionalKeysInlineContainer) {
+          additionalKeysInlineContainer.style.width = additionalKeysInlineContainerWidthPercentage;
+          additionalKeysInlineContainer.style.maxWidth = additionalKeysInlineContainerWidthPercentage;
+          additionalKeysInlineContainer.style.flexBasis = additionalKeysInlineContainerWidthPercentage;
+      }
   
       // Apply widths to individual additional API key containers (with percentage subtraction)
       additionalApiKeyContainers.forEach(keyContainer => {
