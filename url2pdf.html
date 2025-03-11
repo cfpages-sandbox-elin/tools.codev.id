@@ -288,15 +288,15 @@ kontak</textarea>
     }
 
     function adjustApiKeyInputWidths() {
-      console.log("adjustApiKeyInputWidths: Function called"); // Log when the function starts
-      const apiKeyInput = document.querySelector('.api-key-input > div');
-      console.log("adjustApiKeyInputWidths: apiKeyInput =", apiKeyInput); // Log apiKeyInput result
+      console.log("adjustApiKeyInputWidths: Function called");
+      const apiKeyInput = document.querySelector('.api-key-input > div:nth-child(2)');
+      console.log("adjustApiKeyInputWidths: apiKeyInput =", apiKeyInput);
       const mainApiKeyInput = document.querySelector('.api-key-main-input');
-      console.log("adjustApiKeyInputWidths: mainApiKeyInput =", mainApiKeyInput); // Log mainApiKeyInput result
+      console.log("adjustApiKeyInputWidths: mainApiKeyInput =", mainApiKeyInput);
       const additionalKeysInlineContainer = document.getElementById('additionalPrintFriendlyKeys');
-      console.log("adjustApiKeyInputWidths: additionalKeysInlineContainer =", additionalKeysInlineContainer); // Log additionalKeysInlineContainer result
+      console.log("adjustApiKeyInputWidths: additionalKeysInlineContainer =", additionalKeysInlineContainer);
       const additionalApiKeyContainers = document.querySelectorAll('.api-key-input .additional-keys-container');
-      console.log("adjustApiKeyInputWidths: additionalApiKeyContainers =", additionalApiKeyContainers); // Log additionalApiKeyContainers result
+      console.log("adjustApiKeyInputWidths: additionalApiKeyContainers =", additionalApiKeyContainers);
   
       if (!mainApiKeyInput || !additionalKeysInlineContainer || !apiKeyInput) {
           console.error("Key elements not found in adjustApiKeyInputWidths. Check DOM.");
