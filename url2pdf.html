@@ -94,7 +94,7 @@
 </head>
 <body>
 
-  <h1>URL to PDF & Issuu Uploader v5.8 🚀</h1>
+  <h1>URL to PDF & Issuu Uploader v5.9 🚀</h1>
 
   <div class="api-keys-container">
     <div class="api-key-input">
@@ -288,33 +288,34 @@ kontak</textarea>
     }
 
     function adjustApiKeyInputWidths() {
-      const apiKeyInput = document.querySelector('.api-key-input > div'); // Simplified selector
+      const apiKeyInput = document.querySelector('.api-key-input > div');
       const mainApiKeyInput = document.querySelector('.api-key-main-input');
       const additionalKeysInlineContainer = document.getElementById('additionalPrintFriendlyKeys');
-      const additionalApiKeyContainers = document.querySelectorAll('.api-key-input .additional-keys-container'); // Select containers
+      const additionalApiKeyContainers = document.querySelectorAll('.api-key-input .additional-keys-container');
   
       if (!mainApiKeyInput || !additionalKeysInlineContainer || !apiKeyInput) {
-          console.error("One or more key elements not found in adjustApiKeyInputWidths. Check DOM structure.");
-          return; // Exit if elements are not found
+          console.error("Key elements not found in adjustApiKeyInputWidths. Check DOM.");
+          return;
       }
   
-      const totalInputCount = 1 + additionalApiKeyContainers.length; // Main input + additional keys count
+      const totalInputCount = 1 + additionalApiKeyContainers.length;
       let mainInputWidthPercentage = '100%';
-      let additionalKeysInlineContainerWidthPercentage = '0%'; // Default to 0 if no additional keys
-      let additionalKeyContainerWidthPercentage = '100%'; // Default width for additional key containers
+      let additionalKeysInlineContainerWidthPercentage = '0%';
+      let additionalKeyContainerWidthPercentagePercent = '100%'; // Store percentage for maxWidth/flexBasis
+      let additionalKeyContainerPixelWidth = '100%'; // Will be calculated in pixels
   
       if (totalInputCount === 2) {
           mainInputWidthPercentage = '50%';
           additionalKeysInlineContainerWidthPercentage = '50%';
-          additionalKeyContainerWidthPercentage = '100%'; // Each additional key container takes full width in 1-column layout when 2 total keys
+          additionalKeyContainerWidthPercentagePercent = '100%';
       } else if (totalInputCount === 3) {
           mainInputWidthPercentage = '33.33%';
           additionalKeysInlineContainerWidthPercentage = '66.67%';
-          additionalKeyContainerWidthPercentage = '50%'; // Each additional key container takes 50% width in 2-column layout when 3 total keys
+          additionalKeyContainerWidthPercentagePercent = '50%';
       } else if (totalInputCount >= 4) {
           mainInputWidthPercentage = '25%';
           additionalKeysInlineContainerWidthPercentage = '75%';
-          additionalKeyContainerWidthPercentage = '33.33%'; // Each additional key container takes 33.33% width in 3-column layout (3 columns possible in a row, then wrap)
+          additionalKeyContainerWidthPercentagePercent = '33.33%';
       }
   
       // Apply widths to main input
@@ -327,11 +328,19 @@ kontak</textarea>
       additionalKeysInlineContainer.style.maxWidth = additionalKeysInlineContainerWidthPercentage;
       additionalKeysInlineContainer.style.flexBasis = additionalKeysInlineContainerWidthPercentage;
   
-      // Apply widths to individual additional API key containers (NOT the inputs directly)
+      // Calculate and apply pixel width with subtraction to additional key containers
       additionalApiKeyContainers.forEach(keyContainer => {
-          keyContainer.style.width = additionalKeyContainerWidthPercentage;
-          keyContainer.style.maxWidth = additionalKeyContainerWidthPercentage;
-          keyContainer.style.flexBasis = additionalKeyContainerWidthPercentage;
+          const containerPercentage = additionalKeyContainerWidthPercentagePercent; // Use percentage for calculation
+          const availableWidth = additionalKeysInlineContainer.offsetWidth; // Get container's width
+          let calculatedPixelWidth = (parseFloat(containerPercentage) / 100) * availableWidth;
+  
+          // Subtract a few pixels (e.g., 4px) for buffer - adjust as needed
+          calculatedPixelWidth -= 4;
+  
+          // Apply calculated pixel width, but ensure it's not negative
+          keyContainer.style.width = Math.max(0, calculatedPixelWidth) + 'px';
+          keyContainer.style.maxWidth = containerPercentage; // Keep maxWidth as percentage
+          keyContainer.style.flexBasis = containerPercentage; // Keep flexBasis as percentage
       });
   
       // Ensure input fields inside additional key containers are always 100% width
