@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>URL to PDF & Issuu Uploader v5.4 🚀</title>
+<title>URL to PDF & Issuu Uploader v5.5 🚀</title>
 <style>
   body { font-family: sans-serif; }
   textarea { width: 100%; height: 150px; margin-bottom: 10px; box-sizing: border-box; border-radius: 5px; border: 1px solid #ccc; padding: 8px; box-sizing: border-box; font-family: monospace; border-radius: 5px; background-color: #f9f9f9; }
-  button, .ctrl-button, .api-key-button { padding: 7px 15px; cursor: pointer; border-radius: 5px; background-color: #f0f0f0; border: 1px solid #ccc; margin-right: 5px; margin-bottom: 10px; margin-left: 10px; }
+  button, .ctrl-button, .api-key-button { padding: 7px 15px; cursor: pointer; border-radius: 5px; background-color: #f0f0f0; border: 1px solid #ccc; margin-right: 5px; margin-bottom: 10px; }
   button:hover, .ctrl-button:hover, .api-key-button:hover { background-color: #e0e0e0; }
   button:disabled, .ctrl-button:disabled, .api-key-button:disabled { background-color: #ddd; cursor: default; }
   #status, #cleanupStatus { margin-top: 10px; white-space: pre-wrap; height: 150px; overflow-y: scroll; border: 1px solid #ccc; padding: 8px; box-sizing: border-box; font-family: monospace; border-radius: 5px; background-color: #f9f9f9; }
@@ -25,6 +25,7 @@
   .issuu-creds { display: flex; align-items: center; }
   .issuu-creds label { margin-right: 10px; white-space: nowrap; }
   .issuu-creds input { margin-right: 10px; flex: 1; }
+  .api-key-button { margin-left: 10px; }
   .api-keys-container { display: flex; flex-direction: column; }
 
   .api-key-header { margin-bottom: 5px; }
@@ -65,27 +66,6 @@
       flex-grow: 1;
       min-width: 200px;
   }
-
-  /* --- Dynamic Width Adjustments (Corrected and Simplified) --- */
-
-  /* Default: Main input takes 100% width when no additional keys */
-  .api-key-main-input {
-      flex-basis: 100%;
-      max-width: 100%;
-  }
-
-  /* When additional keys container DOES exist: */
-  .additional-keys-inline-container + div > .api-key-main-input {
-      flex-basis: 50%;
-      max-width: 50%;
-  }
-
-  .additional-keys-inline-container {
-      flex-basis: 50%;
-      max-width: 50%;
-      display: flex;
-  }
-
 
   h1 { color: #333; }
   label { font-weight: bold; display: block; margin-bottom: 5px; color: #555; }
@@ -226,6 +206,7 @@ kontak</textarea>
       updateUrlCountDisplay();
       applyUrlFilter();
       updateAdditionalApiKeyFields();
+      adjustApiKeyInputWidths();
 
       // Event listeners for API key input changes to save to local storage
       document.getElementById('printfriendlyApiKey').addEventListener('input', savePrintFriendlyApiKey);
@@ -272,6 +253,21 @@ kontak</textarea>
       evt.currentTarget.classList.add("active");
     }
 
+    function adjustApiKeyInputWidths() {
+      const apiKeyInputFields = document.querySelectorAll('.api-key-input input[type="text"].api-key-main-input, .api-key-input .additional-keys-container input[type="text"].additional-api-key'); // Select all PrintFriendly API key inputs
+      const inputCount = apiKeyInputFields.length;
+      let widthPercentage = '100%'; // Default width for 1 input
+
+      if (inputCount > 1) {
+          widthPercentage = `${(100 / inputCount)}%`; // Calculate width percentage for multiple inputs
+      }
+
+      apiKeyInputFields.forEach(inputField => {
+          inputField.style.width = widthPercentage;
+          inputField.style.maxWidth = widthPercentage;
+          inputField.style.flexBasis = widthPercentage; // Optional, but good to set flex-basis for consistency in flex layout
+      });
+    }
 
     function loadApiKeys() {
       const printfriendlyKey = localStorage.getItem('printfriendlyApiKey');
@@ -697,6 +693,7 @@ kontak</textarea>
       container.appendChild(keyInput);
       const newInput = keyInput.querySelector('input');
       newInput.addEventListener('input', savePrintFriendlyApiKey);
+      adjustApiKeyInputWidths();
       return newInput;
     }
 
@@ -742,6 +739,7 @@ kontak</textarea>
                 additionalKeysContainer.remove();
             }
         }
+        adjustApiKeyInputWidths();
     }
 
 
