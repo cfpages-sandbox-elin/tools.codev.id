@@ -94,7 +94,7 @@
 </head>
 <body>
 
-  <h1>URL ➜ PDF ➜ Issuu Uploader v6.0 🚀</h1>
+  <h1>URL ➜ PDF ➜ Issuu Uploader v6.01 🚀</h1>
 
   <div class="api-keys-container">
     <div class="api-key-input">
@@ -757,11 +757,18 @@ kontak</textarea>
     }
 
     function createAdditionalKeysContainer() {
+      console.log("createAdditionalKeysContainer: Function called"); // Log when function starts
       const apiKeyInputDiv = document.querySelector('.api-key-input > div[style="display: flex; align-items: center;"]');
+      console.log("createAdditionalKeysContainer: apiKeyInputDiv =", apiKeyInputDiv); // Log apiKeyInputDiv result
+      if (!apiKeyInputDiv) {
+          console.error("createAdditionalKeysContainer: Error - apiKeyInputDiv is null. Selector: .api-key-input > div[style='display: flex; align-items: center;']");
+          return null; // Return null if parent not found, to handle error in caller
+      }
       const container = document.createElement('div');
       container.id = 'additionalPrintFriendlyKeys';
       container.classList.add('additional-keys-inline-container');
       apiKeyInputDiv.insertBefore(container, document.getElementById('addApiKeyButton'));
+      console.log("createAdditionalKeysContainer: Container created =", container); // Log created container
       return container;
     }
 
