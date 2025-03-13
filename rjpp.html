@@ -1262,15 +1262,17 @@
                     console.log(`  Topic: ${topicKey}, Status: ${topicStatus}`); // Log topic status
 
                     if (topicStatus === 'completed') {
-                        // Topic is completed, analysis might still be partially answered if other topics are not
-                        noTopicsAnsweredYet = false;
+                        noTopicsAnsweredYet = false; // At least one topic is answered
                     } else if (topicStatus === 'in-progress') {
-                        partiallyAnsweredTopics = true;
+                        partiallyAnsweredTopics = true; // Still partially answered because of in-progress topic
                         allTopicsCompleted = false;
-                        noTopicsAnsweredYet = false;
+                        noTopicsAnsweredYet = false; // At least one topic is started
                     } else { // topicStatus is 'not-started'
                         allTopicsCompleted = false;
-                        // partiallyAnsweredTopics remains false as no topic is partially answered yet
+                        // partiallyAnsweredTopics remains false if no topic is in-progress yet
+                    }
+                    if (topicStatus === 'completed' || topicStatus === 'in-progress') { // Modified condition: if ANY topic is completed or in-progress
+                        partiallyAnsweredTopics = true; // Then the analysis is at least partially answered
                     }
                 }
 
@@ -1278,17 +1280,17 @@
 
                 if (allTopicsCompleted && Object.keys(analysisData).length > 0) {
                     analysisStatus = 'answered';
-                } else if (partiallyAnsweredTopics) {
+                } else if (partiallyAnsweredTopics) { // Now partiallyAnsweredTopics should be correctly set
                     analysisStatus = 'partially-answered';
-                } else if (noTopicsAnsweredYet) { // Check if no topics have been started at all
+                } else if (noTopicsAnsweredYet) {
                     analysisStatus = 'not-answered';
-                } else { // Fallback, should ideally not reach here, but for safety. If some topics are started but none partially or fully completed
-                    analysisStatus = 'not-answered'; // Or maybe 'partially-answered' depending on desired behavior for this edge case
+                } else {
+                    analysisStatus = 'not-answered'; // Fallback
                 }
                 console.log(`  Analysis Status: ${analysisStatus}`); // Log final analysis status
                 console.groupEnd(); // End console group
 
-                if (analysisStatus !== 'answered') { // If any analysis is not fully answered, then all analyses are not completed
+                if (analysisStatus !== 'answered') {
                     allAnalysesCompleted = false;
                 }
 
