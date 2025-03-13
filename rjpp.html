@@ -314,18 +314,37 @@
             margin: 5px 0;
         }
 
-        /* --- Simplified CSS for Combined Card Controls --- */
+        /* --- Modified CSS for Inline Buttons (Attempt 3 - inline-block) --- */
         .card-controls.combined-controls {
-            display: flex;
-            justify-content: space-between; /* Distribute space between prev, checkbox, next */
-            align-items: center; /* Vertically align items */
+            display: block; /* Revert to block display for the container itself */
             margin-top: 15px; /* Add some space above controls in card */
+            text-align: center; /* Center the whole control group horizontally */
         }
 
+        .card-controls.combined-controls button {
+            display: inline-block; /* Make buttons inline-block */
+            width: 30%;          /* Set a fixed width for buttons (adjust as needed) */
+            max-width: none;      /* Ensure buttons don't have max-width preventing inline layout */
+            margin-right: 10px;    /* Add right margin to "Previous" button */
+            margin-left: 0;       /* Reset left margin for "Previous" button */
+            box-sizing: border-box; /* Include padding and border in width calculation */
+            text-align: center;     /* Center text within buttons */
+            vertical-align: middle; /* Vertically align buttons with checkbox */
+        }
+
+        .card-controls.combined-controls button#next-btn-question {
+            margin-left: 10px;     /* Add left margin to "Next" button */
+            margin-right: 0;      /* Reset right margin for "Next" button */
+        }
+
+
         .card-controls.combined-controls label {
-            margin-left: 20px; /* Space to the left of checkbox */
-            margin-right: 20px; /* Space to the right of checkbox */
-            margin-bottom: 0; /* Reset margin for label */
+            display: inline-block; /* Make label inline-block too */
+            vertical-align: middle; /* Vertically align label with buttons */
+            text-align: left;       /* Align text inside label to the left */
+            margin-left: 20px;      /* Space to the left of checkbox */
+            margin-right: 20px;     /* Space to the right of checkbox */
+            margin-bottom: 0;       /* Reset margin for label */
         }
 
         #clear-data-btn {
