@@ -319,20 +319,20 @@
             color: #8a0000;         /* Darker red text */
             border: 1px solid #e0b0b0; /* Light red border */
         }
-        
+
         #clear-data-btn:hover {
             background-color: #f0c0c0; /* Slightly darker red on hover */
         }
 
         /* --- Checkpoint Section Styling --- */
-        #checkpoint-section {
+        #checkpoint-section, #topic-checkpoint-section, #topic-greeting-section {
             display: none; /* Initially hidden */
             width: 100%;
             align-items: center;
             flex-direction: column;
         }
 
-        .checkpoint-cards-container {
+        .checkpoint-cards-container, .topic-checkpoint-cards-container {
             display: flex;
             flex-wrap: wrap; /* Allow cards to wrap to the next line */
             justify-content: center; /* Center cards horizontally */
@@ -340,7 +340,7 @@
             margin-bottom: 20px;
         }
 
-        .checkpoint-card {
+        .checkpoint-card, .topic-checkpoint-card, .greeting-card { /* Added greeting-card class */
             background-color: #fff;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -350,6 +350,7 @@
             cursor: pointer;
             transition: transform 0.2s ease-in-out;
             display: flex;
+            flex-direction: column; /* Stack content vertically */
             align-items: center;
             justify-content: center;
             min-height: 150px; /* Minimum height for cards */
@@ -357,26 +358,33 @@
             font-size: 1.1em;
         }
 
-        .checkpoint-card:hover {
+        .greeting-card { /* Styling specifically for greeting cards if needed */
+            min-height: auto; /* Adjust height for greeting cards */
+            width: 90%;
+            max-width: 600px;
+            text-align: left; /* Align text to left in greeting card */
+        }
+
+        .checkpoint-card:hover, .topic-checkpoint-card:hover, .greeting-card:hover {
             transform: scale(1.05);
         }
 
-        .checkpoint-card.status-answered {
+        .checkpoint-card.status-answered, .topic-checkpoint-card.status-answered {
             background-color: #d4edda; /* Light green */
             border: 2px solid #c3e6cb;
         }
 
-        .checkpoint-card.status-partially-answered {
+        .checkpoint-card.status-partially-answered, .topic-checkpoint-card.status-partially-answered {
             background-color: #fff3cd; /* Light yellow */
             border: 2px solid #ffeeba;
         }
 
-        .checkpoint-card.status-not-answered {
+        .checkpoint-card.status-not-answered, .topic-checkpoint-card.status-not-answered {
             background-color: #f8d7da; /* Light red */
             border: 2px solid #f5c6cb;
         }
 
-        #see-report-btn {
+        #see-report-btn, #go-to-main-checkpoint-btn, #go-to-topic-checkpoint-btn, #start-topic-btn, #next-topic-btn { /* Added new buttons */
             padding: 15px 30px;
             font-size: 1.2em;
             background-color: #4caf50;
@@ -388,14 +396,24 @@
             margin-top: 20px;
         }
 
-        #see-report-btn:hover {
+        #see-report-btn:hover, #go-to-main-checkpoint-btn:hover, #go-to-topic-checkpoint-btn:hover, #start-topic-btn:hover, #next-topic-btn:hover {
             background-color: #45a049;
         }
+
+        .card-details { /* Style for details within checkpoint cards */
+            font-size: 0.9em;
+            color: #555;
+            margin-top: 10px;
+        }
+        .card-details p {
+            margin: 5px 0;
+        }
+
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>RJPP v1.63<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
+        <h1>RJPP v1.7<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
 
         <div id="user-info-form-section">
             <h2>Informasi Perusahaan dan Pengguna 👤🏢</h2>
@@ -445,6 +463,25 @@
                 <!-- Analysis checkpoint cards will be generated here by JavaScript -->
             </div>
             <button id="see-report-btn" style="display: none;">Lihat Laporan RJPP 📝</button>
+        </div>
+
+        <div id="topic-checkpoint-section" style="display: none;">
+            <h2>Pilih Topik Analisis <span id="topic-checkpoint-analysis-name"></span> 🗂️</h2>
+            <div id="topic-checkpoint-cards-container" class="topic-checkpoint-cards-container">
+                <!-- Topic checkpoint cards will be generated here by JavaScript -->
+            </div>
+            <button id="go-to-main-checkpoint-btn" style="display: none;">⬅️ Kembali ke Daftar Analisis Utama</button>
+        </div>
+
+        <div id="topic-greeting-section" style="display: none;">
+            <div id="topic-greeting-card" class="greeting-card">
+                <h2 id="topic-greeting-title"></h2>
+                <p id="topic-greeting-description"></p>
+                <button id="start-topic-btn" style="display: none;">Mulai Survei Topik Ini 🚀</button>
+                <button id="next-topic-btn" style="display: none;">Lanjut ke Topik Berikutnya ➡️</button>
+                <button id="go-to-topic-checkpoint-btn" style="display: none;">Lihat Daftar Topik Analisis 🗂️</button>
+                <button id="go-to-main-checkpoint-btn" style="display: none;">⬅️ Kembali ke Daftar Analisis Utama</button>
+            </div>
         </div>
 
         <div id="question-section" style="display: none;">
@@ -1005,6 +1042,8 @@
 
     <script>
         const checkpointSection = document.getElementById('checkpoint-section');
+        const topicCheckpointSection = document.getElementById('topic-checkpoint-section'); // NEW
+        const topicGreetingSection = document.getElementById('topic-greeting-section'); // NEW
         const userInfoFormSection = document.getElementById('user-info-form-section');
         const userInfoForm = document.getElementById('user-info-form');
         const questionSection = document.getElementById('question-section');
@@ -1022,13 +1061,24 @@
         const reportUserInfoDiv = document.getElementById('report-user-info');
         const reportAnswersDiv = document.getElementById('report-answers');
 
+        // NEW BUTTONS & ELEMENTS
+        const topicCheckpointAnalysisNameDisplay = document.getElementById('topic-checkpoint-analysis-name');
+        const topicCheckpointCardsContainer = document.getElementById('topic-checkpoint-cards-container');
+        const goToMainCheckpointBtn_TopicCheckpoint = document.getElementById('go-to-main-checkpoint-btn');
+        const goToTopicCheckpointBtn_Greeting = document.getElementById('go-to-topic-checkpoint-btn');
+        const goToMainCheckpointBtn_Greeting = document.getElementById('go-to-main-checkpoint-btn');
+        const startTopicBtn = document.getElementById('start-topic-btn');
+        const nextTopicBtn = document.getElementById('next-topic-btn');
+        const topicGreetingTitle = document.getElementById('topic-greeting-title');
+        const topicGreetingDescription = document.getElementById('topic-greeting-description');
 
-        let currentAnalysisKeys = Object.keys(questionsData); // Initialize RIGHT HERE, outside functions
+
+        let currentAnalysisKeys = Object.keys(questionsData);
         let currentAnalysisIndex = 0;
-        let currentTopicKeys; // Declare, but don't initialize yet
+        let currentTopicKeys;
         let currentTopicIndex = 0;
         let currentQuestionIndex = 0;
-        let currentQuestions; // Declare, but don't initialize yet
+        let currentQuestions;
 
 
         let userData = {
@@ -1063,17 +1113,18 @@
         function loadAnswers() {
             const storedAnswers = localStorage.getItem('rjppAnswers');
             if (storedAnswers) {
-                const storedState = JSON.parse(storedAnswers); // Parse DIRECTLY into storedState - NO extra 'answers' layer
+                const storedState = JSON.parse(storedAnswers);
                 if (storedState) {
-                    answers = storedState.answers || {}; // Load answers from storedState.answers, or default to empty object
+                    answers = storedState.answers || {};
                     currentAnalysisIndex = storedState.currentAnalysisIndex || 0;
                     currentTopicIndex = storedState.currentTopicIndex || 0;
                     currentQuestionIndex = storedState.currentQuestionIndex || 0;
                     currentAnalysisKeys = storedState.currentAnalysisKeys || Object.keys(questionsData);
                     currentTopicKeys = storedState.currentTopicKeys || Object.keys(questionsData[currentAnalysisKeys[currentAnalysisIndex]]);
                     currentQuestions = questionsData[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicIndex]] || [];
+                    currentTopicIndex = storedState.currentTopicIndex || 0; // Load topic index
 
-                    // --- NEW LOGIC: Find first unanswered question (rest of your existing logic - no changes needed inside this block) ---
+                    // --- NEW LOGIC: Find first unanswered question (rest of your existing logic) ---
                     let foundUnanswered = false;
                     for (let analysisIndex = 0; analysisIndex < currentAnalysisKeys.length; analysisIndex++) {
                         const analysisKey = currentAnalysisKeys[analysisIndex];
@@ -1107,19 +1158,19 @@
                     }
                     // --- End NEW LOGIC ---
                 } else {
-                    answers = {}; // If no storedState, initialize answers to empty object directly
+                    answers = {};
                 }
             } else {
-                answers = {}; // If no storedAnswers in localStorage, initialize answers to empty object directly
+                answers = {};
             }
             console.log("loadAnswers - answers object loaded from localStorage:", answers);
         }
 
         function saveAnswers() {
-            const stateToSave = { // Save current state ALONGSIDE answers, not nested inside
-                answers: answers, // Keep answers as a top-level property in the state
+            const stateToSave = {
+                answers: answers,
                 currentAnalysisIndex: currentAnalysisIndex,
-                currentTopicIndex: currentTopicIndex,
+                currentTopicIndex: currentTopicIndex, // Save topic index
                 currentQuestionIndex: currentQuestionIndex,
                 currentAnalysisKeys: currentAnalysisKeys,
                 currentTopicKeys: currentTopicKeys
@@ -1133,16 +1184,19 @@
             localStorage.removeItem('rjppAnswers');
         }
 
-        const clearDataBtn = document.getElementById('clear-data-btn'); // Get the button element
+        const clearDataBtn = document.getElementById('clear-data-btn');
 
         clearDataBtn.addEventListener('click', function() {
             const confirmClear = window.confirm("⚠️ Are you sure you want to remove all saved data?\n\nThis will delete all your answers and progress. This action cannot be undone.");
             if (confirmClear) {
-                clearLocalStorageData(); // Call the function to clear local storage
+                clearLocalStorageData();
                 alert("✅ All data has been removed. You will be redirected to the start.");
 
                 // Reset UI to initial state:
                 userInfoFormSection.style.display = 'block';
+                checkpointSection.style.display = 'none';
+                topicCheckpointSection.style.display = 'none'; // Hide topic checkpoint too
+                topicGreetingSection.style.display = 'none'; // Hide topic greeting too
                 questionSection.style.display = 'none';
                 reportSection.style.display = 'none';
 
@@ -1156,16 +1210,20 @@
         // --- Function to Initialize and Display Questions ---
         function startAnalysis() {
             userInfoFormSection.style.display = 'none';
-            checkpointSection.style.display = 'block'; // Show checkpoint section instead of question section
+            checkpointSection.style.display = 'block';
+            topicCheckpointSection.style.display = 'none'; // Ensure topic checkpoint is hidden
+            topicGreetingSection.style.display = 'none'; // Ensure topic greeting is hidden
             questionSection.style.display = 'none';
             reportSection.style.display = 'none';
             saveUserData();
             loadAnswers();
-            displayCheckpointPage(); // Call new function to display checkpoint page
+            displayCheckpointPage();
         }
 
         function displayCheckpointPage() {
             checkpointSection.style.display = 'block';
+            topicCheckpointSection.style.display = 'none'; // Ensure topic checkpoint is hidden
+            topicGreetingSection.style.display = 'none'; // Ensure topic greeting is hidden
             questionSection.style.display = 'none';
             reportSection.style.display = 'none';
 
@@ -1183,20 +1241,11 @@
 
                 for (const topicKey in analysisData) {
                     analysisData[topicKey].forEach(question => {
-                        console.log("displayCheckpointPage - Question Key Value:", question.answerKey); // Log question.answerKey itself
-                        console.log(`displayCheckpointPage -  Analysis: ${analysisKey}, Topic: ${topicKey}, Question Key: ${question.answerKey}`);
-                        console.log(`displayCheckpointPage -  answers[question.answerKey]:`, answers[question.answerKey]);
-
                         if (answers[question.answerKey] !== undefined && answers[question.answerKey] !== null) {
                             answeredQuestionsCount++;
                         }
                     });
                 }
-
-                console.log(`displayCheckpointPage - Analysis: ${analysisKey}`);
-                console.log(`displayCheckpointPage -   totalQuestionsInAnalysis: ${totalQuestionsInAnalysis}`);
-                console.log(`displayCheckpointPage -   answeredQuestionsCount: ${answeredQuestionsCount}`);
-                console.log(`displayCheckpointPage -   analysisStatus: ${analysisStatus}`);
 
                 if (answeredQuestionsCount === totalQuestionsInAnalysis && totalQuestionsInAnalysis > 0) {
                     analysisStatus = 'answered';
@@ -1210,9 +1259,16 @@
 
                 const card = document.createElement('div');
                 card.className = `checkpoint-card status-${analysisStatus}`;
-                card.textContent = analysisKey;
+                card.innerHTML = `
+                    ${analysisKey} 🗂️
+                    <div class="card-details">
+                        <p>📝 Pertanyaan: ${totalQuestionsInAnalysis}</p>
+                        <p>✅ Dijawab: ${answeredQuestionsCount}</p>
+                        <p>❓ Belum Dijawab: ${totalQuestionsInAnalysis - answeredQuestionsCount}</p>
+                    </div>
+                `;
                 card.addEventListener('click', function() {
-                    startAnalysisTopic(analysisKey);
+                    displayTopicCheckpointPage(analysisKey); // Go to topic checkpoint for this analysis
                 });
                 cardsContainer.appendChild(card);
             }
@@ -1225,27 +1281,98 @@
             }
         }
 
-        function startAnalysisTopic(analysisKey) {
+        function displayTopicCheckpointPage(analysisKey) {
             checkpointSection.style.display = 'none';
+            topicCheckpointSection.style.display = 'block';
+            topicGreetingSection.style.display = 'none'; // Ensure topic greeting is hidden
+            questionSection.style.display = 'none';
+            reportSection.style.display = 'none';
+
+            topicCheckpointAnalysisNameDisplay.textContent = analysisKey;
+            topicCheckpointCardsContainer.innerHTML = '';
+
+            currentAnalysisIndex = currentAnalysisKeys.indexOf(analysisKey);
+            currentTopicKeys = Object.keys(questionsData[analysisKey]);
+
+            for (const topicKey of currentTopicKeys) {
+                const topicData = questionsData[analysisKey][topicKey];
+                let topicStatus = 'not-answered';
+                const totalQuestionsInTopic = topicData.length;
+                let answeredQuestionsCount = 0;
+
+                topicData.forEach(question => {
+                    if (answers[question.answerKey] !== undefined && answers[question.answerKey] !== null) {
+                        answeredQuestionsCount++;
+                    }
+                });
+
+                if (answeredQuestionsCount === totalQuestionsInTopic && totalQuestionsInTopic > 0) {
+                    topicStatus = 'answered';
+                } else if (answeredQuestionsCount > 0) {
+                    topicStatus = 'partially-answered';
+                } else {
+                    topicStatus = 'not-answered';
+                }
+
+                const card = document.createElement('div');
+                card.className = `topic-checkpoint-card status-${topicStatus}`;
+                card.innerHTML = `
+                    ${topicKey} 🗂️
+                    <div class="card-details">
+                        <p>📝 Pertanyaan: ${totalQuestionsInTopic}</p>
+                        <p>✅ Dijawab: ${answeredQuestionsCount}</p>
+                        <p>❓ Belum Dijawab: ${totalQuestionsInTopic - answeredQuestionsCount}</p>
+                    </div>
+                `;
+                card.addEventListener('click', function() {
+                    displayTopicGreetingPage(analysisKey, topicKey); // Go to greeting page for this topic
+                });
+                topicCheckpointCardsContainer.appendChild(card);
+            }
+            goToMainCheckpointBtn_TopicCheckpoint.style.display = 'block'; // Show "Back to Main Checkpoint" button
+        }
+
+
+        function displayTopicGreetingPage(analysisKey, topicKey) {
+            checkpointSection.style.display = 'none';
+            topicCheckpointSection.style.display = 'none';
+            topicGreetingSection.style.display = 'block';
+            questionSection.style.display = 'none';
+            reportSection.style.display = 'none';
+
+            topicGreetingTitle.textContent = `Analisis ${analysisKey} - Topik ${topicKey} 🚀`;
+            topicGreetingDescription.textContent = `Anda akan menjawab pertanyaan survei untuk analisis <span style="font-weight:bold;">${analysisKey}</span>, topik <span style="font-weight:bold;">${topicKey}</span>. Klik tombol 'Mulai Survei Topik Ini' di bawah untuk memulai.`;
+
+            startTopicBtn.style.display = 'block';
+            startTopicBtn.textContent = `Mulai Survei Topik ${topicKey} 🚀`;
+            startTopicBtn.onclick = function() { startAnalysisTopic(analysisKey, topicKey); };
+
+            goToTopicCheckpointBtn_Greeting.style.display = 'block';
+            goToMainCheckpointBtn_Greeting.style.display = 'block';
+            nextTopicBtn.style.display = 'none'; // Initially hide next topic button
+        }
+
+
+        function startAnalysisTopic(analysisKey, topicKey) {
+            checkpointSection.style.display = 'none';
+            topicCheckpointSection.style.display = 'none';
+            topicGreetingSection.style.display = 'none';
             questionSection.style.display = 'block';
             reportSection.style.display = 'none';
 
-            currentAnalysisIndex = currentAnalysisKeys.indexOf(analysisKey); // Set current analysis index based on clicked card
+            currentAnalysisIndex = currentAnalysisKeys.indexOf(analysisKey);
             currentTopicKeys = Object.keys(questionsData[analysisKey]);
-            currentTopicIndex = 0;
-            currentQuestions = questionsData[analysisKey][currentTopicKeys[currentTopicIndex]];
+            currentTopicIndex = currentTopicKeys.indexOf(topicKey);
+            currentQuestions = questionsData[analysisKey][topicKey];
             currentQuestionIndex = 0;
 
-            displayQuestion(); // Display the first question of the selected analysis
+            displayQuestion();
         }
 
         function displayQuestion() {
             const analysisName = currentAnalysisKeys[currentAnalysisIndex];
             const topicName = currentTopicKeys[currentTopicIndex];
             const questionData = currentQuestions[currentQuestionIndex];
-
-            console.log("displayQuestion - questionData.answerKey:", questionData.answerKey); // ADD THIS LINE
-            console.log("displayQuestion - answers[questionData.answerKey]:", answers[questionData.answerKey]); // ADD THIS LINE
 
             // Display User Info in Question Card
             let userInfoHTML = `<p>🧑 <strong>${userData.fullName}</strong>, 🏢 <strong>${userData.companyName}</strong></p>`;
@@ -1282,7 +1409,7 @@
 
 
             // Update progress bar segments
-            progressBarSegments.innerHTML = ''; // Clear existing segments
+            progressBarSegments.innerHTML = '';
             for (let i = 0; i < totalQuestionsInTopic; i++) {
                 const segment = document.createElement('div');
                 segment.classList.add('progress-segment');
@@ -1294,9 +1421,8 @@
         }
 
         function updateButtonStates() {
-            prevBtn.disabled = currentQuestionIndex === 0;
-            // nextBtn.disabled = !answerTextarea.value.trim(); // Original next button disable logic - REMOVE THIS LINE
-            nextBtnQuestion.disabled = !confirmAnswerCheckbox.checked; // Disable "Pertanyaan Selanjutnya" if checkbox not checked
+            prevBtn.disabled = currentQuestionIndex === 0 && currentTopicIndex === 0 && currentAnalysisIndex === 0; // Disable prev on very first question
+            nextBtnQuestion.disabled = !confirmAnswerCheckbox.checked;
         }
 
         function goToPreviousQuestion() {
@@ -1308,15 +1434,15 @@
                 saveAnswer();
                 currentTopicIndex--;
                 currentQuestions = questionsData[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicIndex]];
-                currentQuestionIndex = currentQuestions.length - 1; // Go to last question of prev topic
+                currentQuestionIndex = currentQuestions.length - 1;
                 displayQuestion();
             } else if (currentAnalysisIndex > 0) {
                 saveAnswer();
                 currentAnalysisIndex--;
                 currentTopicKeys = Object.keys(questionsData[currentAnalysisKeys[currentAnalysisIndex]]);
-                currentTopicIndex = currentTopicKeys.length - 1; // Go to last topic of prev analysis
+                currentTopicIndex = currentTopicKeys.length - 1;
                 currentQuestions = questionsData[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicIndex]];
-                currentQuestionIndex = currentQuestions.length - 1; // Go to last question of last topic
+                currentQuestionIndex = currentQuestions.length - 1;
                 displayQuestion();
             }
         }
@@ -1327,19 +1453,17 @@
                 alert("Mohon centang 'Saya yakin dengan jawaban ini' sebelum melanjutkan.");
                 return;
             }
+            saveAnswer();
             if (currentQuestionIndex < currentQuestions.length - 1) {
-                saveAnswer();
                 currentQuestionIndex++;
                 displayQuestion();
-            } else if (currentTopicIndex < currentTopicKeys.length - 1) {
-                saveAnswer();
-                currentTopicIndex++;
-                currentQuestions = questionsData[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicIndex]];
-                currentQuestionIndex = 0;
-                displayQuestion();
-            } else {
-                saveAnswer();
-                displayCheckpointPage(); // Return to checkpoint page after finishing analysis
+            } else { // Last question in topic
+                if (currentTopicIndex < currentTopicKeys.length - 1) { // More topics in analysis
+                    currentTopicIndex++;
+                    displayTopicGreetingPage(currentAnalysisKeys[currentAnalysisIndex], currentTopicKeys[currentTopicIndex]); // Go to next topic greeting
+                } else { // Last topic in analysis
+                    displayCheckpointPage(); // Go back to main analysis checkpoint
+                }
             }
         }
 
@@ -1347,7 +1471,6 @@
         function saveAnswer() {
             const currentQuestion = currentQuestions[currentQuestionIndex];
             answers[currentQuestion.answerKey] = answerTextarea.value;
-            console.log("saveAnswer - answerKey:", currentQuestion.answerKey, "answerValue:", answerTextarea.value); // ADD THIS LINE
             saveAnswers();
         }
 
@@ -1355,6 +1478,9 @@
         function showReport() {
             questionSection.style.display = 'none';
             reportSection.style.display = 'block';
+            topicCheckpointSection.style.display = 'none'; // Hide topic checkpoint
+            topicGreetingSection.style.display = 'none'; // Hide topic greeting
+            checkpointSection.style.display = 'none'; // Hide main checkpoint
 
             // Display User Info in Report - UPDATED FORMATTING
             let userInfoHTML = '';
@@ -1381,7 +1507,7 @@
         }
 
         const confirmAnswerCheckbox = document.getElementById('confirm-answer-checkbox');
-        const nextBtnQuestion = document.getElementById('next-btn-question'); // Renamed button
+        const nextBtnQuestion = document.getElementById('next-btn-question');
 
         // --- Event Listeners ---
         userInfoForm.addEventListener('submit', function(event) {
@@ -1394,7 +1520,6 @@
                 productService: document.getElementById('productService').value,
                 companySize: document.getElementById('companySize').value
             };
-            // saveUserData(); // Removed from submit, now saved on input change
             startAnalysis();
         });
 
@@ -1426,13 +1551,15 @@
                     productService: document.getElementById('productService').value,
                     companySize: document.getElementById('companySize').value
                 };
-                saveUserData(); // Save on every input change
+                saveUserData();
             });
         });
 
-        const seeReportBtn = document.getElementById('see-report-btn'); // Get "See Report" button
-
-        seeReportBtn.addEventListener('click', showReport); // Event listener for "See Report" button
+        const seeReportBtn = document.getElementById('see-report-btn');
+        seeReportBtn.addEventListener('click', showReport);
+        goToMainCheckpointBtn_TopicCheckpoint.addEventListener('click', displayCheckpointPage); // Back to main checkpoint from topic checkpoint
+        goToTopicCheckpointBtn_Greeting.addEventListener('click', function() { displayTopicCheckpointPage(currentAnalysisKeys[currentAnalysisIndex]); }); // Go to topic checkpoint from greeting
+        goToMainCheckpointBtn_Greeting.addEventListener('click', displayCheckpointPage); // Go to main checkpoint from greeting
 
 
         // --- Initialization ---
@@ -1447,6 +1574,8 @@
         } else {
             userInfoFormSection.style.display = 'block';
             checkpointSection.style.display = 'none';
+            topicCheckpointSection.style.display = 'none'; // Hide topic checkpoint on init
+            topicGreetingSection.style.display = 'none'; // Hide topic greeting on init
             questionSection.style.display = 'none';
             reportSection.style.display = 'none';
         }
