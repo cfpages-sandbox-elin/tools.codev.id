@@ -450,11 +450,107 @@
             color: #777;
         }
 
+        /* --- CSS for Analysis Completion Celebration --- */
+        #analysis-completion-section {
+            display: none; /* Hidden by default */
+            position: fixed; /* Cover the whole viewport */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9); /* Semi-transparent white background */
+            z-index: 1000; /* Ensure it's on top of everything */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .confetti-container, .balloon-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden; /* Clip overflowing particles/balloons */
+            pointer-events: none; /* Allow clicks to pass through */
+        }
+
+        /* --- Confetti Styling and Animation --- */
+        .confetti {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background-color: #f09433; /* Example confetti color - orange */
+            border-radius: 50%;
+            opacity: 0; /* Start invisible */
+            animation: confetti-fall 3s linear forwards, confetti-rotate 1s infinite linear;
+            z-index: 1; /* Confetti below balloons */
+        }
+
+        @keyframes confetti-fall {
+            0% { top: -10%; opacity: 1; }
+            100% { top: 110%; opacity: 0; }
+        }
+
+        @keyframes confetti-rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* --- Balloon Styling and Animation --- */
+        .balloon {
+            position: absolute;
+            width: 40px;
+            height: 60px;
+            border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; /* Balloon shape */
+            background-color: #3498db; /* Example balloon color - blue */
+            opacity: 0; /* Start invisible */
+            animation: balloon-float 4s ease-out forwards, balloon-sway 2s infinite alternate ease-in-out;
+            z-index: 2; /* Balloons above confetti */
+        }
+
+        @keyframes balloon-float {
+            0% { transform: translateY(110%); opacity: 1; }
+            100% { transform: translateY(-10%); opacity: 0; }
+        }
+
+        @keyframes balloon-sway {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(10px); }
+        }
+
+
+        .celebration-message {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 3; /* Message above balloons and confetti */
+            margin-bottom: 20px;
+        }
+
+        #go-to-checkpoint-button {
+            padding: 15px 30px;
+            font-size: 1.1em;
+            cursor: pointer;
+            border-radius: 8px;
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            z-index: 3; /* Button above balloons and confetti */
+        }
+
+        #go-to-checkpoint-button:hover {
+            background-color: #45a049;
+        }
+
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>RJPP v1.76<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
+        <h1>RJPP v1.77<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
 
         <div id="user-info-form-section">
             <h2>Informasi Perusahaan dan Pengguna 👤🏢</h2>
@@ -557,7 +653,17 @@
                     <button id="next-btn-question" disabled>Selanjutnya ➡️</button>
                 </div>
             </div>
+        </div>
 
+        <div id="analysis-completion-section" style="display: none;">
+            <div class="confetti-container"></div> <!-- Container for confetti -->
+            <div class="balloon-container"></div> <!-- Container for balloons -->
+            <div class="celebration-message">
+                <h2>🎉 Selamat! 🎉</h2>
+                <p>Anda telah menyelesaikan seluruh analisis <span id="completed-analysis-name" style="font-weight: bold;">[Analysis Name]</span>!</p>
+                <p>Bersiaplah untuk analisis berikutnya!</p>
+            </div>
+            <button id="go-to-checkpoint-button">Lanjut ke Daftar Analisis Utama 🚀</button>
         </div>
 
         <div id="report-section" class="report-section" style="display: none;">
@@ -1272,6 +1378,7 @@
         }
 
         function displayCheckpointPage() {
+            analysisCompletionSection.style.display = 'none';
             checkpointSection.style.display = 'block';
             topicCheckpointSection.style.display = 'none';
             topicGreetingSection.style.display = 'none';
@@ -1595,11 +1702,13 @@
                 currentQuestionIndex++;
                 displayQuestion();
             } else { // Last question in topic
+                const analysisName = currentAnalysisKeys[currentAnalysisIndex];
+                const topicName = currentTopicKeys[currentTopicIndex];
                 displayTopicGreetingPage(analysisName, topicName); // Show greeting for CURRENT (completed) topic
 
                 // Check for uncompleted topics WITHIN THE SAME ANALYSIS
                 let nextUncompletedTopicIndex = -1;
-                for (let i = 0; i < currentTopicKeys.length; i++) { // Iterate through ALL topics of the current analysis
+                for (let i = 0; i < currentTopicKeys.length; i++) {
                     const nextTopicKey = currentTopicKeys[i];
                     if (i <= currentTopicIndex) continue; // Skip topics already completed or the current one
                     const nextTopicStatus = answers[analysisName]?.[nextTopicKey]?.status || "not-started";
@@ -1613,11 +1722,69 @@
                     currentTopicIndex = nextUncompletedTopicIndex; // Move to the next uncompleted topic
                     displayTopicGreetingPage(analysisName, currentTopicKeys[currentTopicIndex]); // Show greeting for the NEXT topic
                 } else {
-                    displayCheckpointPage(); // No more uncompleted topics in THIS ANALYSIS, go to main checkpoint
+                    displayAnalysisCompletionPage(analysisName);
                 }
             }
         }
 
+        function displayAnalysisCompletionPage(analysisName) {
+            questionSection.style.display = 'none';
+            analysisCompletionSection.style.display = 'flex'; // Show celebration section
+            document.getElementById('completed-analysis-name').textContent = analysisName; // Set analysis name in message
+
+            createConfetti(300); // Generate confetti particles
+            createBalloons(20);  // Generate balloon elements
+
+            const goToCheckpointButton = document.getElementById('go-to-checkpoint-button');
+            let timeoutId;
+
+            goToCheckpointButton.onclick = function() {
+                clearTimeout(timeoutId); // Clear timeout if button is clicked
+                displayCheckpointPage();   // Go to main checkpoint immediately
+            };
+
+            timeoutId = setTimeout(function() {
+                displayCheckpointPage();   // Go to main checkpoint after 3 seconds
+            }, 3000); // 3000 milliseconds = 3 seconds
+        }
+
+        function createConfetti(count) {
+            const container = document.querySelector('.confetti-container');
+            container.innerHTML = ''; // Clear existing confetti
+
+            for (let i = 0; i < count; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                confetti.style.left = `${Math.random() * 100}%`; // Random horizontal position
+                confetti.style.animationDelay = `${Math.random() * 2}s`; // Random delay for staggered effect
+                confetti.style.backgroundColor = getRandomConfettiColor(); // Random color
+                container.appendChild(confetti);
+            }
+        }
+
+        function createBalloons(count) {
+            const container = document.querySelector('.balloon-container');
+            container.innerHTML = ''; // Clear existing balloons
+
+            for (let i = 0; i < count; i++) {
+                const balloon = document.createElement('div');
+                balloon.classList.add('balloon');
+                balloon.style.left = `${Math.random() * 100}%`; // Random horizontal position
+                balloon.style.animationDelay = `${Math.random() * 3}s`; // Random delay
+                balloon.style.backgroundColor = getRandomBalloonColor(); // Random color
+                container.appendChild(balloon);
+            }
+        }
+
+        function getRandomConfettiColor() {
+            const colors = ['#f09433', '#e74c3c', '#3498db', '#9b59b6', '#2ecc71']; // Example confetti colors
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        function getRandomBalloonColor() {
+            const colors = ['#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6']; // Example balloon colors
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
 
         function saveAnswer() {
             const analysisName = currentAnalysisKeys[currentAnalysisIndex];
