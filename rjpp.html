@@ -417,7 +417,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>RJPP v1.73<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
+        <h1>RJPP v1.74<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
 
         <div id="user-info-form-section">
             <h2>Informasi Perusahaan dan Pengguna 👤🏢</h2>
@@ -462,7 +462,7 @@
         </div>
 
         <div id="checkpoint-section" style="display: none;">
-            <h2>Pilih Analisis untuk Dilanjutkan 🗂️</h2>
+            <h2>Pilih Analisis untuk Dilanjutkan 🎯</h2>
             <div id="checkpoint-cards-container" class="checkpoint-cards-container">
                 <!-- Analysis checkpoint cards will be generated here by JavaScript -->
             </div>
@@ -470,7 +470,7 @@
         </div>
 
         <div id="topic-checkpoint-section" style="display: none;">
-            <h2>Pilih Topik Analisis <span id="topic-checkpoint-analysis-name"></span> 🗂️</h2>
+            <h2>Pilih Topik Analisis<br>🎯 <span id="topic-checkpoint-analysis-name"></span> 🎯</h2>
             <div id="topic-checkpoint-cards-container" class="topic-checkpoint-cards-container">
                 <!-- Topic checkpoint cards will be generated here by JavaScript -->
             </div>
@@ -1362,7 +1362,7 @@
 
 
                 const card = document.createElement('div');
-                card.className = `topic-checkpoint-card ${cardStatusClass}`; // Use dynamically determined status class
+                card.className = `topic-checkpoint-card ${cardStatusClass}`;
                 card.innerHTML = `
                     ${topicKey} 🗂️
                     <div class="card-details">
@@ -1376,7 +1376,33 @@
                 });
                 topicCheckpointCardsContainer.appendChild(card);
             }
+
+            const goToMainCheckpointBtn_TopicCheckpoint = document.getElementById('go-to-main-checkpoint-btn'); // Get button again to ensure scope is correct if needed
             goToMainCheckpointBtn_TopicCheckpoint.style.display = 'block';
+            goToMainCheckpointBtn_TopicCheckpoint.onclick = function() { // Modify the onclick event here
+                const analysisName = currentAnalysisKeys[currentAnalysisIndex];
+                const analysisData = questionsData[analysisName];
+                const uncompletedTopics = [];
+        
+                for (const topicKey in analysisData) {
+                    const topicStatus = answers[analysisName]?.[topicKey]?.status || "not-started";
+                    if (topicStatus !== 'completed') {
+                        uncompletedTopics.push(topicKey);
+                    }
+                }
+        
+                if (uncompletedTopics.length > 0) {
+                    const topicListString = uncompletedTopics.map(topic => `"${topic}"`).join(', ');
+                    const confirmBack = window.confirm(`Analisis "${analysisName}" masih memiliki topik yang belum dijawab yaitu: ${topicListString}. Apakah Anda yakin ingin kembali ke daftar analisis utama?`);
+                    if (confirmBack) {
+                        displayCheckpointPage(); // Go back to main checkpoint if user confirms
+                    } else {
+                        // Stay on topic checkpoint page if user cancels - do nothing
+                    }
+                } else {
+                    displayCheckpointPage(); // Go back to main checkpoint directly if no uncompleted topics
+                }
+            };
         }
 
 
@@ -1534,9 +1560,25 @@
                 currentQuestionIndex++;
                 displayQuestion();
             } else { // Last question in topic
+                displayTopicGreetingPage(analysisName, topicName); // Show greeting for CURRENT (completed) topic
+
                 if (currentTopicIndex < currentTopicKeys.length - 1) { // More topics in analysis
-                    displayTopicGreetingPage(currentAnalysisKeys[currentAnalysisIndex], currentTopicKeys[currentTopicIndex]); // Show greeting for CURRENT (completed) topic FIRST
-                    currentTopicIndex++; // THEN increment topic index to move to the next topic
+                    let nextUncompletedTopicIndex = -1;
+                    for (let i = currentTopicIndex + 1; i < currentTopicKeys.length; i++) {
+                        const nextTopicKey = currentTopicKeys[i];
+                        const nextTopicStatus = answers[analysisName]?.[nextTopicKey]?.status || "not-started";
+                        if (nextTopicStatus !== 'completed') {
+                            nextUncompletedTopicIndex = i;
+                            break; // Found the next uncompleted topic
+                        }
+                    }
+
+                    if (nextUncompletedTopicIndex !== -1) {
+                        currentTopicIndex = nextUncompletedTopicIndex; // Move to the next uncompleted topic
+                        displayTopicGreetingPage(analysisName, currentTopicKeys[currentTopicIndex]); // Show greeting for the NEXT topic (which will be the start greeting, not congratulatory)
+                    } else {
+                        displayCheckpointPage(); // No more uncompleted topics in this analysis, go to main checkpoint
+                    }
                 } else { // Last topic in analysis
                     displayCheckpointPage(); // Go back to main analysis checkpoint
                 }
