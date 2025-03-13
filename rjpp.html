@@ -1253,25 +1253,42 @@
                 let analysisStatus = 'not-answered'; // Default analysis status
                 let allTopicsCompleted = true;
                 let partiallyAnsweredTopics = false;
+                let noTopicsAnsweredYet = true; // Flag to check if ANY topic in analysis has been started
+
+                console.groupCollapsed(`Analysis: ${analysisKey}`); // Start console group for analysis
 
                 for (const topicKey in analysisData) {
                     const topicStatus = answers[analysisKey]?.[topicKey]?.status || "not-started";
+                    console.log(`  Topic: ${topicKey}, Status: ${topicStatus}`); // Log topic status
 
-                    if (topicStatus !== 'completed') {
+                    if (topicStatus === 'completed') {
+                        // Topic is completed, analysis might still be partially answered if other topics are not
+                        noTopicsAnsweredYet = false;
+                    } else if (topicStatus === 'in-progress') {
+                        partiallyAnsweredTopics = true;
                         allTopicsCompleted = false;
-                        if (topicStatus === 'in-progress') {
-                            partiallyAnsweredTopics = true;
-                        }
+                        noTopicsAnsweredYet = false;
+                    } else { // topicStatus is 'not-started'
+                        allTopicsCompleted = false;
+                        // partiallyAnsweredTopics remains false as no topic is partially answered yet
                     }
                 }
 
-                if (allTopicsCompleted && Object.keys(analysisData).length > 0) { // Check if there are topics in the analysis
+                console.log(`  allTopicsCompleted: ${allTopicsCompleted}, partiallyAnsweredTopics: ${partiallyAnsweredTopics}, noTopicsAnsweredYet: ${noTopicsAnsweredYet}`); // Log status flags
+
+                if (allTopicsCompleted && Object.keys(analysisData).length > 0) {
                     analysisStatus = 'answered';
                 } else if (partiallyAnsweredTopics) {
                     analysisStatus = 'partially-answered';
-                    allAnalysesCompleted = false;
-                } else {
+                } else if (noTopicsAnsweredYet) { // Check if no topics have been started at all
                     analysisStatus = 'not-answered';
+                } else { // Fallback, should ideally not reach here, but for safety. If some topics are started but none partially or fully completed
+                    analysisStatus = 'not-answered'; // Or maybe 'partially-answered' depending on desired behavior for this edge case
+                }
+                console.log(`  Analysis Status: ${analysisStatus}`); // Log final analysis status
+                console.groupEnd(); // End console group
+
+                if (analysisStatus !== 'answered') { // If any analysis is not fully answered, then all analyses are not completed
                     allAnalysesCompleted = false;
                 }
 
@@ -1282,7 +1299,7 @@
                     answeredQuestionsCount += Object.keys(topicAnswers).length;
                 }
 
-                const topicCountInAnalysis = Object.keys(analysisData).length; // Calculate topic count for this analysis
+                const topicCountInAnalysis = Object.keys(analysisData).length;
 
                 const card = document.createElement('div');
                 card.className = `checkpoint-card status-${analysisStatus}`;
@@ -1371,29 +1388,33 @@
             const currentTopicKeysForAnalysis = Object.keys(questionsData[analysisKey]);
             const currentTopicIndexInAnalysis = currentTopicKeysForAnalysis.indexOf(topicKey);
             const isLastTopicInAnalysis = currentTopicIndexInAnalysis === currentTopicKeysForAnalysis.length - 1;
-            const topicStatus = answers[analysisKey]?.[topicKey]?.status || "not-started"; // Get topic status, default to "not-started"
+            const topicStatus = answers[analysisKey]?.[topicKey]?.status || "not-started";
 
-            if (topicStatus === "completed") { // Check topic status directly
-                topicGreetingTitle.textContent = `Selamat! 🎉 Topik ${topicKey} Selesai!`; // Congratulatory Title
+            console.log(`displayTopicGreetingPage - Analysis: ${analysisKey}, Topic: ${topicKey}, Status: ${topicStatus}`); // Log status in greeting page
+
+            if (topicStatus === "completed") {
+                console.log(`  Status is 'completed', showing congratulatory message`); // Log when condition is met
+                topicGreetingTitle.textContent = `Selamat! 🎉 Topik ${topicKey} Selesai!`;
                 if (!isLastTopicInAnalysis) {
                     const nextTopicKey = currentTopicKeysForAnalysis[currentTopicIndexInAnalysis + 1];
                     topicGreetingDescription.innerHTML = `Anda baru saja menyelesaikan pertanyaan survei untuk topik <span style="font-weight:bold;">${topicKey}</span> dari analisis <span style="font-weight:bold;">${analysisKey}</span>.<br><br>Siap untuk melanjutkan ke topik berikutnya, <span style="font-weight:bold;">${nextTopicKey}</span>?`;
-                    startTopicBtn.style.display = 'none'; // Hide 'Start Topic'
-                    nextTopicBtn.style.display = 'block'; // Show 'Next Topic'
-                    nextTopicBtn.textContent = `Lanjut ke Topik ${nextTopicKey} ➡️`; // Set 'Next Topic' button text
+                    startTopicBtn.style.display = 'none';
+                    nextTopicBtn.style.display = 'block';
+                    nextTopicBtn.textContent = `Lanjut ke Topik ${nextTopicKey} ➡️`;
                     nextTopicBtn.onclick = function() { startAnalysisTopic(analysisKey, nextTopicKey); };
                 } else {
                     topicGreetingDescription.innerHTML = `Anda telah menyelesaikan semua topik untuk analisis <span style="font-weight:bold;">${analysisKey}</span>! 🎉`;
-                    startTopicBtn.style.display = 'none'; // Hide 'Start Topic'
-                    nextTopicBtn.style.display = 'none'; // Hide 'Next Topic'
+                    startTopicBtn.style.display = 'none';
+                    nextTopicBtn.style.display = 'none';
                 }
             } else {
-                topicGreetingTitle.textContent = `Analisis ${analysisKey} - Topik ${topicKey} 🚀`; // Original Greeting Title
+                console.log(`  Status is NOT 'completed', showing initial greeting message`); // Log when condition is NOT met
+                topicGreetingTitle.textContent = `Analisis ${analysisKey} - Topik ${topicKey} 🚀`;
                 topicGreetingDescription.innerHTML = `Anda akan menjawab pertanyaan survei untuk analisis <span style="font-weight:bold;">${analysisKey}</span>, topik <span style="font-weight:bold;">${topicKey}</span>. Klik tombol 'Mulai Survei Topik Ini' di bawah untuk memulai.`;
-                startTopicBtn.style.display = 'block'; // Show 'Start Topic'
+                startTopicBtn.style.display = 'block';
                 startTopicBtn.textContent = `Mulai Survei Topik ${topicKey} 🚀`;
                 startTopicBtn.onclick = function() { startAnalysisTopic(analysisKey, topicKey); };
-                nextTopicBtn.style.display = 'none'; // Hide 'Next Topic'
+                nextTopicBtn.style.display = 'none';
             }
 
             goToTopicCheckpointBtn_Greeting.style.display = 'block';
