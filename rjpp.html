@@ -314,6 +314,24 @@
             margin: 5px 0;
         }
 
+        /* --- Updated CSS for Combined Card Controls --- */
+        .card-controls.combined-controls {
+            display: flex;
+            justify-content: space-between; /* Distribute space between prev, checkbox, next */
+            align-items: center; /* Vertically align items */
+            margin-top: 15px; /* Add some space above controls in card */
+        }
+
+        .card-controls.combined-controls button#prev-btn {
+            margin-right: auto; /* Push prev button to the left */
+        }
+
+        .card-controls.combined-controls label {
+            margin-left: 15px; /* Space between prev button and checkbox */
+            margin-right: 15px; /* Space between checkbox and next button */
+            margin-bottom: 0; /* Reset margin for label */
+        }
+
         #clear-data-btn {
             background-color: #f9d9d9; /* Light red background */
             color: #8a0000;         /* Darker red text */
@@ -413,11 +431,16 @@
             margin: 5px 0;
         }
 
+        small.ctrl-enter-instruction {
+            font-size: 0.8em;
+            color: #777;
+        }
+
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>RJPP v1.75<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
+        <h1>RJPP v1.76<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
 
         <div id="user-info-form-section">
             <h2>Informasi Perusahaan dan Pengguna 👤🏢</h2>
@@ -510,20 +533,17 @@
                 </div>
                 <div class="card-question" id="card-question-text">[Pertanyaan akan muncul di sini] 🤔</div>
                 <textarea id="answer-textarea" placeholder="Jawaban Anda"></textarea>
+                <small class="ctrl-enter-instruction">💡 Anda bisa menekan Ctrl + Enter di keyboard untuk mengkonfirmasi jawaban ini dan lanjut ke pertanyaan berikutnya.</small>
+
+                <div class="answer-confirmation card-controls combined-controls">
+                    <button id="prev-btn">⬅️ Sebelumnya</button>
+                    <label>
+                        <input type="checkbox" id="confirm-answer-checkbox"> ✅ Saya yakin dengan jawaban ini
+                    </label>
+                    <button id="next-btn-question" disabled>Selanjutnya ➡️</button>
+                </div>
             </div>
 
-            <div class="answer-confirmation">
-                <label>
-                    <input type="checkbox" id="confirm-answer-checkbox"> ✅ Saya yakin dengan jawaban ini
-                </label>
-                <button id="next-btn-question" disabled>Pertanyaan Selanjutnya ➡️</button>
-            </div>
-
-            <div class="controls">
-                <button id="prev-btn">⬅️ Sebelumnya</button>
-                <!--  "Pertanyaan Selanjutnya" button is now in answer-confirmation div -->
-                <!-- <button id="next-btn" disabled>Selanjutnya</button> -->
-            </div>
         </div>
 
         <div id="report-section" class="report-section" style="display: none;">
@@ -1563,25 +1583,23 @@
             } else { // Last question in topic
                 displayTopicGreetingPage(analysisName, topicName); // Show greeting for CURRENT (completed) topic
 
-                if (currentTopicIndex < currentTopicKeys.length - 1) { // More topics in analysis
-                    let nextUncompletedTopicIndex = -1;
-                    for (let i = currentTopicIndex + 1; i < currentTopicKeys.length; i++) {
-                        const nextTopicKey = currentTopicKeys[i];
-                        const nextTopicStatus = answers[analysisName]?.[nextTopicKey]?.status || "not-started";
-                        if (nextTopicStatus !== 'completed') {
-                            nextUncompletedTopicIndex = i;
-                            break; // Found the next uncompleted topic
-                        }
+                // Check for uncompleted topics WITHIN THE SAME ANALYSIS
+                let nextUncompletedTopicIndex = -1;
+                for (let i = 0; i < currentTopicKeys.length; i++) { // Iterate through ALL topics of the current analysis
+                    const nextTopicKey = currentTopicKeys[i];
+                    if (i <= currentTopicIndex) continue; // Skip topics already completed or the current one
+                    const nextTopicStatus = answers[analysisName]?.[nextTopicKey]?.status || "not-started";
+                    if (nextTopicStatus !== 'completed') {
+                        nextUncompletedTopicIndex = i;
+                        break; // Found the next uncompleted topic
                     }
+                }
 
-                    if (nextUncompletedTopicIndex !== -1) {
-                        currentTopicIndex = nextUncompletedTopicIndex; // Move to the next uncompleted topic
-                        displayTopicGreetingPage(analysisName, currentTopicKeys[currentTopicIndex]); // Show greeting for the NEXT topic (which will be the start greeting, not congratulatory)
-                    } else {
-                        displayCheckpointPage(); // No more uncompleted topics in this analysis, go to main checkpoint
-                    }
-                } else { // Last topic in analysis
-                    displayCheckpointPage(); // Go back to main analysis checkpoint
+                if (nextUncompletedTopicIndex !== -1) {
+                    currentTopicIndex = nextUncompletedTopicIndex; // Move to the next uncompleted topic
+                    displayTopicGreetingPage(analysisName, currentTopicKeys[currentTopicIndex]); // Show greeting for the NEXT topic
+                } else {
+                    displayCheckpointPage(); // No more uncompleted topics in THIS ANALYSIS, go to main checkpoint
                 }
             }
         }
@@ -1727,6 +1745,15 @@
             reportSection.style.display = 'none';
         }
 
+        // --- Keyboard Shortcut for Next Question (Ctrl + Enter) ---
+        document.addEventListener('keydown', function(event) {
+            if (event.ctrlKey && event.key === 'Enter') {
+                if (!nextBtnQuestion.disabled) { // Check if the button is not disabled
+                    event.preventDefault(); // Prevent default form submission behavior (if any)
+                    nextBtnQuestion.click(); // Programmatically click the "Next Question" button
+                }
+            }
+        });
     </script>
 </body>
 </html>
