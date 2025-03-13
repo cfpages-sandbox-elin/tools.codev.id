@@ -417,7 +417,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>RJPP v1.72<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
+        <h1>RJPP v1.73<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
 
         <div id="user-info-form-section">
             <h2>Informasi Perusahaan dan Pengguna 👤🏢</h2>
@@ -1525,13 +1525,18 @@
                 return;
             }
             saveAnswer();
+            const analysisName = currentAnalysisKeys[currentAnalysisIndex];
+            const topicName = currentTopicKeys[currentTopicIndex];
+            const currentTopicStatus = answers[analysisName]?.[topicName]?.status;
+            console.log(`goToNextQuestion - After saveAnswer, Topic: ${topicName}, Status: ${currentTopicStatus}`);
+        
             if (currentQuestionIndex < currentQuestions.length - 1) {
                 currentQuestionIndex++;
                 displayQuestion();
             } else { // Last question in topic
                 if (currentTopicIndex < currentTopicKeys.length - 1) { // More topics in analysis
-                    currentTopicIndex++;
-                    displayTopicGreetingPage(currentAnalysisKeys[currentAnalysisIndex], currentTopicKeys[currentTopicIndex]); // Go to next topic greeting
+                    displayTopicGreetingPage(currentAnalysisKeys[currentAnalysisIndex], currentTopicKeys[currentTopicIndex]); // Show greeting for CURRENT (completed) topic FIRST
+                    currentTopicIndex++; // THEN increment topic index to move to the next topic
                 } else { // Last topic in analysis
                     displayCheckpointPage(); // Go back to main analysis checkpoint
                 }
