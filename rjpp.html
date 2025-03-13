@@ -395,7 +395,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>RJPP v1.62<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
+        <h1>RJPP v1.63<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
 
         <div id="user-info-form-section">
             <h2>Informasi Perusahaan dan Pengguna 👤🏢</h2>
@@ -1063,23 +1063,17 @@
         function loadAnswers() {
             const storedAnswers = localStorage.getItem('rjppAnswers');
             if (storedAnswers) {
-                answers = JSON.parse(storedAnswers);
-                const storedState = JSON.parse(storedAnswers);
+                const storedState = JSON.parse(storedAnswers); // Parse DIRECTLY into storedState - NO extra 'answers' layer
                 if (storedState) {
+                    answers = storedState.answers || {}; // Load answers from storedState.answers, or default to empty object
                     currentAnalysisIndex = storedState.currentAnalysisIndex || 0;
                     currentTopicIndex = storedState.currentTopicIndex || 0;
                     currentQuestionIndex = storedState.currentQuestionIndex || 0;
-                    // currentAnalysisKeys = storedState.currentAnalysisKeys || Object.keys(questionsData);
-
-                    // --- ADD THESE CONSOLE LOGS RIGHT HERE ---
-                    console.log("loadAnswers - currentAnalysisKeys:", currentAnalysisKeys);
-                    console.log("loadAnswers - currentAnalysisIndex:", currentAnalysisIndex);
-                    // --- END CONSOLE LOGS ---
-
-                    currentTopicKeys = Object.keys(questionsData[currentAnalysisKeys[currentAnalysisIndex]]) || []; 
+                    currentAnalysisKeys = storedState.currentAnalysisKeys || Object.keys(questionsData);
+                    currentTopicKeys = storedState.currentTopicKeys || Object.keys(questionsData[currentAnalysisKeys[currentAnalysisIndex]]);
                     currentQuestions = questionsData[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicIndex]] || [];
 
-                    // --- NEW LOGIC: Find first unanswered question ---
+                    // --- NEW LOGIC: Find first unanswered question (rest of your existing logic - no changes needed inside this block) ---
                     let foundUnanswered = false;
                     for (let analysisIndex = 0; analysisIndex < currentAnalysisKeys.length; analysisIndex++) {
                         const analysisKey = currentAnalysisKeys[analysisIndex];
@@ -1108,18 +1102,22 @@
                         currentAnalysisIndex = currentAnalysisKeys.length - 1;
                         currentTopicKeys = Object.keys(questionsData[currentAnalysisKeys[currentAnalysisIndex]]);
                         currentTopicIndex = currentTopicKeys.length - 1;
-                        currentQuestions = questionsData[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicIndex]];
+                        currentQuestions = questionsData[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicKeys[currentTopicIndex]]];
                         currentQuestionIndex = currentQuestions.length - 1;
                     }
                     // --- End NEW LOGIC ---
+                } else {
+                    answers = {}; // If no storedState, initialize answers to empty object directly
                 }
+            } else {
+                answers = {}; // If no storedAnswers in localStorage, initialize answers to empty object directly
             }
-            console.log("loadAnswers - answers object loaded from localStorage:", answers); // ADD THIS LINE
+            console.log("loadAnswers - answers object loaded from localStorage:", answers);
         }
 
         function saveAnswers() {
-            const stateToSave = { // Save current state along with answers
-                answers: answers,
+            const stateToSave = { // Save current state ALONGSIDE answers, not nested inside
+                answers: answers, // Keep answers as a top-level property in the state
                 currentAnalysisIndex: currentAnalysisIndex,
                 currentTopicIndex: currentTopicIndex,
                 currentQuestionIndex: currentQuestionIndex,
@@ -1127,7 +1125,7 @@
                 currentTopicKeys: currentTopicKeys
             };
             localStorage.setItem('rjppAnswers', JSON.stringify(stateToSave));
-            console.log("saveAnswers - answers object saved to localStorage:", stateToSave); // ADD THIS LINE
+            console.log("saveAnswers - answers object saved to localStorage:", stateToSave);
         }
 
         function clearLocalStorageData() {
