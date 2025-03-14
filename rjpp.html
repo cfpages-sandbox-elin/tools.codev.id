@@ -550,7 +550,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>RJPP v1.77<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
+        <h1>RJPP v1.78<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
 
         <div id="user-info-form-section">
             <h2>Informasi Perusahaan dan Pengguna 👤🏢</h2>
@@ -1549,7 +1549,7 @@
         }
 
 
-        function displayTopicGreetingPage(analysisKey, topicKey) {
+        function displayTopicGreetingPage(analysisKey, topicKey, isTopicCompleted = false) { // Added isTopicCompleted flag
             checkpointSection.style.display = 'none';
             topicCheckpointSection.style.display = 'none';
             topicGreetingSection.style.display = 'block';
@@ -1561,10 +1561,10 @@
             const isLastTopicInAnalysis = currentTopicIndexInAnalysis === currentTopicKeysForAnalysis.length - 1;
             const topicStatus = answers[analysisKey]?.[topicKey]?.status || "not-started";
 
-            console.log(`displayTopicGreetingPage - Analysis: ${analysisKey}, Topic: ${topicKey}, Status: ${topicStatus}`); // Log status in greeting page
+            console.log(`displayTopicGreetingPage - Analysis: ${analysisKey}, Topic: ${topicKey}, Status: ${topicStatus}, isTopicCompleted: ${isTopicCompleted}`); // Log with isTopicCompleted
 
-            if (topicStatus === "completed") {
-                console.log(`  Status is 'completed', showing congratulatory message`); // Log when condition is met
+            if (isTopicCompleted) { // Check isTopicCompleted flag directly
+                console.log(`  isTopicCompleted is true, showing congratulatory message`);
                 topicGreetingTitle.textContent = `Selamat! 🎉 Topik ${topicKey} Selesai!`;
                 if (!isLastTopicInAnalysis) {
                     const nextTopicKey = currentTopicKeysForAnalysis[currentTopicIndexInAnalysis + 1];
@@ -1572,16 +1572,22 @@
                     startTopicBtn.style.display = 'none';
                     nextTopicBtn.style.display = 'block';
                     nextTopicBtn.textContent = `Lanjut ke Topik ${nextTopicKey} ➡️`;
-                    nextTopicBtn.onclick = function() { startAnalysisTopic(analysisKey, nextTopicKey); };
+                    nextTopicBtn.onclick = function() {
+                        currentTopicIndex++; // Increment topic index HERE
+                        startAnalysisTopic(analysisKey, currentTopicKeys[currentTopicIndex]);
+                    };
                 } else {
                     topicGreetingDescription.innerHTML = `Anda telah menyelesaikan semua topik untuk analisis <span style="font-weight:bold;">${analysisKey}</span>! 🎉`;
                     startTopicBtn.style.display = 'none';
                     nextTopicBtn.style.display = 'none';
+                    // Navigation to checkpoint will happen after 3 seconds or button click in celebration page (analysisCompletionSection)
+                    displayAnalysisCompletionPage(analysisKey); // Call celebration page for analysis completion
+                    return; // Exit function to prevent further navigation in THIS greeting page
                 }
-            } else {
-                console.log(`  Status is NOT 'completed', showing initial greeting message`); // Log when condition is NOT met
-                topicGreetingTitle.innerHTML = `🎯 ${analysisKey} 🎯<br>Topik 📁 ${topicKey}`;
-                topicGreetingDescription.innerHTML = `<center>Anda akan menjawab pertanyaan survei untuk analisis <span style="font-weight:bold;">${analysisKey}</span>, topik <span style="font-weight:bold;">${topicKey}</span>. Klik tombol 'Mulai Survei Topik Ini' di bawah untuk memulai.</center>`;
+            } else { // Initial topic greeting (not completion)
+                console.log(`  isTopicCompleted is false, showing initial greeting message`);
+                topicGreetingTitle.textContent = `Analisis ${analysisKey} - Topik ${topicKey} 🚀`;
+                topicGreetingDescription.innerHTML = `Anda akan menjawab pertanyaan survei untuk analisis <span style="font-weight:bold;">${analysisKey}</span>, topik <span style="font-weight:bold;">${topicKey}</span>. Klik tombol 'Mulai Survei Topik Ini' di bawah untuk memulai.`;
                 startTopicBtn.style.display = 'block';
                 startTopicBtn.textContent = `Mulai Survei Topik ${topicKey} 🚀`;
                 startTopicBtn.onclick = function() { startAnalysisTopic(analysisKey, topicKey); };
@@ -1698,33 +1704,12 @@
             const topicName = currentTopicKeys[currentTopicIndex];
             const currentTopicStatus = answers[analysisName]?.[topicName]?.status;
             console.log(`goToNextQuestion - After saveAnswer, Topic: ${topicName}, Status: ${currentTopicStatus}`);
-        
+
             if (currentQuestionIndex < currentQuestions.length - 1) {
                 currentQuestionIndex++;
                 displayQuestion();
             } else { // Last question in topic
-                const analysisName = currentAnalysisKeys[currentAnalysisIndex];
-                const topicName = currentTopicKeys[currentTopicIndex];
-                displayTopicGreetingPage(analysisName, topicName); // Show greeting for CURRENT (completed) topic
-
-                // Check for uncompleted topics WITHIN THE SAME ANALYSIS
-                let nextUncompletedTopicIndex = -1;
-                for (let i = 0; i < currentTopicKeys.length; i++) {
-                    const nextTopicKey = currentTopicKeys[i];
-                    if (i <= currentTopicIndex) continue; // Skip topics already completed or the current one
-                    const nextTopicStatus = answers[analysisName]?.[nextTopicKey]?.status || "not-started";
-                    if (nextTopicStatus !== 'completed') {
-                        nextUncompletedTopicIndex = i;
-                        break; // Found the next uncompleted topic
-                    }
-                }
-
-                if (nextUncompletedTopicIndex !== -1) {
-                    currentTopicIndex = nextUncompletedTopicIndex; // Move to the next uncompleted topic
-                    displayTopicGreetingPage(analysisName, currentTopicKeys[currentTopicIndex]); // Show greeting for the NEXT topic
-                } else {
-                    displayAnalysisCompletionPage(analysisName);
-                }
+                displayTopicGreetingPage(analysisName, topicName, true); // Show greeting for CURRENT (completed) topic, indicate completion
             }
         }
 
