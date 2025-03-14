@@ -408,6 +408,33 @@
         .checkpoint-card.status-answered, .topic-checkpoint-card.status-answered {
             background-color: #d4edda; /* Light green */
             border: 2px solid #c3e6cb;
+            position: relative;
+        }
+
+        /* --- CSS for "DONE" Stamp on Completed Cards --- */
+        .checkpoint-card.status-answered::after,
+        .topic-checkpoint-card.status-answered::after {
+            content: 'DONE';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 80px; /* Adjust size as needed */
+            height: 80px; /* Adjust size as needed */
+            border-radius: 50%;
+            background-color: rgba(255, 0, 0, 0); /* Light red background for stamp */
+            color: darkred; /* Dark red text color */
+            font-family: 'Courier New', Courier, monospace; /* Stamp-like font */
+            font-weight: bold;
+            font-size: 1.2em; /* Adjust font size as needed */
+            text-transform: uppercase;
+            transform: rotate(-45deg); /* Rotate text */
+            border: 2px solid darkred; /* Dark red border */
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.2); /* Subtle shadow */
+            pointer-events: none; /* Ensure stamp doesn't interfere with clicks */
+            opacity: 1; /* Ensure stamp is always visible - IMPORTANT */
         }
 
         .checkpoint-card.status-partially-answered, .topic-checkpoint-card.status-partially-answered {
@@ -544,31 +571,6 @@
 
         #go-to-checkpoint-button:hover {
             background-color: #45a049;
-        }
-
-        /* --- CSS for "DONE" Stamp on Completed Cards --- */
-        .checkpoint-card.status-answered::after,
-        .topic-checkpoint-card.status-answered::after {
-            content: 'DONE';
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 60px; /* Adjust size as needed */
-            height: 60px; /* Adjust size as needed */
-            border-radius: 50%;
-            background-color: rgba(255, 0, 0, 0.2); /* Light red background for stamp */
-            color: darkred; /* Dark red text color */
-            font-family: 'Courier New', Courier, monospace; /* Stamp-like font */
-            font-weight: bold;
-            font-size: 1.2em; /* Adjust font size as needed */
-            text-transform: uppercase;
-            transform: rotate(45deg); /* Rotate text */
-            border: 2px solid darkred; /* Dark red border */
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.2); /* Subtle shadow */
-            pointer-events: none; /* Ensure stamp doesn't interfere with clicks */
         }
 
     </style>
