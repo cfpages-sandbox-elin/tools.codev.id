@@ -580,7 +580,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>RJPP v1.81<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
+        <h1>RJPP v1.82<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
 
         <div id="user-info-form-section">
             <h2>Informasi Perusahaan dan Pengguna 👤🏢</h2>
@@ -715,26 +715,44 @@
         const questionsData = {
             "Informasi Umum Perusahaan": {
                 "Gambaran Umum": [
-                    { question: "Mohon berikan *Executive Summary* atau ringkasan eksekutif singkat mengenai perusahaan Anda, ${companyName}.", answerKey: "company_overview_executive_summary" },
-                    { question: "Apa Visi dan Misi utama dari ${companyName}?", answerKey: "company_overview_visi_misi" },
-                    { question: "Sebutkan aktivitas usaha utama yang dijalankan oleh ${companyName}.", answerKey: "company_overview_aktivitas_usaha" }
+                    { question: "Apa ringkasan eksekutif (Executive Summary) perusahaan Anda, ${companyName}?", answerKey: "company_overview_executive_summary" },
+                    { question: "Apa visi utama ${companyName}?", answerKey: "company_overview_visi" },
+                    { question: "Apa misi utama ${companyName}?", answerKey: "company_overview_misi" },
+                    { question: "Sebutkan aktivitas usaha utama ${companyName}.", answerKey: "company_overview_aktivitas_usaha" }
                 ],
                 "Pendahuluan Perusahaan": [
-                    { question: "Jelaskan secara singkat latar belakang dan sejarah berdirinya ${companyName}.", answerKey: "company_introduction_latar_belakang_sejarah" },
-                    { question: "Apa Visi dan Misi ${companyName} secara lebih detail?", answerKey: "company_introduction_visi_misi_detail" },
-                    { question: "Sebutkan dan jelaskan nilai-nilai perusahaan yang dianut oleh ${companyName}.", answerKey: "company_introduction_nilai_nilai_perusahaan" },
-                    { question: "Apa saja tujuan utama yang ingin dicapai oleh ${companyName} dalam jangka panjang?", answerKey: "company_introduction_tujuan_perusahaan_jangka_panjang" },
-                    { question: "Ke arah mana ${companyName} ingin dikembangkan di masa depan?", answerKey: "company_introduction_arah_pengembangan_perusahaan" },
-                    { question: "Bagaimana struktur organisasi ${companyName} saat ini?", answerKey: "company_introduction_struktur_organisasi" },
-                    { question: "Sebutkan susunan Dewan Komisaris ${companyName}.", answerKey: "company_introduction_susunan_dewan_komisaris" },
-                    { question: "Sebutkan susunan Direksi ${companyName}.", answerKey: "company_introduction_susunan_direksi" },
-                    { question: "Bagaimana pengelolaan Sumber Daya Manusia di ${companyName}?", answerKey: "company_introduction_sdm" },
-                    { question: "Apakah ${companyName} memiliki perusahaan anak? Jika ya, sebutkan dan jelaskan secara singkat.", answerKey: "company_introduction_perusahaan_anak" }
+                    { question: "Jelaskan secara singkat latar belakang dan sejarah ${companyName}.", answerKey: "company_introduction_latar_belakang_sejarah" },
+                    { question: "Visi ${companyName} secara detail?", answerKey: "company_introduction_visi_detail" },
+                    { question: "Misi ${companyName} secara detail?", answerKey: "company_introduction_misi_detail" },
+                    { question: "Sebutkan nilai-nilai perusahaan ${companyName}.", answerKey: "company_introduction_nilai_nilai_perusahaan" },
+                    { question: "Jelaskan nilai-nilai perusahaan ${companyName} tersebut.", answerKey: "company_introduction_nilai_nilai_perusahaan_detail" },
+                    { question: "Apa tujuan jangka panjang utama ${companyName}?", answerKey: "company_introduction_tujuan_perusahaan_jangka_panjang" },
+                    { question: "Ke arah mana pengembangan ${companyName} di masa depan?", answerKey: "company_introduction_arah_pengembangan_perusahaan" },
+                    { question: "Bagaimana struktur organisasi di ${companyName}?", answerKey: "company_introduction_struktur_organisasi" },
+                    { question: "Siapa saja Dewan Komisaris di ${companyName}?", answerKey: "company_introduction_susunan_dewan_komisaris" },
+                    { question: "Siapa saja Direksi di ${companyName}?", answerKey: "company_introduction_susunan_direksi" },
+                    { question: "Bagaimana pengelolaan SDM di ${companyName}?", answerKey: "company_introduction_sdm" },
+                    {
+                        question: "Apakah ${companyName} memiliki perusahaan anak?",
+                        answerKey: "company_introduction_punya_perusahaan_anak",
+                        type: "yesno",
+                        followUpQuestions: [
+                            { question: "Sebutkan perusahaan anak ${companyName}.", answerKey: "company_introduction_sebutkan_perusahaan_anak" },
+                            { question: "Jelaskan secara singkat tentang masing-masing perusahaan anak tersebut.", answerKey: "company_introduction_jelaskan_perusahaan_anak" }
+                        ]
+                    }
                 ],
                 "Evaluasi RJPP Sebelumnya": [
-                    { question: "Bagaimana evaluasi pelaksanaan Rencana Jangka Panjang Perusahaan (RJPP) ${companyName} sebelumnya?", answerKey: "rjp_evaluation_evaluasi_pelaksanaan_rjpp" },
-                    { question: "Bagaimana evaluasi kinerja keuangan ${companyName} dalam pelaksanaan RJPP sebelumnya?", answerKey: "rjp_evaluation_evaluasi_kinerja_keuangan" },
-                    { question: "Bagaimana evaluasi pelaksanaan strategi yang telah dijalankan dalam RJPP sebelumnya?", answerKey: "rjp_evaluation_evaluasi_pelaksanaan_strategi" }
+                    {
+                        question: "Apakah ${companyName} pernah menyusun RJPP sebelumnya?",
+                        answerKey: "rjp_evaluation_pernah_rjpp_sebelumnya",
+                        type: "yesno",
+                        followUpQuestions: [
+                            { question: "Bagaimana evaluasi pelaksanaan RJPP ${companyName} sebelumnya?", answerKey: "rjp_evaluation_evaluasi_pelaksanaan_rjpp" },
+                            { question: "Bagaimana evaluasi kinerja keuangan ${companyName} di RJPP sebelumnya?", answerKey: "rjp_evaluation_evaluasi_kinerja_keuangan" },
+                            { question: "Bagaimana evaluasi strategi di RJPP sebelumnya?", answerKey: "rjp_evaluation_evaluasi_pelaksanaan_strategi" }
+                        ]
+                    }
                 ]
             },
             "Kerangka Porter's Diamond (Diamond Strategy)": {
@@ -898,10 +916,10 @@
                     { question: "Bagaimana infrastruktur teknologi ${companyName} dibandingkan dengan pesaing utama?", answerKey: "tech_digital_tech_infrastructure_vs_competitors" }
                 ],
                 "Digitalisasi Proses Bisnis": [
-                    { question: "Bagaimana ${companyName} memanfaatkan teknologi digital untuk meningkatkan efisiensi dan efektivitas proses bisnis?", answerKey: "tech_digital_digital_process_digital_adoption" },
-                    { question: "Apakah ada proses bisnis ${companyName} yang dapat diotomatisasi atau didigitalisasi?", answerKey: "tech_digital_digital_process_automation_potential" },
-                    { question: "Bagaimana ${companyName} mengintegrasikan teknologi digital ke dalam operasional bisnisnya?", answerKey: "tech_digital_digital_process_integration" },
-                    { question: "Bagaimana digitalisasi proses bisnis ${companyName} dibandingkan dengan pesaing utama?", answerKey: "tech_digital_digital_process_vs_competitors" }
+                    { question: "Bagaimana cara manfaatkan teknologi digital tingkatkan efisiensi proses bisnis?", answerKey: "tech_digital_digital_process_digital_adoption" },
+                    { question: "Proses bisnis bisa diotomatisasi/digitalisasi?", answerKey: "tech_digital_digital_process_automation_potential" },
+                    { question: "Bagaimana cara integrasikan teknologi digital ke operasional bisnis?", answerKey: "tech_digital_digital_process_integration" },
+                    { question: "Digitalisasi proses bisnis vs pesaing utama?", answerKey: "tech_digital_digital_process_vs_competitors" }
                 ],
                 "Data dan Analitik": [
                     { question: "Bagaimana ${companyName} mengumpulkan, mengelola, dan menganalisis data?", answerKey: "tech_digital_data_analytics_data_management" },
@@ -1656,7 +1674,13 @@
         function displayQuestion() {
             const analysisName = currentAnalysisKeys[currentAnalysisIndex];
             const topicName = currentTopicKeys[currentTopicIndex];
-            const questionData = currentQuestions[currentQuestionIndex];
+            let questionData = currentQuestions[currentQuestionIndex];
+
+            // Check if it's a yes/no question and handle conditional display
+            if (questionData.type === 'yesno') {
+                displayYesNoQuestion(questionData); // Call function to display yes/no question
+                return; // Exit to prevent default question display
+            }
 
             // Display User Info in Question Card
             let userInfoHTML = `<p>🧑 <strong>${userData.fullName}</strong>, 🏢 <strong>${userData.companyName}</strong></p>`;
@@ -1690,6 +1714,7 @@
             cardQuestionText.innerHTML = formattedQuestion + ' 🤔';
             // --- End Modified Question Display ---
 
+            answerTextarea.style.display = 'block'; // Ensure textarea is visible for regular questions
             answerTextarea.value = answers[questionData.answerKey] || '';
             confirmAnswerCheckbox.checked = answers[questionData.answerKey] ? true : false;
             updateProgress();
@@ -1701,6 +1726,55 @@
                 questionCard.classList.remove('hidden');
             }, 100);
         }
+    
+        function displayYesNoQuestion(questionData) {
+            const analysisName = currentAnalysisKeys[currentAnalysisIndex];
+            const topicName = currentTopicKeys[currentTopicIndex];
+    
+            // Display User Info in Question Card
+            let userInfoHTML = `<p>🧑 <strong>${userData.fullName}</strong>, 🏢 <strong>${userData.companyName}</strong></p>`;
+            userInfoHTML += `<p>💼 <strong>${userData.position}</strong>, 🏭 <strong>${userData.industry}</strong></p>`;
+            userInfoHTML += `<p>📦 <strong>${userData.productService}</strong>, 📏 <strong>Ukuran: ${userData.companySize}</strong></p>`;
+            document.getElementById('card-user-info-display').innerHTML = userInfoHTML;
+    
+            cardAnalysisTitle.textContent = `Analisis: ${analysisName} `;
+            cardTopicTitle.textContent = `Topik: ${topicName} `;
+    
+            // --- Modified Question Display with Personalization and Line Breaks ---
+            let personalizedQuestion = questionData.question.replace(/\${companyName}/g, userData.companyName);
+            personalizedQuestion = personalizedQuestion.replace(/\${fullName}/g, userData.fullName);
+            personalizedQuestion = personalizedQuestion.replace(/\${position}/g, userData.position);
+            personalizedQuestion = personalizedQuestion.replace(/\${industry}/g, userData.industry);
+            personalizedQuestion = personalizedQuestion.replace(/\${productService}/g, userData.productService);
+            personalizedQuestion = personalizedQuestion.replace(/\${companySize}/g, userData.companySize);
+    
+            const words = personalizedQuestion.split(' ');
+            let formattedQuestion = '';
+            let line = '';
+            words.forEach(word => {
+                if ((line + word).split(' ').length > 7) {
+                    formattedQuestion += line.trim() + '<br>';
+                    line = word + ' ';
+                } else {
+                    line += word + ' ';
+                }
+            });
+            formattedQuestion += line.trim(); // Add the last line
+            cardQuestionText.innerHTML = formattedQuestion + ' 🤔';
+            // --- End Modified Question Display ---
+    
+            answerTextarea.style.display = 'none'; // Hide textarea for yes/no questions
+            confirmAnswerCheckbox.checked = answers[questionData.answerKey] === 'yes'; // Set checkbox based on saved answer
+    
+            updateProgress();
+            updateButtonStates();
+    
+            questionCard.classList.add('hidden');
+            setTimeout(() => {
+                questionCard.classList.remove('hidden');
+            }, 100);
+        }
+    
 
         function updateProgress() {
             const totalQuestionsInTopic = currentQuestions.length;
@@ -1733,17 +1807,29 @@
 
         function goToPreviousQuestion() {
             if (currentQuestionIndex > 0) {
-                saveAnswer();
                 currentQuestionIndex--;
+                 // --- Skip back over follow-up questions if the relevant "yesno" answer is "no" ---
+                let prevQuestionData = currentQuestions[currentQuestionIndex];
+                const nextQuestionData = currentQuestions[currentQuestionIndex + 1]; // Get the question we are moving back from
+    
+                 if (nextQuestionData && nextQuestionData.type === 'yesno' && answers[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicIndex]].answers[nextQuestionData.answerKey] === 'no' && nextQuestionData.followUpQuestions && nextQuestionData.followUpQuestions.some(fq => fq.answerKey === prevQuestionData.answerKey)) {
+                    // If next question was yesno, answer was no, and current question is a follow-up, skip back again
+                    if (currentQuestionIndex > 0) {
+                        currentQuestionIndex--; // Skip back again to the question before the follow-ups
+                    } else {
+                        // If already at the beginning of the topic after skipping back, do nothing more
+                        displayQuestion(); // Just re-display current question
+                        return;
+                    }
+                }
+                 // --- End Skip Back Logic ---
                 displayQuestion();
             } else if (currentTopicIndex > 0) {
-                saveAnswer();
                 currentTopicIndex--;
                 currentQuestions = questionsData[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicIndex]];
                 currentQuestionIndex = currentQuestions.length - 1;
                 displayQuestion();
             } else if (currentAnalysisIndex > 0) {
-                saveAnswer();
                 currentAnalysisIndex--;
                 currentTopicKeys = Object.keys(questionsData[currentAnalysisKeys[currentAnalysisIndex]]);
                 currentTopicIndex = currentTopicKeys.length - 1;
@@ -1767,6 +1853,20 @@
 
             if (currentQuestionIndex < currentQuestions.length - 1) {
                 currentQuestionIndex++;
+                // --- Skip follow-up questions if the answer to the "yesno" question is "no" ---
+                let nextQuestionData = currentQuestions[currentQuestionIndex];
+                const previousQuestionData = currentQuestions[currentQuestionIndex - 1]; // Get the previous question
+    
+                if (previousQuestionData && previousQuestionData.type === 'yesno' && answers[analysisName][topicName].answers[previousQuestionData.answerKey] === 'no' && previousQuestionData.followUpQuestions && previousQuestionData.followUpQuestions.some(fq => fq.answerKey === nextQuestionData.answerKey)) {
+                     // If previous question was yesno, answer was no, and current question is a follow-up, skip
+                    if (currentQuestionIndex < currentQuestions.length - 1) {
+                        currentQuestionIndex++; // Skip to the next question after follow-ups
+                    } else {
+                        displayTopicGreetingPage(analysisName, topicName, true); // If no more questions after follow-ups, end topic
+                        return;
+                    }
+                }
+                // --- End Skip Logic ---
                 displayQuestion();
             } else { // Last question in topic
                 displayTopicGreetingPage(analysisName, topicName, true); // Show greeting for CURRENT (completed) topic, indicate completion
@@ -1790,8 +1890,8 @@
             };
 
             timeoutId = setTimeout(function() {
-                displayCheckpointPage();   // Go to main checkpoint after 3 seconds
-            }, 3000); // 3000 milliseconds = 3 seconds
+                displayCheckpointPage();
+            }, 10000); // 10000 milliseconds = 10 seconds
         }
 
         function createConfetti(count) {
@@ -1837,8 +1937,14 @@
             const topicName = currentTopicKeys[currentTopicIndex];
             const currentQuestion = currentQuestions[currentQuestionIndex];
             const answerKey = currentQuestion.answerKey;
-            const answerValue = answerTextarea.value;
-        
+            let answerValue;
+
+            if (currentQuestion.type === 'yesno') {
+                answerValue = confirmAnswerCheckbox.checked ? 'yes' : 'no'; // Save 'yes' or 'no' for yes/no questions
+            } else {
+                answerValue = answerTextarea.value; // Save textarea value for regular questions
+            }
+
             // Initialize analysis and topic if they don't exist
             if (!answers[analysisName]) {
                 answers[analysisName] = {};
@@ -1849,20 +1955,20 @@
                     answers: {}
                 };
             }
-        
+
             // Save the answer
             answers[analysisName][topicName].answers[answerKey] = answerValue;
             answers[analysisName][topicName].status = "in-progress"; // Ensure status is at least in-progress
-        
+
             // Check if all questions in the current topic are answered
             const allQuestionsAnsweredInTopic = currentQuestions.every(question => {
                 return answers[analysisName][topicName].answers[question.answerKey] !== undefined && answers[analysisName][topicName].answers[question.answerKey] !== ""; // Check for not undefined and not empty string
             });
-        
+
             if (allQuestionsAnsweredInTopic) {
                 answers[analysisName][topicName].status = "completed";
             }
-        
+
             saveAnswers(); // Save the updated answers object to localStorage
         }
 
