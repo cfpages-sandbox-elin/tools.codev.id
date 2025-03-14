@@ -550,7 +550,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>RJPP v1.79<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
+        <h1>RJPP v1.80<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
 
         <div id="user-info-form-section">
             <h2>Informasi Perusahaan dan Pengguna 👤🏢</h2>
@@ -1521,7 +1521,7 @@
         }
 
 
-        function displayTopicGreetingPage(analysisKey, topicKey, isTopicCompleted = false) { // Added isTopicCompleted flag
+        function displayTopicGreetingPage(analysisKey, topicKey, isTopicCompleted = false) {
             checkpointSection.style.display = 'none';
             topicCheckpointSection.style.display = 'none';
             topicGreetingSection.style.display = 'block';
@@ -1533,26 +1533,38 @@
             const isLastTopicInAnalysis = currentTopicIndexInAnalysis === currentTopicKeysForAnalysis.length - 1;
             const topicStatus = answers[analysisKey]?.[topicKey]?.status || "not-started";
 
-            console.log(`displayTopicGreetingPage - Analysis: ${analysisKey}, Topic: ${topicKey}, Status: ${topicStatus}, isTopicCompleted: ${isTopicCompleted}`); // Log with isTopicCompleted
+            console.log(`displayTopicGreetingPage - Analysis: ${analysisKey}, Topic: ${topicKey}, Status: ${topicStatus}, isTopicCompleted: ${isTopicCompleted}`);
 
-            if (isTopicCompleted) { // Check isTopicCompleted flag directly
+            if (isTopicCompleted) {
                 console.log(`  isTopicCompleted is true, showing congratulatory message`);
                 topicGreetingTitle.textContent = `Selamat! 🎉 Topik ${topicKey} Selesai!`;
-                if (!isLastTopicInAnalysis) {
-                    const nextTopicKey = currentTopicKeysForAnalysis[currentTopicIndexInAnalysis + 1];
-                    topicGreetingDescription.innerHTML = `Anda baru saja menyelesaikan pertanyaan survei untuk topik <span style="font-weight:bold;">${topicKey}</span> dari analisis <span style="font-weight:bold;">${analysisKey}</span>.<br><br>Siap untuk melanjutkan ke topik berikutnya, <span style="font-weight:bold;">${nextTopicKey}</span>?`;
+
+                // --- Improved Next Uncompleted Topic Logic ---
+                let nextUncompletedTopicKey = null;
+                let nextUncompletedTopicIndex = -1;
+                for (let i = 0; i < currentTopicKeysForAnalysis.length; i++) { // Iterate through ALL topics in analysis
+                    const potentialNextTopicKey = currentTopicKeysForAnalysis[i];
+                    const potentialNextTopicStatus = answers[analysisKey]?.[potentialNextTopicKey]?.status || "not-started";
+                    if (potentialNextTopicStatus !== 'completed') {
+                        nextUncompletedTopicKey = potentialNextTopicKey;
+                        nextUncompletedTopicIndex = i;
+                        break; // Found the FIRST uncompleted topic (in order of topic keys)
+                    }
+                }
+
+                if (nextUncompletedTopicKey) { // If there IS an uncompleted topic
+                    topicGreetingDescription.innerHTML = `Anda baru saja menyelesaikan pertanyaan survei untuk topik <span style="font-weight:bold;">${topicKey}</span> dari analisis <span style="font-weight:bold;">${analysisKey}</span>.<br><br>Siap untuk melanjutkan ke topik berikutnya, <span style="font-weight:bold;">${nextUncompletedTopicKey}</span>?`;
                     startTopicBtn.style.display = 'none';
                     nextTopicBtn.style.display = 'block';
-                    nextTopicBtn.textContent = `Lanjut ke Topik ${nextTopicKey} ➡️`;
+                    nextTopicBtn.textContent = `Lanjut ke Topik ${nextUncompletedTopicKey} ➡️`;
                     nextTopicBtn.onclick = function() {
-                        currentTopicIndex++; // Increment topic index HERE
-                        startAnalysisTopic(analysisKey, currentTopicKeys[currentTopicIndex]);
+                        currentTopicIndex = nextUncompletedTopicIndex; // Set currentTopicIndex to the index of the next uncompleted topic
+                        startAnalysisTopic(analysisKey, nextUncompletedTopicKey); // Start the next uncompleted topic
                     };
-                } else {
+                } else { // If NO uncompleted topics left in this analysis
                     topicGreetingDescription.innerHTML = `Anda telah menyelesaikan semua topik untuk analisis <span style="font-weight:bold;">${analysisKey}</span>! 🎉`;
                     startTopicBtn.style.display = 'none';
                     nextTopicBtn.style.display = 'none';
-                    // Navigation to checkpoint will happen after 3 seconds or button click in celebration page (analysisCompletionSection)
                     displayAnalysisCompletionPage(analysisKey); // Call celebration page for analysis completion
                     return; // Exit function to prevent further navigation in THIS greeting page
                 }
