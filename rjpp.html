@@ -550,7 +550,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>RJPP v1.78<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
+        <h1>RJPP v1.79<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
 
         <div id="user-info-form-section">
             <h2>Informasi Perusahaan dan Pengguna 👤🏢</h2>
@@ -1497,12 +1497,10 @@
                     cardStatusClass = `status-not-answered`;
                 }
 
-
                 const totalQuestionsInTopic = topicData.length;
                 let answeredQuestionsCount = 0;
                 const topicAnswers = answers[analysisKey]?.[topicKey]?.answers || {};
                 answeredQuestionsCount = Object.keys(topicAnswers).length;
-
 
                 const card = document.createElement('div');
                 card.className = `topic-checkpoint-card ${cardStatusClass}`;
@@ -1515,37 +1513,11 @@
                     </div>
                 `;
                 card.addEventListener('click', function() {
-                    displayTopicGreetingPage(analysisKey, topicKey);
+                    displayTopicGreetingPage(analysisKey, topicKey, topicStatus === 'completed'); // Pass isTopicCompleted flag based on topicStatus
                 });
                 topicCheckpointCardsContainer.appendChild(card);
             }
-
-            const goToMainCheckpointBtn_TopicCheckpoint = document.getElementById('go-to-main-checkpoint-btn'); // Get button again to ensure scope is correct if needed
             goToMainCheckpointBtn_TopicCheckpoint.style.display = 'block';
-            goToMainCheckpointBtn_TopicCheckpoint.onclick = function() { // Modify the onclick event here
-                const analysisName = currentAnalysisKeys[currentAnalysisIndex];
-                const analysisData = questionsData[analysisName];
-                const uncompletedTopics = [];
-        
-                for (const topicKey in analysisData) {
-                    const topicStatus = answers[analysisName]?.[topicKey]?.status || "not-started";
-                    if (topicStatus !== 'completed') {
-                        uncompletedTopics.push(topicKey);
-                    }
-                }
-        
-                if (uncompletedTopics.length > 0) {
-                    const topicListString = uncompletedTopics.map(topic => `"${topic}"`).join(', ');
-                    const confirmBack = window.confirm(`Analisis "${analysisName}" masih memiliki topik yang belum dijawab yaitu: ${topicListString}. Apakah Anda yakin ingin kembali ke daftar analisis utama?`);
-                    if (confirmBack) {
-                        displayCheckpointPage(); // Go back to main checkpoint if user confirms
-                    } else {
-                        // Stay on topic checkpoint page if user cancels - do nothing
-                    }
-                } else {
-                    displayCheckpointPage(); // Go back to main checkpoint directly if no uncompleted topics
-                }
-            };
         }
 
 
