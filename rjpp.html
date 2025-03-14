@@ -416,25 +416,29 @@
         .topic-checkpoint-card.status-answered::after {
             content: 'DONE';
             position: absolute;
-            top: 10px;
-            right: 10px;
+            bottom: 10px;
+            right: 22%;
             display: flex;
             justify-content: center;
             align-items: center;
-            width: 80px; /* Adjust size as needed */
-            height: 80px; /* Adjust size as needed */
+            width: 150px;
+            height: 150px;
             border-radius: 50%;
-            background-color: rgba(255, 0, 0, 0); /* Light red background for stamp */
-            color: darkred; /* Dark red text color */
-            font-family: 'Courier New', Courier, monospace; /* Stamp-like font */
-            font-weight: bold;
-            font-size: 1.2em; /* Adjust font size as needed */
+            background-color: rgba(255, 0, 0, 0.1); /* Very light red background - base for ink effect */
+            background-image: radial-gradient(circle at center, rgba(255, 0, 0, 0.3) 20%, rgba(255, 0, 0, 0.1) 70%, rgba(255, 0, 0, 0)); /* Radial gradient for ink texture */
+            color: darkred;
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: 900;
+            font-size: 3.1em;
             text-transform: uppercase;
-            transform: rotate(-45deg); /* Rotate text */
-            border: 2px solid darkred; /* Dark red border */
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.2); /* Subtle shadow */
-            pointer-events: none; /* Ensure stamp doesn't interfere with clicks */
-            opacity: 1; /* Ensure stamp is always visible - IMPORTANT */
+            transform: rotate(-35deg);
+            border: 8px solid darkred;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2), /* Existing shadow */
+                        1px 1px 0 white, -1px -1px 0 darkred; /* Emboss effect - highlight and shadow */
+            pointer-events: none;
+            opacity: 1;
+            letter-spacing: -2px;
+            text-shadow: 1px 1px 0 white, -1px -1px 0 darkred; /* Alternative emboss using text-shadow only */
         }
 
         .checkpoint-card.status-partially-answered, .topic-checkpoint-card.status-partially-answered {
