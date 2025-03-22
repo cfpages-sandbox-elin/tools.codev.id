@@ -580,7 +580,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>RJPP v1.85<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
+        <h1>RJPP v1.86<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
 
         <div id="user-info-form-section">
             <h2>Informasi Perusahaan dan Pengguna 👤🏢</h2>
@@ -1640,13 +1640,28 @@
                     displayAnalysisCompletionPage(analysisKey); // Call celebration page for analysis completion
                     return; // Exit function to prevent further navigation in THIS greeting page
                 }
-            } else { // Initial topic greeting (not completion)
-                console.log(`  isTopicCompleted is false, showing initial greeting message`);
+            } else { // Initial topic greeting (not completion) or IN-PROGRESS topic greeting
+                console.log(`  isTopicCompleted is false, showing initial greeting message OR in-progress message`);
                 topicGreetingTitle.textContent = `Analisis ${analysisKey} - Topik ${topicKey} 🚀`;
-                topicGreetingDescription.innerHTML = `Anda akan menjawab pertanyaan survei untuk analisis <span style="font-weight:bold;">${analysisKey}</span>, topik <span style="font-weight:bold;">${topicKey}</span>. Klik tombol 'Mulai Survei Topik Ini' di bawah untuk memulai.`;
+    
+                if (topicStatus === 'in-progress') {
+                    // Calculate progress for in-progress topic
+                    const totalQuestionsInTopic = questionsData[analysisKey][topicKey].length;
+                    let answeredQuestionsCount = 0;
+                    const topicAnswers = answers[analysisKey]?.[topicKey]?.answers || {};
+                    answeredQuestionsCount = Object.keys(topicAnswers).length;
+                    const progressPercentage = ((answeredQuestionsCount / totalQuestionsInTopic) * 100).toFixed(0);
+    
+                    topicGreetingDescription.innerHTML = `Anda sudah menjawab <span style="font-weight:bold;">${answeredQuestionsCount} dari ${totalQuestionsInTopic} pertanyaan</span> (${progressPercentage}%) untuk topik <span style="font-weight:bold;">${topicKey}</span> dari analisis <span style="font-weight:bold;">${analysisKey}</span>.<br><br>Klik tombol di bawah untuk <span style="font-weight:bold;">melanjutkan</span> survei topik ini.`;
+                    startTopicBtn.textContent = `Lanjutkan Jawab Survei Topik ${topicKey} 🚀`; // Changed button text
+    
+                } else { // topicStatus is 'not-started'
+                    topicGreetingDescription.innerHTML = `Anda akan menjawab pertanyaan survei untuk analisis <span style="font-weight:bold;">${analysisKey}</span>, topik <span style="font-weight:bold;">${topicKey}</span>. Klik tombol 'Mulai Survei Topik Ini' di bawah untuk memulai.`;
+                    startTopicBtn.textContent = `Mulai Survei Topik ${topicKey} 🚀`; // Original button text
+                }
+
                 startTopicBtn.style.display = 'block';
-                startTopicBtn.textContent = `Mulai Survei Topik ${topicKey} 🚀`;
-                startTopicBtn.onclick = function() { startAnalysisTopic(analysisKey, topicKey); };
+                startTopicBtn.onclick = function() { startAnalysisTopic(analysisKey, topicKey); }; // Keep same onclick function
                 nextTopicBtn.style.display = 'none';
             }
 
@@ -1666,7 +1681,23 @@
             currentTopicKeys = Object.keys(questionsData[analysisKey]);
             currentTopicIndex = currentTopicKeys.indexOf(topicKey);
             currentQuestions = questionsData[analysisKey][topicKey];
-            currentQuestionIndex = 0;
+
+            // --- Logic to find first unanswered question for "in-progress" topics ---
+            const topicStatus = answers[analysisKey]?.[topicKey]?.status || "not-started";
+            if (topicStatus === 'in-progress') {
+                let firstUnansweredIndex = -1;
+                for (let i = 0; i < currentQuestions.length; i++) {
+                    const question = currentQuestions[i];
+                    if (!answers[analysisKey]?.[topicKey]?.answers?.[question.answerKey]) {
+                        firstUnansweredIndex = i;
+                        break; // Found the first unanswered question index
+                    }
+                }
+                currentQuestionIndex = firstUnansweredIndex !== -1 ? firstUnansweredIndex : 0; // Start at first unanswered or beginning if all answered (shouldn't happen in 'in-progress' state ideally)
+            } else { // For 'not-started' topics, start from the beginning
+                currentQuestionIndex = 0;
+            }
+            // --- End logic to find first unanswered question ---
 
             displayQuestion();
         }
