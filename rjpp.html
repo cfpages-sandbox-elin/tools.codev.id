@@ -580,7 +580,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>RJPP v1.83<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
+        <h1>RJPP v1.84<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
 
         <div id="user-info-form-section">
             <h2>Informasi Perusahaan dan Pengguna 👤🏢</h2>
@@ -1765,16 +1765,29 @@
     
             answerTextarea.style.display = 'none'; // Hide textarea for yes/no questions
     
-            // --- **ADD CHECKBOX HTML HERE** ---
+            // --- **MODIFY ANSWER CONFIRMATION AREA - DO NOT REPLACE ENTIRELY** ---
             const answerConfirmationDiv = document.querySelector('.answer-confirmation.card-controls.combined-controls');
-            answerConfirmationDiv.innerHTML = `
-                <label>
-                    <input type="checkbox" id="confirm-answer-checkbox"> Ya
-                </label>
-                <label style="margin-left: 20px;"> <input type="checkbox" id="reject-answer-checkbox"> Tidak </label>
-            `;
+            answerConfirmationDiv.innerHTML = ''; // Clear ONLY the *inside* of the div
+    
+            // Create and append Yes/No checkboxes and labels
+            const yesLabel = document.createElement('label');
+            yesLabel.innerHTML = '<input type="checkbox" id="confirm-answer-checkbox"> Ya';
+            answerConfirmationDiv.appendChild(yesLabel);
+    
+            const noLabel = document.createElement('label');
+            noLabel.style.marginLeft = '20px'; // Add some spacing
+            noLabel.innerHTML = '<input type="checkbox" id="reject-answer-checkbox"> Tidak';
+            answerConfirmationDiv.appendChild(noLabel);
+    
+            // Re-append Prev and Next buttons (important to keep them!)
+            answerConfirmationDiv.appendChild(prevBtn); // prevBtn and nextBtn should be defined globally and already exist
+            answerConfirmationDiv.appendChild(nextBtnQuestion);
+    
+    
             confirmAnswerCheckbox = document.getElementById('confirm-answer-checkbox'); // Re-assign global confirmAnswerCheckbox
             rejectAnswerCheckbox = document.getElementById('reject-answer-checkbox'); // Get reject checkbox
+            nextBtnQuestion = document.getElementById('next-btn-question'); // Re-assign nextBtnQuestion (ensure it's still correctly referenced)
+    
     
             // Set checkbox states based on saved answer
             if (answers[questionData.answerKey] === 'yes') {
@@ -1788,8 +1801,7 @@
                 rejectAnswerCheckbox.checked = false; // Default to unchecked if no answer
             }
     
-    
-            // --- END ADD CHECKBOX HTML ---
+            // --- END MODIFY ANSWER CONFIRMATION AREA ---
     
     
             updateProgress();
