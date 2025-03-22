@@ -580,7 +580,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>RJPP v1.88<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
+        <h1>RJPP v1.89<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
 
         <div id="user-info-form-section">
             <h2>Informasi Perusahaan dan Pengguna 👤🏢</h2>
@@ -1297,6 +1297,7 @@
         let currentTopicIndex = 0;
         let currentQuestionIndex = 0;
         let currentQuestions;
+        let isDisplayingFollowUp = false;
 
 
         let userData = {
@@ -1750,12 +1751,15 @@
             const topicName = currentTopicKeys[currentTopicIndex];
             let questionData = currentQuestions[currentQuestionIndex];
 
-            // --- **NEW in displayQuestion: Check for and Display Follow-up Questions Immediately if Applicable** ---
+            // --- NEW in displayQuestion: Check for and Display Follow-up Questions Immediately if Applicable ---
             if (questionData.type === 'yesno' && answers[questionData.answerKey] === 'yes' && questionData.followUpQuestions && questionData.followUpQuestions.length > 0) {
                 // If it's a yes/no question, answer is "yes", and has follow-ups, immediately display the *first* follow-up
                 currentQuestions = questionData.followUpQuestions; // **IMPORTANT**: Switch to followUpQuestions array
                 currentQuestionIndex = 0; // **IMPORTANT**: Reset index to start at the first follow-up
                 questionData = currentQuestions[0]; // Update questionData to be the first follow-up question
+                isDisplayingFollowUp = true; // **SET THE FLAG to TRUE when displaying follow-ups**
+            } else {
+                isDisplayingFollowUp = false; // **RESET THE FLAG to FALSE otherwise**
             }
             // --- END NEW SECTION in displayQuestion ---
 
@@ -1808,6 +1812,15 @@
             setTimeout(() => {
                 questionCard.classList.remove('hidden');
             }, 100);
+    
+            // --- CONDITIONAL HIDE/SHOW OF CONFIRMATION AREA ---
+            const answerConfirmationDiv = document.querySelector('.answer-confirmation.card-controls.combined-controls');
+            if (isDisplayingFollowUp) {
+                answerConfirmationDiv.style.display = 'none'; // **HIDE** confirmation area for follow-up questions
+            } else {
+                answerConfirmationDiv.style.display = 'flex'; // **SHOW** confirmation area for other questions
+            }
+            // --- END CONDITIONAL HIDE/SHOW ---
         }
     
         function displayYesNoQuestion(questionData) {
