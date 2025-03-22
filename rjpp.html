@@ -580,7 +580,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>RJPP v1.86<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
+        <h1>RJPP v1.87<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
 
         <div id="user-info-form-section">
             <h2>Informasi Perusahaan dan Pengguna 👤🏢</h2>
@@ -1931,7 +1931,6 @@
 
         function goToNextQuestion() {
             const currentQuestion = currentQuestions[currentQuestionIndex]; // Get current question data
-    
             let isYesNoQuestion = currentQuestion.type === 'yesno'; // Determine if it's a yes/no question
     
             if (isYesNoQuestion) {
@@ -1954,7 +1953,19 @@
 
             if (currentQuestionIndex < currentQuestions.length - 1) {
                 currentQuestionIndex++;
-                // --- Skip follow-up questions if the answer to the "yesno" question is "no" ---
+                // --- **NEW LOGIC: Handle Follow-up Questions for "Yes" Answer** ---
+                if (isYesNoQuestion && confirmAnswerCheckbox.checked) { // If it's a "yesno" question AND answer is "yes"
+                    if (currentQuestion.followUpQuestions && currentQuestion.followUpQuestions.length > 0) {
+                        // Follow-up questions exist, so display the *first* follow-up question
+                        currentQuestions = currentQuestion.followUpQuestions; // **IMPORTANT**: Temporarily set currentQuestions to followUpQuestions
+                        currentQuestionIndex = 0; // **IMPORTANT**: Reset question index to 0 to start from the first follow-up
+                        displayQuestion();
+                        return; // Exit function here after displaying follow-up
+                    }
+                }
+                // --- **END NEW LOGIC for Follow-up Questions** ---
+    
+                // --- Skip follow-up questions if the answer to the "yesno" question is "no" (EXISTING LOGIC - Keep this) ---
                 let nextQuestionData = currentQuestions[currentQuestionIndex];
                 const previousQuestionData = currentQuestions[currentQuestionIndex - 1]; // Get the previous question
     
@@ -1968,7 +1979,9 @@
                     }
                 }
                 // --- End Skip Logic ---
+    
                 displayQuestion();
+    
             } else { // Last question in topic
                 displayTopicGreetingPage(analysisName, topicName, true); // Show greeting for CURRENT (completed) topic, indicate completion
             }
