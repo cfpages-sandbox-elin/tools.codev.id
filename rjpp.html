@@ -580,7 +580,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>RJPP v1.82<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
+        <h1>RJPP v1.83<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
 
         <div id="user-info-form-section">
             <h2>Informasi Perusahaan dan Pengguna 👤🏢</h2>
@@ -1764,7 +1764,33 @@
             // --- End Modified Question Display ---
     
             answerTextarea.style.display = 'none'; // Hide textarea for yes/no questions
-            confirmAnswerCheckbox.checked = answers[questionData.answerKey] === 'yes'; // Set checkbox based on saved answer
+    
+            // --- **ADD CHECKBOX HTML HERE** ---
+            const answerConfirmationDiv = document.querySelector('.answer-confirmation.card-controls.combined-controls');
+            answerConfirmationDiv.innerHTML = `
+                <label>
+                    <input type="checkbox" id="confirm-answer-checkbox"> Ya
+                </label>
+                <label style="margin-left: 20px;"> <input type="checkbox" id="reject-answer-checkbox"> Tidak </label>
+            `;
+            confirmAnswerCheckbox = document.getElementById('confirm-answer-checkbox'); // Re-assign global confirmAnswerCheckbox
+            rejectAnswerCheckbox = document.getElementById('reject-answer-checkbox'); // Get reject checkbox
+    
+            // Set checkbox states based on saved answer
+            if (answers[questionData.answerKey] === 'yes') {
+                confirmAnswerCheckbox.checked = true;
+                rejectAnswerCheckbox.checked = false;
+            } else if (answers[questionData.answerKey] === 'no') {
+                confirmAnswerCheckbox.checked = false;
+                rejectAnswerCheckbox.checked = true;
+            } else {
+                confirmAnswerCheckbox.checked = false;
+                rejectAnswerCheckbox.checked = false; // Default to unchecked if no answer
+            }
+    
+    
+            // --- END ADD CHECKBOX HTML ---
+    
     
             updateProgress();
             updateButtonStates();
@@ -1773,6 +1799,22 @@
             setTimeout(() => {
                 questionCard.classList.remove('hidden');
             }, 100);
+    
+            // --- Add Event Listeners for Checkboxes ---
+            confirmAnswerCheckbox.addEventListener('change', function() {
+                if (confirmAnswerCheckbox.checked) {
+                    rejectAnswerCheckbox.checked = false; // Uncheck "No" if "Yes" is checked
+                }
+                updateButtonStates(); // Update button states based on checkbox changes
+            });
+    
+            rejectAnswerCheckbox.addEventListener('change', function() {
+                if (rejectAnswerCheckbox.checked) {
+                    confirmAnswerCheckbox.checked = false; // Uncheck "Yes" if "No" is checked
+                }
+                updateButtonStates(); // Update button states based on checkbox changes
+            });
+            // --- End Event Listeners for Checkboxes ---
         }
     
 
@@ -1801,8 +1843,12 @@
         }
 
         function updateButtonStates() {
+            if (currentQuestions[currentQuestionIndex].type === 'yesno') {
+                nextBtnQuestion.disabled = !(confirmAnswerCheckbox.checked || rejectAnswerCheckbox.checked); // Disable if neither checkbox is checked for yes/no
+            } else {
+                nextBtnQuestion.disabled = !confirmAnswerCheckbox.checked; // Original logic for other question types
+            }
             prevBtn.disabled = currentQuestionIndex === 0 && currentTopicIndex === 0 && currentAnalysisIndex === 0; // Disable prev on very first question
-            nextBtnQuestion.disabled = !confirmAnswerCheckbox.checked;
         }
 
         function goToPreviousQuestion() {
@@ -1841,10 +1887,22 @@
 
 
         function goToNextQuestion() {
-            if (!confirmAnswerCheckbox.checked) {
-                alert("Mohon centang 'Saya yakin dengan jawaban ini' sebelum melanjutkan.");
-                return;
+            const currentQuestion = currentQuestions[currentQuestionIndex]; // Get current question data
+    
+            let isYesNoQuestion = currentQuestion.type === 'yesno'; // Determine if it's a yes/no question
+    
+            if (isYesNoQuestion) {
+                if (!confirmAnswerCheckbox.checked && !rejectAnswerCheckbox.checked) {
+                    alert("Mohon pilih 'Ya' atau 'Tidak' sebelum melanjutkan.");
+                    return;
+                }
+            } else { // Original validation for non-yesno questions
+                if (!confirmAnswerCheckbox.checked) {
+                    alert("Mohon centang 'Saya yakin dengan jawaban ini' sebelum melanjutkan.");
+                    return;
+                }
             }
+
             saveAnswer();
             const analysisName = currentAnalysisKeys[currentAnalysisIndex];
             const topicName = currentTopicKeys[currentTopicIndex];
