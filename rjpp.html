@@ -580,7 +580,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>RJPP v1.89<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
+        <h1>RJPP v1.90<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
 
         <div id="user-info-form-section">
             <h2>Informasi Perusahaan dan Pengguna 👤🏢</h2>
@@ -2134,7 +2134,7 @@
             answers[analysisName][topicName].answers[answerKey] = answerValue;
             answers[analysisName][topicName].status = "in-progress"; // Ensure status is at least in-progress
 
-            // --- **NEW LOGIC in saveAnswer: Check for completion including follow-up questions** ---
+            // --- **NEW LOGIC in saveAnswer: Check for completion including follow-up questions - CORRECTED** ---
             let allQuestionsAnsweredInTopic = true; // Assume all answered initially
             const topicQuestions = questionsData[analysisName][topicName]; // Get original topic questions
 
@@ -2146,16 +2146,21 @@
                     for (let j = 0; j < followUpQuestions.length; j++) {
                         const followUp = followUpQuestions[j];
                         if (!answers[analysisName][topicName].answers[followUp.answerKey]) {
-                            allQuestionsAnsweredInTopic = false; // If ANY follow-up is unanswered, topic is NOT complete
-                            break; // No need to check further follow-ups
+                            allQuestionsAnsweredInTopic = false; // Topic NOT complete if ANY follow-up is unanswered
+                            break; // Break OUT of follow-up loop, but CONTINUE checking main questions
                         }
                     }
-                    if (!allQuestionsAnsweredInTopic) break; // No need to check further main questions if follow-ups are incomplete
+                    if (!allQuestionsAnsweredInTopic) { // **MODIFIED CONDITION: Check AFTER follow-up loop**
+                        continue; // If follow-ups incomplete, continue to next MAIN question (topic is still incomplete)
+                    }
                 } else { // For regular questions or yes/no "no" answers, just check main question answer
                     if (!answers[analysisName][topicName].answers[question.answerKey]) {
-                        allQuestionsAnsweredInTopic = false; // If main question unanswered, topic is NOT complete
-                        break; // No need to check further main questions
+                        allQuestionsAnsweredInTopic = false; // Topic NOT complete if main question unanswered
+                        break; // Break OUT of main question loop
                     }
+                }
+                if (!allQuestionsAnsweredInTopic) { // **MODIFIED CONDITION: Check AFTER each question type**
+                    break; // If topic is incomplete at any point, break main question loop
                 }
             }
 
@@ -2164,7 +2169,7 @@
             } else {
                 answers[analysisName][topicName].status = "in-progress"; // Ensure status is "in-progress" if not completed
             }
-            // --- **END NEW LOGIC in saveAnswer** ---
+            // --- **END NEW LOGIC in saveAnswer - CORRECTED** ---
 
             saveAnswers(); // Save the updated answers object to localStorage
         }
