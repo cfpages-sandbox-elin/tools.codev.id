@@ -580,7 +580,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>RJPP v1.84<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
+        <h1>RJPP v1.85<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
 
         <div id="user-info-form-section">
             <h2>Informasi Perusahaan dan Pengguna 👤🏢</h2>
@@ -2074,8 +2074,8 @@
             reportAnswersDiv.innerHTML = answersHTML;
         }
 
-        const confirmAnswerCheckbox = document.getElementById('confirm-answer-checkbox');
-        const nextBtnQuestion = document.getElementById('next-btn-question');
+        let confirmAnswerCheckbox = document.getElementById('confirm-answer-checkbox');
+        let nextBtnQuestion = document.getElementById('next-btn-question');
 
         // --- Event Listeners ---
         userInfoForm.addEventListener('submit', function(event) {
