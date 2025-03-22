@@ -580,7 +580,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>RJPP v1.87<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
+        <h1>RJPP v1.88<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
 
         <div id="user-info-form-section">
             <h2>Informasi Perusahaan dan Pengguna 👤🏢</h2>
@@ -1342,8 +1342,8 @@
                         currentTopicKeys = storedState.currentTopicKeys || Object.keys(questionsData[currentAnalysisKeys[currentAnalysisIndex]]);
                         currentQuestions = questionsData[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicIndex]] || [];
                         currentTopicIndex = storedState.currentTopicIndex || 0;
-        
-                        // --- NEW LOGIC: Find first unanswered question based on status ---
+
+                        // --- NEW LOGIC: Find first unanswered question based on status, including follow-ups ---
                         let foundUnanswered = false;
                         for (let analysisIndex = 0; analysisIndex < currentAnalysisKeys.length; analysisIndex++) {
                             const analysisKey = currentAnalysisKeys[analysisIndex];
@@ -1352,18 +1352,36 @@
                                 const topicKey = topicKeys[topicIndex];
                                 const topicData = questionsData[analysisKey][topicKey];
                                 const topicStatus = answers[analysisKey]?.[topicKey]?.status || "not-started"; // Default to "not-started" if no status
-        
+
                                 if (topicStatus !== "completed") { // Only look for unanswered if topic is not completed
                                     for (let questionIndex = 0; questionIndex < topicData.length; questionIndex++) {
                                         const question = topicData[questionIndex];
-                                        if (!answers[analysisKey]?.[topicKey]?.answers?.[question.answerKey]) { // Nested check
+                                        if (question.type === 'yesno' && answers[analysisKey]?.[topicKey]?.answers?.[question.answerKey] === 'yes' && question.followUpQuestions && question.followUpQuestions.length > 0) {
+                                            // For yes/no "yes" answers, prioritize follow-up questions
+                                            const followUpQuestions = question.followUpQuestions;
+                                            for (let followUpQuestionIndex = 0; followUpQuestionIndex < followUpQuestions.length; followUpQuestionIndex++) {
+                                                const followUp = followUpQuestions[followUpQuestionIndex];
+                                                if (!answers[analysisKey]?.[topicKey]?.answers?.[followUp.answerKey]) {
+                                                    currentAnalysisIndex = analysisIndex;
+                                                    currentTopicIndex = topicIndex;
+                                                    currentQuestions = followUpQuestions; // **IMPORTANT**: Set currentQuestions to FOLLOW-UP questions
+                                                    currentQuestionIndex = followUpQuestionIndex; // Set to the unanswered follow-up index
+                                                    currentTopicKeys = Object.keys(questionsData[currentAnalysisKeys[currentAnalysisIndex]]); // Ensure topic keys are updated
+                                                    foundUnanswered = true;
+                                                    break; // Found unanswered follow-up, break inner loop
+                                                }
+                                            }
+                                        }
+                                        if (foundUnanswered) break; // If follow-up unanswered found, break question loop
+
+                                        if (!foundUnanswered && !answers[analysisKey]?.[topicKey]?.answers?.[question.answerKey]) { // Check main question if no unanswered follow-ups found yet
                                             currentAnalysisIndex = analysisIndex;
                                             currentTopicIndex = topicIndex;
                                             currentQuestionIndex = questionIndex;
                                             currentTopicKeys = Object.keys(questionsData[currentAnalysisKeys[currentAnalysisIndex]]);
                                             currentQuestions = questionsData[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicIndex]];
                                             foundUnanswered = true;
-                                            break; // Found first unanswered, break inner loop
+                                            break;
                                         }
                                     }
                                 }
@@ -1379,9 +1397,8 @@
                             currentQuestions = questionsData[currentAnalysisKeys[currentAnalysisIndex]][currentTopicKeys[currentTopicKeys[currentTopicIndex]]];
                             currentQuestionIndex = currentQuestions.length - 1;
                         }
-                        // --- End NEW LOGIC ---
-        
-        
+                        // --- End NEW LOGIC for loadAnswers ---
+
                     } else {
                         answers = {}; // Reset if no valid answers in stored state
                     }
@@ -1682,22 +1699,48 @@
             currentTopicIndex = currentTopicKeys.indexOf(topicKey);
             currentQuestions = questionsData[analysisKey][topicKey];
 
-            // --- Logic to find first unanswered question for "in-progress" topics ---
+            // --- MODIFIED logic to find first unanswered question, including follow-ups ---
             const topicStatus = answers[analysisKey]?.[topicKey]?.status || "not-started";
             if (topicStatus === 'in-progress') {
                 let firstUnansweredIndex = -1;
+                let foundFollowUp = false; // Flag to track if we are in follow-up questions
+
                 for (let i = 0; i < currentQuestions.length; i++) {
                     const question = currentQuestions[i];
-                    if (!answers[analysisKey]?.[topicKey]?.answers?.[question.answerKey]) {
-                        firstUnansweredIndex = i;
-                        break; // Found the first unanswered question index
+                    if (question.type === 'yesno' && answers[analysisKey]?.[topicKey]?.answers?.[question.answerKey] === 'yes' && question.followUpQuestions && question.followUpQuestions.length > 0) {
+                        // Prioritize follow-up questions if yes/no answer is "yes"
+                        const followUpQuestions = question.followUpQuestions;
+                        for (let followUpQuestionIndex = 0; followUpQuestionIndex < followUpQuestions.length; followUpQuestionIndex++) {
+                            const followUp = followUpQuestions[followUpQuestionIndex];
+                            if (!answers[analysisKey]?.[topicKey]?.answers?.[followUp.answerKey]) {
+                                currentQuestions = followUpQuestions; // **IMPORTANT**: Set currentQuestions to FOLLOW-UP questions
+                                currentQuestionIndex = followUpQuestionIndex; // Set to the unanswered follow-up index
+                                firstUnansweredIndex = followUpQuestionIndex; // Redundant but for clarity
+                                foundFollowUp = true; // Mark that we are starting with follow-ups
+                                break; // Found unanswered follow-up
+                            }
+                        }
+                    }
+                    if (foundFollowUp) break; // If we found an unanswered follow-up, break main question loop
+
+                    if (!foundFollowUp && !answers[analysisKey]?.[topicKey]?.answers?.[question.answerKey]) {
+                        firstUnansweredIndex = i; // Index of the first unanswered main question
+                        break; // Found the first unanswered main question
                     }
                 }
-                currentQuestionIndex = firstUnansweredIndex !== -1 ? firstUnansweredIndex : 0; // Start at first unanswered or beginning if all answered (shouldn't happen in 'in-progress' state ideally)
-            } else { // For 'not-started' topics, start from the beginning
+                currentQuestionIndex = firstUnansweredIndex !== -1 ? firstUnansweredIndex : 0; // Start at first unanswered index, or beginning if all answered (shouldn't happen in 'in-progress')
+
+                if (foundFollowUp) {
+                    // If we started with follow-up questions, currentQuestions is already set to followUpQuestions
+                    // No need to change currentQuestions again
+                } else {
+                    currentQuestions = questionsData[analysisKey][topicKey]; // **IMPORTANT**: Ensure currentQuestions is set to MAIN topic questions if not starting with follow-ups
+                }
+
+            } else { // For 'not-started' topics, start from the beginning - unchanged
                 currentQuestionIndex = 0;
             }
-            // --- End logic to find first unanswered question ---
+            // --- End MODIFIED logic to find first unanswered question, including follow-ups ---
 
             displayQuestion();
         }
@@ -1706,6 +1749,15 @@
             const analysisName = currentAnalysisKeys[currentAnalysisIndex];
             const topicName = currentTopicKeys[currentTopicIndex];
             let questionData = currentQuestions[currentQuestionIndex];
+
+            // --- **NEW in displayQuestion: Check for and Display Follow-up Questions Immediately if Applicable** ---
+            if (questionData.type === 'yesno' && answers[questionData.answerKey] === 'yes' && questionData.followUpQuestions && questionData.followUpQuestions.length > 0) {
+                // If it's a yes/no question, answer is "yes", and has follow-ups, immediately display the *first* follow-up
+                currentQuestions = questionData.followUpQuestions; // **IMPORTANT**: Switch to followUpQuestions array
+                currentQuestionIndex = 0; // **IMPORTANT**: Reset index to start at the first follow-up
+                questionData = currentQuestions[0]; // Update questionData to be the first follow-up question
+            }
+            // --- END NEW SECTION in displayQuestion ---
 
             // Check if it's a yes/no question and handle conditional display
             if (questionData.type === 'yesno') {
@@ -1946,26 +1998,22 @@
             }
 
             saveAnswer();
+
             const analysisName = currentAnalysisKeys[currentAnalysisIndex];
             const topicName = currentTopicKeys[currentTopicIndex];
             const currentTopicStatus = answers[analysisName]?.[topicName]?.status;
             console.log(`goToNextQuestion - After saveAnswer, Topic: ${topicName}, Status: ${currentTopicStatus}`);
 
-            if (currentQuestionIndex < currentQuestions.length - 1) {
-                currentQuestionIndex++;
-                // --- **NEW LOGIC: Handle Follow-up Questions for "Yes" Answer** ---
-                if (isYesNoQuestion && confirmAnswerCheckbox.checked) { // If it's a "yesno" question AND answer is "yes"
-                    if (currentQuestion.followUpQuestions && currentQuestion.followUpQuestions.length > 0) {
-                        // Follow-up questions exist, so display the *first* follow-up question
-                        currentQuestions = currentQuestion.followUpQuestions; // **IMPORTANT**: Temporarily set currentQuestions to followUpQuestions
-                        currentQuestionIndex = 0; // **IMPORTANT**: Reset question index to 0 to start from the first follow-up
-                        displayQuestion();
-                        return; // Exit function here after displaying follow-up
-                    }
-                }
-                // --- **END NEW LOGIC for Follow-up Questions** ---
+            if (isYesNoQuestion && confirmAnswerCheckbox.checked && currentQuestion.followUpQuestions && currentQuestion.followUpQuestions.length > 0) {
+                // --- NEW LOGIC: For "Yes" answer on yes/no with follow-ups, stay on the same yes/no question card ---
+                currentQuestions = currentQuestion.followUpQuestions; // **IMPORTANT**: Set currentQuestions to followUpQuestions (again, to ensure correct context for displayQuestion)
+                currentQuestionIndex = 0; // **IMPORTANT**: Reset index to start at the first follow-up
+                displayQuestion(); // Call displayQuestion AGAIN to immediately show the first follow-up question
+                return; // Exit function here after displaying follow-up
     
-                // --- Skip follow-up questions if the answer to the "yesno" question is "no" (EXISTING LOGIC - Keep this) ---
+            } else if (currentQuestionIndex < currentQuestions.length - 1) {
+                currentQuestionIndex++;
+                 // --- Skip follow-up questions if the answer to the "yesno" question is "no" (EXISTING LOGIC - Keep this) ---
                 let nextQuestionData = currentQuestions[currentQuestionIndex];
                 const previousQuestionData = currentQuestions[currentQuestionIndex - 1]; // Get the previous question
     
@@ -1979,9 +2027,8 @@
                     }
                 }
                 // --- End Skip Logic ---
-    
                 displayQuestion();
-    
+
             } else { // Last question in topic
                 displayTopicGreetingPage(analysisName, topicName, true); // Show greeting for CURRENT (completed) topic, indicate completion
             }
@@ -2074,14 +2121,37 @@
             answers[analysisName][topicName].answers[answerKey] = answerValue;
             answers[analysisName][topicName].status = "in-progress"; // Ensure status is at least in-progress
 
-            // Check if all questions in the current topic are answered
-            const allQuestionsAnsweredInTopic = currentQuestions.every(question => {
-                return answers[analysisName][topicName].answers[question.answerKey] !== undefined && answers[analysisName][topicName].answers[question.answerKey] !== ""; // Check for not undefined and not empty string
-            });
+            // --- **NEW LOGIC in saveAnswer: Check for completion including follow-up questions** ---
+            let allQuestionsAnsweredInTopic = true; // Assume all answered initially
+            const topicQuestions = questionsData[analysisName][topicName]; // Get original topic questions
+
+            for (let i = 0; i < topicQuestions.length; i++) {
+                const question = topicQuestions[i];
+                if (question.type === 'yesno' && answers[analysisName][topicName].answers[question.answerKey] === 'yes' && question.followUpQuestions && question.followUpQuestions.length > 0) {
+                    // For yes/no "yes" answers with follow-ups, check if ALL follow-ups are answered
+                    const followUpQuestions = question.followUpQuestions;
+                    for (let j = 0; j < followUpQuestions.length; j++) {
+                        const followUp = followUpQuestions[j];
+                        if (!answers[analysisName][topicName].answers[followUp.answerKey]) {
+                            allQuestionsAnsweredInTopic = false; // If ANY follow-up is unanswered, topic is NOT complete
+                            break; // No need to check further follow-ups
+                        }
+                    }
+                    if (!allQuestionsAnsweredInTopic) break; // No need to check further main questions if follow-ups are incomplete
+                } else { // For regular questions or yes/no "no" answers, just check main question answer
+                    if (!answers[analysisName][topicName].answers[question.answerKey]) {
+                        allQuestionsAnsweredInTopic = false; // If main question unanswered, topic is NOT complete
+                        break; // No need to check further main questions
+                    }
+                }
+            }
 
             if (allQuestionsAnsweredInTopic) {
                 answers[analysisName][topicName].status = "completed";
+            } else {
+                answers[analysisName][topicName].status = "in-progress"; // Ensure status is "in-progress" if not completed
             }
+            // --- **END NEW LOGIC in saveAnswer** ---
 
             saveAnswers(); // Save the updated answers object to localStorage
         }
