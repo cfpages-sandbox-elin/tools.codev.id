@@ -580,7 +580,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>RJPP v1.91 debug 2<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
+        <h1>RJPP v1.91 debug 3<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
 
         <div id="user-info-form-section">
             <h2>Informasi Perusahaan dan Pengguna 👤🏢</h2>
@@ -1491,11 +1491,17 @@
                 console.groupCollapsed(`Analysis: ${analysisKey}`); // Start console group for analysis
 
                 for (const topicKey in analysisData) {
-                    console.log("  Topic Key:", topicKey); // <--- ADD THIS LINE: Log topicKey
-                    const topicData = questionsData[analysisKey][topicKey]; // Line causing error
-                    console.log("  Topic Data (questionsData[analysisKey][topicKey]):", topicData); // <--- ADD THIS LINE: Log topicData
+                    console.log("  Topic Key:", topicKey); // Log topicKey
 
-                    if (!topicData) { // <--- ADD THIS CHECK: Ensure topicData is not undefined
+                    if (!analysisData.hasOwnProperty(topicKey)) { // <--- ADD THIS CHECK: hasOwnProperty()
+                        console.warn("  Warning: Skipping non-own property as topicKey:", topicKey, "in analysisKey:", analysisKey);
+                        continue; // Skip to the next iteration if topicKey is not an own property
+                    }
+
+                    const topicData = questionsData[analysisKey][topicKey]; // Line causing error
+                    console.log("  Topic Data (questionsData[analysisKey][topicKey]):", topicData);
+
+                     if (!topicData) { // Ensure topicData is not undefined (keep this check)
                         console.error("  Error: topicData is undefined for topicKey:", topicKey, "in analysisKey:", analysisKey);
                         continue; // Skip to the next topic if topicData is undefined
                     }
@@ -1591,7 +1597,6 @@
                         }
                     }
                 }
-
 
                 const topicCountInAnalysis = Object.keys(analysisData).length;
 
