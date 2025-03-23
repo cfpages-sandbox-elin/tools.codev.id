@@ -580,7 +580,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>RJPP v1.91<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
+        <h1>RJPP v1.91 debug<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
 
         <div id="user-info-form-section">
             <h2>Informasi Perusahaan dan Pengguna 👤🏢</h2>
@@ -1483,6 +1483,8 @@
 
             for (const analysisKey of currentAnalysisKeys) {
                 const analysisData = questionsData[analysisKey];
+                console.log("Analysis Key:", analysisKey);
+                console.log("Analysis Data (questionsData[analysisKey]):", analysisData);
                 let analysisStatus = 'not-answered'; // Default analysis status
                 let allTopicsCompleted = true;
                 let partiallyAnsweredTopics = false;
