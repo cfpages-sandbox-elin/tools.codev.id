@@ -580,7 +580,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>RJPP v1.90<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
+        <h1>RJPP v1.91<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
 
         <div id="user-info-form-section">
             <h2>Informasi Perusahaan dan Pengguna 👤🏢</h2>
@@ -1475,7 +1475,7 @@
             topicGreetingSection.style.display = 'none';
             questionSection.style.display = 'none';
             reportSection.style.display = 'none';
-        
+
             const cardsContainer = document.getElementById('checkpoint-cards-container');
             cardsContainer.innerHTML = '';
 
@@ -1494,18 +1494,50 @@
                     const topicStatus = answers[analysisKey]?.[topicKey]?.status || "not-started";
                     console.log(`  Topic: ${topicKey}, Status: ${topicStatus}`); // Log topic status
 
-                    if (topicStatus === 'completed') {
-                        noTopicsAnsweredYet = false; // At least one topic is answered
-                    } else if (topicStatus === 'in-progress') {
-                        partiallyAnsweredTopics = true; // Still partially answered because of in-progress topic
+                    // --- **NEW LOGIC in displayCheckpointPage: Robust topic status check including follow-ups** ---
+                    let topicActuallyCompleted = true; // Assume topic is completed for now, disprove if not
+                    const topicQuestions = questionsData[analysisKey][topicKey];
+                    for (let i = 0; i < topicQuestions.length; i++) {
+                        const question = topicQuestions[i];
+                        if (question.type === 'yesno' && answers[analysisKey][topicKey].answers[question.answerKey] === 'yes' && question.followUpQuestions && question.followUpQuestions.length > 0) {
+                            const followUpQuestions = question.followUpQuestions;
+                            for (let j = 0; j < followUpQuestions.length; j++) {
+                                const followUp = followUpQuestions[j];
+                                if (!answers[analysisKey][topicKey].answers[followUp.answerKey]) {
+                                    topicActuallyCompleted = false; // Topic NOT complete if ANY follow-up unanswered
+                                    break;
+                                }
+                            }
+                            if (!topicActuallyCompleted) break; // No need to check further if already incomplete
+                        } else {
+                            if (!answers[analysisKey][topicKey].answers[question.answerKey]) {
+                                topicActuallyCompleted = false; // Topic NOT complete if main question unanswered
+                                break;
+                            }
+                        }
+                    }
+
+                    let calculatedTopicStatus;
+                    if (topicActuallyCompleted) {
+                        calculatedTopicStatus = 'completed';
+                    } else {
+                        calculatedTopicStatus = topicStatus; // Fallback to the status from 'answers' if not fully completed
+                    }
+                    // --- **END NEW LOGIC in displayCheckpointPage** ---
+
+
+                    if (calculatedTopicStatus === 'completed') { // Use calculated status
+                        noTopicsAnsweredYet = false;
+                    } else if (calculatedTopicStatus === 'in-progress') { // Use calculated status
+                        partiallyAnsweredTopics = true;
                         allTopicsCompleted = false;
-                        noTopicsAnsweredYet = false; // At least one topic is started
+                        noTopicsAnsweredYet = false;
                     } else { // topicStatus is 'not-started'
                         allTopicsCompleted = false;
                         // partiallyAnsweredTopics remains false if no topic is in-progress yet
                     }
-                    if (topicStatus === 'completed' || topicStatus === 'in-progress') { // Modified condition: if ANY topic is completed or in-progress
-                        partiallyAnsweredTopics = true; // Then the analysis is at least partially answered
+                    if (calculatedTopicStatus === 'completed' || calculatedTopicStatus === 'in-progress') { // Use calculated status
+                        partiallyAnsweredTopics = true;
                     }
                 }
 
@@ -1529,9 +1561,26 @@
 
                 const totalQuestionsInAnalysis = Object.values(analysisData).flat().length;
                 let answeredQuestionsCount = 0;
+                let unansweredQuestionsCount = 0; // Track unanswered questions
                 for (const topicKey in analysisData) {
                     const topicAnswers = answers[analysisKey]?.[topicKey]?.answers || {};
-                    answeredQuestionsCount += Object.keys(topicAnswers).length;
+                    const topicQData = questionsData[analysisKey][topicKey]; // Get topic question data
+
+                    for (let qIndex = 0; qIndex < topicQData.length; qIndex++) {
+                        const qDataItem = topicQData[qIndex];
+                        if (qDataItem.type === 'yesno' && answers[analysisKey]?.[topicKey]?.answers?.[qDataItem.answerKey] === 'yes' && qDataItem.followUpQuestions) {
+                            // Count follow-up questions if yes/no is "yes"
+                            answeredQuestionsCount += Object.keys(topicAnswers).length; // Consider yes/no answered
+                            unansweredQuestionsCount += qDataItem.followUpQuestions.length - (answers[analysisKey]?.[topicKey]?.answers ? Object.keys(topicAnswers).length -1 : 0); // Count unanswered follow-ups
+
+                        } else {
+                             if (answers[analysisKey]?.[topicKey]?.answers?.[qDataItem.answerKey]) {
+                                answeredQuestionsCount++;
+                            } else {
+                                unansweredQuestionsCount++;
+                            }
+                        }
+                    }
                 }
 
                 const topicCountInAnalysis = Object.keys(analysisData).length;
@@ -1544,7 +1593,7 @@
                         <p>🗂️ Topik: ${topicCountInAnalysis}</p>
                         <p>📝 Pertanyaan: ${totalQuestionsInAnalysis}</p>
                         <p>✅ Dijawab: ${answeredQuestionsCount}</p>
-                        <p>❓ Belum Dijawab: ${totalQuestionsInAnalysis - answeredQuestionsCount}</p>
+                        <p>❓ Belum Dijawab: ${unansweredQuestionsCount}</p>
                     </div>
                 `;
                 card.addEventListener('click', function() {
@@ -1576,21 +1625,60 @@
 
             for (const topicKey of currentTopicKeys) {
                 const topicData = questionsData[analysisKey][topicKey];
-                const topicStatus = answers[analysisKey]?.[topicKey]?.status || "not-started"; // Get topic status
+                let topicStatus = answers[analysisKey]?.[topicKey]?.status || "not-started"; // Get topic status
                 let cardStatusClass = `status-not-answered`; // Default card status class
 
-                if (topicStatus === 'completed') {
-                    cardStatusClass = `status-answered`;
-                } else if (topicStatus === 'in-progress') {
+                // --- **NEW LOGIC in displayTopicCheckpointPage: Robust topic status check including follow-ups** ---
+                let topicActuallyCompleted = true; // Assume topic is completed for now, disprove if not
+                const topicQuestions = questionsData[analysisKey][topicKey];
+                for (let i = 0; i < topicQuestions.length; i++) {
+                    const question = topicQuestions[i];
+                    if (question.type === 'yesno' && answers[analysisKey][topicKey].answers[question.answerKey] === 'yes' && question.followUpQuestions && question.followUpQuestions.length > 0) {
+                        const followUpQuestions = question.followUpQuestions;
+                        for (let j = 0; j < followUpQuestions.length; j++) {
+                            const followUp = followUpQuestions[j];
+                            if (!answers[analysisKey][topicKey].answers[followUp.answerKey]) {
+                                topicActuallyCompleted = false; // Topic NOT complete if ANY follow-up unanswered
+                                break;
+                            }
+                        }
+                        if (!topicActuallyCompleted) break; // No need to check further if already incomplete
+                    } else {
+                        if (!answers[analysisKey][topicKey].answers[question.answerKey]) {
+                            topicActuallyCompleted = false; // Topic NOT complete if main question unanswered
+                            break;
+                        }
+                    }
+                }
+
+                if (topicActuallyCompleted) {
+                    topicStatus = 'completed'; // Override topicStatus if actually completed based on full check
+                    cardStatusClass = `status-answered`; // Set card to answered if truly completed
+                } else if (topicStatus === 'in-progress' || answers[analysisKey]?.[topicKey]?.status === 'in-progress') { // Prioritize 'in-progress' from answers if available
                     cardStatusClass = `status-partially-answered`;
                 } else {
                     cardStatusClass = `status-not-answered`;
                 }
+                // --- **END NEW LOGIC in displayTopicCheckpointPage** ---
 
                 const totalQuestionsInTopic = topicData.length;
                 let answeredQuestionsCount = 0;
-                const topicAnswers = answers[analysisKey]?.[topicKey]?.answers || {};
-                answeredQuestionsCount = Object.keys(topicAnswers).length;
+                let unansweredQuestionsCount = 0; // Track unanswered questions
+                for (let qIndex = 0; qIndex < topicData.length; qIndex++) {
+                    const qDataItem = topicData[qIndex];
+                    if (qDataItem.type === 'yesno' && answers[analysisKey]?.[topicKey]?.answers?.[qDataItem.answerKey] === 'yes' && qDataItem.followUpQuestions) {
+                        // Count follow-up questions if yes/no is "yes"
+                        answeredQuestionsCount += Object.keys(answers[analysisKey]?.[topicKey]?.answers || {}).length; // Consider yes/no answered
+                        unansweredQuestionsCount += qDataItem.followUpQuestions.length - (answers[analysisKey]?.[topicKey]?.answers ? Object.keys(answers[analysisKey]?.[topicKey]?.answers || {}).length -1 : 0); // Count unanswered follow-ups
+
+                    } else {
+                         if (answers[analysisKey]?.[topicKey]?.answers?.[qDataItem.answerKey]) {
+                            answeredQuestionsCount++;
+                        } else {
+                            unansweredQuestionsCount++;
+                        }
+                    }
+                }
 
                 const card = document.createElement('div');
                 card.className = `topic-checkpoint-card ${cardStatusClass}`;
@@ -1599,7 +1687,7 @@
                     <div class="card-details">
                         <p>📝 Pertanyaan: ${totalQuestionsInTopic}</p>
                         <p>✅ Dijawab: ${answeredQuestionsCount}</p>
-                        <p>❓ Belum Dijawab: ${totalQuestionsInTopic - answeredQuestionsCount}</p>
+                        <p>❓ Belum Dijawab: ${unansweredQuestionsCount}</p>
                     </div>
                 `;
                 card.addEventListener('click', function() {
@@ -1621,13 +1709,47 @@
             const currentTopicKeysForAnalysis = Object.keys(questionsData[analysisKey]);
             const currentTopicIndexInAnalysis = currentTopicKeysForAnalysis.indexOf(topicKey);
             const isLastTopicInAnalysis = currentTopicIndexInAnalysis === currentTopicKeysForAnalysis.length - 1;
-            const topicStatus = answers[analysisKey]?.[topicKey]?.status || "not-started";
+            let topicStatus = answers[analysisKey]?.[topicKey]?.status || "not-started";
+
+
+            // --- **NEW LOGIC in displayTopicGreetingPage: Robust topic status check including follow-ups** ---
+            let topicActuallyCompleted = true; // Assume topic is completed for now, disprove if not
+            const topicQuestions = questionsData[analysisKey][topicKey];
+            for (let i = 0; i < topicQuestions.length; i++) {
+                const question = topicQuestions[i];
+                if (question.type === 'yesno' && answers[analysisKey][topicKey].answers[question.answerKey] === 'yes' && question.followUpQuestions && question.followUpQuestions.length > 0) {
+                    const followUpQuestions = question.followUpQuestions;
+                    for (let j = 0; j < followUpQuestions.length; j++) {
+                        const followUp = followUpQuestions[j];
+                        if (!answers[analysisKey][topicKey].answers[followUp.answerKey]) {
+                            topicActuallyCompleted = false; // Topic NOT complete if ANY follow-up unanswered
+                            break;
+                        }
+                    }
+                    if (!topicActuallyCompleted) break; // No need to check further if already incomplete
+                } else {
+                    if (!answers[analysisKey][topicKey].answers[question.answerKey]) {
+                        topicActuallyCompleted = false; // Topic NOT complete if main question unanswered
+                        break;
+                    }
+                }
+            }
+
+            if (topicActuallyCompleted) {
+                topicStatus = 'completed'; // Override topicStatus if actually completed based on full check
+            } else {
+                topicStatus = answers[analysisKey]?.[topicKey]?.status || "not-started"; // Fallback to status from 'answers'
+            }
+             // --- **END NEW LOGIC in displayTopicGreetingPage** ---
+
 
             console.log(`displayTopicGreetingPage - Analysis: ${analysisKey}, Topic: ${topicKey}, Status: ${topicStatus}, isTopicCompleted: ${isTopicCompleted}`);
 
-            if (isTopicCompleted) {
+
+            if (topicStatus === 'completed') {
                 console.log(`  isTopicCompleted is true, showing congratulatory message`);
                 topicGreetingTitle.textContent = `Selamat! 🎉 Topik ${topicKey} Selesai!`;
+
 
                 // --- Improved Next Uncompleted Topic Logic ---
                 let nextUncompletedTopicKey = null;
@@ -1641,6 +1763,7 @@
                         break; // Found the FIRST uncompleted topic (in order of topic keys)
                     }
                 }
+
 
                 if (nextUncompletedTopicKey) { // If there IS an uncompleted topic
                     topicGreetingDescription.innerHTML = `Anda baru saja menyelesaikan pertanyaan survei untuk topik <span style="font-weight:bold;">${topicKey}</span> dari analisis <span style="font-weight:bold;">${analysisKey}</span>.<br><br>Siap untuk melanjutkan ke topik berikutnya, <span style="font-weight:bold;">${nextUncompletedTopicKey}</span>?`;
@@ -1661,7 +1784,7 @@
             } else { // Initial topic greeting (not completion) or IN-PROGRESS topic greeting
                 console.log(`  isTopicCompleted is false, showing initial greeting message OR in-progress message`);
                 topicGreetingTitle.textContent = `Analisis ${analysisKey} - Topik ${topicKey} 🚀`;
-    
+
                 if (topicStatus === 'in-progress') {
                     // Calculate progress for in-progress topic
                     const totalQuestionsInTopic = questionsData[analysisKey][topicKey].length;
@@ -1669,10 +1792,10 @@
                     const topicAnswers = answers[analysisKey]?.[topicKey]?.answers || {};
                     answeredQuestionsCount = Object.keys(topicAnswers).length;
                     const progressPercentage = ((answeredQuestionsCount / totalQuestionsInTopic) * 100).toFixed(0);
-    
+
                     topicGreetingDescription.innerHTML = `Anda sudah menjawab <span style="font-weight:bold;">${answeredQuestionsCount} dari ${totalQuestionsInTopic} pertanyaan</span> (${progressPercentage}%) untuk topik <span style="font-weight:bold;">${topicKey}</span> dari analisis <span style="font-weight:bold;">${analysisKey}</span>.<br><br>Klik tombol di bawah untuk <span style="font-weight:bold;">melanjutkan</span> survei topik ini.`;
                     startTopicBtn.textContent = `Lanjutkan Jawab Survei Topik ${topicKey} 🚀`; // Changed button text
-    
+
                 } else { // topicStatus is 'not-started'
                     topicGreetingDescription.innerHTML = `Anda akan menjawab pertanyaan survei untuk analisis <span style="font-weight:bold;">${analysisKey}</span>, topik <span style="font-weight:bold;">${topicKey}</span>. Klik tombol 'Mulai Survei Topik Ini' di bawah untuk memulai.`;
                     startTopicBtn.textContent = `Mulai Survei Topik ${topicKey} 🚀`; // Original button text
