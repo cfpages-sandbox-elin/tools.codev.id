@@ -5,12 +5,12 @@ on:
   push:
     branches: [ "main" ]
     paths-ignore: # Use paths-ignore instead of paths to trigger ONLY on additions/removals
-      - 'index.md'       # Don't trigger on changes to index.md itself
-      - 'index.html'       # Don't trigger on changes to index.html
-      - '.github/**'   # Don't trigger on changes in .github directory (workflow files)
-      - '**/*.!(html)' # Ignore changes to files that are NOT .html files
+      - 'index.md'
+      - 'index.html'
+      - '.github/**'
+      - '**/*.!(html)'
 
-permissions: # Explicitly grant write permission
+permissions:
   contents: write
 
 jobs:
@@ -26,7 +26,7 @@ jobs:
         id: check_changes
         run: |
           # Get list of changed files, filter for .html (excluding index.html), and get change type
-          CHANGED_HTML_FILES=$(git diff --name-status --diff-filter=ADR --no-renames HEAD^ HEAD | grep '\.html$' | grep -v 'index\.html')
+          CHANGED_HTML_FILES=$(git diff --name-status --diff-filter=ADR --no-renames HEAD^ HEAD | grep '\.html$' | grep -v 'index\.html' || true)
 
           if [[ -n "$CHANGED_HTML_FILES" ]]; then
             echo "::set-output name=trigger_workflow::true" # Set output to trigger workflow
