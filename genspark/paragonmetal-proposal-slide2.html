@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Proposal Pengembangan KPI & Job Grading PT. Paragon Spesial Metal</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --unair-blue: #00529C;
+      --unair-gold: #B8860B;
+      --unair-light-blue: #3A75C4;
+      --unair-light-gold: #DEB887;
+    }
+    
+    body {
+      font-family: 'Montserrat', sans-serif;
+      color: #333;
+      line-height: 1.6;
+      background-color: #f5f5f5;
+    }
+    
+    .slide {
+      aspect-ratio: 16/9;
+      background-color: white;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      position: relative;
+      page-break-after: always;
+      break-after: page;
+    }
+    
+    .slide-content {
+      height: 100%;
+      padding: 30px;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .slide-title {
+      color: var(--unair-blue);
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+    
+    .slide-header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background-color: var(--unair-blue);
+      color: white;
+      padding: 10px 30px;
+      font-size: 18px;
+      font-weight: 500;
+    }
+    
+    .slide-footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background-color: var(--unair-blue);
+      color: white;
+      padding: 8px 30px;
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .logo {
+      height: 60px;
+      margin-bottom: 15px;
+    }
+    
+    .cover-slide {
+      background: linear-gradient(rgba(0, 82, 156, 0.85), rgba(0, 82, 156, 0.95)), url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+      background-size: cover;
+      background-position: center;
+      color: white;
+    }
+    
+    .cover-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 1.5rem;
+      color: white;
+    }
+    
+    .team-photo {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--unair-gold);
+    }
+    
+    .timeline-item {
+      padding-left: 30px;
+      border-left: 2px solid var(--unair-gold);
+      margin-bottom: 20px;
+      position: relative;
+    }
+    
+    .timeline-item:before {
+      content: '';
+      position: absolute;
+      left: -10px;
+      top: 0;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background-color: var(--unair-gold);
+    }
+    
+    .benefit-card {
+      border-left: 4px solid var(--unair-gold);
+      padding: 15px;
+      background-color: rgba(184, 134, 11, 0.1);
+      margin-bottom: 15px;
+    }
+    
+    .btn-primary {
+      background-color: var(--unair-blue);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-weight: 500;
+      display: inline-block;
+      margin-top: 15px;
+      transition: all 0.3s;
+    }
+    
+    .btn-primary:hover {
+      background-color: var(--unair-light-blue);
+      transform: translateY(-2px);
+    }
+    
+    .golden-text {
+      color: var(--unair-gold);
+      font-weight: 600;
+    }
+    
+    .chart-container {
+      height: 200px;
+      margin: 20px 0;
+    }
+    
+    @media print {
+      .slide {
+        page-break-after: always;
+        break-after: page;
+      }
+    }
+    
+    .container {
+      width: 90%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 30px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Slide 1: Cover Slide -->
+    <div class="slide cover-slide">
+      <div class="slide-content flex flex-col justify-center items-center text-center">
+        <div class="mb-6">
+          <img src="https://manajemen.feb.unair.ac.id/wp-content/uploads/2020/06/logo-unair-1.png" alt="LPMB Universitas Airlangga" class="h-20">
+        </div>
+        <h1 class="cover-title">Proposal Pengembangan<br>Key Performance Indicator (KPI)<br>& Job Grading</h1>
+        <div class="text-2xl font-medium mb-8 text-white">PT. Paragon Spesial Metal</div>
+        <div class="text-xl mb-2 text-white opacity-90">April 2025</div>
+        <div class="mt-16 text-xl font-medium text-white">
+          LEMBAGA PENGEMBANGAN MANAJEMEN DAN BISNIS<br>
+          FAKULTAS EKONOMI DAN BISNIS<br>
+          UNIVERSITAS AIRLANGGA
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 2: Introduction to LPMB -->
+    <div class="slide">
+      <div class="slide-header flex justify-between items-center">
+        <div>LPMB Universitas Airlangga</div>
+        <img src="https://manajemen.feb.unair.ac.id/wp-content/uploads/2020/06/logo-unair-1.png" alt="LPMB Logo" class="h-8">
+      </div>
+      <div class="slide-content pt-16">
+        <h2 class="slide-title text-2xl">Tentang LPMB Universitas Airlangga</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <p class="mb-4">
+              <span class="golden-text">LEMBAGA PENGEMBANGAN MANAJEMEN DAN BISNIS</span> Fakultas Ekonomi dan Bisnis Universitas Airlangga didirikan untuk mengemban misi Tri Dharma Perguruan Tinggi, khususnya dalam pengabdian kepada masyarakat melalui kajian dan pengembangan manajemen di Indonesia guna menghadapi era globalisasi.
+            </p>
+            <div class="mt-6">
+              <h3 class="text-xl font-semibold text-gray-700 mb-3">Sejarah LPMB</h3>
+              <div class="space-y-2">
+                <div class="flex items-center">
+                  <div class="w-24 font-bold">1975-1997</div>
+                  <div>Pusat Manajemen dan Pengembangan (PMP)</div>
+                </div>
+                <div class="flex items-center">
+                  <div class="w-24 font-bold">1997-2003</div>
+                  <div>Pusat Pengkajian dan Pengembangan Manajemen (P3M FE UNAIR)</div>
+                </div>
+                <div class="flex items-center">
+                  <div class="w-24 font-bold">2003-Kini</div>
+                  <div>Lembaga Pengembangan Manajemen dan Bisnis (LPMB)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">Kompetensi Kami</h3>
+            <div class="mb-6">
+              <div class="font-semibold mb-2 text-lg flex items-center">
+                <i class="fas fa-graduation-cap mr-2 text-blue-800"></i>
+                Pelatihan Bisnis dan Manajemen
+              </div>
+              <p class="text-sm">Program pelatihan dan peningkatan kompetensi untuk SDM perusahaan dengan kurikulum yang disesuaikan dengan kebutuhan spesifik perusahaan.</p>
+            </div>
+            <div>
+              <div class="font-semibold mb-2 text-lg flex items-center">
+                <i class="fas fa-briefcase mr-2 text-blue-800"></i>
+                Konsultan Bisnis
+              </div>
+              <p class="text-sm">Membantu perusahaan menyelesaikan masalah bisnis dan manajemen, memberikan pendampingan proses bisnis agar perusahaan mampu menyelesaikan proses transformasi dan meningkatkan nilai perusahaan.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Proposal Pengembangan KPI & Job Grading</div>
+        <div>LPMB Universitas Airlangga</div>
+      </div>
+    </div>
+
+    <!-- Slide 3: About PT Paragon Spesial Metal -->
+    <div class="slide">
+      <div class="slide-header flex justify-between items-center">
+        <div>LPMB Universitas Airlangga</div>
+        <img src="https://manajemen.feb.unair.ac.id/wp-content/uploads/2020/06/logo-unair-1.png" alt="LPMB Logo" class="h-8">
+      </div>
+      <div class="slide-content pt-16">
+        <h2 class="slide-title text-2xl">Tentang PT. Paragon Spesial Metal</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <p class="mb-4">
+              PT. Paragon Spesial Metal adalah perusahaan yang telah mapan dalam industri logam spesial dan layanan terkait. Perusahaan ini memiliki reputasi yang solid dengan fokus pada penyediaan berbagai jenis baja berkualitas tinggi dan layanan pendukung.
+            </p>
+            <h3 class="text-xl font-semibold text-gray-700 mb-3">Lokasi Strategis</h3>
+            <div class="flex space-x-4 mb-4">
+              <div class="bg-gray-100 p-3 rounded-lg flex-1 text-center">
+                <div class="font-bold text-blue-800">Cikarang</div>
+                <div class="text-sm">Kantor Pusat</div>
+              </div>
+              <div class="bg-gray-100 p-3 rounded-lg flex-1 text-center">
+                <div class="font-bold text-blue-800">Surabaya</div>
+                <div class="text-sm">Kantor Cabang</div>
+              </div>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-700 mb-3">Visi</h3>
+            <p class="text-sm italic mb-4">"Menjadi penyedia solusi terbaik dan paling efektif di industri logam"</p>
+          </div>
+          <div>
+            <h3 class="text-xl font-semibold text-gray-700 mb-3">Produk & Layanan</h3>
+            <div class="space-y-3">
+              <div class="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-800">
+                <div class="font-bold">Steel Grades</div>
+                <div class="text-sm">Tool Steel, Machinery Steel, Stainless Steel, dan lainnya</div>
+              </div>
+              <div class="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-800">
+                <div class="font-bold">Heat Treatment</div>
+                <div class="text-sm">Proses pengolahan panas untuk meningkatkan kualitas baja</div>
+              </div>
+              <div class="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-800">
+                <div class="font-bold">Machining</div>
+                <div class="text-sm">Proses pemesinan presisi untuk material logam</div>
+              </div>
+              <div class="bg-blue-50 p-3 rounded-lg border-l-4 border-blue-800">
+                <div class="font-bold">Technical Support</div>
+                <div class="text-sm">Dukungan teknis dan konsultasi untuk pelanggan</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Proposal Pengembangan KPI & Job Grading</div>
+        <div>LPMB Universitas Airlangga</div>
+      </div>
+    </div>
+
+    <!-- Slide 4: Importance of KPI & Job Grading -->
+    <div class="slide">
+      <div class="slide-header flex justify-between items-center">
+        <div>LPMB Universitas Airlangga</div>
+        <img src="https://manajemen.feb.unair.ac.id/wp-content/uploads/2020/06/logo-unair-1.png" alt="LPMB Logo" class="h-8">
+      </div>
+      <div class="slide-content pt-16">
+        <h2 class="slide-title text-2xl">Pentingnya KPI & Job Grading</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">Key Performance Indicator (KPI)</h3>
+            <p class="mb-4">
+              KPI adalah alat ukur kuantitatif yang digunakan untuk mengevaluasi keberhasilan suatu organisasi atau individu dalam mencapai tujuan strategis dan operasional.
+            </p>
+            <div class="bg-gray-100 p-4 rounded-lg">
+              <div class="font-semibold mb-2">KPI yang Efektif Bersifat:</div>
+              <ul class="list-disc pl-5 space-y-1">
+                <li><span class="font-medium">Specific</span> - Jelas dan spesifik</li>
+                <li><span class="font-medium">Measurable</span> - Dapat diukur</li>
+                <li><span class="font-medium">Achievable</span> - Dapat dicapai</li>
+                <li><span class="font-medium">Relevant</span> - Relevan dengan tujuan</li>
+                <li><span class="font-medium">Time-bound</span> - Memiliki batas waktu</li>
+              </ul>
+            </div>
+          </div>
+          <div>
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">Job Grading</h3>
+            <p class="mb-4">
+              Job Grading adalah proses sistematis untuk mengevaluasi dan mengklasifikasikan berbagai jabatan dalam suatu organisasi berdasarkan tanggung jawab, kompleksitas pekerjaan, kualifikasi, dan dampaknya terhadap tujuan perusahaan.
+            </p>
+            <div class="chart-container">
+              <svg width="100%" height="100%" viewBox="0 0 500 170">
+                <rect x="20" y="10" width="460" height="40" rx="5" fill="#00529C" />
+                <text x="250" y="35" font-size="16" fill="white" text-anchor="middle">Job Grading Process</text>
+                
+                <rect x="20" y="70" width="100" height="80" rx="5" fill="#3A75C4" />
+                <text x="70" y="100" font-size="12" fill="white" text-anchor="middle">Job Analysis</text>
+                <text x="70" y="120" font-size="10" fill="white" text-anchor="middle">Pengumpulan</text>
+                <text x="70" y="135" font-size="10" fill="white" text-anchor="middle">Informasi Jabatan</text>
+                
+                <polygon points="125,110 140,105 140,115" fill="#B8860B" />
+                
+                <rect x="145" y="70" width="100" height="80" rx="5" fill="#3A75C4" />
+                <text x="195" y="100" font-size="12" fill="white" text-anchor="middle">Job Evaluation</text>
+                <text x="195" y="120" font-size="10" fill="white" text-anchor="middle">Penilaian dan</text>
+                <text x="195" y="135" font-size="10" fill="white" text-anchor="middle">Perbandingan Jabatan</text>
+                
+                <polygon points="250,110 265,105 265,115" fill="#B8860B" />
+                
+                <rect x="270" y="70" width="100" height="80" rx="5" fill="#3A75C4" />
+                <text x="320" y="100" font-size="12" fill="white" text-anchor="middle">Grading Structure</text>
+                <text x="320" y="120" font-size="10" fill="white" text-anchor="middle">Pengelompokan</text>
+                <text x="320" y="135" font-size="10" fill="white" text-anchor="middle">Jabatan ke Grade</text>
+                
+                <polygon points="375,110 390,105 390,115" fill="#B8860B" />
+                
+                <rect x="395" y="70" width="100" height="80" rx="5" fill="#3A75C4" />
+                <text x="445" y="100" font-size="12" fill="white" text-anchor="middle">Compensation</text>
+                <text x="445" y="120" font-size="10" fill="white" text-anchor="middle">Penyusunan Struktur</text>
+                <text x="445" y="135" font-size="10" fill="white" text-anchor="middle">Gaji & Benefit</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Proposal Pengembangan KPI & Job Grading</div>
+        <div>LPMB Universitas Airlangga</div>
+      </div>
+    </div>
+
+    <!-- Slide 5: Key Positions -->
+    <div class="slide">
+      <div class="slide-header flex justify-between items-center">
+        <div>LPMB Universitas Airlangga</div>
+        <img src="https://manajemen.feb.unair.ac.id/wp-content/uploads/2020/06/logo-unair-1.png" alt="LPMB Logo" class="h-8">
+      </div>
+      <div class="slide-content pt-16">
+        <h2 class="slide-title text-2xl">Identifikasi Posisi Kunci</h2>
+        <div class="grid grid-cols-2 gap-6">
+          <div>
+            <h3 class="text-lg font-semibold mb-3 bg-blue-100 p-2 text-blue-800">Manajemen & Administrasi</h3>
+            <ul class="list-disc pl-5 space-y-1 text-sm">
+              <li>General Manager / Direktur</li>
+              <li>Branch Manager (Surabaya)</li>
+              <li>Manajer Keuangan & Akuntansi</li>
+              <li>Manajer Sumber Daya Manusia (HR)</li>
+            </ul>
+            
+            <h3 class="text-lg font-semibold mb-3 mt-4 bg-blue-100 p-2 text-blue-800">Penjualan & Pemasaran</h3>
+            <ul class="list-disc pl-5 space-y-1 text-sm">
+              <li>Manajer Penjualan</li>
+              <li>Sales Engineer / Technical Sales</li>
+              <li>Perwakilan Layanan Pelanggan</li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold mb-3 bg-blue-100 p-2 text-blue-800">Operasional & Produksi</h3>
+            <ul class="list-disc pl-5 space-y-1 text-sm">
+              <li>Manajer Operasional / Produksi</li>
+              <li>Supervisor Produksi (Machining & Heat Treatment)</li>
+              <li>Supervisor Gudang</li>
+              <li>Operator Mesin CNC / Machinist Senior</li>
+              <li>Operator Heat Treatment Senior</li>
+              <li>Inspektur Kontrol Kualitas (QC Inspector)</li>
+            </ul>
+            
+            <h3 class="text-lg font-semibold mb-3 mt-4 bg-blue-100 p-2 text-blue-800">Teknikal & Engineering</h3>
+            <ul class="list-disc pl-5 space-y-1 text-sm">
+              <li>Insinyur Dukungan Teknis (Technical Support Engineer)</li>
+            </ul>
+            
+            <h3 class="text-lg font-semibold mb-3 mt-4 bg-blue-100 p-2 text-blue-800">Supply Chain & Pengadaan</h3>
+            <ul class="list-disc pl-5 space-y-1 text-sm">
+              <li>Manajer/Supervisor Pengadaan (Procurement)</li>
+              <li>Koordinator Logistik</li>
+            </ul>
+          </div>
+        </div>
+        <div class="mt-6 bg-blue-50 p-4 rounded-lg border-l-4 border-blue-800">
+          <p class="text-sm">
+            <strong>Catatan:</strong> Daftar posisi kunci ini dapat disesuaikan setelah diskusi lebih lanjut dengan manajemen PT. Paragon Spesial Metal untuk memastikan cakupan yang komprehensif dan relevan dengan struktur organisasi saat ini.
+          </p>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Proposal Pengembangan KPI & Job Grading</div>
+        <div>LPMB Universitas Airlangga</div>
+      </div>
+    </div>
+
+    <!-- Slide 6: Services Offered -->
+    <div class="slide">
+      <div class="slide-header flex justify-between items-center">
+        <div>LPMB Universitas Airlangga</div>
+        <img src="https://manajemen.feb.unair.ac.id/wp-content/uploads/2020/06/logo-unair-1.png" alt="LPMB Logo" class="h-8">
+      </div>
+      <div class="slide-content pt-16">
+        <h2 class="slide-title text-2xl">Layanan yang Kami Tawarkan</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <h3 class="text-xl font-semibold text-blue-800 mb-4">Pengembangan KPI</h3>
+            <div class="space-y-3">
+              <div class="flex">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-800 flex items-center justify-center text-white font-bold">1</div>
+                <div class="ml-3">
+                  <div class="font-medium">Konsultasi & Analisis</div>
+                  <p class="text-sm">Diskusi mendalam dengan manajemen untuk memahami tujuan strategis dan proses kerja</p>
+                </div>
+              </div>
+              <div class="flex">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-800 flex items-center justify-center text-white font-bold">2</div>
+                <div class="ml-3">
+                  <div class="font-medium">Perancangan KPI</div>
+                  <p class="text-sm">Merumuskan KPI yang SMART untuk setiap posisi kunci</p>
+                </div>
+              </div>
+              <div class="flex">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-800 flex items-center justify-center text-white font-bold">3</div>
+                <div class="ml-3">
+                  <div class="font-medium">Penetapan Target & Bobot</div>
+                  <p class="text-sm">Menentukan target kinerja dan bobot untuk setiap KPI</p>
+                </div>
+              </div>
+              <div class="flex">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-800 flex items-center justify-center text-white font-bold">4</div>
+                <div class="ml-3">
+                  <div class="font-medium">Penyusunan Kamus KPI</div>
+                  <p class="text-sm">Membuat dokumentasi detail untuk setiap KPI</p>
+                </div>
+              </div>
+              <div class="flex">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-800 flex items-center justify-center text-white font-bold">5</div>
+                <div class="ml-3">
+                  <div class="font-medium">Sosialisasi & Pelatihan</div>
+                  <p class="text-sm">Membantu mengkomunikasikan sistem KPI kepada karyawan</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h3 class="text-xl font-semibold text-blue-800 mb-4">Pengembangan Job Grading</h3>
+            <div class="space-y-3">
+              <div class="flex">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-800 flex items-center justify-center text-white font-bold">1</div>
+                <div class="ml-3">
+                  <div class="font-medium">Analisis Jabatan (Job Analysis)</div>
+                  <p class="text-sm">Mengumpulkan informasi detail mengenai tugas, tanggung jawab, dan kualifikasi jabatan</p>
+                </div>
+              </div>
+              <div class="flex">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-800 flex items-center justify-center text-white font-bold">2</div>
+                <div class="ml-3">
+                  <div class="font-medium">Evaluasi Jabatan (Job Evaluation)</div>
+                  <p class="text-sm">Menggunakan metodologi yang disepakati untuk menilai dan membandingkan bobot jabatan</p>
+                </div>
+              </div>
+              <div class="flex">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-800 flex items-center justify-center text-white font-bold">3</div>
+                <div class="ml-3">
+                  <div class="font-medium">Perancangan Struktur Grade</div>
+                  <p class="text-sm">Mengelompokkan jabatan-jabatan ke dalam tingkatan berdasarkan hasil evaluasi</p>
+                </div>
+              </div>
+              <div class="flex">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-800 flex items-center justify-center text-white font-bold">4</div>
+                <div class="ml-3">
+                  <div class="font-medium">Benchmarking Gaji (Opsional)</div>
+                  <p class="text-sm">Melakukan studi perbandingan gaji dengan pasar untuk memastikan daya saing</p>
+                </div>
+              </div>
+              <div class="flex">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-800 flex items-center justify-center text-white font-bold">5</div>
+                <div class="ml-3">
+                  <div class="font-medium">Penyusunan Kebijakan</div>
+                  <p class="text-sm">Membantu menyusun kebijakan terkait struktur grade dan kompensasi</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Proposal Pengembangan KPI & Job Grading</div>
+        <div>LPMB Universitas Airlangga</div>
+      </div>
+    </div>
+
+    <!-- Slide 7: Benefits -->
+    <div class="slide">
+      <div class="slide-header flex justify-between items-center">
+        <div>LPMB Universitas Airlangga</div>
+        <img src="https://manajemen.feb.unair.ac.id/wp-content/uploads/2020/06/logo-unair-1.png" alt="LPMB Logo" class="h-8">
+      </div>
+      <div class="slide-content pt-16">
+        <h2 class="slide-title text-2xl">Manfaat Bagi PT. Paragon Spesial Metal</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+          <div class="benefit-card">
+            <div class="font-medium">Peningkatan Fokus & Akuntabilitas</div>
+            <p class="text-sm">Setiap karyawan dan departemen memiliki pemahaman jelas mengenai apa yang diharapkan dan bagaimana kinerja diukur</p>
+          </div>
+          
+          <div class="benefit-card">
+            <div class="font-medium">Pengukuran Kinerja Objektif</div>
+            <p class="text-sm">Menggantikan penilaian subjektif dengan data kuantitatif, mempermudah evaluasi kinerja yang adil</p>
+          </div>
+          
+          <div class="benefit-card">
+            <div class="font-medium">Dasar Pengambilan Keputusan</div>
+            <p class="text-sm">Menyediakan data kinerja yang akurat untuk keputusan strategis dan alokasi sumber daya</p>
+          </div>
+          
+          <div class="benefit-card">
+            <div class="font-medium">Peningkatan Efisiensi Operasional</div>
+            <p class="text-sm">Mengidentifikasi area yang memerlukan perbaikan dalam proses Heat Treatment, Machining, dan layanan lainnya</p>
+          </div>
+          
+          <div class="benefit-card">
+            <div class="font-medium">Motivasi & Keterlibatan Karyawan</div>
+            <p class="text-sm">KPI yang jelas dan sistem grading yang adil dapat meningkatkan motivasi dan rasa kepemilikan karyawan</p>
+          </div>
+          
+          <div class="benefit-card">
+            <div class="font-medium">Struktur Kompensasi yang Adil</div>
+            <p class="text-sm">Job Grading menjadi dasar penetapan gaji yang konsisten dan kompetitif, membantu menarik dan mempertahankan talenta terbaik</p>
+          </div>
+          
+          <div class="benefit-card">
+            <div class="font-medium">Keselarasan Tujuan</div>
+            <p class="text-sm">Memastikan tujuan individu dan departemen selaras dengan visi dan tujuan strategis perusahaan</p>
+          </div>
+          
+          <div class="benefit-card">
+            <div class="font-medium">Pengembangan Karir yang Jelas</div>
+            <p class="text-sm">Struktur grade memberikan jalur karir yang lebih transparan bagi karyawan</p>
+          </div>
+        </div>
+        
+        <div class="mt-6">
+          <div class="chart-container">
+            <svg width="100%" height="100%" viewBox="0 0 500 170">
+              <text x="250" y="25" font-size="16" fill="#00529C" text-anchor="middle" font-weight="bold">Dampak Implementasi KPI & Job Grading</text>
+              
+              <!-- Before Implementation -->
+              <rect x="50" y="50" width="150" height="100" rx="5" fill="#f0f0f0" stroke="#ccc" />
+              <text x="125" y="70" font-size="14" fill="#00529C" text-anchor="middle" font-weight="bold">Sebelum</text>
+              
+              <rect x="70" y="85" width="110" height="15" rx="2" fill="#ff9999" />
+              <text x="125" y="97" font-size="10" fill="#333" text-anchor="middle">Subjektivitas Tinggi</text>
+              
+              <rect x="70" y="105" width="110" height="15" rx="2" fill="#ff9999" />
+              <text x="125" y="117" font-size="10" fill="#333" text-anchor="middle">Ketidakjelasan Peran</text>
+              
+              <rect x="70" y="125" width="110" height="15" rx="2" fill="#ff9999" />
+              <text x="125" y="137" font-size="10" fill="#333" text-anchor="middle">Demotivasi Karyawan</text>
+              
+              <!-- Arrow -->
+              <polygon points="220,100 240,90 240,110" fill="#B8860B" />
+              
+              <!-- After Implementation -->
+              <rect x="260" y="50" width="150" height="100" rx="5" fill="#f0f0f0" stroke="#ccc" />
+              <text x="335" y="70" font-size="14" fill="#00529C" text-anchor="middle" font-weight="bold">Sesudah</text>
+              
+              <rect x="280" y="85" width="110" height="15" rx="2" fill="#99ff99" />
+              <text x="335" y="97" font-size="10" fill="#333" text-anchor="middle">Penilaian Objektif</text>
+              
+              <rect x="280" y="105" width="110" height="15" rx="2" fill="#99ff99" />
+              <text x="335" y="117" font-size="10" fill="#333" text-anchor="middle">Kejelasan Ekspektasi</text>
+              
+              <rect x="280" y="125" width="110" height="15" rx="2" fill="#99ff99" />
+              <text x="335" y="137" font-size="10" fill="#333" text-anchor="middle">Motivasi Meningkat</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Proposal Pengembangan KPI & Job Grading</div>
+        <div>LPMB Universitas Airlangga</div>
+      </div>
+    </div>
+
+    <!-- Slide 8: Methodology & Timeline -->
+    <div class="slide">
+      <div class="slide-header flex justify-between items-center">
+        <div>LPMB Universitas Airlangga</div>
+        <img src="https://manajemen.feb.unair.ac.id/wp-content/uploads/2020/06/logo-unair-1.png" alt="LPMB Logo" class="h-8">
+      </div>
+      <div class="slide-content pt-16">
+        <h2 class="slide-title text-2xl">Metodologi & Jadwal</h2>
+        <div class="space-y-4">
+          <div class="timeline-item">
+            <div class="font-semibold text-blue-800">Kick-off Meeting & Perencanaan</div>
+            <p class="text-sm">Pemahaman awal, penyelarasan ekspektasi, pembentukan tim kerja, finalisasi ruang lingkup dan jadwal.</p>
+            <div class="text-xs text-gray-500 mt-1">Estimasi: 1 Minggu</div>
+          </div>
+          
+          <div class="timeline-item">
+            <div class="font-semibold text-blue-800">Pengumpulan Data & Analisis</div>
+            <p class="text-sm">Wawancara, observasi, studi dokumen, analisis jabatan.</p>
+            <div class="text-xs text-gray-500 mt-1">Estimasi: 2-4 Minggu</div>
+          </div>
+          
+          <div class="timeline-item">
+            <div class="font-semibold text-blue-800">Perancangan KPI & Job Grading</div>
+            <p class="text-sm">Workshop perancangan, evaluasi jabatan, penyusunan draf KPI dan struktur grade.</p>
+            <div class="text-xs text-gray-500 mt-1">Estimasi: 3-4 Minggu</div>
+          </div>
+          
+          <div class="timeline-item">
+            <div class="font-semibold text-blue-800">Validasi & Finalisasi</div>
+            <p class="text-sm">Presentasi draf, pengumpulan masukan, revisi, dan finalisasi dokumen KPI dan struktur Job Grading.</p>
+            <div class="text-xs text-gray-500 mt-1">Estimasi: 1-2 Minggu</div>
+          </div>
+          
+          <div class="timeline-item">
+            <div class="font-semibold text-blue-800">Sosialisasi & Persiapan Implementasi</div>
+            <p class="text-sm">Penyusunan materi sosialisasi, rencana komunikasi, dan persiapan teknis (jika ada sistem HRIS).</p>
+            <div class="text-xs text-gray-500 mt-1">Estimasi: 1 Minggu</div>
+          </div>
+          
+          <div class="timeline-item">
+            <div class="font-semibold text-blue-800">Serah Terima & Laporan Akhir</div>
+            <p class="text-sm">Penyerahan seluruh dokumen final dan laporan proyek.</p>
+            <div class="text-xs text-gray-500 mt-1">Estimasi: 1 Minggu</div>
+          </div>
+        </div>
+        
+        <div class="bg-blue-50 p-4 rounded-lg mt-6">
+          <p class="font-medium text-blue-800">Total Estimasi Durasi Proyek: 9 - 12 Minggu</p>
+          <p class="text-sm text-gray-700">(Dapat disesuaikan berdasarkan kebutuhan dan ketersediaan sumber daya dari PT. Paragon Spesial Metal)</p>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Proposal Pengembangan KPI & Job Grading</div>
+        <div>LPMB Universitas Airlangga</div>
+      </div>
+    </div>
+
+    <!-- Slide 9: LPMB Expert Team -->
+    <div class="slide">
+      <div class="slide-header flex justify-between items-center">
+        <div>LPMB Universitas Airlangga</div>
+        <img src="https://manajemen.feb.unair.ac.id/wp-content/uploads/2020/06/logo-unair-1.png" alt="LPMB Logo" class="h-8">
+      </div>
+      <div class="slide-content pt-16">
+        <h2 class="slide-title text-2xl">Tim Ahli LPMB</h2>
+        <div class="grid grid-cols-2 gap-8">
+          <div class="flex flex-col items-center">
+            <img src="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80" alt="Dr. Windijarto" class="team-photo">
+            <div class="mt-3 text-center">
+              <div class="font-semibold text-blue-800">Dr. Windijarto, SE., MBA</div>
+              <div class="text-sm font-medium">Ketua LPMB</div>
+              <div class="text-xs mt-1">Bidang Keahlian: Finance, Business and Management</div>
+              <div class="text-xs mt-1 text-blue-800">windijarto@gmail.com</div>
+            </div>
+          </div>
+          
+          <div class="flex flex-col items-center">
+            <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80" alt="Dr. Fitri Ismiyanti" class="team-photo">
+            <div class="mt-3 text-center">
+              <div class="font-semibold text-blue-800">Dr. Fitri Ismiyanti, SE, MSi</div>
+              <div class="text-sm font-medium">Bendahara LPMB</div>
+              <div class="text-xs mt-1">Bidang Keahlian: Finance, Business and Management</div>
+            </div>
+          </div>
+          
+          <div class="flex flex-col items-center">
+            <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80" alt="Amak Muhamad Yaqoub" class="team-photo">
+            <div class="mt-3 text-center">
+              <div class="font-semibold text-blue-800">Amak Muhamad Yaqoub SE., MSM</div>
+              <div class="text-sm font-medium">Divisi Pelatihan dan Sertifikasi</div>
+              <div class="text-xs mt-1">Bidang Keahlian: Operations and Supply Chain Management</div>
+            </div>
+          </div>
+          
+          <div class="flex flex-col items-center">
+            <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80" alt="Nurullaily Kartika" class="team-photo">
+            <div class="mt-3 text-center">
+              <div class="font-semibold text-blue-800">Nurullaily Kartika, SE., MBA</div>
+              <div class="text-sm font-medium">Divisi Riset dan Penelitian</div>
+              <div class="text-xs mt-1">Bidang Keahlian: Operations and Supply Chain Management</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mt-6 text-center">
+          <p class="text-sm">
+            Tim LPMB Universitas Airlangga didukung oleh para ahli berpengalaman di bidang Manajemen Sumber Daya Manusia, Pengembangan Organisasi, dan Peningkatan Kinerja, dengan rekam jejak yang terbukti dalam membantu berbagai industri termasuk manufaktur dan pengolahan logam.
+          </p>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Proposal Pengembangan KPI & Job Grading</div>
+        <div>LPMB Universitas Airlangga</div>
+      </div>
+    </div>
+
+    <!-- Slide 10: Previous Projects -->
+    <div class="slide">
+      <div class="slide-header flex justify-between items-center">
+        <div>LPMB Universitas Airlangga</div>
+        <img src="https://manajemen.feb.unair.ac.id/wp-content/uploads/2020/06/logo-unair-1.png" alt="LPMB Logo" class="h-8">
+      </div>
+      <div class="slide-content pt-16">
+        <h2 class="slide-title text-2xl">Portofolio Proyek Performance Management</h2>
+        <div class="grid grid-cols-1 gap-4">
+          <div class="bg-gray-50 p-4 rounded-lg border-l-4 border-blue-800">
+            <div class="font-semibold">PT Petrokimia Gresik</div>
+            <div class="text-sm space-y-1 mt-1">
+              <div>• Penyusunan Nilai Remunerasi Jabatan Direksi / Pengurus di entitas lain</div>
+              <div>• Penyusunan Alur Pembayaran Remunerasi kepada karyawan diperbantukan</div>
+              <div>• Penyusunan Analisis Jabatan</div>
+              <div>• Penyusunan Silabus Kamus Kompetensi Perilaku</div>
+              <div>• Kajian Jabatan Fungsional dan Struktural Struktur Organisasi</div>
+            </div>
+          </div>
+          
+          <div class="bg-gray-50 p-4 rounded-lg border-l-4 border-blue-800">
+            <div class="font-semibold">PT Petro Oxo Nusantara</div>
+            <div class="text-sm space-y-1 mt-1">
+              <div>• Asesmen Kompetensi untuk Operator, Foreman, Supervisor, Superintendent, Manager</div>
+              <div>• Program Talent Manajemen Untuk Meningkatkan Kinerja Perusahaan Melalui Pengelolaan Human Capital</div>
+            </div>
+          </div>
+          
+          <div class="mt-4">
+            <h3 class="text-lg font-semibold text-gray-700 mb-3">Klien Terpilih Lainnya</h3>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="flex items-center space-x-3 bg-gray-50 p-3 rounded-lg">
+                <div class="w-3 h-3 bg-blue-800 rounded-full"></div>
+                <div>PT SIER (Surabaya Industrial Estate Rungkut)</div>
+              </div>
+              <div class="flex items-center space-x-3 bg-gray-50 p-3 rounded-lg">
+                <div class="w-3 h-3 bg-blue-800 rounded-full"></div>
+                <div>PT Pelabuhan Indonesia Regional 1</div>
+              </div>
+              <div class="flex items-center space-x-3 bg-gray-50 p-3 rounded-lg">
+                <div class="w-3 h-3 bg-blue-800 rounded-full"></div>
+                <div>PT Pelabuhan Indonesia Regional 4</div>
+              </div>
+              <div class="flex items-center space-x-3 bg-gray-50 p-3 rounded-lg">
+                <div class="w-3 h-3 bg-blue-800 rounded-full"></div>
+                <div>PT Prima Multi Terminal</div>
+              </div>
+              <div class="flex items-center space-x-3 bg-gray-50 p-3 rounded-lg">
+                <div class="w-3 h-3 bg-blue-800 rounded-full"></div>
+                <div>PT KIG (Kawasan Industri Gresik)</div>
+              </div>
+              <div class="flex items-center space-x-3 bg-gray-50 p-3 rounded-lg">
+                <div class="w-3 h-3 bg-blue-800 rounded-full"></div>
+                <div>PT Prima Husada Cipta Medan</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Proposal Pengembangan KPI & Job Grading</div>
+        <div>LPMB Universitas Airlangga</div>
+      </div>
+    </div>
+
+    <!-- Slide 11: Investment -->
+    <div class="slide">
+      <div class="slide-header flex justify-between items-center">
+        <div>LPMB Universitas Airlangga</div>
+        <img src="https://manajemen.feb.unair.ac.id/wp-content/uploads/2020/06/logo-unair-1.png" alt="LPMB Logo" class="h-8">
+      </div>
+      <div class="slide-content pt-16">
+        <h2 class="slide-title text-2xl">Investasi</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">Struktur Investasi</h3>
+            <div class="space-y-4">
+              <div class="p-4 bg-blue-50 rounded-lg">
+                <div class="font-semibold text-blue-800">Paket Standar</div>
+                <ul class="list-disc pl-5 mt-2 text-sm space-y-1">
+                  <li>Pengembangan KPI untuk posisi kunci</li>
+                  <li>Job Grading untuk semua posisi</li>
+                  <li>Implementasi dasar dan dokumentasi</li>
+                  <li>1 sesi sosialisasi dengan manajemen</li>
+                </ul>
+              </div>
+              
+              <div class="p-4 bg-blue-50 rounded-lg border-2 border-blue-800 relative">
+                <div class="absolute -top-3 right-3 bg-blue-800 text-white px-3 py-1 text-xs rounded">Rekomendasi</div>
+                <div class="font-semibold text-blue-800">Paket Premium</div>
+                <ul class="list-disc pl-5 mt-2 text-sm space-y-1">
+                  <li>Semua fitur dalam Paket Standar</li>
+                  <li>Benchmarking gaji dengan industri sejenis</li>
+                  <li>Pengembangan KPI untuk semua departemen</li>
+                  <li>2 sesi pelatihan untuk manajer dan karyawan</li>
+                  <li>Pendampingan implementasi selama 1 bulan</li>
+                </ul>
+              </div>
+              
+              <div class="p-4 bg-blue-50 rounded-lg">
+                <div class="font-semibold text-blue-800">Paket Enterprise</div>
+                <ul class="list-disc pl-5 mt-2 text-sm space-y-1">
+                  <li>Semua fitur dalam Paket Premium</li>
+                  <li>Pengembangan dashboard KPI digital</li>
+                  <li>Integrasi dengan sistem HRIS (jika ada)</li>
+                  <li>Pendampingan implementasi selama 3 bulan</li>
+                  <li>Evaluasi pasca-implementasi</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">Rincian Investasi</h3>
+            <p class="text-sm mb-4">
+              Rincian investasi lengkap untuk layanan pengembangan KPI dan Job Grading akan kami sampaikan setelah diskusi awal untuk memahami kompleksitas dan cakupan proyek secara lebih detail.
+            </p>
+            
+            <div class="bg-blue-800 text-white p-4 rounded-lg mb-4">
+              <div class="font-medium mb-2">Faktor Penentu Investasi:</div>
+              <ul class="list-disc pl-5 text-sm space-y-1">
+                <li>Jumlah posisi yang akan dianalisis</li>
+                <li>Kompleksitas struktur organisasi</li>
+                <li>Cakupan geografis (Cikarang dan Surabaya)</li>
+                <li>Ketersediaan data dan dokumentasi awal</li>
+                <li>Tingkat keterlibatan tim internal yang dibutuhkan</li>
+                <li>Paket layanan yang dipilih</li>
+              </ul>
+            </div>
+            
+            <div class="p-4 bg-gray-50 rounded-lg border-l-4 border-blue-800">
+              <div class="font-medium text-blue-800 mb-2">Komitmen Nilai</div>
+              <p class="text-sm">
+                LPMB Universitas Airlangga menawarkan struktur biaya yang fleksibel dan kompetitif dengan fokus pada pengiriman nilai yang optimal bagi PT. Paragon Spesial Metal. Kami berkomitmen untuk memberikan solusi berkualitas tinggi dengan biaya yang efisien.
+              </p>
+            </div>
+            
+            <div class="mt-6 text-center">
+              <a href="#" class="btn-primary">Konsultasi Untuk Mendapatkan Penawaran</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Proposal Pengembangan KPI & Job Grading</div>
+        <div>LPMB Universitas Airlangga</div>
+      </div>
+    </div>
+
+    <!-- Slide 12: Contact Information -->
+    <div class="slide">
+      <div class="slide-header flex justify-between items-center">
+        <div>LPMB Universitas Airlangga</div>
+        <img src="https://manajemen.feb.unair.ac.id/wp-content/uploads/2020/06/logo-unair-1.png" alt="LPMB Logo" class="h-8">
+      </div>
+      <div class="slide-content pt-16">
+        <h2 class="slide-title text-2xl">Hubungi Kami</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div>
+            <div class="mb-6">
+              <h3 class="text-xl font-semibold text-gray-700 mb-4">Kantor LPMB</h3>
+              <div class="flex items-start space-x-3 mb-3">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-800 flex items-center justify-center text-white">
+                  <i class="fas fa-map-marker-alt"></i>
+                </div>
+                <div>
+                  <div class="font-medium">Alamat</div>
+                  <p class="text-sm">JL. Darmawangsa dalam selatan no 30, Unair kampus B, Surabaya -60286</p>
+                </div>
+              </div>
+              
+              <div class="flex items-start space-x-3 mb-3">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-800 flex items-center justify-center text-white">
+                  <i class="fas fa-phone"></i>
+                </div>
+                <div>
+                  <div class="font-medium">Telepon</div>
+                  <p class="text-sm">031-503 8393</p>
+                </div>
+              </div>
+              
+              <div class="flex items-start space-x-3 mb-3">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-800 flex items-center justify-center text-white">
+                  <i class="fas fa-fax"></i>
+                </div>
+                <div>
+                  <div class="font-medium">Fax</div>
+                  <p class="text-sm">(031) 505 4839</p>
+                </div>
+              </div>
+              
+              <div class="flex items-start space-x-3">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-800 flex items-center justify-center text-white">
+                  <i class="fas fa-envelope"></i>
+                </div>
+                <div>
+                  <div class="font-medium">Email</div>
+                  <p class="text-sm">lpmb.feb.unair@gmail.com</p>
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <h3 class="text-xl font-semibold text-gray-700 mb-4">Kontak Langsung</h3>
+              <div class="space-y-4">
+                <div class="flex items-center space-x-3 bg-gray-50 p-3 rounded-lg">
+                  <img src="https://images.unsplash.com/photo-1568602471122-7832951cc4c5?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80" alt="Dr. Windijarto" class="w-10 h-10 rounded-full object-cover">
+                  <div>
+                    <div class="font-medium">Dr. Windijarto, SE., MBA</div>
+                    <div class="text-sm">+62 812-3522-604</div>
+                  </div>
+                </div>
+                
+                <div class="flex items-center space-x-3 bg-gray-50 p-3 rounded-lg">
+                  <div class="w-10 h-10 rounded-full bg-blue-800 flex items-center justify-center text-white font-bold">
+                    L
+                  </div>
+                  <div>
+                    <div class="font-medium">Admin LPMB</div>
+                    <div class="text-sm">+62 813-3681-6923</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h3 class="text-xl font-semibold text-gray-700 mb-4">Langkah Selanjutnya</h3>
+            <div class="space-y-4">
+              <div class="timeline-item">
+                <div class="font-semibold text-blue-800">Diskusi Awal</div>
+                <p class="text-sm">Meeting awal untuk mendiskusikan kebutuhan spesifik PT. Paragon Spesial Metal dan menjawab pertanyaan yang mungkin ada.</p>
+              </div>
+              
+              <div class="timeline-item">
+                <div class="font-semibold text-blue-800">Penyesuaian Proposal</div>
+                <p class="text-sm">Menyesuaikan proposal berdasarkan hasil diskusi dan kebutuhan spesifik perusahaan.</p>
+              </div>
+              
+              <div class="timeline-item">
+                <div class="font-semibold text-blue-800">Penawaran Final</div>
+                <p class="text-sm">Menyampaikan penawaran final termasuk rincian biaya dan jadwal implementasi.</p>
+              </div>
+              
+              <div class="timeline-item">
+                <div class="font-semibold text-blue-800">Penandatanganan Kontrak</div>
+                <p class="text-sm">Finalisasi kesepakatan kerjasama dan penandatanganan kontrak.</p>
+              </div>
+              
+              <div class="timeline-item">
+                <div class="font-semibold text-blue-800">Kick-off Proyek</div>
+                <p class="text-sm">Memulai proyek dengan kick-off meeting dan pembentukan tim kerja.</p>
+              </div>
+            </div>
+            
+            <div class="mt-8 text-center">
+              <div class="inline-block bg-blue-800 text-white px-6 py-3 rounded-lg font-medium">
+                Mari Mulai Kolaborasi
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <div>Proposal Pengembangan KPI & Job Grading</div>
+        <div>LPMB Universitas Airlangga</div>
+      </div>
+    </div>
+    
+  </div>
+  
+  <script>
+    // Optional JavaScript for enhancing presentation functionality could be added here
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialization code if needed
+    });
+  </script>
+</body>
+</html>
