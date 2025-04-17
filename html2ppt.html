@@ -109,11 +109,11 @@
 <body>
     <div class="container">
         <h1>HTML Page to PPT Slides</h1>
-        <p>Enter the URL of a web page. The tool will attempt to detect repeating sections (divs with the same classes under the same parent), screenshot each section, and generate a PowerPoint file with each screenshot as a slide.</p>
-        <p><small>Note: This may not work for all websites due to CORS restrictions or complex HTML structures.</small></p>
+        <p>Enter the URL of a web page or a local path relative to the project root (e.g., /folder/file.html). The tool will attempt to detect repeating sections, screenshot each section, and generate a PowerPoint file.</p>
+        <p><small>Note: Cross-origin requests (to different domains) require a CORS proxy and may not always succeed.</small></p>
 
         <div>
-            <label for="urlInput">Website URL:</label>
+            <label for="urlInput">URL or Local Path:</label>
             <input type="url" id="urlInput" placeholder="https://example.com or /local/path.html" required>
         </div>
         <div>
@@ -161,9 +161,7 @@
                 const classMap = {};
                 childDivs.forEach(div => {
                     const classKey = Array.from(div.classList).sort().join(' ');
-                    if (!classMap[classKey]) {
-                        classMap[classKey] = [];
-                    }
+                    if (!classMap[classKey]) classMap[classKey] = [];
                     classMap[classKey].push(div);
                 });
 
@@ -172,20 +170,16 @@
                         const group = classMap[key];
                         let isSequential = true;
                         for(let i = 0; i < group.length - 1; i++) {
-                            let current = group[i];
-                            let nextExpected = group[i+1];
+                            let current = group[i], nextExpected = group[i+1];
                             let nextSibling = current.nextElementSibling;
                             while(nextSibling && nextSibling !== nextExpected && nextSibling.tagName !== 'DIV'){
                                 nextSibling = nextSibling.nextElementSibling;
                             }
                             if (nextSibling !== nextExpected) {
-                                isSequential = false;
-                                break;
+                                isSequential = false; break;
                             }
                         }
-                        if(isSequential) {
-                            candidates.push(...group);
-                        }
+                        if(isSequential) candidates.push(...group);
                     }
                 }
             });
@@ -195,63 +189,81 @@
             return uniqueCandidates;
         }
 
-        // Function to fetch HTML content (handles both external URLs via proxy and local paths)
-        async function fetchHtmlContent(url) {
-            let isLocal = !url.startsWith('http://') && !url.startsWith('https://');
-            let fetchUrl = url;
+        // Function to check if a URL is cross-origin
+        function isCrossOrigin(url) {
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                return false; // Local paths are not cross-origin
+            }
+            try {
+                const targetOrigin = new URL(url).origin;
+                return targetOrigin !== window.location.origin;
+            } catch (e) {
+                console.error("Error parsing URL origin:", e);
+                return true; // Assume cross-origin if URL parsing fails
+            }
+        }
 
-            if (isLocal) {
-                // Assume local paths are relative to the root
-                // Ensure it starts with '/' or is handled correctly by fetch
-                fetchUrl = url.startsWith('/') ? url : `/${url}`;
-                console.log(`Fetching local resource: ${fetchUrl}`);
-                // No proxy needed for local fetch
-                const response = await fetch(fetchUrl);
-                 if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status} - Failed to fetch local file.`);
-                }
-                 return await response.text();
-
-            } else {
-                // Use CORS proxy for external URLs
-                console.log(`Fetching external resource via proxy: ${url}`);
+        // Function to fetch HTML content
+        async function fetchHtmlContent(url, requiresCors) {
+            if (requiresCors) {
+                console.log(`Fetching cross-origin resource via proxy: ${url}`);
                 const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-                const response = await fetch(proxyUrl);
-                 if (!response.ok) {
-                    // Attempt direct fetch as fallback
-                    console.warn(`Proxy fetch failed (Status: ${response.status}). Attempting direct fetch...`);
+                try {
+                    const response = await fetch(proxyUrl);
+                    if (!response.ok) {
+                         throw new Error(`Proxy fetch failed! Status: ${response.status}`);
+                    }
+                     return await response.text();
+                 } catch (proxyError) {
+                    console.warn(`Proxy fetch failed: ${proxyError.message}. Attempting direct fetch (might fail due to CORS)...`);
+                    // Fallback attempt: direct fetch (will likely fail for cross-origin, but worth a try)
                     try {
                          const directResponse = await fetch(url);
                           if (!directResponse.ok) {
                              throw new Error(`Direct fetch also failed! Status: ${directResponse.status}`);
                          }
-                         console.log("Direct fetch successful after proxy failure.");
+                         console.log("Direct fetch successful after proxy failure (unexpected!).");
                          return await directResponse.text();
                      } catch (directError) {
                         console.error("Direct fetch attempt error:", directError);
-                         throw new Error(`Proxy fetch failed (Status: ${response.status}) and direct fetch failed.`);
+                         throw new Error(`Proxy fetch failed and direct fetch failed: ${proxyError.message}`);
                      }
                  }
-                return await response.text();
+            } else {
+                // Fetching local path or same-origin URL
+                let fetchUrl = url;
+                 if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                     // Ensure local paths are relative to the root or handled correctly
+                     fetchUrl = url.startsWith('/') ? url : `/${url}`;
+                    console.log(`Fetching local resource: ${fetchUrl}`);
+                 } else {
+                    console.log(`Fetching same-origin resource: ${url}`);
+                 }
+                 const response = await fetch(fetchUrl);
+                 if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status} - Failed to fetch resource.`);
+                }
+                 return await response.text();
             }
         }
 
 
         async function handleConversion() {
-            let url = urlInput.value.trim();
+            let originalUrl = urlInput.value.trim(); // Keep original URL for base href etc.
+            let fetchPath = originalUrl;
             const customSelector = selectorInput.value.trim();
 
-            if (!url) {
+            if (!originalUrl) {
                 setStatus('Please enter a valid URL or local path.', 'error');
                 return;
             }
 
-            // Check if it's a local path and adjust if necessary
-            const isLocal = !url.startsWith('http://') && !url.startsWith('https://');
-            if (isLocal && url.startsWith('/')) {
-                // Convert absolute path like /path/to/file.html to relative path/to/file.html
-                // Assumes the server serves files relative to the project root
-                url = url.substring(1);
+            const needsCors = isCrossOrigin(originalUrl);
+            const isLocal = !originalUrl.startsWith('http://') && !originalUrl.startsWith('https://');
+
+            // Adjust local path if needed (remove leading slash for fetch relative to root)
+            if (isLocal && fetchPath.startsWith('/')) {
+                fetchPath = fetchPath.substring(1);
             }
 
             disableForm(true);
@@ -259,27 +271,27 @@
             contentContainer.innerHTML = '';
 
             try {
-                const html = await fetchHtmlContent(url);
+                // Use fetchPath for fetching, but originalUrl for base href if needed
+                const html = await fetchHtmlContent(fetchPath, needsCors);
 
                 setStatus('Parsing HTML and preparing content for rendering...');
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
 
-                // Set base URL only for non-local URLs to resolve relative resources
-                if (!isLocal) {
+                // Set base URL only for non-local URLs to resolve relative resources within them
+                if (!isLocal && originalUrl.startsWith('http')) {
                     const base = doc.createElement('base');
-                    base.href = url;
+                    base.href = originalUrl;
                     doc.head.prepend(base);
                 }
 
                 contentContainer.innerHTML = '';
                 doc.querySelectorAll('link[rel="stylesheet"], style').forEach(styleEl => {
-                    // If it's a local page, ensure relative stylesheet paths are correct
+                     // Adjust relative stylesheet paths if the source was local
                      if (isLocal && styleEl.tagName === 'LINK' && styleEl.hasAttribute('href')) {
                         let href = styleEl.getAttribute('href');
-                        if (!href.startsWith('http') && !href.startsWith('/')) {
-                             // Construct path relative to the fetched page's directory
-                             const pageDir = url.substring(0, url.lastIndexOf('/'));
+                        if (!href.startsWith('http') && !href.startsWith('/') && !href.startsWith('data:')) {
+                             const pageDir = fetchPath.includes('/') ? fetchPath.substring(0, fetchPath.lastIndexOf('/')) : '.';
                              styleEl.setAttribute('href', `${pageDir}/${href}`);
                              console.log(`Adjusted local stylesheet path: ${styleEl.getAttribute('href')}`);
                          }
@@ -311,11 +323,10 @@
                          elementsToCapture = Array.from(contentContainer.children).filter(el => el.tagName === 'DIV');
                          if (elementsToCapture.length === 0) {
                              console.log("Capturing direct body children failed, attempting to capture body itself...");
-                            // Fallback: Capture the body itself if no divs found
                             const bodyElement = contentContainer.querySelector('body') || contentContainer;
                             elementsToCapture = [bodyElement];
                              if (!bodyElement || bodyElement.innerHTML.trim() === '') {
-                                 throw new Error('Could not auto-detect suitable repeating elements, fallback capture failed.');
+                                 throw new Error('Could not auto-detect/fallback to capture elements.');
                             }
                          } else {
                              console.log(`Found ${elementsToCapture.length} direct children divs to capture.`);
@@ -331,7 +342,6 @@
                          console.warn(`Skipping element ${index + 1} as it's not a valid element.`);
                          return Promise.resolve(null);
                     }
-                    // Check visibility and dimensions more robustly
                      const rect = element.getBoundingClientRect();
                      if (rect.width === 0 || rect.height === 0 || getComputedStyle(element).visibility === 'hidden' || getComputedStyle(element).display === 'none') {
                          console.warn(`Skipping element ${index + 1} as it is not visible or has zero dimensions.`);
@@ -339,15 +349,16 @@
                      }
 
                     return html2canvas(element, {
-                        useCORS: !isLocal, // Use CORS only for external resources
-                        allowTaint: !isLocal,
+                        useCORS: needsCors, // Use CORS only if determined necessary
+                        allowTaint: needsCors,
                         logging: false,
                         scale: window.devicePixelRatio || 1,
-                         backgroundColor: '#ffffff', // Ensure a background for potentially transparent elements
-                         scrollX: 0, // Explicitly set scroll to avoid capturing only visible part
-                         scrollY: -window.scrollY, // Adjust for window scroll if element is body
-                         windowWidth: isLocal ? null : document.documentElement.scrollWidth,
-                         windowHeight: isLocal ? null : document.documentElement.scrollHeight
+                         backgroundColor: '#ffffff',
+                         scrollX: 0,
+                         scrollY: -window.scrollY,
+                         // Adjust window dimensions based on whether it's cross-origin or not
+                         windowWidth: needsCors ? document.documentElement.scrollWidth : null,
+                         windowHeight: needsCors ? document.documentElement.scrollHeight : null
                     }).then(canvas => {
                         console.log(`Successfully captured element ${index + 1}`);
                         return canvas.toDataURL('image/png');
@@ -372,39 +383,24 @@
                 const dimensionPromises = images.map((imageDataUrl, index) => {
                     return new Promise((resolve) => {
                         const img = new Image();
-                        img.onload = function() {
-                            resolve({ imageDataUrl, width: img.width, height: img.height, index });
-                        };
-                        img.onerror = function() {
-                            console.error(`Failed to load image data for screenshot ${index + 1} to get dimensions.`);
-                            resolve(null);
-                        };
+                        img.onload = () => resolve({ imageDataUrl, width: img.width, height: img.height, index });
+                        img.onerror = () => { console.error(`Failed to load image ${index + 1} data`); resolve(null); };
                         img.src = imageDataUrl;
                     });
                 });
 
                 const imageInfos = await Promise.all(dimensionPromises);
-
                 setStatus(`Image dimensions processed. Adding ${imageInfos.filter(info => info).length} slides to PPTX...`);
 
                 let addedSlideCount = 0;
                 imageInfos.forEach(info => {
-                    if (!info) { return; }
+                    if (!info || info.width === 0 || info.height === 0) return;
                     const { imageDataUrl, width: imgWidth, height: imgHeight, index } = info;
-                    if (imgWidth === 0 || imgHeight === 0) { return; }
-
                     const aspectRatio = imgWidth / imgHeight;
-                    const slideWidthInches = 13.33;
-                    const slideHeightInches = 7.5;
-                    let w = slideWidthInches;
-                    let h = w / aspectRatio;
-                    if (h > slideHeightInches) {
-                        h = slideHeightInches;
-                        w = h * aspectRatio;
-                    }
-                    const x = (slideWidthInches - w) / 2;
-                    const y = (slideHeightInches - h) / 2;
-
+                    const slideWidthInches = 13.33, slideHeightInches = 7.5;
+                    let w = slideWidthInches, h = w / aspectRatio;
+                    if (h > slideHeightInches) { h = slideHeightInches; w = h * aspectRatio; }
+                    const x = (slideWidthInches - w) / 2, y = (slideHeightInches - h) / 2;
                     try {
                         const slide = pptx.addSlide();
                         slide.addImage({ data: imageDataUrl, x, y, w, h });
@@ -417,12 +413,12 @@
                 });
 
                 if (addedSlideCount > 0) {
-                    const filename = `slides_${url.replace(/[^a-zA-Z0-9]/g, '_')}.pptx`;
+                    const filename = `slides_${originalUrl.replace(/[^a-zA-Z0-9]/g, '_')}.pptx`;
                     setStatus(`Added ${addedSlideCount} slides. Saving PPTX file: ${filename}`);
                     await pptx.writeFile({ fileName: filename });
                     setStatus(`Success! ${addedSlideCount} slides generated in ${filename}`, 'success');
                 } else {
-                    throw new Error('No slides could be successfully added to the PPTX file.');
+                    throw new Error('No slides could be successfully added.');
                 }
 
             } catch (error) {
