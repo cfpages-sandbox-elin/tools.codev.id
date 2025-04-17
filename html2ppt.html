@@ -125,7 +125,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>HTML Page to PPT Slides v.0.0.5</h1>
+        <h1>HTML Page to PPT Slides v.0.0.6</h1>
         <p>Enter the URL of a web page or a local path relative to the project root (e.g., /folder/file.html). The tool will attempt to detect repeating sections, screenshot each section, and generate a PowerPoint file.</p>
         <p><small>Note: Cross-origin requests (to different domains) require a CORS proxy and may not always succeed.</small></p>
 
@@ -240,10 +240,10 @@
             convertButton.textContent = disabled ? 'Processing...' : 'Convert to PPT';
         }
 
-        function findRepeatingSiblingDivs(container) {
+        function findRepeatingSiblingSections(container) {
             const candidates = [];
-            const parentNodes = container.querySelectorAll('div');
-
+            const parentNodes = container.querySelectorAll('section, div');
+            
             parentNodes.forEach(parent => {
                 const childDivs = Array.from(parent.children).filter(el => el.tagName === 'DIV' && el.className.trim() !== '');
                 if (childDivs.length < 2) return;
@@ -264,7 +264,7 @@
                             let nextSibling = current.nextElementSibling;
                             while(nextSibling && nextSibling !== nextExpected && nextSibling.tagName !== 'DIV'){
                                 nextSibling = nextSibling.nextElementSibling;
-                            }
+                           }
                             if (nextSibling !== nextExpected) {
                                 isSequential = false; break;
                             }
@@ -361,18 +361,18 @@
             } else {
                 console.log("Attempting auto-detection of repeating sibling divs...");
                 elementsToCapture = findRepeatingSiblingDivs(contentContainer);
-                if (elementsToCapture.length === 0) {
-                    console.log("Auto-detection failed, attempting to capture direct body children divs...");
-                    elementsToCapture = Array.from(contentContainer.children).filter(el => el.tagName === 'DIV');
-                    if (elementsToCapture.length === 0) {
-                        console.log("Capturing direct body children failed, attempting to capture body itself...");
-                        const bodyElement = contentContainer.querySelector('body') || contentContainer;
-                        elementsToCapture = [bodyElement];
-                        if (!bodyElement || bodyElement.innerHTML.trim() === '') {
+                if (elementsToCapture.length === 0) { // If auto-detecting DIVS as slides fails, try sections
+                    console.log("Auto-detection failed, attempting to capture direct body children sections...");
+                    elementsToCapture = Array.from(contentContainer.children).filter(el => el.tagName === 'SECTION');
+                    if(elementsToCapture.length === 0){
+                       console.log("Capturing direct body children sections failed, attempting to capture body itself...");
+                       const bodyElement = contentContainer.querySelector('body') || contentContainer;
+                       elementsToCapture = [bodyElement];
+                       if (!bodyElement || bodyElement.innerHTML.trim() === '') {
                             throw new Error('Could not auto-detect/fallback to capture elements.');
                         }
-                    } else {
-                        console.log(`Found ${elementsToCapture.length} direct children divs to capture.`);
+                    } else{
+                        console.log(`Found ${elementsToCapture.length} direct children sections to capture.`);
                     }
                 }
             }
@@ -392,7 +392,7 @@
                 }
 
                 return html2canvas(element, {
-                    useCORS: needsCors, // Use CORS only if determined necessary
+                    useCORS: isCrossOrigin(originalUrl), // Use CORS only if determined necessary
                     allowTaint: needsCors,
                     logging: false,
                     scale: window.devicePixelRatio || 1,
@@ -467,5 +467,46 @@
         }       
 
     </script>
+
+    <script>
+
+        function findRepeatingSiblingDivs(container) {
+          const candidates = [];
+          const parentNodes = container.querySelectorAll('div, section');
+      
+          parentNodes.forEach(parent => {
+            const childSections = Array.from(parent.children).filter(el => el.tagName === 'SECTION');
+            if (childSections.length < 2) return;
+      
+            const classMap = {};
+            childSections.forEach(div => {
+              const classKey = Array.from(div.classList).sort().join(' ');
+              if (!classMap[classKey]) classMap[classKey] = [];
+              classMap[classKey].push(div);
+            });
+      
+            for (const key in classMap) {
+              if (classMap[key].length > 1) {
+                const group = classMap[key];
+                let isSequential = true;
+                for(let i = 0; i < group.length - 1; i++) {
+                  let current = group[i], nextExpected = group[i+1];
+                  let nextSibling = current.nextElementSibling;
+                  while(nextSibling && nextSibling !== nextExpected && nextSibling.tagName !== 'SECTION'){
+                    nextSibling = nextSibling.nextElementSibling;
+                  }
+                  if (nextSibling !== nextExpected) {
+                    isSequential = false; break;
+                  }
+                }
+                if(isSequential) candidates.push(...group);
+              }
+            }
+          });
+        const uniqueCandidates = [...new Set(candidates)];
+        console.log(`Auto-detected ${uniqueCandidates.length} potential repeating sections.`);
+        return uniqueCandidates;
+        }
+      </script>
 </body>
 </html>
