@@ -125,7 +125,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>HTML Page to PPT Slides v.0.0.7</h1>
+        <h1>HTML Page to PPT Slides v.0.0.8</h1>
         <p>Enter the URL of a web page or a local path relative to the project root (e.g., /folder/file.html). The tool will attempt to detect repeating sections, screenshot each section, and generate a PowerPoint file.</p>
         <p><small>Note: Cross-origin requests (to different domains) require a CORS proxy and may not always succeed.</small></p>
 
@@ -245,31 +245,31 @@
             const parentNodes = container.querySelectorAll('section, div');
             
             parentNodes.forEach(parent => {
-                const childDivs = Array.from(parent.children).filter(el => el.tagName === 'DIV' && el.className.trim() !== '');
-                if (childDivs.length < 2) return;
+                const childSections = Array.from(parent.children).filter(el => el.tagName === 'SECTION');
+                if (childSections.length < 2) return;
 
                 const classMap = {};
-                childDivs.forEach(div => {
-                    const classKey = Array.from(div.classList).sort().join(' ');
+                childSections.forEach(section => {
+                    const classKey = Array.from(section.classList).sort().join(' ');
                     if (!classMap[classKey]) classMap[classKey] = [];
-                    classMap[classKey].push(div);
+                    classMap[classKey].push(section);
                 });
 
                 for (const key in classMap) {
                     if (classMap[key].length > 1) {
                         const group = classMap[key];
                         let isSequential = true;
-                        for(let i = 0; i < group.length - 1; i++) {
-                            let current = group[i], nextExpected = group[i+1];
+                        for (let i = 0; i < group.length - 1; i++) {
+                            let current = group[i], nextExpected = group[i + 1];
                             let nextSibling = current.nextElementSibling;
-                            while(nextSibling && nextSibling !== nextExpected && nextSibling.tagName !== 'DIV'){
+                            while (nextSibling && nextSibling !== nextExpected && nextSibling.tagName !== 'SECTION') {
                                 nextSibling = nextSibling.nextElementSibling;
-                           }
+                            }
                             if (nextSibling !== nextExpected) {
                                 isSequential = false; break;
                             }
                         }
-                        if(isSequential) candidates.push(...group);
+                        if (isSequential) candidates.push(...group);
                     }
                 }
             });
@@ -361,7 +361,7 @@
             } else {
                 console.log("Attempting auto-detection of repeating sibling sections...");
                 elementsToCapture = findRepeatingSiblingSections(contentContainer);
-                if (elementsToCapture.length === 0) { // If auto-detecting DIVS as slides fails, try sections
+                if (elementsToCapture.length === 0) {
                     console.log("Auto-detection failed, attempting to capture direct body children sections...");
                     elementsToCapture = Array.from(contentContainer.children).filter(el => el.tagName === 'SECTION');
                     if(elementsToCapture.length === 0){
@@ -470,35 +470,36 @@
 
  <script>
   function findRepeatingSiblingSections(container) {
-    const candidates = [];
-    const parentNodes = container.querySelectorAll('div, section');
+      const candidates = [];
+      const parentNodes = container.querySelectorAll('div, section');
 
-    parentNodes.forEach(parent => {
-      const childSections = Array.from(parent.children).filter(el => el.tagName === 'SECTION');
-      if (childSections.length < 2) return;
+      parentNodes.forEach(parent => {
+          const childSections = Array.from(parent.children).filter(el => el.tagName === 'SECTION');
+          if (childSections.length < 2) return;
 
-      const classMap = {};
-      childSections.forEach(section => {
-        const classKey = Array.from(section.classList).sort().join(' ');
-        if (!classMap[classKey]) classMap[classKey] = [];
-        classMap[classKey].push(section);
-      });
+          const classMap = {};
+          childSections.forEach(section => {
+              const classKey = Array.from(section.classList).sort().join(' ');
+              if (!classMap[classKey]) classMap[classKey] = [];
+              classMap[classKey].push(section);
+          });
 
-      for (const key in classMap) {
-        if (classMap[key].length > 1) {
-          const group = classMap[key];
-          let isSequential = true;
-          for (let i = 0; i < group.length - 1; i++) {
-            let current = group[i], nextExpected = group[i + 1];
-            let nextSibling = current.nextElementSibling;
-            while (nextSibling && nextSibling !== nextExpected && nextSibling.tagName !== 'SECTION') {
-              nextSibling = nextSibling.nextElementSibling;
-            }
-            if (nextSibling !== nextExpected) {
-              isSequential = false; break;
-            }
-          }
-          if (isSequential) candidates.push(...group);
+          for (const key in classMap) {
+              if (classMap[key].length > 1) {
+                  const group = classMap[key];
+                  let isSequential = true;
+                  for (let i = 0; i < group.length - 1; i++) {
+                      let current = group[i], nextExpected = group[i + 1];
+                      let nextSibling = current.nextElementSibling;
+                      while (nextSibling && nextSibling !== nextExpected && nextSibling.tagName !== 'SECTION') {
+                          nextSibling = nextSibling.nextElementSibling;
+                      }
+                      if (nextSibling !== nextExpected) {
+                          isSequential = false; break;
+                      }
+                  }
+                  if (isSequential) candidates.push(...group);
+              }
         }
       }
     });
@@ -506,6 +507,6 @@
         console.log(`Auto-detected ${uniqueCandidates.length} potential repeating sections.`);
         return uniqueCandidates;
         }
-      </script>
+    </script>
 </body>
 </html>
