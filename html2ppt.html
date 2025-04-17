@@ -96,7 +96,7 @@
         }
 
         #contentContainer {
-             /* Hidden container to render fetched content for screenshotting */
+            /* Hidden container to render fetched content for screenshotting */
             position: absolute;
             left: -9999px;
             top: -9999px;
@@ -125,7 +125,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>HTML Page to PPT Slides v.0.11</h1>
+        <h1>HTML Page to PPT Slides v.0.1.1</h1>
         <p>Enter the URL of a web page or a local path relative to the project root (e.g., /folder/file.html). The tool will attempt to detect repeating sections, screenshot each section, and generate a PowerPoint file.</p>
         <p><small>Note: Cross-origin requests (to different domains) require a CORS proxy and may not always succeed.</small></p>
 
@@ -156,7 +156,7 @@
 
         convertButton.addEventListener('click', handleConversion);
 
-        pickElementButton.addEventListener('click', function() {
+        pickElementButton.addEventListener('click', async function() {
             const url = urlInput.value.trim();
             if (!url) {
                 setStatus('Please enter a valid URL or local path first.', 'error');
@@ -171,30 +171,32 @@
             }
 
             setStatus('Fetching page content for element picking...');
-            fetchHtmlContent(fetchPath, needsCors)
-                .then(html => {
-                    contentContainer.innerHTML = html;
+            try {
+                const html = await fetchHtmlContent(fetchPath, needsCors);
+                contentContainer.innerHTML = html;
 
-                    // Adjust local stylesheet paths:
-                    contentContainer.querySelectorAll('link[rel="stylesheet"], style').forEach(styleEl => {
-                        if (isLocal && styleEl.tagName === 'LINK' && styleEl.hasAttribute('href')) {
-                            let href = styleEl.getAttribute('href');
-                            if (!href.startsWith('http') && !href.startsWith('/') && !href.startsWith('data:')) {
-                                const pageDir = fetchPath.includes('/') ? fetchPath.substring(0, fetchPath.lastIndexOf('/')) : '.';
-                                styleEl.setAttribute('href', `${pageDir}/${href}`.replace(/([^:])(\/+)/g, '$1/'));
-                                console.log(`Adjusted local stylesheet path: ${styleEl.getAttribute('href')}`);
-                            }
+                // Wait for images to load
+                await waitForAllImages(contentContainer);
+
+                // Adjust local stylesheet paths:
+                contentContainer.querySelectorAll('link[rel="stylesheet"], style').forEach(styleEl => {
+                    if (isLocal && styleEl.tagName === 'LINK' && styleEl.hasAttribute('href')) {
+                        let href = styleEl.getAttribute('href');
+                        if (!href.startsWith('http') && !href.startsWith('/') && !href.startsWith('data:')) {
+                            const pageDir = fetchPath.includes('/') ? fetchPath.substring(0, fetchPath.lastIndexOf('/')) : '.';
+                            styleEl.setAttribute('href', `${pageDir}/${href}`.replace(/([^:])(\/+)/g, '$1/'));
+                            console.log(`Adjusted local stylesheet path: ${styleEl.getAttribute('href')}`);
                         }
-                    });
-
-                    contentContainer.classList.add('picking');
-                    pickingElement = true;
-                    statusMessage.textContent = 'Click on the element you want to select.';
-                    disableForm(true);
-                })
-                .catch(error => {
-                    setStatus(`Error loading content for picking: ${error.message}`, 'error');
+                    }
                 });
+
+                contentContainer.classList.add('picking');
+                pickingElement = true;
+                statusMessage.textContent = 'Click on the element you want to select.';
+                disableForm(true);
+            } catch (error) {
+                setStatus(`Error loading content for picking: ${error.message}`, 'error');
+            }
         });
 
         contentContainer.addEventListener('click', function(event) {
@@ -240,17 +242,6 @@
             convertButton.textContent = disabled ? 'Processing...' : 'Convert to PPT';
         }
 
-        
-
-       
-
-       
-
-
-       
-
-
-
         // Function to check if a URL is cross-origin
         function isCrossOrigin(url) {
             if (!url.startsWith('http://') && !url.startsWith('https://')) {
@@ -265,6 +256,22 @@
             }
         }
 
+        // Function to wait for all images in a container to load
+        async function waitForAllImages(container) {
+            const images = container.querySelectorAll('img');
+            const promises = Array.from(images).map(img => {
+                return new Promise((resolve, reject) => {
+                    if (img.complete) {
+                        resolve();
+                    } else {
+                        img.onload = resolve;
+                        img.onerror = reject;
+                    }
+                });
+            });
+            return Promise.all(promises);
+        }
+
         // Function to fetch HTML content
         async function fetchHtmlContent(url, requiresCors) {
             if (requiresCors) {
@@ -275,7 +282,9 @@
                     if (!response.ok) {
                          throw new Error(`Proxy fetch failed! Status: ${response.status}`);
                     }
-                    return await response.text();
+                    const html = await response.text();
+                    await waitForAllImages(contentContainer); // Wait for images to load before returning
+                    return html;
                 } catch (proxyError) {
                     console.warn(`Proxy fetch failed: ${proxyError.message}. Attempting direct fetch (might fail due to CORS)...`);
                     // Fallback attempt: direct fetch (will likely fail for cross-origin, but worth a try)
@@ -285,7 +294,9 @@
                             throw new Error(`Direct fetch also failed! Status: ${directResponse.status}`);
                         }
                         console.log("Direct fetch successful after proxy failure (unexpected!).");
-                        return await directResponse.text();
+                        const html = await directResponse.text();
+                        await waitForAllImages(contentContainer); // Wait for images to load before returning
+                        return html;
                     } catch (directError) {
                         console.error("Direct fetch attempt error:", directError);
                         throw new Error(`Proxy fetch failed and direct fetch failed: ${proxyError.message}`);
@@ -305,7 +316,9 @@
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status} - Failed to fetch resource.`);
                 }
-                return await response.text();
+                 const html = await response.text();
+                await waitForAllImages(contentContainer); // Wait for images to load before returning
+                return html;
             }
         }
 
@@ -323,18 +336,22 @@
 
             setStatus('Parsing HTML and preparing content for rendering...');
 
+            const needsCors = isCrossOrigin(originalUrl);
+            const html = await fetchHtmlContent(fetchPath, needsCors);
+            contentContainer.innerHTML = html;
+            await waitForAllImages(contentContainer); // Wait for images to load
+
             let elementsToCapture;
             if (customSelector) {
                 console.log(`Using custom selector: ${customSelector}`)
                 elementsToCapture = Array.from(contentContainer.querySelectorAll(customSelector));
                 if (elementsToCapture.length === 0) {
                     throw new Error(`No elements found matching selector: ${customSelector}`);
-                } 
+                }
             } else {
-                console.log("No custom selector provided, capturing each section element.");
                 elementsToCapture = Array.from(contentContainer.querySelectorAll('section'));
-                if (elementsToCapture.length === 0) {                   
-                    throw new Error('Could not find any <section> elements to capture.');
+                if (elementsToCapture.length === 0) {
+                   throw new Error('Could not find any <section> elements to capture.');
                 }
             }
 
@@ -425,8 +442,8 @@
                 throw new Error('No slides could be successfully added.');
             }
 
-        }       
+        }
 
     </script>
-</body>   
+</body>
 </html>
