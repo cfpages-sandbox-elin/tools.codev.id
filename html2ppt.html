@@ -102,13 +102,30 @@
             top: -9999px;
             width: 1280px; /* Define a width for rendering */
             opacity: 0;
+            pointer-events: none; /* Disable interactions by default */
+        }
+
+        #contentContainer.picking {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent overlay */
+            z-index: 1000; /* Ensure it's on top */
+            pointer-events: auto; /* Make it interactive */
+        }
+
+        #contentContainer.picking *:hover {
+            outline: 2px solid red !important; /* Highlight hovered elements */
+            cursor: pointer;
         }
 
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>HTML Page to PPT Slides v.0.0.3</h1>
+        <h1>HTML Page to PPT Slides v.0.0.4</h1>
         <p>Enter the URL of a web page or a local path relative to the project root (e.g., /folder/file.html). The tool will attempt to detect repeating sections, screenshot each section, and generate a PowerPoint file.</p>
         <p><small>Note: Cross-origin requests (to different domains) require a CORS proxy and may not always succeed.</small></p>
 
@@ -117,8 +134,9 @@
             <input type="url" id="urlInput" placeholder="https://example.com or /local/path.html" required>
         </div>
         <div>
-            <label for="selectorInput">Optional: CSS Selector for repeating elements (e.g., .product-item):</label>
+            <label for="selectorInput">Optional: CSS Selector for repeating elements:</label>
             <input type="text" id="selectorInput" placeholder="Leave empty for auto-detection">
+            <button id="pickElementButton" type="button">Pick Element</button>
         </div>
         <button id="convertButton">Convert to PPT</button>
 
@@ -133,8 +151,44 @@
         const convertButton = document.getElementById('convertButton');
         const statusMessage = document.getElementById('statusMessage');
         const contentContainer = document.getElementById('contentContainer');
+        const pickElementButton = document.getElementById('pickElementButton');
+        let pickingElement = false;
 
         convertButton.addEventListener('click', handleConversion);
+
+        pickElementButton.addEventListener('click', function() {
+            pickingElement = !pickingElement;
+            contentContainer.classList.toggle('picking', pickingElement); //add picking class to style the container
+            statusMessage.textContent = pickingElement ? 'Click on the element you want to select.' : '';
+            disableForm(pickingElement);
+        });
+
+        contentContainer.addEventListener('click', function(event) {
+            if (pickingElement) {
+                event.preventDefault(); // Prevent any links from being followed
+                const target = event.target;
+
+                // Function to generate CSS selector (very basic implementation)
+                function generateSelector(el) {
+                    if (!el) return null;
+                    if (el.id) return '#' + el.id;
+                    if (el.tagName === 'BODY') return 'BODY'; // special case
+                    let selector = el.tagName;
+                    if (el.className) {
+                        selector += '.' + el.className.split(' ').join('.');
+                    }
+                    return selector;
+                }
+
+
+                const selector = generateSelector(target);
+                selectorInput.value = selector;
+                pickingElement = false;
+                contentContainer.classList.remove('picking');
+                statusMessage.textContent = `Selected element: ${selector}`;
+                disableForm(false);
+            }
+        });
 
         function setStatus(message, type = 'info') {
             statusMessage.textContent = message;
@@ -147,6 +201,7 @@
             convertButton.disabled = disabled;
             urlInput.disabled = disabled;
             selectorInput.disabled = disabled;
+            pickElementButton.disabled = disabled;
             convertButton.textContent = disabled ? 'Processing...' : 'Convert to PPT';
         }
 
@@ -292,8 +347,8 @@
                         let href = styleEl.getAttribute('href');
                         if (!href.startsWith('http') && !href.startsWith('/') && !href.startsWith('data:')) {
                              const pageDir = fetchPath.includes('/') ? fetchPath.substring(0, fetchPath.lastIndexOf('/')) : '.';
-                             styleEl.setAttribute('href', `${pageDir}/${href}`);
-                             console.log(`Adjusted local stylesheet path: ${styleEl.getAttribute('href')}`);
+                             styleEl.setAttribute('href', \`\${pageDir}/\${href}\`);
+                             console.log(\`Adjusted local stylesheet path: \${styleEl.getAttribute('href')}\`);
                          }
                      }
                     contentContainer.appendChild(styleEl.cloneNode(true));
@@ -310,10 +365,10 @@
 
                 let elementsToCapture;
                 if (customSelector) {
-                    console.log(`Using custom selector: ${customSelector}`)
+                    console.log(\`Using custom selector: \${customSelector}\`)
                     elementsToCapture = Array.from(contentContainer.querySelectorAll(customSelector));
                     if (elementsToCapture.length === 0) {
-                        throw new Error(`No elements found matching selector: ${customSelector}`);
+                        throw new Error(\`No elements found matching selector: \${customSelector}\`);
                     }
                 } else {
                     console.log("Attempting auto-detection of repeating sibling divs...");
@@ -329,22 +384,22 @@
                                  throw new Error('Could not auto-detect/fallback to capture elements.');
                             }
                          } else {
-                             console.log(`Found ${elementsToCapture.length} direct children divs to capture.`);
+                             console.log(\`Found \${elementsToCapture.length} direct children divs to capture.\`);
                          }
                      }
                 }
 
-                setStatus(`Found ${elementsToCapture.length} element(s) to capture. Generating screenshots...`);
+                setStatus(\`Found \${elementsToCapture.length} element(s) to capture. Generating screenshots...\`);
 
                 const imagePromises = elementsToCapture.map((element, index) => {
-                    console.log(`Preparing to capture element ${index + 1}`, element);
+                    console.log(\`Preparing to capture element \${index + 1}\`, element);
                     if (!element || typeof element.getBoundingClientRect !== 'function') {
-                         console.warn(`Skipping element ${index + 1} as it's not a valid element.`);
+                         console.warn(\`Skipping element \${index + 1} as it's not a valid element.\`);
                          return Promise.resolve(null);
                     }
                      const rect = element.getBoundingClientRect();
                      if (rect.width === 0 || rect.height === 0 || getComputedStyle(element).visibility === 'hidden' || getComputedStyle(element).display === 'none') {
-                         console.warn(`Skipping element ${index + 1} as it is not visible or has zero dimensions.`);
+                         console.warn(\`Skipping element \${index + 1} as it is not visible or has zero dimensions.\`);
                          return Promise.resolve(null);
                      }
 
@@ -360,11 +415,11 @@
                          windowWidth: needsCors ? document.documentElement.scrollWidth : null,
                          windowHeight: needsCors ? document.documentElement.scrollHeight : null
                     }).then(canvas => {
-                        console.log(`Successfully captured element ${index + 1}`);
+                        console.log(\`Successfully captured element \${index + 1}\`);
                         return canvas.toDataURL('image/png');
                     }).catch(err => {
-                        console.error(`html2canvas error for element ${index+1}:`, err);
-                        setStatus(`Error capturing element ${index + 1}. Skipping.`, 'error');
+                        console.error(\`html2canvas error for element \${index+1}:\`, err);
+                        setStatus(\`Error capturing element \${index + 1}. Skipping.\`, 'error');
                         return null;
                     });
                 });
@@ -375,7 +430,7 @@
                     throw new Error('No elements could be successfully screenshotted.');
                 }
 
-                setStatus(`Generated ${images.length} screenshots. Preparing slides...`);
+                setStatus(\`Generated \${images.length} screenshots. Preparing slides...\`);
 
                 const pptx = new PptxGenJS();
                 pptx.layout = 'LAYOUT_WIDE';
@@ -384,13 +439,13 @@
                     return new Promise((resolve) => {
                         const img = new Image();
                         img.onload = () => resolve({ imageDataUrl, width: img.width, height: img.height, index });
-                        img.onerror = () => { console.error(`Failed to load image ${index + 1} data`); resolve(null); };
+                        img.onerror = () => { console.error(\`Failed to load image \${index + 1} data\`); resolve(null); };
                         img.src = imageDataUrl;
                     });
                 });
 
                 const imageInfos = await Promise.all(dimensionPromises);
-                setStatus(`Image dimensions processed. Adding ${imageInfos.filter(info => info).length} slides to PPTX...`);
+                setStatus(\`Image dimensions processed. Adding \${imageInfos.filter(info => info).length} slides to PPTX...\`);
 
                 let addedSlideCount = 0;
                 imageInfos.forEach(info => {
@@ -405,25 +460,25 @@
                         const slide = pptx.addSlide();
                         slide.addImage({ data: imageDataUrl, x, y, w, h });
                         addedSlideCount++;
-                        console.log(`Added image ${index + 1} to slide.`);
+                        console.log(\`Added image \${index + 1} to slide.\`);
                     } catch(slideErr) {
-                        console.error(`Error adding image ${index + 1} to slide:`, slideErr);
-                        setStatus(`Error adding image ${index + 1} to slide. Skipping.`, 'error');
+                        console.error(\`Error adding image \${index + 1} to slide:\`, slideErr);
+                        setStatus(\`Error adding image \${index + 1} to slide. Skipping.\`, 'error');
                     }
                 });
 
                 if (addedSlideCount > 0) {
-                    const filename = `slides_${originalUrl.replace(/[^a-zA-Z0-9]/g, '_')}.pptx`;
-                    setStatus(`Added ${addedSlideCount} slides. Saving PPTX file: ${filename}`);
+                    const filename = \`slides_\${originalUrl.replace(/[^a-zA-Z0-9]/g, '_')}.pptx\`;
+                    setStatus(\`Added \${addedSlideCount} slides. Saving PPTX file: \${filename}\`);
                     await pptx.writeFile({ fileName: filename });
-                    setStatus(`Success! ${addedSlideCount} slides generated in ${filename}`, 'success');
+                    setStatus(\`Success! \${addedSlideCount} slides generated in \${filename}\`, 'success');
                 } else {
                     throw new Error('No slides could be successfully added.');
                 }
 
             } catch (error) {
                 console.error('Conversion failed:', error);
-                setStatus(`Error: ${error.message}`, 'error');
+                setStatus(\`Error: \${error.message}\`, 'error');
             } finally {
                 disableForm(false);
                 contentContainer.innerHTML = '';
