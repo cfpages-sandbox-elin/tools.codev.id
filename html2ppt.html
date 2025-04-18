@@ -439,7 +439,8 @@
                 elementsToCapture = Array.from(iframeDoc.querySelectorAll('section'));
                  if (elementsToCapture.length === 0) {
                     console.warn("No <section> found, falling back to divs with 'slide' in class/id");
-                    elementsToCapture = Array.from(contentContainer.querySelectorAll('div[class*="slide"], div[id*="slide"]'));
+                    const iframeDoc = contentIframe.contentDocument || contentIframe.contentWindow.document;
+                    elementsToCapture = Array.from(iframeDoc.querySelectorAll('div[class*="slide"], div[id*="slide"]'));
                     if (!elementsToCapture || elementsToCapture.length === 0) {
                         throw new Error('Could not find any <section> elements or divs with "slide" in class/id to capture.');
                     } else {
