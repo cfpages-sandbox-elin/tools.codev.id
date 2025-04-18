@@ -120,7 +120,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>HTML Page to PPT Slides v.0.1.4</h1>
+        <h1>HTML Page to PPT Slides v.0.1.5</h1>
         <p>Enter the URL of a web page or a local path relative to the project root (e.g., /folder/file.html). The tool will attempt to detect repeating sections, screenshot each section, and generate a PowerPoint file.</p>
         <p><small>Note: Cross-origin requests (to different domains) require a CORS proxy and may not always succeed.</small></p>
 
@@ -270,8 +270,41 @@
         // Function to fetch HTML content
         async function fetchHtmlContent(url, requiresCors) {
             if (requiresCors) {
+                 
+                // Function to fetch external CSS and add it to the style tag
+                async function fetchAndInjectCSS(htmlString, isLocal) {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(htmlString, 'text/html');
 
-                 // Function to fetch external CSS and add it to the style tag
+                    const linkElements = doc.querySelectorAll('link[rel="stylesheet"]');
+                    const stylePromises = Array.from(linkElements).map(async linkElement => {
+                        const href = linkElement.getAttribute('href');
+                        if (isLocal && (!href.startsWith('http') && !href.startsWith('/') && !href.startsWith('data:'))) {
+                              console.log(`Skipping fetch for local CSS: ${href}`);
+                            return null;
+                        }
+
+                        try {
+                            const response = await fetch(href);
+                            if (!response.ok) {
+                                console.error(`Failed to fetch CSS from ${href}`);
+                                return null;
+                            }
+                            const cssText = await response.text();
+                            return cssText;
+                        } catch (error) {
+                            console.error(`Error fetching CSS from ${href}:`, error);
+                            return null;
+                        }
+                    });
+                    const cssTexts = (await Promise.all(stylePromises)).filter(text => text);
+                    const styleTag = doc.createElement('style');
+                    styleTag.textContent = cssTexts.join('\n');
+                    doc.head.appendChild(styleTag);
+                    return doc.documentElement.outerHTML;
+                }
+
+                // Function to fetch external CSS and add it to the style tag
                 async function fetchAndInjectCSS(htmlString, isLocal) {
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(htmlString, 'text/html');
@@ -313,7 +346,7 @@
                     }
                     let html = await response.text();
                     html = await fetchAndInjectCSS(html, false);
-                    
+
                     return html;
                 } catch (proxyError) {
                     console.warn(`Proxy fetch failed: ${proxyError.message}. Attempting direct fetch (might fail due to CORS)...`);
@@ -347,8 +380,9 @@
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status} - Failed to fetch resource.`);
                 }
-                let html = await response.text();
-                html = await fetchAndInjectCSS(html, true);
+                 let html = await response.text();
+                 html = await fetchAndInjectCSS(html, true);
+                    
                  await waitForAllImages(contentContainer);
                 return html;
             }
@@ -382,16 +416,13 @@
                 }
             } else {
                 elementsToCapture = Array.from(contentContainer.querySelectorAll('section'));
-                 // Fallback: Check for divs with "slide" in class or ID
-                if(elementsToCapture.length === 0) {
-                     elementsToCapture = Array.from(contentContainer.querySelectorAll('div[class*="slide"], div[id*="slide"]'));
-                     if(elementsToCapture.length === 0){
+                 if (elementsToCapture.length === 0) {
+                    console.log("No <section> found, falling back to divs with 'slide' in class/id");
+                    elementsToCapture = Array.from(contentContainer.querySelectorAll('div[class*="slide"], div[id*="slide"]'));
+                    if (elementsToCapture.length === 0) {
                         throw new Error('Could not find any <section> elements or divs with "slide" in class/id to capture.');
                     } else {
-                        const filteredElements = elementsToCapture.filter(element => {
-                            const parent = element.parentElement;
-                            return !elementsToCapture.includes(parent)
-                        })
+                         const filteredElements = elementsToCapture.filter(element => !elementsToCapture.includes(element.parentElement));
                         elementsToCapture = filteredElements;
                          console.log("filtered children:", filteredElements);
 
@@ -399,7 +430,7 @@
                 } else {
                     console.log("No <section> found, falling back to divs with 'slide' in class/id");
                 }
-            }
+             }
 
             setStatus(`Found ${elementsToCapture.length} element(s) to capture. Generating screenshots...`);
 
