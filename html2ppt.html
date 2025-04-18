@@ -120,7 +120,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>HTML Page to PPT Slides v.0.1.2</h1>
+        <h1>HTML Page to PPT Slides v.0.1.3</h1>
         <p>Enter the URL of a web page or a local path relative to the project root (e.g., /folder/file.html). The tool will attempt to detect repeating sections, screenshot each section, and generate a PowerPoint file.</p>
         <p><small>Note: Cross-origin requests (to different domains) require a CORS proxy and may not always succeed.</small></p>
 
@@ -346,8 +346,14 @@
                 }
             } else {
                 elementsToCapture = Array.from(contentContainer.querySelectorAll('section'));
-                if (elementsToCapture.length === 0) {
-                   throw new Error('Could not find any <section> elements to capture.');
+                 // Fallback: Check for divs with "slide" in class or ID
+                if(elementsToCapture.length === 0) {
+                     elementsToCapture = Array.from(contentContainer.querySelectorAll('div[class*="slide"], div[id*="slide"]'));
+                     if(elementsToCapture.length === 0){
+                        throw new Error('Could not find any <section> elements or divs with "slide" in class/id to capture.');
+                    } else {
+                         console.log("No <section> found, falling back to divs with 'slide' in class/id");
+                    }
                 }
             }
 
