@@ -91,13 +91,13 @@
             border: 1px solid #ffcdd2;
         }
 
-        #contentContainer {
-            /* Hidden container to render fetched content for screenshotting */
-            position: absolute;
-            left: -9999px;
-            top: -9999px;
-            width: 1280px; /* Define a width for rendering */
-            opacity: 0;
+        #contentIframe {
+            /* Hidden iframe to render fetched content for screenshotting */
+             position: absolute;
+             left: -9999px;
+             top: -9999px;
+             width: 1280px; /* Define a width for rendering */
+             height: 720px;
             pointer-events: none; /* Disable interactions by default */
         }
 
@@ -112,7 +112,7 @@
             pointer-events: auto; /* Make it interactive */
         }
 
-        #contentContainer.picking *:hover {
+        #contentIframe.picking *:hover {
             outline: 2px solid red !important; /* Highlight hovered elements */
             cursor: pointer;
         }
@@ -120,7 +120,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>HTML Page to PPT Slides v.0.1.5</h1>
+        <h1>HTML Page to PPT Slides v.0.1.6</h1>
         <p>Enter the URL of a web page or a local path relative to the project root (e.g., /folder/file.html). The tool will attempt to detect repeating sections, screenshot each section, and generate a PowerPoint file.</p>
         <p><small>Note: Cross-origin requests (to different domains) require a CORS proxy and may not always succeed.</small></p>
 
@@ -138,7 +138,7 @@
         <div id="statusMessage"></div>
     </div>
 
-    <div id="contentContainer"></div>
+    <iframe id="contentIframe"></iframe>
 
     <script>
         const urlInput = document.getElementById('urlInput');
@@ -146,6 +146,23 @@
         const convertButton = document.getElementById('convertButton');
         const statusMessage = document.getElementById('statusMessage');
         const contentContainer = document.getElementById('contentContainer');
+        const contentIframe = document.getElementById('contentIframe');
+        const iframeDoc = contentIframe.contentDocument || contentIframe.contentWindow.document;
+
+        function appendContentToIframe(html) {
+            return new Promise((resolve) => {
+                 contentIframe.onload = () => {
+                    console.log('iframe loaded.');
+                    resolve();
+                };
+                 iframeDoc.open();
+                 iframeDoc.write(html);
+                 iframeDoc.close();
+            });
+
+        }
+
+
         const pickElementButton = document.getElementById('pickElementButton');
         let pickingElement = false;
 
@@ -168,14 +185,15 @@
             setStatus('Fetching page content for element picking...');
             try {
                 const html = await fetchHtmlContent(fetchPath, needsCors);
-                contentContainer.innerHTML = html;
 
+                await appendContentToIframe(html);
+                
                 // Wait for images to load
-                await waitForAllImages(contentContainer);
+                await waitForAllImages(iframeDoc);
 
                 // Adjust local stylesheet paths:
-                contentContainer.querySelectorAll('link[rel="stylesheet"], style').forEach(styleEl => {
-                    if (isLocal && styleEl.tagName === 'LINK' && styleEl.hasAttribute('href')) {
+               iframeDoc.querySelectorAll('link[rel="stylesheet"], style').forEach(styleEl => {
+                     if (isLocal && styleEl.tagName === 'LINK' && styleEl.hasAttribute('href')) {
                         let href = styleEl.getAttribute('href');
                         if (!href.startsWith('http') && !href.startsWith('/') && !href.startsWith('data:')) {
                             const pageDir = fetchPath.includes('/') ? fetchPath.substring(0, fetchPath.lastIndexOf('/')) : '.';
@@ -185,7 +203,7 @@
                     }
                 });
 
-                contentContainer.classList.add('picking');
+                contentIframe.classList.add('picking');
                 pickingElement = true;
                 statusMessage.textContent = 'Click on the element you want to select.';
                 disableForm(true);
@@ -215,7 +233,7 @@
                 const selector = generateSelector(target);
                 selectorInput.value = selector;
                 pickingElement = false;
-                contentContainer.classList.remove('picking');
+                contentIframe.classList.remove('picking');
                 statusMessage.textContent = `Selected element: ${selector}`;
                 disableForm(false);
             }
@@ -359,8 +377,7 @@
                         }
                         console.log("Direct fetch successful after proxy failure (unexpected!).")
                         let html = await directResponse.text();
-                         html = await fetchAndInjectCSS(html, false);
-                        await waitForAllImages(contentContainer); // Wait for images to load before returning
+                        html = await fetchAndInjectCSS(html, false);
                         return html;
                     } catch (directError) {
                         console.error("Direct fetch attempt error:", directError);
@@ -381,10 +398,8 @@
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status} - Failed to fetch resource.`);
                 }
-                 let html = await response.text();
-                 html = await fetchAndInjectCSS(html, true);
-                    
-                 await waitForAllImages(contentContainer);
+                let html = await response.text();
+                html = await fetchAndInjectCSS(html, true);
                 return html;
             }
         }
@@ -405,13 +420,13 @@
 
             const needsCors = isCrossOrigin(originalUrl);
             const html = await fetchHtmlContent(fetchPath, needsCors);
-            contentContainer.innerHTML = html;
-            await waitForAllImages(contentContainer); // Wait for images to load
+            await appendContentToIframe(html);
+            await waitForAllImages(iframeDoc); // Wait for images to load
 
             let elementsToCapture;
             if (customSelector) {
                 console.log(`Using custom selector: ${customSelector}`)
-                elementsToCapture = Array.from(contentContainer.querySelectorAll(customSelector));
+                elementsToCapture = Array.from(iframeDoc.querySelectorAll(customSelector));
                 if (elementsToCapture.length === 0) {
                     throw new Error(`No elements found matching selector: ${customSelector}.`);
                 }
