@@ -10,27 +10,23 @@
     <style>
         body {
             font-family: sans-serif;
-            background-color: var(--wp--preset--color--theme-palette-8, #F7FAFC);
-            color: var(--wp--preset--color--theme-palette-3, #000027);
+            background-color: #F7FAFC;
+            color: #000027;
             padding: 2rem;
             line-height: 1.6;
-            --wp--preset--color--theme-palette-1: #FC5E1F; /* Example color */
-            --wp--preset--color--theme-palette-3: #000027; /* Example color */
-            --wp--preset--color--theme-palette-8: #F7FAFC; /* Example color */
-            --wp--preset--color--theme-palette-9: #ffffff; /* Example color */
         }
 
         .container {
             max-width: 800px;
             margin: 2rem auto;
             padding: 2rem;
-            background-color: var(--wp--preset--color--theme-palette-9, #ffffff);
+            background-color: #ffffff;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             border-radius: 8px;
         }
 
         h1 {
-            color: var(--wp--preset--color--theme-palette-1, #FC5E1F);
+            color: #FC5E1F;
             text-align: center;
             margin-bottom: 1.5rem;
         }
@@ -52,8 +48,8 @@
 
         button {
             display: inline-block;
-            background-color: var(--wp--preset--color--theme-palette-1, #FC5E1F);
-            color: var(--wp--preset--color--theme-palette-9, #ffffff);
+            background-color: #FC5E1F;
+            color: #ffffff;
             padding: 0.8rem 1.5rem;
             border: none;
             border-radius: 4px;
@@ -120,12 +116,11 @@
             outline: 2px solid red !important; /* Highlight hovered elements */
             cursor: pointer;
         }
-
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>HTML Page to PPT Slides v.0.1.1</h1>
+        <h1>HTML Page to PPT Slides v.0.1.2</h1>
         <p>Enter the URL of a web page or a local path relative to the project root (e.g., /folder/file.html). The tool will attempt to detect repeating sections, screenshot each section, and generate a PowerPoint file.</p>
         <p><small>Note: Cross-origin requests (to different domains) require a CORS proxy and may not always succeed.</small></p>
 
@@ -324,6 +319,7 @@
 
 
         async function handleConversion() {
+             await new Promise(resolve => setTimeout(resolve, 100));
             let originalUrl = urlInput.value.trim(); // Keep original URL for base href etc.
             let fetchPath = originalUrl;
             const customSelector = selectorInput.value.trim();
@@ -357,31 +353,27 @@
 
             setStatus(`Found ${elementsToCapture.length} element(s) to capture. Generating screenshots...`);
 
-            const imagePromises = elementsToCapture.map((element, index) => {
+            const imagePromises = elementsToCapture.map(async (element, index) => {
+                 await new Promise(resolve => setTimeout(resolve, 100));
                 console.log(`Preparing to capture element ${index + 1}`, element);
                 if (!element || typeof element.getBoundingClientRect !== 'function') {
                     console.warn(`Skipping element ${index + 1} as it's not a valid element.`);
-                    return Promise.resolve(null);
+                    return null;
                 }
                 const rect = element.getBoundingClientRect();
                 if (rect.width === 0 || rect.height === 0 || getComputedStyle(element).visibility === 'hidden' || getComputedStyle(element).display === 'none') {
                     console.warn(`Skipping element ${index + 1} as it is not visible or has zero dimensions.`);
-                    return Promise.resolve(null);
+                    return null;
                 }
-                const elementScale = 2;
-                const scaledWindowWidth = needsCors ? element.scrollWidth * elementScale : element.scrollWidth;
-                const scaledWindowHeight = needsCors ? element.scrollHeight * elementScale : element.scrollHeight;
 
                 return html2canvas(element, {
                     useCORS: isCrossOrigin(originalUrl), // Use CORS only if determined necessary
                     allowTaint: needsCors,
                     logging: false,
-                    scale: elementScale,
+                    scale: 2,
                     backgroundColor: '#ffffff',
-                    scrollX: 0,
-                    scrollY: -window.scrollY,
-                    windowWidth: scaledWindowWidth,
-                    windowHeight: scaledWindowHeight,
+                    windowWidth: element.scrollWidth,
+                    windowHeight: element.scrollHeight
                 }).then(canvas => {
                     console.log(`Successfully captured element ${index + 1}`);
                     return canvas.toDataURL('image/png');
