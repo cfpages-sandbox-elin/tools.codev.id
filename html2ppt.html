@@ -267,43 +267,44 @@
             return Promise.all(promises);
         }
 
+        // Function to fetch external CSS and add it to the style tag
+        async function fetchAndInjectCSS(htmlString, isLocal) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlString, 'text/html');
+
+            const linkElements = doc.querySelectorAll('link[rel="stylesheet"]');
+            const stylePromises = Array.from(linkElements).map(async linkElement => {
+                const href = linkElement.getAttribute('href');
+                if (isLocal && (!href.startsWith('http') && !href.startsWith('/') && !href.startsWith('data:'))) {
+                    console.log(`Skipping fetch for local CSS: ${href}`);
+                    return null;
+                }
+
+                try {
+                    const response = await fetch(href);
+                    if (!response.ok) {
+                        console.error(`Failed to fetch CSS from ${href}`);
+                        return null;
+                    }
+                    const cssText = await response.text();
+                    return cssText;
+                } catch (error) {
+                    console.error(`Error fetching CSS from ${href}:`, error);
+                    return null;
+                }
+            });
+            const cssTexts = (await Promise.all(stylePromises)).filter(text => text);
+            const styleTag = doc.createElement('style');
+            styleTag.textContent = cssTexts.join('\n');
+            doc.head.appendChild(styleTag);
+            return doc.documentElement.outerHTML;
+        }
+
+
         // Function to fetch HTML content
         async function fetchHtmlContent(url, requiresCors) {
             if (requiresCors) {
                  
-                // Function to fetch external CSS and add it to the style tag
-                async function fetchAndInjectCSS(htmlString, isLocal) {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(htmlString, 'text/html');
-
-                    const linkElements = doc.querySelectorAll('link[rel="stylesheet"]');
-                    const stylePromises = Array.from(linkElements).map(async linkElement => {
-                        const href = linkElement.getAttribute('href');
-                        if (isLocal && (!href.startsWith('http') && !href.startsWith('/') && !href.startsWith('data:'))) {
-                              console.log(`Skipping fetch for local CSS: ${href}`);
-                            return null;
-                        }
-
-                        try {
-                            const response = await fetch(href);
-                            if (!response.ok) {
-                                console.error(`Failed to fetch CSS from ${href}`);
-                                return null;
-                            }
-                            const cssText = await response.text();
-                            return cssText;
-                        } catch (error) {
-                            console.error(`Error fetching CSS from ${href}:`, error);
-                            return null;
-                        }
-                    });
-                    const cssTexts = (await Promise.all(stylePromises)).filter(text => text);
-                    const styleTag = doc.createElement('style');
-                    styleTag.textContent = cssTexts.join('\n');
-                    doc.head.appendChild(styleTag);
-                    return doc.documentElement.outerHTML;
-                }
-
                 // Function to fetch external CSS and add it to the style tag
                 async function fetchAndInjectCSS(htmlString, isLocal) {
                     const parser = new DOMParser();
