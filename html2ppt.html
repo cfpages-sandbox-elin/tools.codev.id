@@ -368,18 +368,20 @@
                     console.warn(`Skipping element ${index + 1} as it is not visible or has zero dimensions.`);
                     return Promise.resolve(null);
                 }
+                const elementScale = 2;
+                const scaledWindowWidth = needsCors ? element.scrollWidth * elementScale : element.scrollWidth;
+                const scaledWindowHeight = needsCors ? element.scrollHeight * elementScale : element.scrollHeight;
 
                 return html2canvas(element, {
                     useCORS: isCrossOrigin(originalUrl), // Use CORS only if determined necessary
                     allowTaint: needsCors,
                     logging: false,
-                    scale: window.devicePixelRatio || 1,
+                    scale: elementScale,
                     backgroundColor: '#ffffff',
                     scrollX: 0,
                     scrollY: -window.scrollY,
-                    // Adjust window dimensions based on whether it's cross-origin or not
-                    windowWidth: needsCors ? document.documentElement.scrollWidth : null,
-                    windowHeight: needsCors ? document.documentElement.scrollHeight : null
+                    windowWidth: scaledWindowWidth,
+                    windowHeight: scaledWindowHeight,
                 }).then(canvas => {
                     console.log(`Successfully captured element ${index + 1}`);
                     return canvas.toDataURL('image/png');
