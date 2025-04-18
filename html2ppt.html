@@ -101,7 +101,7 @@
             pointer-events: none; /* Disable interactions by default */
         }
 
-        #contentContainer.picking {
+        body.picking {
             position: fixed;
             top: 0;
             left: 0;
@@ -112,7 +112,7 @@
             pointer-events: auto; /* Make it interactive */
         }
 
-        #contentIframe.picking *:hover {
+        body.picking #contentIframe *:hover {
             outline: 2px solid red !important; /* Highlight hovered elements */
             cursor: pointer;
         }
@@ -120,7 +120,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>HTML Page to PPT Slides v.0.1.6</h1>
+        <h1>HTML Page to PPT Slides v.0.1.7</h1>
         <p>Enter the URL of a web page or a local path relative to the project root (e.g., /folder/file.html). The tool will attempt to detect repeating sections, screenshot each section, and generate a PowerPoint file.</p>
         <p><small>Note: Cross-origin requests (to different domains) require a CORS proxy and may not always succeed.</small></p>
 
@@ -145,11 +145,10 @@
         const selectorInput = document.getElementById('selectorInput');
         const convertButton = document.getElementById('convertButton');
         const statusMessage = document.getElementById('statusMessage');
-        const contentContainer = document.getElementById('contentContainer');
         const contentIframe = document.getElementById('contentIframe');
-        const iframeDoc = contentIframe.contentDocument || contentIframe.contentWindow.document;
 
         function appendContentToIframe(html) {
+            const iframeDoc = contentIframe.contentDocument || contentIframe.contentWindow.document;
             return new Promise((resolve) => {
                  contentIframe.onload = () => {
                     console.log('iframe loaded.');
@@ -161,7 +160,6 @@
             });
 
         }
-
 
         const pickElementButton = document.getElementById('pickElementButton');
         let pickingElement = false;
@@ -185,37 +183,40 @@
             setStatus('Fetching page content for element picking...');
             try {
                 const html = await fetchHtmlContent(fetchPath, needsCors);
-
                 await appendContentToIframe(html);
                 
-                // Wait for images to load
-                await waitForAllImages(iframeDoc);
+                contentIframe.onload = async () => {
+                    const iframeDoc = contentIframe.contentDocument || contentIframe.contentWindow.document;
+                    // Wait for images to load
+                    await waitForAllImages(iframeDoc);
 
-                // Adjust local stylesheet paths:
-               iframeDoc.querySelectorAll('link[rel="stylesheet"], style').forEach(styleEl => {
-                     if (isLocal && styleEl.tagName === 'LINK' && styleEl.hasAttribute('href')) {
-                        let href = styleEl.getAttribute('href');
-                        if (!href.startsWith('http') && !href.startsWith('/') && !href.startsWith('data:')) {
-                            const pageDir = fetchPath.includes('/') ? fetchPath.substring(0, fetchPath.lastIndexOf('/')) : '.';
-                            styleEl.setAttribute('href', `${pageDir}/${href}`.replace(/([^:])(\/+)/g, '$1/'));
-                            console.log(`Adjusted local stylesheet path: ${styleEl.getAttribute('href')}`);
-                        }
-                    }
-                });
+                    // Adjust local stylesheet paths:
+                    iframeDoc.querySelectorAll('link[rel="stylesheet"], style').forEach(styleEl => {
+                          if (isLocal && styleEl.tagName === 'LINK' && styleEl.hasAttribute('href')) {
+                             let href = styleEl.getAttribute('href');
+                             if (!href.startsWith('http') && !href.startsWith('/') && !href.startsWith('data:')) {
+                                 const pageDir = fetchPath.includes('/') ? fetchPath.substring(0, fetchPath.lastIndexOf('/')) : '.';
+                                 styleEl.setAttribute('href', `${pageDir}/${href}`.replace(/([^:])(\/+)/g, '$1/'));
+                                 console.log(`Adjusted local stylesheet path: ${styleEl.getAttribute('href')}`);
+                             }
+                         }
+                     });
 
-                contentIframe.classList.add('picking');
-                pickingElement = true;
-                statusMessage.textContent = 'Click on the element you want to select.';
-                disableForm(true);
+                     contentIframe.classList.add('picking');
+                     document.body.classList.add('picking');
+                     pickingElement = true;
+                     statusMessage.textContent = 'Click on the element you want to select.';
+                     disableForm(true);
+                };
             } catch (error) {
                 setStatus(`Error loading content for picking: ${error.message}`, 'error');
             }
         });
 
-        contentContainer.addEventListener('click', function(event) {
+        contentIframe.addEventListener('click', function(event) {
             if (pickingElement) {
                 event.preventDefault(); // Prevent any links from being followed
-                const target = event.target;
+                const target = event.target ;
 
                 // Function to generate CSS selector (very basic implementation)
                 function generateSelector(el) {
@@ -229,11 +230,13 @@
                     return selector;
                 }
 
-
-                const selector = generateSelector(target);
+                const iframeDoc = contentIframe.contentDocument || contentIframe.contentWindow.document;
+                const el = iframeDoc.querySelector(generateSelector(target))
+                const selector = generateSelector(el);
                 selectorInput.value = selector;
                 pickingElement = false;
                 contentIframe.classList.remove('picking');
+                document.body.classList.remove('picking');
                 statusMessage.textContent = `Selected element: ${selector}`;
                 disableForm(false);
             }
@@ -283,39 +286,6 @@
                 });
             });
             return Promise.all(promises);
-        }
-
-        // Function to fetch external CSS and add it to the style tag
-        async function fetchAndInjectCSS(htmlString, isLocal) {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(htmlString, 'text/html');
-
-            const linkElements = doc.querySelectorAll('link[rel="stylesheet"]');
-            const stylePromises = Array.from(linkElements).map(async linkElement => {
-                const href = linkElement.getAttribute('href');
-                if (isLocal && (!href.startsWith('http') && !href.startsWith('/') && !href.startsWith('data:'))) {
-                    console.log(`Skipping fetch for local CSS: ${href}`);
-                    return null;
-                }
-
-                try {
-                    const response = await fetch(href);
-                    if (!response.ok) {
-                        console.error(`Failed to fetch CSS from ${href}`);
-                        return null;
-                    }
-                    const cssText = await response.text();
-                    return cssText;
-                } catch (error) {
-                    console.error(`Error fetching CSS from ${href}:`, error);
-                    return null;
-                }
-            });
-            const cssTexts = (await Promise.all(stylePromises)).filter(text => text);
-            const styleTag = doc.createElement('style');
-            styleTag.textContent = cssTexts.join('\n');
-            doc.head.appendChild(styleTag);
-            return doc.documentElement.outerHTML;
         }
 
 
@@ -420,6 +390,7 @@
 
             const needsCors = isCrossOrigin(originalUrl);
             const html = await fetchHtmlContent(fetchPath, needsCors);
+            const iframeDoc = contentIframe.contentDocument || contentIframe.contentWindow.document;
             await appendContentToIframe(html);
             await waitForAllImages(iframeDoc); // Wait for images to load
 
@@ -431,11 +402,11 @@
                     throw new Error(`No elements found matching selector: ${customSelector}.`);
                 }
             } else {
-                elementsToCapture = Array.from(contentContainer.querySelectorAll('section'));
+                elementsToCapture = Array.from(iframeDoc.querySelectorAll('section'));
                  if (elementsToCapture.length === 0) {
-                    console.log("No <section> found, falling back to divs with 'slide' in class/id");
+                    console.warn("No <section> found, falling back to divs with 'slide' in class/id");
                     elementsToCapture = Array.from(contentContainer.querySelectorAll('div[class*="slide"], div[id*="slide"]'));
-                    if (elementsToCapture.length === 0) {
+                    if (!elementsToCapture || elementsToCapture.length === 0) {
                         throw new Error('Could not find any <section> elements or divs with "slide" in class/id to capture.');
                     } else {
                          const filteredElements = elementsToCapture.filter(element => !elementsToCapture.includes(element.parentElement));
@@ -444,7 +415,7 @@
 
                     } 
                 } else {
-                    console.log("No <section> found, falling back to divs with 'slide' in class/id");
+                    console.warn("No <section> found, falling back to divs with 'slide' in class/id");
                 }
              }
 
@@ -505,7 +476,6 @@
 
             let addedSlideCount = 0;
             imageInfos.forEach(info => {
-                if (!info || info.width === 0 || info.height === 0) return;
                 const { imageDataUrl, width: imgWidth, height: imgHeight, index } = info;
                 const aspectRatio = imgWidth / imgHeight;
                 const slideWidthInches = 13.33, slideHeightInches = 7.5;
