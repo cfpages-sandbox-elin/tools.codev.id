@@ -576,11 +576,60 @@
             background-color: #45a049;
         }
 
+        #qa-review-section {
+            /* Styles for the container */
+            padding: 20px;
+        }
+
+        .qa-item {
+            margin-bottom: 15px;
+            padding-left: 10px;
+            border-left: 3px solid #eee; /* Simple separator */
+        }
+
+        .qa-item.follow-up {
+            margin-top: 5px;
+            margin-left: 20px; /* Indent follow-up */
+            border-left-color: #ccc; /* Different border for follow-up */
+        }
+
+        .qa-item p {
+            margin: 5px 0;
+        }
+
+        .user-info-summary .user-info-item {
+            margin-bottom: 5px;
+        }
+
+        /* Styles for Status on Topic Checkpoint Cards */
+        .status-completed {
+            color: green;
+            font-weight: bold;
+        }
+
+        .status-incomplete {
+            color: orange;
+            font-weight: bold;
+        }
+
+        /* Ensure the section is hidden by default if not done by main-section class logic */
+        #qa-review-section {
+            display: none;
+        }
+
+        /* Adjust button spacing if needed */
+        #qa-review-section .button-container {
+            margin-top: 20px;
+            display: flex; /* Use flexbox for better alignment */
+            gap: 10px; /* Add space between buttons */
+            justify-content: center; /* Center buttons */
+        }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>RJPP v1.90<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
+        <h1>RJPP v2.00<br>Rencana Jangka Panjang Perusahaan 🚀</h1>
 
         <div id="user-info-form-section">
             <h2>Informasi Perusahaan dan Pengguna 👤🏢</h2>
@@ -708,6 +757,26 @@
             </div>
             <button id="download-pdf-btn">Unduh PDF ⬇️ (Coming Soon)</button>
         </div>
+
+        <!-- Q&A Review Section (Initially Hidden) -->
+        <section id="qa-review-section" class="main-section" style="display: none;">
+            <div class="container">
+                <h2 id="qa-review-title">Review Jawaban Anda</h2>
+                <div id="qa-review-user-info" class="user-info-summary">
+                    <!-- User details will be populated here -->
+                </div>
+                <hr>
+                <h3 id="qa-review-analysis-topic-name"></h3>
+                <div id="qa-review-answers-container">
+                    <!-- Questions and Answers will be populated here -->
+                </div>
+                <div class="navigation-buttons button-container">
+                    <button id="download-qa-pdf-btn" class="btn btn-secondary">Download PDF</button>
+                    <button id="back-to-topic-checkpoint-btn" class="btn btn-primary">Kembali ke Topik</button>
+                </div>
+            </div>
+        </section>
+
         <button id="clear-data-btn">🗑️ Remove All Data</button>
     </div>
     <script>
@@ -1610,6 +1679,191 @@
             goToMainCheckpointBtn_TopicCheckpoint.style.display = 'block';
         }
 
+        // --- NEW Function to Display Q&A Review Page ---
+        function displayTopicQAPage(analysisKey, topicKey) {
+            hideAllSections(); // Hide all other sections
+            qaReviewSection.style.display = 'block'; // Show the QA review section
+
+            const analysisName = analysisKey;
+            const topicName = topicKey;
+            const topicQuestions = questionsData[analysisName]?.[topicName] || [];
+            const topicAnswers = answers[analysisName]?.[topicName]?.answers || {};
+
+            // --- Populate User Info ---
+            const qaUserInfoDiv = document.getElementById('qa-review-user-info');
+            qaUserInfoDiv.innerHTML = `
+                <div class="user-info-item"><strong>🧑 Nama Lengkap:</strong> ${userData.fullName || 'N/A'}</div>
+                <div class="user-info-item"><strong>🏢 Nama Perusahaan:</strong> ${userData.companyName || 'N/A'}</div>
+                <div class="user-info-item"><strong>✉️ Email:</strong> ${userData.email || 'N/A'}</div>
+                <div class="user-info-item"><strong>📞 No. Telepon:</strong> ${userData.phone || 'N/A'}</div>
+                <div class="user-info-item"><strong>🌐 Website:</strong> ${userData.website ? `<a href="${userData.website}" target="_blank">${userData.website}</a>` : 'N/A'}</div>
+            `;
+
+            // --- Populate Analysis/Topic Info ---
+            const qaAnalysisTopicName = document.getElementById('qa-review-analysis-topic-name');
+            qaAnalysisTopicName.textContent = `Analisis: ${analysisName} - Topik: ${topicName}`;
+
+
+            // --- Populate Questions and Answers ---
+            const qaAnswersContainer = document.getElementById('qa-review-answers-container');
+            qaAnswersContainer.innerHTML = ''; // Clear previous content
+
+            if (topicQuestions.length === 0) {
+                qaAnswersContainer.innerHTML = '<p>Tidak ada pertanyaan untuk topik ini.</p>';
+            } else {
+                topicQuestions.forEach((question, index) => {
+                    const qaItem = document.createElement('div');
+                    qaItem.classList.add('qa-item'); // Add class for styling
+
+                    let answerText = topicAnswers[question.answerKey] || '<i>Tidak dijawab</i>';
+                    // Handle potential array answers (e.g., checkboxes)
+                    if (Array.isArray(answerText)) {
+                        answerText = answerText.join(', ');
+                    }
+
+                    qaItem.innerHTML = `
+                        <p><strong>Pertanyaan ${index + 1}:</strong> ${question.text}</p>
+                        <p><strong>Jawaban Anda:</strong> ${answerText}</p>
+                    `;
+
+                    // --- Handle Follow-up Questions ---
+                    if (question.followUp && topicAnswers[question.answerKey] === question.followUp.triggerAnswer) {
+                         const followUpQaItem = document.createElement('div');
+                         followUpQaItem.classList.add('qa-item', 'follow-up'); // Indent or style follow-ups
+                         let followUpAnswerText = topicAnswers[question.followUp.answerKey] || '<i>Tidak dijawab</i>';
+                         if (Array.isArray(followUpAnswerText)) {
+                              followUpAnswerText = followUpAnswerText.join(', ');
+                         }
+                         followUpQaItem.innerHTML = `
+                             <p><strong>Pertanyaan Lanjutan:</strong> ${question.followUp.text}</p>
+                             <p><strong>Jawaban Anda:</strong> ${followUpAnswerText}</p>
+                         `;
+                         qaItem.appendChild(followUpQaItem); // Append follow-up under the main question
+                    }
+                    // --- End Handle Follow-up Questions ---
+
+                    qaAnswersContainer.appendChild(qaItem);
+                });
+            }
+
+            // --- Add Event Listeners for Buttons ---
+            const downloadBtn = document.getElementById('download-qa-pdf-btn');
+            // Clone and replace to remove old listeners before adding new ones
+            const newDownloadBtn = downloadBtn.cloneNode(true);
+            downloadBtn.parentNode.replaceChild(newDownloadBtn, downloadBtn);
+            newDownloadBtn.addEventListener('click', () => generateQAPdf(analysisName, topicName));
+
+            const backBtn = document.getElementById('back-to-topic-checkpoint-btn');
+            // Clone and replace
+            const newBackBtn = backBtn.cloneNode(true);
+            backBtn.parentNode.replaceChild(newBackBtn, backBtn);
+            newBackBtn.addEventListener('click', () => displayTopicCheckpointPage(analysisName));
+        }
+
+        async function generateQAPdf(analysisKey, topicKey) {
+            // Check if jsPDF is loaded
+             if (typeof window.jspdf === 'undefined') {
+                alert('PDF library (jsPDF) not loaded. Cannot generate PDF.');
+                console.error('jsPDF is not defined. Make sure the library is included.');
+                return;
+            }
+             const { jsPDF } = window.jspdf; // Get the jsPDF constructor
+
+            console.log(`Generating PDF for Analysis: ${analysisKey}, Topic: ${topicKey}`); // Debug log
+
+            // --- Gather Data ---
+            const analysisName = analysisKey;
+            const topicName = topicKey;
+            const topicQuestions = questionsData[analysisName]?.[topicName] || [];
+            const topicAnswers = answers[analysisName]?.[topicName]?.answers || {};
+            const fileName = `RJPP_QA_${analysisName.replace(/\s+/g, '_')}_${topicName.replace(/\s+/g, '_')}.pdf`;
+
+
+            // --- Create PDF Document ---
+             const doc = new jsPDF();
+             const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
+             const pageWidth = doc.internal.pageSize.width || doc.internal.pageSize.getWidth();
+             let currentY = 20; // Start Y position for content
+             const margin = 15;
+             const maxLineWidth = pageWidth - margin * 2;
+
+
+             // --- Helper function to add text and handle page breaks ---
+             function addText(text, options, isBold = false) {
+                doc.setFont(undefined, isBold ? 'bold' : 'normal');
+                const splitText = doc.splitTextToSize(text, maxLineWidth);
+                splitText.forEach(line => {
+                    if (currentY > pageHeight - margin) { // Check if page break needed
+                        doc.addPage();
+                        currentY = margin; // Reset Y for new page
+                    }
+                    doc.text(line, margin, currentY, options);
+                    currentY += 7; // Adjust line height as needed
+                });
+                 currentY += 3; // Add a little space after each block
+             }
+
+            // --- Add Content to PDF ---
+
+            // Title
+            doc.setFontSize(18);
+            addText(`Laporan Q&A - Road Journey Planner Partner`, { align: 'center' }, true);
+             currentY += 5; // Extra space after title
+
+            // Analysis and Topic Info
+            doc.setFontSize(14);
+            addText(`Analisis: ${analysisName}`, {}, true);
+            addText(`Topik: ${topicName}`, {}, true);
+             currentY += 5;
+
+            // User Info
+            doc.setFontSize(12);
+            addText('Informasi Pengguna:', {}, true);
+            addText(`Nama Lengkap: ${userData.fullName || 'N/A'}`, {});
+            addText(`Nama Perusahaan: ${userData.companyName || 'N/A'}`, {});
+            addText(`Email: ${userData.email || 'N/A'}`, {});
+            addText(`No. Telepon: ${userData.phone || 'N/A'}`, {});
+            addText(`Website: ${userData.website || 'N/A'}`, {});
+             currentY += 5;
+
+            // Questions and Answers
+            addText('Pertanyaan dan Jawaban:', {}, true);
+             doc.setFontSize(11);
+
+             if (topicQuestions.length === 0) {
+                 addText('Tidak ada pertanyaan untuk topik ini.', {});
+             } else {
+                 topicQuestions.forEach((question, index) => {
+                     // Question Text
+                     addText(`P${index + 1}: ${question.text}`, {}, true); // Bold question
+
+                     // Answer Text
+                     let answerText = topicAnswers[question.answerKey] || 'Tidak dijawab';
+                     if (Array.isArray(answerText)) answerText = answerText.join(', ');
+                     addText(`   Jawaban: ${answerText}`, {}); // Indent answer slightly
+
+
+                     // Follow-up Question (if applicable)
+                     if (question.followUp && topicAnswers[question.answerKey] === question.followUp.triggerAnswer) {
+                         addText(`   Pertanyaan Lanjutan: ${question.followUp.text}`, {}, true); // Bold follow-up Q
+                         let followUpAnswerText = topicAnswers[question.followUp.answerKey] || 'Tidak dijawab';
+                         if (Array.isArray(followUpAnswerText)) followUpAnswerText = followUpAnswerText.join(', ');
+                         addText(`      Jawaban Lanjutan: ${followUpAnswerText}`, {}); // Further indent
+                     }
+                      currentY += 4; // Add space between Q&A pairs
+                 });
+             }
+
+             // --- Save PDF ---
+            try {
+                doc.save(fileName);
+                console.log('PDF generated successfully.'); // Debug log
+            } catch (error) {
+                console.error("Error generating PDF:", error);
+                alert('Gagal membuat file PDF. Silakan coba lagi.');
+            }
+        }
+        // --- END NEW Function ---
 
         function displayTopicGreetingPage(analysisKey, topicKey, isTopicCompleted = false) {
             checkpointSection.style.display = 'none';
