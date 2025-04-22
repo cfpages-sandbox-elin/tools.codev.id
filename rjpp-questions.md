@@ -164,6 +164,9 @@
 - Bagaimana ${companyName} memastikan kondisi kerja yang aman dan sehat bagi karyawan? {answerKey: sustainability_social_responsibility_working_conditions}
 - Bagaimana ${companyName} mengelola hubungan dengan karyawan (upah, tunjangan, pengembangan karir)? {answerKey: sustainability_social_responsibility_employee_relations}
 - Bagaimana ${companyName} mempromosikan keragaman dan inklusi di tempat kerja? {answerKey: sustainability_social_responsibility_diversity_inclusion}
+- Apakah ${companyName} memiliki program pelatihan keselamatan kerja secara rutin? {answerKey: sustainability_social_safety_training_program} ? [y/n]
+  -> yes: Seberapa sering pelatihan tersebut diadakan? {answerKey: sustainability_social_safety_training_frequency}
+  -> no: Apakah ada rencana untuk mengadakannya di masa depan? {answerKey: sustainability_social_safety_training_future_plans}
 - Bagaimana ${companyName} berkontribusi pada pengembangan masyarakat lokal? {answerKey: sustainability_social_responsibility_community_development}
 - Bagaimana ${companyName} memastikan etika dalam rantai pasokannya? {answerKey: sustainability_social_responsibility_supply_chain_ethics}
 - Bagaimana ${companyName} melindungi hak asasi manusia dalam operasinya? {answerKey: sustainability_social_responsibility_human_rights}
