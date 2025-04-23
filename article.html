@@ -307,7 +307,8 @@
         function logToConsole(message, type = 'info') {
             console.log(`[${type.toUpperCase()}] ${message}`); // Log to browser console
             const timestamp = new Date().toLocaleTimeString();
-            const logEntry = documentcreateElement('div');
+            // ***** FIX: Corrected typo documentcreateElement to document.createElement *****
+            const logEntry = document.createElement('div');
             logEntry.classList.add(`log-${type}`);
             logEntry.textContent = `[${timestamp}] ${message}`;
             consoleLog.prepend(logEntry); // Add new logs to the top
@@ -466,7 +467,12 @@
         // --- Spintax Highlighting ---
         function highlightSpintax(element) {
             // Avoid re-highlighting if already done (simple check)
-            if (element.querySelector('.spintax-pipe')) return;
+            // Clear previous highlighting spans before applying new ones
+             element.querySelectorAll('.spintax-level-1, .spintax-level-2, .spintax-level-3, .spintax-pipe').forEach(el => {
+                 // Replace span with its content
+                 el.outerHTML = el.innerHTML;
+            });
+
 
             let html = element.innerHTML;
              // Temporarily replace HTML tags to avoid messing them up
@@ -631,10 +637,6 @@
             spunArticleDisplay.innerHTML = generatedArticleTextarea.value;
             step4Section.classList.remove('hidden');
             // Clear previous highlighting before applying new one
-            spunArticleDisplay.querySelectorAll('.spintax-level-1, .spintax-level-2, .spintax-level-3, .spintax-pipe').forEach(el => {
-                 // Replace span with its content
-                 el.outerHTML = el.innerHTML;
-            });
             highlightSpintax(spunArticleDisplay); // Highlight existing spintax if any
             logToConsole("Spinning enabled. Select text in the 'Spinnable Article' area.", 'info');
 
