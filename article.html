@@ -219,14 +219,14 @@
         const aiProviders = {
             // Updated models (as of early 2025 - check provider docs for latest)
             google: {
-                models: ['gemini-1.5-pro-latest', 'gemini-1.5-flash-latest', 'gemini-1.0-pro'],
+                models: ['gemini-2.5-pro-preview-03-25', 'gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-2.0-flash-thinking-exp-01-21'],
                 endpoint: (model, apiKey) => `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
                 getBody: (prompt) => ({ contents: [{ parts: [{ text: prompt }] }] }),
                 headers: { 'Content-Type': 'application/json' },
                 getText: (data) => data?.candidates?.[0]?.content?.parts?.[0]?.text || ''
             },
             openai: {
-                models: ['gpt-4o', 'gpt-4-turbo', 'gpt-3.5-turbo'],
+                models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini', 'gpt-4.1-nano'],
                 endpoint: () => `https://api.openai.com/v1/chat/completions`,
                 getBody: (prompt, model) => ({ model: model, messages: [{ role: 'user', content: prompt }], max_tokens: 1500 }), // Adjust max_tokens as needed
                 headers: (apiKey) => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }),
@@ -253,7 +253,7 @@
                 cors_warning: true // Flag potential CORS issues
             },
             xai: { // Grok - API details might differ, assuming OpenAI compatible for now
-                models: ['grok-1'], // Check official XAI docs for endpoints/models
+                models: ['grok-3', 'grok-3-mini', 'grok-3-fast', 'grok-3-mini-fast'], // Check official XAI docs for endpoints/models
                 endpoint: () => `https://api.xai.com/v1/chat/completions`, // Placeholder endpoint - VERIFY THIS
                 getBody: (prompt, model) => ({ model: model, messages: [{ role: 'user', content: prompt }], max_tokens: 1500 }),
                 headers: (apiKey) => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }),
