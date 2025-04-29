@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Article Generator & Spinner v5 (CF++)</title>
+    <title>AI Article Generator & Spinner 🪄 v6 (CF++)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Styles remain largely the same as v4 */
+        /* Styles largely same as v5, minor adjustments */
         body { font-family: 'Inter', sans-serif; @apply bg-gray-100 text-gray-800; }
         .compact-section { @apply bg-white p-4 mb-4 rounded-lg shadow-md; }
-        .compact-label { @apply block text-sm font-medium text-gray-700 mb-1 whitespace-nowrap; } /* Prevent wrap */
+        .compact-label { @apply block text-sm font-medium text-gray-700 mb-1 whitespace-nowrap; }
         .compact-input, .compact-select, .compact-textarea { @apply block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm; }
         .custom-input-visible { @apply compact-input mt-1; }
         .compact-button { @apply inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed; }
@@ -30,11 +30,12 @@
         .toggle-switch input:checked + .slider { @apply bg-indigo-600; }
         .toggle-switch .dot { @apply absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-200 ease-in-out; }
         .toggle-switch input:checked + .slider .dot { @apply transform translate-x-5; }
-        /* Styling for multi-select (basic) */
         .multi-select-container { @apply block w-full p-2 border border-gray-300 rounded-md shadow-sm bg-white; }
         .multi-select-container label { @apply flex items-center space-x-2 text-sm cursor-pointer mb-1; }
         .multi-select-container input[type="checkbox"] { @apply rounded text-indigo-600 focus:ring-indigo-500 h-4 w-4; }
-
+        /* Style for image options section */
+        #imageOptionsContainer { @apply mt-3 border-t pt-3 border-gray-200; }
+        .image-option-group { @apply grid grid-cols-3 items-center gap-x-2 mb-2; } /* Consistent grid for image options */
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -42,21 +43,20 @@
 </head>
 <body class="p-4 max-w-4xl mx-auto">
 
-    <h1 class="text-2xl font-bold mb-4 text-center text-indigo-700">AI Article Generator & Spinner (v5)</h1>
+    <h1 class="text-2xl font-bold mb-4 text-center text-indigo-700">AI Article Generator & Spinner 🪄📝🖼️ (v6)</h1>
 
     <section id="step1" class="compact-section">
         <h2 class="text-lg font-semibold mb-3 text-gray-600 border-b pb-2">Step 1: Define Your Article 🎯</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6">
             <div>
                 <div class="input-group grid grid-cols-3 items-center gap-x-2">
-                    <label for="keyword" class="compact-label">Keyword 🔑<span class="text-red-500">*</span>:</label>
+                    <label for="keyword" class="compact-label">Keyword <span class="text-red-500">*</span>🔑:</label>
                     <input type="text" id="keyword" class="compact-input col-span-2" placeholder="e.g., best ergonomic chairs">
                 </div>
                  <div class="input-group grid grid-cols-3 items-center gap-x-2">
-                    <label for="language" class="compact-label">Language 🗣️<span class="text-red-500">*</span>:</label>
+                    <label for="language" class="compact-label">Language <span class="text-red-500">*</span>🗣️:</label>
                     <div class="col-span-2">
-                        <select id="language" class="compact-select w-full">
-                        </select>
+                        <select id="language" class="compact-select w-full"> </select>
                         <input type="text" id="custom_language" class="custom-input-visible hidden w-full" placeholder="Enter custom language">
                      </div>
                 </div>
@@ -67,61 +67,40 @@
                     </select>
                 </div>
                 <div class="input-group grid grid-cols-3 items-center gap-x-2">
-                    <label for="audience" class="compact-label">Audience 👥<span class="text-red-500">*</span>:</label>
+                    <label for="audience" class="compact-label">Audience <span class="text-red-500">*</span>👥:</label>
                     <input type="text" id="audience" class="compact-input col-span-2" placeholder="e.g., Small business owners, Gamers">
                 </div>
-                <div class="input-group grid grid-cols-3 items-center gap-x-2">
-                    <label for="readerName" class="compact-label">Reader Name 🙇:</label>
-                    <input type="text" id="readerName" class="compact-input col-span-2" placeholder="e.g., Boss, Bro, Anda (leave blank for general)">
-                </div>
                  <div class="input-group grid grid-cols-3 items-center gap-x-2">
-                    <label for="sitemapUrl" class="compact-label">Sitemap URL 🔗:</label>
-                    <div class="col-span-2 flex items-center gap-x-2">
-                        <input type="url" id="sitemapUrl" class="compact-input flex-grow" placeholder="https://example.com/sitemap.xml">
-                        <button id="fetchSitemapBtn" class="compact-button flex-shrink-0">
-                            Fetch
-                            <span id="sitemapLoadingIndicator" class="hidden"><span class="loader"></span></span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div>
-                <div class="input-group grid grid-cols-3 items-center gap-x-2">
-                    <label for="tone" class="compact-label">Tone 🎙️<span class="text-red-500">*</span>:</label>
-                     <div class="col-span-2">
-                        <select id="tone" class="compact-select w-full">
-                            <option value="Professional">Professional</option>
-                            <option value="Casual">Casual</option>
-                            <option value="Formal">Formal</option>
-                            <option value="Humorous">Humorous</option>
-                            <option value="Informative">Informative</option>
-                            <option value="Persuasive">Persuasive</option>
-                            <option value="custom">Custom...</option>
-                        </select>
-                        <input type="text" id="custom_tone" class="custom-input-visible hidden w-full" placeholder="Enter custom tone">
-                    </div>
-                </div>
-                <div class="input-group grid grid-cols-3 items-center gap-x-2">
-                    <label for="gender" class="compact-label">Author Gender 🚻:</label>
+                    <label for="gender" class="compact-label">Author Gender 🧑‍💻:</label>
                     <select id="gender" class="compact-select col-span-2">
-                        <option value="">Any</option>
-                        <option value="Male">♂️ Male</option>
-                        <option value="Female">♀️ Female</option>
+                        <option value="">Any</option> <option value="Male">Male</option> <option value="Female">Female</option>
                     </select>
                 </div>
                  <div class="input-group grid grid-cols-3 items-center gap-x-2">
                     <label for="age" class="compact-label">Author Age 🎂:</label>
                     <select id="age" class="compact-select col-span-2">
-                        <option value="">Any</option>
-                        <option value="18-24">18-24</option>
-                        <option value="25-34">25-34</option>
-                        <option value="35-44">35-44</option>
-                        <option value="45+">45+</option>
+                        <option value="">Any</option> <option value="18-24">18-24</option> <option value="25-34">25-34</option> <option value="35-44">35-44</option> <option value="45+">45+</option>
                     </select>
                 </div>
+                 <div class="input-group grid grid-cols-3 items-center gap-x-2">
+                    <label for="readerName" class="compact-label">Reader Name 👋:</label>
+                    <input type="text" id="readerName" class="compact-input col-span-2" placeholder="e.g., Boss, Bro, Anda">
+                </div>
+
+            </div>
+            {/* Column 2 */}
+            <div>
+                <div class="input-group grid grid-cols-3 items-center gap-x-2">
+                    <label for="tone" class="compact-label">Tone <span class="text-red-500">*</span>😎:</label>
+                     <div class="col-span-2">
+                        <select id="tone" class="compact-select w-full">
+                            <option value="Professional">Professional</option> <option value="Casual">Casual</option> <option value="Formal">Formal</option> <option value="Humorous">Humorous</option> <option value="Informative">Informative</option> <option value="Persuasive">Persuasive</option> <option value="custom">Custom...</option>
+                        </select>
+                        <input type="text" id="custom_tone" class="custom-input-visible hidden w-full" placeholder="Enter custom tone">
+                    </div>
+                </div>
                 <div class="input-group grid grid-cols-3 items-start gap-x-2">
-                    <label for="purpose" class="compact-label pt-1">Purpose 💡<span class="text-red-500">*</span>:</label>
+                    <label class="compact-label pt-1">Purpose <span class="text-red-500">*</span>💡:</label>
                     <div class="col-span-2 multi-select-container">
                         <label><input type="checkbox" name="purpose" value="Inform"> Inform Reader</label>
                         <label><input type="checkbox" name="purpose" value="Promote Site/Product"> Promote Site/Product</label>
@@ -133,19 +112,95 @@
                     </div>
                 </div>
                 <div class="input-group grid grid-cols-3 items-center gap-x-2">
-                    <label for="format" class="compact-label">Format <span class="text-red-500">*</span>:</label>
+                    <label for="format" class="compact-label">Format <span class="text-red-500">*</span>📄:</label>
                     <select id="format" class="compact-select col-span-2">
-                        <option value="html">HTML</option>
-                        <option value="markdown">Markdown</option>
+                        <option value="html">HTML</option> <option value="markdown">Markdown</option>
                     </select>
                 </div>
-
+                 <div class="input-group grid grid-cols-3 items-center gap-x-2">
+                    <label for="sitemapUrl" class="compact-label">Sitemap URL 🗺️:</label>
+                    <div class="col-span-2 flex items-center gap-x-2">
+                        <input type="url" id="sitemapUrl" class="compact-input flex-grow" placeholder="https://example.com/sitemap.xml">
+                        <button id="fetchSitemapBtn" class="compact-button flex-shrink-0">
+                            Fetch
+                            <span id="sitemapLoadingIndicator" class="hidden"><span class="loader"></span></span>
+                        </button>
+                    </div>
+                </div>
             </div>
 
              <div class="input-group grid grid-cols-3 items-start gap-x-2 md:col-span-2 mt-4">
-                <label for="custom_specs" class="compact-label pt-1">Other Details:</label>
+                <label for="custom_specs" class="compact-label pt-1">Other Details ✍️:</label>
                 <textarea id="custom_specs" rows="2" class="compact-textarea col-span-2" placeholder="Any other specific instructions..."></textarea>
             </div>
+        </div>
+
+        <div class="mt-4 pt-4 border-t border-gray-200">
+             <div class="flex items-center mb-3">
+                 <input type="checkbox" id="generateImages" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mr-2">
+                 <label for="generateImages" class="text-md font-semibold text-gray-600 cursor-pointer">Generate Images? 🖼️</label>
+             </div>
+             <div id="imageOptionsContainer" class="hidden">
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+                     <div>
+                         <div class="image-option-group">
+                            <label for="imageProvider" class="compact-label">Image Provider:</label>
+                            <select id="imageProvider" class="compact-select col-span-2">
+                                <option value="google">Google</option>
+                                <option value="openai">OpenAI</option>
+                            </select>
+                         </div>
+                         <div class="image-option-group">
+                            <label for="imageModel" class="compact-label">Image Model:</label>
+                             <div class="col-span-2">
+                                 <select id="imageModel" class="compact-select w-full"> </select>
+                                 <input type="text" id="customImageModel" class="custom-input-visible hidden w-full" placeholder="Enter custom model name">
+                                 <label class="text-xs flex items-center mt-1">
+                                     <input type="checkbox" id="useCustomImageModel" class="h-3 w-3 mr-1"> Use Custom
+                                 </label>
+                             </div>
+                         </div>
+                          <div class="image-option-group">
+                            <label for="numImages" class="compact-label">Images per Section:</label>
+                            <select id="numImages" class="compact-select col-span-2">
+                                <option value="1">1</option> <option value="2">2</option> <option value="3">3</option> <option value="4">4</option>
+                            </select>
+                         </div>
+                         <div class="image-option-group">
+                            <label for="imageSubject" class="compact-label">Subject (Optional):</label>
+                            <input type="text" id="imageSubject" class="compact-input col-span-2" placeholder="e.g., Person working, Abstract background">
+                         </div>
+
+                     </div>
+                     <div>
+                         <div class="image-option-group">
+                            <label for="imageAspectRatio" class="compact-label">Aspect Ratio:</label>
+                            <select id="imageAspectRatio" class="compact-select col-span-2">
+                            </select>
+                         </div>
+                         <div class="image-option-group">
+                            <label for="imageStyle" class="compact-label">Style (Optional):</label>
+                            <select id="imageStyle" class="compact-select col-span-2">
+                                <option value="">Default/Automatic</option>
+                                <option value="photorealistic">Photorealistic</option>
+                                <option value="illustration">Illustration</option>
+                                <option value="anime">Anime</option>
+                                <option value="sketch">Sketch</option>
+                                <option value="3d_render">3D Render</option>
+                                <option value="pixel_art">Pixel Art</option>
+                            </select>
+                         </div>
+                         <div class="image-option-group">
+                             <label for="imageStyleModifiers" class="compact-label">Style Modifiers:</label>
+                             <input type="text" id="imageStyleModifiers" class="compact-input col-span-2" placeholder="e.g., cinematic lighting, wide angle">
+                         </div>
+                         <div class="image-option-group">
+                            <label for="imageText" class="compact-label">Include Text:</label>
+                            <input type="text" id="imageText" class="compact-input col-span-2" placeholder="Text to render in image (if supported)">
+                         </div>
+                     </div>
+                 </div>
+             </div>
         </div>
 
         <div class="mt-4 pt-4 border-t border-gray-200">
@@ -158,19 +213,20 @@
              </div>
              <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4">
                  <div class="input-group grid grid-cols-3 items-center gap-x-2">
-                    <label for="ai_provider" class="compact-label">AI Provider:</label>
+                    <label for="ai_provider" class="compact-label">Text Provider:</label>
                     <select id="ai_provider" class="compact-select col-span-2">
-                        <option value="google">Google</option>
-                        <option value="openai">OpenAI</option>
-                        <option value="anthropic">Anthropic</option>
-                        <option value="deepseek">DeepSeek</option>
-                        <option value="xai">xAI (Grok)</option>
+                        <option value="google">Google</option> <option value="openai">OpenAI</option> <option value="anthropic">Anthropic</option> <option value="deepseek">DeepSeek</option> <option value="xai">xAI (Grok)</option>
                     </select>
                  </div>
                  <div class="input-group grid grid-cols-3 items-center gap-x-2">
-                    <label for="ai_model" class="compact-label">Model:</label>
-                    <select id="ai_model" class="compact-select col-span-2">
-                        </select>
+                    <label for="ai_model" class="compact-label">Text Model:</label>
+                     <div class="col-span-2">
+                         <select id="ai_model" class="compact-select w-full"> </select>
+                         <input type="text" id="customAiModel" class="custom-input-visible hidden w-full" placeholder="Enter custom model name">
+                         <label class="text-xs flex items-center mt-1">
+                             <input type="checkbox" id="useCustomAiModel" class="h-3 w-3 mr-1"> Use Custom
+                         </label>
+                     </div>
                  </div>
              </div>
              <p class="text-xs text-gray-500 mt-1">API Keys are handled securely by the backend function.</p>
@@ -211,10 +267,11 @@
         </div>
          <div class="mt-3 text-right">
              <button id="generateArticleBtn" class="compact-button">
-                 Generate Full Article ✍️
+                 Generate Full Article ✍️🖼️
                  <span id="articleLoadingIndicator" class="hidden"><span class="loader"></span></span>
              </button>
          </div>
+         <div id="generationProgress" class="text-sm text-center text-gray-600 mt-2 hidden">Generating section <span id="currentSectionNum">1</span> of <span id="totalSectionNum">1</span>...</div>
     </section>
     <section id="step3" class="compact-section hidden">
          <h2 class="text-lg font-semibold mb-3 text-gray-600 border-b pb-2">Step 3: Review & Edit Article 📝</h2>
@@ -257,7 +314,7 @@
 
 
     <script>
-        // --- Configuration ---
+        // --- Configurations ---
         const aiProviders = {
             google: { models: ['gemini-2.5-pro-preview-03-25', 'gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-2.0-flash-thinking-exp-01-21'] },
             openai: { models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini', 'gpt-4.1-nano'] },
@@ -265,36 +322,42 @@
             deepseek: { models: ['deepseek-chat', 'deepseek-coder'] },
             xai: { models: ['grok-3', 'grok-3-mini', 'grok-3-fast', 'grok-3-mini-fast'] }
         };
-        const SITEMAP_STORAGE_KEY = 'aiArticleSpinner_sitemapUrls_v1';
-
-        // Language and Dialect Configuration
-        const languageOptions = {
-            "English": { name: "English", dialects: ["Default", "American", "British", "Australian"] },
-            "Indonesian": { name: "Indonesian", dialects: ["Default/Formal", "Jaksel", "Suroboyoan", "Medan", "Santai/Gaul"] },
-            "Spanish": { name: "Spanish", dialects: ["Default/Neutral", "Spain", "Mexican", "Argentinian"] },
-            "French": { name: "French", dialects: ["Default/Standard", "Canadian", "African"] },
-            "German": { name: "German", dialects: ["Default/Standard", "Bavarian", "Swiss German"] },
-            "custom": { name: "Custom...", dialects: [] } // Handle custom language case
+        // Image Generation Models & Config
+        const imageProviders = {
+            google: {
+                models: ['imagen-3.0-generate-002', 'gemini-2.0-flash-exp-image-generation'],
+                aspectRatios: ["1:1", "3:4", "4:3", "9:16", "16:9"] // Imagen 3 ratios
+            },
+            openai: {
+                models: ['gpt-image-1'], // Assuming this is DALL-E 3 via API
+                aspectRatios: ["1024x1024", "1024x1536", "1536x1024"] // DALL-E 3 ratios
+            }
         };
+        const SITEMAP_STORAGE_KEY = 'aiArticleSpinner_sitemapUrls_v1';
+        const CUSTOM_MODELS_STORAGE_KEY = 'aiArticleSpinner_customModels_v1';
+
+        const languageOptions = { /* ... (same as v5) ... */ "English": { name: "English", dialects: ["Default", "American", "British", "Australian"] }, "Indonesian": { name: "Indonesian", dialects: ["Default/Formal", "Jaksel", "Suroboyoan", "Medan", "Santai/Gaul"] }, "Spanish": { name: "Spanish", dialects: ["Default/Neutral", "Spain", "Mexican", "Argentinian"] }, "French": { name: "French", dialects: ["Default/Standard", "Canadian", "African"] }, "German": { name: "German", dialects: ["Default/Standard", "Bavarian", "Swiss German"] }, "custom": { name: "Custom...", dialects: [] } };
 
         // --- DOM Elements ---
         const keywordInput = document.getElementById('keyword');
         const languageSelect = document.getElementById('language');
         const customLanguageInput = document.getElementById('custom_language');
-        const dialectSelect = document.getElementById('dialect'); // New
-        const audienceInput = document.getElementById('audience'); // New
-        const readerNameInput = document.getElementById('readerName'); // New
+        const dialectSelect = document.getElementById('dialect');
+        const audienceInput = document.getElementById('audience');
+        const readerNameInput = document.getElementById('readerName');
         const toneSelect = document.getElementById('tone');
         const customToneInput = document.getElementById('custom_tone');
-        const genderSelect = document.getElementById('gender'); // New
-        const ageSelect = document.getElementById('age'); // New
-        const purposeCheckboxes = document.querySelectorAll('input[name="purpose"]'); // New (NodeList)
-        const purposeUrlInput = document.getElementById('purposeUrl'); // New
-        const purposeCtaInput = document.getElementById('purposeCta'); // New
+        const genderSelect = document.getElementById('gender');
+        const ageSelect = document.getElementById('age');
+        const purposeCheckboxes = document.querySelectorAll('input[name="purpose"]');
+        const purposeUrlInput = document.getElementById('purposeUrl');
+        const purposeCtaInput = document.getElementById('purposeCta');
         const formatSelect = document.getElementById('format');
         const customSpecsInput = document.getElementById('custom_specs');
         const aiProviderSelect = document.getElementById('ai_provider');
         const aiModelSelect = document.getElementById('ai_model');
+        const useCustomAiModelCheckbox = document.getElementById('useCustomAiModel'); // New
+        const customAiModelInput = document.getElementById('customAiModel'); // New
         const sitemapUrlInput = document.getElementById('sitemapUrl');
         const fetchSitemapBtn = document.getElementById('fetchSitemapBtn');
         const apiStatusDiv = document.getElementById('apiStatus');
@@ -302,6 +365,23 @@
         const sitemapUrlsListDiv = document.getElementById('sitemapUrlsList');
         const linkTypeToggle = document.getElementById('linkTypeToggle');
         const linkTypeText = document.getElementById('linkTypeText');
+        // Image Gen Elements
+        const generateImagesCheckbox = document.getElementById('generateImages');
+        const imageOptionsContainer = document.getElementById('imageOptionsContainer');
+        const imageProviderSelect = document.getElementById('imageProvider');
+        const imageModelSelect = document.getElementById('imageModel');
+        const useCustomImageModelCheckbox = document.getElementById('useCustomImageModel'); // New
+        const customImageModelInput = document.getElementById('customImageModel'); // New
+        const numImagesSelect = document.getElementById('numImages');
+        const imageAspectRatioSelect = document.getElementById('imageAspectRatio');
+        const imageSubjectInput = document.getElementById('imageSubject');
+        const imageStyleSelect = document.getElementById('imageStyle');
+        const imageStyleModifiersInput = document.getElementById('imageStyleModifiers');
+        const imageTextInput = document.getElementById('imageText');
+        // Generation Progress
+        const generationProgressDiv = document.getElementById('generationProgress');
+        const currentSectionNumSpan = document.getElementById('currentSectionNum');
+        const totalSectionNumSpan = document.getElementById('totalSectionNum');
         // ... (rest of DOM elements are the same) ...
         const generateStructureBtn = document.getElementById('generateStructureBtn');
         const generateArticleBtn = document.getElementById('generateArticleBtn');
@@ -327,112 +407,133 @@
         const spinActionLoadingIndicator = document.getElementById('spinActionLoadingIndicator');
         const consoleLog = document.getElementById('consoleLog');
 
-
         // --- State ---
         let parsedSitemapUrls = [];
+        let customModels = {}; // Store custom models: { text: { google: '...', openai: '...' }, image: { ... } }
 
         // --- Helper Functions ---
-        function logToConsole(message, type = 'info') { console.log(`[${type.toUpperCase()}] ${message}`); const timestamp = new Date().toLocaleTimeString(); const logEntry = document.createElement('div'); logEntry.classList.add(`log-${type}`); logEntry.textContent = `[${timestamp}] ${message}`; consoleLog.prepend(logEntry); while (consoleLog.children.length > 100) { consoleLog.removeChild(consoleLog.lastChild); } }
+        function logToConsole(message, type = 'info') { /* ... (same) ... */ console.log(`[${type.toUpperCase()}] ${message}`); const timestamp = new Date().toLocaleTimeString(); const logEntry = document.createElement('div'); logEntry.classList.add(`log-${type}`); logEntry.textContent = `[${timestamp}] ${message}`; consoleLog.prepend(logEntry); while (consoleLog.children.length > 100) { consoleLog.removeChild(consoleLog.lastChild); } }
         function showLoading(indicatorElement, show = true) { indicatorElement.classList.toggle('hidden', !show); }
-        function disableButtons(disabled = true) { generateStructureBtn.disabled = disabled; generateArticleBtn.disabled = disabled; enableSpinningBtn.disabled = disabled; }
+        function disableButtons(disabled = true) { /* ... (same) ... */ generateStructureBtn.disabled = disabled; generateArticleBtn.disabled = disabled; enableSpinningBtn.disabled = disabled; }
         function getSelectedProviderKey() { return aiProviderSelect.value; }
+        function getSelectedImageProviderKey() { return imageProviderSelect.value; }
+
+        // --- Custom Model Storage ---
+        function loadCustomModels() {
+            const stored = localStorage.getItem(CUSTOM_MODELS_STORAGE_KEY);
+            customModels = stored ? JSON.parse(stored) : { text: {}, image: {} };
+            // Ensure structure exists
+            customModels.text = customModels.text || {};
+            customModels.image = customModels.image || {};
+            logToConsole('Loaded custom models from storage.', 'info');
+        }
+        function saveCustomModels() {
+            localStorage.setItem(CUSTOM_MODELS_STORAGE_KEY, JSON.stringify(customModels));
+            logToConsole('Saved custom models to storage.', 'info');
+        }
+        function updateCustomModel(type, provider, modelName) { // type = 'text' or 'image'
+             if (!customModels[type]) customModels[type] = {};
+             customModels[type][provider] = modelName.trim();
+             saveCustomModels();
+        }
+        function getCustomModel(type, provider) {
+             return customModels[type]?.[provider] || '';
+        }
 
         // --- API Status Function ---
-        async function checkApiStatus() {
-            const providerKey = getSelectedProviderKey();
-            const model = aiModelSelect.value; // Use the currently selected model for the check
-
-            if (!providerKey || !model) {
-                apiStatusDiv.innerHTML = `<span class="status-error">Select Provider/Model</span>`;
-                return; // Don't check if no model selected
-            }
-
-            apiStatusDiv.innerHTML = `<span class="status-checking">Checking ${providerKey}...</span>`;
-            showLoading(apiStatusIndicator, true);
-
-            try {
-                const response = await fetch('/ai-api', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'check_status',
-                        providerKey: providerKey,
-                        model: model
-                    })
-                });
-
-                const data = await response.json();
-
-                if (!response.ok || !data.success) {
-                    throw new Error(data.error || `Status check failed (${response.status})`);
-                }
-
-                apiStatusDiv.innerHTML = `<span class="status-ok">✅ Ready (${providerKey})</span>`;
-                logToConsole(`API Status OK for ${providerKey} (${model})`, 'success');
-
-            } catch (error) {
-                console.error("API Status Check Failed:", error);
-                logToConsole(`API Status Error: ${error.message}`, 'error');
-                apiStatusDiv.innerHTML = `<span class="status-error">❌ Error: ${error.message}</span>`;
-            } finally {
-                 showLoading(apiStatusIndicator, false);
-            }
-        }
-
+        async function checkApiStatus() { /* ... (same as v5) ... */ const providerKey = getSelectedProviderKey(); const model = getSelectedTextModel(); if (!providerKey || !model) { apiStatusDiv.innerHTML = `<span class="status-error">Select Provider/Model</span>`; return; } apiStatusDiv.innerHTML = `<span class="status-checking">Checking ${providerKey}...</span>`; showLoading(apiStatusIndicator, true); try { const response = await fetch('/ai-api', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'check_status', providerKey: providerKey, model: model }) }); const data = await response.json(); if (!response.ok || !data.success) { throw new Error(data.error || `Status check failed (${response.status})`); } apiStatusDiv.innerHTML = `<span class="status-ok">✅ Ready (${providerKey})</span>`; logToConsole(`API Status OK for ${providerKey} (${model})`, 'success'); } catch (error) { console.error("API Status Check Failed:", error); logToConsole(`API Status Error: ${error.message}`, 'error'); apiStatusDiv.innerHTML = `<span class="status-error">❌ Error: ${error.message}</span>`; } finally { showLoading(apiStatusIndicator, false); } }
 
         // --- Sitemap Functions ---
-        function displaySitemapUrls() { /* ... (same as v4) ... */ if (parsedSitemapUrls.length === 0) { sitemapUrlsListDiv.innerHTML = `<em class="text-gray-400">No sitemap loaded or no URLs found.</em>`; return; } sitemapUrlsListDiv.innerHTML = ''; parsedSitemapUrls.forEach(url => { const div = document.createElement('div'); div.textContent = url; sitemapUrlsListDiv.appendChild(div); }); }
-        function loadSitemapFromStorage() { /* ... (same as v4) ... */ const storedUrls = localStorage.getItem(SITEMAP_STORAGE_KEY); if (storedUrls) { parsedSitemapUrls = JSON.parse(storedUrls); logToConsole(`Loaded ${parsedSitemapUrls.length} sitemap URLs from local storage.`, 'info'); } else { parsedSitemapUrls = []; } displaySitemapUrls(); }
-        async function fetchAndParseSitemap() { /* ... (same as v4) ... */ const url = sitemapUrlInput.value.trim(); if (!url) { alert('Please enter a Sitemap URL.'); return; } logToConsole(`Fetching sitemap from URL: ${url}`, 'info'); showLoading(sitemapLoadingIndicator, true); fetchSitemapBtn.disabled = true; try { const response = await fetch('/ai-api', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fetch_sitemap', sitemapUrl: url }) }); const data = await response.json(); if (!response.ok || !data.success) { throw new Error(data.error || `Failed to fetch/parse sitemap (${response.status})`); } parsedSitemapUrls = data.urls || []; localStorage.setItem(SITEMAP_STORAGE_KEY, JSON.stringify(parsedSitemapUrls)); logToConsole(`Successfully fetched and parsed ${parsedSitemapUrls.length} URLs.`, 'success'); displaySitemapUrls(); } catch (error) { console.error("Sitemap Fetch/Parse Failed:", error); logToConsole(`Sitemap Error: ${error.message}`, 'error'); alert(`Failed to process sitemap: ${error.message}`); } finally { showLoading(sitemapLoadingIndicator, false); fetchSitemapBtn.disabled = false; } }
+        function displaySitemapUrls() { /* ... (same as v5) ... */ if (parsedSitemapUrls.length === 0) { sitemapUrlsListDiv.innerHTML = `<em class="text-gray-400">No sitemap loaded.</em>`; return; } sitemapUrlsListDiv.innerHTML = ''; parsedSitemapUrls.forEach(url => { const div = document.createElement('div'); div.textContent = url; sitemapUrlsListDiv.appendChild(div); }); }
+        function loadSitemapFromStorage() { /* ... (same as v5) ... */ const storedUrls = localStorage.getItem(SITEMAP_STORAGE_KEY); if (storedUrls) { parsedSitemapUrls = JSON.parse(storedUrls); logToConsole(`Loaded ${parsedSitemapUrls.length} sitemap URLs.`, 'info'); } else { parsedSitemapUrls = []; } displaySitemapUrls(); }
+        async function fetchAndParseSitemap() { /* ... (same as v5) ... */ const url = sitemapUrlInput.value.trim(); if (!url) { alert('Please enter a Sitemap URL.'); return; } logToConsole(`Fetching sitemap: ${url}`, 'info'); showLoading(sitemapLoadingIndicator, true); fetchSitemapBtn.disabled = true; try { const response = await fetch('/ai-api', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fetch_sitemap', sitemapUrl: url }) }); const data = await response.json(); if (!response.ok || !data.success) { throw new Error(data.error || `Failed fetch/parse (${response.status})`); } parsedSitemapUrls = data.urls || []; localStorage.setItem(SITEMAP_STORAGE_KEY, JSON.stringify(parsedSitemapUrls)); logToConsole(`Fetched/parsed ${parsedSitemapUrls.length} URLs.`, 'success'); displaySitemapUrls(); } catch (error) { console.error("Sitemap Error:", error); logToConsole(`Sitemap Error: ${error.message}`, 'error'); alert(`Sitemap Error: ${error.message}`); } finally { showLoading(sitemapLoadingIndicator, false); fetchSitemapBtn.disabled = false; } }
 
         // --- Language/Dialect Functions ---
-        function populateLanguages() {
-            languageSelect.innerHTML = ''; // Clear existing
-            Object.keys(languageOptions).forEach(langKey => {
-                const option = document.createElement('option');
-                option.value = langKey; // Use the key as value
-                option.textContent = languageOptions[langKey].name;
-                languageSelect.appendChild(option);
-            });
-            // Trigger initial dialect population
-            populateDialects();
-        }
+        function populateLanguages() { /* ... (same as v5) ... */ languageSelect.innerHTML = ''; Object.keys(languageOptions).forEach(langKey => { const option = document.createElement('option'); option.value = langKey; option.textContent = languageOptions[langKey].name; languageSelect.appendChild(option); }); populateDialects(); }
+        function populateDialects() { /* ... (same as v5) ... */ const selectedLangKey = languageSelect.value; const langConfig = languageOptions[selectedLangKey]; const dialects = langConfig?.dialects || []; dialectSelect.innerHTML = ''; if (selectedLangKey === 'custom' || dialects.length === 0) { dialectSelect.disabled = true; const option = document.createElement('option'); option.value = ""; option.textContent = "-- N/A --"; dialectSelect.appendChild(option); } else { dialectSelect.disabled = false; dialects.forEach(dialect => { const option = document.createElement('option'); option.value = dialect; option.textContent = dialect; dialectSelect.appendChild(option); }); } customLanguageInput.classList.toggle('hidden', selectedLangKey !== 'custom'); customLanguageInput.classList.toggle('custom-input-visible', selectedLangKey === 'custom'); }
 
-        function populateDialects() {
-            const selectedLangKey = languageSelect.value;
-            const langConfig = languageOptions[selectedLangKey];
-            const dialects = langConfig?.dialects || [];
+        // --- Dynamic Model Loading (Text & Image) ---
+        function populateTextModels() {
+            const providerKey = getSelectedProviderKey();
+            const providerConfig = aiProviders[providerKey];
+            const models = providerConfig?.models || [];
+            aiModelSelect.innerHTML = '';
 
-            dialectSelect.innerHTML = ''; // Clear existing dialects
-
-            if (selectedLangKey === 'custom' || dialects.length === 0) {
-                dialectSelect.disabled = true;
-                const option = document.createElement('option');
-                option.value = "";
-                option.textContent = "-- N/A --";
-                dialectSelect.appendChild(option);
+            if (models.length === 0) {
+                 const option = document.createElement('option'); option.value = ''; option.textContent = 'No models listed'; aiModelSelect.appendChild(option); aiModelSelect.disabled = true;
+                 useCustomAiModelCheckbox.checked = true; // Force custom if no standard models
             } else {
-                dialectSelect.disabled = false;
-                dialects.forEach(dialect => {
-                    const option = document.createElement('option');
-                    option.value = dialect; // Use dialect name as value
-                    option.textContent = dialect;
-                    dialectSelect.appendChild(option);
+                models.forEach(model => {
+                    const option = document.createElement('option'); option.value = model; option.textContent = model; aiModelSelect.appendChild(option);
                 });
+                 aiModelSelect.disabled = false;
+                 useCustomAiModelCheckbox.checked = false; // Default to standard model
             }
-             // Handle custom language input visibility
-             customLanguageInput.classList.toggle('hidden', selectedLangKey !== 'custom');
-             customLanguageInput.classList.toggle('custom-input-visible', selectedLangKey === 'custom');
+            // Load and set custom model input
+            customAiModelInput.value = getCustomModel('text', providerKey);
+            toggleCustomModelInput('text'); // Update visibility based on checkbox
+            checkApiStatus(); // Check status after populating
         }
 
-        // --- Dynamic Model Loading ---
-        function populateModels() { /* ... (same as v4, calls checkApiStatus) ... */ const providerKey = getSelectedProviderKey(); const providerConfig = aiProviders[providerKey]; const models = providerConfig?.models || []; aiModelSelect.innerHTML = ''; if (models.length === 0) { const option = document.createElement('option'); option.value = ''; option.textContent = 'No models listed'; aiModelSelect.appendChild(option); aiModelSelect.disabled = true; } else { models.forEach(model => { const option = document.createElement('option'); option.value = model; option.textContent = model; aiModelSelect.appendChild(option); }); aiModelSelect.disabled = false; } checkApiStatus(); }
+         function populateImageModels() {
+            const providerKey = getSelectedImageProviderKey();
+            const providerConfig = imageProviders[providerKey];
+            const models = providerConfig?.models || [];
+            const aspectRatios = providerConfig?.aspectRatios || ["1:1"]; // Default aspect ratio
+
+            imageModelSelect.innerHTML = '';
+             if (models.length === 0) {
+                 const option = document.createElement('option'); option.value = ''; option.textContent = 'No models listed'; imageModelSelect.appendChild(option); imageModelSelect.disabled = true;
+                 useCustomImageModelCheckbox.checked = true;
+            } else {
+                models.forEach(model => {
+                    const option = document.createElement('option'); option.value = model; option.textContent = model; imageModelSelect.appendChild(option);
+                });
+                 imageModelSelect.disabled = false;
+                 useCustomImageModelCheckbox.checked = false;
+            }
+            // Load and set custom model input
+            customImageModelInput.value = getCustomModel('image', providerKey);
+            toggleCustomModelInput('image');
+
+            // Populate aspect ratios
+            imageAspectRatioSelect.innerHTML = '';
+            aspectRatios.forEach(ratio => {
+                 const option = document.createElement('option'); option.value = ratio; option.textContent = ratio; imageAspectRatioSelect.appendChild(option);
+            });
+        }
+
+        function toggleCustomModelInput(type) { // type = 'text' or 'image'
+            const useCustomCheckbox = type === 'text' ? useCustomAiModelCheckbox : useCustomImageModelCheckbox;
+            const modelSelect = type === 'text' ? aiModelSelect : imageModelSelect;
+            const customInput = type === 'text' ? customAiModelInput : customImageModelInput;
+
+            const useStandard = !useCustomCheckbox.checked;
+            modelSelect.disabled = !useStandard;
+            customInput.classList.toggle('hidden', useStandard);
+            customInput.classList.toggle('custom-input-visible', !useStandard);
+
+            if (!useStandard) { // If using custom, save it
+                 updateCustomModel(type, type === 'text' ? getSelectedProviderKey() : getSelectedImageProviderKey(), customInput.value);
+            }
+             // Re-check API status if text model changed
+             if (type === 'text') {
+                 checkApiStatus();
+             }
+        }
+
+        function getSelectedTextModel() {
+            return useCustomAiModelCheckbox.checked ? customAiModelInput.value.trim() : aiModelSelect.value;
+        }
+        function getSelectedImageModel() {
+             return useCustomImageModelCheckbox.checked ? customImageModelInput.value.trim() : imageModelSelect.value;
+        }
 
         // --- Unified AI Call Function ---
-        async function callAI(action, payload, loadingIndicator, buttonToDisable) { /* ... (same as v4) ... */ const fullPayload = { action, ...payload }; logToConsole(`Sending action '${action}' to Cloudflare Function...`, 'info'); if(loadingIndicator) showLoading(loadingIndicator, true); if (buttonToDisable) buttonToDisable.disabled = true; else disableButtons(true); try { const response = await fetch('/ai-api', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(fullPayload) }); const data = await response.json(); if (!response.ok || !data.success) { const errorMsg = data.error || `Request failed with status ${response.status}`; throw new Error(errorMsg); } logToConsole(`Action '${action}' completed successfully.`, 'success'); return data; } catch (error) { console.error(`Action '${action}' Failed:`, error); logToConsole(`Error during action '${action}': ${error.message}`, 'error'); alert(`Operation Failed: ${error.message}. Check console log.`); return null; } finally { if(loadingIndicator) showLoading(loadingIndicator, false); if (buttonToDisable) buttonToDisable.disabled = false; else disableButtons(false); } }
+        async function callAI(action, payload, loadingIndicator, buttonToDisable) { /* ... (same as v5) ... */ const fullPayload = { action, ...payload }; logToConsole(`Sending action '${action}' to Cloudflare Function...`, 'info'); if(loadingIndicator) showLoading(loadingIndicator, true); if (buttonToDisable) buttonToDisable.disabled = true; else disableButtons(true); try { const response = await fetch('/ai-api', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(fullPayload) }); const data = await response.json(); if (!response.ok || !data.success) { const errorMsg = data.error || `Request failed with status ${response.status}`; throw new Error(errorMsg); } logToConsole(`Action '${action}' completed successfully.`, 'success'); return data; } catch (error) { console.error(`Action '${action}' Failed:`, error); logToConsole(`Error during action '${action}': ${error.message}`, 'error'); alert(`Operation Failed: ${error.message}. Check console log.`); return null; } finally { if(loadingIndicator) showLoading(loadingIndicator, false); if (buttonToDisable) buttonToDisable.disabled = false; else disableButtons(false); } }
 
         // --- Spintax Highlighting ---
-        function highlightSpintax(element) { /* ... (same as v4) ... */ element.querySelectorAll('.spintax-level-1, .spintax-level-2, .spintax-level-3, .spintax-pipe').forEach(el => { el.outerHTML = el.innerHTML; }); let html = element.innerHTML; const tagMap = {}; let tagIndex = 0; html = html.replace(/<[^>]+>/g, (match) => { const placeholder = `__TAG${tagIndex}__`; tagMap[placeholder] = match; tagIndex++; return placeholder; }); html = html.replace(/\|/g, '<span class="spintax-pipe">|</span>'); let level = 0; let coloredHtml = ''; for (let i = 0; i < html.length; i++) { if (html[i] === '{') { level++; const colorClass = `spintax-level-${level % 3 + 1}`; coloredHtml += `<span class="${colorClass}">{</span>`; } else if (html[i] === '}') { if (level > 0) { const colorClass = `spintax-level-${level % 3 + 1}`; coloredHtml += `<span class="${colorClass}">}</span>`; level--; } else { coloredHtml += '}'; } } else { coloredHtml += html[i]; } } coloredHtml = coloredHtml.replace(/__TAG\d+__/g, (placeholder) => tagMap[placeholder] || placeholder); element.innerHTML = coloredHtml; }
+        function highlightSpintax(element) { /* ... (same as v5) ... */ element.querySelectorAll('.spintax-level-1, .spintax-level-2, .spintax-level-3, .spintax-pipe').forEach(el => { el.outerHTML = el.innerHTML; }); let html = element.innerHTML; const tagMap = {}; let tagIndex = 0; html = html.replace(/<[^>]+>/g, (match) => { const placeholder = `__TAG${tagIndex}__`; tagMap[placeholder] = match; tagIndex++; return placeholder; }); html = html.replace(/\|/g, '<span class="spintax-pipe">|</span>'); let level = 0; let coloredHtml = ''; for (let i = 0; i < html.length; i++) { if (html[i] === '{') { level++; const colorClass = `spintax-level-${level % 3 + 1}`; coloredHtml += `<span class="${colorClass}">{</span>`; } else if (html[i] === '}') { if (level > 0) { const colorClass = `spintax-level-${level % 3 + 1}`; coloredHtml += `<span class="${colorClass}">}</span>`; level--; } else { coloredHtml += '}'; } } else { coloredHtml += html[i]; } } coloredHtml = coloredHtml.replace(/__TAG\d+__/g, (placeholder) => tagMap[placeholder] || placeholder); element.innerHTML = coloredHtml; }
 
         // --- Validation Function ---
         function validateInputs() {
@@ -444,7 +545,7 @@
             if (!languageSelect.value || (languageSelect.value === 'custom' && !customLanguageInput.value.trim())) { missingFields.push("Language"); isValid = false; }
             if (!audienceInput.value.trim()) { missingFields.push("Audience"); isValid = false; }
             if (!toneSelect.value || (toneSelect.value === 'custom' && !customToneInput.value.trim())) { missingFields.push("Tone"); isValid = false; }
-            if (!formatSelect.value) { missingFields.push("Format"); isValid = false; } // Should always have a value, but good practice
+            if (!formatSelect.value) { missingFields.push("Format"); isValid = false; }
 
             // Purpose validation
             const selectedPurposes = getSelectedPurposes();
@@ -452,9 +553,13 @@
                  missingFields.push("Purpose (select at least one)"); isValid = false;
             } else {
                 if (selectedPurposes.includes("Promote URL") && !purposeUrlInput.value.trim()) {
-                     missingFields.push("Purpose URL (required when 'Promote URL' is selected)"); isValid = false;
+                     missingFields.push("Purpose URL"); isValid = false;
                 }
             }
+
+            // Model validation
+             if (!getSelectedTextModel()) { missingFields.push("Text Model"); isValid = false; }
+             if (generateImagesCheckbox.checked && !getSelectedImageModel()) { missingFields.push("Image Model"); isValid = false; }
 
 
             if (!isValid) {
@@ -464,40 +569,64 @@
         }
 
         // --- Get Selected Purposes ---
-        function getSelectedPurposes() {
-            const selected = [];
-            purposeCheckboxes.forEach(checkbox => {
-                if (checkbox.checked) {
-                    selected.push(checkbox.value);
-                }
-            });
-            return selected;
-        }
+        function getSelectedPurposes() { /* ... (same as v5) ... */ const selected = []; purposeCheckboxes.forEach(checkbox => { if (checkbox.checked) { selected.push(checkbox.value); } }); return selected; }
 
         // --- Event Listeners ---
-        languageSelect.addEventListener('change', populateDialects); // Update dialects on language change
-        aiProviderSelect.addEventListener('change', populateModels); // Checks API status
-        aiModelSelect.addEventListener('change', (event) => { // Log model change
-             logToConsole(`Selected AI Model: ${event.target.value}`, 'info');
-             // Optionally re-check status if model change might affect compatibility
-             checkApiStatus();
+        languageSelect.addEventListener('change', populateDialects);
+        aiProviderSelect.addEventListener('change', populateTextModels); // Populates text models & checks API
+        aiModelSelect.addEventListener('change', (event) => { logToConsole(`Selected Text Model: ${event.target.value}`, 'info'); checkApiStatus(); }); // Check status on model change too
+        useCustomAiModelCheckbox.addEventListener('change', () => toggleCustomModelInput('text'));
+        customAiModelInput.addEventListener('change', () => updateCustomModel('text', getSelectedProviderKey(), customAiModelInput.value));
+
+        // Image Gen Listeners
+        generateImagesCheckbox.addEventListener('change', () => {
+             imageOptionsContainer.classList.toggle('hidden', !generateImagesCheckbox.checked);
+             if (generateImagesCheckbox.checked) {
+                 populateImageModels(); // Populate models when enabling
+             }
         });
+        imageProviderSelect.addEventListener('change', populateImageModels);
+        imageModelSelect.addEventListener('change', (event) => { logToConsole(`Selected Image Model: ${event.target.value}`, 'info'); });
+        useCustomImageModelCheckbox.addEventListener('change', () => toggleCustomModelInput('image'));
+        customImageModelInput.addEventListener('change', () => updateCustomModel('image', getSelectedImageProviderKey(), customImageModelInput.value));
+
+
         fetchSitemapBtn.addEventListener('click', fetchAndParseSitemap);
         linkTypeToggle.addEventListener('change', () => { linkTypeText.textContent = linkTypeToggle.checked ? 'External' : 'Internal'; });
-        toneSelect.addEventListener('change', () => { customToneInput.classList.toggle('hidden', toneSelect.value !== 'custom'); customToneInput.classList.toggle('custom-input-visible', toneSelect.value === 'custom'); }); // Listener for custom tone
+        toneSelect.addEventListener('change', () => { customToneInput.classList.toggle('hidden', toneSelect.value !== 'custom'); customToneInput.classList.toggle('custom-input-visible', toneSelect.value === 'custom'); });
 
-        // Purpose checkbox listeners to show/hide related inputs
         purposeCheckboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', () => {
-                const selectedPurposes = getSelectedPurposes();
-                purposeUrlInput.classList.toggle('hidden', !selectedPurposes.includes('Promote URL'));
-                purposeCtaInput.classList.toggle('hidden', !selectedPurposes.some(p => p.startsWith('Promote') || p === 'Generate Leads')); // Show CTA for promotion/leads
-            });
+            checkbox.addEventListener('change', () => { /* ... (same as v5) ... */ const selectedPurposes = getSelectedPurposes(); purposeUrlInput.classList.toggle('hidden', !selectedPurposes.includes('Promote URL')); purposeCtaInput.classList.toggle('hidden', !selectedPurposes.some(p => p.startsWith('Promote') || p === 'Generate Leads')); });
         });
+
+        // --- Core Logic Functions ---
+
+        // Function to extract outlines (simple split by newline, assumes basic structure)
+        function getArticleOutlines(structureText) {
+             return structureText.split('\n').map(line => line.trim()).filter(line => line.length > 0 && !line.startsWith('#') && !line.startsWith('- ')); // Basic filter, adjust as needed
+        }
+
+        // Function to construct image prompt
+        function constructImagePrompt(sectionContent, sectionTitle = "article image") {
+             const subject = imageSubjectInput.value.trim() || sectionTitle; // Use section title/content if no subject provided
+             const style = imageStyleSelect.value;
+             const modifiers = imageStyleModifiersInput.value.trim();
+             const textToInclude = imageTextInput.value.trim();
+
+             let prompt = `Create an image representing: ${subject}.`;
+             if (style) prompt += ` Style: ${style}.`;
+             if (modifiers) prompt += ` Details: ${modifiers}.`;
+             if (textToInclude) prompt += ` Include the text: "${textToInclude}".`;
+             // Add context from section content (keep it brief)
+             const contextSnippet = sectionContent.substring(0, 150); // Limit context length
+             prompt += ` Context: ${contextSnippet}...`;
+
+             return prompt;
+        }
 
         // Step 1 -> Step 2: Generate Structure
         generateStructureBtn.addEventListener('click', async () => {
-            if (!validateInputs()) return; // Perform validation
+            if (!validateInputs()) return;
 
             // Gather all inputs
             const keyword = keywordInput.value.trim();
@@ -509,37 +638,13 @@
             const gender = genderSelect.value;
             const age = ageSelect.value;
             const selectedPurposes = getSelectedPurposes();
-            const purposeDetails = {
-                types: selectedPurposes,
-                url: selectedPurposes.includes("Promote URL") ? purposeUrlInput.value.trim() : '',
-                cta: purposeCtaInput.classList.contains('hidden') ? '' : purposeCtaInput.value.trim()
-            };
+            const purposeDetails = { types: selectedPurposes, url: purposeUrlInput.value.trim(), cta: purposeCtaInput.value.trim() };
             const customSpecs = customSpecsInput.value.trim();
 
-            // Construct Prompt
-            const prompt = `Generate a detailed article structure/outline based on these specifications:
-            - Keyword: "${keyword}"
-            - Language: ${language}${dialect ? ` (${dialect} dialect)` : ''}
-            - Target Audience: ${audience}
-            - Tone: ${tone}
-            ${gender ? `- Author Gender Persona: ${gender}` : ''}
-            ${age ? `- Author Age Persona: ${age}` : ''}
-            - Article Purpose(s): ${purposeDetails.types.join(', ')}
-            ${purposeDetails.url ? `  - Promotional URL: ${purposeDetails.url}` : ''}
-            ${purposeDetails.cta ? `  - Desired Call to Action: ${purposeDetails.cta}` : ''}
-            ${readerName ? `- Address Reader As: ${readerName}` : ''}
-            ${customSpecs ? `- Other Details: ${customSpecs}` : ''}
+            // Construct Prompt (same as v5)
+            const prompt = `Generate a detailed article structure/outline based on these specifications:\n- Keyword: "${keyword}"\n- Language: ${language}${dialect ? ` (${dialect} dialect)` : ''}\n- Target Audience: ${audience}\n- Tone: ${tone}\n${gender ? `- Author Gender Persona: ${gender}` : ''}\n${age ? `- Author Age Persona: ${age}` : ''}\n- Article Purpose(s): ${purposeDetails.types.join(', ')}\n${purposeDetails.url && purposeDetails.types.includes('Promote URL') ? `  - Promotional URL: ${purposeDetails.url}` : ''}\n${purposeDetails.cta && purposeDetails.types.some(p => p.startsWith('Promote') || p === 'Generate Leads') ? `  - Desired Call to Action: ${purposeDetails.cta}` : ''}\n${readerName ? `- Address Reader As: ${readerName}` : ''}\n${customSpecs ? `- Other Details: ${customSpecs}` : ''}\n\nInstructions:\n- Create a logical structure covering the keyword comprehensively for the specified audience.\n- Output only the structure using clear headings or bullet points (e.g., Section 1: ..., - Point A, - Point B).\n- Do not include introductory or concluding remarks about the structure itself.`;
 
-            Instructions:
-            - Create a logical structure covering the keyword comprehensively for the specified audience.
-            - Output only the structure using clear headings or bullet points (e.g., Section 1: ..., - Point A, - Point B).
-            - Do not include introductory or concluding remarks about the structure itself.`;
-
-            const payload = {
-                providerKey: getSelectedProviderKey(),
-                model: aiModelSelect.value,
-                prompt: prompt
-            };
+            const payload = { providerKey: getSelectedProviderKey(), model: getSelectedTextModel(), prompt: prompt };
             logToConsole(`--- Generating Structure Prompt ---\n${prompt}\n---------------------------------`);
             const result = await callAI('generate', payload, structureLoadingIndicator, generateStructureBtn);
 
@@ -553,83 +658,159 @@
             }
         });
 
-        // Step 2 -> Step 3: Generate Article
+        // Step 2 -> Step 3: Generate Article (Incremental)
         generateArticleBtn.addEventListener('click', async () => {
             const structure = articleStructureTextarea.value.trim();
             if (!structure) { alert('Article structure is empty.'); return; }
-            if (!validateInputs()) return; // Re-validate base inputs if needed
+            if (!validateInputs()) return;
 
-            // Gather all inputs again for consistency
-            const keyword = keywordInput.value.trim();
-            const language = languageSelect.value === 'custom' ? customLanguageInput.value.trim() : languageOptions[languageSelect.value]?.name || languageSelect.value;
-            const dialect = dialectSelect.disabled ? '' : dialectSelect.value;
-            const audience = audienceInput.value.trim();
-            const readerName = readerNameInput.value.trim();
-            const tone = toneSelect.value === 'custom' ? customToneInput.value.trim() : toneSelect.value;
-            const gender = genderSelect.value;
-            const age = ageSelect.value;
-            const selectedPurposes = getSelectedPurposes();
-            const purposeDetails = {
-                types: selectedPurposes,
-                url: selectedPurposes.includes("Promote URL") ? purposeUrlInput.value.trim() : '',
-                cta: purposeCtaInput.classList.contains('hidden') ? '' : purposeCtaInput.value.trim()
-            };
-            const format = formatSelect.value;
-            const customSpecs = customSpecsInput.value.trim();
+            const outlines = getArticleOutlines(structure);
+            if (outlines.length === 0) { alert('Could not parse outlines from the structure.'); return; }
 
-            // Prepare linking instructions
-            let linkingInstructions = '';
-            const linkType = linkTypeToggle.checked ? 'External (absolute URLs)' : 'Internal (relative URLs if possible, otherwise absolute)';
-            if (parsedSitemapUrls.length > 0) {
-                 const urlList = parsedSitemapUrls.slice(0, 20).join('\n');
-                 linkingInstructions = `\n\nLinking Instructions:\n- Incorporate relevant links naturally into the article content where appropriate, using the following URLs as a reference pool.\n- Link Type Preference: ${linkType}.\n- Maximum 5-7 links total.\n\nAvailable URLs:\n${urlList}`;
+            generatedArticleTextarea.value = ''; // Clear previous article
+            let previousSectionContent = ''; // Context for next section
+            let fullArticleContent = '';
+
+            generationProgressDiv.classList.remove('hidden');
+            totalSectionNumSpan.textContent = outlines.length;
+
+            // Disable generation button during process
+            generateArticleBtn.disabled = true;
+            showLoading(articleLoadingIndicator, true);
+
+            for (let i = 0; i < outlines.length; i++) {
+                const currentOutline = outlines[i];
+                currentSectionNumSpan.textContent = i + 1;
+                logToConsole(`Generating content for outline: "${currentOutline}"`, 'info');
+
+                // --- Gather Base Specs (same as before) ---
+                const keyword = keywordInput.value.trim();
+                const language = languageSelect.value === 'custom' ? customLanguageInput.value.trim() : languageOptions[languageSelect.value]?.name || languageSelect.value;
+                const dialect = dialectSelect.disabled ? '' : dialectSelect.value;
+                const audience = audienceInput.value.trim();
+                const readerName = readerNameInput.value.trim();
+                const tone = toneSelect.value === 'custom' ? customToneInput.value.trim() : toneSelect.value;
+                const gender = genderSelect.value;
+                const age = ageSelect.value;
+                const selectedPurposes = getSelectedPurposes();
+                const purposeDetails = { types: selectedPurposes, url: purposeUrlInput.value.trim(), cta: purposeCtaInput.value.trim() };
+                const format = formatSelect.value;
+                const customSpecs = customSpecsInput.value.trim();
+                const linkType = linkTypeToggle.checked ? 'External (absolute URLs)' : 'Internal (relative URLs if possible, otherwise absolute)';
+                let linkingInstructions = '';
+                if (parsedSitemapUrls.length > 0) {
+                     const urlList = parsedSitemapUrls.slice(0, 5).join('\n'); // Limit URLs per section prompt
+                     linkingInstructions = `\n- Consider linking naturally to relevant URLs from this list if appropriate for this section: ${urlList}\n- Link Type Preference: ${linkType}.`;
+                }
+
+                // --- Construct Text Prompt for Current Section ---
+                const textPrompt = `Generate the article content ONLY for the following section/outline, continuing naturally from the previous context if provided.
+                Section Outline: "${currentOutline}"
+
+                Previous Context (end of last section):
+                ---
+                ${previousSectionContent ? previousSectionContent.slice(-500) : '(Start of article)'}
+                ---
+
+                Overall Article Specifications:
+                - Keyword: "${keyword}"
+                - Language: ${language}${dialect ? ` (${dialect} dialect)` : ''}
+                - Target Audience: ${audience}
+                - Tone: ${tone}
+                ${gender ? `- Author Gender Persona: ${gender}` : ''}
+                ${age ? `- Author Age Persona: ${age}` : ''}
+                - Article Purpose(s): ${purposeDetails.types.join(', ')}
+                ${purposeDetails.url && purposeDetails.types.includes('Promote URL') ? `  - Promotional URL: ${purposeDetails.url}` : ''}
+                ${purposeDetails.cta && purposeDetails.types.some(p => p.startsWith('Promote') || p === 'Generate Leads') ? `  - Desired Call to Action: ${purposeDetails.cta}` : ''}
+                ${readerName ? `- Address Reader As: ${readerName}` : ''}
+                - Output Format: ${format}
+                ${customSpecs ? `- Other Details: ${customSpecs}` : ''}
+                ${linkingInstructions}
+
+                Instructions:
+                - Write ONLY the content for the current section outline: "${currentOutline}".
+                - Do NOT repeat the outline heading itself unless it's naturally part of the content (e.g., within a paragraph).
+                - Ensure smooth transition from the previous context.
+                - Adhere strictly to the requested output format (${format}).
+                ${format === 'html' ? '- For HTML: Use only <p>, <h1>-<h6>, <ul>, <ol>, <li>, <b>, <i>, <a> tags.' : '- For Markdown: Use standard Markdown.'}
+                - Do NOT add any introductory/concluding remarks about the generation process itself.`;
+
+                const textPayload = { providerKey: getSelectedProviderKey(), model: getSelectedTextModel(), prompt: textPrompt };
+                const textResult = await callAI('generate', textPayload, null, null); // No specific indicator/button
+
+                if (!textResult || !textResult.text) {
+                    logToConsole(`Failed to generate text for outline: "${currentOutline}". Stopping article generation.`, 'error');
+                    alert(`Error generating section ${i + 1}. Check console log.`);
+                    break; // Stop generation if a section fails
+                }
+
+                const currentSectionText = textResult.text.trim() + (format === 'html' ? '\n\n' : '\n\n'); // Add spacing
+                fullArticleContent += currentSectionText;
+                generatedArticleTextarea.value = fullArticleContent; // Update textarea incrementally
+                previousSectionContent = currentSectionText; // Update context for next loop
+
+                // --- Image Generation (If Enabled) ---
+                if (generateImagesCheckbox.checked) {
+                    logToConsole(`Generating image for outline: "${currentOutline}"`, 'info');
+                    const imagePrompt = constructImagePrompt(currentSectionText, currentOutline);
+                    const imagePayload = {
+                        action: 'generate_image', // Ensure this action exists in CF function
+                        providerKey: getSelectedImageProviderKey(),
+                        model: getSelectedImageModel(),
+                        prompt: imagePrompt,
+                        // Pass image settings
+                        numImages: parseInt(numImagesSelect.value, 10) || 1,
+                        aspectRatio: imageAspectRatioSelect.value,
+                        // Include other params based on provider needs (add to CF function later)
+                        // style: imageStyleSelect.value, // Example
+                        // text: imageTextInput.value.trim() // Example
+                    };
+
+                    const imageResult = await callAI('generate_image', imagePayload, null, null);
+
+                    if (imageResult && imageResult.imageData) { // Assuming CF returns { success: true, imageData: 'base64...' or url }
+                         // For now, insert a placeholder. Handling actual images is complex.
+                         const altText = `Image for ${currentOutline.substring(0, 50)}`;
+                         let imagePlaceholder = '';
+                         if (format === 'html') {
+                             // Using a placeholder service for now
+                             imagePlaceholder = `<img src="https://placehold.co/600x400/EEE/333?text=Image+for+${encodeURIComponent(currentOutline)}" alt="${altText}" class="mx-auto my-4 rounded shadow">\n\n`;
+                             // Alternatively, if base64: `<img src="data:image/png;base64,${imageResult.imageData}" alt="${altText}">\n\n`;
+                         } else {
+                             imagePlaceholder = `![${altText}](https://placehold.co/600x400/EEE/333?text=Image+for+${encodeURIComponent(currentOutline)})\n\n`;
+                             // Alternatively, if base64: `![${altText}](data:image/png;base64,${imageResult.imageData})\n\n`;
+                         }
+                         fullArticleContent += imagePlaceholder;
+                         generatedArticleTextarea.value = fullArticleContent; // Update textarea with placeholder
+                         logToConsole(`Image placeholder added for section ${i + 1}.`, 'success');
+                    } else {
+                         logToConsole(`Failed to generate image for section ${i + 1}.`, 'warn');
+                         // Optionally add a text note about failed image gen
+                         // fullArticleContent += `\n\n[Image generation failed for this section]\n\n`;
+                         // generatedArticleTextarea.value = fullArticleContent;
+                    }
+                }
+                 // Scroll textarea to bottom
+                 generatedArticleTextarea.scrollTop = generatedArticleTextarea.scrollHeight;
+
+            } // End loop through outlines
+
+            generationProgressDiv.classList.add('hidden');
+            showLoading(articleLoadingIndicator, false);
+            generateArticleBtn.disabled = false; // Re-enable button
+
+            // Show Step 3 if generation finished (even partially)
+            if (fullArticleContent) {
+                 step3Section.classList.remove('hidden');
+                 step4Section.classList.add('hidden');
+                 const isHtml = format === 'html';
+                 previewHtmlCheckbox.checked = false; previewHtmlCheckbox.disabled = !isHtml;
+                 previewHtmlCheckbox.parentElement.classList.toggle('hidden', !isHtml);
+                 generatedArticleTextarea.classList.remove('hidden');
+                 htmlPreviewDiv.classList.add('hidden'); htmlPreviewDiv.innerHTML = '';
+                 logToConsole('Article generation process complete.', 'success');
             } else {
-                 linkingInstructions = '\n\nLinking Instructions: No sitemap URLs provided.';
-            }
-
-            // Construct Prompt
-            const prompt = `Generate a full article based on the following structure and specifications:
-            - Keyword: "${keyword}"
-            - Language: ${language}${dialect ? ` (${dialect} dialect)` : ''}
-            - Target Audience: ${audience}
-            - Tone: ${tone}
-            ${gender ? `- Author Gender Persona: ${gender}` : ''}
-            ${age ? `- Author Age Persona: ${age}` : ''}
-            - Article Purpose(s): ${purposeDetails.types.join(', ')}
-            ${purposeDetails.url ? `  - Promotional URL: ${purposeDetails.url}` : ''}
-            ${purposeDetails.cta ? `  - Desired Call to Action: ${purposeDetails.cta}` : ''}
-            ${readerName ? `- Address Reader As: ${readerName}` : ''}
-            - Output Format: ${format}
-            ${customSpecs ? `- Other Details: ${customSpecs}` : ''}
-
-            Article Structure:
-            ---
-            ${structure}
-            ---
-            ${linkingInstructions}
-
-            Format Instructions:
-            - Write content for each section of the structure, ensuring coherence and flow.
-            - Adhere strictly to the requested output format (${format}).
-            ${format === 'html' ? '- For HTML: Use only basic text formatting tags like <p>, <h1>-<h6>, <ul>, <ol>, <li>, <b>, <i>, and <a> for links. Do NOT include <html>, <head>, <body>, or <div> tags.' : '- For Markdown: Use standard Markdown syntax including [link text](URL) for links.'}
-            - Generate only the article content itself, without any introductory or concluding remarks about the generation process.`;
-
-            const payload = {
-                providerKey: getSelectedProviderKey(),
-                model: aiModelSelect.value,
-                prompt: prompt
-            };
-             logToConsole(`--- Generating Article Prompt ---\n${prompt}\n---------------------------------`);
-            const result = await callAI('generate', payload, articleLoadingIndicator, generateArticleBtn);
-
-            if (result && result.text) {
-                generatedArticleTextarea.value = result.text;
-                const isHtml = format === 'html';
-                previewHtmlCheckbox.checked = false; previewHtmlCheckbox.disabled = !isHtml;
-                previewHtmlCheckbox.parentElement.classList.toggle('hidden', !isHtml);
-                generatedArticleTextarea.classList.remove('hidden');
-                htmlPreviewDiv.classList.add('hidden'); htmlPreviewDiv.innerHTML = '';
-                step3Section.classList.remove('hidden'); step4Section.classList.add('hidden');
+                 logToConsole('Article generation failed or produced no content.', 'error');
             }
         });
 
@@ -637,10 +818,10 @@
         toggleStructureVisibilityBtn.addEventListener('click', () => { const isHidden = structureContainer.classList.toggle('hidden'); toggleStructureVisibilityBtn.textContent = isHidden ? 'Show' : 'Hide'; });
 
          // HTML Preview Toggle (Unchanged)
-        previewHtmlCheckbox.addEventListener('change', () => { /* ... (same as v4) ... */ const showPreview = previewHtmlCheckbox.checked; generatedArticleTextarea.classList.toggle('hidden', showPreview); htmlPreviewDiv.classList.toggle('hidden', !showPreview); if (showPreview) { let unsafeHTML = generatedArticleTextarea.value; let sanitizedHTML = unsafeHTML.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ''); htmlPreviewDiv.innerHTML = sanitizedHTML; logToConsole("Showing HTML preview. Basic script tag removal applied.", "warn"); } });
+        previewHtmlCheckbox.addEventListener('change', () => { /* ... (same as v5) ... */ const showPreview = previewHtmlCheckbox.checked; generatedArticleTextarea.classList.toggle('hidden', showPreview); htmlPreviewDiv.classList.toggle('hidden', !showPreview); if (showPreview) { let unsafeHTML = generatedArticleTextarea.value; let sanitizedHTML = unsafeHTML.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ''); htmlPreviewDiv.innerHTML = sanitizedHTML; logToConsole("Showing HTML preview.", "warn"); } });
 
         // Step 3 -> Step 4: Enable Spinning (Unchanged)
-        enableSpinningBtn.addEventListener('click', () => { /* ... (same as v4) ... */ spunArticleDisplay.innerHTML = generatedArticleTextarea.value; step4Section.classList.remove('hidden'); highlightSpintax(spunArticleDisplay); logToConsole("Spinning enabled.", 'info'); generatedArticleTextarea.classList.add('hidden'); htmlPreviewDiv.classList.add('hidden'); previewHtmlCheckbox.parentElement.classList.add('hidden'); previewHtmlCheckbox.checked = false; });
+        enableSpinningBtn.addEventListener('click', () => { /* ... (same as v5) ... */ spunArticleDisplay.innerHTML = generatedArticleTextarea.value; step4Section.classList.remove('hidden'); highlightSpintax(spunArticleDisplay); logToConsole("Spinning enabled.", 'info'); generatedArticleTextarea.classList.add('hidden'); htmlPreviewDiv.classList.add('hidden'); previewHtmlCheckbox.parentElement.classList.add('hidden'); previewHtmlCheckbox.checked = false; });
 
 
         // --- Text Selection and Spinning Logic ---
@@ -649,28 +830,20 @@
         spunArticleDisplay.addEventListener('keyup', handleSelection);
         spunArticleDisplay.addEventListener('focus', handleSelection);
 
-        function handleSelection() { /* ... (same as v4) ... */ const selection = window.getSelection(); if (selection && selection.rangeCount > 0) { const range = selection.getRangeAt(0); if (spunArticleDisplay.contains(range.commonAncestorContainer) && !range.collapsed) { const text = selection.toString().trim(); if (text.length > 0) { selectedTextInfo = { text: text, range: range.cloneRange() }; spinSelectedBtn.disabled = false; return; } } } selectedTextInfo = null; spinSelectedBtn.disabled = true; }
+        function handleSelection() { /* ... (same as v5) ... */ const selection = window.getSelection(); if (selection && selection.rangeCount > 0) { const range = selection.getRangeAt(0); if (spunArticleDisplay.contains(range.commonAncestorContainer) && !range.collapsed) { const text = selection.toString().trim(); if (text.length > 0) { selectedTextInfo = { text: text, range: range.cloneRange() }; spinSelectedBtn.disabled = false; return; } } } selectedTextInfo = null; spinSelectedBtn.disabled = true; }
 
         spinSelectedBtn.addEventListener('click', async () => {
+            // ... (Spinning logic remains largely the same, uses 'generate' action) ...
             if (!selectedTextInfo || !selectedTextInfo.text) { logToConsole("Spin button clicked but no valid text selected.", "warn"); return; }
             const textToSpin = selectedTextInfo.text;
-            // Get language/tone again for spinning context (could simplify if needed)
             const language = languageSelect.value === 'custom' ? customLanguageInput.value.trim() : languageOptions[languageSelect.value]?.name || languageSelect.value;
             const dialect = dialectSelect.disabled ? '' : dialectSelect.value;
             const tone = toneSelect.value === 'custom' ? customToneInput.value.trim() : toneSelect.value;
-
             const prompt = `Take the following text and generate 2-4 variations that mean the same thing, suitable for spintax.\n- Language: ${language}${dialect ? ` (${dialect} dialect)` : ''}\n- Tone: ${tone} (Maintain this tone)\n- Output Format: Return ONLY the spintax string in the format {original|variation1|variation2|...}. Do not include the original text you were given unless it's one of the variations. Do not include any explanation or surrounding text.\n\nText to Spin:\n---\n${textToSpin}\n---`;
-
-             const payload = {
-                providerKey: getSelectedProviderKey(),
-                model: aiModelSelect.value,
-                prompt: prompt
-            };
-             logToConsole(`--- Spinning Text Prompt ---\n${prompt}\n---------------------------------`);
+            const payload = { providerKey: getSelectedProviderKey(), model: getSelectedTextModel(), prompt: prompt };
+            logToConsole(`--- Spinning Text Prompt ---\n${prompt}\n---------------------------------`);
             const result = await callAI('generate', payload, spinActionLoadingIndicator, spinSelectedBtn);
-
             if (result && result.text) {
-                // ... (Spintax insertion logic same as v4) ...
                 const spintaxResult = result.text; const selection = window.getSelection(); if (selection && selectedTextInfo.range) { try { selection.removeAllRanges(); selection.addRange(selectedTextInfo.range); if (document.queryCommandSupported('insertHTML')) { document.execCommand('insertHTML', false, spintaxResult); } else if (document.queryCommandSupported('insertText')) { logToConsole("insertHTML not supported, using insertText.", "warn"); document.execCommand('insertText', false, spintaxResult); } else { selectedTextInfo.range.deleteContents(); selectedTextInfo.range.insertNode(document.createTextNode(spintaxResult)); } logToConsole(`Inserted spintax: ${spintaxResult}`, 'success'); highlightSpintax(spunArticleDisplay); } catch (e) { logToConsole(`Error replacing selection with spintax: ${e}`, 'error'); alert("Error applying spintax."); } finally { selectedTextInfo = null; spinSelectedBtn.disabled = true; selection.removeAllRanges(); } } else { logToConsole("Could not restore selection range.", 'error'); alert("Could not apply spintax."); spinSelectedBtn.disabled = true; }
             } else { spinSelectedBtn.disabled = true; }
         });
@@ -678,10 +851,13 @@
 
         // --- Initial Setup ---
         document.addEventListener('DOMContentLoaded', () => {
-            populateLanguages(); // Populate languages first
+            loadCustomModels(); // Load custom models first
+            populateLanguages();
             loadSitemapFromStorage();
-            populateModels(); // Populate models (triggers dialect & API check)
-            logToConsole("App initialized (v5 - More Specs). Ready for input.", 'info');
+            populateTextModels(); // Populate text models (triggers dialect & API check)
+            // Populate image models only if checkbox might be checked initially (e.g., from saved state - not implemented here)
+            // populateImageModels();
+            logToConsole("App initialized (v6 - Specs & Image Gen Prep). Ready.", 'info');
             logToConsole("API calls proxied via /ai-api.", 'info');
         });
 
