@@ -295,7 +295,7 @@
             showLoading(apiStatusIndicator, true);
 
             try {
-                const response = await fetch('/functions/ai-api', {
+                const response = await fetch('/ai-api', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -361,7 +361,7 @@
             fetchSitemapBtn.disabled = true;
 
             try {
-                const response = await fetch('/functions/ai-api', {
+                const response = await fetch('/ai-api', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -429,7 +429,7 @@
              if (buttonToDisable) buttonToDisable.disabled = true; else disableButtons(true); // Disable general buttons if no specific one
 
              try {
-                const response = await fetch('/functions/ai-api', {
+                const response = await fetch('/ai-api', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(fullPayload)
@@ -596,7 +596,7 @@
             loadSitemapFromStorage(); // Load sitemap URLs first
             populateModels(); // Populate models (this will also trigger initial API status check)
             logToConsole("App initialized (v4 - Sitemap & Status). Ready for input.", 'info');
-            logToConsole("API calls proxied via /functions/ai-api.", 'info');
+            logToConsole("API calls proxied via /ai-api.", 'info');
         });
 
     </script>
