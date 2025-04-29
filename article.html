@@ -3,25 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Article Generator & Spinner v3 (CF)</title>
+    <title>AI Article Generator & Spinner v4 (CF+)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Styles remain largely the same as v2, omitting unchanged styles for brevity */
+        /* Styles remain largely the same, adding styles for sitemap list */
         body { font-family: 'Inter', sans-serif; @apply bg-gray-100 text-gray-800; }
-        button, input, optgroup, select, textarea { border: 1px solid; }
         .compact-section { @apply bg-white p-4 mb-4 rounded-lg shadow-md; }
         .compact-label { @apply block text-sm font-medium text-gray-700 mb-1; }
         .compact-input, .compact-select, .compact-textarea { @apply block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm; }
         .custom-input-visible { @apply compact-input mt-1; }
-        .compact-button { @apply inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed; }
+        /* Adjusted button padding slightly */
+        .compact-button { @apply inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed; }
         .spintax-level-1 { color: #007bff; } .spintax-level-2 { color: #28a745; } .spintax-level-3 { color: #dc3545; } .spintax-pipe { color: #ffc107; font-weight: bold; }
         .compact-textarea::-webkit-scrollbar { display: none; } .compact-textarea { -ms-overflow-style: none; scrollbar-width: none; }
-        .input-group { @apply mb-3; }
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #6366f1; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: inline-block; margin-left: 8px; }
+        .input-group { @apply mb-3; } /* Keep spacing */
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #6366f1; border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; display: inline-block; margin-left: 6px; vertical-align: middle; } /* Smaller loader */
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         #consoleLogContainer { @apply compact-section mt-4 bg-gray-800 text-white p-3; }
         #consoleLog { @apply text-xs h-32 overflow-y-auto whitespace-pre-wrap break-all font-mono; }
         .log-error { @apply text-red-400; } .log-warn { @apply text-yellow-400; } .log-info { @apply text-blue-300; } .log-success { @apply text-green-400; }
+
+        /* API Status Styles */
+        .status-ok { @apply text-green-600 font-semibold; }
+        .status-error { @apply text-red-600 font-semibold; }
+        .status-checking { @apply text-yellow-600 italic; }
+
+        /* Sitemap List Styles */
+        #sitemapUrlsList { @apply text-xs max-h-32 overflow-y-auto border border-gray-200 bg-gray-50 p-2 rounded mt-1; }
+        #sitemapUrlsList div { @apply mb-1 truncate; } /* Truncate long URLs */
+
+        /* Toggle Switch Styles */
+        .toggle-switch { @apply relative inline-flex items-center h-6 rounded-full w-11 cursor-pointer; }
+        .toggle-switch input { @apply sr-only; }
+        .toggle-switch .slider { @apply absolute inset-0 bg-gray-300 rounded-full transition-colors duration-200 ease-in-out; }
+        .toggle-switch input:checked + .slider { @apply bg-indigo-600; }
+        .toggle-switch .dot { @apply absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-200 ease-in-out; }
+        .toggle-switch input:checked + .slider .dot { @apply transform translate-x-5; }
+
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -29,55 +47,75 @@
 </head>
 <body class="p-4 max-w-4xl mx-auto">
 
-    <h1 class="text-2xl font-bold mb-4 text-center text-indigo-700">AI Article Generator & Spinner (v3)</h1>
+    <h1 class="text-2xl font-bold mb-4 text-center text-indigo-700">AI Article Generator & Spinner  (v4)</h1>
 
     <section id="step1" class="compact-section">
         <h2 class="text-lg font-semibold mb-3 text-gray-600 border-b pb-2">Step 1: Define Your Article 🎯</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4">
-            <div class="input-group grid grid-cols-3 md:grid-cols-3 gap-x-4">
+            <div class="input-group grid grid-cols-3 items-center gap-x-2">
                 <label for="keyword" class="compact-label">Keyword 🔑:</label>
                 <input type="text" id="keyword" class="compact-input col-span-2" placeholder="e.g., best ergonomic chairs">
             </div>
-            <div class="input-group grid grid-cols-3 md:grid-cols-3 gap-x-4">
+            <div class="input-group grid grid-cols-3 items-center gap-x-2">
                 <label for="language" class="compact-label">Language 🗣️:</label>
-                <select id="language" class="compact-select col-span-2">
-                    <option value="English">English</option>
-                    <option value="Indonesian">Indonesian</option>
-                    <option value="Spanish">Spanish</option>
-                    <option value="French">French</option>
-                    <option value="German">German</option>
-                    <option value="custom">Custom...</option>
-                </select>
-                <input type="text" id="custom_language" class="custom-input-visible hidden col-span-2" placeholder="Enter custom language">
+                <div class="col-span-2">
+                    <select id="language" class="compact-select w-full">
+                        <option value="English">English</option>
+                        <option value="Indonesian">Indonesian</option>
+                        <option value="Spanish">Spanish</option>
+                        <option value="French">French</option>
+                        <option value="German">German</option>
+                        <option value="custom">Custom...</option>
+                    </select>
+                    <input type="text" id="custom_language" class="custom-input-visible hidden w-full" placeholder="Enter custom language">
+                 </div>
             </div>
-            <div class="input-group grid grid-cols-3 md:grid-cols-3 gap-x-4">
+            <div class="input-group grid grid-cols-3 items-center gap-x-2">
                 <label for="tone" class="compact-label">Tone 😎:</label>
-                <select id="tone" class="compact-select col-span-2">
-                    <option value="Professional">Professional</option>
-                    <option value="Casual">Casual</option>
-                    <option value="Formal">Formal</option>
-                    <option value="Humorous">Humorous</option>
-                    <option value="Informative">Informative</option>
-                     <option value="custom">Custom...</option>
-                </select>
-                 <input type="text" id="custom_tone" class="custom-input-visible hidden col-span-2" placeholder="Enter custom tone">
+                 <div class="col-span-2">
+                    <select id="tone" class="compact-select w-full">
+                        <option value="Professional">Professional</option>
+                        <option value="Casual">Casual</option>
+                        <option value="Formal">Formal</option>
+                        <option value="Humorous">Humorous</option>
+                        <option value="Informative">Informative</option>
+                        <option value="custom">Custom...</option>
+                    </select>
+                    <input type="text" id="custom_tone" class="custom-input-visible hidden w-full" placeholder="Enter custom tone">
+                </div>
             </div>
-            <div class="input-group grid grid-cols-3 md:grid-cols-3 gap-x-4">
+            <div class="input-group grid grid-cols-3 items-center gap-x-2">
                 <label for="format" class="compact-label">Format 📄:</label>
                 <select id="format" class="compact-select col-span-2">
                     <option value="html">HTML</option>
                     <option value="markdown">Markdown</option>
                 </select>
             </div>
-            <div class="input-group grid grid-cols-3 md:grid-cols-3 gap-x-4">
-                <label for="custom_specs" class="compact-label">Details ✍️:</label>
+             <div class="input-group grid grid-cols-3 items-start gap-x-2 md:col-span-2">
+                <label for="custom_specs" class="compact-label pt-1">Details ✍️:</label>
                 <textarea id="custom_specs" rows="2" class="compact-textarea col-span-2" placeholder="e.g., Target audience is small business owners, mention sustainability..."></textarea>
+            </div>
+             <div class="input-group grid grid-cols-3 items-center gap-x-2 md:col-span-2">
+                <label for="sitemapUrl" class="compact-label">Sitemap URL 🗺️:</label>
+                <div class="col-span-2 flex items-center gap-x-2">
+                    <input type="url" id="sitemapUrl" class="compact-input flex-grow" placeholder="https://example.com/sitemap.xml">
+                    <button id="fetchSitemapBtn" class="compact-button flex-shrink-0">
+                        Fetch
+                        <span id="sitemapLoadingIndicator" class="hidden"><span class="loader"></span></span>
+                    </button>
+                </div>
             </div>
         </div>
         <div class="mt-4 pt-4 border-t border-gray-200">
-             <h3 class="text-md font-semibold mb-3 text-gray-600">AI Configuration 🤖</h3>
-             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4"> 
-                <div class="input-group grid grid-cols-3 md:grid-cols-3 gap-x-4">
+             <div class="flex justify-between items-center mb-3">
+                 <h3 class="text-md font-semibold text-gray-600">AI Configuration 🤖</h3>
+                 <div id="apiStatus" class="text-sm">
+                     <span class="status-checking">Checking status...</span>
+                     <span id="apiStatusIndicator" class="hidden"><span class="loader !w-4 !h-4"></span></span>
+                 </div>
+             </div>
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4">
+                 <div class="input-group grid grid-cols-3 items-center gap-x-2">
                     <label for="ai_provider" class="compact-label">AI Provider:</label>
                     <select id="ai_provider" class="compact-select col-span-2">
                         <option value="google">Google</option>
@@ -86,14 +124,14 @@
                         <option value="deepseek">DeepSeek</option>
                         <option value="xai">xAI (Grok)</option>
                     </select>
-                </div>
-                <div class="input-group grid grid-cols-3 md:grid-cols-3 gap-x-4">
+                 </div>
+                 <div class="input-group grid grid-cols-3 items-center gap-x-2">
                     <label for="ai_model" class="compact-label">Model:</label>
                     <select id="ai_model" class="compact-select col-span-2">
                         </select>
-                </div>
-            </div>
-            <p class="text-xs text-gray-500 mt-1">API Keys are now handled securely by the backend function.</p>
+                 </div>
+             </div>
+             <p class="text-xs text-gray-500 mt-1">API Keys are handled securely by the backend function.</p>
         </div>
         <div class="mt-4 text-right">
             <button id="generateStructureBtn" class="compact-button">
@@ -105,19 +143,36 @@
 
     <section id="step2" class="compact-section hidden">
         <div class="flex justify-between items-center mb-2 border-b pb-2">
-            <h2 class="text-lg font-semibold text-gray-600">Step 2: Refine Structure 📐</h2>
+            <h2 class="text-lg font-semibold text-gray-600">Step 2: Refine Structure & Links 📐🔗</h2>
             <button id="toggleStructureVisibility" class="text-sm text-indigo-600 hover:underline">Hide</button>
         </div>
-        <div id="structureContainer">
-             <label for="article_structure" class="compact-label">Generated Structure (Editable):</label>
-             <textarea id="article_structure" rows="8" class="compact-textarea" placeholder="AI will generate the article structure here..."></textarea>
-             <div class="mt-3 text-right">
-                 <button id="generateArticleBtn" class="compact-button">
-                     Generate Full Article ✍️
-                     <span id="articleLoadingIndicator" class="hidden"><span class="loader"></span></span>
-                 </button>
+        <div id="structureContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="md:col-span-2">
+                 <label for="article_structure" class="compact-label">Generated Structure (Editable):</label>
+                 <textarea id="article_structure" rows="10" class="compact-textarea" placeholder="AI will generate the article structure here..."></textarea>
+            </div>
+             <div class="md:col-span-1">
+                 <label for="sitemapUrlsList" class="compact-label">Sitemap URLs (for Linking):</label>
+                 <div id="sitemapUrlsList" class="mb-2">
+                     <em class="text-gray-400">No sitemap loaded.</em>
+                 </div>
+                 <div class="flex items-center justify-between text-sm">
+                     <span class="text-gray-700">Link Type:</span>
+                     <label for="linkTypeToggle" class="toggle-switch">
+                         <input type="checkbox" id="linkTypeToggle">
+                         <span class="slider"><span class="dot"></span></span>
+                     </label>
+                     <span id="linkTypeText" class="font-medium text-indigo-700 w-16 text-right">Internal</span>
+                 </div>
+                 <p class="text-xs text-gray-500 mt-1">Toggle for Internal (relative) or External (absolute) links in the generated article.</p>
              </div>
         </div>
+         <div class="mt-3 text-right">
+             <button id="generateArticleBtn" class="compact-button">
+                 Generate Full Article ✍️
+                 <span id="articleLoadingIndicator" class="hidden"><span class="loader"></span></span>
+             </button>
+         </div>
     </section>
 
     <section id="step3" class="compact-section hidden">
@@ -138,7 +193,6 @@
             </button>
          </div>
     </section>
-
     <section id="step4" class="compact-section hidden">
          <h2 class="text-lg font-semibold mb-3 text-gray-600 border-b pb-2">Step 4: Spin Content 🌀</h2>
          <p class="text-sm text-gray-600 mb-2">Select text in the article area below, then click the "Spin Selected Text" button.</p>
@@ -164,15 +218,15 @@
     <script>
         // --- Configuration (Frontend Only - Models List) ---
         const aiProviders = {
-            // Only need model lists now
             google: { models: ['gemini-2.5-pro-preview-03-25', 'gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-2.0-flash-thinking-exp-01-21'] },
             openai: { models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini', 'gpt-4.1-nano'] },
             anthropic: { models: ['claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307'] },
             deepseek: { models: ['deepseek-chat', 'deepseek-coder'] },
             xai: { models: ['grok-3', 'grok-3-mini', 'grok-3-fast', 'grok-3-mini-fast'] }
         };
+        const SITEMAP_STORAGE_KEY = 'aiArticleSpinner_sitemapUrls_v1';
 
-        // --- DOM Elements (Mostly unchanged) ---
+        // --- DOM Elements ---
         const keywordInput = document.getElementById('keyword');
         const languageSelect = document.getElementById('language');
         const customLanguageInput = document.getElementById('custom_language');
@@ -182,7 +236,13 @@
         const customSpecsInput = document.getElementById('custom_specs');
         const aiProviderSelect = document.getElementById('ai_provider');
         const aiModelSelect = document.getElementById('ai_model');
-        // API Key Input Removed
+        const sitemapUrlInput = document.getElementById('sitemapUrl');
+        const fetchSitemapBtn = document.getElementById('fetchSitemapBtn');
+        const apiStatusDiv = document.getElementById('apiStatus');
+        const apiStatusIndicator = document.getElementById('apiStatusIndicator');
+        const sitemapUrlsListDiv = document.getElementById('sitemapUrlsList');
+        const linkTypeToggle = document.getElementById('linkTypeToggle');
+        const linkTypeText = document.getElementById('linkTypeText');
 
         const generateStructureBtn = document.getElementById('generateStructureBtn');
         const generateArticleBtn = document.getElementById('generateArticleBtn');
@@ -206,176 +266,271 @@
 
         const structureLoadingIndicator = document.getElementById('structureLoadingIndicator');
         const articleLoadingIndicator = document.getElementById('articleLoadingIndicator');
+        const sitemapLoadingIndicator = document.getElementById('sitemapLoadingIndicator');
         const spinLoadingIndicator = document.getElementById('spinLoadingIndicator');
         const spinActionLoadingIndicator = document.getElementById('spinActionLoadingIndicator');
 
         const consoleLog = document.getElementById('consoleLog');
 
-        // --- Helper Functions (logToConsole, showLoading, disableButtons are the same) ---
-        function logToConsole(message, type = 'info') {
-            console.log(`[${type.toUpperCase()}] ${message}`);
-            const timestamp = new Date().toLocaleTimeString();
-            const logEntry = document.createElement('div');
-            logEntry.classList.add(`log-${type}`);
-            logEntry.textContent = `[${timestamp}] ${message}`;
-            consoleLog.prepend(logEntry);
-            while (consoleLog.children.length > 50) {
-                consoleLog.removeChild(consoleLog.lastChild);
+        // --- State ---
+        let parsedSitemapUrls = [];
+
+        // --- Helper Functions ---
+        function logToConsole(message, type = 'info') { console.log(`[${type.toUpperCase()}] ${message}`); const timestamp = new Date().toLocaleTimeString(); const logEntry = document.createElement('div'); logEntry.classList.add(`log-${type}`); logEntry.textContent = `[${timestamp}] ${message}`; consoleLog.prepend(logEntry); while (consoleLog.children.length > 100) { consoleLog.removeChild(consoleLog.lastChild); } }
+        function showLoading(indicatorElement, show = true) { indicatorElement.classList.toggle('hidden', !show); }
+        function disableButtons(disabled = true) { generateStructureBtn.disabled = disabled; generateArticleBtn.disabled = disabled; enableSpinningBtn.disabled = disabled; }
+        function getSelectedProviderKey() { return aiProviderSelect.value; }
+
+        // --- API Status Function ---
+        async function checkApiStatus() {
+            const providerKey = getSelectedProviderKey();
+            const model = aiModelSelect.value; // Use the currently selected model for the check
+
+            if (!providerKey || !model) {
+                apiStatusDiv.innerHTML = `<span class="status-error">Select Provider/Model</span>`;
+                return; // Don't check if no model selected
+            }
+
+            apiStatusDiv.innerHTML = `<span class="status-checking">Checking ${providerKey}...</span>`;
+            showLoading(apiStatusIndicator, true);
+
+            try {
+                const response = await fetch('/functions/ai-api', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'check_status',
+                        providerKey: providerKey,
+                        model: model
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || `Status check failed (${response.status})`);
+                }
+
+                apiStatusDiv.innerHTML = `<span class="status-ok">✅ Ready (${providerKey})</span>`;
+                logToConsole(`API Status OK for ${providerKey} (${model})`, 'success');
+
+            } catch (error) {
+                console.error("API Status Check Failed:", error);
+                logToConsole(`API Status Error: ${error.message}`, 'error');
+                apiStatusDiv.innerHTML = `<span class="status-error">❌ Error: ${error.message}</span>`;
+            } finally {
+                 showLoading(apiStatusIndicator, false);
             }
         }
 
-        function showLoading(indicatorElement, show = true) {
-            indicatorElement.classList.toggle('hidden', !show);
+
+        // --- Sitemap Functions ---
+        function displaySitemapUrls() {
+            if (parsedSitemapUrls.length === 0) {
+                sitemapUrlsListDiv.innerHTML = `<em class="text-gray-400">No sitemap loaded or no URLs found.</em>`;
+                return;
+            }
+            sitemapUrlsListDiv.innerHTML = ''; // Clear previous
+            parsedSitemapUrls.forEach(url => {
+                const div = document.createElement('div');
+                div.textContent = url;
+                sitemapUrlsListDiv.appendChild(div);
+            });
         }
 
-        function disableButtons(disabled = true) {
-            generateStructureBtn.disabled = disabled;
-            generateArticleBtn.disabled = disabled;
-            enableSpinningBtn.disabled = disabled;
+        function loadSitemapFromStorage() {
+            const storedUrls = localStorage.getItem(SITEMAP_STORAGE_KEY);
+            if (storedUrls) {
+                parsedSitemapUrls = JSON.parse(storedUrls);
+                logToConsole(`Loaded ${parsedSitemapUrls.length} sitemap URLs from local storage.`, 'info');
+            } else {
+                 parsedSitemapUrls = [];
+            }
+            displaySitemapUrls(); // Update display
         }
 
-        function getSelectedProviderKey() {
-             return aiProviderSelect.value;
+        async function fetchAndParseSitemap() {
+            const url = sitemapUrlInput.value.trim();
+            if (!url) {
+                alert('Please enter a Sitemap URL.');
+                return;
+            }
+
+            logToConsole(`Fetching sitemap from URL: ${url}`, 'info');
+            showLoading(sitemapLoadingIndicator, true);
+            fetchSitemapBtn.disabled = true;
+
+            try {
+                const response = await fetch('/functions/ai-api', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'fetch_sitemap',
+                        sitemapUrl: url
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || `Failed to fetch/parse sitemap (${response.status})`);
+                }
+
+                parsedSitemapUrls = data.urls || [];
+                localStorage.setItem(SITEMAP_STORAGE_KEY, JSON.stringify(parsedSitemapUrls)); // Save to storage
+                logToConsole(`Successfully fetched and parsed ${parsedSitemapUrls.length} URLs.`, 'success');
+                displaySitemapUrls(); // Update the list display
+
+            } catch (error) {
+                console.error("Sitemap Fetch/Parse Failed:", error);
+                logToConsole(`Sitemap Error: ${error.message}`, 'error');
+                alert(`Failed to process sitemap: ${error.message}`);
+                // Optionally clear previous results on error
+                // parsedSitemapUrls = [];
+                // localStorage.removeItem(SITEMAP_STORAGE_KEY);
+                // displaySitemapUrls();
+            } finally {
+                showLoading(sitemapLoadingIndicator, false);
+                fetchSitemapBtn.disabled = false;
+            }
         }
 
-        // --- API Key Handling Removed ---
 
-        // --- Dynamic Model Loading (Simpler) ---
+        // --- Dynamic Model Loading ---
         function populateModels() {
             const providerKey = getSelectedProviderKey();
-            const providerConfig = aiProviders[providerKey]; // Get from simplified config
+            const providerConfig = aiProviders[providerKey];
             const models = providerConfig?.models || [];
-            aiModelSelect.innerHTML = ''; // Clear existing options
+            aiModelSelect.innerHTML = '';
 
             if (models.length === 0) {
                  const option = document.createElement('option');
-                 option.value = '';
-                 option.textContent = 'No models listed';
-                 aiModelSelect.appendChild(option);
-                 aiModelSelect.disabled = true;
+                 option.value = ''; option.textContent = 'No models listed';
+                 aiModelSelect.appendChild(option); aiModelSelect.disabled = true;
             } else {
                 models.forEach(model => {
                     const option = document.createElement('option');
-                    option.value = model;
-                    option.textContent = model;
+                    option.value = model; option.textContent = model;
                     aiModelSelect.appendChild(option);
                 });
                  aiModelSelect.disabled = false;
             }
-            // No need to load API key here anymore
+             // Check API status when models are populated (after provider change or initial load)
+             checkApiStatus();
         }
 
-        // --- Updated AI Call Function (Calls Cloudflare Function) ---
-        async function callAI(prompt, loadingIndicator, buttonToDisable) {
-            const providerKey = getSelectedProviderKey();
-            const model = aiModelSelect.value;
+        // --- Unified AI Call Function (Calls CF Function) ---
+        async function callAI(action, payload, loadingIndicator, buttonToDisable) {
+             // Payload should include providerKey, model, prompt (if needed)
+             const fullPayload = { action, ...payload };
 
-            if (!providerKey || !model) {
-                logToConsole('Missing Provider or Model selection.', 'error');
-                alert('Please select a provider and model.');
-                return null;
-            }
+             logToConsole(`Sending action '${action}' to Cloudflare Function...`, 'info');
+             if(loadingIndicator) showLoading(loadingIndicator, true);
+             if (buttonToDisable) buttonToDisable.disabled = true; else disableButtons(true); // Disable general buttons if no specific one
 
-            const requestBody = {
-                providerKey: providerKey,
-                model: model,
-                prompt: prompt
-            };
-
-            logToConsole(`Sending request to Cloudflare Function for ${providerKey} (${model})...`, 'info');
-            showLoading(loadingIndicator, true);
-            if (buttonToDisable) buttonToDisable.disabled = true; else disableButtons(true);
-
-            try {
-                const response = await fetch('/functions/ai-api', { // Call the CF function endpoint
+             try {
+                const response = await fetch('/functions/ai-api', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(requestBody)
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(fullPayload)
                 });
 
-                const data = await response.json(); // Always expect JSON back
+                const data = await response.json();
 
                 if (!response.ok || !data.success) {
                     const errorMsg = data.error || `Request failed with status ${response.status}`;
-                    throw new Error(errorMsg); // Throw error to be caught below
+                    throw new Error(errorMsg);
                 }
 
-                logToConsole(`Successfully received response via Cloudflare Function.`, 'success');
-                return data.text; // Return the text from the successful response
+                logToConsole(`Action '${action}' completed successfully.`, 'success');
+                return data; // Return the full success response (might contain 'text' or other fields)
 
             } catch (error) {
-                console.error("AI Call via Function Failed:", error);
-                logToConsole(`AI Call Error: ${error.message}`, 'error');
-                alert(`API Call Failed: ${error.message}. Check the console log for more details.`);
+                console.error(`Action '${action}' Failed:`, error);
+                logToConsole(`Error during action '${action}': ${error.message}`, 'error');
+                alert(`Operation Failed: ${error.message}. Check console log.`);
                 return null; // Indicate failure
             } finally {
-                showLoading(loadingIndicator, false);
+                 if(loadingIndicator) showLoading(loadingIndicator, false);
                  if (buttonToDisable) buttonToDisable.disabled = false; else disableButtons(false);
             }
         }
 
 
-        // --- Spintax Highlighting (Unchanged from v2 fix) ---
-        function highlightSpintax(element) {
-             element.querySelectorAll('.spintax-level-1, .spintax-level-2, .spintax-level-3, .spintax-pipe').forEach(el => {
-                 el.outerHTML = el.innerHTML;
-            });
-            let html = element.innerHTML;
-            const tagMap = {}; let tagIndex = 0;
-            html = html.replace(/<[^>]+>/g, (match) => { const placeholder = `__TAG${tagIndex}__`; tagMap[placeholder] = match; tagIndex++; return placeholder; });
-            html = html.replace(/\|/g, '<span class="spintax-pipe">|</span>');
-            let level = 0; let coloredHtml = '';
-            for (let i = 0; i < html.length; i++) {
-                if (html[i] === '{') { level++; const colorClass = `spintax-level-${level % 3 + 1}`; coloredHtml += `<span class="${colorClass}">{</span>`; }
-                else if (html[i] === '}') { if (level > 0) { const colorClass = `spintax-level-${level % 3 + 1}`; coloredHtml += `<span class="${colorClass}">}</span>`; level--; } else { coloredHtml += '}'; } }
-                else { coloredHtml += html[i]; }
-            }
-            coloredHtml = coloredHtml.replace(/__TAG\d+__/g, (placeholder) => tagMap[placeholder] || placeholder);
-            element.innerHTML = coloredHtml;
-        }
+        // --- Spintax Highlighting ---
+        function highlightSpintax(element) { /* ... (same as before) ... */ element.querySelectorAll('.spintax-level-1, .spintax-level-2, .spintax-level-3, .spintax-pipe').forEach(el => { el.outerHTML = el.innerHTML; }); let html = element.innerHTML; const tagMap = {}; let tagIndex = 0; html = html.replace(/<[^>]+>/g, (match) => { const placeholder = `__TAG${tagIndex}__`; tagMap[placeholder] = match; tagIndex++; return placeholder; }); html = html.replace(/\|/g, '<span class="spintax-pipe">|</span>'); let level = 0; let coloredHtml = ''; for (let i = 0; i < html.length; i++) { if (html[i] === '{') { level++; const colorClass = `spintax-level-${level % 3 + 1}`; coloredHtml += `<span class="${colorClass}">{</span>`; } else if (html[i] === '}') { if (level > 0) { const colorClass = `spintax-level-${level % 3 + 1}`; coloredHtml += `<span class="${colorClass}">}</span>`; level--; } else { coloredHtml += '}'; } } else { coloredHtml += html[i]; } } coloredHtml = coloredHtml.replace(/__TAG\d+__/g, (placeholder) => tagMap[placeholder] || placeholder); element.innerHTML = coloredHtml; }
 
-        // --- Event Listeners (Unchanged, except API key listener removed) ---
+        // --- Event Listeners ---
+        languageSelect.addEventListener('change', () => { customLanguageInput.classList.toggle('hidden', languageSelect.value !== 'custom'); customLanguageInput.classList.toggle('custom-input-visible', languageSelect.value === 'custom'); }); // Ensure class is added
+        toneSelect.addEventListener('change', () => { customToneInput.classList.toggle('hidden', toneSelect.value !== 'custom'); customToneInput.classList.toggle('custom-input-visible', toneSelect.value === 'custom'); });
+        aiProviderSelect.addEventListener('change', populateModels); // This now also triggers checkApiStatus
+        fetchSitemapBtn.addEventListener('click', fetchAndParseSitemap);
+        linkTypeToggle.addEventListener('change', () => {
+             linkTypeText.textContent = linkTypeToggle.checked ? 'External' : 'Internal';
+        });
 
-        languageSelect.addEventListener('change', () => { customLanguageInput.classList.toggle('hidden', languageSelect.value !== 'custom'); });
-        toneSelect.addEventListener('change', () => { customToneInput.classList.toggle('hidden', toneSelect.value !== 'custom'); });
-        aiProviderSelect.addEventListener('change', populateModels);
-        // apiKeyInput listener removed
 
-        // Step 1 -> Step 2: Generate Structure (Uses updated callAI)
+        // Step 1 -> Step 2: Generate Structure
         generateStructureBtn.addEventListener('click', async () => {
             const keyword = keywordInput.value.trim();
-            if (!keyword) { alert('Please enter a keyword or product.'); return; }
+            if (!keyword) { alert('Please enter a keyword.'); return; }
             const language = languageSelect.value === 'custom' ? customLanguageInput.value.trim() : languageSelect.value;
             const tone = toneSelect.value === 'custom' ? customToneInput.value.trim() : toneSelect.value;
             const customSpecs = customSpecsInput.value.trim();
             const prompt = `Generate a detailed article structure/outline for the keyword: "${keyword}".\n- Language: ${language}\n- Tone: ${tone}\n${customSpecs ? `- Other Specifications: ${customSpecs}` : ''}\n- The structure should be logical and cover the topic comprehensively.\n- Output only the structure, using clear headings or bullet points (like Section 1: ..., - Point A, - Point B). No introductory or concluding remarks about the structure itself.`;
+
+            const payload = {
+                providerKey: getSelectedProviderKey(),
+                model: aiModelSelect.value,
+                prompt: prompt
+            };
             logToConsole(`--- Generating Structure Prompt ---\n${prompt}\n---------------------------------`);
-            const structure = await callAI(prompt, structureLoadingIndicator, generateStructureBtn);
-            if (structure) {
-                articleStructureTextarea.value = structure;
+            const result = await callAI('generate', payload, structureLoadingIndicator, generateStructureBtn);
+
+            if (result && result.text) {
+                articleStructureTextarea.value = result.text;
                 step2Section.classList.remove('hidden');
-                structureContainer.classList.remove('hidden');
+                structureContainer.classList.remove('hidden'); // Ensure container is visible
                 toggleStructureVisibilityBtn.textContent = 'Hide';
                 step3Section.classList.add('hidden'); step4Section.classList.add('hidden');
+                 // Ensure sitemap display is updated (might have loaded from storage earlier)
+                 displaySitemapUrls();
             }
         });
 
-        // Step 2 -> Step 3: Generate Article (Uses updated callAI)
+        // Step 2 -> Step 3: Generate Article
         generateArticleBtn.addEventListener('click', async () => {
             const structure = articleStructureTextarea.value.trim();
             if (!structure) { alert('Article structure is empty.'); return; }
+
+            // Prepare linking instructions based on sitemap and toggle
+            let linkingInstructions = '';
+            const linkType = linkTypeToggle.checked ? 'External (absolute URLs)' : 'Internal (relative URLs if possible, otherwise absolute)';
+            if (parsedSitemapUrls.length > 0) {
+                 const urlList = parsedSitemapUrls.slice(0, 20).join('\n'); // Limit URLs sent in prompt
+                 linkingInstructions = `\n\nLinking Instructions:\n- Incorporate relevant links into the article content where appropriate, using the following URLs as a reference pool.\n- Link Type Preference: ${linkType}.\n- Prioritize linking naturally within the text.\n- Maximum 5-7 links total.\n\nAvailable URLs for reference:\n${urlList}`;
+            } else {
+                 linkingInstructions = '\n\nLinking Instructions: No sitemap URLs provided for linking.';
+            }
+
+
             const keyword = keywordInput.value.trim();
             const language = languageSelect.value === 'custom' ? customLanguageInput.value.trim() : languageSelect.value;
             const tone = toneSelect.value === 'custom' ? customToneInput.value.trim() : toneSelect.value;
             const format = formatSelect.value;
             const customSpecs = customSpecsInput.value.trim();
-            const prompt = `Generate a full article based on the following structure and specifications:\n- Keyword: "${keyword}"\n- Language: ${language}\n- Tone: ${tone}\n- Output Format: ${format}\n${customSpecs ? `- Other Specifications: ${customSpecs}` : ''}\n\nArticle Structure:\n---\n${structure}\n---\n\nInstructions:\n- Write content for each section of the structure.\n- Ensure the article flows well and is coherent.\n- Adhere strictly to the requested output format (${format}).\n${format === 'html' ? '- For HTML: Use only basic text formatting tags like <p>, <h1>-<h6>, <ul>, <ol>, <li>, <b>, <i>, <a>. Do NOT include <html>, <head>, <body>, or <div> tags.' : '- For Markdown: Use standard Markdown syntax.'}\n- Generate only the article content itself, without any introductory or concluding remarks about the generation process.`;
-            logToConsole(`--- Generating Article Prompt ---\n${prompt}\n---------------------------------`);
-            const article = await callAI(prompt, articleLoadingIndicator, generateArticleBtn);
-            if (article) {
-                generatedArticleTextarea.value = article;
+            const prompt = `Generate a full article based on the following structure and specifications:\n- Keyword: "${keyword}"\n- Language: ${language}\n- Tone: ${tone}\n- Output Format: ${format}\n${customSpecs ? `- Other Specifications: ${customSpecs}` : ''}\n\nArticle Structure:\n---\n${structure}\n---${linkingInstructions}\n\nFormat Instructions:\n- Adhere strictly to the requested output format (${format}).\n${format === 'html' ? '- For HTML: Use only basic text formatting tags like <p>, <h1>-<h6>, <ul>, <ol>, <li>, <b>, <i>, and <a> for links. Do NOT include <html>, <head>, <body>, or <div> tags.' : '- For Markdown: Use standard Markdown syntax including [link text](URL) for links.'}\n- Generate only the article content itself, without any introductory or concluding remarks about the generation process.`;
+
+            const payload = {
+                providerKey: getSelectedProviderKey(),
+                model: aiModelSelect.value,
+                prompt: prompt
+            };
+             logToConsole(`--- Generating Article Prompt ---\n${prompt}\n---------------------------------`); // Log the full prompt
+            const result = await callAI('generate', payload, articleLoadingIndicator, generateArticleBtn);
+
+            if (result && result.text) {
+                generatedArticleTextarea.value = result.text;
                 const isHtml = format === 'html';
                 previewHtmlCheckbox.checked = false; previewHtmlCheckbox.disabled = !isHtml;
                 previewHtmlCheckbox.parentElement.classList.toggle('hidden', !isHtml);
@@ -389,51 +544,19 @@
         toggleStructureVisibilityBtn.addEventListener('click', () => { const isHidden = structureContainer.classList.toggle('hidden'); toggleStructureVisibilityBtn.textContent = isHidden ? 'Show' : 'Hide'; });
 
          // HTML Preview Toggle (Unchanged)
-        previewHtmlCheckbox.addEventListener('change', () => {
-            const showPreview = previewHtmlCheckbox.checked;
-            generatedArticleTextarea.classList.toggle('hidden', showPreview);
-            htmlPreviewDiv.classList.toggle('hidden', !showPreview);
-            if (showPreview) {
-                let unsafeHTML = generatedArticleTextarea.value;
-                let sanitizedHTML = unsafeHTML.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-                htmlPreviewDiv.innerHTML = sanitizedHTML;
-                 logToConsole("Showing HTML preview. Basic script tag removal applied.", "warn");
-            }
-        });
+        previewHtmlCheckbox.addEventListener('change', () => { /* ... (same as before) ... */ const showPreview = previewHtmlCheckbox.checked; generatedArticleTextarea.classList.toggle('hidden', showPreview); htmlPreviewDiv.classList.toggle('hidden', !showPreview); if (showPreview) { let unsafeHTML = generatedArticleTextarea.value; let sanitizedHTML = unsafeHTML.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ''); htmlPreviewDiv.innerHTML = sanitizedHTML; logToConsole("Showing HTML preview. Basic script tag removal applied.", "warn"); } });
 
         // Step 3 -> Step 4: Enable Spinning (Unchanged)
-        enableSpinningBtn.addEventListener('click', () => {
-            spunArticleDisplay.innerHTML = generatedArticleTextarea.value;
-            step4Section.classList.remove('hidden');
-            highlightSpintax(spunArticleDisplay);
-            logToConsole("Spinning enabled. Select text in the 'Spinnable Article' area.", 'info');
-            generatedArticleTextarea.classList.add('hidden');
-            htmlPreviewDiv.classList.add('hidden');
-            previewHtmlCheckbox.parentElement.classList.add('hidden');
-            previewHtmlCheckbox.checked = false;
-        });
+        enableSpinningBtn.addEventListener('click', () => { /* ... (same as before) ... */ spunArticleDisplay.innerHTML = generatedArticleTextarea.value; step4Section.classList.remove('hidden'); highlightSpintax(spunArticleDisplay); logToConsole("Spinning enabled.", 'info'); generatedArticleTextarea.classList.add('hidden'); htmlPreviewDiv.classList.add('hidden'); previewHtmlCheckbox.parentElement.classList.add('hidden'); previewHtmlCheckbox.checked = false; });
 
 
-        // --- Text Selection and Spinning Logic (Uses updated callAI) ---
+        // --- Text Selection and Spinning Logic ---
         let selectedTextInfo = null;
         spunArticleDisplay.addEventListener('mouseup', handleSelection);
         spunArticleDisplay.addEventListener('keyup', handleSelection);
         spunArticleDisplay.addEventListener('focus', handleSelection);
 
-        function handleSelection() {
-            const selection = window.getSelection();
-            if (selection && selection.rangeCount > 0) {
-                const range = selection.getRangeAt(0);
-                if (spunArticleDisplay.contains(range.commonAncestorContainer) && !range.collapsed) {
-                    const text = selection.toString().trim();
-                    if (text.length > 0) {
-                        selectedTextInfo = { text: text, range: range.cloneRange() };
-                        spinSelectedBtn.disabled = false; return;
-                    }
-                }
-            }
-            selectedTextInfo = null; spinSelectedBtn.disabled = true;
-        }
+        function handleSelection() { /* ... (same as before) ... */ const selection = window.getSelection(); if (selection && selection.rangeCount > 0) { const range = selection.getRangeAt(0); if (spunArticleDisplay.contains(range.commonAncestorContainer) && !range.collapsed) { const text = selection.toString().trim(); if (text.length > 0) { selectedTextInfo = { text: text, range: range.cloneRange() }; spinSelectedBtn.disabled = false; return; } } } selectedTextInfo = null; spinSelectedBtn.disabled = true; }
 
         spinSelectedBtn.addEventListener('click', async () => {
             if (!selectedTextInfo || !selectedTextInfo.text) { logToConsole("Spin button clicked but no valid text selected.", "warn"); return; }
@@ -441,9 +564,17 @@
             const language = languageSelect.value === 'custom' ? customLanguageInput.value.trim() : languageSelect.value;
             const tone = toneSelect.value === 'custom' ? customToneInput.value.trim() : toneSelect.value;
             const prompt = `Take the following text and generate 2-4 variations that mean the same thing, suitable for spintax.\n- Language: ${language}\n- Tone: ${tone} (Maintain this tone)\n- Output Format: Return ONLY the spintax string in the format {original|variation1|variation2|...}. Do not include the original text you were given unless it's one of the variations. Do not include any explanation or surrounding text.\n\nText to Spin:\n---\n${textToSpin}\n---`;
-            logToConsole(`--- Spinning Text Prompt ---\n${prompt}\n---------------------------------`);
-            const spintaxResult = await callAI(prompt, spinActionLoadingIndicator, spinSelectedBtn);
-            if (spintaxResult) {
+
+             const payload = {
+                providerKey: getSelectedProviderKey(),
+                model: aiModelSelect.value,
+                prompt: prompt
+            };
+             logToConsole(`--- Spinning Text Prompt ---\n${prompt}\n---------------------------------`);
+            const result = await callAI('generate', payload, spinActionLoadingIndicator, spinSelectedBtn); // Use 'generate' action
+
+            if (result && result.text) {
+                const spintaxResult = result.text;
                 const selection = window.getSelection();
                 if (selection && selectedTextInfo.range) {
                     try {
@@ -462,9 +593,10 @@
 
         // --- Initial Setup ---
         document.addEventListener('DOMContentLoaded', () => {
-            populateModels(); // Populate models for the default provider
-            logToConsole("App initialized (v3 - Cloudflare Function). Ready for input.", 'info');
-            logToConsole("API calls are now proxied securely via /functions/ai-api.", 'info');
+            loadSitemapFromStorage(); // Load sitemap URLs first
+            populateModels(); // Populate models (this will also trigger initial API status check)
+            logToConsole("App initialized (v4 - Sitemap & Status). Ready for input.", 'info');
+            logToConsole("API calls proxied via /functions/ai-api.", 'info');
         });
 
     </script>
