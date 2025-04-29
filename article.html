@@ -3,42 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Article Generator & Spinner v4 (CF+)</title>
+    <title>AI Article Generator & Spinner v5 (CF++)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Styles remain largely the same, adding styles for sitemap list */
+        /* Styles remain largely the same as v4 */
         body { font-family: 'Inter', sans-serif; @apply bg-gray-100 text-gray-800; }
         .compact-section { @apply bg-white p-4 mb-4 rounded-lg shadow-md; }
-        .compact-label { @apply block text-sm font-medium text-gray-700 mb-1; }
+        .compact-label { @apply block text-sm font-medium text-gray-700 mb-1 whitespace-nowrap; } /* Prevent wrap */
         .compact-input, .compact-select, .compact-textarea { @apply block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm; }
         .custom-input-visible { @apply compact-input mt-1; }
-        /* Adjusted button padding slightly */
         .compact-button { @apply inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed; }
         .spintax-level-1 { color: #007bff; } .spintax-level-2 { color: #28a745; } .spintax-level-3 { color: #dc3545; } .spintax-pipe { color: #ffc107; font-weight: bold; }
         .compact-textarea::-webkit-scrollbar { display: none; } .compact-textarea { -ms-overflow-style: none; scrollbar-width: none; }
-        .input-group { @apply mb-3; } /* Keep spacing */
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #6366f1; border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; display: inline-block; margin-left: 6px; vertical-align: middle; } /* Smaller loader */
+        .input-group { @apply mb-3; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #6366f1; border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; display: inline-block; margin-left: 6px; vertical-align: middle; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         #consoleLogContainer { @apply compact-section mt-4 bg-gray-800 text-white p-3; }
         #consoleLog { @apply text-xs h-32 overflow-y-auto whitespace-pre-wrap break-all font-mono; }
         .log-error { @apply text-red-400; } .log-warn { @apply text-yellow-400; } .log-info { @apply text-blue-300; } .log-success { @apply text-green-400; }
-
-        /* API Status Styles */
-        .status-ok { @apply text-green-600 font-semibold; }
-        .status-error { @apply text-red-600 font-semibold; }
-        .status-checking { @apply text-yellow-600 italic; }
-
-        /* Sitemap List Styles */
+        .status-ok { @apply text-green-600 font-semibold; } .status-error { @apply text-red-600 font-semibold; } .status-checking { @apply text-yellow-600 italic; }
         #sitemapUrlsList { @apply text-xs max-h-32 overflow-y-auto border border-gray-200 bg-gray-50 p-2 rounded mt-1; }
-        #sitemapUrlsList div { @apply mb-1 truncate; } /* Truncate long URLs */
-
-        /* Toggle Switch Styles */
+        #sitemapUrlsList div { @apply mb-1 truncate; }
         .toggle-switch { @apply relative inline-flex items-center h-6 rounded-full w-11 cursor-pointer; }
         .toggle-switch input { @apply sr-only; }
         .toggle-switch .slider { @apply absolute inset-0 bg-gray-300 rounded-full transition-colors duration-200 ease-in-out; }
         .toggle-switch input:checked + .slider { @apply bg-indigo-600; }
         .toggle-switch .dot { @apply absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-200 ease-in-out; }
         .toggle-switch input:checked + .slider .dot { @apply transform translate-x-5; }
+        /* Styling for multi-select (basic) */
+        .multi-select-container { @apply block w-full p-2 border border-gray-300 rounded-md shadow-sm bg-white; }
+        .multi-select-container label { @apply flex items-center space-x-2 text-sm cursor-pointer mb-1; }
+        .multi-select-container input[type="checkbox"] { @apply rounded text-indigo-600 focus:ring-indigo-500 h-4 w-4; }
 
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -47,65 +42,112 @@
 </head>
 <body class="p-4 max-w-4xl mx-auto">
 
-    <h1 class="text-2xl font-bold mb-4 text-center text-indigo-700">AI Article Generator & Spinner  (v4)</h1>
+    <h1 class="text-2xl font-bold mb-4 text-center text-indigo-700">AI Article Generator & Spinner (v5)</h1>
 
     <section id="step1" class="compact-section">
         <h2 class="text-lg font-semibold mb-3 text-gray-600 border-b pb-2">Step 1: Define Your Article 🎯</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4">
-            <div class="input-group grid grid-cols-3 items-center gap-x-2">
-                <label for="keyword" class="compact-label">Keyword 🔑:</label>
-                <input type="text" id="keyword" class="compact-input col-span-2" placeholder="e.g., best ergonomic chairs">
-            </div>
-            <div class="input-group grid grid-cols-3 items-center gap-x-2">
-                <label for="language" class="compact-label">Language 🗣️:</label>
-                <div class="col-span-2">
-                    <select id="language" class="compact-select w-full">
-                        <option value="English">English</option>
-                        <option value="Indonesian">Indonesian</option>
-                        <option value="Spanish">Spanish</option>
-                        <option value="French">French</option>
-                        <option value="German">German</option>
-                        <option value="custom">Custom...</option>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+            <div>
+                <div class="input-group grid grid-cols-3 items-center gap-x-2">
+                    <label for="keyword" class="compact-label">Keyword 🔑<span class="text-red-500">*</span>:</label>
+                    <input type="text" id="keyword" class="compact-input col-span-2" placeholder="e.g., best ergonomic chairs">
+                </div>
+                 <div class="input-group grid grid-cols-3 items-center gap-x-2">
+                    <label for="language" class="compact-label">Language 🗣️<span class="text-red-500">*</span>:</label>
+                    <div class="col-span-2">
+                        <select id="language" class="compact-select w-full">
+                        </select>
+                        <input type="text" id="custom_language" class="custom-input-visible hidden w-full" placeholder="Enter custom language">
+                     </div>
+                </div>
+                 <div class="input-group grid grid-cols-3 items-center gap-x-2">
+                    <label for="dialect" class="compact-label">Dialect:</label>
+                    <select id="dialect" class="compact-select col-span-2" disabled>
+                        <option value="">-- Select Language First --</option>
                     </select>
-                    <input type="text" id="custom_language" class="custom-input-visible hidden w-full" placeholder="Enter custom language">
-                 </div>
-            </div>
-            <div class="input-group grid grid-cols-3 items-center gap-x-2">
-                <label for="tone" class="compact-label">Tone 😎:</label>
-                 <div class="col-span-2">
-                    <select id="tone" class="compact-select w-full">
-                        <option value="Professional">Professional</option>
-                        <option value="Casual">Casual</option>
-                        <option value="Formal">Formal</option>
-                        <option value="Humorous">Humorous</option>
-                        <option value="Informative">Informative</option>
-                        <option value="custom">Custom...</option>
-                    </select>
-                    <input type="text" id="custom_tone" class="custom-input-visible hidden w-full" placeholder="Enter custom tone">
+                </div>
+                <div class="input-group grid grid-cols-3 items-center gap-x-2">
+                    <label for="audience" class="compact-label">Audience 👥<span class="text-red-500">*</span>:</label>
+                    <input type="text" id="audience" class="compact-input col-span-2" placeholder="e.g., Small business owners, Gamers">
+                </div>
+                <div class="input-group grid grid-cols-3 items-center gap-x-2">
+                    <label for="readerName" class="compact-label">Reader Name 🙇:</label>
+                    <input type="text" id="readerName" class="compact-input col-span-2" placeholder="e.g., Boss, Bro, Anda (leave blank for general)">
+                </div>
+                 <div class="input-group grid grid-cols-3 items-center gap-x-2">
+                    <label for="sitemapUrl" class="compact-label">Sitemap URL 🔗:</label>
+                    <div class="col-span-2 flex items-center gap-x-2">
+                        <input type="url" id="sitemapUrl" class="compact-input flex-grow" placeholder="https://example.com/sitemap.xml">
+                        <button id="fetchSitemapBtn" class="compact-button flex-shrink-0">
+                            Fetch
+                            <span id="sitemapLoadingIndicator" class="hidden"><span class="loader"></span></span>
+                        </button>
+                    </div>
                 </div>
             </div>
-            <div class="input-group grid grid-cols-3 items-center gap-x-2">
-                <label for="format" class="compact-label">Format 📄:</label>
-                <select id="format" class="compact-select col-span-2">
-                    <option value="html">HTML</option>
-                    <option value="markdown">Markdown</option>
-                </select>
-            </div>
-             <div class="input-group grid grid-cols-3 items-start gap-x-2 md:col-span-2">
-                <label for="custom_specs" class="compact-label pt-1">Details ✍️:</label>
-                <textarea id="custom_specs" rows="2" class="compact-textarea col-span-2" placeholder="e.g., Target audience is small business owners, mention sustainability..."></textarea>
-            </div>
-             <div class="input-group grid grid-cols-3 items-center gap-x-2 md:col-span-2">
-                <label for="sitemapUrl" class="compact-label">Sitemap URL 🗺️:</label>
-                <div class="col-span-2 flex items-center gap-x-2">
-                    <input type="url" id="sitemapUrl" class="compact-input flex-grow" placeholder="https://example.com/sitemap.xml">
-                    <button id="fetchSitemapBtn" class="compact-button flex-shrink-0">
-                        Fetch
-                        <span id="sitemapLoadingIndicator" class="hidden"><span class="loader"></span></span>
-                    </button>
+
+            <div>
+                <div class="input-group grid grid-cols-3 items-center gap-x-2">
+                    <label for="tone" class="compact-label">Tone 🎙️<span class="text-red-500">*</span>:</label>
+                     <div class="col-span-2">
+                        <select id="tone" class="compact-select w-full">
+                            <option value="Professional">Professional</option>
+                            <option value="Casual">Casual</option>
+                            <option value="Formal">Formal</option>
+                            <option value="Humorous">Humorous</option>
+                            <option value="Informative">Informative</option>
+                            <option value="Persuasive">Persuasive</option>
+                            <option value="custom">Custom...</option>
+                        </select>
+                        <input type="text" id="custom_tone" class="custom-input-visible hidden w-full" placeholder="Enter custom tone">
+                    </div>
                 </div>
+                <div class="input-group grid grid-cols-3 items-center gap-x-2">
+                    <label for="gender" class="compact-label">Author Gender 🚻:</label>
+                    <select id="gender" class="compact-select col-span-2">
+                        <option value="">Any</option>
+                        <option value="Male">♂️ Male</option>
+                        <option value="Female">♀️ Female</option>
+                    </select>
+                </div>
+                 <div class="input-group grid grid-cols-3 items-center gap-x-2">
+                    <label for="age" class="compact-label">Author Age 🎂:</label>
+                    <select id="age" class="compact-select col-span-2">
+                        <option value="">Any</option>
+                        <option value="18-24">18-24</option>
+                        <option value="25-34">25-34</option>
+                        <option value="35-44">35-44</option>
+                        <option value="45+">45+</option>
+                    </select>
+                </div>
+                <div class="input-group grid grid-cols-3 items-start gap-x-2">
+                    <label for="purpose" class="compact-label pt-1">Purpose 💡<span class="text-red-500">*</span>:</label>
+                    <div class="col-span-2 multi-select-container">
+                        <label><input type="checkbox" name="purpose" value="Inform"> Inform Reader</label>
+                        <label><input type="checkbox" name="purpose" value="Promote Site/Product"> Promote Site/Product</label>
+                        <label><input type="checkbox" name="purpose" value="Promote URL"> Promote Specific URL</label>
+                        <label><input type="checkbox" name="purpose" value="Generate Leads"> Generate Leads</label>
+                        <label><input type="checkbox" name="purpose" value="Build Authority"> Build Authority</label>
+                        <input type="text" id="purposeUrl" class="compact-input mt-1 hidden" placeholder="URL to promote/link to">
+                        <input type="text" id="purposeCta" class="compact-input mt-1 hidden" placeholder="Call to action text (e.g., Visit now!)">
+                    </div>
+                </div>
+                <div class="input-group grid grid-cols-3 items-center gap-x-2">
+                    <label for="format" class="compact-label">Format <span class="text-red-500">*</span>:</label>
+                    <select id="format" class="compact-select col-span-2">
+                        <option value="html">HTML</option>
+                        <option value="markdown">Markdown</option>
+                    </select>
+                </div>
+
+            </div>
+
+             <div class="input-group grid grid-cols-3 items-start gap-x-2 md:col-span-2 mt-4">
+                <label for="custom_specs" class="compact-label pt-1">Other Details:</label>
+                <textarea id="custom_specs" rows="2" class="compact-textarea col-span-2" placeholder="Any other specific instructions..."></textarea>
             </div>
         </div>
+
         <div class="mt-4 pt-4 border-t border-gray-200">
              <div class="flex justify-between items-center mb-3">
                  <h3 class="text-md font-semibold text-gray-600">AI Configuration 🤖</h3>
@@ -142,7 +184,7 @@
     </section>
 
     <section id="step2" class="compact-section hidden">
-        <div class="flex justify-between items-center mb-2 border-b pb-2">
+         <div class="flex justify-between items-center mb-2 border-b pb-2">
             <h2 class="text-lg font-semibold text-gray-600">Step 2: Refine Structure & Links 📐🔗</h2>
             <button id="toggleStructureVisibility" class="text-sm text-indigo-600 hover:underline">Hide</button>
         </div>
@@ -164,7 +206,7 @@
                      </label>
                      <span id="linkTypeText" class="font-medium text-indigo-700 w-16 text-right">Internal</span>
                  </div>
-                 <p class="text-xs text-gray-500 mt-1">Toggle for Internal (relative) or External (absolute) links in the generated article.</p>
+                 <p class="text-xs text-gray-500 mt-1">Toggle for Internal (relative) or External (absolute) links.</p>
              </div>
         </div>
          <div class="mt-3 text-right">
@@ -174,7 +216,6 @@
              </button>
          </div>
     </section>
-
     <section id="step3" class="compact-section hidden">
          <h2 class="text-lg font-semibold mb-3 text-gray-600 border-b pb-2">Step 3: Review & Edit Article 📝</h2>
          <label for="generated_article" class="compact-label">Generated Article (Editable):</label>
@@ -206,7 +247,7 @@
          <div id="spin_output_container" class="border border-gray-300 rounded-md p-2 bg-gray-50 min-h-[200px] max-h-[450px] overflow-y-auto">
               <div id="spun_article_display" contenteditable="true" class="compact-textarea w-full h-full border-none focus:outline-none focus:ring-0 min-h-[200px]" placeholder="Article content will appear here for spinning..."></div>
          </div>
-         <p class="text-xs text-gray-500 mt-2">Spintax: <code class="bg-gray-200 px-1 rounded">{opt1|opt2}</code> Nested: <code class="bg-gray-200 px-1 rounded">{opt1|{nest1|nest2}|opt3}</code>. Colors distinguish levels.</p>
+         <p class="text-xs text-gray-500 mt-2">Spintax: <code class="bg-gray-200 px-1 rounded">{opt1|opt2}</code> Nested: <code class="bg-gray-200 px-1 rounded">{opt1|{nest1|nest2}|opt3}</code>.</p>
     </section>
 
     <div id="consoleLogContainer">
@@ -216,7 +257,7 @@
 
 
     <script>
-        // --- Configuration (Frontend Only - Models List) ---
+        // --- Configuration ---
         const aiProviders = {
             google: { models: ['gemini-2.5-pro-preview-03-25', 'gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-2.0-flash-thinking-exp-01-21'] },
             openai: { models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini', 'gpt-4.1-nano'] },
@@ -226,12 +267,30 @@
         };
         const SITEMAP_STORAGE_KEY = 'aiArticleSpinner_sitemapUrls_v1';
 
+        // Language and Dialect Configuration
+        const languageOptions = {
+            "English": { name: "English", dialects: ["Default", "American", "British", "Australian"] },
+            "Indonesian": { name: "Indonesian", dialects: ["Default/Formal", "Jaksel", "Suroboyoan", "Medan", "Santai/Gaul"] },
+            "Spanish": { name: "Spanish", dialects: ["Default/Neutral", "Spain", "Mexican", "Argentinian"] },
+            "French": { name: "French", dialects: ["Default/Standard", "Canadian", "African"] },
+            "German": { name: "German", dialects: ["Default/Standard", "Bavarian", "Swiss German"] },
+            "custom": { name: "Custom...", dialects: [] } // Handle custom language case
+        };
+
         // --- DOM Elements ---
         const keywordInput = document.getElementById('keyword');
         const languageSelect = document.getElementById('language');
         const customLanguageInput = document.getElementById('custom_language');
+        const dialectSelect = document.getElementById('dialect'); // New
+        const audienceInput = document.getElementById('audience'); // New
+        const readerNameInput = document.getElementById('readerName'); // New
         const toneSelect = document.getElementById('tone');
         const customToneInput = document.getElementById('custom_tone');
+        const genderSelect = document.getElementById('gender'); // New
+        const ageSelect = document.getElementById('age'); // New
+        const purposeCheckboxes = document.querySelectorAll('input[name="purpose"]'); // New (NodeList)
+        const purposeUrlInput = document.getElementById('purposeUrl'); // New
+        const purposeCtaInput = document.getElementById('purposeCta'); // New
         const formatSelect = document.getElementById('format');
         const customSpecsInput = document.getElementById('custom_specs');
         const aiProviderSelect = document.getElementById('ai_provider');
@@ -243,19 +302,17 @@
         const sitemapUrlsListDiv = document.getElementById('sitemapUrlsList');
         const linkTypeToggle = document.getElementById('linkTypeToggle');
         const linkTypeText = document.getElementById('linkTypeText');
-
+        // ... (rest of DOM elements are the same) ...
         const generateStructureBtn = document.getElementById('generateStructureBtn');
         const generateArticleBtn = document.getElementById('generateArticleBtn');
         const enableSpinningBtn = document.getElementById('enableSpinningBtn');
         const spinSelectedBtn = document.getElementById('spinSelectedBtn');
         const toggleStructureVisibilityBtn = document.getElementById('toggleStructureVisibility');
         const previewHtmlCheckbox = document.getElementById('preview_html_checkbox');
-
         const step1Section = document.getElementById('step1');
         const step2Section = document.getElementById('step2');
         const step3Section = document.getElementById('step3');
         const step4Section = document.getElementById('step4');
-
         const structureContainer = document.getElementById('structureContainer');
         const articleStructureTextarea = document.getElementById('article_structure');
         const generatedArticleTextarea = document.getElementById('generated_article');
@@ -263,14 +320,13 @@
         const htmlPreviewDiv = document.getElementById('html_preview');
         const spinOutputContainer = document.getElementById('spin_output_container');
         const spunArticleDisplay = document.getElementById('spun_article_display');
-
         const structureLoadingIndicator = document.getElementById('structureLoadingIndicator');
         const articleLoadingIndicator = document.getElementById('articleLoadingIndicator');
         const sitemapLoadingIndicator = document.getElementById('sitemapLoadingIndicator');
         const spinLoadingIndicator = document.getElementById('spinLoadingIndicator');
         const spinActionLoadingIndicator = document.getElementById('spinActionLoadingIndicator');
-
         const consoleLog = document.getElementById('consoleLog');
+
 
         // --- State ---
         let parsedSitemapUrls = [];
@@ -325,159 +381,159 @@
 
 
         // --- Sitemap Functions ---
-        function displaySitemapUrls() {
-            if (parsedSitemapUrls.length === 0) {
-                sitemapUrlsListDiv.innerHTML = `<em class="text-gray-400">No sitemap loaded or no URLs found.</em>`;
-                return;
-            }
-            sitemapUrlsListDiv.innerHTML = ''; // Clear previous
-            parsedSitemapUrls.forEach(url => {
-                const div = document.createElement('div');
-                div.textContent = url;
-                sitemapUrlsListDiv.appendChild(div);
+        function displaySitemapUrls() { /* ... (same as v4) ... */ if (parsedSitemapUrls.length === 0) { sitemapUrlsListDiv.innerHTML = `<em class="text-gray-400">No sitemap loaded or no URLs found.</em>`; return; } sitemapUrlsListDiv.innerHTML = ''; parsedSitemapUrls.forEach(url => { const div = document.createElement('div'); div.textContent = url; sitemapUrlsListDiv.appendChild(div); }); }
+        function loadSitemapFromStorage() { /* ... (same as v4) ... */ const storedUrls = localStorage.getItem(SITEMAP_STORAGE_KEY); if (storedUrls) { parsedSitemapUrls = JSON.parse(storedUrls); logToConsole(`Loaded ${parsedSitemapUrls.length} sitemap URLs from local storage.`, 'info'); } else { parsedSitemapUrls = []; } displaySitemapUrls(); }
+        async function fetchAndParseSitemap() { /* ... (same as v4) ... */ const url = sitemapUrlInput.value.trim(); if (!url) { alert('Please enter a Sitemap URL.'); return; } logToConsole(`Fetching sitemap from URL: ${url}`, 'info'); showLoading(sitemapLoadingIndicator, true); fetchSitemapBtn.disabled = true; try { const response = await fetch('/ai-api', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fetch_sitemap', sitemapUrl: url }) }); const data = await response.json(); if (!response.ok || !data.success) { throw new Error(data.error || `Failed to fetch/parse sitemap (${response.status})`); } parsedSitemapUrls = data.urls || []; localStorage.setItem(SITEMAP_STORAGE_KEY, JSON.stringify(parsedSitemapUrls)); logToConsole(`Successfully fetched and parsed ${parsedSitemapUrls.length} URLs.`, 'success'); displaySitemapUrls(); } catch (error) { console.error("Sitemap Fetch/Parse Failed:", error); logToConsole(`Sitemap Error: ${error.message}`, 'error'); alert(`Failed to process sitemap: ${error.message}`); } finally { showLoading(sitemapLoadingIndicator, false); fetchSitemapBtn.disabled = false; } }
+
+        // --- Language/Dialect Functions ---
+        function populateLanguages() {
+            languageSelect.innerHTML = ''; // Clear existing
+            Object.keys(languageOptions).forEach(langKey => {
+                const option = document.createElement('option');
+                option.value = langKey; // Use the key as value
+                option.textContent = languageOptions[langKey].name;
+                languageSelect.appendChild(option);
             });
+            // Trigger initial dialect population
+            populateDialects();
         }
 
-        function loadSitemapFromStorage() {
-            const storedUrls = localStorage.getItem(SITEMAP_STORAGE_KEY);
-            if (storedUrls) {
-                parsedSitemapUrls = JSON.parse(storedUrls);
-                logToConsole(`Loaded ${parsedSitemapUrls.length} sitemap URLs from local storage.`, 'info');
+        function populateDialects() {
+            const selectedLangKey = languageSelect.value;
+            const langConfig = languageOptions[selectedLangKey];
+            const dialects = langConfig?.dialects || [];
+
+            dialectSelect.innerHTML = ''; // Clear existing dialects
+
+            if (selectedLangKey === 'custom' || dialects.length === 0) {
+                dialectSelect.disabled = true;
+                const option = document.createElement('option');
+                option.value = "";
+                option.textContent = "-- N/A --";
+                dialectSelect.appendChild(option);
             } else {
-                 parsedSitemapUrls = [];
-            }
-            displaySitemapUrls(); // Update display
-        }
-
-        async function fetchAndParseSitemap() {
-            const url = sitemapUrlInput.value.trim();
-            if (!url) {
-                alert('Please enter a Sitemap URL.');
-                return;
-            }
-
-            logToConsole(`Fetching sitemap from URL: ${url}`, 'info');
-            showLoading(sitemapLoadingIndicator, true);
-            fetchSitemapBtn.disabled = true;
-
-            try {
-                const response = await fetch('/ai-api', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'fetch_sitemap',
-                        sitemapUrl: url
-                    })
+                dialectSelect.disabled = false;
+                dialects.forEach(dialect => {
+                    const option = document.createElement('option');
+                    option.value = dialect; // Use dialect name as value
+                    option.textContent = dialect;
+                    dialectSelect.appendChild(option);
                 });
-
-                const data = await response.json();
-
-                if (!response.ok || !data.success) {
-                    throw new Error(data.error || `Failed to fetch/parse sitemap (${response.status})`);
-                }
-
-                parsedSitemapUrls = data.urls || [];
-                localStorage.setItem(SITEMAP_STORAGE_KEY, JSON.stringify(parsedSitemapUrls)); // Save to storage
-                logToConsole(`Successfully fetched and parsed ${parsedSitemapUrls.length} URLs.`, 'success');
-                displaySitemapUrls(); // Update the list display
-
-            } catch (error) {
-                console.error("Sitemap Fetch/Parse Failed:", error);
-                logToConsole(`Sitemap Error: ${error.message}`, 'error');
-                alert(`Failed to process sitemap: ${error.message}`);
-                // Optionally clear previous results on error
-                // parsedSitemapUrls = [];
-                // localStorage.removeItem(SITEMAP_STORAGE_KEY);
-                // displaySitemapUrls();
-            } finally {
-                showLoading(sitemapLoadingIndicator, false);
-                fetchSitemapBtn.disabled = false;
             }
+             // Handle custom language input visibility
+             customLanguageInput.classList.toggle('hidden', selectedLangKey !== 'custom');
+             customLanguageInput.classList.toggle('custom-input-visible', selectedLangKey === 'custom');
         }
-
 
         // --- Dynamic Model Loading ---
-        function populateModels() {
-            const providerKey = getSelectedProviderKey();
-            const providerConfig = aiProviders[providerKey];
-            const models = providerConfig?.models || [];
-            aiModelSelect.innerHTML = '';
+        function populateModels() { /* ... (same as v4, calls checkApiStatus) ... */ const providerKey = getSelectedProviderKey(); const providerConfig = aiProviders[providerKey]; const models = providerConfig?.models || []; aiModelSelect.innerHTML = ''; if (models.length === 0) { const option = document.createElement('option'); option.value = ''; option.textContent = 'No models listed'; aiModelSelect.appendChild(option); aiModelSelect.disabled = true; } else { models.forEach(model => { const option = document.createElement('option'); option.value = model; option.textContent = model; aiModelSelect.appendChild(option); }); aiModelSelect.disabled = false; } checkApiStatus(); }
 
-            if (models.length === 0) {
-                 const option = document.createElement('option');
-                 option.value = ''; option.textContent = 'No models listed';
-                 aiModelSelect.appendChild(option); aiModelSelect.disabled = true;
-            } else {
-                models.forEach(model => {
-                    const option = document.createElement('option');
-                    option.value = model; option.textContent = model;
-                    aiModelSelect.appendChild(option);
-                });
-                 aiModelSelect.disabled = false;
-            }
-             // Check API status when models are populated (after provider change or initial load)
-             checkApiStatus();
-        }
-
-        // --- Unified AI Call Function (Calls CF Function) ---
-        async function callAI(action, payload, loadingIndicator, buttonToDisable) {
-             // Payload should include providerKey, model, prompt (if needed)
-             const fullPayload = { action, ...payload };
-
-             logToConsole(`Sending action '${action}' to Cloudflare Function...`, 'info');
-             if(loadingIndicator) showLoading(loadingIndicator, true);
-             if (buttonToDisable) buttonToDisable.disabled = true; else disableButtons(true); // Disable general buttons if no specific one
-
-             try {
-                const response = await fetch('/ai-api', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(fullPayload)
-                });
-
-                const data = await response.json();
-
-                if (!response.ok || !data.success) {
-                    const errorMsg = data.error || `Request failed with status ${response.status}`;
-                    throw new Error(errorMsg);
-                }
-
-                logToConsole(`Action '${action}' completed successfully.`, 'success');
-                return data; // Return the full success response (might contain 'text' or other fields)
-
-            } catch (error) {
-                console.error(`Action '${action}' Failed:`, error);
-                logToConsole(`Error during action '${action}': ${error.message}`, 'error');
-                alert(`Operation Failed: ${error.message}. Check console log.`);
-                return null; // Indicate failure
-            } finally {
-                 if(loadingIndicator) showLoading(loadingIndicator, false);
-                 if (buttonToDisable) buttonToDisable.disabled = false; else disableButtons(false);
-            }
-        }
-
+        // --- Unified AI Call Function ---
+        async function callAI(action, payload, loadingIndicator, buttonToDisable) { /* ... (same as v4) ... */ const fullPayload = { action, ...payload }; logToConsole(`Sending action '${action}' to Cloudflare Function...`, 'info'); if(loadingIndicator) showLoading(loadingIndicator, true); if (buttonToDisable) buttonToDisable.disabled = true; else disableButtons(true); try { const response = await fetch('/ai-api', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(fullPayload) }); const data = await response.json(); if (!response.ok || !data.success) { const errorMsg = data.error || `Request failed with status ${response.status}`; throw new Error(errorMsg); } logToConsole(`Action '${action}' completed successfully.`, 'success'); return data; } catch (error) { console.error(`Action '${action}' Failed:`, error); logToConsole(`Error during action '${action}': ${error.message}`, 'error'); alert(`Operation Failed: ${error.message}. Check console log.`); return null; } finally { if(loadingIndicator) showLoading(loadingIndicator, false); if (buttonToDisable) buttonToDisable.disabled = false; else disableButtons(false); } }
 
         // --- Spintax Highlighting ---
-        function highlightSpintax(element) { /* ... (same as before) ... */ element.querySelectorAll('.spintax-level-1, .spintax-level-2, .spintax-level-3, .spintax-pipe').forEach(el => { el.outerHTML = el.innerHTML; }); let html = element.innerHTML; const tagMap = {}; let tagIndex = 0; html = html.replace(/<[^>]+>/g, (match) => { const placeholder = `__TAG${tagIndex}__`; tagMap[placeholder] = match; tagIndex++; return placeholder; }); html = html.replace(/\|/g, '<span class="spintax-pipe">|</span>'); let level = 0; let coloredHtml = ''; for (let i = 0; i < html.length; i++) { if (html[i] === '{') { level++; const colorClass = `spintax-level-${level % 3 + 1}`; coloredHtml += `<span class="${colorClass}">{</span>`; } else if (html[i] === '}') { if (level > 0) { const colorClass = `spintax-level-${level % 3 + 1}`; coloredHtml += `<span class="${colorClass}">}</span>`; level--; } else { coloredHtml += '}'; } } else { coloredHtml += html[i]; } } coloredHtml = coloredHtml.replace(/__TAG\d+__/g, (placeholder) => tagMap[placeholder] || placeholder); element.innerHTML = coloredHtml; }
+        function highlightSpintax(element) { /* ... (same as v4) ... */ element.querySelectorAll('.spintax-level-1, .spintax-level-2, .spintax-level-3, .spintax-pipe').forEach(el => { el.outerHTML = el.innerHTML; }); let html = element.innerHTML; const tagMap = {}; let tagIndex = 0; html = html.replace(/<[^>]+>/g, (match) => { const placeholder = `__TAG${tagIndex}__`; tagMap[placeholder] = match; tagIndex++; return placeholder; }); html = html.replace(/\|/g, '<span class="spintax-pipe">|</span>'); let level = 0; let coloredHtml = ''; for (let i = 0; i < html.length; i++) { if (html[i] === '{') { level++; const colorClass = `spintax-level-${level % 3 + 1}`; coloredHtml += `<span class="${colorClass}">{</span>`; } else if (html[i] === '}') { if (level > 0) { const colorClass = `spintax-level-${level % 3 + 1}`; coloredHtml += `<span class="${colorClass}">}</span>`; level--; } else { coloredHtml += '}'; } } else { coloredHtml += html[i]; } } coloredHtml = coloredHtml.replace(/__TAG\d+__/g, (placeholder) => tagMap[placeholder] || placeholder); element.innerHTML = coloredHtml; }
+
+        // --- Validation Function ---
+        function validateInputs() {
+            let isValid = true;
+            let missingFields = [];
+
+            // Required fields check
+            if (!keywordInput.value.trim()) { missingFields.push("Keyword"); isValid = false; }
+            if (!languageSelect.value || (languageSelect.value === 'custom' && !customLanguageInput.value.trim())) { missingFields.push("Language"); isValid = false; }
+            if (!audienceInput.value.trim()) { missingFields.push("Audience"); isValid = false; }
+            if (!toneSelect.value || (toneSelect.value === 'custom' && !customToneInput.value.trim())) { missingFields.push("Tone"); isValid = false; }
+            if (!formatSelect.value) { missingFields.push("Format"); isValid = false; } // Should always have a value, but good practice
+
+            // Purpose validation
+            const selectedPurposes = getSelectedPurposes();
+            if (selectedPurposes.length === 0) {
+                 missingFields.push("Purpose (select at least one)"); isValid = false;
+            } else {
+                if (selectedPurposes.includes("Promote URL") && !purposeUrlInput.value.trim()) {
+                     missingFields.push("Purpose URL (required when 'Promote URL' is selected)"); isValid = false;
+                }
+            }
+
+
+            if (!isValid) {
+                alert(`Please fill in the required fields (*):\n- ${missingFields.join('\n- ')}`);
+            }
+            return isValid;
+        }
+
+        // --- Get Selected Purposes ---
+        function getSelectedPurposes() {
+            const selected = [];
+            purposeCheckboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    selected.push(checkbox.value);
+                }
+            });
+            return selected;
+        }
 
         // --- Event Listeners ---
-        languageSelect.addEventListener('change', () => { customLanguageInput.classList.toggle('hidden', languageSelect.value !== 'custom'); customLanguageInput.classList.toggle('custom-input-visible', languageSelect.value === 'custom'); }); // Ensure class is added
-        toneSelect.addEventListener('change', () => { customToneInput.classList.toggle('hidden', toneSelect.value !== 'custom'); customToneInput.classList.toggle('custom-input-visible', toneSelect.value === 'custom'); });
-        aiProviderSelect.addEventListener('change', populateModels); // This now also triggers checkApiStatus
-        fetchSitemapBtn.addEventListener('click', fetchAndParseSitemap);
-        linkTypeToggle.addEventListener('change', () => {
-             linkTypeText.textContent = linkTypeToggle.checked ? 'External' : 'Internal';
+        languageSelect.addEventListener('change', populateDialects); // Update dialects on language change
+        aiProviderSelect.addEventListener('change', populateModels); // Checks API status
+        aiModelSelect.addEventListener('change', (event) => { // Log model change
+             logToConsole(`Selected AI Model: ${event.target.value}`, 'info');
+             // Optionally re-check status if model change might affect compatibility
+             checkApiStatus();
         });
+        fetchSitemapBtn.addEventListener('click', fetchAndParseSitemap);
+        linkTypeToggle.addEventListener('change', () => { linkTypeText.textContent = linkTypeToggle.checked ? 'External' : 'Internal'; });
+        toneSelect.addEventListener('change', () => { customToneInput.classList.toggle('hidden', toneSelect.value !== 'custom'); customToneInput.classList.toggle('custom-input-visible', toneSelect.value === 'custom'); }); // Listener for custom tone
 
+        // Purpose checkbox listeners to show/hide related inputs
+        purposeCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                const selectedPurposes = getSelectedPurposes();
+                purposeUrlInput.classList.toggle('hidden', !selectedPurposes.includes('Promote URL'));
+                purposeCtaInput.classList.toggle('hidden', !selectedPurposes.some(p => p.startsWith('Promote') || p === 'Generate Leads')); // Show CTA for promotion/leads
+            });
+        });
 
         // Step 1 -> Step 2: Generate Structure
         generateStructureBtn.addEventListener('click', async () => {
+            if (!validateInputs()) return; // Perform validation
+
+            // Gather all inputs
             const keyword = keywordInput.value.trim();
-            if (!keyword) { alert('Please enter a keyword.'); return; }
-            const language = languageSelect.value === 'custom' ? customLanguageInput.value.trim() : languageSelect.value;
+            const language = languageSelect.value === 'custom' ? customLanguageInput.value.trim() : languageOptions[languageSelect.value]?.name || languageSelect.value;
+            const dialect = dialectSelect.disabled ? '' : dialectSelect.value;
+            const audience = audienceInput.value.trim();
+            const readerName = readerNameInput.value.trim();
             const tone = toneSelect.value === 'custom' ? customToneInput.value.trim() : toneSelect.value;
+            const gender = genderSelect.value;
+            const age = ageSelect.value;
+            const selectedPurposes = getSelectedPurposes();
+            const purposeDetails = {
+                types: selectedPurposes,
+                url: selectedPurposes.includes("Promote URL") ? purposeUrlInput.value.trim() : '',
+                cta: purposeCtaInput.classList.contains('hidden') ? '' : purposeCtaInput.value.trim()
+            };
             const customSpecs = customSpecsInput.value.trim();
-            const prompt = `Generate a detailed article structure/outline for the keyword: "${keyword}".\n- Language: ${language}\n- Tone: ${tone}\n${customSpecs ? `- Other Specifications: ${customSpecs}` : ''}\n- The structure should be logical and cover the topic comprehensively.\n- Output only the structure, using clear headings or bullet points (like Section 1: ..., - Point A, - Point B). No introductory or concluding remarks about the structure itself.`;
+
+            // Construct Prompt
+            const prompt = `Generate a detailed article structure/outline based on these specifications:
+            - Keyword: "${keyword}"
+            - Language: ${language}${dialect ? ` (${dialect} dialect)` : ''}
+            - Target Audience: ${audience}
+            - Tone: ${tone}
+            ${gender ? `- Author Gender Persona: ${gender}` : ''}
+            ${age ? `- Author Age Persona: ${age}` : ''}
+            - Article Purpose(s): ${purposeDetails.types.join(', ')}
+            ${purposeDetails.url ? `  - Promotional URL: ${purposeDetails.url}` : ''}
+            ${purposeDetails.cta ? `  - Desired Call to Action: ${purposeDetails.cta}` : ''}
+            ${readerName ? `- Address Reader As: ${readerName}` : ''}
+            ${customSpecs ? `- Other Details: ${customSpecs}` : ''}
+
+            Instructions:
+            - Create a logical structure covering the keyword comprehensively for the specified audience.
+            - Output only the structure using clear headings or bullet points (e.g., Section 1: ..., - Point A, - Point B).
+            - Do not include introductory or concluding remarks about the structure itself.`;
 
             const payload = {
                 providerKey: getSelectedProviderKey(),
@@ -490,11 +546,10 @@
             if (result && result.text) {
                 articleStructureTextarea.value = result.text;
                 step2Section.classList.remove('hidden');
-                structureContainer.classList.remove('hidden'); // Ensure container is visible
+                structureContainer.classList.remove('hidden');
                 toggleStructureVisibilityBtn.textContent = 'Hide';
                 step3Section.classList.add('hidden'); step4Section.classList.add('hidden');
-                 // Ensure sitemap display is updated (might have loaded from storage earlier)
-                 displaySitemapUrls();
+                displaySitemapUrls();
             }
         });
 
@@ -502,31 +557,69 @@
         generateArticleBtn.addEventListener('click', async () => {
             const structure = articleStructureTextarea.value.trim();
             if (!structure) { alert('Article structure is empty.'); return; }
+            if (!validateInputs()) return; // Re-validate base inputs if needed
 
-            // Prepare linking instructions based on sitemap and toggle
+            // Gather all inputs again for consistency
+            const keyword = keywordInput.value.trim();
+            const language = languageSelect.value === 'custom' ? customLanguageInput.value.trim() : languageOptions[languageSelect.value]?.name || languageSelect.value;
+            const dialect = dialectSelect.disabled ? '' : dialectSelect.value;
+            const audience = audienceInput.value.trim();
+            const readerName = readerNameInput.value.trim();
+            const tone = toneSelect.value === 'custom' ? customToneInput.value.trim() : toneSelect.value;
+            const gender = genderSelect.value;
+            const age = ageSelect.value;
+            const selectedPurposes = getSelectedPurposes();
+            const purposeDetails = {
+                types: selectedPurposes,
+                url: selectedPurposes.includes("Promote URL") ? purposeUrlInput.value.trim() : '',
+                cta: purposeCtaInput.classList.contains('hidden') ? '' : purposeCtaInput.value.trim()
+            };
+            const format = formatSelect.value;
+            const customSpecs = customSpecsInput.value.trim();
+
+            // Prepare linking instructions
             let linkingInstructions = '';
             const linkType = linkTypeToggle.checked ? 'External (absolute URLs)' : 'Internal (relative URLs if possible, otherwise absolute)';
             if (parsedSitemapUrls.length > 0) {
-                 const urlList = parsedSitemapUrls.slice(0, 20).join('\n'); // Limit URLs sent in prompt
-                 linkingInstructions = `\n\nLinking Instructions:\n- Incorporate relevant links into the article content where appropriate, using the following URLs as a reference pool.\n- Link Type Preference: ${linkType}.\n- Prioritize linking naturally within the text.\n- Maximum 5-7 links total.\n\nAvailable URLs for reference:\n${urlList}`;
+                 const urlList = parsedSitemapUrls.slice(0, 20).join('\n');
+                 linkingInstructions = `\n\nLinking Instructions:\n- Incorporate relevant links naturally into the article content where appropriate, using the following URLs as a reference pool.\n- Link Type Preference: ${linkType}.\n- Maximum 5-7 links total.\n\nAvailable URLs:\n${urlList}`;
             } else {
-                 linkingInstructions = '\n\nLinking Instructions: No sitemap URLs provided for linking.';
+                 linkingInstructions = '\n\nLinking Instructions: No sitemap URLs provided.';
             }
 
+            // Construct Prompt
+            const prompt = `Generate a full article based on the following structure and specifications:
+            - Keyword: "${keyword}"
+            - Language: ${language}${dialect ? ` (${dialect} dialect)` : ''}
+            - Target Audience: ${audience}
+            - Tone: ${tone}
+            ${gender ? `- Author Gender Persona: ${gender}` : ''}
+            ${age ? `- Author Age Persona: ${age}` : ''}
+            - Article Purpose(s): ${purposeDetails.types.join(', ')}
+            ${purposeDetails.url ? `  - Promotional URL: ${purposeDetails.url}` : ''}
+            ${purposeDetails.cta ? `  - Desired Call to Action: ${purposeDetails.cta}` : ''}
+            ${readerName ? `- Address Reader As: ${readerName}` : ''}
+            - Output Format: ${format}
+            ${customSpecs ? `- Other Details: ${customSpecs}` : ''}
 
-            const keyword = keywordInput.value.trim();
-            const language = languageSelect.value === 'custom' ? customLanguageInput.value.trim() : languageSelect.value;
-            const tone = toneSelect.value === 'custom' ? customToneInput.value.trim() : toneSelect.value;
-            const format = formatSelect.value;
-            const customSpecs = customSpecsInput.value.trim();
-            const prompt = `Generate a full article based on the following structure and specifications:\n- Keyword: "${keyword}"\n- Language: ${language}\n- Tone: ${tone}\n- Output Format: ${format}\n${customSpecs ? `- Other Specifications: ${customSpecs}` : ''}\n\nArticle Structure:\n---\n${structure}\n---${linkingInstructions}\n\nFormat Instructions:\n- Adhere strictly to the requested output format (${format}).\n${format === 'html' ? '- For HTML: Use only basic text formatting tags like <p>, <h1>-<h6>, <ul>, <ol>, <li>, <b>, <i>, and <a> for links. Do NOT include <html>, <head>, <body>, or <div> tags.' : '- For Markdown: Use standard Markdown syntax including [link text](URL) for links.'}\n- Generate only the article content itself, without any introductory or concluding remarks about the generation process.`;
+            Article Structure:
+            ---
+            ${structure}
+            ---
+            ${linkingInstructions}
+
+            Format Instructions:
+            - Write content for each section of the structure, ensuring coherence and flow.
+            - Adhere strictly to the requested output format (${format}).
+            ${format === 'html' ? '- For HTML: Use only basic text formatting tags like <p>, <h1>-<h6>, <ul>, <ol>, <li>, <b>, <i>, and <a> for links. Do NOT include <html>, <head>, <body>, or <div> tags.' : '- For Markdown: Use standard Markdown syntax including [link text](URL) for links.'}
+            - Generate only the article content itself, without any introductory or concluding remarks about the generation process.`;
 
             const payload = {
                 providerKey: getSelectedProviderKey(),
                 model: aiModelSelect.value,
                 prompt: prompt
             };
-             logToConsole(`--- Generating Article Prompt ---\n${prompt}\n---------------------------------`); // Log the full prompt
+             logToConsole(`--- Generating Article Prompt ---\n${prompt}\n---------------------------------`);
             const result = await callAI('generate', payload, articleLoadingIndicator, generateArticleBtn);
 
             if (result && result.text) {
@@ -544,10 +637,10 @@
         toggleStructureVisibilityBtn.addEventListener('click', () => { const isHidden = structureContainer.classList.toggle('hidden'); toggleStructureVisibilityBtn.textContent = isHidden ? 'Show' : 'Hide'; });
 
          // HTML Preview Toggle (Unchanged)
-        previewHtmlCheckbox.addEventListener('change', () => { /* ... (same as before) ... */ const showPreview = previewHtmlCheckbox.checked; generatedArticleTextarea.classList.toggle('hidden', showPreview); htmlPreviewDiv.classList.toggle('hidden', !showPreview); if (showPreview) { let unsafeHTML = generatedArticleTextarea.value; let sanitizedHTML = unsafeHTML.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ''); htmlPreviewDiv.innerHTML = sanitizedHTML; logToConsole("Showing HTML preview. Basic script tag removal applied.", "warn"); } });
+        previewHtmlCheckbox.addEventListener('change', () => { /* ... (same as v4) ... */ const showPreview = previewHtmlCheckbox.checked; generatedArticleTextarea.classList.toggle('hidden', showPreview); htmlPreviewDiv.classList.toggle('hidden', !showPreview); if (showPreview) { let unsafeHTML = generatedArticleTextarea.value; let sanitizedHTML = unsafeHTML.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ''); htmlPreviewDiv.innerHTML = sanitizedHTML; logToConsole("Showing HTML preview. Basic script tag removal applied.", "warn"); } });
 
         // Step 3 -> Step 4: Enable Spinning (Unchanged)
-        enableSpinningBtn.addEventListener('click', () => { /* ... (same as before) ... */ spunArticleDisplay.innerHTML = generatedArticleTextarea.value; step4Section.classList.remove('hidden'); highlightSpintax(spunArticleDisplay); logToConsole("Spinning enabled.", 'info'); generatedArticleTextarea.classList.add('hidden'); htmlPreviewDiv.classList.add('hidden'); previewHtmlCheckbox.parentElement.classList.add('hidden'); previewHtmlCheckbox.checked = false; });
+        enableSpinningBtn.addEventListener('click', () => { /* ... (same as v4) ... */ spunArticleDisplay.innerHTML = generatedArticleTextarea.value; step4Section.classList.remove('hidden'); highlightSpintax(spunArticleDisplay); logToConsole("Spinning enabled.", 'info'); generatedArticleTextarea.classList.add('hidden'); htmlPreviewDiv.classList.add('hidden'); previewHtmlCheckbox.parentElement.classList.add('hidden'); previewHtmlCheckbox.checked = false; });
 
 
         // --- Text Selection and Spinning Logic ---
@@ -556,14 +649,17 @@
         spunArticleDisplay.addEventListener('keyup', handleSelection);
         spunArticleDisplay.addEventListener('focus', handleSelection);
 
-        function handleSelection() { /* ... (same as before) ... */ const selection = window.getSelection(); if (selection && selection.rangeCount > 0) { const range = selection.getRangeAt(0); if (spunArticleDisplay.contains(range.commonAncestorContainer) && !range.collapsed) { const text = selection.toString().trim(); if (text.length > 0) { selectedTextInfo = { text: text, range: range.cloneRange() }; spinSelectedBtn.disabled = false; return; } } } selectedTextInfo = null; spinSelectedBtn.disabled = true; }
+        function handleSelection() { /* ... (same as v4) ... */ const selection = window.getSelection(); if (selection && selection.rangeCount > 0) { const range = selection.getRangeAt(0); if (spunArticleDisplay.contains(range.commonAncestorContainer) && !range.collapsed) { const text = selection.toString().trim(); if (text.length > 0) { selectedTextInfo = { text: text, range: range.cloneRange() }; spinSelectedBtn.disabled = false; return; } } } selectedTextInfo = null; spinSelectedBtn.disabled = true; }
 
         spinSelectedBtn.addEventListener('click', async () => {
             if (!selectedTextInfo || !selectedTextInfo.text) { logToConsole("Spin button clicked but no valid text selected.", "warn"); return; }
             const textToSpin = selectedTextInfo.text;
-            const language = languageSelect.value === 'custom' ? customLanguageInput.value.trim() : languageSelect.value;
+            // Get language/tone again for spinning context (could simplify if needed)
+            const language = languageSelect.value === 'custom' ? customLanguageInput.value.trim() : languageOptions[languageSelect.value]?.name || languageSelect.value;
+            const dialect = dialectSelect.disabled ? '' : dialectSelect.value;
             const tone = toneSelect.value === 'custom' ? customToneInput.value.trim() : toneSelect.value;
-            const prompt = `Take the following text and generate 2-4 variations that mean the same thing, suitable for spintax.\n- Language: ${language}\n- Tone: ${tone} (Maintain this tone)\n- Output Format: Return ONLY the spintax string in the format {original|variation1|variation2|...}. Do not include the original text you were given unless it's one of the variations. Do not include any explanation or surrounding text.\n\nText to Spin:\n---\n${textToSpin}\n---`;
+
+            const prompt = `Take the following text and generate 2-4 variations that mean the same thing, suitable for spintax.\n- Language: ${language}${dialect ? ` (${dialect} dialect)` : ''}\n- Tone: ${tone} (Maintain this tone)\n- Output Format: Return ONLY the spintax string in the format {original|variation1|variation2|...}. Do not include the original text you were given unless it's one of the variations. Do not include any explanation or surrounding text.\n\nText to Spin:\n---\n${textToSpin}\n---`;
 
              const payload = {
                 providerKey: getSelectedProviderKey(),
@@ -571,31 +667,21 @@
                 prompt: prompt
             };
              logToConsole(`--- Spinning Text Prompt ---\n${prompt}\n---------------------------------`);
-            const result = await callAI('generate', payload, spinActionLoadingIndicator, spinSelectedBtn); // Use 'generate' action
+            const result = await callAI('generate', payload, spinActionLoadingIndicator, spinSelectedBtn);
 
             if (result && result.text) {
-                const spintaxResult = result.text;
-                const selection = window.getSelection();
-                if (selection && selectedTextInfo.range) {
-                    try {
-                         selection.removeAllRanges(); selection.addRange(selectedTextInfo.range);
-                         if (document.queryCommandSupported('insertHTML')) { document.execCommand('insertHTML', false, spintaxResult); }
-                         else if (document.queryCommandSupported('insertText')) { logToConsole("insertHTML not supported, using insertText.", "warn"); document.execCommand('insertText', false, spintaxResult); }
-                         else { selectedTextInfo.range.deleteContents(); selectedTextInfo.range.insertNode(document.createTextNode(spintaxResult)); }
-                         logToConsole(`Inserted spintax: ${spintaxResult}`, 'success');
-                         highlightSpintax(spunArticleDisplay);
-                    } catch (e) { logToConsole(`Error replacing selection with spintax: ${e}`, 'error'); alert("Error applying spintax."); }
-                    finally { selectedTextInfo = null; spinSelectedBtn.disabled = true; selection.removeAllRanges(); }
-                } else { logToConsole("Could not restore selection range.", 'error'); alert("Could not apply spintax."); spinSelectedBtn.disabled = true; }
+                // ... (Spintax insertion logic same as v4) ...
+                const spintaxResult = result.text; const selection = window.getSelection(); if (selection && selectedTextInfo.range) { try { selection.removeAllRanges(); selection.addRange(selectedTextInfo.range); if (document.queryCommandSupported('insertHTML')) { document.execCommand('insertHTML', false, spintaxResult); } else if (document.queryCommandSupported('insertText')) { logToConsole("insertHTML not supported, using insertText.", "warn"); document.execCommand('insertText', false, spintaxResult); } else { selectedTextInfo.range.deleteContents(); selectedTextInfo.range.insertNode(document.createTextNode(spintaxResult)); } logToConsole(`Inserted spintax: ${spintaxResult}`, 'success'); highlightSpintax(spunArticleDisplay); } catch (e) { logToConsole(`Error replacing selection with spintax: ${e}`, 'error'); alert("Error applying spintax."); } finally { selectedTextInfo = null; spinSelectedBtn.disabled = true; selection.removeAllRanges(); } } else { logToConsole("Could not restore selection range.", 'error'); alert("Could not apply spintax."); spinSelectedBtn.disabled = true; }
             } else { spinSelectedBtn.disabled = true; }
         });
 
 
         // --- Initial Setup ---
         document.addEventListener('DOMContentLoaded', () => {
-            loadSitemapFromStorage(); // Load sitemap URLs first
-            populateModels(); // Populate models (this will also trigger initial API status check)
-            logToConsole("App initialized (v4 - Sitemap & Status). Ready for input.", 'info');
+            populateLanguages(); // Populate languages first
+            loadSitemapFromStorage();
+            populateModels(); // Populate models (triggers dialect & API check)
+            logToConsole("App initialized (v5 - More Specs). Ready for input.", 'info');
             logToConsole("API calls proxied via /ai-api.", 'info');
         });
 
