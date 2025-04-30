@@ -1,5 +1,7 @@
 // article-config.js
 
+export const CLOUDFLARE_FUNCTION_URL = '/ai-api';
+
 // --- AI Provider Configurations ---
 export const textProviders = {
     google: { models: ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-2.0-flash-thinking-exp-01-21', 'gemini-2.5-pro-preview-03-25'] }, // Flash first for default
