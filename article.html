@@ -3,16 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Article Generator & Spinner 🪄 v7.1 (GitHub Upload)</title>
+    <title>AI Article Generator & Spinner 🪄 v8 (Bulk Mode)</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
-        /* Styles largely same as v7 */
+        /* Styles largely same as v7.1 - Minor adjustments possible */
         body { font-family: 'Inter', sans-serif; @apply bg-gray-100 text-gray-800; }
         .compact-section { @apply bg-white p-4 mb-4 rounded-lg shadow-md; }
         .compact-label { @apply block text-sm font-medium text-gray-700 mb-1 whitespace-nowrap; }
         .compact-input, .compact-select, .compact-textarea { @apply block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm; }
         .custom-input-visible { @apply compact-input mt-1; }
         .compact-button { @apply inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed; }
+        .reset-button { @apply inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500; }
         .spintax-level-1 { color: #007bff; } .spintax-level-2 { color: #28a745; } .spintax-level-3 { color: #dc3545; } .spintax-pipe { color: #ffc107; font-weight: bold; }
         .compact-textarea::-webkit-scrollbar { display: none; } .compact-textarea { -ms-overflow-style: none; scrollbar-width: none; }
         .input-group { @apply mb-3; }
@@ -37,387 +39,188 @@
         .image-option-group, .github-option-group { @apply grid grid-cols-3 items-center gap-x-2 mb-2; }
         #uploadProgressContainer { @apply w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mt-2 hidden; }
         #uploadProgressBar { @apply bg-indigo-600 h-2.5 rounded-full transition-all duration-300 ease-out; width: 0%; }
+        /* Planning Table Styles */
+        #planningTableContainer { @apply mt-4 overflow-x-auto; }
+        #planningTable { @apply min-w-full divide-y divide-gray-200 text-sm; }
+        #planningTable thead th { @apply px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider bg-gray-50; }
+        #planningTable tbody tr:nth-child(even) { @apply bg-gray-50; }
+        #planningTable tbody td { @apply px-3 py-2 whitespace-nowrap; }
+        #planningTable input[type="text"] { @apply compact-input p-1 text-xs; } /* Smaller inputs in table */
+        .status-pending { @apply text-gray-500; }
+        .status-generating { @apply text-yellow-600 italic; }
+        .status-completed { @apply text-green-600 font-semibold; }
+        .status-failed { @apply text-red-600 font-semibold; }
+        .status-uploading { @apply text-blue-600 italic; }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
-<body class="p-4 max-w-4xl mx-auto">
+<body class="p-4 max-w-5xl mx-auto">
 
-    <h1 class="text-2xl font-bold mb-4 text-center text-indigo-700">AI Article Generator & Spinner 🪄📝🖼️ (v7.1)</h1>
+    <div class="flex justify-between items-center mb-4">
+        <h1 class="text-2xl font-bold text-indigo-700">AI Article Generator & Spinner 🪄📝🖼️ (v8)</h1>
+        <button id="resetDataBtn" class="reset-button">Reset All Data ⚠️</button>
+    </div>
 
-    <section id="step1" class="compact-section">
-        <h2 class="text-lg font-semibold mb-3 text-gray-600 border-b pb-2">Step 1: Define Your Article 🎯</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6">
-            <div> <div class="input-group grid grid-cols-3 items-center gap-x-2"> <label for="keyword" class="compact-label">Keyword <span class="text-red-500">*</span>🔑:</label> <input type="text" id="keyword" class="compact-input col-span-2" placeholder="e.g., best ergonomic chairs"> </div> <div class="input-group grid grid-cols-3 items-center gap-x-2"> <label for="language" class="compact-label">Language <span class="text-red-500">*</span>🗣️:</label> <div class="col-span-2"> <select id="language" class="compact-select w-full"> </select> <input type="text" id="custom_language" class="custom-input-visible hidden w-full" placeholder="Enter custom language"> </div> </div> <div class="input-group grid grid-cols-3 items-center gap-x-2"> <label for="dialect" class="compact-label">Dialect:</label> <select id="dialect" class="compact-select col-span-2" disabled> <option value="">-- Select Language First --</option> </select> </div> <div class="input-group grid grid-cols-3 items-center gap-x-2"> <label for="audience" class="compact-label">Audience <span class="text-red-500">*</span>👥:</label> <input type="text" id="audience" class="compact-input col-span-2" placeholder="e.g., Small business owners, Gamers"> </div> <div class="input-group grid grid-cols-3 items-center gap-x-2"> <label for="gender" class="compact-label">Author Gender 🧑‍💻:</label> <select id="gender" class="compact-select col-span-2"> <option value="">Any</option> <option value="Male">Male</option> <option value="Female">Female</option> </select> </div> <div class="input-group grid grid-cols-3 items-center gap-x-2"> <label for="age" class="compact-label">Author Age 🎂:</label> <select id="age" class="compact-select col-span-2"> <option value="">Any</option> <option value="18-24">18-24</option> <option value="25-34">25-34</option> <option value="35-44">35-44</option> <option value="45+">45+</option> </select> </div> <div class="input-group grid grid-cols-3 items-center gap-x-2"> <label for="readerName" class="compact-label">Reader Name 👋:</label> <input type="text" id="readerName" class="compact-input col-span-2" placeholder="e.g., Boss, Bro, Anda"> </div> </div>
-            <div> <div class="input-group grid grid-cols-3 items-center gap-x-2"> <label for="tone" class="compact-label">Tone <span class="text-red-500">*</span>😎:</label> <div class="col-span-2"> <select id="tone" class="compact-select w-full"> <option value="Professional">Professional</option> <option value="Casual">Casual</option> <option value="Formal">Formal</option> <option value="Humorous">Humorous</option> <option value="Informative">Informative</option> <option value="Persuasive">Persuasive</option> <option value="custom">Custom...</option> </select> <input type="text" id="custom_tone" class="custom-input-visible hidden w-full" placeholder="Enter custom tone"> </div> </div> <div class="input-group grid grid-cols-3 items-start gap-x-2"> <label class="compact-label pt-1">Purpose <span class="text-red-500">*</span>💡:</label> <div class="col-span-2 multi-select-container"> <label><input type="checkbox" name="purpose" value="Inform"> Inform Reader</label> <label><input type="checkbox" name="purpose" value="Promote Site/Product"> Promote Site/Product</label> <label><input type="checkbox" name="purpose" value="Promote URL"> Promote Specific URL</label> <label><input type="checkbox" name="purpose" value="Generate Leads"> Generate Leads</label> <label><input type="checkbox" name="purpose" value="Build Authority"> Build Authority</label> <input type="text" id="purposeUrl" class="compact-input mt-1 hidden" placeholder="URL to promote/link to"> <input type="text" id="purposeCta" class="compact-input mt-1 hidden" placeholder="Call to action text (e.g., Visit now!)"> </div> </div> <div class="input-group grid grid-cols-3 items-center gap-x-2"> <label for="format" class="compact-label">Format <span class="text-red-500">*</span>📄:</label> <select id="format" class="compact-select col-span-2"> <option value="html">HTML</option> <option value="markdown">Markdown</option> </select> </div> <div class="input-group grid grid-cols-3 items-center gap-x-2"> <label for="sitemapUrl" class="compact-label">Sitemap URL 🗺️:</label> <div class="col-span-2 flex items-center gap-x-2"> <input type="url" id="sitemapUrl" class="compact-input flex-grow" placeholder="https://example.com/sitemap.xml"> <button id="fetchSitemapBtn" class="compact-button flex-shrink-0"> Fetch <span id="sitemapLoadingIndicator" class="hidden"><span class="loader"></span></span> </button> </div> </div> </div>
-            <div class="input-group grid grid-cols-3 items-start gap-x-2 md:col-span-2 mt-4"> <label for="custom_specs" class="compact-label pt-1">Other Details ✍️:</label> <textarea id="custom_specs" rows="2" class="compact-textarea col-span-2" placeholder="Any other specific instructions..."></textarea> </div>
+    <section id="aiConfigSection" class="compact-section">
+        <div class="flex justify-between items-center mb-3">
+            <h3 class="text-md font-semibold text-gray-600">AI Configuration 🤖</h3>
+            <div id="apiStatus" class="text-sm">
+                <span class="status-checking">Checking status...</span>
+                <span id="apiStatusIndicator" class="hidden"><span class="loader !w-4 !h-4"></span></span>
+            </div>
         </div>
-        <div class="mt-4 pt-4 border-t border-gray-200"> <div class="flex items-center mb-3"> <input type="checkbox" id="generateImages" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mr-2"> <label for="generateImages" class="text-md font-semibold text-gray-600 cursor-pointer">Generate Images? 🖼️</label> </div> <div id="imageOptionsContainer" class="hidden"> <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6"> <div> <div class="image-option-group"> <label for="imageProvider" class="compact-label">Image Provider:</label> <select id="imageProvider" class="compact-select col-span-2"> <option value="google">Google</option> <option value="openai">OpenAI</option> </select> </div> <div class="image-option-group"> <label for="imageModel" class="compact-label">Image Model:</label> <div class="col-span-2"> <select id="imageModel" class="compact-select w-full"> </select> <input type="text" id="customImageModel" class="custom-input-visible hidden w-full" placeholder="Enter custom model name"> <label class="text-xs flex items-center mt-1"> <input type="checkbox" id="useCustomImageModel" class="h-3 w-3 mr-1"> Use Custom </label> </div> </div> <div class="image-option-group"> <label for="numImages" class="compact-label">Images per Section:</label> <select id="numImages" class="compact-select col-span-2"> <option value="1">1</option> <option value="2">2</option> <option value="3">3</option> <option value="4">4</option> </select> </div> <div class="image-option-group"> <label for="imageSubject" class="compact-label">Subject (Optional):</label> <input type="text" id="imageSubject" class="compact-input col-span-2" placeholder="e.g., Person working"> </div> <div class="image-option-group"> <label class="compact-label">Image Storage:</label> <div class="col-span-2 flex items-center space-x-4"> <label class="flex items-center text-sm"><input type="radio" name="imageStorage" value="base64" checked class="mr-1"> Embed Base64</label> <label class="flex items-center text-sm"><input type="radio" name="imageStorage" value="github" class="mr-1"> Upload to GitHub</label> </div> </div> </div> <div> <div class="image-option-group"> <label for="imageAspectRatio" class="compact-label">Aspect Ratio:</label> <select id="imageAspectRatio" class="compact-select col-span-2"> </select> </div> <div class="image-option-group"> <label for="imageStyle" class="compact-label">Style (Optional):</label> <select id="imageStyle" class="compact-select col-span-2"> <option value="">Default</option> <option value="photorealistic">Photorealistic</option> <option value="illustration">Illustration</option> <option value="anime">Anime</option> <option value="sketch">Sketch</option> <option value="3d_render">3D Render</option> <option value="pixel_art">Pixel Art</option> </select> </div> <div class="image-option-group"> <label for="imageStyleModifiers" class="compact-label">Style Modifiers:</label> <input type="text" id="imageStyleModifiers" class="compact-input col-span-2" placeholder="e.g., cinematic lighting"> </div> <div class="image-option-group"> <label for="imageText" class="compact-label">Include Text:</label> <input type="text" id="imageText" class="compact-input col-span-2" placeholder="Text in image (if supported)"> </div> </div> </div> <div id="githubOptionsContainer" class="hidden mt-3 border-t pt-3 border-gray-200"> <h4 class="text-sm font-medium text-gray-600 mb-2">GitHub Upload Settings</h4> <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6"> <div class="github-option-group"> <label for="githubRepoUrl" class="compact-label">Repo URL <span class="text-red-500">*</span>:</label> <input type="url" id="githubRepoUrl" class="compact-input col-span-2" placeholder="https://github.com/owner/repo-name"> </div> <div class="github-option-group"> <label for="githubCustomPath" class="compact-label">Custom Path (Opt.):</label> <input type="text" id="githubCustomPath" class="compact-input col-span-2" placeholder="/optional/custom/path/"> </div> </div> <p class="text-xs text-gray-500 mt-1">Default path: /wp-content/uploads/tools.codev.id/YYYY/MM/</p> </div> </div> </div>
-        <div class="mt-4 pt-4 border-t border-gray-200"> <div class="flex justify-between items-center mb-3"> <h3 class="text-md font-semibold text-gray-600">AI Configuration 🤖</h3> <div id="apiStatus" class="text-sm"> <span class="status-checking">Checking status...</span> <span id="apiStatusIndicator" class="hidden"><span class="loader !w-4 !h-4"></span></span> </div> </div> <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4"> <div class="input-group grid grid-cols-3 items-center gap-x-2"> <label for="ai_provider" class="compact-label">Text Provider:</label> <select id="ai_provider" class="compact-select col-span-2"> <option value="google">Google</option> <option value="openai">OpenAI</option> <option value="anthropic">Anthropic</option> <option value="deepseek">DeepSeek</option> <option value="xai">xAI (Grok)</option> </select> </div> <div class="input-group grid grid-cols-3 items-center gap-x-2"> <label for="ai_model" class="compact-label">Text Model:</label> <div class="col-span-2"> <select id="ai_model" class="compact-select w-full"> </select> <input type="text" id="customAiModel" class="custom-input-visible hidden w-full" placeholder="Enter custom model name"> <label class="text-xs flex items-center mt-1"> <input type="checkbox" id="useCustomAiModel" class="h-3 w-3 mr-1"> Use Custom </label> </div> </div> </div> <p class="text-xs text-gray-500 mt-1">API Keys handled securely by backend.</p> </div>
-        <div class="mt-4 text-right"> <button id="generateStructureBtn" class="compact-button"> Generate Structure 🏗️ <span id="structureLoadingIndicator" class="hidden"><span class="loader"></span></span> </button> </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4">
+            <div class="input-group grid grid-cols-3 items-center gap-x-2"> <label for="ai_provider" class="compact-label">Text Provider:</label> <select id="ai_provider" class="compact-select col-span-2"> </select> </div>
+            <div class="input-group grid grid-cols-3 items-center gap-x-2"> <label for="ai_model" class="compact-label">Text Model:</label> <div class="col-span-2"> <select id="ai_model" class="compact-select w-full"> </select> <input type="text" id="customAiModel" class="custom-input-visible hidden w-full" placeholder="Enter custom model name"> <label class="text-xs flex items-center mt-1"> <input type="checkbox" id="useCustomAiModel" class="h-3 w-3 mr-1"> Use Custom </label> </div> </div>
+        </div>
+        <p class="text-xs text-gray-500 mt-1">API Keys handled securely by backend.</p>
     </section>
 
-    <section id="step2" class="compact-section hidden"> <div class="flex justify-between items-center mb-2 border-b pb-2"> <h2 class="text-lg font-semibold text-gray-600">Step 2: Refine Structure & Links 📐🔗</h2> <button id="toggleStructureVisibility" class="text-sm text-indigo-600 hover:underline">Hide</button> </div> <div id="structureContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4"> <div class="md:col-span-2"> <label for="article_structure" class="compact-label">Generated Structure (Editable):</label> <textarea id="article_structure" rows="10" class="compact-textarea" placeholder="AI will generate the article structure here..."></textarea> </div> <div class="md:col-span-1"> <label for="sitemapUrlsList" class="compact-label">Sitemap URLs (for Linking):</label> <div id="sitemapUrlsList" class="mb-2"> <em class="text-gray-400">No sitemap loaded.</em> </div> <div class="flex items-center justify-between text-sm"> <span class="text-gray-700">Link Type:</span> <label for="linkTypeToggle" class="toggle-switch"> <input type="checkbox" id="linkTypeToggle"> <span class="slider"><span class="dot"></span></span> </label> <span id="linkTypeText" class="font-medium text-indigo-700 w-16 text-right">Internal</span> </div> <p class="text-xs text-gray-500 mt-1">Toggle for Internal (relative) or External (absolute) links.</p> </div> </div> <div class="mt-3 text-right"> <button id="generateArticleBtn" class="compact-button"> Generate Full Article ✍️🖼️ <span id="articleLoadingIndicator" class="hidden"><span class="loader"></span></span> </button> </div> <div id="generationProgress" class="text-sm text-center text-gray-600 mt-2 hidden">Generating section <span id="currentSectionNum">1</span> of <span id="totalSectionNum">1</span>...</div> <div id="uploadProgressContainer" class="w-full bg-gray-200 rounded-full h-2.5 mt-2 hidden"> <div id="uploadProgressBar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div> </div> <div id="uploadProgressText" class="text-sm text-center text-gray-600 mt-1 hidden">Uploading image 1 of 1...</div> </section>
+    <section id="step1" class="compact-section">
+        <h2 class="text-lg font-semibold mb-3 text-gray-600 border-b pb-2">Step 1: Article Specifications 🎯</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 mb-4">
+            <div>
+                <div class="input-group grid grid-cols-3 items-center gap-x-2">
+                    <label for="keyword" class="compact-label">Keyword <span class="text-red-500">*</span>🔑:</label>
+                    <input type="text" id="keyword" class="compact-input col-span-2" placeholder="Enter single keyword">
+                </div>
+            </div>
+            <div>
+                <label class="flex items-center space-x-2 cursor-pointer">
+                     <input type="checkbox" id="bulkModeCheckbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                     <span class="text-sm font-medium text-gray-700">Bulk Article Mode? 📚</span>
+                 </label>
+            </div>
+        </div>
+        <div id="bulkKeywordsContainer" class="hidden mb-4">
+            <label for="bulkKeywords" class="compact-label">Enter Keywords (one per line):</label>
+            <textarea id="bulkKeywords" rows="5" class="compact-textarea" placeholder="keyword one&#10;keyword two&#10;another keyword"></textarea>
+            <p class="text-xs text-gray-500 mt-1">Duplicates and leading/trailing symbols/spaces will be removed.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+            <div>
+                <div class="input-group grid grid-cols-3 items-center gap-x-2"> <label for="language" class="compact-label">Language <span class="text-red-500">*</span>🗣️:</label> <div class="col-span-2"> <select id="language" class="compact-select w-full"> </select> <input type="text" id="custom_language" class="custom-input-visible hidden w-full" placeholder="Enter custom language"> </div> </div>
+                <div class="input-group grid grid-cols-3 items-center gap-x-2"> <label for="dialect" class="compact-label">Dialect:</label> <select id="dialect" class="compact-select col-span-2" disabled> <option value="">-- Select Language First --</option> </select> </div>
+                <div class="input-group grid grid-cols-3 items-center gap-x-2"> <label for="audience" class="compact-label">Audience <span class="text-red-500">*</span>👥:</label> <input type="text" id="audience" class="compact-input col-span-2" placeholder="e.g., Small business owners, Gamers"> </div>
+                <div class="input-group grid grid-cols-3 items-center gap-x-2"> <label for="gender" class="compact-label">Author Gender 👫:</label> <select id="gender" class="compact-select col-span-2"> <option value="">Any</option> <option value="Male">Male</option> <option value="Female">Female</option> </select> </div>
+                <div class="input-group grid grid-cols-3 items-center gap-x-2"> <label for="age" class="compact-label">Author Age 🎂:</label> <select id="age" class="compact-select col-span-2"> <option value="">Any</option> <option value="18-24">18-24</option> <option value="25-34">25-34</option> <option value="35-44">35-44</option> <option value="45+">45+</option> </select> </div>
+                <div class="input-group grid grid-cols-3 items-center gap-x-2"> <label for="readerName" class="compact-label">Reader Name 👋:</label> <input type="text" id="readerName" class="compact-input col-span-2" placeholder="e.g., Boss, Bro, Anda"> </div>
+            </div>
+            <div>
+                <div class="input-group grid grid-cols-3 items-center gap-x-2"> <label for="tone" class="compact-label">Tone <span class="text-red-500">*</span>😎:</label> <div class="col-span-2"> <select id="tone" class="compact-select w-full"> <option value="Professional">Professional</option> <option value="Casual">Casual</option> <option value="Formal">Formal</option> <option value="Humorous">Humorous</option> <option value="Informative">Informative</option> <option value="Persuasive">Persuasive</option> <option value="custom">Custom...</option> </select> <input type="text" id="custom_tone" class="custom-input-visible hidden w-full" placeholder="Enter custom tone"> </div> </div>
+                <div class="input-group grid grid-cols-3 items-start gap-x-2"> <label class="compact-label pt-1">Purpose <span class="text-red-500">*</span>💡:</label> <div class="col-span-2 multi-select-container"> <label><input type="checkbox" name="purpose" value="Inform"> Inform Reader</label> <label><input type="checkbox" name="purpose" value="Promote Site/Product"> Promote Site/Product</label> <label><input type="checkbox" name="purpose" value="Promote URL"> Promote Specific URL</label> <label><input type="checkbox" name="purpose" value="Generate Leads"> Generate Leads</label> <label><input type="checkbox" name="purpose" value="Build Authority"> Build Authority</label> <input type="text" id="purposeUrl" class="compact-input mt-1 hidden" placeholder="URL to promote/link to"> <input type="text" id="purposeCta" class="compact-input mt-1 hidden" placeholder="Call to action text (e.g., Visit now!)"> </div> </div>
+                <div class="input-group grid grid-cols-3 items-center gap-x-2"> <label for="format" class="compact-label">Format <span class="text-red-500">*</span>📄:</label> <select id="format" class="compact-select col-span-2"> <option value="html">HTML</option> <option value="markdown">Markdown</option> </select> </div>
+                <div class="input-group grid grid-cols-3 items-center gap-x-2"> <label for="sitemapUrl" class="compact-label">Sitemap URL 🗺️:</label> <div class="col-span-2 flex items-center gap-x-2"> <input type="url" id="sitemapUrl" class="compact-input flex-grow" placeholder="https://example.com/sitemap.xml"> <button id="fetchSitemapBtn" class="compact-button flex-shrink-0"> Fetch <span id="sitemapLoadingIndicator" class="hidden"><span class="loader"></span></span> </button> </div> </div>
+            </div>
+            <div class="input-group grid grid-cols-3 items-start gap-x-2 md:col-span-2 mt-4"> <label for="custom_specs" class="compact-label pt-1">Other Details ✍️:</label> <textarea id="custom_specs" rows="2" class="compact-textarea col-span-2" placeholder="Any other specific instructions..."></textarea> </div>
+        </div>
+
+        <div class="mt-4 pt-4 border-t border-gray-200"> <div class="flex items-center mb-3"> <input type="checkbox" id="generateImages" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mr-2"> <label for="generateImages" class="text-md font-semibold text-gray-600 cursor-pointer">Generate Images? 🖼️</label> </div> <div id="imageOptionsContainer" class="hidden"> <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6"> <div> <div class="image-option-group"> <label for="imageProvider" class="compact-label">Image Provider:</label> <select id="imageProvider" class="compact-select col-span-2"> </select> </div> <div class="image-option-group"> <label for="imageModel" class="compact-label">Image Model:</label> <div class="col-span-2"> <select id="imageModel" class="compact-select w-full"> </select> <input type="text" id="customImageModel" class="custom-input-visible hidden w-full" placeholder="Enter custom model name"> <label class="text-xs flex items-center mt-1"> <input type="checkbox" id="useCustomImageModel" class="h-3 w-3 mr-1"> Use Custom </label> </div> </div> <div class="image-option-group"> <label for="numImages" class="compact-label">Images per Section:</label> <select id="numImages" class="compact-select col-span-2"> <option value="1">1</option> <option value="2">2</option> <option value="3">3</option> <option value="4">4</option> </select> </div> <div class="image-option-group"> <label for="imageSubject" class="compact-label">Subject (Optional):</label> <input type="text" id="imageSubject" class="compact-input col-span-2" placeholder="e.g., Person working"> </div> <div class="image-option-group"> <label class="compact-label">Image Storage:</label> <div class="col-span-2 flex items-center space-x-4"> <label class="flex items-center text-sm"><input type="radio" name="imageStorage" value="base64" checked class="mr-1"> Embed Base64</label> <label class="flex items-center text-sm"><input type="radio" name="imageStorage" value="github" class="mr-1"> Upload to GitHub</label> </div> </div> </div> <div> <div class="image-option-group"> <label for="imageAspectRatio" class="compact-label">Aspect Ratio:</label> <select id="imageAspectRatio" class="compact-select col-span-2"> </select> </div> <div class="image-option-group"> <label for="imageStyle" class="compact-label">Style (Optional):</label> <select id="imageStyle" class="compact-select col-span-2"> <option value="">Default</option> <option value="photorealistic">Photorealistic</option> <option value="illustration">Illustration</option> <option value="anime">Anime</option> <option value="sketch">Sketch</option> <option value="3d_render">3D Render</option> <option value="pixel_art">Pixel Art</option> </select> </div> <div class="image-option-group"> <label for="imageStyleModifiers" class="compact-label">Style Modifiers:</label> <input type="text" id="imageStyleModifiers" class="compact-input col-span-2" placeholder="e.g., cinematic lighting"> </div> <div class="image-option-group"> <label for="imageText" class="compact-label">Include Text:</label> <input type="text" id="imageText" class="compact-input col-span-2" placeholder="Text in image (if supported)"> </div> </div> </div> <div id="githubOptionsContainer" class="hidden mt-3 border-t pt-3 border-gray-200"> <h4 class="text-sm font-medium text-gray-600 mb-2">GitHub Upload Settings</h4> <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6"> <div class="github-option-group"> <label for="githubRepoUrl" class="compact-label">Repo URL <span class="text-red-500">*</span>:</label> <input type="url" id="githubRepoUrl" class="compact-input col-span-2" placeholder="https://github.com/owner/repo-name"> </div> <div class="github-option-group"> <label for="githubCustomPath" class="compact-label">Custom Path (Opt.):</label> <input type="text" id="githubCustomPath" class="compact-input col-span-2" placeholder="/optional/custom/path/"> </div> </div> <p class="text-xs text-gray-500 mt-1">Default path based on language (e.g., /articles/ or /artikel/).</p> </div> </div> </div>
+
+        <div class="mt-4 text-right">
+            <button id="generateSingleBtn" class="compact-button"> Generate Structure 🏗️ <span id="structureLoadingIndicator" class="hidden"><span class="loader"></span></span> </button>
+            <button id="generatePlanBtn" class="compact-button hidden"> Generate Plan 🗺️ <span id="planLoadingIndicator" class="hidden"><span class="loader"></span></span> </button>
+        </div>
+    </section>
+
+    <section id="step1_5" class="compact-section hidden">
+        <h2 class="text-lg font-semibold mb-3 text-gray-600 border-b pb-2">Step 1.5: Planning Table 📊</h2>
+        <p class="text-sm text-gray-600 mb-2">Review and optionally edit the generated plan before starting bulk generation.</p>
+        <div id="planningTableContainer">
+             <table id="planningTable" class="min-w-full divide-y divide-gray-200 text-sm">
+                 <thead>
+                     <tr>
+                         <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Keyword</th>
+                         <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Title</th>
+                         <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Slug</th>
+                         <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Intent</th>
+                         <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Status</th>
+                     </tr>
+                 </thead>
+                 <tbody class="bg-white divide-y divide-gray-200">
+                 </tbody>
+             </table>
+        </div>
+        <div class="mt-4 text-right space-x-2">
+             <button id="startBulkGenerationBtn" class="compact-button"> Start Bulk Generation ▶️ <span id="bulkLoadingIndicator" class="hidden"><span class="loader"></span></span> </button>
+             <button id="downloadBulkZipBtn" class="compact-button bg-green-600 hover:bg-green-700"> Download as Zip 💾 </button>
+        </div>
+        <div id="bulkGenerationProgress" class="text-sm text-center text-gray-600 mt-2 hidden">Generating article <span id="bulkCurrentNum">1</span> of <span id="bulkTotalNum">1</span> (<span id="bulkCurrentKeyword">...</span>)...</div>
+        <div id="bulkUploadProgressContainer" class="w-full bg-gray-200 rounded-full h-2.5 mt-2 hidden"> <div id="bulkUploadProgressBar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div> </div>
+        <div id="bulkUploadProgressText" class="text-sm text-center text-gray-600 mt-1 hidden">Uploading article 1 of 1...</div>
+    </section>
+
+
+    <section id="step2" class="compact-section hidden">
+         <div class="flex justify-between items-center mb-2 border-b pb-2"> <h2 class="text-lg font-semibold text-gray-600">Step 2: Refine Title, Structure & Links 📐🔗</h2> <button id="toggleStructureVisibility" class="text-sm text-indigo-600 hover:underline">Hide</button> </div>
+         <div class="mb-3">
+             <label for="articleTitle" class="compact-label">Article Title (Optional - AI will generate if blank):</label>
+             <input type="text" id="articleTitle" class="compact-input" placeholder="Enter article title...">
+         </div>
+         <div id="structureContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+             <div class="md:col-span-2"> <label for="article_structure" class="compact-label">Generated Structure (Editable):</label> <textarea id="article_structure" rows="10" class="compact-textarea" placeholder="AI will generate the article structure here..."></textarea> </div>
+             <div class="md:col-span-1"> <label for="sitemapUrlsList" class="compact-label">Sitemap URLs (for Linking):</label> <div id="sitemapUrlsList" class="mb-2"> <em class="text-gray-400">No sitemap loaded.</em> </div> <div class="flex items-center justify-between text-sm"> <span class="text-gray-700">Link Type:</span> <label for="linkTypeToggle" class="toggle-switch"> <input type="checkbox" id="linkTypeToggle"> <span class="slider"><span class="dot"></span></span> </label> <span id="linkTypeText" class="font-medium text-indigo-700 w-16 text-right">Internal</span> </div> <p class="text-xs text-gray-500 mt-1">Toggle for Internal (relative) or External (absolute) links.</p> </div>
+         </div>
+         <div class="mt-3 text-right"> <button id="generateArticleBtn" class="compact-button"> Generate Full Article ✍️🖼️ <span id="articleLoadingIndicator" class="hidden"><span class="loader"></span></span> </button> </div>
+         <div id="generationProgress" class="text-sm text-center text-gray-600 mt-2 hidden">Generating section <span id="currentSectionNum">1</span> of <span id="totalSectionNum">1</span>...</div>
+         <div id="uploadProgressContainer" class="w-full bg-gray-200 rounded-full h-2.5 mt-2 hidden"> <div id="uploadProgressBar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div> </div>
+         <div id="uploadProgressText" class="text-sm text-center text-gray-600 mt-1 hidden">Uploading image 1 of 1...</div>
+    </section>
+
     <section id="step3" class="compact-section hidden"> <h2 class="text-lg font-semibold mb-3 text-gray-600 border-b pb-2">Step 3: Review & Edit Article 📝</h2> <label for="generated_article" class="compact-label">Generated Article (Editable):</label> <div id="article_output_container" class="border border-gray-300 rounded-md p-1 bg-gray-50 min-h-[200px] max-h-[450px] overflow-y-auto"> <textarea id="generated_article" rows="12" class="compact-textarea w-full h-full border-none focus:ring-0 bg-transparent" placeholder="AI will generate the full article here..."></textarea> <div id="html_preview" class="prose max-w-none hidden p-2"></div> </div> <div class="mt-2 flex justify-between items-center"> <label class="flex items-center space-x-2 text-sm cursor-pointer"> <input type="checkbox" id="preview_html_checkbox" class="rounded text-indigo-600 focus:ring-indigo-500"> <span>Preview HTML</span> </label> <button id="enableSpinningBtn" class="compact-button"> Enable Spinning 🔄 <span id="spinLoadingIndicator" class="hidden"><span class="loader"></span></span> </button> </div> </section>
+
     <section id="step4" class="compact-section hidden"> <h2 class="text-lg font-semibold mb-3 text-gray-600 border-b pb-2">Step 4: Spin Content 🌀</h2> <p class="text-sm text-gray-600 mb-2">Select text in the article area below, then click the "Spin Selected Text" button.</p> <div class="mb-2 text-right"> <button id="spinSelectedBtn" class="compact-button" disabled> Spin Selected Text ✨ <span id="spinActionLoadingIndicator" class="hidden"><span class="loader"></span></span> </button> </div> <label for="spun_article_display" class="compact-label">Spinnable Article (Editable):</label> <div id="spin_output_container" class="border border-gray-300 rounded-md p-2 bg-gray-50 min-h-[200px] max-h-[450px] overflow-y-auto"> <div id="spun_article_display" contenteditable="true" class="compact-textarea w-full h-full border-none focus:outline-none focus:ring-0 min-h-[200px]" placeholder="Article content will appear here for spinning..."></div> </div> <p class="text-xs text-gray-500 mt-2">Spintax: <code class="bg-gray-200 px-1 rounded">{opt1|opt2}</code> Nested: <code class="bg-gray-200 px-1 rounded">{opt1|{nest1|nest2}|opt3}</code>.</p> </section>
 
     <div id="consoleLogContainer"> <h3 class="text-md font-semibold mb-2 text-gray-400">Console Log 🪵</h3> <pre id="consoleLog"></pre> </div>
 
+    <script type="module">
+        // --- Load JavaScript Modules Sequentially ---
+        // Using dynamic import() with await to enforce order
 
-    <script>
-        // --- Configurations ---
-        const aiProviders = { /* ... (same as v7) ... */ google: { models: ['gemini-2.5-pro-preview-03-25', 'gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-2.0-flash-thinking-exp-01-21'] }, openai: { models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini', 'gpt-4.1-nano'] }, anthropic: { models: ['claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307'] }, deepseek: { models: ['deepseek-chat', 'deepseek-coder'] }, xai: { models: ['grok-3', 'grok-3-mini', 'grok-3-fast', 'grok-3-mini-fast'] } };
-        const imageProviders = { /* ... (same as v7) ... */ google: { models: ['imagen-3.0-generate-002', 'gemini-2.0-flash-exp-image-generation'], aspectRatios: ["1:1", "3:4", "4:3", "9:16", "16:9"] }, openai: { models: ['gpt-image-1'], aspectRatios: ["1024x1024", "1024x1536", "1536x1024"] } };
-        const SITEMAP_STORAGE_KEY = 'aiArticleSpinner_sitemapUrls_v1';
-        const CUSTOM_MODELS_STORAGE_KEY = 'aiArticleSpinner_customModels_v1';
-        const languageOptions = { /* ... (same as v7) ... */ "English": { name: "English", dialects: ["Default", "American", "British", "Australian"] }, "Indonesian": { name: "Indonesian", dialects: ["Default/Formal", "Jaksel", "Suroboyoan", "Medan", "Santai/Gaul"] }, "Spanish": { name: "Spanish", dialects: ["Default/Neutral", "Spain", "Mexican", "Argentinian"] }, "French": { name: "French", dialects: ["Default/Standard", "Canadian", "African"] }, "German": { name: "German", dialects: ["Default/Standard", "Bavarian", "Swiss German"] }, "custom": { name: "Custom...", dialects: [] } };
+        console.log("Starting module loading...");
 
-        // --- DOM Elements ---
-        // ... (Get all elements as in v7) ...
-        const keywordInput = document.getElementById('keyword'); const languageSelect = document.getElementById('language'); const customLanguageInput = document.getElementById('custom_language'); const dialectSelect = document.getElementById('dialect'); const audienceInput = document.getElementById('audience'); const readerNameInput = document.getElementById('readerName'); const toneSelect = document.getElementById('tone'); const customToneInput = document.getElementById('custom_tone'); const genderSelect = document.getElementById('gender'); const ageSelect = document.getElementById('age'); const purposeCheckboxes = document.querySelectorAll('input[name="purpose"]'); const purposeUrlInput = document.getElementById('purposeUrl'); const purposeCtaInput = document.getElementById('purposeCta'); const formatSelect = document.getElementById('format'); const customSpecsInput = document.getElementById('custom_specs'); const aiProviderSelect = document.getElementById('ai_provider'); const aiModelSelect = document.getElementById('ai_model'); const useCustomAiModelCheckbox = document.getElementById('useCustomAiModel'); const customAiModelInput = document.getElementById('customAiModel'); const sitemapUrlInput = document.getElementById('sitemapUrl'); const fetchSitemapBtn = document.getElementById('fetchSitemapBtn'); const apiStatusDiv = document.getElementById('apiStatus'); const apiStatusIndicator = document.getElementById('apiStatusIndicator'); const sitemapUrlsListDiv = document.getElementById('sitemapUrlsList'); const linkTypeToggle = document.getElementById('linkTypeToggle'); const linkTypeText = document.getElementById('linkTypeText'); const generateImagesCheckbox = document.getElementById('generateImages'); const imageOptionsContainer = document.getElementById('imageOptionsContainer'); const imageProviderSelect = document.getElementById('imageProvider'); const imageModelSelect = document.getElementById('imageModel'); const useCustomImageModelCheckbox = document.getElementById('useCustomImageModel'); const customImageModelInput = document.getElementById('customImageModel'); const numImagesSelect = document.getElementById('numImages'); const imageAspectRatioSelect = document.getElementById('imageAspectRatio'); const imageSubjectInput = document.getElementById('imageSubject'); const imageStyleSelect = document.getElementById('imageStyle'); const imageStyleModifiersInput = document.getElementById('imageStyleModifiers'); const imageTextInput = document.getElementById('imageText'); const imageStorageRadios = document.querySelectorAll('input[name="imageStorage"]'); const githubOptionsContainer = document.getElementById('githubOptionsContainer'); const githubRepoUrlInput = document.getElementById('githubRepoUrl'); const githubCustomPathInput = document.getElementById('githubCustomPath'); const generationProgressDiv = document.getElementById('generationProgress'); const currentSectionNumSpan = document.getElementById('currentSectionNum'); const totalSectionNumSpan = document.getElementById('totalSectionNum'); const uploadProgressContainer = document.getElementById('uploadProgressContainer'); const uploadProgressBar = document.getElementById('uploadProgressBar'); const uploadProgressText = document.getElementById('uploadProgressText'); const generateStructureBtn = document.getElementById('generateStructureBtn'); const generateArticleBtn = document.getElementById('generateArticleBtn'); const enableSpinningBtn = document.getElementById('enableSpinningBtn'); const spinSelectedBtn = document.getElementById('spinSelectedBtn'); const toggleStructureVisibilityBtn = document.getElementById('toggleStructureVisibility'); const previewHtmlCheckbox = document.getElementById('preview_html_checkbox'); const step1Section = document.getElementById('step1'); const step2Section = document.getElementById('step2'); const step3Section = document.getElementById('step3'); const step4Section = document.getElementById('step4'); const structureContainer = document.getElementById('structureContainer'); const articleStructureTextarea = document.getElementById('article_structure'); const generatedArticleTextarea = document.getElementById('generated_article'); const articleOutputContainer = document.getElementById('article_output_container'); const htmlPreviewDiv = document.getElementById('html_preview'); const spinOutputContainer = document.getElementById('spin_output_container'); const spunArticleDisplay = document.getElementById('spun_article_display'); const structureLoadingIndicator = document.getElementById('structureLoadingIndicator'); const articleLoadingIndicator = document.getElementById('articleLoadingIndicator'); const sitemapLoadingIndicator = document.getElementById('sitemapLoadingIndicator'); const spinLoadingIndicator = document.getElementById('spinLoadingIndicator'); const spinActionLoadingIndicator = document.getElementById('spinActionLoadingIndicator'); const consoleLog = document.getElementById('consoleLog');
+        try {
+            // Order is important! Config -> Helpers -> State -> UI -> Modules -> Main
+            console.log("Loading: article-config.js");
+            await import('./article-config.js');
 
-        // --- State ---
-        let parsedSitemapUrls = [];
-        let customModels = {};
-        let imagesToUpload = []; // Store { filename: '...', base64: '...', placeholderId: '...' }
-        let fullArticleContent = ''; // Store combined article content during generation
+            console.log("Loading: article-helpers.js");
+            await import('./article-helpers.js');
 
-        // --- Helper Functions ---
-        function logToConsole(message, type = 'info') { /* ... */ console.log(`[${type.toUpperCase()}] ${message}`); const timestamp = new Date().toLocaleTimeString(); const logEntry = document.createElement('div'); logEntry.classList.add(`log-${type}`); logEntry.textContent = `[${timestamp}] ${message}`; consoleLog.prepend(logEntry); while (consoleLog.children.length > 100) { consoleLog.removeChild(consoleLog.lastChild); } }
-        function showLoading(indicatorElement, show = true) { indicatorElement.classList.toggle('hidden', !show); }
-        function disableButtons(disabled = true) { /* ... */ generateStructureBtn.disabled = disabled; generateArticleBtn.disabled = disabled; enableSpinningBtn.disabled = disabled; }
-        function getSelectedProviderKey() { return aiProviderSelect.value; }
-        function getSelectedImageProviderKey() { return imageProviderSelect.value; }
-        function sanitizeFilename(name) { /* ... */ return name.toLowerCase().replace(/[^a-z0-9\-\.]/g, '-').replace(/-+/g, '-').replace(/^-+|-+$/g, '').substring(0, 100); }
-        // Helper to find the "cheapest/fastest" model from a list
-        function findCheapestModel(models = []) {
-            const cheapKeywords = ['flash', 'mini', 'lite', 'fast', 'haiku', 'nano', '3.5-turbo']; // Add known cheap model identifiers
-            for (const keyword of cheapKeywords) {
-                const found = models.find(m => m.includes(keyword));
-                if (found) return found;
-            }
-            return models[0] || ''; // Fallback to the first model
+            console.log("Loading: article-state.js");
+            await import('./article-state.js');
+
+            console.log("Loading: article-ui.js");
+            await import('./article-ui.js');
+
+            console.log("Loading: article-single.js");
+            await import('./article-single.js');
+
+            console.log("Loading: article-bulk.js");
+            await import('./article-bulk.js');
+
+            console.log("Loading: article-spinner.js");
+            await import('./article-spinner.js');
+
+            console.log("Loading: article-main.js");
+            // You might want to capture the main module if it exports functions you need to call immediately
+            const mainModule = await import('./article-main.js');
+            console.log("article-main.js loaded.");
+
+            // Optional: If article-main.js exports an init function or similar:
+            // if (mainModule && typeof mainModule.init === 'function') {
+            //     mainModule.init();
+            // }
+
+            console.log("All modules loaded successfully.");
+
+        } catch (error) {
+            console.error("Failed to load one or more modules:", error);
+            // Handle loading errors appropriately (e.g., show a message to the user)
         }
-
-        // --- Custom Model Storage ---
-        function loadCustomModels() { /* ... (same as v7) ... */ const stored = localStorage.getItem(CUSTOM_MODELS_STORAGE_KEY); customModels = stored ? JSON.parse(stored) : { text: {}, image: {} }; customModels.text = customModels.text || {}; customModels.image = customModels.image || {}; logToConsole('Loaded custom models.', 'info'); }
-        function saveCustomModels() { /* ... (same as v7) ... */ localStorage.setItem(CUSTOM_MODELS_STORAGE_KEY, JSON.stringify(customModels)); logToConsole('Saved custom models.', 'info'); }
-        function updateCustomModel(type, provider, modelName) { /* ... (same as v7) ... */ if (!customModels[type]) customModels[type] = {}; customModels[type][provider] = modelName.trim(); saveCustomModels(); }
-        function getCustomModel(type, provider) { /* ... (same as v7) ... */ return customModels[type]?.[provider] || ''; }
-
-        // --- API Status Function ---
-        async function checkApiStatus() { /* ... (same as v7) ... */ const providerKey = getSelectedProviderKey(); const model = getSelectedTextModel(); if (!providerKey || !model) { apiStatusDiv.innerHTML = `<span class="status-error">Select Provider/Model</span>`; return; } apiStatusDiv.innerHTML = `<span class="status-checking">Checking ${providerKey}...</span>`; showLoading(apiStatusIndicator, true); try { const response = await fetch('/ai-api', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'check_status', providerKey: providerKey, model: model }) }); const data = await response.json(); if (!response.ok || !data.success) { throw new Error(data.error || `Status check failed (${response.status})`); } apiStatusDiv.innerHTML = `<span class="status-ok">✅ Ready (${providerKey})</span>`; logToConsole(`API Status OK for ${providerKey} (${model})`, 'success'); } catch (error) { console.error("API Status Check Failed:", error); logToConsole(`API Status Error: ${error.message}`, 'error'); apiStatusDiv.innerHTML = `<span class="status-error">❌ Error: ${error.message}</span>`; } finally { showLoading(apiStatusIndicator, false); } }
-
-        // --- Sitemap Functions ---
-        function displaySitemapUrls() { /* ... (same as v7) ... */ if (parsedSitemapUrls.length === 0) { sitemapUrlsListDiv.innerHTML = `<em class="text-gray-400">No sitemap loaded.</em>`; return; } sitemapUrlsListDiv.innerHTML = ''; parsedSitemapUrls.forEach(url => { const div = document.createElement('div'); div.textContent = url; sitemapUrlsListDiv.appendChild(div); }); }
-        function loadSitemapFromStorage() { /* ... (same as v7) ... */ const storedUrls = localStorage.getItem(SITEMAP_STORAGE_KEY); if (storedUrls) { parsedSitemapUrls = JSON.parse(storedUrls); logToConsole(`Loaded ${parsedSitemapUrls.length} sitemap URLs.`, 'info'); } else { parsedSitemapUrls = []; } displaySitemapUrls(); }
-        async function fetchAndParseSitemap() { /* ... (same as v7) ... */ const url = sitemapUrlInput.value.trim(); if (!url) { alert('Please enter a Sitemap URL.'); return; } logToConsole(`Fetching sitemap: ${url}`, 'info'); showLoading(sitemapLoadingIndicator, true); fetchSitemapBtn.disabled = true; try { const response = await fetch('/ai-api', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'fetch_sitemap', sitemapUrl: url }) }); const data = await response.json(); if (!response.ok || !data.success) { throw new Error(data.error || `Failed fetch/parse (${response.status})`); } parsedSitemapUrls = data.urls || []; localStorage.setItem(SITEMAP_STORAGE_KEY, JSON.stringify(parsedSitemapUrls)); logToConsole(`Fetched/parsed ${parsedSitemapUrls.length} URLs.`, 'success'); displaySitemapUrls(); } catch (error) { console.error("Sitemap Error:", error); logToConsole(`Sitemap Error: ${error.message}`, 'error'); alert(`Sitemap Error: ${error.message}`); } finally { showLoading(sitemapLoadingIndicator, false); fetchSitemapBtn.disabled = false; } }
-
-        // --- Language/Dialect Functions ---
-        function populateLanguages() { /* ... (same as v7) ... */ languageSelect.innerHTML = ''; Object.keys(languageOptions).forEach(langKey => { const option = document.createElement('option'); option.value = langKey; option.textContent = languageOptions[langKey].name; languageSelect.appendChild(option); }); populateDialects(); }
-        function populateDialects() { /* ... (same as v7) ... */ const selectedLangKey = languageSelect.value; const langConfig = languageOptions[selectedLangKey]; const dialects = langConfig?.dialects || []; dialectSelect.innerHTML = ''; if (selectedLangKey === 'custom' || dialects.length === 0) { dialectSelect.disabled = true; const option = document.createElement('option'); option.value = ""; option.textContent = "-- N/A --"; dialectSelect.appendChild(option); } else { dialectSelect.disabled = false; dialects.forEach(dialect => { const option = document.createElement('option'); option.value = dialect; option.textContent = dialect; dialectSelect.appendChild(option); }); } customLanguageInput.classList.toggle('hidden', selectedLangKey !== 'custom'); customLanguageInput.classList.toggle('custom-input-visible', selectedLangKey === 'custom'); }
-
-        // --- Dynamic Model Loading (Text & Image) ---
-        function populateTextModels(setDefault = false) {
-            const providerKey = getSelectedProviderKey();
-            const providerConfig = aiProviders[providerKey];
-            const models = providerConfig?.models || [];
-            aiModelSelect.innerHTML = '';
-            let defaultModel = '';
-
-            if (models.length === 0) {
-                 aiModelSelect.disabled = true; useCustomAiModelCheckbox.checked = true;
-            } else {
-                models.forEach(model => {
-                    const option = document.createElement('option'); option.value = model; option.textContent = model; aiModelSelect.appendChild(option);
-                });
-                 aiModelSelect.disabled = false; useCustomAiModelCheckbox.checked = false;
-                 // Find and set default cheapest model if requested
-                 if (setDefault) {
-                     defaultModel = findCheapestModel(models);
-                     if (defaultModel) aiModelSelect.value = defaultModel;
-                 }
-            }
-            customAiModelInput.value = getCustomModel('text', providerKey);
-            toggleCustomModelInput('text');
-            if(defaultModel) logToConsole(`Default text model set to: ${defaultModel}`, 'info');
-            checkApiStatus();
-        }
-
-         function populateImageModels(setDefault = false) {
-            const providerKey = getSelectedImageProviderKey();
-            const providerConfig = imageProviders[providerKey];
-            const models = providerConfig?.models || [];
-            const aspectRatios = providerConfig?.aspectRatios || ["1:1"];
-            imageModelSelect.innerHTML = '';
-             let defaultModel = '';
-
-            if (models.length === 0) {
-                 imageModelSelect.disabled = true; useCustomImageModelCheckbox.checked = true;
-            } else {
-                models.forEach(model => {
-                    const option = document.createElement('option'); option.value = model; option.textContent = model; imageModelSelect.appendChild(option);
-                });
-                 imageModelSelect.disabled = false; useCustomImageModelCheckbox.checked = false;
-                 // Find and set default cheapest model if requested
-                 if (setDefault) {
-                     defaultModel = findCheapestModel(models); // Use same logic for image models
-                     if (defaultModel) imageModelSelect.value = defaultModel;
-                 }
-            }
-            customImageModelInput.value = getCustomModel('image', providerKey);
-            toggleCustomModelInput('image');
-            if(defaultModel) logToConsole(`Default image model set to: ${defaultModel}`, 'info');
-
-            imageAspectRatioSelect.innerHTML = '';
-            aspectRatios.forEach(ratio => { const option = document.createElement('option'); option.value = ratio; option.textContent = ratio; imageAspectRatioSelect.appendChild(option); });
-        }
-
-        function toggleCustomModelInput(type) { /* ... (same as v7) ... */ const useCustomCheckbox = type === 'text' ? useCustomAiModelCheckbox : useCustomImageModelCheckbox; const modelSelect = type === 'text' ? aiModelSelect : imageModelSelect; const customInput = type === 'text' ? customAiModelInput : customImageModelInput; const useStandard = !useCustomCheckbox.checked; modelSelect.disabled = !useStandard; customInput.classList.toggle('hidden', useStandard); customInput.classList.toggle('custom-input-visible', !useStandard); if (!useStandard) { updateCustomModel(type, type === 'text' ? getSelectedProviderKey() : getSelectedImageProviderKey(), customInput.value); } if (type === 'text') { checkApiStatus(); } }
-        function getSelectedTextModel() { /* ... (same as v7) ... */ return useCustomAiModelCheckbox.checked ? customAiModelInput.value.trim() : aiModelSelect.value; }
-        function getSelectedImageModel() { /* ... (same as v7) ... */ return useCustomImageModelCheckbox.checked ? customImageModelInput.value.trim() : imageModelSelect.value; }
-
-        // --- Unified AI Call Function ---
-        // Updated to use the fetchWithRetry logic implicitly via the backend
-        async function callAI(action, payload, loadingIndicator, buttonToDisable) {
-             const fullPayload = { action, ...payload };
-             logToConsole(`Sending action '${action}' to Cloudflare Function...`, 'info');
-             if(loadingIndicator) showLoading(loadingIndicator, true);
-             if (buttonToDisable) buttonToDisable.disabled = true; else disableButtons(true);
-
-             try {
-                // The backend function now handles retries internally
-                const response = await fetch('/ai-api', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(fullPayload)
-                });
-
-                const data = await response.json();
-
-                if (!response.ok || !data.success) {
-                    const errorMsg = data.error || `Request failed with status ${response.status}`;
-                    // Log specific errors if available
-                    if (response.status === 429) {
-                        logToConsole(`Rate limit hit during action '${action}'. Backend should handle retries.`, 'warn');
-                    } else if (response.status >= 500) {
-                         logToConsole(`Server error (${response.status}) during action '${action}'. Backend should handle retries.`, 'warn');
-                    }
-                    throw new Error(errorMsg);
-                }
-
-                logToConsole(`Action '${action}' completed successfully.`, 'success');
-                return data;
-
-            } catch (error) {
-                console.error(`Action '${action}' Failed:`, error);
-                logToConsole(`Error during action '${action}': ${error.message}`, 'error');
-                alert(`Operation Failed: ${error.message}. Check console log.`);
-                return null; // Indicate failure
-            } finally {
-                 if(loadingIndicator) showLoading(loadingIndicator, false);
-                 if (buttonToDisable) buttonToDisable.disabled = false; else disableButtons(false);
-            }
-        }
-
-        // --- Spintax Highlighting ---
-        function highlightSpintax(element) { /* ... (same as v7) ... */ element.querySelectorAll('.spintax-level-1, .spintax-level-2, .spintax-level-3, .spintax-pipe').forEach(el => { el.outerHTML = el.innerHTML; }); let html = element.innerHTML; const tagMap = {}; let tagIndex = 0; html = html.replace(/<[^>]+>/g, (match) => { const placeholder = `__TAG${tagIndex}__`; tagMap[placeholder] = match; tagIndex++; return placeholder; }); html = html.replace(/\|/g, '<span class="spintax-pipe">|</span>'); let level = 0; let coloredHtml = ''; for (let i = 0; i < html.length; i++) { if (html[i] === '{') { level++; const colorClass = `spintax-level-${level % 3 + 1}`; coloredHtml += `<span class="${colorClass}">{</span>`; } else if (html[i] === '}') { if (level > 0) { const colorClass = `spintax-level-${level % 3 + 1}`; coloredHtml += `<span class="${colorClass}">}</span>`; level--; } else { coloredHtml += '}'; } } else { coloredHtml += html[i]; } } coloredHtml = coloredHtml.replace(/__TAG\d+__/g, (placeholder) => tagMap[placeholder] || placeholder); element.innerHTML = coloredHtml; }
-
-        // --- Validation Function ---
-        function validateInputs() { /* ... (same as v7) ... */ let isValid = true; let missingFields = []; if (!keywordInput.value.trim()) { missingFields.push("Keyword"); isValid = false; } if (!languageSelect.value || (languageSelect.value === 'custom' && !customLanguageInput.value.trim())) { missingFields.push("Language"); isValid = false; } if (!audienceInput.value.trim()) { missingFields.push("Audience"); isValid = false; } if (!toneSelect.value || (toneSelect.value === 'custom' && !customToneInput.value.trim())) { missingFields.push("Tone"); isValid = false; } if (!formatSelect.value) { missingFields.push("Format"); isValid = false; } const selectedPurposes = getSelectedPurposes(); if (selectedPurposes.length === 0) { missingFields.push("Purpose"); isValid = false; } else { if (selectedPurposes.includes("Promote URL") && !purposeUrlInput.value.trim()) { missingFields.push("Purpose URL"); isValid = false; } } if (!getSelectedTextModel()) { missingFields.push("Text Model"); isValid = false; } if (generateImagesCheckbox.checked) { if (!getSelectedImageModel()) { missingFields.push("Image Model"); isValid = false; } const storageType = document.querySelector('input[name="imageStorage"]:checked').value; if (storageType === 'github' && !githubRepoUrlInput.value.trim()) { missingFields.push("GitHub Repo URL"); isValid = false; } } if (!isValid) { alert(`Please fill in the required fields (*):\n- ${missingFields.join('\n- ')}`); } return isValid; }
-
-        // --- Get Selected Purposes ---
-        function getSelectedPurposes() { /* ... (same as v7) ... */ const selected = []; purposeCheckboxes.forEach(checkbox => { if (checkbox.checked) { selected.push(checkbox.value); } }); return selected; }
-
-        // --- Event Listeners ---
-        languageSelect.addEventListener('change', populateDialects);
-        aiProviderSelect.addEventListener('change', () => populateTextModels(false)); // Don't force default on user change
-        aiModelSelect.addEventListener('change', (event) => { logToConsole(`Selected Text Model: ${event.target.value}`, 'info'); checkApiStatus(); });
-        useCustomAiModelCheckbox.addEventListener('change', () => toggleCustomModelInput('text'));
-        customAiModelInput.addEventListener('change', () => updateCustomModel('text', getSelectedProviderKey(), customAiModelInput.value));
-        generateImagesCheckbox.addEventListener('change', () => { imageOptionsContainer.classList.toggle('hidden', !generateImagesCheckbox.checked); if (generateImagesCheckbox.checked) { populateImageModels(true); toggleGithubOptions(); } else { githubOptionsContainer.classList.add('hidden'); } }); // Set default image model when enabling
-        imageProviderSelect.addEventListener('change', () => populateImageModels(true)); // Set default image model on provider change
-        imageModelSelect.addEventListener('change', (event) => { logToConsole(`Selected Image Model: ${event.target.value}`, 'info'); });
-        useCustomImageModelCheckbox.addEventListener('change', () => toggleCustomModelInput('image'));
-        customImageModelInput.addEventListener('change', () => updateCustomModel('image', getSelectedImageProviderKey(), customImageModelInput.value));
-        imageStorageRadios.forEach(radio => radio.addEventListener('change', toggleGithubOptions));
-        fetchSitemapBtn.addEventListener('click', fetchAndParseSitemap);
-        linkTypeToggle.addEventListener('change', () => { linkTypeText.textContent = linkTypeToggle.checked ? 'External' : 'Internal'; });
-        toneSelect.addEventListener('change', () => { customToneInput.classList.toggle('hidden', toneSelect.value !== 'custom'); customToneInput.classList.toggle('custom-input-visible', toneSelect.value === 'custom'); });
-        purposeCheckboxes.forEach(checkbox => { checkbox.addEventListener('change', () => { /* ... (same as v7) ... */ const selectedPurposes = getSelectedPurposes(); purposeUrlInput.classList.toggle('hidden', !selectedPurposes.includes('Promote URL')); purposeCtaInput.classList.toggle('hidden', !selectedPurposes.some(p => p.startsWith('Promote') || p === 'Generate Leads')); }); });
-        function toggleGithubOptions() { /* ... (same as v7) ... */ const storageType = document.querySelector('input[name="imageStorage"]:checked').value; githubOptionsContainer.classList.toggle('hidden', storageType !== 'github'); }
-
-        // --- Core Logic Functions ---
-        function getArticleOutlines(structureText) { /* ... (same as v7) ... */ return structureText.split('\n').map(line => line.trim()).filter(line => line.length > 0 && !line.startsWith('#') && !line.startsWith('- ') && line.length > 3); } // Added min length filter
-        function constructImagePrompt(sectionContent, sectionTitle = "article image") { /* ... (same as v7) ... */ const subject = imageSubjectInput.value.trim() || sectionTitle; const style = imageStyleSelect.value; const modifiers = imageStyleModifiersInput.value.trim(); const textToInclude = imageTextInput.value.trim(); let prompt = `Create an image representing: ${subject}.`; if (style) prompt += ` Style: ${style}.`; if (modifiers) prompt += ` Details: ${modifiers}.`; if (textToInclude) prompt += ` Include the text: "${textToInclude}".`; const contextSnippet = sectionContent.substring(0, 150); prompt += ` Context: ${contextSnippet}...`; return prompt; }
-        function buildTextGenerationPayload(currentOutline, previousContext) { /* ... (same as v7) ... */ const keyword = keywordInput.value.trim(); const language = languageSelect.value === 'custom' ? customLanguageInput.value.trim() : languageOptions[languageSelect.value]?.name || languageSelect.value; const dialect = dialectSelect.disabled ? '' : dialectSelect.value; const audience = audienceInput.value.trim(); const readerName = readerNameInput.value.trim(); const tone = toneSelect.value === 'custom' ? customToneInput.value.trim() : toneSelect.value; const gender = genderSelect.value; const age = ageSelect.value; const selectedPurposes = getSelectedPurposes(); const purposeDetails = { types: selectedPurposes, url: purposeUrlInput.value.trim(), cta: purposeCtaInput.value.trim() }; const format = formatSelect.value; const customSpecs = customSpecsInput.value.trim(); const linkType = linkTypeToggle.checked ? 'External (absolute URLs)' : 'Internal (relative URLs if possible, otherwise absolute)'; let linkingInstructions = ''; if (parsedSitemapUrls.length > 0) { const urlList = parsedSitemapUrls.slice(0, 5).join('\n'); linkingInstructions = `\n- Consider linking naturally to relevant URLs from this list if appropriate: ${urlList}\n- Link Type Preference: ${linkType}.`; } const prompt = `Generate the article content ONLY for the following section/outline, continuing naturally from the previous context if provided.\nSection Outline: "${currentOutline}"\nPrevious Context (end of last section):\n---\n${previousContext ? previousContext.slice(-500) : '(Start of article)'}\n---\nOverall Article Specifications:\n- Keyword: "${keyword}" - Language: ${language}${dialect ? ` (${dialect} dialect)` : ''} - Target Audience: ${audience} - Tone: ${tone} ${gender ? `- Author Gender: ${gender}` : ''} ${age ? `- Author Age: ${age}` : ''} - Purpose(s): ${purposeDetails.types.join(', ')} ${purposeDetails.url && purposeDetails.types.includes('Promote URL') ? ` - Promo URL: ${purposeDetails.url}` : ''} ${purposeDetails.cta && purposeDetails.types.some(p => p.startsWith('Promote') || p === 'Generate Leads') ? ` - CTA: ${purposeDetails.cta}` : ''} ${readerName ? `- Reader Name: ${readerName}` : ''} - Output Format: ${format} ${customSpecs ? `- Other Details: ${customSpecs}` : ''} ${linkingInstructions}\nInstructions:\n- Write ONLY the content for the current section outline: "${currentOutline}". Do NOT repeat the outline heading unless natural. Ensure smooth transition. Adhere strictly to ${format} format (${format === 'html' ? 'use only <p>,<h1>-<h6>,<ul>,<ol>,<li>,<b>,<i>,<a> tags' : 'use standard Markdown'}). Do NOT add intro/concluding remarks about the generation.`; return { providerKey: getSelectedProviderKey(), model: getSelectedTextModel(), prompt: prompt }; }
-        function buildImageGenerationPayload(sectionContent, sectionTitle, sectionIndex) { /* ... (same as v7) ... */ const keyword = keywordInput.value.trim(); const filename = sanitizeFilename(`${keyword}-${sectionTitle}-${Date.now()}-${sectionIndex}.png`); const imagePrompt = constructImagePrompt(sectionContent, sectionTitle); return { providerKey: getSelectedImageProviderKey(), model: getSelectedImageModel(), prompt: imagePrompt, filename: filename, numImages: parseInt(numImagesSelect.value, 10) || 1, aspectRatio: imageAspectRatioSelect.value, style: imageStyleSelect.value || undefined, text: imageTextInput.value.trim() || undefined }; }
-
-        // Step 1 -> Step 2: Generate Structure
-        generateStructureBtn.addEventListener('click', async () => { /* ... (same as v7) ... */ if (!validateInputs()) return; const keyword = keywordInput.value.trim(); const language = languageSelect.value === 'custom' ? customLanguageInput.value.trim() : languageOptions[languageSelect.value]?.name || languageSelect.value; const dialect = dialectSelect.disabled ? '' : dialectSelect.value; const audience = audienceInput.value.trim(); const readerName = readerNameInput.value.trim(); const tone = toneSelect.value === 'custom' ? customToneInput.value.trim() : toneSelect.value; const gender = genderSelect.value; const age = ageSelect.value; const selectedPurposes = getSelectedPurposes(); const purposeDetails = { types: selectedPurposes, url: purposeUrlInput.value.trim(), cta: purposeCtaInput.value.trim() }; const customSpecs = customSpecsInput.value.trim(); const prompt = `Generate a detailed article structure/outline based on these specifications:\n- Keyword: "${keyword}"\n- Language: ${language}${dialect ? ` (${dialect} dialect)` : ''}\n- Target Audience: ${audience}\n- Tone: ${tone}\n${gender ? `- Author Gender Persona: ${gender}` : ''}\n${age ? `- Author Age Persona: ${age}` : ''}\n- Article Purpose(s): ${purposeDetails.types.join(', ')}\n${purposeDetails.url && purposeDetails.types.includes('Promote URL') ? `  - Promotional URL: ${purposeDetails.url}` : ''}\n${purposeDetails.cta && purposeDetails.types.some(p => p.startsWith('Promote') || p === 'Generate Leads') ? `  - Desired Call to Action: ${purposeDetails.cta}` : ''}\n${readerName ? `- Address Reader As: ${readerName}` : ''}\n${customSpecs ? `- Other Details: ${customSpecs}` : ''}\n\nInstructions:\n- Create a logical structure covering the keyword comprehensively for the specified audience.\n- Output only the structure using clear headings or bullet points (e.g., Section 1: ..., - Point A, - Point B).\n- Do not include introductory or concluding remarks about the structure itself.`; const payload = { providerKey: getSelectedProviderKey(), model: getSelectedTextModel(), prompt: prompt }; logToConsole(`--- Generating Structure Prompt ---\n${prompt}\n---------------------------------`); const result = await callAI('generate', payload, structureLoadingIndicator, generateStructureBtn); if (result && result.text) { articleStructureTextarea.value = result.text; step2Section.classList.remove('hidden'); structureContainer.classList.remove('hidden'); toggleStructureVisibilityBtn.textContent = 'Hide'; step3Section.classList.add('hidden'); step4Section.classList.add('hidden'); displaySitemapUrls(); } });
-
-        // Step 2 -> Step 3: Generate Article (Incremental + Image Handling)
-        generateArticleBtn.addEventListener('click', async () => {
-            const structure = articleStructureTextarea.value.trim();
-            if (!structure) { alert('Article structure is empty.'); return; }
-            if (!validateInputs()) return;
-            const outlines = getArticleOutlines(structure);
-            if (outlines.length === 0) { alert('Could not parse outlines.'); return; }
-
-            // Reset state
-            generatedArticleTextarea.value = ''; imagesToUpload = []; fullArticleContent = '';
-            const doImageGeneration = generateImagesCheckbox.checked;
-            const imageStorageType = doImageGeneration ? document.querySelector('input[name="imageStorage"]:checked').value : 'none';
-            const outputFormat = formatSelect.value;
-            let previousSectionContent = '';
-
-            generationProgressDiv.classList.remove('hidden'); totalSectionNumSpan.textContent = outlines.length;
-            uploadProgressContainer.classList.add('hidden'); uploadProgressText.classList.add('hidden');
-            generateArticleBtn.disabled = true; showLoading(articleLoadingIndicator, true);
-
-            for (let i = 0; i < outlines.length; i++) {
-                const currentOutline = outlines[i];
-                currentSectionNumSpan.textContent = i + 1;
-                logToConsole(`Processing outline ${i+1}: "${currentOutline}"`, 'info');
-
-                // Generate Text
-                const textPayload = buildTextGenerationPayload(currentOutline, previousSectionContent);
-                const textResult = await callAI('generate', textPayload, null, null);
-                if (!textResult || !textResult.text) { logToConsole(`Failed text gen for outline: "${currentOutline}". Stopping.`, 'error'); alert(`Error generating section ${i + 1}.`); break; }
-                const currentSectionText = textResult.text.trim() + (outputFormat === 'html' ? '\n\n' : '\n\n');
-                fullArticleContent += currentSectionText;
-                generatedArticleTextarea.value = fullArticleContent;
-                previousSectionContent = currentSectionText;
-
-                // Generate Image
-                let imagePlaceholder = '';
-                if (doImageGeneration) {
-                    logToConsole(`Generating image for section ${i + 1}...`, 'info');
-                    const imagePayload = buildImageGenerationPayload(currentSectionText, currentOutline, i + 1);
-                    const imageResult = await callAI('generate_image', imagePayload, null, null);
-                    if (imageResult && imageResult.imageData) {
-                        const filename = imagePayload.filename;
-                        const altText = `Image for ${currentOutline.substring(0, 50)}`;
-                        const placeholderId = `img-placeholder-${filename.replace(/\./g, '-')}`;
-                        if (imageStorageType === 'github') {
-                            imagesToUpload.push({ filename: filename, base64: imageResult.imageData, placeholderId: placeholderId });
-                            imagePlaceholder = outputFormat === 'html' ? `<div id="${placeholderId}">[Uploading image: ${filename}...]</div>\n\n` : `[Uploading image: ${filename}...]\n\n`;
-                            logToConsole(`Image ${filename} queued for GitHub upload.`, 'info');
-                        } else {
-                            imagePlaceholder = outputFormat === 'html' ? `<img src="data:image/png;base64,${imageResult.imageData}" alt="${altText}" class="mx-auto my-4 rounded shadow">\n\n` : `![${altText}](data:image/png;base64,${imageResult.imageData})\n\n`;
-                            logToConsole(`Image for section ${i + 1} embedded as base64.`, 'success');
-                        }
-                    } else {
-                        logToConsole(`Failed image gen for section ${i + 1}.`, 'warn');
-                        imagePlaceholder = outputFormat === 'html' ? `\n\n` : `[Image generation failed]\n\n`;
-                    }
-                    fullArticleContent += imagePlaceholder;
-                    generatedArticleTextarea.value = fullArticleContent;
-                }
-                 generatedArticleTextarea.scrollTop = generatedArticleTextarea.scrollHeight;
-            } // End outline loop
-
-            generationProgressDiv.classList.add('hidden'); showLoading(articleLoadingIndicator, false);
-
-            // Upload Images
-            if (imageStorageType === 'github' && imagesToUpload.length > 0) {
-                await uploadImagesToGithub();
-            }
-
-            // Finalize
-            generateArticleBtn.disabled = false;
-            if (fullArticleContent) {
-                 step3Section.classList.remove('hidden'); step4Section.classList.add('hidden');
-                 const isHtml = outputFormat === 'html'; previewHtmlCheckbox.checked = false; previewHtmlCheckbox.disabled = !isHtml; previewHtmlCheckbox.parentElement.classList.toggle('hidden', !isHtml); generatedArticleTextarea.classList.remove('hidden'); htmlPreviewDiv.classList.add('hidden'); htmlPreviewDiv.innerHTML = '';
-                 logToConsole('Article generation process complete.', 'success');
-            } else { logToConsole('Article generation failed or produced no content.', 'error'); }
-        });
-
-        // --- GitHub Image Upload Function ---
-        async function uploadImagesToGithub() {
-            if (imagesToUpload.length === 0) return;
-            const repoUrl = githubRepoUrlInput.value.trim();
-            if (!repoUrl) { alert("GitHub Repo URL is required."); return; }
-            const urlMatch = repoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
-            if (!urlMatch || urlMatch.length < 3) { alert("Invalid GitHub Repo URL format."); return; }
-            const owner = urlMatch[1];
-            const repo = urlMatch[2].replace(/\.git$/, '');
-            const customPath = githubCustomPathInput.value.trim();
-            let basePath;
-            if (customPath) { basePath = (customPath.startsWith('/') ? customPath.substring(1) : customPath).replace(/\/$/, '') + '/'; } // Ensure ends with /
-            else { const now = new Date(); const year = now.getFullYear(); const month = String(now.getMonth() + 1).padStart(2, '0'); basePath = `wp-content/uploads/tools.codev.id/${year}/${month}/`; }
-
-            logToConsole(`Starting GitHub upload to ${owner}/${repo} path /${basePath}...`, 'info');
-            uploadProgressContainer.classList.remove('hidden'); uploadProgressText.classList.remove('hidden');
-            uploadProgressBar.style.width = '0%'; uploadProgressText.textContent = `Uploading image 1 of ${imagesToUpload.length}...`;
-
-            let uploadedCount = 0; const totalImages = imagesToUpload.length;
-            const repoDomain = repo.toLowerCase(); // Assume repo name is the domain
-
-            for (let i = 0; i < totalImages; i++) {
-                const img = imagesToUpload[i];
-                uploadProgressText.textContent = `Uploading image ${i + 1} of ${totalImages} (${img.filename})...`;
-                const fullPath = basePath + img.filename;
-                const payload = { owner: owner, repo: repo, path: fullPath, content: img.base64, message: `Upload image: ${img.filename} via AI Tool` };
-                const result = await callAI('upload_image', payload, null, null);
-
-                if (result && result.success) { // Check success flag from backend (even if URL construction happens frontend)
-                     // Construct the URL using the repo name as the domain
-                     const finalImageUrl = `https://${repoDomain}/${fullPath}`;
-                     logToConsole(`Uploaded ${img.filename}. URL: ${finalImageUrl}`, 'success');
-
-                     // Replace placeholder
-                     const placeholderDiv = document.getElementById(img.placeholderId);
-                     const placeholderRegex = new RegExp(`\\[Uploading image: ${img.filename}\\.\\.\\.\\]`, 'g');
-                     const outputFormat = formatSelect.value;
-                     const finalImageTag = outputFormat === 'html' ? `<img src="${finalImageUrl}" alt="${img.filename}" class="mx-auto my-4 rounded shadow">` : `![${img.filename}](${finalImageUrl})`;
-
-                     if (placeholderDiv) {
-                         placeholderDiv.outerHTML = finalImageTag;
-                         generatedArticleTextarea.value = generatedArticleTextarea.value.replace(new RegExp(`<div id="${img.placeholderId}">.*?</div>`, 's'), finalImageTag); // Replace div in raw value too
-                     } else {
-                         generatedArticleTextarea.value = generatedArticleTextarea.value.replace(placeholderRegex, finalImageTag);
-                     }
-                     fullArticleContent = generatedArticleTextarea.value; // Update master content
-
-                     uploadedCount++;
-                     const progressPercent = Math.round((uploadedCount / totalImages) * 100);
-                     uploadProgressBar.style.width = `${progressPercent}%`;
-                } else {
-                    logToConsole(`Failed to upload ${img.filename}. Error: ${result?.error || 'Unknown'}`, 'error');
-                    const errorMsg = `[Upload failed: ${img.filename}]`;
-                    const placeholderDiv = document.getElementById(img.placeholderId);
-                    const placeholderRegex = new RegExp(`\\[Uploading image: ${img.filename}\\.\\.\\.\\]`, 'g');
-                    if(placeholderDiv) { placeholderDiv.outerHTML = errorMsg; generatedArticleTextarea.value = generatedArticleTextarea.value.replace(new RegExp(`<div id="${img.placeholderId}">.*?</div>`, 's'), errorMsg); }
-                    else { generatedArticleTextarea.value = generatedArticleTextarea.value.replace(placeholderRegex, errorMsg); }
-                    fullArticleContent = generatedArticleTextarea.value;
-                }
-            }
-            uploadProgressText.textContent = `Upload complete (${uploadedCount}/${totalImages} successful).`;
-            logToConsole(`GitHub upload process finished.`, 'info');
-        }
-
-
-        // --- Text Selection and Spinning Logic ---
-        // ... (Spinning logic same as v7) ...
-        let selectedTextInfo = null; spunArticleDisplay.addEventListener('mouseup', handleSelection); spunArticleDisplay.addEventListener('keyup', handleSelection); spunArticleDisplay.addEventListener('focus', handleSelection); function handleSelection() { const selection = window.getSelection(); if (selection && selection.rangeCount > 0) { const range = selection.getRangeAt(0); if (spunArticleDisplay.contains(range.commonAncestorContainer) && !range.collapsed) { const text = selection.toString().trim(); if (text.length > 0) { selectedTextInfo = { text: text, range: range.cloneRange() }; spinSelectedBtn.disabled = false; return; } } } selectedTextInfo = null; spinSelectedBtn.disabled = true; }
-        spinSelectedBtn.addEventListener('click', async () => { if (!selectedTextInfo || !selectedTextInfo.text) { logToConsole("Spin button clicked but no valid text selected.", "warn"); return; } const textToSpin = selectedTextInfo.text; const language = languageSelect.value === 'custom' ? customLanguageInput.value.trim() : languageOptions[languageSelect.value]?.name || languageSelect.value; const dialect = dialectSelect.disabled ? '' : dialectSelect.value; const tone = toneSelect.value === 'custom' ? customToneInput.value.trim() : toneSelect.value; const prompt = `Take the following text and generate 2-4 variations that mean the same thing, suitable for spintax.\n- Language: ${language}${dialect ? ` (${dialect} dialect)` : ''}\n- Tone: ${tone} (Maintain this tone)\n- Output Format: Return ONLY the spintax string in the format {original|variation1|variation2|...}. Do not include the original text you were given unless it's one of the variations. Do not include any explanation or surrounding text.\n\nText to Spin:\n---\n${textToSpin}\n---`; const payload = { providerKey: getSelectedProviderKey(), model: getSelectedTextModel(), prompt: prompt }; logToConsole(`--- Spinning Text Prompt ---\n${prompt}\n---------------------------------`); const result = await callAI('generate', payload, spinActionLoadingIndicator, spinSelectedBtn); if (result && result.text) { const spintaxResult = result.text; const selection = window.getSelection(); if (selection && selectedTextInfo.range) { try { selection.removeAllRanges(); selection.addRange(selectedTextInfo.range); if (document.queryCommandSupported('insertHTML')) { document.execCommand('insertHTML', false, spintaxResult); } else if (document.queryCommandSupported('insertText')) { logToConsole("insertHTML not supported, using insertText.", "warn"); document.execCommand('insertText', false, spintaxResult); } else { selectedTextInfo.range.deleteContents(); selectedTextInfo.range.insertNode(document.createTextNode(spintaxResult)); } logToConsole(`Inserted spintax: ${spintaxResult}`, 'success'); highlightSpintax(spunArticleDisplay); } catch (e) { logToConsole(`Error replacing selection with spintax: ${e}`, 'error'); alert("Error applying spintax."); } finally { selectedTextInfo = null; spinSelectedBtn.disabled = true; selection.removeAllRanges(); } } else { logToConsole("Could not restore selection range.", 'error'); alert("Could not apply spintax."); spinSelectedBtn.disabled = true; } } else { spinSelectedBtn.disabled = true; } });
-
-
-        // --- Initial Setup ---
-        document.addEventListener('DOMContentLoaded', () => {
-            loadCustomModels();
-            populateLanguages();
-            loadSitemapFromStorage();
-            populateTextModels(true); // Set default text model on load
-            // Populate image models only if checkbox is checked (or set default provider/model here too)
-            populateImageModels(true); // Set default image model on load (will be hidden if checkbox off)
-            toggleGithubOptions();
-            logToConsole("App initialized (v7.1 - Retries & Defaults). Ready.", 'info');
-            logToConsole("API calls proxied via /ai-api.", 'info');
-        });
-
     </script>
 
 </body>
