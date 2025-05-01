@@ -111,41 +111,73 @@ export function findCheapestModel(models = []) {
 }
 
 // --- Image Prompt Construction ---
-// Moved here as it's a general helper used by single and bulk modes
 export function constructImagePrompt(sectionContent, sectionTitle = "article image", imageSettings = {}) {
-     const {
-        imageSubject = '',
-        imageStyle = '',
-        imageStyleModifiers = '',
-        imageText = ''
-     } = imageSettings; // Destructure settings passed from the caller
-
-     const subject = imageSubject.trim() || sectionTitle; // Use section title/content if no subject provided
+     const { imageSubject = '', imageStyle = '', imageStyleModifiers = '', imageText = '' } = imageSettings;
+     const subject = imageSubject.trim() || sectionTitle;
      const style = imageStyle;
      const modifiers = imageStyleModifiers.trim();
      const textToInclude = imageText.trim();
-
-     // Construct prompt based on available info
      let prompt = `Create an image representing: ${subject}.`;
      if (style) prompt += ` Style: ${style}.`;
      if (modifiers) prompt += ` Details: ${modifiers}.`;
      if (textToInclude) prompt += ` Include the text: "${textToInclude}".`;
-
-     // Add context from section content (keep it brief)
-     const contextSnippet = typeof sectionContent === 'string' ? sectionContent.substring(0, 150) : ''; // Limit context length
+     const contextSnippet = typeof sectionContent === 'string' ? sectionContent.substring(0, 150) : '';
      if (contextSnippet) prompt += ` Context: ${contextSnippet}...`;
-
-     return prompt.trim(); // Return the final prompt
+     return prompt.trim();
 }
+
+// --- Sitemap Fetching ---
+// ***** FIX: Added export keyword *****
+export async function fetchAndParseSitemap() {
+    const sitemapUrlInput = document.getElementById('sitemapUrl'); // Get elements directly here or pass them in
+    const fetchSitemapBtn = document.getElementById('fetchSitemapBtn');
+    const sitemapLoadingIndicator = document.getElementById('sitemapLoadingIndicator');
+    const { updateState, defaultSettings } = await import('./article-state.js'); // Dynamically import state functions if needed here
+    const { displaySitemapUrlsUI } = await import('./article-ui.js'); // Dynamically import UI functions if needed here
+
+    const url = sitemapUrlInput.value.trim();
+    if (!url) {
+        alert('Please enter a Sitemap URL.');
+        return;
+    }
+
+    logToConsole(`Fetching sitemap from URL: ${url}`, 'info');
+    showLoading(sitemapLoadingIndicator, true);
+    disableElement(fetchSitemapBtn, true);
+
+    let parsedUrls = []; // Keep track of parsed URLs locally
+
+    try {
+        const result = await callAI('fetch_sitemap', { sitemapUrl: url }, null, null); // Use callAI
+
+        if (!result?.success) {
+            throw new Error(result?.error || 'Failed to fetch/parse sitemap');
+        }
+
+        parsedUrls = result.urls || [];
+        updateState({ sitemapUrls: parsedUrls }); // Update the application state
+        // displaySitemapUrlsUI(parsedUrls); // Update UI directly or rely on state change listener if implemented
+        logToConsole(`Successfully fetched and parsed ${parsedUrls.length} URLs.`, 'success');
+
+    } catch (error) {
+        console.error("Sitemap Fetch/Parse Failed:", error);
+        logToConsole(`Sitemap Error: ${error.message}`, 'error');
+        alert(`Failed to process sitemap: ${error.message}`);
+        updateState({ sitemapUrls: [] }); // Clear sitemap in state on error
+        // displaySitemapUrlsUI([]); // Clear UI
+    } finally {
+        showLoading(sitemapLoadingIndicator, false);
+        disableElement(fetchSitemapBtn, false);
+    }
+}
+
 
 // --- Delay Helper ---
 export const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 // --- Outline Parser ---
-// Moved here as it might be used by different modules potentially
 export function getArticleOutlines(structureText) {
      if (!structureText) return [];
-     // Split by newline, trim, filter empty lines and basic comment/list markers
      return structureText.split('\n')
                          .map(line => line.trim())
                          .filter(line => line.length > 3 && !line.startsWith('#') && !line.startsWith('- ') && !line.startsWith('* '));
