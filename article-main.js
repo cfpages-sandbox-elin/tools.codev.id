@@ -1,11 +1,11 @@
-// article-main.js
-import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState } from './article-state.js';
-import { logToConsole, fetchAndParseSitemap } from './article-helpers.js'; // fetchAndParseSitemap is back in helpers
+// article-main.js (simplified init)
+import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState } from './article-state.js'; // Added getState
+import { logToConsole, fetchAndParseSitemap } from './article-helpers.js';
 import {
     cacheDomElements, getElement, populateAiProviders, populateTextModels,
     populateImageModels, updateUIFromState, updateUIBasedOnMode, toggleCustomModelUI,
     populateLanguagesUI, populateDialectsUI, toggleGithubOptions, checkApiStatus,
-    displaySitemapUrlsUI // Import UI update for sitemap
+    displaySitemapUrlsUI
 } from './article-ui.js';
 import { handleGenerateStructure, handleGenerateArticle } from './article-single.js';
 import { handleGeneratePlan, handleStartBulkGeneration, handleDownloadZip } from './article-bulk.js';
@@ -30,32 +30,31 @@ function initializeApp() {
     setupStep4Listeners();
     setupBulkModeListeners();
 
-    // Initial API status check (already called within populateTextModels)
-    // checkApiStatus(); // No need to call explicitly here anymore
+    // Initial API status check is triggered within populateTextModels called by updateUIFromState
 
     logToConsole("Application Initialized.", "success");
 }
 
 function setupConfigurationListeners() {
-    // ... (listeners for AI config, reset, reload - same as v8.1) ...
+    // ... (listeners same as v8.1) ...
     const ui = { aiProviderSelect: getElement('ai_provider'), aiModelSelect: getElement('ai_model'), useCustomAiModelCheckbox: getElement('useCustomAiModel'), customAiModelInput: getElement('customAiModel'), imageProviderSelect: getElement('imageProvider'), imageModelSelect: getElement('imageModel'), useCustomImageModelCheckbox: getElement('useCustomImageModel'), customImageModelInput: getElement('customImageModel'), resetDataBtn: getElement('resetDataBtn'), forceReloadBtn: getElement('forceReloadBtn'), };
     ui.forceReloadBtn?.addEventListener('click', () => { logToConsole("Attempting hard refresh...", "warn"); location.reload(true); });
-    ui.aiProviderSelect?.addEventListener('change', (e) => { updateState({ textProvider: e.target.value }); populateTextModels(true); });
-    ui.aiModelSelect?.addEventListener('change', (e) => { updateState({ textModel: e.target.value }); logToConsole(`Selected Text Model: ${e.target.value}`, 'info'); checkApiStatus(); });
+    ui.aiProviderSelect?.addEventListener('change', (e) => { updateState({ textProvider: e.target.value }); populateTextModels(true); }); // populateTextModels will call checkApiStatus
+    ui.aiModelSelect?.addEventListener('change', (e) => { if (!getElement('useCustomAiModel').checked) { updateState({ textModel: e.target.value }); logToConsole(`Selected Text Model: ${e.target.value}`, 'info'); checkApiStatus(); } }); // Only update state if not using custom
     ui.useCustomAiModelCheckbox?.addEventListener('change', () => { toggleCustomModelUI('text'); const isChecked = getElement('useCustomAiModel').checked; updateState({ useCustomTextModel: isChecked }); if (!isChecked) { updateState({ textModel: getElement('ai_model').value }); } else { updateState({ customTextModel: getElement('customAiModel').value }); } checkApiStatus(); });
-    ui.customAiModelInput?.addEventListener('change', (e) => { const provider = getState().textProvider; updateCustomModelState('text', provider, e.target.value); updateState({ customTextModel: e.target.value }); checkApiStatus(); });
+    ui.customAiModelInput?.addEventListener('change', (e) => { const provider = getState().textProvider; updateCustomModelState('text', provider, e.target.value); updateState({ customTextModel: e.target.value }); if (getElement('useCustomAiModel').checked) checkApiStatus(); }); // Check status only if custom is active
     ui.imageProviderSelect?.addEventListener('change', (e) => { updateState({ imageProvider: e.target.value }); populateImageModels(true); });
-    ui.imageModelSelect?.addEventListener('change', (e) => { updateState({ imageModel: e.target.value }); logToConsole(`Selected Image Model: ${e.target.value}`, 'info'); });
+    ui.imageModelSelect?.addEventListener('change', (e) => { if (!getElement('useCustomImageModel').checked) { updateState({ imageModel: e.target.value }); logToConsole(`Selected Image Model: ${e.target.value}`, 'info'); } });
     ui.useCustomImageModelCheckbox?.addEventListener('change', () => { toggleCustomModelUI('image'); const isChecked = getElement('useCustomImageModel').checked; updateState({ useCustomImageModel: isChecked }); if (!isChecked) { updateState({ imageModel: getElement('imageModel').value }); } else { updateState({ customImageModel: getElement('customImageModel').value }); } });
     ui.customImageModelInput?.addEventListener('change', (e) => { const provider = getState().imageProvider; updateCustomModelState('image', provider, e.target.value); updateState({ customImageModel: e.target.value }); });
     ui.resetDataBtn?.addEventListener('click', resetAllData);
 }
 
 function setupStep1Listeners() {
-     // ... (Most listeners same as v8.1) ...
+     // ... (listeners same as v8.1) ...
      const ui = { bulkModeCheckbox: getElement('bulkModeCheckbox'), languageSelect: getElement('language'), customLanguageInput: getElement('custom_language'), dialectSelect: getElement('dialect'), toneSelect: getElement('tone'), customToneInput: getElement('custom_tone'), purposeCheckboxes: getElement('purposeCheckboxes'), purposeUrlInput: getElement('purposeUrl'), purposeCtaInput: getElement('purposeCta'), generateImagesCheckbox: getElement('generateImages'), imageStorageRadios: getElement('imageStorageRadios'), fetchSitemapBtn: getElement('fetchSitemapBtn'), generateSingleBtn: getElement('generateSingleBtn'), generatePlanBtn: getElement('generatePlanBtn'), keywordInput: getElement('keyword'), audienceInput: getElement('audience'), readerNameInput: getElement('readerName'), genderSelect: getElement('gender'), ageSelect: getElement('age'), formatSelect: getElement('format'), sitemapUrlInput: getElement('sitemapUrl'), customSpecsInput: getElement('custom_specs'), numImagesSelect: getElement('numImages'), imageAspectRatioSelect: getElement('imageAspectRatio'), imageSubjectInput: getElement('imageSubject'), imageStyleSelect: getElement('imageStyle'), imageStyleModifiersInput: getElement('imageStyleModifiers'), imageTextInput: getElement('imageText'), githubRepoUrlInput: getElement('githubRepoUrl'), githubCustomPathInput: getElement('githubCustomPath'), sitemapLoadingIndicator: getElement('sitemapLoadingIndicator'), };
      ui.bulkModeCheckbox?.addEventListener('change', (e) => { const isBulk = e.target.checked; updateState({ bulkMode: isBulk }); updateUIBasedOnMode(isBulk); });
-     ui.languageSelect?.addEventListener('change', (e) => { updateState({ language: e.target.value, dialect: '' }); populateDialectsUI(); });
+     ui.languageSelect?.addEventListener('change', (e) => { updateState({ language: e.target.value, dialect: '', customLanguage: '' }); populateDialectsUI(); }); // Clear custom language too
      ui.customLanguageInput?.addEventListener('change', (e) => updateState({ customLanguage: e.target.value }));
      ui.dialectSelect?.addEventListener('change', (e) => updateState({ dialect: e.target.value }));
      ui.toneSelect?.addEventListener('change', (e) => { const showCustom = e.target.value === 'custom'; showElement(ui.customToneInput, showCustom); ui.customToneInput.classList.toggle('custom-input-visible', showCustom); updateState({ tone: e.target.value }); if (!showCustom) updateState({ customTone: '' }); });
@@ -63,34 +62,9 @@ function setupStep1Listeners() {
      ui.purposeCheckboxes?.forEach(checkbox => { checkbox.addEventListener('change', () => { const selectedPurposes = Array.from(document.querySelectorAll('input[name="purpose"]')).filter(cb => cb.checked).map(cb => cb.value); updateState({ purpose: selectedPurposes }); const showUrl = selectedPurposes.includes('Promote URL'); const showCta = selectedPurposes.some(p => p.startsWith('Promote') || p === 'Generate Leads'); showElement(ui.purposeUrlInput, showUrl); showElement(ui.purposeCtaInput, showCta); if (!showUrl) updateState({ purposeUrl: '' }); if (!showCta) updateState({ purposeCta: '' }); }); });
      ui.generateImagesCheckbox?.addEventListener('change', (e) => { const generate = e.target.checked; updateState({ generateImages: generate }); showElement(getElement('imageOptionsContainer'), generate); if (generate) { populateImageModels(true); toggleGithubOptions(); } else { showElement(getElement('githubOptionsContainer'), false); } });
      ui.imageStorageRadios?.forEach(radio => { radio.addEventListener('change', (e) => { if (e.target.checked) { updateState({ imageStorage: e.target.value }); toggleGithubOptions(); } }); });
-
-     // --- Sitemap Fetch Listener (Corrected) ---
-     ui.fetchSitemapBtn?.addEventListener('click', async () => {
-        const url = ui.sitemapUrlInput.value.trim();
-        if (!url) { alert('Please enter a Sitemap URL.'); return; }
-        logToConsole(`Fetching sitemap from URL: ${url}`, 'info');
-        showLoading(ui.sitemapLoadingIndicator, true); disableElement(ui.fetchSitemapBtn, true);
-        try {
-            // Call helper function (now correctly exported and simplified)
-            const parsedUrls = await fetchAndParseSitemap(url);
-            // Update state and UI *after* the helper returns successfully
-            updateState({ sitemapUrls: parsedUrls });
-            displaySitemapUrlsUI(parsedUrls); // Call UI update function
-
-        } catch (error) {
-            logToConsole(`Sitemap fetch listener caught error: ${error.message}`, 'error');
-            updateState({ sitemapUrls: [] }); // Clear sitemap in state on error
-            displaySitemapUrlsUI([]); // Clear UI
-        } finally {
-            showLoading(ui.sitemapLoadingIndicator, false); disableElement(ui.fetchSitemapBtn, false);
-        }
-    });
-
-     // Save other simple input values on change
-     const inputsToSave = [ /* ... (same as v8.1) ... */ { id: 'keywordInput', stateKey: 'keyword' }, { id: 'audienceInput', stateKey: 'audience' }, { id: 'readerNameInput', stateKey: 'readerName' }, { id: 'genderSelect', stateKey: 'gender' }, { id: 'ageSelect', stateKey: 'age' }, { id: 'formatSelect', stateKey: 'format' }, { id: 'sitemapUrlInput', stateKey: 'sitemapUrl' }, { id: 'customSpecsInput', stateKey: 'customSpecs' }, { id: 'numImagesSelect', stateKey: 'numImages' }, { id: 'imageAspectRatioSelect', stateKey: 'imageAspectRatio' }, { id: 'imageSubjectInput', stateKey: 'imageSubject' }, { id: 'imageStyleSelect', stateKey: 'imageStyle' }, { id: 'imageStyleModifiersInput', stateKey: 'imageStyleModifiers' }, { id: 'imageTextInput', stateKey: 'imageText' }, { id: 'githubRepoUrlInput', stateKey: 'githubRepoUrl' }, { id: 'githubCustomPathInput', stateKey: 'githubCustomPath' } ];
+     ui.fetchSitemapBtn?.addEventListener('click', async () => { const url = ui.sitemapUrlInput.value.trim(); if (!url) { alert('Please enter a Sitemap URL.'); return; } logToConsole(`Fetching sitemap from URL: ${url}`, 'info'); showLoading(ui.sitemapLoadingIndicator, true); disableElement(ui.fetchSitemapBtn, true); try { const parsedUrls = await fetchAndParseSitemap(url); updateState({ sitemapUrls: parsedUrls }); displaySitemapUrlsUI(parsedUrls); } catch (error) { logToConsole(`Sitemap fetch listener caught error: ${error.message}`, 'error'); updateState({ sitemapUrls: [] }); displaySitemapUrlsUI([]); } finally { showLoading(ui.sitemapLoadingIndicator, false); disableElement(ui.fetchSitemapBtn, false); } });
+     const inputsToSave = [ { id: 'keywordInput', stateKey: 'keyword' }, { id: 'audienceInput', stateKey: 'audience' }, { id: 'readerNameInput', stateKey: 'readerName' }, { id: 'genderSelect', stateKey: 'gender' }, { id: 'ageSelect', stateKey: 'age' }, { id: 'formatSelect', stateKey: 'format' }, { id: 'sitemapUrlInput', stateKey: 'sitemapUrl' }, { id: 'customSpecsInput', stateKey: 'customSpecs' }, { id: 'numImagesSelect', stateKey: 'numImages' }, { id: 'imageAspectRatioSelect', stateKey: 'imageAspectRatio' }, { id: 'imageSubjectInput', stateKey: 'imageSubject' }, { id: 'imageStyleSelect', stateKey: 'imageStyle' }, { id: 'imageStyleModifiersInput', stateKey: 'imageStyleModifiers' }, { id: 'imageTextInput', stateKey: 'imageText' }, { id: 'githubRepoUrlInput', stateKey: 'githubRepoUrl' }, { id: 'githubCustomPathInput', stateKey: 'githubCustomPath' } ];
      inputsToSave.forEach(item => { const element = getElement(item.id); if (element) { element.addEventListener('change', (e) => { let value = e.target.value; if (item.stateKey === 'numImages') { value = parseInt(value, 10) || 1; } updateState({ [item.stateKey]: value }); }); } });
-
-     // Action Buttons
      ui.generateSingleBtn?.addEventListener('click', handleGenerateStructure);
      ui.generatePlanBtn?.addEventListener('click', handleGeneratePlan);
 }
