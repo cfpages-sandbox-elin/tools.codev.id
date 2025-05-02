@@ -1,38 +1,43 @@
-// article-main.js (corrected listener logic and API status checks)
-import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js'; // Added setBulkPlan, updateBulkPlanItem
-import { logToConsole, fetchAndParseSitemap, showLoading, disableElement } from './article-helpers.js'; // Added showLoading, disableElement
+// article-main.js (Ensuring DOM is ready for caching)
+import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
+import { logToConsole, fetchAndParseSitemap, showLoading, disableElement } from './article-helpers.js';
 import {
     cacheDomElements, getElement, populateAiProviders, populateTextModels,
     populateImageModels, updateUIFromState, updateUIBasedOnMode, toggleCustomModelUI,
     populateLanguagesUI, populateDialectsUI, toggleGithubOptions, checkApiStatus,
     displaySitemapUrlsUI
-} from './article-ui.js';
+} from './article-ui.js'; // Use the updated ui file
 import { handleGenerateStructure, handleGenerateArticle } from './article-single.js';
 import { handleGeneratePlan, handleStartBulkGeneration, handleDownloadZip } from './article-bulk.js';
 import { handleSpinSelectedText, handleSelection, highlightSpintax } from './article-spinner.js';
 
 function initializeApp() {
     logToConsole("Initializing AI Article Generator v8.2...", "info");
-    cacheDomElements();
+
+    // 1. Cache DOM Elements FIRST
+    cacheDomElements(); // This now has internal logging for failures
+
+    // 2. Load State
     const initialState = loadState();
+
+    // 3. Update UI from State (this relies on cached elements)
     updateUIFromState(initialState); // This populates and sets initial UI based on loaded state
+
+    // 4. Setup Event Listeners (these also rely on cached elements)
     setupConfigurationListeners();
     setupStep1Listeners();
     setupStep2Listeners();
     setupStep3Listeners();
     setupStep4Listeners();
     setupBulkModeListeners();
-    logToConsole("Application Initialized and listeners attached.", "success");
 
-    // Final check - ensure initial UI state is correct (sometimes CSS takes time)
-    // setTimeout(() => {
-    //     const currentMode = getState().bulkMode;
-    //     logToConsole(`Re-asserting UI mode based on state: ${currentMode ? 'Bulk' : 'Single'}`, 'debug');
-    //     updateUIBasedOnMode(currentMode);
-    // }, 100); // Small delay just in case
+    logToConsole("Application Initialized and listeners attached.", "success");
 }
 
+// --- Listener setup functions (setupConfigurationListeners, etc.) remain the same ---
+// No changes needed in listener functions themselves based on the current errors.
 function setupConfigurationListeners() {
+    // ... (same as previous version) ...
     const aiProviderSelect = getElement('aiProviderSelect');
     const aiModelSelect = getElement('aiModelSelect');
     const useCustomAiModelCheckbox = getElement('useCustomAiModelCheckbox');
@@ -54,31 +59,24 @@ function setupConfigurationListeners() {
     // --- Text AI Config ---
     aiProviderSelect?.addEventListener('change', (e) => {
         logToConsole(`Text Provider changed to: ${e.target.value}`, 'info');
-        // Update state FIRST (resetting models)
         updateState({
             textProvider: e.target.value,
-            textModel: '', // Reset standard model selection
-            // Custom model is provider-specific, so it doesn't need resetting here,
-            // but we'll clear the active custom model value if using custom was checked
-            // customTextModel: '' // Let getCustomModelState handle provider switching
+            textModel: '',
         });
-        // Repopulate models for the NEW provider using the updated state
-        populateTextModels(true); // Pass true to set a default model
-        // Check status AFTER models are populated and a default is potentially set
+        populateTextModels(true);
         checkApiStatus();
     });
 
     aiModelSelect?.addEventListener('change', (e) => {
-        // This listener only matters if the standard dropdown is active
-        if (!useCustomAiModelCheckbox?.checked) {
+        if (!getElement('useCustomAiModelCheckbox')?.checked) { // Use getElement for safety
             const selectedModel = e.target.value;
             logToConsole(`Standard Text Model selected: ${selectedModel}`, 'info');
             if (selectedModel) {
                  updateState({ textModel: selectedModel });
-                 checkApiStatus(); // Check status for the newly selected standard model
+                 checkApiStatus();
             } else {
                  logToConsole("Empty model selected, skipping status check.", "warn");
-                 checkApiStatus(); // Check status (will likely show select model)
+                 checkApiStatus();
             }
         }
     });
@@ -86,41 +84,29 @@ function setupConfigurationListeners() {
     useCustomAiModelCheckbox?.addEventListener('change', () => {
         const isChecked = useCustomAiModelCheckbox.checked;
         logToConsole(`Use Custom Text Model checkbox changed: ${isChecked}`, 'info');
-        // Update the boolean flag in state
         updateState({ useCustomTextModel: isChecked });
-        // Update the UI (disables/enables standard select, shows/hides custom input)
         toggleCustomModelUI('text');
 
-        // Update the *active* model in the main state based on the checkbox change
         if (isChecked) {
-             // If switching TO custom, update state with the custom input's current value
-            updateState({ customTextModel: customAiModelInput.value });
+            updateState({ customTextModel: getElement('customAiModelInput')?.value || '' }); // Safe access
         } else {
-            // If switching TO standard, update state with the standard dropdown's current value
-            updateState({ textModel: aiModelSelect.value });
-             // Ensure custom model state is cleared when switching away? Optional.
-             // updateState({ customTextModel: '' });
+            updateState({ textModel: getElement('aiModelSelect')?.value || '' }); // Safe access
         }
-        // Check API status based on the *newly active* model
         checkApiStatus();
     });
 
-    customAiModelInput?.addEventListener('blur', (e) => { // Use 'blur' instead of 'change' for less frequent updates
-        // Only process if the custom checkbox is actually checked
-        if (useCustomAiModelCheckbox?.checked) {
+    customAiModelInput?.addEventListener('blur', (e) => {
+        if (getElement('useCustomAiModelCheckbox')?.checked) { // Safe access
             const provider = getState().textProvider;
             const customModelName = e.target.value.trim();
             logToConsole(`Custom Text Model input changed (on blur) to: ${customModelName}`, 'info');
-            // Update the persistent custom model storage for this provider
             updateCustomModelState('text', provider, customModelName);
-            // Update the active custom model in the main app state
             updateState({ customTextModel: customModelName });
-            // Check status if the input is not empty
             if (customModelName) {
                 checkApiStatus();
             } else {
                  logToConsole("Custom model input cleared, skipping status check.", "warn");
-                 checkApiStatus(); // Check status (will show select model)
+                 checkApiStatus();
             }
         }
     });
@@ -128,18 +114,18 @@ function setupConfigurationListeners() {
      // --- Image AI Config ---
      imageProviderSelect?.addEventListener('change', (e) => {
          logToConsole(`Image Provider changed to: ${e.target.value}`, 'info');
+         const newProvider = e.target.value;
+         const defaultAspectRatio = imageProviders[newProvider]?.aspectRatios?.[0] || '1:1';
          updateState({
-             imageProvider: e.target.value,
+             imageProvider: newProvider,
              imageModel: '',
-             // Reset aspect ratio based on new provider's defaults/state
-             imageAspectRatio: imageProviders[e.target.value]?.aspectRatios?.[0] || '1:1'
+             imageAspectRatio: defaultAspectRatio // Set default aspect ratio for new provider
          });
          populateImageModels(true); // Populate models and aspect ratio, set default model
-         // No separate status check for image models needed currently
      });
 
      imageModelSelect?.addEventListener('change', (e) => {
-         if (!useCustomImageModelCheckbox?.checked) {
+         if (!getElement('useCustomImageModelCheckbox')?.checked) { // Safe access
              const selectedModel = e.target.value;
              logToConsole(`Standard Image Model selected: ${selectedModel}`, 'info');
               if (selectedModel) {
@@ -147,8 +133,7 @@ function setupConfigurationListeners() {
              }
          }
      });
-     // Also update state if aspect ratio changes
-    getElement('imageAspectRatioSelect')?.addEventListener('change', (e) => {
+    getElement('imageAspectRatioSelect')?.addEventListener('change', (e) => { // Safe access
         updateState({ imageAspectRatio: e.target.value });
         logToConsole(`Image Aspect Ratio changed to: ${e.target.value}`, 'info');
     });
@@ -159,15 +144,14 @@ function setupConfigurationListeners() {
          updateState({ useCustomImageModel: isChecked });
          toggleCustomModelUI('image');
          if (isChecked) {
-            updateState({ customImageModel: customImageModelInput.value });
+            updateState({ customImageModel: getElement('customImageModelInput')?.value || '' }); // Safe access
         } else {
-            updateState({ imageModel: imageModelSelect.value });
+            updateState({ imageModel: getElement('imageModelSelect')?.value || '' }); // Safe access
         }
-         // No status check needed
      });
 
      customImageModelInput?.addEventListener('blur', (e) => {
-         if (useCustomImageModelCheckbox?.checked) {
+         if (getElement('useCustomImageModelCheckbox')?.checked) { // Safe access
              const provider = getState().imageProvider;
              const customModelName = e.target.value.trim();
              logToConsole(`Custom Image Model input changed (on blur) to: ${customModelName}`, 'info');
@@ -176,19 +160,20 @@ function setupConfigurationListeners() {
          }
      });
 }
-
 function setupStep1Listeners() {
-    const bulkModeCheckbox = getElement('bulkModeCheckbox');
+    // ... (same as previous version, but ensure getElement is used internally if needed) ...
+     const bulkModeCheckbox = getElement('bulkModeCheckbox');
     const languageSelect = getElement('language');
     const customLanguageInput = getElement('customLanguageInput');
-    const dialectSelect = getElement('dialectSelect');
+    const dialectSelect = getElement('dialectSelect'); // Corrected ID
     const toneSelect = getElement('toneSelect');
     const customToneInput = getElement('customToneInput');
-    const purposeCheckboxes = document.querySelectorAll('input[name="purpose"]'); // Query all
+    // Query All returns a NodeList, check length before accessing
+    const purposeCheckboxes = domElements['purposeCheckboxes']; // Use cached NodeList
     const purposeUrlInput = getElement('purposeUrlInput');
     const purposeCtaInput = getElement('purposeCtaInput');
     const generateImagesCheckbox = getElement('generateImagesCheckbox');
-    const imageStorageRadios = document.querySelectorAll('input[name="imageStorage"]'); // Query all
+    const imageStorageRadios = domElements['imageStorageRadios']; // Use cached NodeList
     const fetchSitemapBtn = getElement('fetchSitemapBtn');
     const sitemapUrlInput = getElement('sitemapUrlInput');
     const generateSingleBtn = getElement('generateSingleBtn');
@@ -199,24 +184,22 @@ function setupStep1Listeners() {
         const isBulk = e.target.checked;
         logToConsole(`Bulk Mode Checkbox changed: ${isBulk}`, 'info');
         updateState({ bulkMode: isBulk });
-        updateUIBasedOnMode(isBulk); // Update visibility of sections
+        updateUIBasedOnMode(isBulk);
     });
 
     languageSelect?.addEventListener('change', (e) => {
         const newLang = e.target.value;
         logToConsole(`Language Select changed to: ${newLang}`, 'info');
-        // Update state FIRST, resetting dialect and custom language
         updateState({
             language: newLang,
-            dialect: '', // Reset dialect when language changes
-            customLanguage: '' // Clear custom language input value
+            dialect: '',
+            customLanguage: ''
         });
-        // Repopulate dialects UI using the *updated* state
-        populateDialectsUI(getState()); // Pass the fresh state
+        populateDialectsUI(getState());
     });
 
     customLanguageInput?.addEventListener('blur', (e) => {
-         if (languageSelect?.value === 'custom') {
+         if (getElement('language')?.value === 'custom') { // Safe access
              logToConsole(`Custom Language input changed (on blur): ${e.target.value}`, 'info');
             updateState({ customLanguage: e.target.value });
          }
@@ -231,64 +214,69 @@ function setupStep1Listeners() {
         const newTone = e.target.value;
         logToConsole(`Tone Select changed to: ${newTone}`, 'info');
         const showCustom = newTone === 'custom';
-        updateState({ tone: newTone }); // Update state first
+        updateState({ tone: newTone });
         if (!showCustom) {
-            updateState({ customTone: '' }); // Clear custom tone if switching away
-            customToneInput.value = ''; // Clear input field visually
+            updateState({ customTone: '' });
+            if(customToneInput) customToneInput.value = ''; // Safe access
         }
-        showElement(customToneInput, showCustom);
-        customToneInput?.classList.toggle('custom-input-visible', showCustom);
+        showElement(customToneInput, showCustom); // customToneInput checked inside showElement
+        customToneInput?.classList.toggle('custom-input-visible', showCustom); // Safe access
     });
 
     customToneInput?.addEventListener('blur', (e) => {
-         if (toneSelect?.value === 'custom') {
+         if (getElement('toneSelect')?.value === 'custom') { // Safe access
              logToConsole(`Custom Tone input changed (on blur): ${e.target.value}`, 'info');
              updateState({ customTone: e.target.value });
          }
     });
 
-    purposeCheckboxes?.forEach(checkbox => {
-        checkbox.addEventListener('change', () => {
-            const selectedPurposes = Array.from(document.querySelectorAll('input[name="purpose"]:checked')).map(cb => cb.value);
-            logToConsole(`Purpose checkboxes changed: ${selectedPurposes.join(', ')}`, 'info');
-            updateState({ purpose: selectedPurposes });
+    // Check if NodeList exists and has items
+     if (purposeCheckboxes && purposeCheckboxes.length > 0) {
+         purposeCheckboxes.forEach(checkbox => {
+             checkbox.addEventListener('change', () => {
+                 const selectedPurposes = Array.from(document.querySelectorAll('input[name="purpose"]:checked')).map(cb => cb.value); // Re-query here is fine
+                 logToConsole(`Purpose checkboxes changed: ${selectedPurposes.join(', ')}`, 'info');
+                 updateState({ purpose: selectedPurposes });
 
-            const showUrl = selectedPurposes.includes('Promote URL');
-            const showCta = selectedPurposes.some(p => p.startsWith('Promote') || p === 'Generate Leads');
+                 const showUrl = selectedPurposes.includes('Promote URL');
+                 const showCta = selectedPurposes.some(p => p.startsWith('Promote') || p === 'Generate Leads');
 
-            showElement(purposeUrlInput, showUrl);
-            showElement(purposeCtaInput, showCta);
+                 showElement(purposeUrlInput, showUrl); // Elements checked inside
+                 showElement(purposeCtaInput, showCta);
 
-            if (!showUrl) updateState({ purposeUrl: '' }); // Clear state if hidden
-            if (!showCta) updateState({ purposeCta: '' }); // Clear state if hidden
-        });
-    });
-     getElement('purposeUrlInput')?.addEventListener('blur', (e) => updateState({ purposeUrl: e.target.value }));
-     getElement('purposeCtaInput')?.addEventListener('blur', (e) => updateState({ purposeCta: e.target.value }));
+                 if (!showUrl) updateState({ purposeUrl: '' });
+                 if (!showCta) updateState({ purposeCta: '' });
+             });
+         });
+     }
+     getElement('purposeUrlInput')?.addEventListener('blur', (e) => updateState({ purposeUrl: e.target.value })); // Safe access
+     getElement('purposeCtaInput')?.addEventListener('blur', (e) => updateState({ purposeCta: e.target.value })); // Safe access
 
 
     generateImagesCheckbox?.addEventListener('change', (e) => {
         const generate = e.target.checked;
         logToConsole(`Generate Images checkbox changed: ${generate}`, 'info');
         updateState({ generateImages: generate });
-        showElement(getElement('imageOptionsContainer'), generate);
-        // If enabling, ensure models are populated (might have been skipped if disabled before)
+        showElement(getElement('imageOptionsContainer'), generate); // Safe access
         if (generate) {
-            populateImageModels(); // Populate models based on current provider
+            populateImageModels();
         }
-        toggleGithubOptions(); // Update visibility based on combined state
+        toggleGithubOptions();
     });
 
-    imageStorageRadios?.forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            if (e.target.checked) {
-                 const storageType = e.target.value;
-                 logToConsole(`Image Storage radio changed: ${storageType}`, 'info');
-                updateState({ imageStorage: storageType });
-                toggleGithubOptions(); // Update GitHub section visibility
-            }
-        });
-    });
+     // Check if NodeList exists and has items
+     if (imageStorageRadios && imageStorageRadios.length > 0) {
+         imageStorageRadios.forEach(radio => {
+             radio.addEventListener('change', (e) => {
+                 if (e.target.checked) {
+                      const storageType = e.target.value;
+                      logToConsole(`Image Storage radio changed: ${storageType}`, 'info');
+                     updateState({ imageStorage: storageType });
+                     toggleGithubOptions();
+                 }
+             });
+         });
+     }
 
     fetchSitemapBtn?.addEventListener('click', async () => {
         const url = sitemapUrlInput?.value.trim();
@@ -297,71 +285,43 @@ function setupStep1Listeners() {
             return;
         }
         logToConsole(`Fetching sitemap from URL: ${url}`, 'info');
-        showLoading(sitemapLoadingIndicator, true);
-        disableElement(fetchSitemapBtn, true);
+        showLoading(sitemapLoadingIndicator, true); // Element checked inside
+        disableElement(fetchSitemapBtn, true); // Element checked inside
         try {
-            const parsedUrls = await fetchAndParseSitemap(url); // Helper now just returns data or throws error
-            updateState({ sitemapUrls: parsedUrls }); // Update state with results
-            displaySitemapUrlsUI(parsedUrls); // Update UI from state
+            const parsedUrls = await fetchAndParseSitemap(url);
+            updateState({ sitemapUrls: parsedUrls });
+            displaySitemapUrlsUI(parsedUrls);
             logToConsole(`Successfully fetched and parsed ${parsedUrls.length} URLs.`, 'success');
         } catch (error) {
             logToConsole(`Sitemap fetch failed: ${error.message}`, 'error');
             alert(`Failed to fetch or parse sitemap: ${error.message}`);
-            updateState({ sitemapUrls: [] }); // Clear sitemap in state on error
-            displaySitemapUrlsUI([]); // Update UI to show empty
+            updateState({ sitemapUrls: [] });
+            displaySitemapUrlsUI([]);
         } finally {
-            showLoading(sitemapLoadingIndicator, false);
-            disableElement(fetchSitemapBtn, false);
+            showLoading(sitemapLoadingIndicator, false); // Element checked inside
+            disableElement(fetchSitemapBtn, false); // Element checked inside
         }
     });
 
-    // Listeners for simple text/select inputs to save state on change/blur
-    const inputsToSave = [
-        { id: 'keywordInput', stateKey: 'keyword', event: 'blur' },
-        { id: 'audienceInput', stateKey: 'audience', event: 'blur' },
-        { id: 'readerNameInput', stateKey: 'readerName', event: 'blur' },
-        { id: 'genderSelect', stateKey: 'gender', event: 'change' },
-        { id: 'ageSelect', stateKey: 'age', event: 'change' },
-        { id: 'formatSelect', stateKey: 'format', event: 'change' },
-        { id: 'sitemapUrlInput', stateKey: 'sitemapUrl', event: 'blur' },
-        { id: 'customSpecsInput', stateKey: 'customSpecs', event: 'blur' },
-        { id: 'numImagesSelect', stateKey: 'numImages', event: 'change' },
-        // imageAspectRatioSelect handled above
-        { id: 'imageSubjectInput', stateKey: 'imageSubject', event: 'blur' },
-        { id: 'imageStyleSelect', stateKey: 'imageStyle', event: 'change' },
-        { id: 'imageStyleModifiersInput', stateKey: 'imageStyleModifiers', event: 'blur' },
-        { id: 'imageTextInput', stateKey: 'imageText', event: 'blur' },
-        { id: 'githubRepoUrlInput', stateKey: 'githubRepoUrl', event: 'blur' },
-        { id: 'githubCustomPathInput', stateKey: 'githubCustomPath', event: 'blur' }
-    ];
-
+    // Listeners for simple text/select inputs
+    const inputsToSave = [ /* ... same list as before ... */ { id: 'keywordInput', stateKey: 'keyword', event: 'blur' }, { id: 'audienceInput', stateKey: 'audience', event: 'blur' }, { id: 'readerNameInput', stateKey: 'readerName', event: 'blur' }, { id: 'genderSelect', stateKey: 'gender', event: 'change' }, { id: 'ageSelect', stateKey: 'age', event: 'change' }, { id: 'formatSelect', stateKey: 'format', event: 'change' }, { id: 'sitemapUrlInput', stateKey: 'sitemapUrl', event: 'blur' }, { id: 'customSpecsInput', stateKey: 'customSpecs', event: 'blur' }, { id: 'numImagesSelect', stateKey: 'numImages', event: 'change' }, { id: 'imageSubjectInput', stateKey: 'imageSubject', event: 'blur' }, { id: 'imageStyleSelect', stateKey: 'imageStyle', event: 'change' }, { id: 'imageStyleModifiersInput', stateKey: 'imageStyleModifiers', event: 'blur' }, { id: 'imageTextInput', stateKey: 'imageText', event: 'blur' }, { id: 'githubRepoUrlInput', stateKey: 'githubRepoUrl', event: 'blur' }, { id: 'githubCustomPathInput', stateKey: 'githubCustomPath', event: 'blur' } ];
     inputsToSave.forEach(item => {
-        const element = getElement(item.id);
-        if (element) {
-            element.addEventListener(item.event, (e) => {
-                let value = e.target.value;
-                if (e.target.type === 'select-one' && item.stateKey === 'numImages') {
-                    value = parseInt(value, 10) || 1;
-                }
-                 // Only log if value actually changed? Optional.
-                // if (getState()[item.stateKey] !== value) {
-                //    logToConsole(`Input ${item.id} (${item.event}) updated state.${item.stateKey}: ${value}`, 'debug');
-                    updateState({ [item.stateKey]: value });
-                // }
-            });
-        } else {
-             logToConsole(`Element ${item.id} not found for listener setup.`, 'warn');
-        }
+        const element = getElement(item.id); // Use safe getter
+        element?.addEventListener(item.event, (e) => { // Add listener only if element exists
+            let value = e.target.value;
+            if (e.target.type === 'select-one' && item.stateKey === 'numImages') {
+                value = parseInt(value, 10) || 1;
+            }
+            updateState({ [item.stateKey]: value });
+        });
     });
 
     // Action Buttons
     generateSingleBtn?.addEventListener('click', handleGenerateStructure);
     generatePlanBtn?.addEventListener('click', handleGeneratePlan);
 }
-
-// --- setupStep2Listeners ---
-// No changes needed, logic seems sound. Ensure elements are cached.
 function setupStep2Listeners() {
+    // ... (same as previous version, ensure getElement is used for safety) ...
     const toggleStructureVisibilityBtn = getElement('toggleStructureVisibilityBtn');
     const structureContainer = getElement('structureContainer');
     const linkTypeToggle = getElement('linkTypeToggle');
@@ -377,7 +337,7 @@ function setupStep2Listeners() {
     });
 
     linkTypeToggle?.addEventListener('change', (e) => {
-        const isInternal = !e.target.checked; // Checked = External, Unchecked = Internal
+        const isInternal = !e.target.checked;
         updateState({ linkTypeInternal: isInternal });
         if (linkTypeText) {
              linkTypeText.textContent = isInternal ? 'Internal' : 'External';
@@ -385,35 +345,32 @@ function setupStep2Listeners() {
         logToConsole(`Link type toggled. Internal: ${isInternal}`, 'info');
     });
 
-    articleTitleInput?.addEventListener('blur', (e) => { // Use blur
+    articleTitleInput?.addEventListener('blur', (e) => {
         updateState({ articleTitle: e.target.value });
          logToConsole(`Article Title input updated (on blur): ${e.target.value}`, 'info');
     });
 
     generateArticleBtn?.addEventListener('click', handleGenerateArticle);
 }
-
-// --- setupStep3Listeners ---
-// No changes needed, logic seems sound. Ensure elements are cached.
 function setupStep3Listeners() {
+    // ... (same as previous version, ensure getElement is used for safety) ...
     const previewHtmlCheckbox = getElement('preview_html_checkbox');
     const generatedArticleTextarea = getElement('generated_article');
     const htmlPreviewDiv = getElement('html_preview');
     const enableSpinningBtn = getElement('enableSpinningBtn');
-    const spunArticleDisplay = getElement('spun_article_display'); // Need for enabling step 4
-    const step4Section = getElement('step4Section'); // Need for enabling step 4
+    const spunArticleDisplay = getElement('spun_article_display');
+    const step4Section = getElement('step4Section');
 
     previewHtmlCheckbox?.addEventListener('change', (e) => {
         const showPreview = e.target.checked;
         showElement(generatedArticleTextarea, !showPreview);
         showElement(htmlPreviewDiv, showPreview);
         if (showPreview && htmlPreviewDiv && generatedArticleTextarea) {
-            // Basic sanitation example - consider a more robust library if security is critical
             let unsafeHTML = generatedArticleTextarea.value;
-            let sanitizedHTML = unsafeHTML.replace(/<script.*?>.*?<\/script>/gis, ''); // Remove script tags
-             sanitizedHTML = sanitizedHTML.replace(/onerror=".*?"/gi, ''); // Remove onerror attributes
-             sanitizedHTML = sanitizedHTML.replace(/onload=".*?"/gi, ''); // Remove onload attributes
-             // Add more sanitation as needed
+            // Simple sanitation
+            let sanitizedHTML = unsafeHTML.replace(/<script.*?>.*?<\/script>/gis, '');
+             sanitizedHTML = sanitizedHTML.replace(/onerror=".*?"/gi, '');
+             sanitizedHTML = sanitizedHTML.replace(/onload=".*?"/gi, '');
             htmlPreviewDiv.innerHTML = sanitizedHTML;
             logToConsole("Showing sanitized HTML preview.", "warn");
         }
@@ -421,44 +378,37 @@ function setupStep3Listeners() {
 
     enableSpinningBtn?.addEventListener('click', () => {
         if (spunArticleDisplay && generatedArticleTextarea && step4Section) {
-            spunArticleDisplay.innerHTML = generatedArticleTextarea.value; // Copy content
-            showElement(step4Section, true); // Show Step 4
-            highlightSpintax(spunArticleDisplay); // Highlight existing spintax
+            spunArticleDisplay.innerHTML = generatedArticleTextarea.value;
+            showElement(step4Section, true);
+            highlightSpintax(spunArticleDisplay);
             logToConsole("Spinning enabled, content copied to Step 4.", 'info');
-            spunArticleDisplay.focus(); // Focus the editable area
+            spunArticleDisplay.focus();
         } else {
              logToConsole("Could not enable spinning - required elements missing.", 'error');
         }
     });
 }
-
-// --- setupStep4Listeners ---
-// No changes needed, logic seems sound. Ensure elements are cached.
 function setupStep4Listeners() {
+    // ... (same as previous version, ensure getElement is used for safety) ...
     const spunArticleDisplay = getElement('spun_article_display');
     const spinSelectedBtn = getElement('spinSelectedBtn');
 
-    // Use 'input' event for contenteditable changes, mouseup/keyup for selection
-    spunArticleDisplay?.addEventListener('input', () => highlightSpintax(spunArticleDisplay)); // Re-highlight on edit
+    spunArticleDisplay?.addEventListener('input', () => highlightSpintax(spunArticleDisplay));
     spunArticleDisplay?.addEventListener('mouseup', handleSelection);
     spunArticleDisplay?.addEventListener('keyup', handleSelection);
-    spunArticleDisplay?.addEventListener('focus', handleSelection); // Handle selection on focus too
+    spunArticleDisplay?.addEventListener('focus', handleSelection);
     spinSelectedBtn?.addEventListener('click', handleSpinSelectedText);
 }
-
-// --- setupBulkModeListeners ---
-// Added listener for table input changes to update the plan state.
 function setupBulkModeListeners() {
+     // ... (same as previous version, ensure getElement is used for safety) ...
     const startBulkGenerationBtn = getElement('startBulkGenerationBtn');
     const downloadBulkZipBtn = getElement('downloadBulkZipBtn');
-    const planningTableBody = getElement('planningTableBody'); // Get tbody element
+    const planningTableBody = getElement('planningTableBody');
 
     startBulkGenerationBtn?.addEventListener('click', handleStartBulkGeneration);
     downloadBulkZipBtn?.addEventListener('click', handleDownloadZip);
 
-    // Add event delegation for changes within the table body
     planningTableBody?.addEventListener('change', (e) => {
-        // Check if the changed element is an INPUT within a row with a data-field attribute
         if (e.target.tagName === 'INPUT' && e.target.dataset.field) {
             const row = e.target.closest('tr');
             const rowIndex = row?.dataset.index;
@@ -468,9 +418,7 @@ function setupBulkModeListeners() {
             if (rowIndex !== undefined && field) {
                 const index = parseInt(rowIndex, 10);
                  logToConsole(`Planning table input changed: Row ${index}, Field ${field}, Value: ${value}`, 'info');
-                 // Update the specific item in the bulk plan state
                 updateBulkPlanItem(index, { [field]: value });
-                 // If slug changed, maybe update filename?
                  if (field === 'slug') {
                      const newFilename = `${slugify(value || `item-${index}`)}.md`;
                      updateBulkPlanItem(index, { filename: newFilename });
@@ -481,12 +429,22 @@ function setupBulkModeListeners() {
     });
 }
 
-
 // --- Initialize ---
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeApp);
-} else {
-    initializeApp(); // Already loaded
+// Wrap initialization in a function that runs on DOMContentLoaded
+function runInitialization() {
+    // Ensure this runs only once
+    if (window.appInitialized) return;
+    window.appInitialized = true; // Flag to prevent double execution
+
+    initializeApp();
 }
 
-console.log("article-main.js loaded (v8.2 fixes)");
+if (document.readyState === 'loading') {
+    // Still loading, wait for the event
+    document.addEventListener('DOMContentLoaded', runInitialization);
+} else {
+    // DOM is already ready, run now
+    runInitialization();
+}
+
+console.log("article-main.js loaded (v8.3 caching fixes)");
