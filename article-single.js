@@ -1,68 +1,55 @@
-// article-single.js (v8.9 Title Input Check Fix)
+// article-single.js (v8.11 showElement Import Fix)
 import { getState, updateState } from './article-state.js';
-import { logToConsole, callAI, getArticleOutlines, constructImagePrompt, sanitizeFilename, slugify, showLoading, disableElement } from './article-helpers.js'; // Import helpers including UI ones
-import { getElement, updateProgressBar, hideProgressBar, updateUIFromState } from './article-ui.js'; // Import getElement and progress helpers
-import { languageOptions } from './article-config.js'; // Needed for GitHub path logic
-
+// *** FIX: Import showElement from article-helpers ***
+import { logToConsole, callAI, getArticleOutlines, constructImagePrompt, sanitizeFilename, slugify, showLoading, disableElement, delay, showElement } from './article-helpers.js';
+import { getElement, updateProgressBar, hideProgressBar, updateUIFromState } from './article-ui.js';
+import { languageOptions } from './article-config.js';
 
 let singleModeImagesToUpload = []; // State specific to single mode image uploads
 
 // --- Generate Structure (and Title if needed) ---
 export async function handleGenerateStructure() {
-    logToConsole("handleGenerateStructure called", "info"); // Add entry log
+    logToConsole("handleGenerateStructure called", "info");
     const state = getState();
     const ui = {
         keywordInput: getElement('keywordInput'),
-        articleTitleInput: getElement('articleTitleInput'), // JS Key
-        articleStructureTextarea: getElement('articleStructureTextarea'), // JS Key 'article_structure'
+        articleTitleInput: getElement('articleTitleInput'),
+        articleStructureTextarea: getElement('articleStructureTextarea'),
         step2Section: getElement('step2Section'),
         structureContainer: getElement('structureContainer'),
-        toggleStructureVisibilityBtn: getElement('toggleStructureVisibilityBtn'), // JS Key 'toggleStructureVisibility'
+        toggleStructureVisibilityBtn: getElement('toggleStructureVisibilityBtn'),
         step3Section: getElement('step3Section'),
         step4Section: getElement('step4Section'),
         loadingIndicator: getElement('structureLoadingIndicator'),
         button: getElement('generateSingleBtn'),
     };
 
-    // --- *** FIX: Add safety check for ui.articleTitleInput *** ---
-    if (!ui.articleTitleInput) {
-        logToConsole("Article title input element not found. Cannot proceed with structure generation.", "error");
-        alert("Error: Could not find the article title input field.");
-        return; // Stop execution if the element is missing
-    }
-    // --- End Fix ---
+    if (!ui.articleTitleInput) { logToConsole("Article title input element not found.", "error"); alert("Error: Could not find the article title input field."); return; }
 
-    // --- 1. Generate Title (if blank) ---
-    let articleTitle = ui.articleTitleInput.value.trim(); // Now this access is safe
+    let articleTitle = ui.articleTitleInput.value.trim();
     logToConsole(`Initial article title from input: "${articleTitle}"`, "debug");
 
     if (!articleTitle) {
         logToConsole('Article title is blank, generating one...', 'info');
         const titlePrompt = buildTitlePrompt();
         const titlePayload = { providerKey: state.textProvider, model: state.textModel, prompt: titlePrompt };
-
-        // Show loading indicator while generating title
         showLoading(ui.loadingIndicator, true);
         disableElement(ui.button, true);
-
-        const titleResult = await callAI('generate', titlePayload, null, null); // Pass nulls as we manage UI here
-
-        // Hide loading indicator after title generation attempt
-        showLoading(ui.loadingIndicator, false); // Hide loader regardless of success
+        const titleResult = await callAI('generate', titlePayload, null, null);
+        showLoading(ui.loadingIndicator, false);
 
         if (titleResult?.success && titleResult.text) {
             articleTitle = titleResult.text.trim().replace(/^"|"$/g, '');
             logToConsole(`Generated Title: ${articleTitle}`, 'success');
-            ui.articleTitleInput.value = articleTitle; // Update input field
-            updateState({ articleTitle: articleTitle }); // Save to state
+            ui.articleTitleInput.value = articleTitle;
+            updateState({ articleTitle: articleTitle });
         } else {
             logToConsole('Failed to generate article title.', 'error');
             alert('Failed to generate article title. Please provide one manually or try again.');
-            disableElement(ui.button, false); // Re-enable button on failure
-            return; // Stop if title generation failed
+            disableElement(ui.button, false);
+            return;
         }
     } else {
-        // If title was provided manually, just save it to state
         updateState({ articleTitle: articleTitle });
     }
 
@@ -70,30 +57,22 @@ export async function handleGenerateStructure() {
     logToConsole('Generating article structure...', 'info');
     const structurePrompt = buildStructurePrompt(articleTitle);
     const structurePayload = { providerKey: state.textProvider, model: state.textModel, prompt: structurePrompt };
-
-    // Show loader and disable button for structure generation
     showLoading(ui.loadingIndicator, true);
     disableElement(ui.button, true);
-
-    const structureResult = await callAI('generate', structurePayload, null, null); // Manage UI manually
-
-    // Hide loader and re-enable button AFTER the call finishes
+    const structureResult = await callAI('generate', structurePayload, null, null);
     showLoading(ui.loadingIndicator, false);
     disableElement(ui.button, false);
 
-
     if (structureResult?.success && structureResult.text) {
-        if (ui.articleStructureTextarea) { // Check if textarea exists
-            ui.articleStructureTextarea.value = structureResult.text;
-        } else {
-             logToConsole("Article structure textarea not found to display results.", "error");
-        }
-        // Show/Hide sections - use safe getElement or direct access if already checked
-        showElement(getElement('step2Section'), true); // Use getElement for safety
-        showElement(getElement('structureContainer'), true);
-        if(ui.toggleStructureVisibilityBtn) ui.toggleStructureVisibilityBtn.textContent = 'Hide'; // Element already checked
-        showElement(getElement('step3Section'), false); // Ensure step 3 is hidden
-        showElement(getElement('step4Section'), false); // Ensure step 4 is hidden
+        if (ui.articleStructureTextarea) { ui.articleStructureTextarea.value = structureResult.text; }
+        else { logToConsole("Article structure textarea not found to display results.", "error"); }
+
+        // *** FIX: Ensure showElement is available here ***
+        showElement(getElement('step2Section'), true); // Show Step 2
+        showElement(getElement('structureContainer'), true); // Show structure container
+        if(ui.toggleStructureVisibilityBtn) ui.toggleStructureVisibilityBtn.textContent = 'Hide';
+        showElement(getElement('step3Section'), false); // Hide Step 3
+        showElement(getElement('step4Section'), false); // Hide Step 4
 
         logToConsole('Structure generated successfully.', 'success');
     } else {
@@ -106,7 +85,6 @@ export async function handleGenerateStructure() {
 export async function handleGenerateArticle() {
     const state = getState();
     const ui = {
-        // Use getElement for safety
         articleStructureTextarea: getElement('articleStructureTextarea'),
         generatedArticleTextarea: getElement('generatedArticleTextarea'),
         generationProgressDiv: getElement('generationProgressDiv'),
@@ -124,20 +102,14 @@ export async function handleGenerateArticle() {
         articleTitleInput: getElement('articleTitleInput'),
     };
 
-    // Check essential elements
-    if (!ui.articleStructureTextarea || !ui.generatedArticleTextarea || !ui.articleTitleInput || !ui.button) {
-        logToConsole("Missing essential UI elements for article generation.", "error");
-        alert("Error: Cannot generate article due to missing UI components.");
-        return;
-    }
-
+    if (!ui.articleStructureTextarea || !ui.generatedArticleTextarea || !ui.articleTitleInput || !ui.button) { logToConsole("Missing essential UI elements for article generation.", "error"); alert("Error: Cannot generate article due to missing UI components."); return; }
     const structure = ui.articleStructureTextarea.value.trim();
     if (!structure) { alert('Article structure is empty.'); return; }
     const outlines = getArticleOutlines(structure);
     if (outlines.length === 0) { alert('Could not parse outlines from the structure.'); return; }
 
-    ui.generatedArticleTextarea.value = ''; // Reset output
-    singleModeImagesToUpload = []; // Reset image queue
+    ui.generatedArticleTextarea.value = '';
+    singleModeImagesToUpload = [];
     let previousSectionContent = '';
     let combinedArticleContent = '';
     const doImageGeneration = state.generateImages;
@@ -145,102 +117,77 @@ export async function handleGenerateArticle() {
     const outputFormat = state.format;
     const articleTitle = ui.articleTitleInput.value.trim() || state.keyword || 'untitled-article';
 
-    showElement(ui.generationProgressDiv, true); // Show progress text area
-    if(ui.totalSectionNumSpan) ui.totalSectionNumSpan.textContent = outlines.length; // Update total count
-    hideProgressBar(ui.uploadProgressBar, ui.uploadProgressContainer, ui.uploadProgressText); // Hide image upload bar initially
+    showElement(ui.generationProgressDiv, true); // Uses imported showElement implicitly
+    if(ui.totalSectionNumSpan) ui.totalSectionNumSpan.textContent = outlines.length;
+    hideProgressBar(ui.uploadProgressBar, ui.uploadProgressContainer, ui.uploadProgressText);
     disableElement(ui.button, true);
-    showLoading(ui.loadingIndicator, true);
+    showLoading(ui.loadingIndicator, true); // Uses showElement internally
 
-    try { // Wrap generation loop in try block
+    try {
         for (let i = 0; i < outlines.length; i++) {
             const currentOutline = outlines[i];
-            if(ui.currentSectionNumSpan) ui.currentSectionNumSpan.textContent = i + 1; // Update current count
+            if(ui.currentSectionNumSpan) ui.currentSectionNumSpan.textContent = i + 1;
             logToConsole(`Processing outline ${i+1}/${outlines.length}: "${currentOutline}"`, 'info');
 
-            // Generate Text
             const textPayload = buildSingleTextPayload(currentOutline, previousSectionContent, articleTitle);
-            const textResult = await callAI('generate', textPayload, null, null); // No loader/button disable needed here
-            if (!textResult?.success || !textResult.text) {
-                throw new Error(`Text generation failed for section ${i + 1} ("${currentOutline}"): ${textResult?.error || 'No text returned'}`);
-            }
-            const currentSectionText = textResult.text.trim() + (outputFormat === 'html' ? '\n\n' : '\n\n'); // Add spacing
+            const textResult = await callAI('generate', textPayload, null, null);
+            if (!textResult?.success || !textResult.text) { throw new Error(`Text generation failed for section ${i + 1} ("${currentOutline}"): ${textResult?.error || 'No text returned'}`); }
+            const currentSectionText = textResult.text.trim() + (outputFormat === 'html' ? '\n\n' : '\n\n');
             combinedArticleContent += currentSectionText;
-            ui.generatedArticleTextarea.value = combinedArticleContent; // Update textarea incrementally
-            previousSectionContent = currentSectionText; // Update context for next iteration
+            ui.generatedArticleTextarea.value = combinedArticleContent;
+            previousSectionContent = currentSectionText;
 
-            // Generate Image (if enabled)
             let imagePlaceholder = '';
             if (doImageGeneration) {
                 logToConsole(`Generating image for section ${i + 1}...`, 'info');
                 const imagePayload = buildSingleImagePayload(currentSectionText, currentOutline, articleTitle, i + 1);
-                const imageResult = await callAI('generate_image', imagePayload, null, null); // No loader needed
-
+                const imageResult = await callAI('generate_image', imagePayload, null, null);
                 if (imageResult?.success && imageResult.imageData) {
                     const filename = imagePayload.filename;
                     const altText = `Image for ${currentOutline.substring(0, 50)}`;
                     const placeholderId = `img-placeholder-${filename.replace(/\./g, '-')}`;
-
                     if (imageStorageType === 'github') {
                         singleModeImagesToUpload.push({ filename: filename, base64: imageResult.imageData, placeholderId: placeholderId });
-                        imagePlaceholder = outputFormat === 'html'
-                            ? `<div id="${placeholderId}">[Uploading image: ${filename}...]</div>\n\n`
-                            : `[Uploading image: ${filename}...]\n\n`;
+                        imagePlaceholder = outputFormat === 'html' ? `<div id="${placeholderId}">[Uploading image: ${filename}...]</div>\n\n` : `[Uploading image: ${filename}...]\n\n`;
                         logToConsole(`Image ${filename} queued for GitHub upload.`, 'info');
-                    } else { // Base64 embedding
-                        imagePlaceholder = outputFormat === 'html'
-                            ? `<img src="data:image/png;base64,${imageResult.imageData}" alt="${altText}" class="mx-auto my-4 rounded shadow">\n\n`
-                            : `![${altText}](data:image/png;base64,${imageResult.imageData})\n\n`;
+                    } else {
+                        imagePlaceholder = outputFormat === 'html' ? `<img src="data:image/png;base64,${imageResult.imageData}" alt="${altText}" class="mx-auto my-4 rounded shadow">\n\n` : `![${altText}](data:image/png;base64,${imageResult.imageData})\n\n`;
                         logToConsole(`Image for section ${i + 1} embedded as base64.`, 'success');
                     }
                 } else {
                     logToConsole(`Failed image gen for section ${i + 1}. Error: ${imageResult?.error || 'Unknown'}`, 'warn');
                     imagePlaceholder = outputFormat === 'html' ? `\n\n<!-- Image generation failed -->\n\n` : `\n\n[Image generation failed]\n\n`;
                 }
-                combinedArticleContent += imagePlaceholder; // Add placeholder/image tag
-                ui.generatedArticleTextarea.value = combinedArticleContent; // Update textarea again
+                combinedArticleContent += imagePlaceholder;
+                ui.generatedArticleTextarea.value = combinedArticleContent;
             }
-            // Scroll to bottom
             ui.generatedArticleTextarea.scrollTop = ui.generatedArticleTextarea.scrollHeight;
-            await delay(200); // Small delay between sections if needed
-        } // End outline loop
-
-        // Success: Hide generation progress
-        showElement(ui.generationProgressDiv, false);
-
-        // Upload Images if needed
-        if (imageStorageType === 'github' && singleModeImagesToUpload.length > 0) {
-            await uploadSingleImagesToGithub(); // Handles its own progress bar
-        } else {
-             hideProgressBar(ui.uploadProgressBar, ui.uploadProgressContainer, ui.uploadProgressText); // Ensure hidden if no uploads
+            await delay(200);
         }
 
-        // Finalize UI after successful generation
+        showElement(ui.generationProgressDiv, false); // Uses imported showElement implicitly
+
+        if (imageStorageType === 'github' && singleModeImagesToUpload.length > 0) { await uploadSingleImagesToGithub(); }
+        else { hideProgressBar(ui.uploadProgressBar, ui.uploadProgressContainer, ui.uploadProgressText); }
+
         if (combinedArticleContent) {
-            showElement(ui.step3Section, true); // Show review step
-            showElement(ui.step4Section, false); // Ensure spin step is hidden
+            showElement(ui.step3Section, true); // Uses imported showElement implicitly
+            showElement(ui.step4Section, false); // Uses imported showElement implicitly
             const isHtml = outputFormat === 'html';
-            if(ui.previewHtmlCheckbox) {
-                ui.previewHtmlCheckbox.checked = false;
-                disableElement(ui.previewHtmlCheckbox, !isHtml);
-                showElement(ui.previewHtmlCheckbox.parentElement, isHtml); // Show/hide the checkbox label container
-            }
-            showElement(ui.generatedArticleTextarea, true); // Ensure textarea is visible
-            showElement(ui.htmlPreviewDiv, false); // Ensure preview is hidden
-            if(ui.htmlPreviewDiv) ui.htmlPreviewDiv.innerHTML = ''; // Clear preview
-
+            if(ui.previewHtmlCheckbox) { ui.previewHtmlCheckbox.checked = false; disableElement(ui.previewHtmlCheckbox, !isHtml); showElement(ui.previewHtmlCheckbox.parentElement, isHtml); } // Uses imported showElement implicitly
+            showElement(ui.generatedArticleTextarea, true); // Uses imported showElement implicitly
+            showElement(ui.htmlPreviewDiv, false); // Uses imported showElement implicitly
+            if(ui.htmlPreviewDiv) ui.htmlPreviewDiv.innerHTML = '';
             logToConsole('Single article generation process complete.', 'success');
-        } else {
-            logToConsole('Single article generation finished but produced no content.', 'warn');
-        }
+        } else { logToConsole('Single article generation finished but produced no content.', 'warn'); }
 
-    } catch (error) { // Catch errors during the generation loop
+    } catch (error) {
         logToConsole(`Error during article generation: ${error.message}`, 'error');
         alert(`Article generation failed: ${error.message}`);
-        showElement(ui.generationProgressDiv, false); // Hide progress on error
-        hideProgressBar(ui.uploadProgressBar, ui.uploadProgressContainer, ui.uploadProgressText); // Hide upload bar on error
+        showElement(ui.generationProgressDiv, false); // Uses imported showElement implicitly
+        hideProgressBar(ui.uploadProgressBar, ui.uploadProgressContainer, ui.uploadProgressText);
     } finally {
-        // Always re-enable button and hide main loader
-        showLoading(ui.loadingIndicator, false);
+        showLoading(ui.loadingIndicator, false); // Uses showElement internally
         disableElement(ui.button, false);
     }
 }
@@ -425,5 +372,4 @@ function replacePlaceholderInTextarea(textarea, placeholderId, filename, finalIm
     // }
 }
 
-
-console.log("article-single.js loaded");
+console.log("article-single.js loaded (v8.11 fix)"); // Update version marker
