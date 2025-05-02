@@ -1,6 +1,7 @@
-// article-ui.js (v8.6 Nodelist+Dialect Fix)
+// article-ui.js (v8.10 State Sync Fix)
 import { textProviders, imageProviders, languageOptions, defaultSettings } from './article-config.js';
-import { getState, getCustomModelState } from './article-state.js';
+// *** Import updateState function ***
+import { getState, getCustomModelState, updateState } from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement } from './article-helpers.js';
 
 // --- DOM Element References (Centralized) ---
@@ -460,15 +461,12 @@ export function updateUIFromState(state) {
     if (!state) { logToConsole("Cannot update UI: state is null.", "error"); return; }
     if (Object.keys(domElements).length === 0) { logToConsole("DOM elements not cached yet. Cannot update UI.", "error"); return; }
 
+    // 1. Populate Provider Selects first
     populateAiProviders(state);
+
+    // 2. Set simple values from state BEFORE populating models/dialects
     const keywordInput = getElement('keywordInput'); if (keywordInput) keywordInput.value = state.keyword || '';
     const bulkModeCheckbox = getElement('bulkModeCheckbox'); if (bulkModeCheckbox) bulkModeCheckbox.checked = state.bulkMode || defaultSettings.bulkMode;
-
-    // --- Language and Dialect ---
-    // This needs to happen *before* other fields that might depend on language defaults indirectly
-    populateLanguagesUI(state); // This function now also handles setting the correct dialect based on state
-
-    // --- Other Step 1 Fields ---
     const audienceInputElement = getElement('audienceInput'); if(audienceInputElement) audienceInputElement.value = state.audience || defaultSettings.audience;
     const readerNameInputElement = getElement('readerNameInput'); if(readerNameInputElement) readerNameInputElement.value = state.readerName || defaultSettings.readerName;
     const toneSelectElement = getElement('toneSelect'); if(toneSelectElement) toneSelectElement.value = state.tone || defaultSettings.tone;
@@ -479,10 +477,13 @@ export function updateUIFromState(state) {
     const sitemapUrlInputElement = getElement('sitemapUrlInput'); if(sitemapUrlInputElement) sitemapUrlInputElement.value = state.sitemapUrl || defaultSettings.sitemapUrl;
     const customSpecsInputElement = getElement('customSpecsInput'); if(customSpecsInputElement) customSpecsInputElement.value = state.customSpecs || defaultSettings.customSpecs;
 
-    // --- Purpose ---
+    // 3. Language and Dialect (this sets the UI dropdowns)
+    populateLanguagesUI(state); // Calls populateDialectsUI internally
+
+    // 4. Purpose
     const savedPurposes = state.purpose || defaultSettings.purpose;
     let showPurposeUrl = false; let showPurposeCta = false;
-    const purposeCheckboxes = getElement('purposeCheckboxes'); // Use getElement here
+    const purposeCheckboxes = getElement('purposeCheckboxes');
     if(purposeCheckboxes) { purposeCheckboxes.forEach(cb => { cb.checked = savedPurposes.includes(cb.value); if (cb.checked) { if (cb.value === 'Promote URL') showPurposeUrl = true; if (cb.value.startsWith('Promote') || cb.value === 'Generate Leads') showPurposeCta = true; } }); }
     const purposeUrlInputElement = getElement('purposeUrlInput'); if(purposeUrlInputElement) purposeUrlInputElement.value = state.purposeUrl || defaultSettings.purposeUrl;
     const purposeCtaInputElement = getElement('purposeCtaInput'); if(purposeCtaInputElement) purposeCtaInputElement.value = state.purposeCta || defaultSettings.purposeCta;
@@ -490,7 +491,7 @@ export function updateUIFromState(state) {
     showElement(getElement('purposeCtaInput'), showPurposeCta);
     showElement(getElement('customToneInput'), state.tone === 'custom');
 
-    // --- Images ---
+    // 5. Images
     const generateImagesCheckboxElement = getElement('generateImagesCheckbox'); if (generateImagesCheckboxElement) generateImagesCheckboxElement.checked = state.generateImages || defaultSettings.generateImages;
     const numImagesSelectElement = getElement('numImagesSelect'); if(numImagesSelectElement) numImagesSelectElement.value = state.numImages || defaultSettings.numImages;
     const imageSubjectInputElement = getElement('imageSubjectInput'); if(imageSubjectInputElement) imageSubjectInputElement.value = state.imageSubject || defaultSettings.imageSubject;
@@ -498,36 +499,61 @@ export function updateUIFromState(state) {
     const imageStyleModifiersInputElement = getElement('imageStyleModifiersInput'); if(imageStyleModifiersInputElement) imageStyleModifiersInputElement.value = state.imageStyleModifiers || defaultSettings.imageStyleModifiers;
     const imageTextInputElement = getElement('imageTextInput'); if(imageTextInputElement) imageTextInputElement.value = state.imageText || defaultSettings.imageText;
     const storageValue = state.imageStorage || defaultSettings.imageStorage;
-    const imageStorageRadios = getElement('imageStorageRadios'); // Use getElement
+    const imageStorageRadios = getElement('imageStorageRadios');
     let radioFound = false;
-    if (imageStorageRadios) {
-        imageStorageRadios.forEach(radio => {
-            if (radio.value === storageValue) { radio.checked = true; radioFound = true; }
-        });
-        // Default to first if saved value wasn't found
-        if (!radioFound && imageStorageRadios.length > 0) { imageStorageRadios[0].checked = true; }
-    }
+    if (imageStorageRadios) { imageStorageRadios.forEach(radio => { if (radio.value === storageValue) { radio.checked = true; radioFound = true; } }); if (!radioFound && imageStorageRadios.length > 0) { imageStorageRadios[0].checked = true; } }
     const githubRepoUrlInputElement = getElement('githubRepoUrlInput'); if(githubRepoUrlInputElement) githubRepoUrlInputElement.value = state.githubRepoUrl || defaultSettings.githubRepoUrl;
     const githubCustomPathInputElement = getElement('githubCustomPathInput'); if(githubCustomPathInputElement) githubCustomPathInputElement.value = state.githubCustomPath || defaultSettings.githubCustomPath;
 
-    // Populate Models (after providers are set)
+    // 6. Populate Models (this sets the UI dropdowns based on state or defaults)
     populateTextModels();
     populateImageModels();
 
-    // Set Visibility (after options/radios are set)
-    showElement(getElement('imageOptionsContainer'), state.generateImages);
-    toggleGithubOptions();
-    updateUIBasedOnMode(state.bulkMode); // Set initial mode visibility
+    // *** FIX: Synchronize state AFTER populating UI ***
+    logToConsole("Syncing state with default UI selections after population...", "debug");
+    const defaultTextModel = getElement('aiModelSelect')?.value || '';
+    const defaultImageModel = getElement('imageModelSelect')?.value || '';
+    const defaultImageAspect = getElement('imageAspectRatioSelect')?.value || '';
+    // Only update state if the UI value differs from current state or state is empty
+    // This prevents unnecessary saves if the loaded state was already correct.
+    const updatesNeeded = {};
+    if (defaultTextModel && state.textModel !== defaultTextModel) {
+        updatesNeeded.textModel = defaultTextModel;
+        logToConsole(`Syncing state.textModel -> ${defaultTextModel}`, 'debug');
+    }
+    if (defaultImageModel && state.imageModel !== defaultImageModel) {
+         updatesNeeded.imageModel = defaultImageModel;
+         logToConsole(`Syncing state.imageModel -> ${defaultImageModel}`, 'debug');
+    }
+     if (defaultImageAspect && state.imageAspectRatio !== defaultImageAspect) {
+         updatesNeeded.imageAspectRatio = defaultImageAspect;
+         logToConsole(`Syncing state.imageAspectRatio -> ${defaultImageAspect}`, 'debug');
+     }
+    // Also ensure custom flags are false if we set a standard model
+    if (updatesNeeded.textModel) updatesNeeded.useCustomTextModel = false;
+    if (updatesNeeded.imageModel) updatesNeeded.useCustomImageModel = false;
 
-    // --- Step 2+ Elements ---
+    if (Object.keys(updatesNeeded).length > 0) {
+        updateState(updatesNeeded);
+        // We need the *very latest* state for the final steps
+        state = getState(); // Refresh state variable after updates
+    }
+    // *** End Fix ***
+
+    // 7. Set Visibility based on the potentially updated state
+    showElement(getElement('imageOptionsContainer'), state.generateImages);
+    toggleGithubOptions(); // Uses latest state implicitly via querySelector
+    updateUIBasedOnMode(state.bulkMode); // Uses latest state
+
+    // 8. Update Step 2+ Elements
     const articleTitleInputElement = getElement('articleTitleInput'); if (articleTitleInputElement) articleTitleInputElement.value = state.articleTitle || '';
     const linkTypeToggleElement = getElement('linkTypeToggle'); if(linkTypeToggleElement) linkTypeToggleElement.checked = !(state.linkTypeInternal ?? defaultSettings.linkTypeInternal);
     const linkTypeTextElement = getElement('linkTypeText'); if(linkTypeTextElement) linkTypeTextElement.textContent = (state.linkTypeInternal ?? defaultSettings.linkTypeInternal) ? 'Internal' : 'External';
 
-    // --- Bulk Plan ---
+    // 9. Bulk Plan Rendering
     if (state.bulkMode) { renderPlanningTable(getBulkPlan()); }
 
-    // Final API Status Check
+    // 10. Final API Status Check (uses the fully updated state)
     checkApiStatus();
     logToConsole("UI update from state finished.", "info");
 }
@@ -584,4 +610,4 @@ export function displaySitemapUrlsUI(urls = []) {
     logToConsole(`Displayed ${urls.length} sitemap URLs.`, 'info');
 }
 
-console.log("article-ui.js loaded (v8.6 Nodelist+Dialect Fix)");
+console.log("article-ui.js loaded (v8.10 State Sync Fix)");
