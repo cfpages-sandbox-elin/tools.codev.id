@@ -1,62 +1,100 @@
-// article-single.js
+// article-single.js (v8.9 Title Input Check Fix)
 import { getState, updateState } from './article-state.js';
-import { logToConsole, callAI, getArticleOutlines, constructImagePrompt, sanitizeFilename, slugify } from './article-helpers.js'; // Import helpers
-import { getElement, updateProgressBar, hideProgressBar, updateUIFromState } from './article-ui.js';
+import { logToConsole, callAI, getArticleOutlines, constructImagePrompt, sanitizeFilename, slugify, showLoading, disableElement } from './article-helpers.js'; // Import helpers including UI ones
+import { getElement, updateProgressBar, hideProgressBar, updateUIFromState } from './article-ui.js'; // Import getElement and progress helpers
+import { languageOptions } from './article-config.js'; // Needed for GitHub path logic
+
 
 let singleModeImagesToUpload = []; // State specific to single mode image uploads
 
 // --- Generate Structure (and Title if needed) ---
 export async function handleGenerateStructure() {
+    logToConsole("handleGenerateStructure called", "info"); // Add entry log
     const state = getState();
     const ui = {
         keywordInput: getElement('keywordInput'),
-        articleTitleInput: getElement('articleTitle'),
-        articleStructureTextarea: getElement('articleStructureTextarea'),
+        articleTitleInput: getElement('articleTitleInput'), // JS Key
+        articleStructureTextarea: getElement('articleStructureTextarea'), // JS Key 'article_structure'
         step2Section: getElement('step2Section'),
         structureContainer: getElement('structureContainer'),
-        toggleStructureVisibilityBtn: getElement('toggleStructureVisibilityBtn'),
+        toggleStructureVisibilityBtn: getElement('toggleStructureVisibilityBtn'), // JS Key 'toggleStructureVisibility'
         step3Section: getElement('step3Section'),
         step4Section: getElement('step4Section'),
         loadingIndicator: getElement('structureLoadingIndicator'),
         button: getElement('generateSingleBtn'),
     };
 
+    // --- *** FIX: Add safety check for ui.articleTitleInput *** ---
+    if (!ui.articleTitleInput) {
+        logToConsole("Article title input element not found. Cannot proceed with structure generation.", "error");
+        alert("Error: Could not find the article title input field.");
+        return; // Stop execution if the element is missing
+    }
+    // --- End Fix ---
+
     // --- 1. Generate Title (if blank) ---
-    let articleTitle = ui.articleTitleInput.value.trim();
+    let articleTitle = ui.articleTitleInput.value.trim(); // Now this access is safe
+    logToConsole(`Initial article title from input: "${articleTitle}"`, "debug");
+
     if (!articleTitle) {
         logToConsole('Article title is blank, generating one...', 'info');
-        const titlePrompt = buildTitlePrompt(); // Uses local helper
+        const titlePrompt = buildTitlePrompt();
         const titlePayload = { providerKey: state.textProvider, model: state.textModel, prompt: titlePrompt };
-        const titleResult = await callAI('generate', titlePayload, ui.loadingIndicator, ui.button);
+
+        // Show loading indicator while generating title
+        showLoading(ui.loadingIndicator, true);
+        disableElement(ui.button, true);
+
+        const titleResult = await callAI('generate', titlePayload, null, null); // Pass nulls as we manage UI here
+
+        // Hide loading indicator after title generation attempt
+        showLoading(ui.loadingIndicator, false); // Hide loader regardless of success
 
         if (titleResult?.success && titleResult.text) {
             articleTitle = titleResult.text.trim().replace(/^"|"$/g, '');
-            ui.articleTitleInput.value = articleTitle;
-            updateState({ articleTitle: articleTitle });
             logToConsole(`Generated Title: ${articleTitle}`, 'success');
+            ui.articleTitleInput.value = articleTitle; // Update input field
+            updateState({ articleTitle: articleTitle }); // Save to state
         } else {
             logToConsole('Failed to generate article title.', 'error');
             alert('Failed to generate article title. Please provide one manually or try again.');
-            return;
+            disableElement(ui.button, false); // Re-enable button on failure
+            return; // Stop if title generation failed
         }
     } else {
+        // If title was provided manually, just save it to state
         updateState({ articleTitle: articleTitle });
     }
 
     // --- 2. Generate Structure ---
     logToConsole('Generating article structure...', 'info');
-    const structurePrompt = buildStructurePrompt(articleTitle); // Uses local helper
+    const structurePrompt = buildStructurePrompt(articleTitle);
     const structurePayload = { providerKey: state.textProvider, model: state.textModel, prompt: structurePrompt };
-    const structureResult = await callAI('generate', structurePayload, ui.loadingIndicator, ui.button);
+
+    // Show loader and disable button for structure generation
+    showLoading(ui.loadingIndicator, true);
+    disableElement(ui.button, true);
+
+    const structureResult = await callAI('generate', structurePayload, null, null); // Manage UI manually
+
+    // Hide loader and re-enable button AFTER the call finishes
+    showLoading(ui.loadingIndicator, false);
+    disableElement(ui.button, false);
+
 
     if (structureResult?.success && structureResult.text) {
-        ui.articleStructureTextarea.value = structureResult.text;
-        ui.step2Section.classList.remove('hidden');
-        ui.structureContainer.classList.remove('hidden');
-        ui.toggleStructureVisibilityBtn.textContent = 'Hide';
-        ui.step3Section.classList.add('hidden');
-        ui.step4Section.classList.add('hidden');
-        // displaySitemapUrlsUI(); // Call UI function if needed
+        if (ui.articleStructureTextarea) { // Check if textarea exists
+            ui.articleStructureTextarea.value = structureResult.text;
+        } else {
+             logToConsole("Article structure textarea not found to display results.", "error");
+        }
+        // Show/Hide sections - use safe getElement or direct access if already checked
+        showElement(getElement('step2Section'), true); // Use getElement for safety
+        showElement(getElement('structureContainer'), true);
+        if(ui.toggleStructureVisibilityBtn) ui.toggleStructureVisibilityBtn.textContent = 'Hide'; // Element already checked
+        showElement(getElement('step3Section'), false); // Ensure step 3 is hidden
+        showElement(getElement('step4Section'), false); // Ensure step 4 is hidden
+
         logToConsole('Structure generated successfully.', 'success');
     } else {
         logToConsole('Failed to generate structure.', 'error');
@@ -68,97 +106,143 @@ export async function handleGenerateStructure() {
 export async function handleGenerateArticle() {
     const state = getState();
     const ui = {
-        articleStructureTextarea: getElement('article_structure'),
-        generatedArticleTextarea: getElement('generated_article'),
-        generationProgressDiv: getElement('generationProgress'),
-        currentSectionNumSpan: getElement('currentSectionNum'),
-        totalSectionNumSpan: getElement('totalSectionNum'),
+        // Use getElement for safety
+        articleStructureTextarea: getElement('articleStructureTextarea'),
+        generatedArticleTextarea: getElement('generatedArticleTextarea'),
+        generationProgressDiv: getElement('generationProgressDiv'),
+        currentSectionNumSpan: getElement('currentSectionNumSpan'),
+        totalSectionNumSpan: getElement('totalSectionNumSpan'),
         uploadProgressContainer: getElement('uploadProgressContainer'),
         uploadProgressText: getElement('uploadProgressText'),
         uploadProgressBar: getElement('uploadProgressBar'),
         step3Section: getElement('step3Section'),
         step4Section: getElement('step4Section'),
-        previewHtmlCheckbox: getElement('preview_html_checkbox'),
-        htmlPreviewDiv: getElement('html_preview'),
+        previewHtmlCheckbox: getElement('previewHtmlCheckbox'),
+        htmlPreviewDiv: getElement('htmlPreviewDiv'),
         loadingIndicator: getElement('articleLoadingIndicator'),
         button: getElement('generateArticleBtn'),
-        articleTitleInput: getElement('articleTitle'),
+        articleTitleInput: getElement('articleTitleInput'),
     };
+
+    // Check essential elements
+    if (!ui.articleStructureTextarea || !ui.generatedArticleTextarea || !ui.articleTitleInput || !ui.button) {
+        logToConsole("Missing essential UI elements for article generation.", "error");
+        alert("Error: Cannot generate article due to missing UI components.");
+        return;
+    }
 
     const structure = ui.articleStructureTextarea.value.trim();
     if (!structure) { alert('Article structure is empty.'); return; }
-    const outlines = getArticleOutlines(structure); // Use helper
-    if (outlines.length === 0) { alert('Could not parse outlines.'); return; }
+    const outlines = getArticleOutlines(structure);
+    if (outlines.length === 0) { alert('Could not parse outlines from the structure.'); return; }
 
-    // Reset state
-    ui.generatedArticleTextarea.value = ''; singleModeImagesToUpload = [];
-    let previousSectionContent = ''; let combinedArticleContent = '';
+    ui.generatedArticleTextarea.value = ''; // Reset output
+    singleModeImagesToUpload = []; // Reset image queue
+    let previousSectionContent = '';
+    let combinedArticleContent = '';
     const doImageGeneration = state.generateImages;
     const imageStorageType = doImageGeneration ? state.imageStorage : 'none';
     const outputFormat = state.format;
     const articleTitle = ui.articleTitleInput.value.trim() || state.keyword || 'untitled-article';
 
-    ui.generationProgressDiv.classList.remove('hidden'); ui.totalSectionNumSpan.textContent = outlines.length;
-    hideProgressBar(null, ui.uploadProgressContainer, ui.uploadProgressText);
-    disableElement(ui.button, true); showLoading(ui.loadingIndicator, true);
+    showElement(ui.generationProgressDiv, true); // Show progress text area
+    if(ui.totalSectionNumSpan) ui.totalSectionNumSpan.textContent = outlines.length; // Update total count
+    hideProgressBar(ui.uploadProgressBar, ui.uploadProgressContainer, ui.uploadProgressText); // Hide image upload bar initially
+    disableElement(ui.button, true);
+    showLoading(ui.loadingIndicator, true);
 
-    for (let i = 0; i < outlines.length; i++) {
-        const currentOutline = outlines[i];
-        ui.currentSectionNumSpan.textContent = i + 1;
-        logToConsole(`Processing outline ${i+1}: "${currentOutline}"`, 'info');
+    try { // Wrap generation loop in try block
+        for (let i = 0; i < outlines.length; i++) {
+            const currentOutline = outlines[i];
+            if(ui.currentSectionNumSpan) ui.currentSectionNumSpan.textContent = i + 1; // Update current count
+            logToConsole(`Processing outline ${i+1}/${outlines.length}: "${currentOutline}"`, 'info');
 
-        // Generate Text
-        const textPayload = buildSingleTextPayload(currentOutline, previousSectionContent, articleTitle); // Use local helper
-        const textResult = await callAI('generate', textPayload, null, null);
-        if (!textResult?.success || !textResult.text) { logToConsole(`Failed text gen for outline: "${currentOutline}". Stopping. Error: ${textResult?.error}`, 'error'); alert(`Error generating section ${i + 1}.`); break; }
-        const currentSectionText = textResult.text.trim() + (outputFormat === 'html' ? '\n\n' : '\n\n');
-        combinedArticleContent += currentSectionText; ui.generatedArticleTextarea.value = combinedArticleContent;
-        previousSectionContent = currentSectionText;
-
-        // Generate Image
-        let imagePlaceholder = '';
-        if (doImageGeneration) {
-            logToConsole(`Generating image for section ${i + 1}...`, 'info');
-            const imagePayload = buildSingleImagePayload(currentSectionText, currentOutline, articleTitle, i + 1); // Use local helper
-            const imageResult = await callAI('generate_image', imagePayload, null, null);
-
-            if (imageResult?.success && imageResult.imageData) {
-                const filename = imagePayload.filename;
-                const altText = `Image for ${currentOutline.substring(0, 50)}`;
-                const placeholderId = `img-placeholder-${filename.replace(/\./g, '-')}`;
-                if (imageStorageType === 'github') {
-                    singleModeImagesToUpload.push({ filename: filename, base64: imageResult.imageData, placeholderId: placeholderId });
-                    imagePlaceholder = outputFormat === 'html' ? `<div id="${placeholderId}">[Uploading image: ${filename}...]</div>\n\n` : `[Uploading image: ${filename}...]\n\n`;
-                    logToConsole(`Image ${filename} queued for GitHub upload.`, 'info');
-                } else {
-                    imagePlaceholder = outputFormat === 'html' ? `<img src="data:image/png;base64,${imageResult.imageData}" alt="${altText}" class="mx-auto my-4 rounded shadow">\n\n` : `![${altText}](data:image/png;base64,${imageResult.imageData})\n\n`;
-                    logToConsole(`Image for section ${i + 1} embedded as base64.`, 'success');
-                }
-            } else {
-                logToConsole(`Failed image gen for section ${i + 1}. Error: ${imageResult?.error}`, 'warn');
-                imagePlaceholder = outputFormat === 'html' ? `\n\n` : `[Image generation failed]\n\n`;
+            // Generate Text
+            const textPayload = buildSingleTextPayload(currentOutline, previousSectionContent, articleTitle);
+            const textResult = await callAI('generate', textPayload, null, null); // No loader/button disable needed here
+            if (!textResult?.success || !textResult.text) {
+                throw new Error(`Text generation failed for section ${i + 1} ("${currentOutline}"): ${textResult?.error || 'No text returned'}`);
             }
-            combinedArticleContent += imagePlaceholder; ui.generatedArticleTextarea.value = combinedArticleContent;
+            const currentSectionText = textResult.text.trim() + (outputFormat === 'html' ? '\n\n' : '\n\n'); // Add spacing
+            combinedArticleContent += currentSectionText;
+            ui.generatedArticleTextarea.value = combinedArticleContent; // Update textarea incrementally
+            previousSectionContent = currentSectionText; // Update context for next iteration
+
+            // Generate Image (if enabled)
+            let imagePlaceholder = '';
+            if (doImageGeneration) {
+                logToConsole(`Generating image for section ${i + 1}...`, 'info');
+                const imagePayload = buildSingleImagePayload(currentSectionText, currentOutline, articleTitle, i + 1);
+                const imageResult = await callAI('generate_image', imagePayload, null, null); // No loader needed
+
+                if (imageResult?.success && imageResult.imageData) {
+                    const filename = imagePayload.filename;
+                    const altText = `Image for ${currentOutline.substring(0, 50)}`;
+                    const placeholderId = `img-placeholder-${filename.replace(/\./g, '-')}`;
+
+                    if (imageStorageType === 'github') {
+                        singleModeImagesToUpload.push({ filename: filename, base64: imageResult.imageData, placeholderId: placeholderId });
+                        imagePlaceholder = outputFormat === 'html'
+                            ? `<div id="${placeholderId}">[Uploading image: ${filename}...]</div>\n\n`
+                            : `[Uploading image: ${filename}...]\n\n`;
+                        logToConsole(`Image ${filename} queued for GitHub upload.`, 'info');
+                    } else { // Base64 embedding
+                        imagePlaceholder = outputFormat === 'html'
+                            ? `<img src="data:image/png;base64,${imageResult.imageData}" alt="${altText}" class="mx-auto my-4 rounded shadow">\n\n`
+                            : `![${altText}](data:image/png;base64,${imageResult.imageData})\n\n`;
+                        logToConsole(`Image for section ${i + 1} embedded as base64.`, 'success');
+                    }
+                } else {
+                    logToConsole(`Failed image gen for section ${i + 1}. Error: ${imageResult?.error || 'Unknown'}`, 'warn');
+                    imagePlaceholder = outputFormat === 'html' ? `\n\n<!-- Image generation failed -->\n\n` : `\n\n[Image generation failed]\n\n`;
+                }
+                combinedArticleContent += imagePlaceholder; // Add placeholder/image tag
+                ui.generatedArticleTextarea.value = combinedArticleContent; // Update textarea again
+            }
+            // Scroll to bottom
+            ui.generatedArticleTextarea.scrollTop = ui.generatedArticleTextarea.scrollHeight;
+            await delay(200); // Small delay between sections if needed
+        } // End outline loop
+
+        // Success: Hide generation progress
+        showElement(ui.generationProgressDiv, false);
+
+        // Upload Images if needed
+        if (imageStorageType === 'github' && singleModeImagesToUpload.length > 0) {
+            await uploadSingleImagesToGithub(); // Handles its own progress bar
+        } else {
+             hideProgressBar(ui.uploadProgressBar, ui.uploadProgressContainer, ui.uploadProgressText); // Ensure hidden if no uploads
         }
-        ui.generatedArticleTextarea.scrollTop = ui.generatedArticleTextarea.scrollHeight;
-    } // End outline loop
 
-    ui.generationProgressDiv.classList.add('hidden'); showLoading(ui.loadingIndicator, false);
+        // Finalize UI after successful generation
+        if (combinedArticleContent) {
+            showElement(ui.step3Section, true); // Show review step
+            showElement(ui.step4Section, false); // Ensure spin step is hidden
+            const isHtml = outputFormat === 'html';
+            if(ui.previewHtmlCheckbox) {
+                ui.previewHtmlCheckbox.checked = false;
+                disableElement(ui.previewHtmlCheckbox, !isHtml);
+                showElement(ui.previewHtmlCheckbox.parentElement, isHtml); // Show/hide the checkbox label container
+            }
+            showElement(ui.generatedArticleTextarea, true); // Ensure textarea is visible
+            showElement(ui.htmlPreviewDiv, false); // Ensure preview is hidden
+            if(ui.htmlPreviewDiv) ui.htmlPreviewDiv.innerHTML = ''; // Clear preview
 
-    // Upload Images
-    if (imageStorageType === 'github' && singleModeImagesToUpload.length > 0) {
-        await uploadSingleImagesToGithub(); // Use local helper
+            logToConsole('Single article generation process complete.', 'success');
+        } else {
+            logToConsole('Single article generation finished but produced no content.', 'warn');
+        }
+
+    } catch (error) { // Catch errors during the generation loop
+        logToConsole(`Error during article generation: ${error.message}`, 'error');
+        alert(`Article generation failed: ${error.message}`);
+        showElement(ui.generationProgressDiv, false); // Hide progress on error
+        hideProgressBar(ui.uploadProgressBar, ui.uploadProgressContainer, ui.uploadProgressText); // Hide upload bar on error
+    } finally {
+        // Always re-enable button and hide main loader
+        showLoading(ui.loadingIndicator, false);
+        disableElement(ui.button, false);
     }
-
-    // Finalize
-    disableElement(ui.button, false);
-    if (combinedArticleContent) {
-        ui.step3Section.classList.remove('hidden'); ui.step4Section.classList.add('hidden');
-        const isHtml = outputFormat === 'html'; ui.previewHtmlCheckbox.checked = false; disableElement(ui.previewHtmlCheckbox, !isHtml);
-        ui.previewHtmlCheckbox.parentElement.classList.toggle('hidden', !isHtml);
-        ui.generatedArticleTextarea.classList.remove('hidden'); ui.htmlPreviewDiv.classList.add('hidden'); ui.htmlPreviewDiv.innerHTML = '';
-        logToConsole('Single article generation process complete.', 'success');
-    } else { logToConsole('Single article generation failed or produced no content.', 'error'); }
 }
 
 
@@ -177,38 +261,38 @@ function buildSingleTextPayload(currentOutline, previousContext, articleTitle) {
     const state = getState();
     let linkingInstructions = '';
     if (state.sitemapUrls && state.sitemapUrls.length > 0) {
-         const urlList = state.sitemapUrls.slice(0, 5).join('\n');
-         linkingInstructions = `\n- Consider linking naturally to relevant URLs from this list if appropriate: ${urlList}\n- Link Type Preference: ${state.linkTypeInternal ? 'Internal' : 'External'}.`;
+         const urlList = state.sitemapUrls.slice(0, 5).join('\n'); // Limit shown URLs
+         linkingInstructions = `\n- Consider linking naturally to relevant URLs from this list if appropriate:\n${urlList}\n- Link Type Preference: ${state.linkTypeInternal ? 'Internal (relative paths like /slug)' : 'External (full URLs)'}. Aim for 1-2 relevant links per section if possible.`;
     }
 
-    const prompt = `Generate the article content ONLY for the following section/outline of an article titled "${articleTitle}", continuing naturally from the previous context if provided.\nSection Outline: "${currentOutline}"\nPrevious Context (end of last section):\n---\n${previousContext ? previousContext.slice(-500) : '(Start of article)'}\n---\nOverall Article Specifications:\n- Keyword: "${state.keyword}" - Language: ${state.language}${state.dialect ? ` (${state.dialect} dialect)` : ''} - Target Audience: ${state.audience} - Tone: ${state.tone} ${state.gender ? `- Author Gender: ${state.gender}` : ''} ${state.age ? `- Author Age: ${state.age}` : ''} - Purpose(s): ${state.purpose.join(', ')} ${state.purposeUrl && state.purpose.includes('Promote URL') ? ` - Promo URL: ${state.purposeUrl}` : ''} ${state.purposeCta && state.purpose.some(p => p.startsWith('Promote') || p === 'Generate Leads') ? ` - CTA: ${state.purposeCta}` : ''} ${state.readerName ? `- Reader Name: ${state.readerName}` : ''} - Output Format: ${state.format} ${state.customSpecs ? `- Other Details: ${state.customSpecs}` : ''} ${linkingInstructions}\nInstructions:\n- Write ONLY the content for the current section outline: "${currentOutline}". Do NOT repeat the outline heading unless natural. Ensure smooth transition. Adhere strictly to ${state.format} format (${state.format === 'html' ? 'use only <p>,<h1>-<h6>,<ul>,<ol>,<li>,<b>,<i>,<a> tags' : 'use standard Markdown'}). Do NOT add intro/concluding remarks.`;
+    const prompt = `Generate the article content ONLY for the following section/outline of an article titled "${articleTitle}", continuing naturally from the previous context if provided.\n\nSection Outline: "${currentOutline}"\n\nPrevious Context (end of last section):\n---\n${previousContext ? previousContext.slice(-500) : '(Start of article)'}\n---\n\nOverall Article Specifications:\n- Keyword: "${state.keyword}"\n- Language: ${state.language}${state.dialect ? ` (${state.dialect} dialect)` : ''}\n- Target Audience: ${state.audience}\n- Tone: ${state.tone}\n${state.gender ? `- Author Gender: ${state.gender}` : ''}\n${state.age ? `- Author Age: ${state.age}` : ''}\n- Purpose(s): ${state.purpose.join(', ')}\n${state.purposeUrl && state.purpose.includes('Promote URL') ? ` - Promo URL: ${state.purposeUrl}\n` : ''}${state.purposeCta && state.purpose.some(p => p.startsWith('Promote') || p === 'Generate Leads') ? ` - CTA: ${state.purposeCta}\n` : ''}${state.readerName ? `- Reader Name: ${state.readerName}\n` : ''}- Output Format: ${state.format}\n${state.customSpecs ? `- Other Details: ${state.customSpecs}\n` : ''}${linkingInstructions}\n\nInstructions:\n- Write ONLY the content for the current section outline: "${currentOutline}".\n- Do NOT repeat the outline heading unless it fits naturally within the flow (e.g., as an <h2>).\n- Ensure smooth transition from previous context.\n- Adhere strictly to ${state.format} format (${state.format === 'html' ? 'use only <p>, <h2>-<h6>, <ul>, <ol>, <li>, <b>, <i>, <a> tags' : 'use standard Markdown'}).\n- Do NOT add introductory or concluding remarks about the writing process or the section itself.`;
 
     return { providerKey: state.textProvider, model: state.textModel, prompt: prompt };
 }
 
 function buildSingleImagePayload(sectionContent, sectionTitle, articleTitle, sectionIndex) {
     const state = getState();
-    const keyword = state.keyword || 'article';
-    const filename = sanitizeFilename(`${slugify(articleTitle)}-${slugify(sectionTitle)}-${Date.now()}-${sectionIndex}.png`);
-    // Get image settings from state
+    const baseFilename = sanitizeFilename(`${slugify(articleTitle)}-${slugify(sectionTitle)}`);
+    const filename = `${baseFilename}-${Date.now()}-${sectionIndex}.png`;
     const imageSettings = {
         imageSubject: state.imageSubject,
         imageStyle: state.imageStyle,
         imageStyleModifiers: state.imageStyleModifiers,
         imageText: state.imageText
     };
-    const imagePrompt = constructImagePrompt(sectionContent, sectionTitle, imageSettings); // Use helper
+    const imagePrompt = constructImagePrompt(sectionContent, sectionTitle, imageSettings);
+
+    // Dynamically get model based on custom state for image
+    const imageModel = state.useCustomImageModel ? state.customImageModel : state.imageModel;
 
     return {
         providerKey: state.imageProvider,
-        model: state.imageModel,
+        model: imageModel, // Use potentially custom model
         prompt: imagePrompt,
         filename: filename,
-        numImages: state.numImages || 1,
+        // Backend should handle numImages > 1 if needed by provider
+        // numImages: state.numImages || 1, // Generally backend generates 1 per call
         aspectRatio: state.imageAspectRatio,
-        // Pass other relevant params from state if needed by backend
-        // style: state.imageStyle || undefined,
-        // text: state.imageText || undefined
     };
 }
 
@@ -217,73 +301,128 @@ function buildSingleImagePayload(sectionContent, sectionTitle, articleTitle, sec
 async function uploadSingleImagesToGithub() {
     const state = getState();
     const ui = {
-        githubRepoUrlInput: getElement('githubRepoUrl'),
-        githubCustomPathInput: getElement('githubCustomPath'),
+        // Use getElement for safety
+        githubRepoUrlInput: getElement('githubRepoUrlInput'),
+        githubCustomPathInput: getElement('githubCustomPathInput'),
         uploadProgressContainer: getElement('uploadProgressContainer'),
         uploadProgressBar: getElement('uploadProgressBar'),
         uploadProgressText: getElement('uploadProgressText'),
-        generatedArticleTextarea: getElement('generated_article'),
+        generatedArticleTextarea: getElement('generatedArticleTextarea'),
     };
 
-    if (singleModeImagesToUpload.length === 0) return;
-    const repoUrl = state.githubRepoUrl;
-    if (!repoUrl) { alert("GitHub Repo URL is required."); return; }
-    const urlMatch = repoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
-    if (!urlMatch || urlMatch.length < 3) { alert("Invalid GitHub Repo URL format."); return; }
-    const owner = urlMatch[1]; const repo = urlMatch[2].replace(/\.git$/, '');
-    const repoDomain = repo.toLowerCase();
-    const customPath = state.githubCustomPath;
-    let basePath;
-    if (customPath) { basePath = (customPath.startsWith('/') ? customPath.substring(1) : customPath).replace(/\/$/, '') + '/'; }
-    else { const langKey = Object.keys(languageOptions).find(key => languageOptions[key].name === state.language || key === state.language) || 'English'; basePath = (languageOptions[langKey]?.defaultPath || '/articles/').replace(/^\//, '').replace(/\/$/, '') + '/'; }
+    if (singleModeImagesToUpload.length === 0 || !ui.uploadProgressContainer || !ui.uploadProgressBar || !ui.uploadProgressText || !ui.generatedArticleTextarea) {
+        logToConsole("Skipping GitHub upload: No images or missing UI elements.", "warn");
+        return;
+    }
 
-    logToConsole(`Starting GitHub upload (Single Mode) to ${owner}/${repo} path /${basePath}...`, 'info');
+    const repoUrl = state.githubRepoUrl; // Repo URL from state
+    if (!repoUrl) { logToConsole("GitHub Repo URL is missing in state.", "error"); alert("GitHub Repo URL is required for upload."); return; }
+
+    // Basic validation of URL format
+    const urlMatch = repoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+    if (!urlMatch || urlMatch.length < 3) { logToConsole(`Invalid GitHub Repo URL format: ${repoUrl}`, "error"); alert("Invalid GitHub Repo URL format."); return; }
+    const owner = urlMatch[1];
+    const repo = urlMatch[2].replace(/\.git$/, ''); // Remove trailing .git if present
+
+    const repoDomain = `${owner.toLowerCase()}.github.io`; // Common convention for Pages, adjust if needed
+    // Or maybe use the direct raw content URL pattern? Decide based on usage.
+    // const rawContentBase = `https://raw.githubusercontent.com/${owner}/${repo}/main`; // Needs branch name
+
+    const customPath = state.githubCustomPath; // Custom path from state
+    let basePath;
+    if (customPath) {
+        basePath = (customPath.startsWith('/') ? customPath.substring(1) : customPath).replace(/\/$/, '') + '/'; // Ensure trailing slash, remove leading
+    } else {
+        // Fallback to language default path
+        const langKey = Object.keys(languageOptions).find(key => languageOptions[key].name === state.language || key === state.language) || 'English';
+        basePath = (languageOptions[langKey]?.defaultPath || 'articles/').replace(/^\//, '').replace(/\/$/, '') + '/'; // Ensure trailing slash, remove leading
+    }
+
+    logToConsole(`Starting GitHub upload (Single Mode) to ${owner}/${repo}, Path: /${basePath}...`, 'info');
     updateProgressBar(ui.uploadProgressBar, ui.uploadProgressContainer, ui.uploadProgressText, 0, singleModeImagesToUpload.length, 'Uploading image ');
 
-    let uploadedCount = 0; const totalImages = singleModeImagesToUpload.length;
+    let uploadedCount = 0;
+    const totalImages = singleModeImagesToUpload.length;
 
     for (let i = 0; i < totalImages; i++) {
         const img = singleModeImagesToUpload[i];
-        updateProgressBar(ui.uploadProgressBar, ui.uploadProgressContainer, ui.uploadProgressText, i, totalImages, `Uploading image ${i + 1} of ${totalImages} (${img.filename}) `);
-        const fullPath = basePath + img.filename;
-        const payload = { owner: owner, repo: repo, path: fullPath, content: img.base64, message: `Upload image: ${img.filename} via AI Tool` };
-        const result = await callAI('upload_image', payload, null, null);
+        updateProgressBar(ui.uploadProgressBar, ui.uploadProgressContainer, ui.uploadProgressText, i, totalImages, `Uploading ${img.filename} (${i + 1}/${totalImages}) `);
+        const fullPath = basePath + img.filename; // e.g., 'articles/my-image.png'
+        const payload = {
+            owner: owner,
+            repo: repo,
+            path: fullPath,
+            content: img.base64, // Just the base64 data
+            message: `Upload image: ${img.filename} via AI Tool`
+        };
 
-        if (result?.success) {
-            const finalImageUrl = `https://${repoDomain}/${fullPath}`;
+        const result = await callAI('upload_image', payload, null, null); // Backend handles GitHub API call
+
+        if (result?.success && result.download_url) {
+            // Use the download_url provided by the backend (likely the raw content URL)
+            const finalImageUrl = result.download_url;
             logToConsole(`Uploaded ${img.filename}. URL: ${finalImageUrl}`, 'success');
             replacePlaceholderInTextarea(ui.generatedArticleTextarea, img.placeholderId, img.filename, finalImageUrl, state.format);
             uploadedCount++;
         } else {
             logToConsole(`Failed to upload ${img.filename}. Error: ${result?.error || 'Unknown'}`, 'error');
-            replacePlaceholderInTextarea(ui.generatedArticleTextarea, img.placeholderId, img.filename, null, state.format, true);
+            replacePlaceholderInTextarea(ui.generatedArticleTextarea, img.placeholderId, img.filename, null, state.format, true); // Indicate error
         }
-        const progressPercent = Math.round(((i + 1) / totalImages) * 100);
-        ui.uploadProgressBar.style.width = `${progressPercent}%`;
+        // Update visual progress (already handled by updateProgressBar in loop start)
     }
-    ui.uploadProgressText.textContent = `Upload complete (${uploadedCount}/${totalImages} successful).`;
-    logToConsole(`GitHub upload process finished (Single Mode).`, 'info');
+
+    if (ui.uploadProgressText) { // Check element exists
+        ui.uploadProgressText.textContent = `Upload complete (${uploadedCount}/${totalImages} successful).`;
+    }
+    logToConsole(`GitHub upload process finished (Single Mode). ${uploadedCount}/${totalImages} successful.`, 'info');
+
+    // Optionally hide the progress bar after a short delay
+    setTimeout(() => {
+        hideProgressBar(ui.uploadProgressBar, ui.uploadProgressContainer, ui.uploadProgressText);
+    }, 3000);
 }
 
 // Helper to replace placeholder (moved from v7 bulk)
 function replacePlaceholderInTextarea(textarea, placeholderId, filename, finalImageUrl, format, isError = false) {
-    const placeholderDivRegex = new RegExp(`<div id="${placeholderId}">\\[Uploading image: ${filename}\\.\\.\\.\\]</div>`, 's');
-    const placeholderTextRegex = new RegExp(`\\[Uploading image: ${filename}\\.\\.\\.\\]`, 'g');
+    if (!textarea) return;
+
+    const placeholderDivRegex = new RegExp(`<div\\s+id="${placeholderId.replace(/-/g, '\\-')}">.*?</div>`, 'is'); // More robust div regex
+    const placeholderTextRegex = new RegExp(`\\[Uploading image:\\s*${filename.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}\\.\\.\\.\\]`, 'g'); // Escape filename for regex
+
     let replacementText;
 
     if (isError) {
-        replacementText = format === 'html' ? `` : `[Upload failed: ${filename}]`;
-    } else {
+        replacementText = format === 'html' ? `<!-- Upload failed: ${filename} -->` : `[Upload failed: ${filename}]`;
+    } else if (finalImageUrl) { // Ensure URL exists
         replacementText = format === 'html'
             ? `<img src="${finalImageUrl}" alt="${filename}" class="mx-auto my-4 rounded shadow">`
             : `![${filename}](${finalImageUrl})`;
-    }
-    if (textarea.value.includes(`<div id="${placeholderId}">`)) {
-         textarea.value = textarea.value.replace(placeholderDivRegex, replacementText);
     } else {
-        textarea.value = textarea.value.replace(placeholderTextRegex, replacementText);
+        // Should not happen if not error, but fallback just in case
+        replacementText = format === 'html' ? `<!-- Image URL missing: ${filename} -->` : `[Image URL missing: ${filename}]`;
     }
-    // Note: We are not updating a global 'fullArticleContent' here as it's managed within handleGenerateArticle
+
+    let replaced = false;
+    // Try replacing div placeholder first (HTML format)
+    if (format === 'html' && textarea.value.includes(placeholderId)) {
+         textarea.value = textarea.value.replace(placeholderDivRegex, replacementText);
+         replaced = true;
+         // logToConsole(`Replaced DIV placeholder ${placeholderId} with: ${replacementText.substring(0,50)}...`, 'debug');
+    }
+
+    // If div wasn't found/replaced, try text placeholder (Markdown or fallback)
+    if (!replaced) {
+        const originalLength = textarea.value.length;
+        textarea.value = textarea.value.replace(placeholderTextRegex, replacementText);
+        if (textarea.value.length !== originalLength) {
+            replaced = true;
+             // logToConsole(`Replaced TEXT placeholder for ${filename} with: ${replacementText.substring(0,50)}...`, 'debug');
+        }
+    }
+
+    // if (!replaced) {
+    //      logToConsole(`Could not find placeholder for ${filename} (ID: ${placeholderId})`, 'warn');
+    // }
 }
 
 
