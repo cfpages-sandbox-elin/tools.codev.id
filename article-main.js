@@ -1,13 +1,14 @@
-// article-main.js (v8.8 Provider Change Status Fix)
+// article-main.js (v8.9 showElement Import Fix)
 import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
-import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, findCheapestModel } from './article-helpers.js'; // Added findCheapestModel if needed (though populate should handle it)
+// *** FIX: Add showElement to the import from article-helpers ***
+import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, findCheapestModel, showElement } from './article-helpers.js';
 import {
     cacheDomElements, getElement, populateAiProviders, populateTextModels,
     populateImageModels, updateUIFromState, updateUIBasedOnMode, toggleCustomModelUI,
     populateLanguagesUI, populateDialectsUI, toggleGithubOptions, checkApiStatus,
     displaySitemapUrlsUI
 } from './article-ui.js';
-import { languageOptions, imageProviders } from './article-config.js'; // Added imageProviders import
+import { languageOptions, imageProviders } from './article-config.js';
 import { handleGenerateStructure, handleGenerateArticle } from './article-single.js';
 import { handleGeneratePlan, handleStartBulkGeneration, handleDownloadZip } from './article-bulk.js';
 import { handleSpinSelectedText, handleSelection, highlightSpintax } from './article-spinner.js';
@@ -76,66 +77,44 @@ function setupConfigurationListeners() {
     forceReloadBtn?.addEventListener('click', () => { logToConsole("Attempting hard refresh...", "warn"); location.reload(true); });
     resetDataBtn?.addEventListener('click', resetAllData);
 
-    // *** MODIFIED LISTENER ***
     aiProviderSelect?.addEventListener('change', (e) => {
         const newProvider = e.target.value;
         logToConsole(`Text Provider changed to: ${newProvider}`, 'info');
-
-        // 1. Update provider state ONLY first
         updateState({ textProvider: newProvider });
-        logToConsole(`State provider updated. New provider: ${getState().textProvider}`, 'debug');
-
-        // 2. Repopulate models UI (this will set the dropdown's value to the default)
-        populateTextModels(true); // Pass true to ensure it finds and sets the default/cheapest
-
-        // 3. Get the model that was actually selected in the dropdown by populateTextModels
+        // logToConsole(`State provider updated. New provider: ${getState().textProvider}`, 'debug');
+        populateTextModels(true);
         const selectedDefaultModel = getElement('aiModelSelect')?.value || '';
-        logToConsole(`Default model selected in UI by populateTextModels: ${selectedDefaultModel}`, 'debug');
-
-        // 4. Update the textModel state variable with this default model
-        //    Also ensure 'useCustomTextModel' is false when changing provider
-        updateState({
-             textModel: selectedDefaultModel,
-             useCustomTextModel: false // Force back to standard model on provider change
-        });
-        // Ensure custom UI reflects the switch back to standard (checkbox unchecked, input hidden)
-        if(useCustomAiModelCheckbox) useCustomAiModelCheckbox.checked = false; // Explicitly uncheck
-        toggleCustomModelUI('text'); // Update visibility/disabled states
-
-        // 5. Check status using the now-updated state which includes the default model
+        // logToConsole(`Default model selected in UI by populateTextModels: ${selectedDefaultModel}`, 'debug');
+        updateState({ textModel: selectedDefaultModel, useCustomTextModel: false });
+        if(useCustomAiModelCheckbox) useCustomAiModelCheckbox.checked = false;
+        toggleCustomModelUI('text');
         checkApiStatus();
     });
 
     aiModelSelect?.addEventListener('change', (e) => {
         if (!getElement('useCustomAiModelCheckbox')?.checked) {
             const selectedModel = e.target.value;
-            if (selectedModel) {
-                logToConsole(`Standard Text Model selected via dropdown: ${selectedModel}`, 'info');
-                updateState({ textModel: selectedModel }); checkApiStatus(); }
-            else { logToConsole("Empty model selected, checking status (likely shows error).", "warn"); checkApiStatus(); }
+            if (selectedModel) { updateState({ textModel: selectedModel }); checkApiStatus(); }
+            else { checkApiStatus(); }
         }
     });
 
     useCustomAiModelCheckbox?.addEventListener('change', () => {
         const isChecked = useCustomAiModelCheckbox.checked;
-        // logToConsole(`Use Custom Text Model checkbox changed: ${isChecked}`, 'info');
         updateState({ useCustomTextModel: isChecked });
-        toggleCustomModelUI('text'); // Update UI visibility first
-        // Update state with the *active* model based on checkbox
+        toggleCustomModelUI('text');
         if (isChecked) { updateState({ customTextModel: getElement('customAiModelInput')?.value || '' }); }
         else { updateState({ textModel: getElement('aiModelSelect')?.value || '' }); }
-        checkApiStatus(); // Check status of the newly active model
+        checkApiStatus();
     });
 
     customAiModelInput?.addEventListener('blur', (e) => {
         if (getElement('useCustomAiModelCheckbox')?.checked) {
             const provider = getState().textProvider;
             const customModelName = e.target.value.trim();
-            // logToConsole(`Custom Text Model input changed (on blur) to: ${customModelName}`, 'info');
             updateCustomModelState('text', provider, customModelName);
             updateState({ customTextModel: customModelName });
-            if (customModelName) { checkApiStatus(); }
-            else { /* logToConsole("Custom model input cleared...", "warn"); */ checkApiStatus(); }
+            if (customModelName) { checkApiStatus(); } else { checkApiStatus(); }
         }
     });
 
@@ -143,27 +122,16 @@ function setupConfigurationListeners() {
          const newProvider = e.target.value;
          logToConsole(`Image Provider changed to: ${newProvider}`, 'info');
          const defaultAspectRatio = imageProviders[newProvider]?.aspectRatios?.[0] || '1:1';
-         // Update state including provider, reset model, set default aspect ratio
-         updateState({
-            imageProvider: newProvider,
-            imageModel: '',
-            imageAspectRatio: defaultAspectRatio,
-            useCustomImageModel: false // Also reset custom image model on provider change
-        });
-        // Ensure custom checkbox is unchecked visually
+         updateState({ imageProvider: newProvider, imageModel: '', imageAspectRatio: defaultAspectRatio, useCustomImageModel: false });
          if(useCustomImageModelCheckbox) useCustomImageModelCheckbox.checked = false;
-         // Repopulate and update UI
          populateImageModels(true);
-         toggleCustomModelUI('image'); // Ensure custom UI is hidden
+         toggleCustomModelUI('image');
      });
 
      imageModelSelect?.addEventListener('change', (e) => {
          if (!getElement('useCustomImageModelCheckbox')?.checked) {
              const selectedModel = e.target.value;
-             if (selectedModel) {
-                logToConsole(`Standard Image Model selected: ${selectedModel}`, 'info');
-                updateState({ imageModel: selectedModel });
-            }
+             if (selectedModel) { updateState({ imageModel: selectedModel }); }
          }
      });
     getElement('imageAspectRatioSelect')?.addEventListener('change', (e) => {
@@ -173,7 +141,6 @@ function setupConfigurationListeners() {
 
      useCustomImageModelCheckbox?.addEventListener('change', () => {
          const isChecked = useCustomImageModelCheckbox.checked;
-         // logToConsole(`Use Custom Image Model checkbox changed: ${isChecked}`, 'info');
          updateState({ useCustomImageModel: isChecked });
          toggleCustomModelUI('image');
          if (isChecked) { updateState({ customImageModel: getElement('customImageModelInput')?.value || '' }); }
@@ -184,7 +151,6 @@ function setupConfigurationListeners() {
          if (getElement('useCustomImageModelCheckbox')?.checked) {
              const provider = getState().imageProvider;
              const customModelName = e.target.value.trim();
-             // logToConsole(`Custom Image Model input changed (on blur) to: ${customModelName}`, 'info');
              updateCustomModelState('image', provider, customModelName);
              updateState({ customImageModel: customModelName });
          }
@@ -217,37 +183,29 @@ function setupStep1Listeners() {
 
     languageSelect?.addEventListener('change', (e) => {
         const newLang = e.target.value;
-        // logToConsole(`Language Select changed to: ${newLang}`, 'info');
         const newLangConfig = languageOptions[newLang];
         const defaultDialect = newLangConfig?.dialects?.[0] || '';
         updateState({ language: newLang, dialect: defaultDialect, customLanguage: '' });
-        // logToConsole(`State updated. New language: ${getState().language}, Default Dialect: ${getState().dialect}`, 'debug');
         populateDialectsUI(getState());
     });
 
     customLanguageInput?.addEventListener('blur', (e) => {
-         if (getElement('languageSelect')?.value === 'custom') {
-            updateState({ customLanguage: e.target.value });
-         }
+         if (getElement('languageSelect')?.value === 'custom') { updateState({ customLanguage: e.target.value }); }
     });
 
-    dialectSelect?.addEventListener('change', (e) => {
-        updateState({ dialect: e.target.value });
-    });
+    dialectSelect?.addEventListener('change', (e) => { updateState({ dialect: e.target.value }); });
 
     toneSelect?.addEventListener('change', (e) => {
         const newTone = e.target.value;
         const showCustom = newTone === 'custom';
         updateState({ tone: newTone });
         if (!showCustom) { updateState({ customTone: '' }); if(customToneInput) customToneInput.value = ''; }
-        showElement(customToneInput, showCustom);
+        showElement(customToneInput, showCustom); // Uses imported showElement implicitly
         customToneInput?.classList.toggle('custom-input-visible', showCustom);
     });
 
     customToneInput?.addEventListener('blur', (e) => {
-         if (getElement('toneSelect')?.value === 'custom') {
-             updateState({ customTone: e.target.value });
-         }
+         if (getElement('toneSelect')?.value === 'custom') { updateState({ customTone: e.target.value }); }
     });
 
      if (purposeCheckboxes) {
@@ -257,8 +215,8 @@ function setupStep1Listeners() {
                  updateState({ purpose: selectedPurposes });
                  const showUrl = selectedPurposes.includes('Promote URL');
                  const showCta = selectedPurposes.some(p => p.startsWith('Promote') || p === 'Generate Leads');
-                 showElement(purposeUrlInput, showUrl);
-                 showElement(purposeCtaInput, showCta);
+                 showElement(purposeUrlInput, showUrl); // Uses imported showElement implicitly
+                 showElement(purposeCtaInput, showCta); // Uses imported showElement implicitly
                  if (!showUrl) updateState({ purposeUrl: '' });
                  if (!showCta) updateState({ purposeCta: '' });
              });
@@ -267,10 +225,12 @@ function setupStep1Listeners() {
      getElement('purposeUrlInput')?.addEventListener('blur', (e) => updateState({ purposeUrl: e.target.value }));
      getElement('purposeCtaInput')?.addEventListener('blur', (e) => updateState({ purposeCta: e.target.value }));
 
+    // *** LISTENER THAT CAUSED THE ERROR ***
     generateImagesCheckbox?.addEventListener('change', (e) => {
         const generate = e.target.checked;
         updateState({ generateImages: generate });
-        showElement(getElement('imageOptionsContainer'), generate);
+        // *** FIX: Make sure showElement is available here ***
+        showElement(getElement('imageOptionsContainer'), generate); // Explicitly use imported showElement
         if (generate) { populateImageModels(); }
         toggleGithubOptions();
     });
@@ -290,7 +250,7 @@ function setupStep1Listeners() {
     fetchSitemapBtn?.addEventListener('click', async () => {
         const url = sitemapUrlInput?.value.trim();
         if (!url) { alert('Please enter a Sitemap URL.'); return; }
-        showLoading(sitemapLoadingIndicator, true);
+        showLoading(sitemapLoadingIndicator, true); // showLoading uses showElement internally
         disableElement(fetchSitemapBtn, true);
         try {
             const parsedUrls = await fetchAndParseSitemap(url);
@@ -302,7 +262,7 @@ function setupStep1Listeners() {
             updateState({ sitemapUrls: [] });
             displaySitemapUrlsUI([]);
         } finally {
-            showLoading(sitemapLoadingIndicator, false);
+            showLoading(sitemapLoadingIndicator, false); // Uses showElement internally
             disableElement(fetchSitemapBtn, false);
         }
     });
@@ -335,9 +295,8 @@ function setupStep2Listeners() {
     linkTypeToggle?.addEventListener('change', (e) => {
         const isInternal = !e.target.checked; updateState({ linkTypeInternal: isInternal });
         if (linkTypeText) { linkTypeText.textContent = isInternal ? 'Internal' : 'External'; }
-        // logToConsole(`Link type toggled. Internal: ${isInternal}`, 'info');
     });
-    articleTitleInput?.addEventListener('blur', (e) => { updateState({ articleTitle: e.target.value }); /* logToConsole(`Article Title input updated...`, 'info'); */ });
+    articleTitleInput?.addEventListener('blur', (e) => { updateState({ articleTitle: e.target.value }); });
     generateArticleBtn?.addEventListener('click', handleGenerateArticle);
 }
 function setupStep3Listeners() {
@@ -350,23 +309,21 @@ function setupStep3Listeners() {
 
     previewHtmlCheckbox?.addEventListener('change', (e) => {
         const showPreview = e.target.checked;
-        showElement(generatedArticleTextarea, !showPreview);
-        showElement(htmlPreviewDiv, showPreview);
+        showElement(generatedArticleTextarea, !showPreview); // Uses imported showElement implicitly
+        showElement(htmlPreviewDiv, showPreview); // Uses imported showElement implicitly
         if (showPreview && htmlPreviewDiv && generatedArticleTextarea) {
             let unsafeHTML = generatedArticleTextarea.value;
             let sanitizedHTML = unsafeHTML.replace(/<script.*?>.*?<\/script>/gis, '');
              sanitizedHTML = sanitizedHTML.replace(/onerror=".*?"/gi, '');
              sanitizedHTML = sanitizedHTML.replace(/onload=".*?"/gi, '');
             htmlPreviewDiv.innerHTML = sanitizedHTML;
-            // logToConsole("Showing sanitized HTML preview.", "warn");
         }
     });
     enableSpinningBtn?.addEventListener('click', () => {
         if (spunArticleDisplay && generatedArticleTextarea && step4Section) {
             spunArticleDisplay.innerHTML = generatedArticleTextarea.value;
-            showElement(step4Section, true);
+            showElement(step4Section, true); // Uses imported showElement implicitly
             highlightSpintax(spunArticleDisplay);
-            // logToConsole("Spinning enabled...", 'info');
             spunArticleDisplay.focus();
         } else { logToConsole("Could not enable spinning - required elements missing.", 'error'); }
     });
@@ -409,4 +366,4 @@ function setupBulkModeListeners() {
 logToConsole("article-main.js evaluating. Setting up DOMContentLoaded listener.", "debug");
 document.addEventListener('DOMContentLoaded', initializeApp, { once: true });
 
-console.log("article-main.js loaded (v8.8 Provider Change Status Fix)");
+console.log("article-main.js loaded (v8.9 showElement Import Fix)");
