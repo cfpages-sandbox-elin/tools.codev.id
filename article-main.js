@@ -1,4 +1,4 @@
-// article-main.js (corrected initialization)
+// article-main.js (corrected listener logic)
 import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState } from './article-state.js';
 import { logToConsole, fetchAndParseSitemap } from './article-helpers.js';
 import {
@@ -13,52 +13,93 @@ import { handleSpinSelectedText, handleSelection, highlightSpintax } from './art
 
 function initializeApp() {
     logToConsole("Initializing AI Article Generator v8.2...", "info");
-
-    // 1. Cache DOM Elements FIRST
     cacheDomElements();
-
-    // 2. Load initial state from storage
-    const initialState = loadState(); // This loads state into memory
-
-    // 3. Populate UI elements based on loaded state
-    // This function should now correctly populate dropdowns using the loaded state
-    updateUIFromState(initialState);
-
-    // 4. Setup Event Listeners AFTER UI is populated and state is loaded
+    const initialState = loadState();
+    updateUIFromState(initialState); // This now correctly calls population functions
     setupConfigurationListeners();
     setupStep1Listeners();
     setupStep2Listeners();
     setupStep3Listeners();
     setupStep4Listeners();
     setupBulkModeListeners();
-
-    // 5. Initial API status check (already called within populateTextModels called by updateUIFromState)
     logToConsole("Application Initialized and listeners attached.", "success");
 }
 
 function setupConfigurationListeners() {
-    // ... (listeners same as v8.1) ...
-    const ui = { aiProviderSelect: getElement('ai_provider'), aiModelSelect: getElement('ai_model'), useCustomAiModelCheckbox: getElement('useCustomAiModel'), customAiModelInput: getElement('customAiModel'), imageProviderSelect: getElement('imageProvider'), imageModelSelect: getElement('imageModel'), useCustomImageModelCheckbox: getElement('useCustomImageModel'), customImageModelInput: getElement('customImageModel'), resetDataBtn: getElement('resetDataBtn'), forceReloadBtn: getElement('forceReloadBtn'), };
+    const ui = { /* ... Get elements ... */ aiProviderSelect: getElement('ai_provider'), aiModelSelect: getElement('ai_model'), useCustomAiModelCheckbox: getElement('useCustomAiModel'), customAiModelInput: getElement('customAiModel'), imageProviderSelect: getElement('imageProvider'), imageModelSelect: getElement('imageModel'), useCustomImageModelCheckbox: getElement('useCustomImageModel'), customImageModelInput: getElement('customImageModel'), resetDataBtn: getElement('resetDataBtn'), forceReloadBtn: getElement('forceReloadBtn'), };
+
     ui.forceReloadBtn?.addEventListener('click', () => { logToConsole("Attempting hard refresh...", "warn"); location.reload(true); });
-    ui.aiProviderSelect?.addEventListener('change', (e) => { updateState({ textProvider: e.target.value }); populateTextModels(true); });
-    ui.aiModelSelect?.addEventListener('change', (e) => { if (!getElement('useCustomAiModel').checked) { updateState({ textModel: e.target.value }); logToConsole(`Selected Text Model: ${e.target.value}`, 'info'); checkApiStatus(); } });
-    ui.useCustomAiModelCheckbox?.addEventListener('change', () => { toggleCustomModelUI('text'); const isChecked = getElement('useCustomAiModel').checked; updateState({ useCustomTextModel: isChecked }); if (!isChecked) { updateState({ textModel: getElement('ai_model').value }); } else { updateState({ customTextModel: getElement('customAiModel').value }); } checkApiStatus(); });
-    ui.customAiModelInput?.addEventListener('change', (e) => { const provider = getState().textProvider; updateCustomModelState('text', provider, e.target.value); updateState({ customTextModel: e.target.value }); if (getElement('useCustomAiModel').checked) checkApiStatus(); });
-    ui.imageProviderSelect?.addEventListener('change', (e) => { updateState({ imageProvider: e.target.value }); populateImageModels(true); });
-    ui.imageModelSelect?.addEventListener('change', (e) => { if (!getElement('useCustomImageModel').checked) { updateState({ imageModel: e.target.value }); logToConsole(`Selected Image Model: ${e.target.value}`, 'info'); } });
-    ui.useCustomImageModelCheckbox?.addEventListener('change', () => { toggleCustomModelUI('image'); const isChecked = getElement('useCustomImageModel').checked; updateState({ useCustomImageModel: isChecked }); if (!isChecked) { updateState({ imageModel: getElement('imageModel').value }); } else { updateState({ customImageModel: getElement('customImageModel').value }); } });
-    ui.customImageModelInput?.addEventListener('change', (e) => { const provider = getState().imageProvider; updateCustomModelState('image', provider, e.target.value); updateState({ customImageModel: e.target.value }); });
-    ui.resetDataBtn?.addEventListener('click', resetAllData);
+
+    // AI Config (Text)
+    ui.aiProviderSelect?.addEventListener('change', (e) => {
+        updateState({ textProvider: e.target.value, textModel: '', customTextModel: '' }); // Reset model state on provider change
+        populateTextModels(true); // Populate models for the new provider and set default
+    });
+    ui.aiModelSelect?.addEventListener('change', (e) => {
+        // Only update state if a standard model is selected (custom handled separately)
+        if (!getElement('useCustomAiModel').checked) {
+            updateState({ textModel: e.target.value });
+            logToConsole(`Selected Text Model: ${e.target.value}`, 'info');
+            checkApiStatus(); // Check status for the newly selected standard model
+        }
+    });
+    ui.useCustomAiModelCheckbox?.addEventListener('change', () => {
+        const isChecked = getElement('useCustomAiModel').checked;
+        updateState({ useCustomTextModel: isChecked });
+        toggleCustomModelUI('text'); // Update UI visibility
+        // Update state with the relevant model value when checkbox changes
+        if (!isChecked) { updateState({ textModel: getElement('ai_model').value }); }
+        else { updateState({ customTextModel: getElement('customAiModel').value }); }
+        checkApiStatus(); // Check status after potential model change
+    });
+    ui.customAiModelInput?.addEventListener('change', (e) => {
+        const provider = getState().textProvider;
+        updateCustomModelState('text', provider, e.target.value); // Update storage
+        updateState({ customTextModel: e.target.value }); // Update app state
+        if (getElement('useCustomAiModel').checked) { // Only check status if custom is active
+            checkApiStatus();
+        }
+    });
+
+     // AI Config (Image)
+     ui.imageProviderSelect?.addEventListener('change', (e) => {
+         updateState({ imageProvider: e.target.value, imageModel: '', customImageModel: '' }); // Reset model state
+         populateImageModels(true); // Populate and set default
+     });
+     ui.imageModelSelect?.addEventListener('change', (e) => {
+         if (!getElement('useCustomImageModel').checked) {
+             updateState({ imageModel: e.target.value });
+             logToConsole(`Selected Image Model: ${e.target.value}`, 'info');
+         }
+     });
+     ui.useCustomImageModelCheckbox?.addEventListener('change', () => {
+         const isChecked = getElement('useCustomImageModel').checked;
+         updateState({ useCustomImageModel: isChecked });
+         toggleCustomModelUI('image');
+         if (!isChecked) { updateState({ imageModel: getElement('imageModel').value }); }
+         else { updateState({ customImageModel: getElement('customImageModel').value }); }
+     });
+     ui.customImageModelInput?.addEventListener('change', (e) => {
+         const provider = getState().imageProvider;
+         updateCustomModelState('image', provider, e.target.value);
+         updateState({ customImageModel: e.target.value });
+     });
+
+     ui.resetDataBtn?.addEventListener('click', resetAllData);
 }
 
 function setupStep1Listeners() {
-     // ... (listeners same as v8.1) ...
-     const ui = { bulkModeCheckbox: getElement('bulkModeCheckbox'), languageSelect: getElement('language'), customLanguageInput: getElement('custom_language'), dialectSelect: getElement('dialect'), toneSelect: getElement('tone'), customToneInput: getElement('custom_tone'), purposeCheckboxes: getElement('purposeCheckboxes'), purposeUrlInput: getElement('purposeUrl'), purposeCtaInput: getElement('purposeCta'), generateImagesCheckbox: getElement('generateImages'), imageStorageRadios: getElement('imageStorageRadios'), fetchSitemapBtn: getElement('fetchSitemapBtn'), generateSingleBtn: getElement('generateSingleBtn'), generatePlanBtn: getElement('generatePlanBtn'), keywordInput: getElement('keyword'), audienceInput: getElement('audience'), readerNameInput: getElement('readerName'), genderSelect: getElement('gender'), ageSelect: getElement('age'), formatSelect: getElement('format'), sitemapUrlInput: getElement('sitemapUrl'), customSpecsInput: getElement('custom_specs'), numImagesSelect: getElement('numImages'), imageAspectRatioSelect: getElement('imageAspectRatio'), imageSubjectInput: getElement('imageSubject'), imageStyleSelect: getElement('imageStyle'), imageStyleModifiersInput: getElement('imageStyleModifiers'), imageTextInput: getElement('imageText'), githubRepoUrlInput: getElement('githubRepoUrl'), githubCustomPathInput: getElement('githubCustomPath'), sitemapLoadingIndicator: getElement('sitemapLoadingIndicator'), };
+     // ... (Most listeners same as v8.1) ...
+     const ui = { /* ... Get elements ... */ bulkModeCheckbox: getElement('bulkModeCheckbox'), languageSelect: getElement('language'), customLanguageInput: getElement('custom_language'), dialectSelect: getElement('dialect'), toneSelect: getElement('tone'), customToneInput: getElement('custom_tone'), purposeCheckboxes: getElement('purposeCheckboxes'), purposeUrlInput: getElement('purposeUrl'), purposeCtaInput: getElement('purposeCta'), generateImagesCheckbox: getElement('generateImages'), imageStorageRadios: getElement('imageStorageRadios'), fetchSitemapBtn: getElement('fetchSitemapBtn'), generateSingleBtn: getElement('generateSingleBtn'), generatePlanBtn: getElement('generatePlanBtn'), keywordInput: getElement('keyword'), audienceInput: getElement('audience'), readerNameInput: getElement('readerName'), genderSelect: getElement('gender'), ageSelect: getElement('age'), formatSelect: getElement('format'), sitemapUrlInput: getElement('sitemapUrl'), customSpecsInput: getElement('custom_specs'), numImagesSelect: getElement('numImages'), imageAspectRatioSelect: getElement('imageAspectRatio'), imageSubjectInput: getElement('imageSubject'), imageStyleSelect: getElement('imageStyle'), imageStyleModifiersInput: getElement('imageStyleModifiers'), imageTextInput: getElement('imageText'), githubRepoUrlInput: getElement('githubRepoUrl'), githubCustomPathInput: getElement('githubCustomPath'), sitemapLoadingIndicator: getElement('sitemapLoadingIndicator'), };
      ui.bulkModeCheckbox?.addEventListener('change', (e) => { const isBulk = e.target.checked; updateState({ bulkMode: isBulk }); updateUIBasedOnMode(isBulk); });
-     ui.languageSelect?.addEventListener('change', (e) => { updateState({ language: e.target.value, dialect: '', customLanguage: '' }); populateDialectsUI(); });
+     // FIX: Ensure state is updated *before* calling populateDialectsUI
+     ui.languageSelect?.addEventListener('change', (e) => {
+         updateState({ language: e.target.value, dialect: '', customLanguage: '' });
+         populateDialectsUI(); // Now reads the updated state
+     });
      ui.customLanguageInput?.addEventListener('change', (e) => updateState({ customLanguage: e.target.value }));
      ui.dialectSelect?.addEventListener('change', (e) => updateState({ dialect: e.target.value }));
-     ui.toneSelect?.addEventListener('change', (e) => { const showCustom = e.target.value === 'custom'; showElement(ui.customToneInput, showCustom); ui.customToneInput.classList.toggle('custom-input-visible', showCustom); updateState({ tone: e.target.value }); if (!showCustom) updateState({ customTone: '' }); });
+     ui.toneSelect?.addEventListener('change', (e) => { const showCustom = e.target.value === 'custom'; updateState({ tone: e.target.value }); if (!showCustom) updateState({ customTone: '' }); showElement(ui.customToneInput, showCustom); ui.customToneInput.classList.toggle('custom-input-visible', showCustom); }); // Update state before UI
      ui.customToneInput?.addEventListener('change', (e) => updateState({ customTone: e.target.value }));
      ui.purposeCheckboxes?.forEach(checkbox => { checkbox.addEventListener('change', () => { const selectedPurposes = Array.from(document.querySelectorAll('input[name="purpose"]')).filter(cb => cb.checked).map(cb => cb.value); updateState({ purpose: selectedPurposes }); const showUrl = selectedPurposes.includes('Promote URL'); const showCta = selectedPurposes.some(p => p.startsWith('Promote') || p === 'Generate Leads'); showElement(ui.purposeUrlInput, showUrl); showElement(ui.purposeCtaInput, showCta); if (!showUrl) updateState({ purposeUrl: '' }); if (!showCta) updateState({ purposeCta: '' }); }); });
      ui.generateImagesCheckbox?.addEventListener('change', (e) => { const generate = e.target.checked; updateState({ generateImages: generate }); showElement(getElement('imageOptionsContainer'), generate); if (generate) { populateImageModels(true); toggleGithubOptions(); } else { showElement(getElement('githubOptionsContainer'), false); } });
@@ -79,12 +120,7 @@ function setupBulkModeListeners() { /* ... */ const ui = { startBulkGenerationBt
 
 
 // --- Initialize ---
-// Ensure this runs *after* the DOM is fully parsed and ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeApp);
-} else {
-    // DOMContentLoaded has already fired
-    initializeApp();
-}
+if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', initializeApp); }
+else { initializeApp(); }
 
 console.log("article-main.js loaded");

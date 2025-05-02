@@ -1,226 +1,142 @@
-// article-ui.js (add population check)
+// article-ui.js (fixed state reading and population)
 import { textProviders, imageProviders, languageOptions, defaultSettings } from './article-config.js';
 import { getState, getCustomModelState } from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement } from './article-helpers.js';
 
 // --- DOM Element References (Centralized) ---
-let domElements = {};
+let domElements = {}; // Populated by cacheDomElements
 
 export function cacheDomElements() {
-    domElements = {
-        // AI Config
-        aiConfigSection: document.getElementById('aiConfigSection'),
-        aiProviderSelect: document.getElementById('ai_provider'),
-        aiModelSelect: document.getElementById('ai_model'),
-        useCustomAiModelCheckbox: document.getElementById('useCustomAiModel'),
-        customAiModelInput: document.getElementById('customAiModel'),
-        apiStatusDiv: document.getElementById('apiStatus'),
-        apiStatusIndicator: document.getElementById('apiStatusIndicator'),
-        // Step 1
-        step1Section: document.getElementById('step1'),
-        keywordInput: document.getElementById('keyword'),
-        bulkModeCheckbox: document.getElementById('bulkModeCheckbox'),
-        bulkKeywordsContainer: document.getElementById('bulkKeywordsContainer'),
-        bulkKeywords: document.getElementById('bulkKeywords'),
-        languageSelect: document.getElementById('language'),
-        customLanguageInput: document.getElementById('custom_language'),
-        dialectSelect: document.getElementById('dialect'),
-        audienceInput: document.getElementById('audience'),
-        readerNameInput: document.getElementById('readerName'),
-        toneSelect: document.getElementById('tone'),
-        customToneInput: document.getElementById('custom_tone'),
-        genderSelect: document.getElementById('gender'),
-        ageSelect: document.getElementById('age'),
-        purposeCheckboxes: document.querySelectorAll('input[name="purpose"]'),
-        purposeUrlInput: document.getElementById('purposeUrl'),
-        purposeCtaInput: document.getElementById('purposeCta'),
-        formatSelect: document.getElementById('format'),
-        sitemapUrlInput: document.getElementById('sitemapUrl'),
-        fetchSitemapBtn: document.getElementById('fetchSitemapBtn'),
-        sitemapLoadingIndicator: document.getElementById('sitemapLoadingIndicator'),
-        customSpecsInput: document.getElementById('custom_specs'),
-        // Image Gen
-        generateImagesCheckbox: document.getElementById('generateImages'),
-        imageOptionsContainer: document.getElementById('imageOptionsContainer'),
-        imageProviderSelect: document.getElementById('imageProvider'),
-        imageModelSelect: document.getElementById('imageModel'),
-        useCustomImageModelCheckbox: document.getElementById('useCustomImageModel'),
-        customImageModelInput: document.getElementById('customImageModel'),
-        numImagesSelect: document.getElementById('numImages'),
-        imageAspectRatioSelect: document.getElementById('imageAspectRatio'),
-        imageSubjectInput: document.getElementById('imageSubject'),
-        imageStyleSelect: document.getElementById('imageStyle'),
-        imageStyleModifiersInput: document.getElementById('imageStyleModifiers'),
-        imageTextInput: document.getElementById('imageText'),
-        imageStorageRadios: document.querySelectorAll('input[name="imageStorage"]'),
-        githubOptionsContainer: document.getElementById('githubOptionsContainer'),
-        githubRepoUrlInput: document.getElementById('githubRepoUrl'),
-        githubCustomPathInput: document.getElementById('githubCustomPath'),
-        // Action Buttons
-        generateSingleBtn: document.getElementById('generateSingleBtn'),
-        generatePlanBtn: document.getElementById('generatePlanBtn'),
-        structureLoadingIndicator: document.getElementById('structureLoadingIndicator'),
-        planLoadingIndicator: document.getElementById('planLoadingIndicator'),
-        resetDataBtn: document.getElementById('resetDataBtn'),
-        forceReloadBtn: document.getElementById('forceReloadBtn'),
-        // Step 1.5 (Bulk Plan)
-        step1_5Section: document.getElementById('step1_5'),
-        planningTableContainer: document.getElementById('planningTableContainer'),
-        planningTableBody: document.querySelector('#planningTable tbody'),
-        startBulkGenerationBtn: document.getElementById('startBulkGenerationBtn'),
-        bulkLoadingIndicator: document.getElementById('bulkLoadingIndicator'),
-        downloadBulkZipBtn: document.getElementById('downloadBulkZipBtn'),
-        bulkGenerationProgress: document.getElementById('bulkGenerationProgress'),
-        bulkCurrentNum: document.getElementById('bulkCurrentNum'),
-        bulkTotalNum: document.getElementById('bulkTotalNum'),
-        bulkCurrentKeyword: document.getElementById('bulkCurrentKeyword'),
-        bulkUploadProgressContainer: document.getElementById('bulkUploadProgressContainer'),
-        bulkUploadProgressBar: document.getElementById('bulkUploadProgressBar'),
-        bulkUploadProgressText: document.getElementById('bulkUploadProgressText'),
-        // Step 2 (Single)
-        step2Section: document.getElementById('step2'),
-        toggleStructureVisibilityBtn: document.getElementById('toggleStructureVisibilityBtn'),
-        articleTitleInput: document.getElementById('articleTitle'),
-        structureContainer: document.getElementById('structureContainer'),
-        articleStructureTextarea: document.getElementById('article_structure'),
-        sitemapUrlsListDiv: document.getElementById('sitemapUrlsList'),
-        linkTypeToggle: document.getElementById('linkTypeToggle'),
-        linkTypeText: document.getElementById('linkTypeText'),
-        generateArticleBtn: document.getElementById('generateArticleBtn'),
-        articleLoadingIndicator: document.getElementById('articleLoadingIndicator'),
-        generationProgressDiv: document.getElementById('generationProgress'),
-        currentSectionNumSpan: document.getElementById('currentSectionNum'),
-        totalSectionNumSpan: document.getElementById('totalSectionNum'),
-        uploadProgressContainer: document.getElementById('uploadProgressContainer'),
-        uploadProgressBar: document.getElementById('uploadProgressBar'),
-        uploadProgressText: document.getElementById('uploadProgressText'),
-        // Step 3 (Single)
-        step3Section: document.getElementById('step3'),
-        articleOutputContainer: document.getElementById('article_output_container'),
-        generatedArticleTextarea: document.getElementById('generated_article'),
-        htmlPreviewDiv: document.getElementById('html_preview'),
-        previewHtmlCheckbox: document.getElementById('preview_html_checkbox'),
-        enableSpinningBtn: document.getElementById('enableSpinningBtn'),
-        spinLoadingIndicator: document.getElementById('spinLoadingIndicator'),
-        // Step 4 (Single)
-        step4Section: document.getElementById('step4'),
-        spinSelectedBtn: document.getElementById('spinSelectedBtn'),
-        spinActionLoadingIndicator: document.getElementById('spinActionLoadingIndicator'),
-        spinOutputContainer: document.getElementById('spin_output_container'),
-        spunArticleDisplay: document.getElementById('spun_article_display'),
-        // Console
-        consoleLogContainer: document.getElementById('consoleLogContainer'),
-        consoleLog: document.getElementById('consoleLog'),
-    };
-    // Check if critical elements were found
-    if (!domElements.aiProviderSelect || !domElements.languageSelect) {
-         logToConsole("Critical select elements (AI Provider or Language) not found during cacheDomElements!", "error");
-    } else {
-        logToConsole("DOM Elements cached.", "info");
-    }
+    // ... (Caching logic remains the same as v8.1) ...
+    domElements = { aiConfigSection: document.getElementById('aiConfigSection'), aiProviderSelect: document.getElementById('ai_provider'), aiModelSelect: document.getElementById('ai_model'), useCustomAiModelCheckbox: document.getElementById('useCustomAiModel'), customAiModelInput: document.getElementById('customAiModel'), apiStatusDiv: document.getElementById('apiStatus'), apiStatusIndicator: document.getElementById('apiStatusIndicator'), step1Section: document.getElementById('step1'), keywordInput: document.getElementById('keyword'), bulkModeCheckbox: document.getElementById('bulkModeCheckbox'), bulkKeywordsContainer: document.getElementById('bulkKeywordsContainer'), bulkKeywords: document.getElementById('bulkKeywords'), languageSelect: document.getElementById('language'), customLanguageInput: document.getElementById('custom_language'), dialectSelect: document.getElementById('dialect'), audienceInput: document.getElementById('audience'), readerNameInput: document.getElementById('readerName'), toneSelect: document.getElementById('tone'), customToneInput: document.getElementById('custom_tone'), genderSelect: document.getElementById('gender'), ageSelect: document.getElementById('age'), purposeCheckboxes: document.querySelectorAll('input[name="purpose"]'), purposeUrlInput: document.getElementById('purposeUrl'), purposeCtaInput: document.getElementById('purposeCta'), formatSelect: document.getElementById('format'), sitemapUrlInput: document.getElementById('sitemapUrl'), fetchSitemapBtn: document.getElementById('fetchSitemapBtn'), sitemapLoadingIndicator: document.getElementById('sitemapLoadingIndicator'), customSpecsInput: document.getElementById('custom_specs'), generateImagesCheckbox: document.getElementById('generateImages'), imageOptionsContainer: document.getElementById('imageOptionsContainer'), imageProviderSelect: document.getElementById('imageProvider'), imageModelSelect: document.getElementById('imageModel'), useCustomImageModelCheckbox: document.getElementById('useCustomImageModel'), customImageModelInput: document.getElementById('customImageModel'), numImagesSelect: document.getElementById('numImages'), imageAspectRatioSelect: document.getElementById('imageAspectRatio'), imageSubjectInput: document.getElementById('imageSubject'), imageStyleSelect: document.getElementById('imageStyle'), imageStyleModifiersInput: document.getElementById('imageStyleModifiers'), imageTextInput: document.getElementById('imageText'), imageStorageRadios: document.querySelectorAll('input[name="imageStorage"]'), githubOptionsContainer: document.getElementById('githubOptionsContainer'), githubRepoUrlInput: document.getElementById('githubRepoUrl'), githubCustomPathInput: document.getElementById('githubCustomPath'), generateSingleBtn: document.getElementById('generateSingleBtn'), generatePlanBtn: document.getElementById('generatePlanBtn'), structureLoadingIndicator: document.getElementById('structureLoadingIndicator'), planLoadingIndicator: document.getElementById('planLoadingIndicator'), resetDataBtn: document.getElementById('resetDataBtn'), forceReloadBtn: document.getElementById('forceReloadBtn'), step1_5Section: document.getElementById('step1_5'), planningTableContainer: document.getElementById('planningTableContainer'), planningTableBody: document.querySelector('#planningTable tbody'), startBulkGenerationBtn: document.getElementById('startBulkGenerationBtn'), bulkLoadingIndicator: document.getElementById('bulkLoadingIndicator'), downloadBulkZipBtn: document.getElementById('downloadBulkZipBtn'), bulkGenerationProgress: document.getElementById('bulkGenerationProgress'), bulkCurrentNum: document.getElementById('bulkCurrentNum'), bulkTotalNum: document.getElementById('bulkTotalNum'), bulkCurrentKeyword: document.getElementById('bulkCurrentKeyword'), bulkUploadProgressContainer: document.getElementById('bulkUploadProgressContainer'), bulkUploadProgressBar: document.getElementById('bulkUploadProgressBar'), bulkUploadProgressText: document.getElementById('bulkUploadProgressText'), step2Section: document.getElementById('step2'), toggleStructureVisibilityBtn: document.getElementById('toggleStructureVisibilityBtn'), articleTitleInput: document.getElementById('articleTitle'), structureContainer: document.getElementById('structureContainer'), articleStructureTextarea: document.getElementById('article_structure'), sitemapUrlsListDiv: document.getElementById('sitemapUrlsList'), linkTypeToggle: document.getElementById('linkTypeToggle'), linkTypeText: document.getElementById('linkTypeText'), generateArticleBtn: document.getElementById('generateArticleBtn'), articleLoadingIndicator: document.getElementById('articleLoadingIndicator'), generationProgressDiv: document.getElementById('generationProgress'), currentSectionNumSpan: document.getElementById('currentSectionNum'), totalSectionNumSpan: document.getElementById('totalSectionNum'), uploadProgressContainer: document.getElementById('uploadProgressContainer'), uploadProgressBar: document.getElementById('uploadProgressBar'), uploadProgressText: document.getElementById('uploadProgressText'), step3Section: document.getElementById('step3'), articleOutputContainer: document.getElementById('article_output_container'), generatedArticleTextarea: document.getElementById('generated_article'), htmlPreviewDiv: document.getElementById('html_preview'), previewHtmlCheckbox: document.getElementById('preview_html_checkbox'), enableSpinningBtn: document.getElementById('enableSpinningBtn'), spinLoadingIndicator: document.getElementById('spinLoadingIndicator'), step4Section: document.getElementById('step4'), spinSelectedBtn: document.getElementById('spinSelectedBtn'), spinActionLoadingIndicator: document.getElementById('spinActionLoadingIndicator'), spinOutputContainer: document.getElementById('spin_output_container'), spunArticleDisplay: document.getElementById('spun_article_display'), consoleLogContainer: document.getElementById('consoleLogContainer'), consoleLog: document.getElementById('consoleLog'), };
+    if (!domElements.aiProviderSelect || !domElements.languageSelect) { logToConsole("Critical select elements not found during cache!", "error"); }
+    else { logToConsole("DOM Elements cached.", "info"); }
 }
 
 export function getElement(id) {
-    // Add a check here too
-    if (!domElements[id]) {
-        logToConsole(`Attempted to get non-cached or non-existent element: ${id}`, 'warn');
-    }
+    if (!domElements[id]) { logToConsole(`Attempted to get non-cached element: ${id}`, 'warn'); }
     return domElements[id];
 }
 
 // --- UI Update Functions ---
 
-// Populate Select Options
 function populateSelect(selectElement, options, selectedValue = null, addEmptyOption = false, emptyText = "-- Select --") {
-    if (!selectElement) {
-        logToConsole(`Cannot populate select: Element not found (was null).`, 'error');
-        return 0; // Return 0 options added
-    }
-    const elementName = selectElement.id || selectElement.name || 'Unnamed Select'; // Get identifier for logging
-    selectElement.innerHTML = '';
-    let optionsAdded = 0;
+    // ... (implementation same as v8.1) ...
+    if (!selectElement) { logToConsole(`Cannot populate select: Element not found (was null).`, 'error'); return 0; }
+    const elementName = selectElement.id || selectElement.name || 'Unnamed Select';
+    selectElement.innerHTML = ''; let optionsAdded = 0;
     if (addEmptyOption) { const emptyOpt = document.createElement('option'); emptyOpt.value = ""; emptyOpt.textContent = emptyText; selectElement.appendChild(emptyOpt); optionsAdded++; }
     options.forEach(option => { const opt = document.createElement('option'); if (typeof option === 'string') { opt.value = option; opt.textContent = option; } else { opt.value = option.value; opt.textContent = option.text; } selectElement.appendChild(opt); optionsAdded++; });
-
-    // Set selected value
-    if (selectedValue !== null && Array.from(selectElement.options).some(opt => opt.value === selectedValue)) {
-        selectElement.value = selectedValue;
-    } else if (selectElement.options.length > 0) {
-        selectElement.selectedIndex = addEmptyOption ? 0 : 0; // Select the first actual option or the empty one
-    }
-
-    // Debug log
-    if (optionsAdded === (addEmptyOption ? 1 : 0)) { // Check if only the empty option was added (or none)
-         logToConsole(`Populated select '${elementName}' but added 0 actual options. Check input data.`, 'warn');
-    } else {
-        // logToConsole(`Populated select '${elementName}' with ${optionsAdded} options. Selected: '${selectElement.value}'`, 'info'); // Can be verbose
-    }
+    if (selectedValue !== null && Array.from(selectElement.options).some(opt => opt.value === selectedValue)) { selectElement.value = selectedValue; }
+    else if (selectElement.options.length > 0) { selectElement.selectedIndex = addEmptyOption ? 0 : 0; }
+    // if (optionsAdded === (addEmptyOption ? 1 : 0)) { logToConsole(`Populated select '${elementName}' but added 0 actual options.`, 'warn'); }
     return optionsAdded;
 }
 
-// Populate AI Providers
 export function populateAiProviders(state) {
     logToConsole("Populating AI providers...", "info");
     populateSelect(domElements.aiProviderSelect, Object.keys(textProviders), state.textProvider);
     populateSelect(domElements.imageProviderSelect, Object.keys(imageProviders), state.imageProvider);
-    // Check if options were actually added
-    if (domElements.aiProviderSelect && domElements.aiProviderSelect.options.length === 0) {
-        logToConsole("Text AI Provider select is empty after population attempt!", "error");
-    }
-     if (domElements.imageProviderSelect && domElements.imageProviderSelect.options.length === 0) {
-        logToConsole("Image AI Provider select is empty after population attempt!", "error");
-    }
 }
 
 // --- API Status Function ---
 export async function checkApiStatus() {
-    // ... (implementation same as v8.1) ...
-    const state = getState(); const providerKey = state.textProvider; const model = state.useCustomTextModel ? state.customTextModel : state.textModel; if (!providerKey || !model) { domElements.apiStatusDiv.innerHTML = `<span class="status-error">Select Provider/Model</span>`; return; } if (!domElements.apiStatusDiv || !domElements.apiStatusIndicator) return; domElements.apiStatusDiv.innerHTML = `<span class="status-checking">Checking ${providerKey}...</span>`; showElement(domElements.apiStatusIndicator, true); try { const result = await callAI('check_status', { providerKey, model }, null, null); if (!result?.success) { throw new Error(result?.error || `Status check failed`); } domElements.apiStatusDiv.innerHTML = `<span class="status-ok">✅ Ready (${providerKey})</span>`; logToConsole(`API Status OK for ${providerKey} (${model})`, 'success'); } catch (error) { console.error("API Status Check Failed:", error); logToConsole(`API Status Error: ${error.message}`, 'error'); const displayError = error.message.startsWith('API Error:') ? error.message.substring(10).trim() : error.message; domElements.apiStatusDiv.innerHTML = `<span class="status-error">❌ Error: ${displayError}</span>`; } finally { showElement(domElements.apiStatusIndicator, false); }
+    const state = getState(); // Get FRESH state
+    const providerKey = state.textProvider;
+    // FIX: Get the correct model based on the custom checkbox state
+    const model = state.useCustomTextModel
+        ? state.customTextModel
+        : state.textModel;
+
+    // Check if elements exist before using them
+    const statusDiv = getElement('apiStatus');
+    const statusIndicator = getElement('apiStatusIndicator');
+    if (!statusDiv || !statusIndicator) {
+        logToConsole("API Status UI elements not found.", "error");
+        return;
+    }
+
+    if (!providerKey || !model) {
+        statusDiv.innerHTML = `<span class="status-error">Select Provider/Model</span>`;
+        logToConsole("API Status Check skipped: Provider or Model missing.", "warn");
+        return;
+    }
+
+    statusDiv.innerHTML = `<span class="status-checking">Checking ${providerKey} (${model})...</span>`;
+    showElement(statusIndicator, true);
+
+    try {
+        const result = await callAI('check_status', { providerKey, model }, null, null);
+        if (!result?.success) { throw new Error(result?.error || `Status check failed`); }
+        statusDiv.innerHTML = `<span class="status-ok">✅ Ready (${providerKey})</span>`;
+        logToConsole(`API Status OK for ${providerKey} (${model})`, 'success');
+    } catch (error) {
+        console.error("API Status Check Failed:", error);
+        logToConsole(`API Status Error: ${error.message}`, 'error');
+        const displayError = error.message.startsWith('API Error:') ? error.message.substring(10).trim() : error.message;
+        statusDiv.innerHTML = `<span class="status-error">❌ Error: ${displayError}</span>`;
+    } finally {
+         showElement(statusIndicator, false);
+    }
 }
 
 
 // Populate Text Models based on selected provider
 export function populateTextModels(setDefault = false) {
-    const state = getState();
-    const providerKey = state.textProvider;
+    const state = getState(); // Get FRESH state
+    const providerKey = state.textProvider; // Use current provider from state
     logToConsole(`Populating text models for provider: ${providerKey}`, "info");
-    if (!providerKey) {
-        logToConsole("Cannot populate text models: No provider key found in state.", "warn");
+    if (!providerKey || !textProviders[providerKey]) {
+        logToConsole(`Cannot populate text models: Invalid provider key '${providerKey}' found in state.`, "warn");
         domElements.aiModelSelect.innerHTML = '<option value="">-- Select Provider --</option>';
         disableElement(domElements.aiModelSelect, true);
         return;
     }
     const providerConfig = textProviders[providerKey];
     const models = providerConfig?.models || [];
-    const currentSelectedModel = state.useCustomTextModel ? state.customTextModel : state.textModel;
+    // Determine current selection based on state, PRIORITIZING custom if checked
+    const currentSelectedModel = state.useCustomTextModel
+        ? state.customTextModel // If custom checked, this is irrelevant for the dropdown selection
+        : state.textModel;      // If not custom, use the saved standard model
 
     populateSelect(domElements.aiModelSelect, models);
 
     let modelToSelect = '';
-    if (setDefault && !state.useCustomTextModel && models.length > 0) { modelToSelect = findCheapestModel(models); if (modelToSelect) logToConsole(`Default text model set to: ${modelToSelect}`, 'info'); }
-    else if (state.useCustomTextModel && state.customTextModel) { modelToSelect = ''; }
-    else if (currentSelectedModel && models.includes(currentSelectedModel)) { modelToSelect = currentSelectedModel; }
-    else if (models.length > 0) { modelToSelect = models[0]; }
+    if (setDefault && !state.useCustomTextModel && models.length > 0) {
+        modelToSelect = findCheapestModel(models);
+        if (modelToSelect) logToConsole(`Default text model set to: ${modelToSelect}`, 'info');
+    } else if (!state.useCustomTextModel && currentSelectedModel && models.includes(currentSelectedModel)) {
+        // Select saved standard model only if not using custom and it exists in the list
+        modelToSelect = currentSelectedModel;
+    } else if (!state.useCustomTextModel && models.length > 0) {
+        // Fallback to first standard model if not using custom and saved one is invalid
+        modelToSelect = models[0];
+    }
+    // If using custom, modelToSelect remains '', dropdown shows first item but isn't the 'active' model
 
-    if (modelToSelect) { domElements.aiModelSelect.value = modelToSelect; }
+    if (modelToSelect) {
+        domElements.aiModelSelect.value = modelToSelect;
+    }
 
+    // Update custom model UI based on state AFTER populating dropdown
     domElements.useCustomAiModelCheckbox.checked = state.useCustomTextModel || false;
     domElements.customAiModelInput.value = getCustomModelState('text', providerKey);
-    toggleCustomModelUI('text');
-    // Check if options were added
+    toggleCustomModelUI('text'); // This enables/disables based on checkbox
+
     if (domElements.aiModelSelect && domElements.aiModelSelect.options.length === 0 && !state.useCustomTextModel) {
         logToConsole(`Text Model select is empty after population attempt for provider ${providerKey}!`, "error");
     }
-    checkApiStatus(); // Check API status *after* potentially setting a model value
+    // Check status *after* everything is set
+    checkApiStatus();
 }
 
 // Populate Image Models based on selected provider
 export function populateImageModels(setDefault = false) {
-    const state = getState();
-    const providerKey = state.imageProvider;
+    const state = getState(); // Get FRESH state
+    const providerKey = state.imageProvider; // Use current provider from state
     logToConsole(`Populating image models for provider: ${providerKey}`, "info");
-    if (!providerKey) {
-        logToConsole("Cannot populate image models: No provider key found in state.", "warn");
+    if (!providerKey || !imageProviders[providerKey]) {
+        logToConsole(`Cannot populate image models: Invalid provider key '${providerKey}' found in state.`, "warn");
         domElements.imageModelSelect.innerHTML = '<option value="">-- Select Provider --</option>';
         disableElement(domElements.imageModelSelect, true);
         return;
@@ -235,19 +151,15 @@ export function populateImageModels(setDefault = false) {
 
     let modelToSelect = '';
     if (setDefault && !state.useCustomImageModel && models.length > 0) { modelToSelect = findCheapestModel(models); if (modelToSelect) logToConsole(`Default image model set to: ${modelToSelect}`, 'info'); }
-    else if (state.useCustomImageModel && state.customImageModel) { modelToSelect = ''; }
-    else if (currentSelectedModel && models.includes(currentSelectedModel)) { modelToSelect = currentSelectedModel; }
-    else if (models.length > 0) { modelToSelect = models[0]; }
+    else if (!state.useCustomImageModel && currentSelectedModel && models.includes(currentSelectedModel)) { modelToSelect = currentSelectedModel; }
+    else if (!state.useCustomImageModel && models.length > 0) { modelToSelect = models[0]; }
 
     if (modelToSelect) { domElements.imageModelSelect.value = modelToSelect; }
 
     domElements.useCustomImageModelCheckbox.checked = state.useCustomImageModel || false;
     domElements.customImageModelInput.value = getCustomModelState('image', providerKey);
     toggleCustomModelUI('image');
-     // Check if options were added
-    if (domElements.imageModelSelect && domElements.imageModelSelect.options.length === 0 && !state.useCustomImageModel) {
-        logToConsole(`Image Model select is empty after population attempt for provider ${providerKey}!`, "error");
-    }
+    if (domElements.imageModelSelect && domElements.imageModelSelect.options.length === 0 && !state.useCustomImageModel) { logToConsole(`Image Model select is empty after population attempt for provider ${providerKey}!`, "error"); }
 }
 
 // Toggle Custom Model UI Elements
@@ -259,22 +171,15 @@ export function populateLanguagesUI(state) {
     logToConsole("Populating languages...", "info");
     const options = Object.keys(languageOptions).map(k => ({ value: k, text: languageOptions[k].name }));
     const count = populateSelect(domElements.languageSelect, options, state.language);
-    if (count === 0) {
-        logToConsole("Language select is empty after population attempt!", "error");
-    }
+    if (count === 0) { logToConsole("Language select is empty after population attempt!", "error"); }
     populateDialectsUI(); // Call this AFTER language is set
 }
 
 export function populateDialectsUI() {
-    const state = getState();
-    const selectedLangKey = state.language;
+    const state = getState(); // Get FRESH state
+    const selectedLangKey = state.language; // Read from current state
     logToConsole(`Populating dialects for language key: ${selectedLangKey}`, "info");
-    if (!selectedLangKey) {
-        logToConsole("Cannot populate dialects: No language key found in state.", "warn");
-        domElements.dialectSelect.innerHTML = '<option value="">-- Select Language --</option>';
-        disableElement(domElements.dialectSelect, true);
-        return;
-    }
+    if (!selectedLangKey) { logToConsole("Cannot populate dialects: No language key in state.", "warn"); domElements.dialectSelect.innerHTML = '<option value="">-- Select Language --</option>'; disableElement(domElements.dialectSelect, true); return; }
     const langConfig = languageOptions[selectedLangKey];
     const dialects = langConfig?.dialects || [];
     const currentDialect = state.dialect;
@@ -297,20 +202,21 @@ export function updateUIBasedOnMode(isBulkMode) { /* ... (same as v8.1) ... */ l
 // Update UI with loaded state
 export function updateUIFromState(state) {
     logToConsole("Updating UI from loaded state...", "info");
-    if (!state) {
-        logToConsole("Cannot update UI: state is null or undefined.", "error");
-        return;
-    }
+    if (!state) { logToConsole("Cannot update UI: state is null.", "error"); return; }
 
     // --- Populate Selects FIRST ---
-    // Ensure providers and languages are populated before trying to set their values
     populateAiProviders(state);
-    populateLanguagesUI(state); // This will also call populateDialectsUI
+    populateLanguagesUI(state); // Populates languages and initial dialects
 
     // --- Set Values for Simple Inputs/Selects ---
-    // Use || defaultSettings.value to prevent setting null/undefined
+    // FIX: Check if state.keyword exists before setting, otherwise leave placeholder
+    if (state.keyword !== undefined && state.keyword !== null) {
+         domElements.keywordInput.value = state.keyword;
+    } else {
+         domElements.keywordInput.value = ''; // Explicitly clear if state is undefined/null
+    }
+    // ... (rest of value setting same as v8.1, using || defaultSettings) ...
     domElements.bulkModeCheckbox.checked = state.bulkMode || defaultSettings.bulkMode;
-    domElements.keywordInput.value = state.keyword || defaultSettings.keyword;
     domElements.audienceInput.value = state.audience || defaultSettings.audience;
     domElements.readerNameInput.value = state.readerName || defaultSettings.readerName;
     domElements.toneSelect.value = state.tone || defaultSettings.tone;
@@ -328,10 +234,10 @@ export function updateUIFromState(state) {
     domElements.imageTextInput.value = state.imageText || defaultSettings.imageText;
     const storageValue = state.imageStorage || defaultSettings.imageStorage;
     const radioToCheck = document.querySelector(`input[name="imageStorage"][value="${storageValue}"]`);
-    if(radioToCheck) radioToCheck.checked = true; else if(domElements.imageStorageRadios.length > 0) domElements.imageStorageRadios[0].checked = true; // Fallback check first radio
+    if(radioToCheck) radioToCheck.checked = true; else if(domElements.imageStorageRadios.length > 0) domElements.imageStorageRadios[0].checked = true;
     domElements.githubRepoUrlInput.value = state.githubRepoUrl || defaultSettings.githubRepoUrl;
     domElements.githubCustomPathInput.value = state.githubCustomPath || defaultSettings.githubCustomPath;
-    domElements.linkTypeToggle.checked = !(state.linkTypeInternal ?? defaultSettings.linkTypeInternal); // Use nullish coalescing for default
+    domElements.linkTypeToggle.checked = !(state.linkTypeInternal ?? defaultSettings.linkTypeInternal);
     domElements.linkTypeText.textContent = (state.linkTypeInternal ?? defaultSettings.linkTypeInternal) ? 'Internal' : 'External';
 
     // --- Handle Complex UI Updates ---
@@ -343,13 +249,14 @@ export function updateUIFromState(state) {
     domElements.customToneInput.classList.toggle('hidden', state.tone !== 'custom');
 
     // Populate models *after* providers and languages/dialects are set
-    populateTextModels(); // Populates text models based on state.textProvider
-    populateImageModels(); // Populates image models based on state.imageProvider
+    // These will read the state internally now
+    populateTextModels();
+    populateImageModels();
 
     // Show/hide sections based on state
     showElement(domElements.imageOptionsContainer, state.generateImages);
     showElement(domElements.githubOptionsContainer, state.generateImages && storageValue === 'github');
-    updateUIBasedOnMode(state.bulkMode); // Set initial mode visibility
+    updateUIBasedOnMode(state.bulkMode);
 
     logToConsole("UI update from state finished.", "info");
 }
@@ -368,11 +275,7 @@ export function hideProgressBar(barElement, containerElement, textElement) { /* 
 export function toggleGithubOptions() { /* ... (same as v8.1) ... */ const storageType = document.querySelector('input[name="imageStorage"]:checked')?.value; showElement(getElement('githubOptionsContainer'), storageType === 'github'); }
 
 // Function to display sitemap URLs (called from main after fetch)
-export function displaySitemapUrlsUI(urls = []) {
-    const listDiv = getElement('sitemapUrlsListDiv');
-    if (!listDiv) { logToConsole("Sitemap list element not found for UI update.", "warn"); return; }
-    if (urls.length === 0) { listDiv.innerHTML = `<em class="text-gray-400">No sitemap loaded or no URLs found.</em>`; return; }
-    listDiv.innerHTML = ''; urls.forEach(url => { const div = document.createElement('div'); div.textContent = url; listDiv.appendChild(div); });
-}
+export function displaySitemapUrlsUI(urls = []) { /* ... (same as v8.1) ... */ const listDiv = getElement('sitemapUrlsListDiv'); if (!listDiv) { logToConsole("Sitemap list element not found for UI update.", "warn"); return; } if (urls.length === 0) { listDiv.innerHTML = `<em class="text-gray-400">No sitemap loaded or no URLs found.</em>`; return; } listDiv.innerHTML = ''; urls.forEach(url => { const div = document.createElement('div'); div.textContent = url; listDiv.appendChild(div); }); }
+
 
 console.log("article-ui.js loaded");
