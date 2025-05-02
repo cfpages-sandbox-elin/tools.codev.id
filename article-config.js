@@ -1,10 +1,10 @@
-// article-config.js
+// article-config.js (v8.7 fix google model)
 
 export const CLOUDFLARE_FUNCTION_URL = '/ai-api';
 
 // --- AI Provider Configurations ---
 export const textProviders = {
-    google: { models: ['gemini-2.0-flash', 'gemini-2.0-flash-lite', 'gemini-2.0-flash-thinking-exp-01-21', 'gemini-2.5-pro-preview-03-25'] }, // Flash first for default
+    google: { models: ['gemini-2.0-flash-lite', 'gemini-2.0-flash', 'gemini-2.0-flash-thinking-exp-01-21'] }, // Flash lite first for default
     openai: { models: ['gpt-4o-mini', 'gpt-4.1-nano', 'gpt-4.1-mini', 'gpt-4o', 'gpt-4.1'] }, // Mini/Nano first
     anthropic: { models: ['claude-3-haiku-20240307', 'claude-3-sonnet-20240229', 'claude-3-opus-20240229'] }, // Haiku first
     deepseek: { models: ['deepseek-chat', 'deepseek-coder'] }, // Assuming chat is cheaper/faster
