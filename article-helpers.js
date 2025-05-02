@@ -18,14 +18,53 @@ export function logToConsole(message, type = 'info') {
 }
 
 // --- UI Helpers ---
-export function showElement(element, show = true) { /* ... */ if (element) { element.classList.toggle('hidden', !show); } else { logToConsole(`Attempted to show/hide a null element.`, 'warn'); } }
-export function showLoading(indicatorElement, show = true) { /* ... */ showElement(indicatorElement, show); }
-export function disableElement(element, disabled = true) { /* ... */ if (element) { element.disabled = disabled; } else { logToConsole(`Attempted to disable a null element.`, 'warn'); } }
-export function disableActionButtons(disabled = true) { /* ... */ const btnIds = ['generateSingleBtn', 'generatePlanBtn', 'generateArticleBtn', 'startBulkGenerationBtn', 'enableSpinningBtn', 'spinSelectedBtn', 'fetchSitemapBtn']; btnIds.forEach(id => { const btn = document.getElementById(id); if (btn) disableElement(btn, disabled); }); }
+export function showElement(element, show = true) {
+    if (element) {
+        element.classList.toggle('hidden', !show);
+    } else {
+        logToConsole(`Attempted to show/hide a null element.`, 'warn');
+    }
+}
+
+export function showLoading(indicatorElement, show = true) {
+    showElement(indicatorElement, show);
+}
+
+export function disableElement(element, disabled = true) {
+     if (element) {
+        element.disabled = disabled;
+    } else {
+        logToConsole(`Attempted to disable a null element.`, 'warn');
+    }
+}
+
+export function disableActionButtons(disabled = true) {
+    const btnIds = ['generateSingleBtn', 'generatePlanBtn', 'generateArticleBtn', 'startBulkGenerationBtn', 'enableSpinningBtn', 'spinSelectedBtn', 'fetchSitemapBtn'];
+    btnIds.forEach(id => {
+        const btn = document.getElementById(id); // Assuming direct access is okay here or pass elements
+        if (btn) disableElement(btn, disabled);
+    });
+}
 
 // --- Text/String Helpers ---
-export function sanitizeFilename(name) { /* ... */ if (!name) return `untitled-${Date.now()}.md`; return name.toLowerCase().replace(/[^a-z0-9\-\.]/g, '-').replace(/-+/g, '-').replace(/^-+|-+$/g, '').substring(0, 100) || `sanitized-${Date.now()}`; }
-export function slugify(text) { /* ... */ if (!text) return ''; return text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '').replace(/\-\-+/g, '-').replace(/^-+/, '').replace(/-+$/, ''); }
+export function sanitizeFilename(name) {
+    if (!name) return `untitled-${Date.now()}.md`;
+    return name.toLowerCase()
+               .replace(/[^a-z0-9\-\.]/g, '-')
+               .replace(/-+/g, '-')
+               .replace(/^-+|-+$/g, '')
+               .substring(0, 100) || `sanitized-${Date.now()}`;
+}
+
+export function slugify(text) {
+    if (!text) return '';
+    return text.toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^\w\-]+/g, '')
+        .replace(/\-\-+/g, '-')
+        .replace(/^-+/, '')
+        .replace(/-+$/, '');
+}
 
 // --- AI/API Call Helper ---
 export async function callAI(action, payload, loadingIndicator = null, buttonToDisable = null) {
@@ -45,10 +84,48 @@ export async function callAI(action, payload, loadingIndicator = null, buttonToD
 }
 
 // --- Model Helpers ---
-export function findCheapestModel(models = []) { /* ... */ const cheapKeywords = ['flash', 'mini', 'lite', 'fast', 'haiku', 'nano', '3.5-turbo']; for (const keyword of cheapKeywords) { const found = models.find(m => m.includes(keyword)); if (found) return found; } return models[0] || ''; }
+export function findCheapestModel(models = []) {
+    if (!models?.length) return ''; // Handle empty/null/undefined array
+
+    const cheapKeywords = ['flash', 'mini', 'lite', 'fast', 'haiku', 'nano', '3.5-turbo'];
+    // Helper to count keywords in a name string
+    const countKeywords = (name) => cheapKeywords.filter(kw => name.includes(kw)).length;
+
+    // Use reduce to find the model with the highest keyword count
+    return models.reduce((bestModel, currentModel) => {
+        // Compare scores: current vs the best found so far
+        return countKeywords(currentModel) > countKeywords(bestModel)
+            ? currentModel  // New best found
+            : bestModel;    // Keep existing best (handles ties by preferring earlier)
+    }, models[0]); // Start comparison with the first model as the initial best
+}
 
 // --- Image Prompt Construction ---
-export function constructImagePrompt(sectionContent, sectionTitle = "article image", imageSettings = {}) { /* ... */ const { imageSubject = '', imageStyle = '', imageStyleModifiers = '', imageText = '' } = imageSettings; const subject = imageSubject.trim() || sectionTitle; const style = imageStyle; const modifiers = imageStyleModifiers.trim(); const textToInclude = imageText.trim(); let prompt = `Create an image representing: ${subject}.`; if (style) prompt += ` Style: ${style}.`; if (modifiers) prompt += ` Details: ${modifiers}.`; if (textToInclude) prompt += ` Include the text: "${textToInclude}".`; const contextSnippet = typeof sectionContent === 'string' ? sectionContent.substring(0, 150) : ''; if (contextSnippet) prompt += ` Context: ${contextSnippet}...`; return prompt.trim(); }
+export function constructImagePrompt(sectionContent, sectionTitle = "article image", imageSettings = {}) {
+    const {
+       imageSubject = '',
+       imageStyle = '',
+       imageStyleModifiers = '',
+       imageText = ''
+    } = imageSettings; // Destructure settings passed from the caller
+
+    const subject = imageSubject.trim() || sectionTitle; // Use section title/content if no subject provided
+    const style = imageStyle;
+    const modifiers = imageStyleModifiers.trim();
+    const textToInclude = imageText.trim();
+
+    // Construct prompt based on available info
+    let prompt = `Create an image representing: ${subject}.`;
+    if (style) prompt += ` Style: ${style}.`;
+    if (modifiers) prompt += ` Details: ${modifiers}.`;
+    if (textToInclude) prompt += ` Include the text: "${textToInclude}".`;
+
+    // Add context from section content (keep it brief)
+    const contextSnippet = typeof sectionContent === 'string' ? sectionContent.substring(0, 150) : ''; // Limit context length
+    if (contextSnippet) prompt += ` Context: ${contextSnippet}...`;
+
+    return prompt.trim(); // Return the final prompt
+}
 
 // --- Sitemap Fetching ---
 // ***** FIX: Removed direct UI/State calls, now just returns result or throws error *****
@@ -87,7 +164,13 @@ export async function fetchAndParseSitemap(sitemapUrl) {
 export const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 // --- Outline Parser ---
-export function getArticleOutlines(structureText) { /* ... */ if (!structureText) return []; return structureText.split('\n').map(line => line.trim()).filter(line => line.length > 3 && !line.startsWith('#') && !line.startsWith('- ') && !line.startsWith('* ')); }
+export function getArticleOutlines(structureText) {
+    if (!structureText) return [];
+    // Split by newline, trim, filter empty lines and basic comment/list markers
+    return structureText.split('\n')
+                        .map(line => line.trim())
+                        .filter(line => line.length > 3 && !line.startsWith('#') && !line.startsWith('- ') && !line.startsWith('* '));
+}
 
 
-console.log("article-helpers.js loaded and functions exported.");
+console.log("article-helpers.js v8.6 loaded and functions exported.");

@@ -1,6 +1,6 @@
-// article-main.js (v8.5 log+mode fix)
+// article-main.js (v8.6 Nodelist+Dialect Fix)
 import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
-import { logToConsole, fetchAndParseSitemap, showLoading, disableElement } from './article-helpers.js';
+import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify } from './article-helpers.js'; // Added slugify
 import {
     cacheDomElements, getElement, populateAiProviders, populateTextModels,
     populateImageModels, updateUIFromState, updateUIBasedOnMode, toggleCustomModelUI,
@@ -73,9 +73,9 @@ function setupConfigurationListeners() {
 
     aiProviderSelect?.addEventListener('change', (e) => {
         logToConsole(`Text Provider changed to: ${e.target.value}`, 'info');
-        updateState({ textProvider: e.target.value, textModel: '', });
+        updateState({ textProvider: e.target.value, textModel: '', }); // Reset textModel on provider change
         logToConsole(`State updated. New provider: ${getState().textProvider}`, 'debug');
-        populateTextModels(true);
+        populateTextModels(true); // Repopulate models and set default
         checkApiStatus();
     });
 
@@ -157,11 +157,12 @@ function setupStep1Listeners() {
     const dialectSelect = getElement('dialectSelect');
     const toneSelect = getElement('toneSelect');
     const customToneInput = getElement('customToneInput');
-    const purposeCheckboxes = domElements['purposeCheckboxes'];
+    // Use getElement to retrieve NodeLists now
+    const purposeCheckboxes = getElement('purposeCheckboxes');
     const purposeUrlInput = getElement('purposeUrlInput');
     const purposeCtaInput = getElement('purposeCtaInput');
     const generateImagesCheckbox = getElement('generateImagesCheckbox');
-    const imageStorageRadios = domElements['imageStorageRadios'];
+    const imageStorageRadios = getElement('imageStorageRadios');
     const fetchSitemapBtn = getElement('fetchSitemapBtn');
     const sitemapUrlInput = getElement('sitemapUrlInput');
     const generateSingleBtn = getElement('generateSingleBtn');
@@ -178,8 +179,17 @@ function setupStep1Listeners() {
     languageSelect?.addEventListener('change', (e) => {
         const newLang = e.target.value;
         logToConsole(`Language Select changed to: ${newLang}`, 'info');
-        updateState({ language: newLang, dialect: '', customLanguage: '' });
-        logToConsole(`State updated. New language: ${getState().language}`, 'debug');
+        // Determine default dialect for the new language
+        const newLangConfig = languageOptions[newLang];
+        const defaultDialect = newLangConfig?.dialects?.[0] || ''; // First dialect or empty string
+        // Update state with new language AND its default dialect
+        updateState({
+            language: newLang,
+            dialect: defaultDialect, // Set default dialect
+            customLanguage: ''
+        });
+        logToConsole(`State updated. New language: ${getState().language}, Default Dialect: ${getState().dialect}`, 'debug');
+        // Repopulate dialects UI using the fresh state (which includes the default dialect)
         populateDialectsUI(getState());
     });
 
@@ -192,7 +202,7 @@ function setupStep1Listeners() {
 
     dialectSelect?.addEventListener('change', (e) => {
          logToConsole(`Dialect Select changed to: ${e.target.value}`, 'info');
-        updateState({ dialect: e.target.value });
+        updateState({ dialect: e.target.value }); // Update only the dialect
     });
 
     toneSelect?.addEventListener('change', (e) => {
@@ -212,9 +222,11 @@ function setupStep1Listeners() {
          }
     });
 
-     if (purposeCheckboxes && purposeCheckboxes.length > 0) {
+     // Check if NodeList was successfully retrieved
+     if (purposeCheckboxes) {
          purposeCheckboxes.forEach(checkbox => {
              checkbox.addEventListener('change', () => {
+                 // Query current checked state directly
                  const selectedPurposes = Array.from(document.querySelectorAll('input[name="purpose"]:checked')).map(cb => cb.value);
                  logToConsole(`Purpose checkboxes changed: ${selectedPurposes.join(', ')}`, 'info');
                  updateState({ purpose: selectedPurposes });
@@ -226,6 +238,8 @@ function setupStep1Listeners() {
                  if (!showCta) updateState({ purposeCta: '' });
              });
          });
+     } else {
+         logToConsole("Could not attach listeners to purposeCheckboxes (not found).", "warn");
      }
      getElement('purposeUrlInput')?.addEventListener('blur', (e) => updateState({ purposeUrl: e.target.value }));
      getElement('purposeCtaInput')?.addEventListener('blur', (e) => updateState({ purposeCta: e.target.value }));
@@ -239,7 +253,8 @@ function setupStep1Listeners() {
         toggleGithubOptions();
     });
 
-     if (imageStorageRadios && imageStorageRadios.length > 0) {
+     // Check if NodeList was successfully retrieved
+     if (imageStorageRadios) {
          imageStorageRadios.forEach(radio => {
              radio.addEventListener('change', (e) => {
                  if (e.target.checked) {
@@ -250,6 +265,8 @@ function setupStep1Listeners() {
                  }
              });
          });
+     } else {
+         logToConsole("Could not attach listeners to imageStorageRadios (not found).", "warn");
      }
 
     fetchSitemapBtn?.addEventListener('click', async () => {
@@ -365,12 +382,12 @@ function setupBulkModeListeners() {
             const value = e.target.value;
             if (rowIndex !== undefined && field) {
                 const index = parseInt(rowIndex, 10);
-                 logToConsole(`Planning table input changed: Row ${index}, Field ${field}, Value: ${value}`, 'info');
+                 // logToConsole(`Planning table input changed: Row ${index}, Field ${field}, Value: ${value}`, 'info');
                 updateBulkPlanItem(index, { [field]: value });
                  if (field === 'slug') {
-                     const newFilename = `${slugify(value || `item-${index}`)}.md`;
+                     const newFilename = `${slugify(value || `item-${index}`)}.md`; // Use slugify helper
                      updateBulkPlanItem(index, { filename: newFilename });
-                     logToConsole(`Updated filename for row ${index} to: ${newFilename}`, 'info');
+                     // logToConsole(`Updated filename for row ${index} to: ${newFilename}`, 'info');
                  }
             }
         }
@@ -381,4 +398,4 @@ function setupBulkModeListeners() {
 logToConsole("article-main.js evaluating. Setting up DOMContentLoaded listener.", "debug");
 document.addEventListener('DOMContentLoaded', initializeApp, { once: true });
 
-console.log("article-main.js loaded (v8.5 log+mode fix)");
+console.log("article-main.js loaded (v8.6 Nodelist+Dialect Fix)");

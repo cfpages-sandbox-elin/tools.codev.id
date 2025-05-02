@@ -1,10 +1,10 @@
-// article-ui.js (v8.5 log+mode fix)
+// article-ui.js (v8.6 Nodelist+Dialect Fix)
 import { textProviders, imageProviders, languageOptions, defaultSettings } from './article-config.js';
 import { getState, getCustomModelState } from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement } from './article-helpers.js';
 
 // --- DOM Element References (Centralized) ---
-let domElements = {};
+let domElements = {}; // Keep private to this module
 
 // Map JS variable names to actual HTML IDs
 const elementIdMap = {
@@ -101,11 +101,24 @@ const elementIdMap = {
     consoleLog: 'consoleLog'
 };
 
+// Keys for elements retrieved with querySelectorAll
+const querySelectorAllKeys = {
+    purposeCheckboxes: 'input[name="purpose"]',
+    imageStorageRadios: 'input[name="imageStorage"]'
+};
+
+// Keys for elements retrieved with querySelector
+const querySelectorKeys = {
+    planningTableBody: '#planningTable tbody'
+};
+
+
 export function cacheDomElements() {
-    logToConsole("Attempting to cache DOM elements using mapped IDs...", "info");
+    logToConsole("Attempting to cache DOM elements...", "info");
     let allFound = true;
     domElements = {}; // Reset before caching
 
+    // Cache elements by ID using the map
     for (const key in elementIdMap) {
         const htmlId = elementIdMap[key];
         const element = document.getElementById(htmlId);
@@ -118,30 +131,48 @@ export function cacheDomElements() {
         }
     }
 
-    // Special cases for querySelector / querySelectorAll
-    const planningTableBody = document.querySelector('#planningTable tbody');
-    if (planningTableBody) { domElements['planningTableBody'] = planningTableBody; }
-    else { logToConsole(`Failed to cache element with selector: #planningTable tbody`, 'error'); allFound = false; domElements['planningTableBody'] = null; }
+    // Cache elements using querySelectorAll
+    for (const key in querySelectorAllKeys) {
+        const selector = querySelectorAllKeys[key];
+        const elements = document.querySelectorAll(selector);
+        if (elements && elements.length > 0) {
+            domElements[key] = elements; // Store the NodeList
+        } else {
+            logToConsole(`Failed to cache elements with selector: ${selector} (JS Key: ${key})`, 'warn');
+            domElements[key] = null; // Indicate not found or empty
+        }
+    }
 
-    const purposeCheckboxes = document.querySelectorAll('input[name="purpose"]');
-     if (purposeCheckboxes && purposeCheckboxes.length > 0) { domElements['purposeCheckboxes'] = purposeCheckboxes; }
-     else { logToConsole(`Failed to cache elements with selector: input[name="purpose"]`, 'warn'); domElements['purposeCheckboxes'] = null; }
+    // Cache elements using querySelector
+    for (const key in querySelectorKeys) {
+        const selector = querySelectorKeys[key];
+        const element = document.querySelector(selector);
+        if (element) {
+            domElements[key] = element;
+        } else {
+            logToConsole(`Failed to cache element with selector: ${selector} (JS Key: ${key})`, 'error');
+            allFound = false; // Consider single elements from querySelector critical
+            domElements[key] = null;
+        }
+    }
 
-     const imageStorageRadios = document.querySelectorAll('input[name="imageStorage"]');
-     if (imageStorageRadios && imageStorageRadios.length > 0) { domElements['imageStorageRadios'] = imageStorageRadios; }
-     else { logToConsole(`Failed to cache elements with selector: input[name="imageStorage"]`, 'warn'); domElements['imageStorageRadios'] = null; }
-
-
-    if (allFound) { logToConsole("All expected DOM Elements cached successfully.", "success"); }
+    if (allFound) { logToConsole("Core DOM Elements cached successfully.", "success"); }
     else { logToConsole("One or more critical DOM elements failed to cache! UI will likely malfunction.", "error"); }
 }
 
+// getElement can now return single elements or NodeLists
 export function getElement(id) {
     const element = domElements[id];
+    // Check if the key exists and has a value (could be element or NodeList)
     if (element === undefined || element === null) {
-        logToConsole(`Attempted to get element '${id}', but it was not found during caching or is null.`, 'warn');
+        // Check if it was expected to be a NodeList but was empty
+        if (querySelectorAllKeys[id] && element === null) {
+             logToConsole(`Attempted to get NodeList for key '${id}', but it was empty or not found during caching.`, 'warn');
+        } else {
+            logToConsole(`Attempted to get element/NodeList '${id}', but it was not found during caching or is null.`, 'warn');
+        }
     }
-    return element;
+    return element; // Return the element, NodeList, or null/undefined
 }
 
 // --- UI Update Functions ---
@@ -153,8 +184,19 @@ function populateSelect(selectElement, options, selectedValue = null, addEmptyOp
     let optionsAdded = 0;
     if (addEmptyOption) { const emptyOpt = document.createElement('option'); emptyOpt.value = ""; emptyOpt.textContent = emptyText; selectElement.appendChild(emptyOpt); optionsAdded++; }
     options.forEach(option => { const opt = document.createElement('option'); if (typeof option === 'string') { opt.value = option; opt.textContent = option; } else { opt.value = option.value; opt.textContent = option.text; } selectElement.appendChild(opt); optionsAdded++; });
-    if (selectedValue !== null && selectedValue !== undefined && Array.from(selectElement.options).some(opt => opt.value === selectedValue)) { selectElement.value = selectedValue; }
-    else if (selectElement.options.length > 0) { selectElement.selectedIndex = 0; }
+
+    // Explicitly check if selectedValue exists in the new options
+    const valueExists = Array.from(selectElement.options).some(opt => opt.value === selectedValue);
+
+    if (selectedValue !== null && selectedValue !== undefined && valueExists) {
+        selectElement.value = selectedValue;
+        // logToConsole(`Selected value '${selectedValue}' exists in ${elementName}. Setting value.`, 'debug');
+    } else if (selectElement.options.length > 0) {
+        selectElement.selectedIndex = 0; // Default to the first option
+        // if (selectedValue !== null && selectedValue !== undefined) {
+        //     logToConsole(`Selected value '${selectedValue}' NOT found in ${elementName}. Defaulting to index 0.`, 'debug');
+        // }
+    }
     return optionsAdded;
 }
 
@@ -162,7 +204,6 @@ export function populateAiProviders(state) {
     logToConsole("Populating AI providers...", "info");
     const textProviderSelect = getElement('aiProviderSelect');
     const imageProviderSelect = getElement('imageProviderSelect');
-
     if (textProviderSelect) { populateSelect(textProviderSelect, Object.keys(textProviders), state.textProvider); }
     else { logToConsole("Text Provider select element ('aiProviderSelect') not found for population.", "error"); }
     if (imageProviderSelect) { populateSelect(imageProviderSelect, Object.keys(imageProviders), state.imageProvider); }
@@ -175,19 +216,14 @@ export async function checkApiStatus() {
     const model = state.useCustomTextModel ? state.customTextModel : state.textModel;
     const statusDiv = getElement('apiStatusDiv');
     const statusIndicator = getElement('apiStatusIndicator');
-
     if (!statusDiv) { return; }
-
     statusDiv.innerHTML = '';
     showElement(statusIndicator, false);
-
     if (!providerKey) { statusDiv.innerHTML = `<span class="status-error">Select Provider</span>`; logToConsole("API Status Check skipped: Provider missing.", "warn"); return; }
     if (!model) { statusDiv.innerHTML = `<span class="status-error">Select Model</span>`; logToConsole("API Status Check skipped: Model missing.", "warn"); return; }
-
     logToConsole(`Checking API Status for Provider: ${providerKey}, Model: ${model} (Custom: ${state.useCustomTextModel})`, "info");
     statusDiv.innerHTML = `<span class="status-checking">Checking ${providerKey} (${model})...</span>`;
     showElement(statusIndicator, true);
-
     try {
         const result = await callAI('check_status', { providerKey, model }, null, null);
         if (!result?.success) { throw new Error(result?.error || `Status check failed`); }
@@ -232,11 +268,9 @@ export function populateTextModels(setDefault = false) {
 
     const providerConfig = textProviders[providerKey];
     const models = providerConfig?.models || [];
-    logToConsole(`Models found for ${providerKey}: ${JSON.stringify(models)}`, "debug");
+    // logToConsole(`Models found for ${providerKey}: ${JSON.stringify(models)}`, "debug");
     const standardModelFromState = state.textModel;
-
     populateSelect(aiModelSelect, models);
-
     let modelToSelectInDropdown = '';
     if (setDefault && !state.useCustomTextModel && models.length > 0) {
         modelToSelectInDropdown = findCheapestModel(models);
@@ -263,14 +297,9 @@ export function populateTextModels(setDefault = false) {
 
     useCustomCheckbox.checked = state.useCustomTextModel || false;
     customInput.value = getCustomModelState('text', providerKey);
-    logToConsole(`Setting custom checkbox: ${useCustomCheckbox.checked}, custom input value: "${customInput.value}"`, "debug");
     toggleCustomModelUI('text');
-
-    if (!state.useCustomTextModel && aiModelSelect.options.length === 0) {
-        logToConsole(`Text Model select is empty after population for provider ${providerKey}! Disabling.`, "error");
-        disableElement(aiModelSelect, true);
-    }
-     logToConsole(`--- Finished populateTextModels ---`, "debug");
+    if (!state.useCustomTextModel && aiModelSelect.options.length === 0) { disableElement(aiModelSelect, true); }
+    // logToConsole(`--- Finished populateTextModels ---`, "debug");
 }
 
 export function populateImageModels(setDefault = false) {
@@ -321,7 +350,7 @@ export function toggleCustomModelUI(type) {
     const useCustomCheckbox = type === 'text' ? getElement('useCustomAiModelCheckbox') : getElement('useCustomImageModelCheckbox');
     const modelSelect = type === 'text' ? getElement('aiModelSelect') : getElement('imageModelSelect');
     const customInput = type === 'text' ? getElement('customAiModelInput') : getElement('customImageModelInput');
-    if (!useCustomCheckbox || !modelSelect || !customInput) { logToConsole(`Missing UI elements for custom model toggle (type: ${type})`, 'warn'); return; }
+    if (!useCustomCheckbox || !modelSelect || !customInput) { return; }
     const useStandard = !useCustomCheckbox.checked;
     disableElement(modelSelect, !useStandard);
     showElement(customInput, !useStandard);
@@ -338,19 +367,18 @@ export function populateLanguagesUI(state) {
     logToConsole("Populating languages...", "info");
     const languageSelect = getElement('languageSelect');
     if (!languageSelect) {
-        logToConsole("Language select ('languageSelect') element not found. Cannot populate languages.", "error");
-        populateDialectsUI(state);
-        return;
+        logToConsole("Language select ('languageSelect') element not found.", "error");
+        populateDialectsUI(state); return;
     }
     const options = Object.keys(languageOptions).map(k => ({ value: k, text: languageOptions[k].name }));
     const count = populateSelect(languageSelect, options, state.language);
     if (count === 0) { logToConsole("Language select populated with 0 options!", "error"); }
     else { logToConsole(`Populated languages. Selected: ${languageSelect.value}`, 'info'); }
-    populateDialectsUI(state);
+    populateDialectsUI(state); // Use the same state that was used to set the language
 }
 
 export function populateDialectsUI(state) {
-    const selectedLangKey = state.language;
+    const selectedLangKey = state.language; // Use the language from the passed state
     const dialectSelect = getElement('dialectSelect');
     const customLanguageInput = getElement('customLanguageInput');
 
@@ -367,7 +395,6 @@ export function populateDialectsUI(state) {
     logToConsole(`Populating dialects for language key: ${selectedLangKey}`, "info");
     dialectSelect.innerHTML = '';
     disableElement(dialectSelect, true);
-
     const showCustom = selectedLangKey === 'custom';
      if(customLanguageInput) {
         showElement(customLanguageInput, showCustom);
@@ -381,56 +408,51 @@ export function populateDialectsUI(state) {
 
     const langConfig = languageOptions[selectedLangKey];
     const dialects = langConfig?.dialects || [];
-    logToConsole(`Dialects found for ${selectedLangKey}: ${JSON.stringify(dialects)}`, "debug");
-    const currentDialectFromState = state.dialect;
+    // ** FIX: Use the dialect from the passed state IF it's valid for the current language, otherwise default **
+    const dialectFromState = state.dialect;
+    const dialectToSelect = dialects.includes(dialectFromState) ? dialectFromState : (dialects.length > 0 ? dialects[0] : ''); // Default to first dialect if state one is invalid
 
+    // logToConsole(`Dialects found for ${selectedLangKey}: ${JSON.stringify(dialects)}`, "debug");
     if (dialects.length > 0) {
-        populateSelect(dialectSelect, dialects, currentDialectFromState, false);
+        populateSelect(dialectSelect, dialects, dialectToSelect, false); // Populate and select the determined dialect
         disableElement(dialectSelect, false);
-        logToConsole(`-> Populated ${dialects.length} dialects for ${selectedLangKey}. Selected: ${dialectSelect.value} (State was: ${currentDialectFromState})`, 'info');
+        logToConsole(`-> Populated ${dialects.length} dialects for ${selectedLangKey}. Selected: ${dialectSelect.value} (State was: ${dialectFromState}, Determined: ${dialectToSelect})`, 'info');
     } else {
         dialectSelect.innerHTML = '<option value="">-- N/A --</option>';
         disableElement(dialectSelect, true);
         logToConsole(`-> No dialects found for ${selectedLangKey}. Disabling select.`, 'info');
     }
-     logToConsole(`--- Finished populateDialectsUI ---`, "debug");
+    // logToConsole(`--- Finished populateDialectsUI ---`, "debug");
 }
 
 export function updateUIBasedOnMode(isBulkMode) {
-    logToConsole(`--- Running updateUIBasedOnMode ---`, "debug");
+    // logToConsole(`--- Running updateUIBasedOnMode ---`, "debug"); // Keep logs if needed
     logToConsole(`Setting UI for Bulk Mode: ${isBulkMode}`, 'info');
-
-    // Elements specific to Single mode
     const singleKeywordGroup = getElement('keywordInput')?.closest('.input-group');
     const generateSingleBtn = getElement('generateSingleBtn');
     const step2Section = getElement('step2Section');
     const step3Section = getElement('step3Section');
     const step4Section = getElement('step4Section');
     const formatSelect = getElement('formatSelect');
-
-    // Elements specific to Bulk mode
     const bulkKeywordsContainer = getElement('bulkKeywordsContainer');
     const generatePlanBtn = getElement('generatePlanBtn');
     const step1_5Section = getElement('step1_5Section');
-
-    logToConsole(`Setting Single Mode elements visibility: ${!isBulkMode}`, "debug");
+    // logToConsole(`Setting Single Mode elements visibility: ${!isBulkMode}`, "debug");
     showElement(singleKeywordGroup, !isBulkMode);
     showElement(generateSingleBtn, !isBulkMode);
     showElement(step2Section, !isBulkMode);
     showElement(step3Section, !isBulkMode);
     showElement(step4Section, !isBulkMode);
-
-    logToConsole(`Setting Bulk Mode elements visibility: ${isBulkMode}`, "debug");
+    // logToConsole(`Setting Bulk Mode elements visibility: ${isBulkMode}`, "debug");
     showElement(bulkKeywordsContainer, isBulkMode);
     showElement(generatePlanBtn, isBulkMode);
     showElement(step1_5Section, isBulkMode);
-
     if (formatSelect) {
-        logToConsole(`Setting Format Select disabled: ${isBulkMode}`, "debug");
+        // logToConsole(`Setting Format Select disabled: ${isBulkMode}`, "debug");
         disableElement(formatSelect, isBulkMode);
         if (isBulkMode) { formatSelect.value = 'markdown'; logToConsole('Format forced to Markdown for Bulk Mode.', 'info'); }
     } else { logToConsole("Format select element not found for mode update.", "warn"); }
-     logToConsole(`--- Finished updateUIBasedOnMode ---`, "debug");
+    // logToConsole(`--- Finished updateUIBasedOnMode ---`, "debug");
 }
 
 export function updateUIFromState(state) {
@@ -441,8 +463,12 @@ export function updateUIFromState(state) {
     populateAiProviders(state);
     const keywordInput = getElement('keywordInput'); if (keywordInput) keywordInput.value = state.keyword || '';
     const bulkModeCheckbox = getElement('bulkModeCheckbox'); if (bulkModeCheckbox) bulkModeCheckbox.checked = state.bulkMode || defaultSettings.bulkMode;
-    populateLanguagesUI(state); // Populates language AND dialect
 
+    // --- Language and Dialect ---
+    // This needs to happen *before* other fields that might depend on language defaults indirectly
+    populateLanguagesUI(state); // This function now also handles setting the correct dialect based on state
+
+    // --- Other Step 1 Fields ---
     const audienceInputElement = getElement('audienceInput'); if(audienceInputElement) audienceInputElement.value = state.audience || defaultSettings.audience;
     const readerNameInputElement = getElement('readerNameInput'); if(readerNameInputElement) readerNameInputElement.value = state.readerName || defaultSettings.readerName;
     const toneSelectElement = getElement('toneSelect'); if(toneSelectElement) toneSelectElement.value = state.tone || defaultSettings.tone;
@@ -453,9 +479,10 @@ export function updateUIFromState(state) {
     const sitemapUrlInputElement = getElement('sitemapUrlInput'); if(sitemapUrlInputElement) sitemapUrlInputElement.value = state.sitemapUrl || defaultSettings.sitemapUrl;
     const customSpecsInputElement = getElement('customSpecsInput'); if(customSpecsInputElement) customSpecsInputElement.value = state.customSpecs || defaultSettings.customSpecs;
 
+    // --- Purpose ---
     const savedPurposes = state.purpose || defaultSettings.purpose;
     let showPurposeUrl = false; let showPurposeCta = false;
-    const purposeCheckboxes = domElements['purposeCheckboxes'];
+    const purposeCheckboxes = getElement('purposeCheckboxes'); // Use getElement here
     if(purposeCheckboxes) { purposeCheckboxes.forEach(cb => { cb.checked = savedPurposes.includes(cb.value); if (cb.checked) { if (cb.value === 'Promote URL') showPurposeUrl = true; if (cb.value.startsWith('Promote') || cb.value === 'Generate Leads') showPurposeCta = true; } }); }
     const purposeUrlInputElement = getElement('purposeUrlInput'); if(purposeUrlInputElement) purposeUrlInputElement.value = state.purposeUrl || defaultSettings.purposeUrl;
     const purposeCtaInputElement = getElement('purposeCtaInput'); if(purposeCtaInputElement) purposeCtaInputElement.value = state.purposeCta || defaultSettings.purposeCta;
@@ -463,6 +490,7 @@ export function updateUIFromState(state) {
     showElement(getElement('purposeCtaInput'), showPurposeCta);
     showElement(getElement('customToneInput'), state.tone === 'custom');
 
+    // --- Images ---
     const generateImagesCheckboxElement = getElement('generateImagesCheckbox'); if (generateImagesCheckboxElement) generateImagesCheckboxElement.checked = state.generateImages || defaultSettings.generateImages;
     const numImagesSelectElement = getElement('numImagesSelect'); if(numImagesSelectElement) numImagesSelectElement.value = state.numImages || defaultSettings.numImages;
     const imageSubjectInputElement = getElement('imageSubjectInput'); if(imageSubjectInputElement) imageSubjectInputElement.value = state.imageSubject || defaultSettings.imageSubject;
@@ -470,26 +498,37 @@ export function updateUIFromState(state) {
     const imageStyleModifiersInputElement = getElement('imageStyleModifiersInput'); if(imageStyleModifiersInputElement) imageStyleModifiersInputElement.value = state.imageStyleModifiers || defaultSettings.imageStyleModifiers;
     const imageTextInputElement = getElement('imageTextInput'); if(imageTextInputElement) imageTextInputElement.value = state.imageText || defaultSettings.imageText;
     const storageValue = state.imageStorage || defaultSettings.imageStorage;
-    const radioToCheck = document.querySelector(`input[name="imageStorage"][value="${storageValue}"]`);
-    if (radioToCheck) radioToCheck.checked = true; else { const firstRadio = document.querySelector('input[name="imageStorage"]'); if (firstRadio) firstRadio.checked = true; }
+    const imageStorageRadios = getElement('imageStorageRadios'); // Use getElement
+    let radioFound = false;
+    if (imageStorageRadios) {
+        imageStorageRadios.forEach(radio => {
+            if (radio.value === storageValue) { radio.checked = true; radioFound = true; }
+        });
+        // Default to first if saved value wasn't found
+        if (!radioFound && imageStorageRadios.length > 0) { imageStorageRadios[0].checked = true; }
+    }
     const githubRepoUrlInputElement = getElement('githubRepoUrlInput'); if(githubRepoUrlInputElement) githubRepoUrlInputElement.value = state.githubRepoUrl || defaultSettings.githubRepoUrl;
     const githubCustomPathInputElement = getElement('githubCustomPathInput'); if(githubCustomPathInputElement) githubCustomPathInputElement.value = state.githubCustomPath || defaultSettings.githubCustomPath;
 
+    // Populate Models (after providers are set)
     populateTextModels();
     populateImageModels();
 
+    // Set Visibility (after options/radios are set)
     showElement(getElement('imageOptionsContainer'), state.generateImages);
     toggleGithubOptions();
     updateUIBasedOnMode(state.bulkMode); // Set initial mode visibility
 
+    // --- Step 2+ Elements ---
     const articleTitleInputElement = getElement('articleTitleInput'); if (articleTitleInputElement) articleTitleInputElement.value = state.articleTitle || '';
     const linkTypeToggleElement = getElement('linkTypeToggle'); if(linkTypeToggleElement) linkTypeToggleElement.checked = !(state.linkTypeInternal ?? defaultSettings.linkTypeInternal);
     const linkTypeTextElement = getElement('linkTypeText'); if(linkTypeTextElement) linkTypeTextElement.textContent = (state.linkTypeInternal ?? defaultSettings.linkTypeInternal) ? 'Internal' : 'External';
 
+    // --- Bulk Plan ---
     if (state.bulkMode) { renderPlanningTable(getBulkPlan()); }
 
+    // Final API Status Check
     checkApiStatus();
-
     logToConsole("UI update from state finished.", "info");
 }
 
@@ -545,4 +584,4 @@ export function displaySitemapUrlsUI(urls = []) {
     logToConsole(`Displayed ${urls.length} sitemap URLs.`, 'info');
 }
 
-console.log("article-ui.js loaded (v8.5 log+mode fix)");
+console.log("article-ui.js loaded (v8.6 Nodelist+Dialect Fix)");
