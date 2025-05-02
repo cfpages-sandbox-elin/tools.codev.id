@@ -1,4 +1,4 @@
-// article-main.js (Forcing initialization strictly after DOMContentLoaded)
+// article-main.js (Using correct JS keys in critical check)
 import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
 import { logToConsole, fetchAndParseSitemap, showLoading, disableElement } from './article-helpers.js';
 import {
@@ -6,7 +6,7 @@ import {
     populateImageModels, updateUIFromState, updateUIBasedOnMode, toggleCustomModelUI,
     populateLanguagesUI, populateDialectsUI, toggleGithubOptions, checkApiStatus,
     displaySitemapUrlsUI
-} from './article-ui.js'; // Use the updated ui file (v8.3 export fix)
+} from './article-ui.js'; // Use the updated ui file (v8.4 ID fix)
 import { handleGenerateStructure, handleGenerateArticle } from './article-single.js';
 import { handleGeneratePlan, handleStartBulkGeneration, handleDownloadZip } from './article-bulk.js';
 import { handleSpinSelectedText, handleSelection, highlightSpintax } from './article-spinner.js';
@@ -15,34 +15,33 @@ import { handleSpinSelectedText, handleSelection, highlightSpintax } from './art
 let appInitialized = false;
 
 function initializeApp() {
-    // Double check flag to prevent running twice
-    if (appInitialized) {
-        logToConsole("Initialization attempted again, skipping.", "warn");
-        return;
-    }
-    appInitialized = true; // Set flag immediately
+    if (appInitialized) { logToConsole("Initialization attempted again, skipping.", "warn"); return; }
+    appInitialized = true;
 
-    // Log that the event handler is running
     logToConsole("DOMContentLoaded event fired. Initializing application...", "info");
 
     // 1. Cache DOM Elements FIRST
-    // We are now certain this runs after the DOM is parsed.
     cacheDomElements();
 
     // --- CRITICAL CHECK ---
-    // Verify essential elements were cached. If not, stop everything.
-    const criticalElementsCheck = ['aiProviderSelect', 'language', 'apiStatus', 'audienceInput', 'bulkModeCheckbox'];
+    // Use the JS keys defined in article-ui.js's elementIdMap
+    const criticalElementsCheck = [
+        'aiProviderSelect',     // JS Key for id="ai_provider"
+        'languageSelect',       // JS Key for id="language" <--- CORRECTED
+        'apiStatusDiv',         // JS Key for id="apiStatus" <--- CORRECTED
+        'audienceInput',        // JS Key for id="audience"
+        'bulkModeCheckbox'      // JS Key for id="bulkModeCheckbox"
+        // Add more JS keys here if other elements are absolutely essential for basic operation
+    ];
     let criticalMissing = false;
-    criticalElementsCheck.forEach(id => {
-        if (!getElement(id)) { // getElement now logs warnings if null/undefined
-            logToConsole(`FATAL: Critical element '${id}' missing after cache attempt. Cannot initialize UI.`, "error");
+    criticalElementsCheck.forEach(jsKey => {
+        if (!getElement(jsKey)) { // Check using the JS key
+            logToConsole(`FATAL: Critical element with JS key '${jsKey}' missing after cache attempt. Cannot initialize UI.`, "error");
             criticalMissing = true;
         }
     });
 
     if (criticalMissing) {
-        // Display a user-friendly message maybe?
-        // document.body.innerHTML = `<p style="color:red; font-weight:bold; padding:20px;">Application Error: Failed to load UI components. Please check the console or contact support.</p>`;
         return; // Halt execution
     }
     // --- End Critical Check ---
@@ -54,7 +53,7 @@ function initializeApp() {
 
     // 3. Update UI from State
     logToConsole("Applying loaded state to UI...", "info");
-    updateUIFromState(initialState); // This function relies heavily on cached elements
+    updateUIFromState(initialState);
 
     // 4. Setup Event Listeners
     logToConsole("Setting up event listeners...", "info");
@@ -69,26 +68,16 @@ function initializeApp() {
 }
 
 // --- Listener setup functions (setupConfigurationListeners, etc.) ---
-// No changes needed here, but they rely on getElement working now
-function setupConfigurationListeners() { /* ... same as v8.3 ... */ }
-function setupStep1Listeners() { /* ... same as v8.3 ... */ }
-function setupStep2Listeners() { /* ... same as v8.3 ... */ }
-function setupStep3Listeners() { /* ... same as v8.3 ... */ }
-function setupStep4Listeners() { /* ... same as v8.3 ... */ }
-function setupBulkModeListeners() { /* ... same as v8.3 ... */ }
+// No changes needed here
+function setupConfigurationListeners() { /* ... */ }
+function setupStep1Listeners() { /* ... */ }
+function setupStep2Listeners() { /* ... */ }
+function setupStep3Listeners() { /* ... */ }
+function setupStep4Listeners() { /* ... */ }
+function setupBulkModeListeners() { /* ... */ }
 
 // --- Initialize ---
-// We absolutely MUST wait for the DOM to be ready before doing anything,
-// especially caching elements.
 logToConsole("article-main.js evaluating. Setting up DOMContentLoaded listener.", "debug");
-
-// Attach the listener only once.
 document.addEventListener('DOMContentLoaded', initializeApp, { once: true });
 
-// Remove the check for `document.readyState !== 'loading'` because
-// if the script loads *after* DOMContentLoaded has already fired,
-// the listener added above might not fire again. However, modules scripts
-// at the end of the body *should* execute after parsing anyway.
-// The { once: true } listener is the most reliable way.
-
-console.log("article-main.js loaded (v8.4 timing fix 2)");
+console.log("article-main.js loaded (v8.4 key fix)");
