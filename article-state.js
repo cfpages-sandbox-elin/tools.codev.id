@@ -1,7 +1,9 @@
-// article-state.js
+// article-state.js (v8.7 SITEMAP_KEY Import Fix)
 import {
     defaultSettings, APP_STATE_STORAGE_KEY, BULK_PLAN_STORAGE_KEY,
-    BULK_ARTICLES_STORAGE_KEY, CUSTOM_MODELS_STORAGE_KEY
+    BULK_ARTICLES_STORAGE_KEY, CUSTOM_MODELS_STORAGE_KEY,
+    // *** FIX: Import SITEMAP_STORAGE_KEY ***
+    SITEMAP_STORAGE_KEY
 } from './article-config.js';
 import { logToConsole } from './article-helpers.js';
 
@@ -47,6 +49,10 @@ export function loadState() {
         loadBulkPlanState();
         loadBulkArticlesState();
 
+        // Note: Sitemap URLs are loaded into appState directly if saved,
+        // so no separate sitemap load needed here unless stored separately.
+        // The reset function below *does* clear the separate key if it exists.
+
     } catch (error) {
         logToConsole(`Error loading app state: ${error.message}`, 'error');
         appState = { ...defaultSettings }; // Reset to defaults on error
@@ -57,7 +63,7 @@ export function loadState() {
 export function saveState() {
     try {
         localStorage.setItem(APP_STATE_STORAGE_KEY, JSON.stringify(appState));
-        // logToConsole('App state saved.', 'info'); // Can be noisy, save specific states instead
+        // logToConsole('App state saved.', 'info'); // Can be noisy
     } catch (error) {
         logToConsole(`Error saving app state: ${error.message}`, 'error');
     }
@@ -150,28 +156,28 @@ function loadBulkArticlesState() {
 
 export function saveBulkArticlesState() {
      try {
-        // Be cautious with large amounts of article data in local storage
         localStorage.setItem(BULK_ARTICLES_STORAGE_KEY, JSON.stringify(bulkArticles));
-        logToConsole('Bulk articles saved.', 'info');
+        // logToConsole('Bulk articles saved.', 'info'); // Can be noisy
     } catch (error) {
         logToConsole(`Error saving bulk articles (might be too large): ${error.message}`, 'error');
-         // Consider more robust storage if this becomes an issue (IndexedDB)
     }
 }
 
 export function addBulkArticle(filename, content) {
     bulkArticles[filename] = content;
-    saveBulkArticlesState(); // Save each time an article is added/updated
+    saveBulkArticlesState();
 }
 
 // --- Reset State ---
 export function resetAllData() {
     if (confirm("Are you sure you want to reset ALL settings, custom models, and bulk progress? This cannot be undone.")) {
+        logToConsole('Resetting all application data...', 'warn');
         localStorage.removeItem(APP_STATE_STORAGE_KEY);
         localStorage.removeItem(CUSTOM_MODELS_STORAGE_KEY);
         localStorage.removeItem(BULK_PLAN_STORAGE_KEY);
         localStorage.removeItem(BULK_ARTICLES_STORAGE_KEY);
-        localStorage.removeItem(SITEMAP_STORAGE_KEY); // Also clear sitemap
+        // *** FIX: Use the imported SITEMAP_STORAGE_KEY ***
+        localStorage.removeItem(SITEMAP_STORAGE_KEY);
 
         // Reset in-memory state
         appState = { ...defaultSettings };
@@ -182,8 +188,9 @@ export function resetAllData() {
         logToConsole('All application data has been reset.', 'warn');
         // Reload the page to apply default UI state cleanly
         window.location.reload();
+    } else {
+         logToConsole('Reset cancelled by user.', 'info');
     }
 }
-
 
 console.log("article-state.js loaded");
