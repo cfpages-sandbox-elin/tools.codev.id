@@ -1,14 +1,13 @@
-// article-main.js (v8.7 Import + Final Mode Fix)
+// article-main.js (v8.8 Provider Change Status Fix)
 import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
-import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify } from './article-helpers.js';
+import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, findCheapestModel } from './article-helpers.js'; // Added findCheapestModel if needed (though populate should handle it)
 import {
     cacheDomElements, getElement, populateAiProviders, populateTextModels,
     populateImageModels, updateUIFromState, updateUIBasedOnMode, toggleCustomModelUI,
     populateLanguagesUI, populateDialectsUI, toggleGithubOptions, checkApiStatus,
     displaySitemapUrlsUI
 } from './article-ui.js';
-// *** FIX: Import languageOptions from article-config ***
-import { languageOptions } from './article-config.js';
+import { languageOptions, imageProviders } from './article-config.js'; // Added imageProviders import
 import { handleGenerateStructure, handleGenerateArticle } from './article-single.js';
 import { handleGeneratePlan, handleStartBulkGeneration, handleDownloadZip } from './article-bulk.js';
 import { handleSpinSelectedText, handleSelection, highlightSpintax } from './article-spinner.js';
@@ -43,7 +42,7 @@ function initializeApp() {
 
     // 3. Update UI from State
     logToConsole("Applying loaded state to UI...", "info");
-    updateUIFromState(initialState); // Calls updateUIBasedOnMode internally
+    updateUIFromState(initialState);
 
     // 4. Setup Event Listeners
     logToConsole("Setting up event listeners...", "info");
@@ -54,8 +53,7 @@ function initializeApp() {
     setupStep4Listeners();
     setupBulkModeListeners();
 
-    // *** FIX: Explicitly ensure correct UI mode AFTER everything else ***
-    // Sometimes initial rendering might override earlier calls
+    // Final check/assertion of UI mode
     logToConsole("Final check/assertion of UI mode...", "info");
     updateUIBasedOnMode(getState().bulkMode);
 
@@ -78,20 +76,43 @@ function setupConfigurationListeners() {
     forceReloadBtn?.addEventListener('click', () => { logToConsole("Attempting hard refresh...", "warn"); location.reload(true); });
     resetDataBtn?.addEventListener('click', resetAllData);
 
+    // *** MODIFIED LISTENER ***
     aiProviderSelect?.addEventListener('change', (e) => {
-        logToConsole(`Text Provider changed to: ${e.target.value}`, 'info');
-        updateState({ textProvider: e.target.value, textModel: '', });
-        // logToConsole(`State updated. New provider: ${getState().textProvider}`, 'debug');
-        populateTextModels(true);
+        const newProvider = e.target.value;
+        logToConsole(`Text Provider changed to: ${newProvider}`, 'info');
+
+        // 1. Update provider state ONLY first
+        updateState({ textProvider: newProvider });
+        logToConsole(`State provider updated. New provider: ${getState().textProvider}`, 'debug');
+
+        // 2. Repopulate models UI (this will set the dropdown's value to the default)
+        populateTextModels(true); // Pass true to ensure it finds and sets the default/cheapest
+
+        // 3. Get the model that was actually selected in the dropdown by populateTextModels
+        const selectedDefaultModel = getElement('aiModelSelect')?.value || '';
+        logToConsole(`Default model selected in UI by populateTextModels: ${selectedDefaultModel}`, 'debug');
+
+        // 4. Update the textModel state variable with this default model
+        //    Also ensure 'useCustomTextModel' is false when changing provider
+        updateState({
+             textModel: selectedDefaultModel,
+             useCustomTextModel: false // Force back to standard model on provider change
+        });
+        // Ensure custom UI reflects the switch back to standard (checkbox unchecked, input hidden)
+        if(useCustomAiModelCheckbox) useCustomAiModelCheckbox.checked = false; // Explicitly uncheck
+        toggleCustomModelUI('text'); // Update visibility/disabled states
+
+        // 5. Check status using the now-updated state which includes the default model
         checkApiStatus();
     });
 
     aiModelSelect?.addEventListener('change', (e) => {
         if (!getElement('useCustomAiModelCheckbox')?.checked) {
             const selectedModel = e.target.value;
-            // logToConsole(`Standard Text Model selected: ${selectedModel}`, 'info');
-            if (selectedModel) { updateState({ textModel: selectedModel }); checkApiStatus(); }
-            else { /* logToConsole("Empty model selected...", "warn"); */ checkApiStatus(); }
+            if (selectedModel) {
+                logToConsole(`Standard Text Model selected via dropdown: ${selectedModel}`, 'info');
+                updateState({ textModel: selectedModel }); checkApiStatus(); }
+            else { logToConsole("Empty model selected, checking status (likely shows error).", "warn"); checkApiStatus(); }
         }
     });
 
@@ -99,10 +120,11 @@ function setupConfigurationListeners() {
         const isChecked = useCustomAiModelCheckbox.checked;
         // logToConsole(`Use Custom Text Model checkbox changed: ${isChecked}`, 'info');
         updateState({ useCustomTextModel: isChecked });
-        toggleCustomModelUI('text');
+        toggleCustomModelUI('text'); // Update UI visibility first
+        // Update state with the *active* model based on checkbox
         if (isChecked) { updateState({ customTextModel: getElement('customAiModelInput')?.value || '' }); }
         else { updateState({ textModel: getElement('aiModelSelect')?.value || '' }); }
-        checkApiStatus();
+        checkApiStatus(); // Check status of the newly active model
     });
 
     customAiModelInput?.addEventListener('blur', (e) => {
@@ -118,23 +140,35 @@ function setupConfigurationListeners() {
     });
 
      imageProviderSelect?.addEventListener('change', (e) => {
-         // logToConsole(`Image Provider changed to: ${e.target.value}`, 'info');
          const newProvider = e.target.value;
-         const defaultAspectRatio = imageProviders[newProvider]?.aspectRatios?.[0] || '1:1'; // Need imageProviders for this
-         updateState({ imageProvider: newProvider, imageModel: '', imageAspectRatio: defaultAspectRatio });
+         logToConsole(`Image Provider changed to: ${newProvider}`, 'info');
+         const defaultAspectRatio = imageProviders[newProvider]?.aspectRatios?.[0] || '1:1';
+         // Update state including provider, reset model, set default aspect ratio
+         updateState({
+            imageProvider: newProvider,
+            imageModel: '',
+            imageAspectRatio: defaultAspectRatio,
+            useCustomImageModel: false // Also reset custom image model on provider change
+        });
+        // Ensure custom checkbox is unchecked visually
+         if(useCustomImageModelCheckbox) useCustomImageModelCheckbox.checked = false;
+         // Repopulate and update UI
          populateImageModels(true);
+         toggleCustomModelUI('image'); // Ensure custom UI is hidden
      });
 
      imageModelSelect?.addEventListener('change', (e) => {
          if (!getElement('useCustomImageModelCheckbox')?.checked) {
              const selectedModel = e.target.value;
-             // logToConsole(`Standard Image Model selected: ${selectedModel}`, 'info');
-              if (selectedModel) { updateState({ imageModel: selectedModel }); }
+             if (selectedModel) {
+                logToConsole(`Standard Image Model selected: ${selectedModel}`, 'info');
+                updateState({ imageModel: selectedModel });
+            }
          }
      });
     getElement('imageAspectRatioSelect')?.addEventListener('change', (e) => {
         updateState({ imageAspectRatio: e.target.value });
-        // logToConsole(`Image Aspect Ratio changed to: ${e.target.value}`, 'info');
+        logToConsole(`Image Aspect Ratio changed to: ${e.target.value}`, 'info');
     });
 
      useCustomImageModelCheckbox?.addEventListener('change', () => {
@@ -177,37 +211,32 @@ function setupStep1Listeners() {
 
     bulkModeCheckbox?.addEventListener('change', (e) => {
         const isBulk = e.target.checked;
-        // logToConsole(`Bulk Mode Checkbox changed: ${isBulk}`, 'info');
         updateState({ bulkMode: isBulk });
         updateUIBasedOnMode(isBulk);
     });
 
     languageSelect?.addEventListener('change', (e) => {
         const newLang = e.target.value;
-        logToConsole(`Language Select changed to: ${newLang}`, 'info');
-        // *** FIX: Use the imported languageOptions ***
+        // logToConsole(`Language Select changed to: ${newLang}`, 'info');
         const newLangConfig = languageOptions[newLang];
         const defaultDialect = newLangConfig?.dialects?.[0] || '';
         updateState({ language: newLang, dialect: defaultDialect, customLanguage: '' });
-        logToConsole(`State updated. New language: ${getState().language}, Default Dialect: ${getState().dialect}`, 'debug');
+        // logToConsole(`State updated. New language: ${getState().language}, Default Dialect: ${getState().dialect}`, 'debug');
         populateDialectsUI(getState());
     });
 
     customLanguageInput?.addEventListener('blur', (e) => {
          if (getElement('languageSelect')?.value === 'custom') {
-             // logToConsole(`Custom Language input changed (on blur): ${e.target.value}`, 'info');
             updateState({ customLanguage: e.target.value });
          }
     });
 
     dialectSelect?.addEventListener('change', (e) => {
-         // logToConsole(`Dialect Select changed to: ${e.target.value}`, 'info');
         updateState({ dialect: e.target.value });
     });
 
     toneSelect?.addEventListener('change', (e) => {
         const newTone = e.target.value;
-        // logToConsole(`Tone Select changed to: ${newTone}`, 'info');
         const showCustom = newTone === 'custom';
         updateState({ tone: newTone });
         if (!showCustom) { updateState({ customTone: '' }); if(customToneInput) customToneInput.value = ''; }
@@ -217,7 +246,6 @@ function setupStep1Listeners() {
 
     customToneInput?.addEventListener('blur', (e) => {
          if (getElement('toneSelect')?.value === 'custom') {
-             // logToConsole(`Custom Tone input changed (on blur): ${e.target.value}`, 'info');
              updateState({ customTone: e.target.value });
          }
     });
@@ -226,7 +254,6 @@ function setupStep1Listeners() {
          purposeCheckboxes.forEach(checkbox => {
              checkbox.addEventListener('change', () => {
                  const selectedPurposes = Array.from(document.querySelectorAll('input[name="purpose"]:checked')).map(cb => cb.value);
-                 // logToConsole(`Purpose checkboxes changed: ${selectedPurposes.join(', ')}`, 'info');
                  updateState({ purpose: selectedPurposes });
                  const showUrl = selectedPurposes.includes('Promote URL');
                  const showCta = selectedPurposes.some(p => p.startsWith('Promote') || p === 'Generate Leads');
@@ -242,7 +269,6 @@ function setupStep1Listeners() {
 
     generateImagesCheckbox?.addEventListener('change', (e) => {
         const generate = e.target.checked;
-        // logToConsole(`Generate Images checkbox changed: ${generate}`, 'info');
         updateState({ generateImages: generate });
         showElement(getElement('imageOptionsContainer'), generate);
         if (generate) { populateImageModels(); }
@@ -254,7 +280,6 @@ function setupStep1Listeners() {
              radio.addEventListener('change', (e) => {
                  if (e.target.checked) {
                       const storageType = e.target.value;
-                      // logToConsole(`Image Storage radio changed: ${storageType}`, 'info');
                      updateState({ imageStorage: storageType });
                      toggleGithubOptions();
                  }
@@ -265,14 +290,12 @@ function setupStep1Listeners() {
     fetchSitemapBtn?.addEventListener('click', async () => {
         const url = sitemapUrlInput?.value.trim();
         if (!url) { alert('Please enter a Sitemap URL.'); return; }
-        // logToConsole(`Fetching sitemap from URL: ${url}`, 'info');
         showLoading(sitemapLoadingIndicator, true);
         disableElement(fetchSitemapBtn, true);
         try {
             const parsedUrls = await fetchAndParseSitemap(url);
             updateState({ sitemapUrls: parsedUrls });
             displaySitemapUrlsUI(parsedUrls);
-            // logToConsole(`Successfully fetched and parsed ${parsedUrls.length} URLs.`, 'success');
         } catch (error) {
             logToConsole(`Sitemap fetch failed: ${error.message}`, 'error');
             alert(`Failed to fetch or parse sitemap: ${error.message}`);
@@ -386,4 +409,4 @@ function setupBulkModeListeners() {
 logToConsole("article-main.js evaluating. Setting up DOMContentLoaded listener.", "debug");
 document.addEventListener('DOMContentLoaded', initializeApp, { once: true });
 
-console.log("article-main.js loaded (v8.7 Import + Final Mode Fix)");
+console.log("article-main.js loaded (v8.8 Provider Change Status Fix)");
