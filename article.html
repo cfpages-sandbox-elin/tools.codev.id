@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Article Generator & Spinner 🪄 v8.1 (Bulk Mode)</title>
+    <title>AI Article Generator & Spinner 🪄 v8.2 (Bulk Mode)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
-        /* Styles largely same as v8 */
+        /* Styles identical to v8.1 */
         body { font-family: 'Inter', sans-serif; @apply bg-gray-100 text-gray-800; }
         .compact-section { @apply bg-white p-4 mb-4 rounded-lg shadow-md; }
         .compact-label { @apply block text-sm font-medium text-gray-700 mb-1 whitespace-nowrap; }
@@ -15,7 +15,6 @@
         .custom-input-visible { @apply compact-input mt-1; }
         .compact-button { @apply inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed; }
         .reset-button { @apply inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500; }
-        /* Style for the new reload button */
         .reload-button { @apply inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-500 hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400; }
         .spintax-level-1 { color: #007bff; } .spintax-level-2 { color: #28a745; } .spintax-level-3 { color: #dc3545; } .spintax-pipe { color: #ffc107; font-weight: bold; }
         .compact-textarea::-webkit-scrollbar { display: none; } .compact-textarea { -ms-overflow-style: none; scrollbar-width: none; }
@@ -56,7 +55,7 @@
 <body class="p-4 max-w-5xl mx-auto">
 
     <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-bold text-indigo-700">AI Article Generator & Spinner 🪄📝🖼️ (v8.1)</h1>
+        <h1 class="text-2xl font-bold text-indigo-700">AI Article Generator & Spinner 🪄📝🖼️ (v8.2)</h1>
         <div class="space-x-2">
              <button id="forceReloadBtn" class="reload-button" title="Attempt to bypass cache and reload all resources">Force Reload 🔄</button>
              <button id="resetDataBtn" class="reset-button">Reset All Data ⚠️</button>
@@ -71,43 +70,14 @@
     <section id="step4" class="compact-section hidden"> <h2 class="text-lg font-semibold mb-3 text-gray-600 border-b pb-2">Step 4: Spin Content 🌀</h2> <p class="text-sm text-gray-600 mb-2">Select text in the article area below, then click the "Spin Selected Text" button.</p> <div class="mb-2 text-right"> <button id="spinSelectedBtn" class="compact-button" disabled> Spin Selected Text ✨ <span id="spinActionLoadingIndicator" class="hidden"><span class="loader"></span></span> </button> </div> <label for="spun_article_display" class="compact-label">Spinnable Article (Editable):</label> <div id="spin_output_container" class="border border-gray-300 rounded-md p-2 bg-gray-50 min-h-[200px] max-h-[450px] overflow-y-auto"> <div id="spun_article_display" contenteditable="true" class="compact-textarea w-full h-full border-none focus:outline-none focus:ring-0 min-h-[200px]" placeholder="Article content will appear here for spinning..."></div> </div> <p class="text-xs text-gray-500 mt-2">Spintax: <code class="bg-gray-200 px-1 rounded">{opt1|opt2}</code> Nested: <code class="bg-gray-200 px-1 rounded">{opt1|{nest1|nest2}|opt3}</code>.</p> </section>
     <div id="consoleLogContainer"> <h3 class="text-md font-semibold mb-2 text-gray-400">Console Log 🪵</h3> <pre id="consoleLog"></pre> </div>
 
-    <script type="module">
-        console.log("Starting module loading...");
-        try {
-            // Order is important! Config -> Helpers -> State -> UI -> Modules -> Main
-            console.log("Loading: article-config.js");
-            await import('./article-config.js');
-
-            console.log("Loading: article-helpers.js");
-            await import('./article-helpers.js?v=1');
-
-            console.log("Loading: article-state.js");
-            await import('./article-state.js');
-
-            console.log("Loading: article-ui.js");
-            await import('./article-ui.js?fjalkjfalkej');
-
-            console.log("Loading: article-single.js");
-            await import('./article-single.js');
-
-            console.log("Loading: article-bulk.js");
-            await import('./article-bulk.js');
-
-            console.log("Loading: article-spinner.js");
-            await import('./article-spinner.js');
-
-            console.log("Loading: article-main.js");
-            // article-main.js contains the initializeApp call triggered by DOMContentLoaded
-            await import('./article-main.js?fjalekjflaj');
-            console.log("article-main.js execution likely started.");
-
-            console.log("All modules imported successfully (initialization happens via DOMContentLoaded in main).");
-
-        } catch (error) {
-            console.error("Failed to load one or more modules:", error);
-            alert("Error loading application modules. Check the console (F12) for details.");
-        }
-    </script>
+    <script type="module" src="article-config.js"></script>
+    <script type="module" src="article-helpers.js"></script>
+    <script type="module" src="article-state.js"></script>
+    <script type="module" src="article-ui.js"></script>
+    <script type="module" src="article-single.js"></script>
+    <script type="module" src="article-bulk.js"></script>
+    <script type="module" src="article-spinner.js"></script>
+    <script type="module" src="article-main.js"></script> {/* Main must be last */}
 
 </body>
 </html>

@@ -1,5 +1,5 @@
-// article-main.js (simplified init)
-import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState } from './article-state.js'; // Added getState
+// article-main.js (corrected initialization)
+import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState } from './article-state.js';
 import { logToConsole, fetchAndParseSitemap } from './article-helpers.js';
 import {
     cacheDomElements, getElement, populateAiProviders, populateTextModels,
@@ -12,17 +12,19 @@ import { handleGeneratePlan, handleStartBulkGeneration, handleDownloadZip } from
 import { handleSpinSelectedText, handleSelection, highlightSpintax } from './article-spinner.js';
 
 function initializeApp() {
-    logToConsole("Initializing AI Article Generator v8.1...", "info");
+    logToConsole("Initializing AI Article Generator v8.2...", "info");
+
+    // 1. Cache DOM Elements FIRST
     cacheDomElements();
 
-    // Load initial state from storage FIRST
-    const initialState = loadState();
+    // 2. Load initial state from storage
+    const initialState = loadState(); // This loads state into memory
 
-    // Populate UI elements based on loaded state
-    // This function now handles populating selects correctly based on loaded state
+    // 3. Populate UI elements based on loaded state
+    // This function should now correctly populate dropdowns using the loaded state
     updateUIFromState(initialState);
 
-    // Setup Event Listeners AFTER UI is populated
+    // 4. Setup Event Listeners AFTER UI is populated and state is loaded
     setupConfigurationListeners();
     setupStep1Listeners();
     setupStep2Listeners();
@@ -30,19 +32,18 @@ function initializeApp() {
     setupStep4Listeners();
     setupBulkModeListeners();
 
-    // Initial API status check is triggered within populateTextModels called by updateUIFromState
-
-    logToConsole("Application Initialized.", "success");
+    // 5. Initial API status check (already called within populateTextModels called by updateUIFromState)
+    logToConsole("Application Initialized and listeners attached.", "success");
 }
 
 function setupConfigurationListeners() {
     // ... (listeners same as v8.1) ...
     const ui = { aiProviderSelect: getElement('ai_provider'), aiModelSelect: getElement('ai_model'), useCustomAiModelCheckbox: getElement('useCustomAiModel'), customAiModelInput: getElement('customAiModel'), imageProviderSelect: getElement('imageProvider'), imageModelSelect: getElement('imageModel'), useCustomImageModelCheckbox: getElement('useCustomImageModel'), customImageModelInput: getElement('customImageModel'), resetDataBtn: getElement('resetDataBtn'), forceReloadBtn: getElement('forceReloadBtn'), };
     ui.forceReloadBtn?.addEventListener('click', () => { logToConsole("Attempting hard refresh...", "warn"); location.reload(true); });
-    ui.aiProviderSelect?.addEventListener('change', (e) => { updateState({ textProvider: e.target.value }); populateTextModels(true); }); // populateTextModels will call checkApiStatus
-    ui.aiModelSelect?.addEventListener('change', (e) => { if (!getElement('useCustomAiModel').checked) { updateState({ textModel: e.target.value }); logToConsole(`Selected Text Model: ${e.target.value}`, 'info'); checkApiStatus(); } }); // Only update state if not using custom
+    ui.aiProviderSelect?.addEventListener('change', (e) => { updateState({ textProvider: e.target.value }); populateTextModels(true); });
+    ui.aiModelSelect?.addEventListener('change', (e) => { if (!getElement('useCustomAiModel').checked) { updateState({ textModel: e.target.value }); logToConsole(`Selected Text Model: ${e.target.value}`, 'info'); checkApiStatus(); } });
     ui.useCustomAiModelCheckbox?.addEventListener('change', () => { toggleCustomModelUI('text'); const isChecked = getElement('useCustomAiModel').checked; updateState({ useCustomTextModel: isChecked }); if (!isChecked) { updateState({ textModel: getElement('ai_model').value }); } else { updateState({ customTextModel: getElement('customAiModel').value }); } checkApiStatus(); });
-    ui.customAiModelInput?.addEventListener('change', (e) => { const provider = getState().textProvider; updateCustomModelState('text', provider, e.target.value); updateState({ customTextModel: e.target.value }); if (getElement('useCustomAiModel').checked) checkApiStatus(); }); // Check status only if custom is active
+    ui.customAiModelInput?.addEventListener('change', (e) => { const provider = getState().textProvider; updateCustomModelState('text', provider, e.target.value); updateState({ customTextModel: e.target.value }); if (getElement('useCustomAiModel').checked) checkApiStatus(); });
     ui.imageProviderSelect?.addEventListener('change', (e) => { updateState({ imageProvider: e.target.value }); populateImageModels(true); });
     ui.imageModelSelect?.addEventListener('change', (e) => { if (!getElement('useCustomImageModel').checked) { updateState({ imageModel: e.target.value }); logToConsole(`Selected Image Model: ${e.target.value}`, 'info'); } });
     ui.useCustomImageModelCheckbox?.addEventListener('change', () => { toggleCustomModelUI('image'); const isChecked = getElement('useCustomImageModel').checked; updateState({ useCustomImageModel: isChecked }); if (!isChecked) { updateState({ imageModel: getElement('imageModel').value }); } else { updateState({ customImageModel: getElement('customImageModel').value }); } });
@@ -54,7 +55,7 @@ function setupStep1Listeners() {
      // ... (listeners same as v8.1) ...
      const ui = { bulkModeCheckbox: getElement('bulkModeCheckbox'), languageSelect: getElement('language'), customLanguageInput: getElement('custom_language'), dialectSelect: getElement('dialect'), toneSelect: getElement('tone'), customToneInput: getElement('custom_tone'), purposeCheckboxes: getElement('purposeCheckboxes'), purposeUrlInput: getElement('purposeUrl'), purposeCtaInput: getElement('purposeCta'), generateImagesCheckbox: getElement('generateImages'), imageStorageRadios: getElement('imageStorageRadios'), fetchSitemapBtn: getElement('fetchSitemapBtn'), generateSingleBtn: getElement('generateSingleBtn'), generatePlanBtn: getElement('generatePlanBtn'), keywordInput: getElement('keyword'), audienceInput: getElement('audience'), readerNameInput: getElement('readerName'), genderSelect: getElement('gender'), ageSelect: getElement('age'), formatSelect: getElement('format'), sitemapUrlInput: getElement('sitemapUrl'), customSpecsInput: getElement('custom_specs'), numImagesSelect: getElement('numImages'), imageAspectRatioSelect: getElement('imageAspectRatio'), imageSubjectInput: getElement('imageSubject'), imageStyleSelect: getElement('imageStyle'), imageStyleModifiersInput: getElement('imageStyleModifiers'), imageTextInput: getElement('imageText'), githubRepoUrlInput: getElement('githubRepoUrl'), githubCustomPathInput: getElement('githubCustomPath'), sitemapLoadingIndicator: getElement('sitemapLoadingIndicator'), };
      ui.bulkModeCheckbox?.addEventListener('change', (e) => { const isBulk = e.target.checked; updateState({ bulkMode: isBulk }); updateUIBasedOnMode(isBulk); });
-     ui.languageSelect?.addEventListener('change', (e) => { updateState({ language: e.target.value, dialect: '', customLanguage: '' }); populateDialectsUI(); }); // Clear custom language too
+     ui.languageSelect?.addEventListener('change', (e) => { updateState({ language: e.target.value, dialect: '', customLanguage: '' }); populateDialectsUI(); });
      ui.customLanguageInput?.addEventListener('change', (e) => updateState({ customLanguage: e.target.value }));
      ui.dialectSelect?.addEventListener('change', (e) => updateState({ dialect: e.target.value }));
      ui.toneSelect?.addEventListener('change', (e) => { const showCustom = e.target.value === 'custom'; showElement(ui.customToneInput, showCustom); ui.customToneInput.classList.toggle('custom-input-visible', showCustom); updateState({ tone: e.target.value }); if (!showCustom) updateState({ customTone: '' }); });
@@ -78,6 +79,12 @@ function setupBulkModeListeners() { /* ... */ const ui = { startBulkGenerationBt
 
 
 // --- Initialize ---
-document.addEventListener('DOMContentLoaded', initializeApp);
+// Ensure this runs *after* the DOM is fully parsed and ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+    // DOMContentLoaded has already fired
+    initializeApp();
+}
 
 console.log("article-main.js loaded");
