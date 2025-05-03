@@ -1,4 +1,4 @@
-// article-helpers.js
+// article-helpers.js v8.13 (better outline parser)
 import { CLOUDFLARE_FUNCTION_URL } from './article-config.js';
 
 // --- Logging ---
@@ -166,11 +166,100 @@ export const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 // --- Outline Parser ---
 export function getArticleOutlines(structureText) {
     if (!structureText) return [];
-    // Split by newline, trim, filter empty lines and basic comment/list markers
-    return structureText.split('\n')
-                        .map(line => line.trim())
-                        .filter(line => line.length > 3 && !line.startsWith('#') && !line.startsWith('- ') && !line.startsWith('* '));
+    logToConsole("Parsing article structure for outlines...", "info");
+
+    // Simple detection: check for common HTML tags
+    const isHtmlLikely = /<[a-z][\s\S]*>/i.test(structureText) && (structureText.includes('<h') || structureText.includes('<li') || structureText.includes('<p>'));
+
+    let outlines = [];
+    if (isHtmlLikely) {
+        logToConsole("Detected HTML-like structure. Using DOM parser.", "debug");
+        outlines = parseHtmlStructure(structureText);
+    } else {
+        logToConsole("Detected Markdown-like structure. Using Regex parser.", "debug");
+        outlines = parseMarkdownStructure(structureText);
+    }
+
+    logToConsole(`Finished parsing. Found ${outlines.length} outlines.`, "info");
+    if (outlines.length === 0) {
+         logToConsole("Warning: No outlines were parsed from the structure text. Article generation might fail.", "warn");
+    }
+    return outlines;
 }
 
+// --- *** NEW: HTML Structure Parser *** ---
+function parseHtmlStructure(htmlString) {
+    const outlines = [];
+    try {
+        // Create a temporary container element (doesn't need to be added to DOM)
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlString;
 
-console.log("article-helpers.js v8.6 loaded and functions exported.");
+        // Select potential heading and list item elements
+        // Prioritize headings, then list items if headings are sparse? Or just combine? Let's combine for now.
+        const nodes = tempDiv.querySelectorAll('h1, h2, h3, h4, h5, h6, li');
+
+        nodes.forEach(node => {
+            // Get text content, which strips inner tags
+            let potentialOutline = node.textContent?.trim();
+
+            // Clean and Add if valid
+            if (potentialOutline) {
+                // Remove potential list numbers/bullets if they are part of textContent
+                potentialOutline = potentialOutline.replace(/^(\d+\.|[a-zA-Z]\.|[IVXLCDM]+\.|\*|-)\s*/, '').trim();
+                // Further filter out very short lines or lines that look like comments/instructions
+                if (potentialOutline.length > 3 && !potentialOutline.startsWith('(')) {
+                   logToConsole(`Parsed HTML Outline: "${potentialOutline}"`, "debug");
+                   outlines.push(potentialOutline);
+                } else {
+                    logToConsole(`Filtered out potential HTML outline: "${potentialOutline}"`, "debug");
+                }
+            }
+        });
+    } catch (error) {
+        logToConsole(`Error parsing HTML structure: ${error.message}. Falling back to simple split.`, "error");
+        // Fallback to basic line splitting if DOM parsing fails catastrophically
+        return htmlString.split('\n').map(line => line.trim()).filter(line => line.length > 3);
+    }
+    return outlines;
+}
+
+// --- *** Markdown Structure Parser (from previous version) *** ---
+function parseMarkdownStructure(markdownString) {
+    const lines = markdownString.split('\n');
+    const outlines = [];
+    const headingRegex = /^(#{1,6})\s+(.*)/;
+    const listRegex = /^(\s*)([-*]|\d+\.|[a-zA-Z]\.|[IVXLCDM]+\.)\s+(.*)/;
+    const boldRegex = /^\s*\*\*(.*?)\*\*\s*$/;
+
+    lines.forEach(line => {
+        const trimmedLine = line.trim();
+        if (trimmedLine.length === 0) return;
+
+        let potentialOutline = null;
+        let match = trimmedLine.match(headingRegex);
+        if (match) { potentialOutline = match[2].trim(); }
+        else {
+            match = line.match(listRegex); // Use original line for list marker check
+            if (match) { potentialOutline = match[3].trim(); }
+            else {
+                 match = trimmedLine.match(boldRegex);
+                 if(match) { potentialOutline = match[1].trim(); }
+            }
+        }
+
+        if (potentialOutline) {
+             potentialOutline = potentialOutline.replace(/^\**|\**$/g, '').trim(); // Clean surrounding asterisks
+             if (potentialOutline.length > 3 && !potentialOutline.startsWith('(')) {
+                // logToConsole(`Parsed MD Outline: "${potentialOutline}"`, "debug"); // Already logged in main func
+                outlines.push(potentialOutline);
+             } else {
+                 // logToConsole(`Filtered out potential MD outline: "${potentialOutline}"`, "debug");
+             }
+        }
+    });
+    return outlines;
+}
+// --- End Outline Parsers ---
+
+console.log("article-helpers.js v8.13 loaded and functions exported.");
