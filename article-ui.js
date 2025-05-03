@@ -1,6 +1,5 @@
-// article-ui.js (v8.10 State Sync Fix)
+// article-ui.js (Load structure state)
 import { textProviders, imageProviders, languageOptions, defaultSettings } from './article-config.js';
-// *** Import updateState function ***
 import { getState, getCustomModelState, updateState } from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement } from './article-helpers.js';
 
@@ -514,39 +513,43 @@ export function updateUIFromState(state) {
     const defaultTextModel = getElement('aiModelSelect')?.value || '';
     const defaultImageModel = getElement('imageModelSelect')?.value || '';
     const defaultImageAspect = getElement('imageAspectRatioSelect')?.value || '';
-    // Only update state if the UI value differs from current state or state is empty
-    // This prevents unnecessary saves if the loaded state was already correct.
     const updatesNeeded = {};
-    if (defaultTextModel && state.textModel !== defaultTextModel) {
-        updatesNeeded.textModel = defaultTextModel;
-        logToConsole(`Syncing state.textModel -> ${defaultTextModel}`, 'debug');
-    }
-    if (defaultImageModel && state.imageModel !== defaultImageModel) {
-         updatesNeeded.imageModel = defaultImageModel;
-         logToConsole(`Syncing state.imageModel -> ${defaultImageModel}`, 'debug');
-    }
-     if (defaultImageAspect && state.imageAspectRatio !== defaultImageAspect) {
-         updatesNeeded.imageAspectRatio = defaultImageAspect;
-         logToConsole(`Syncing state.imageAspectRatio -> ${defaultImageAspect}`, 'debug');
-     }
-    // Also ensure custom flags are false if we set a standard model
+    if (defaultTextModel && state.textModel !== defaultTextModel) updatesNeeded.textModel = defaultTextModel;
+    if (defaultImageModel && state.imageModel !== defaultImageModel) updatesNeeded.imageModel = defaultImageModel;
+    if (defaultImageAspect && state.imageAspectRatio !== defaultImageAspect) updatesNeeded.imageAspectRatio = defaultImageAspect;
     if (updatesNeeded.textModel) updatesNeeded.useCustomTextModel = false;
     if (updatesNeeded.imageModel) updatesNeeded.useCustomImageModel = false;
-
-    if (Object.keys(updatesNeeded).length > 0) {
-        updateState(updatesNeeded);
-        // We need the *very latest* state for the final steps
-        state = getState(); // Refresh state variable after updates
-    }
+    if (Object.keys(updatesNeeded).length > 0) { updateState(updatesNeeded); state = getState(); }
     // *** End Fix ***
 
     // 7. Set Visibility based on the potentially updated state
     showElement(getElement('imageOptionsContainer'), state.generateImages);
-    toggleGithubOptions(); // Uses latest state implicitly via querySelector
-    updateUIBasedOnMode(state.bulkMode); // Uses latest state
+    toggleGithubOptions();
+    updateUIBasedOnMode(state.bulkMode); // Set initial mode visibility
 
     // 8. Update Step 2+ Elements
     const articleTitleInputElement = getElement('articleTitleInput'); if (articleTitleInputElement) articleTitleInputElement.value = state.articleTitle || '';
+    const articleStructureTextarea = getElement('articleStructureTextarea');
+    if (articleStructureTextarea) {
+        // Populate textarea ONLY if structure exists in state AND we are in SINGLE mode
+        if (state.articleStructure && !state.bulkMode) {
+            articleStructureTextarea.value = state.articleStructure;
+            logToConsole("Loaded saved article structure into textarea.", "info");
+            // Make Step 2 visible if structure exists
+            showElement(getElement('step2Section'), true);
+            showElement(getElement('structureContainer'), true); // Ensure container is visible
+            const toggleBtn = getElement('toggleStructureVisibilityBtn');
+            if (toggleBtn) toggleBtn.textContent = 'Hide'; // Assume user wants to see it initially
+        } else {
+             articleStructureTextarea.value = ''; // Clear if no structure or in bulk mode
+             // Keep Step 2 hidden unless bulkMode logic already hid it
+             if (!state.bulkMode) {
+                 showElement(getElement('step2Section'), false);
+             }
+        }
+    } else {
+        logToConsole("Structure textarea not found during UI update.", "warn");
+    }
     const linkTypeToggleElement = getElement('linkTypeToggle'); if(linkTypeToggleElement) linkTypeToggleElement.checked = !(state.linkTypeInternal ?? defaultSettings.linkTypeInternal);
     const linkTypeTextElement = getElement('linkTypeText'); if(linkTypeTextElement) linkTypeTextElement.textContent = (state.linkTypeInternal ?? defaultSettings.linkTypeInternal) ? 'Internal' : 'External';
 
@@ -610,4 +613,4 @@ export function displaySitemapUrlsUI(urls = []) {
     logToConsole(`Displayed ${urls.length} sitemap URLs.`, 'info');
 }
 
-console.log("article-ui.js loaded (v8.10 State Sync Fix)");
+console.log("article-ui.js loaded (v8.12 structure state)");

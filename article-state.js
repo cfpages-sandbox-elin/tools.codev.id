@@ -1,21 +1,19 @@
-// article-state.js (v8.7 SITEMAP_KEY Import Fix)
+// article-state.js v8.12 (Add articleStructure)
 import {
     defaultSettings, APP_STATE_STORAGE_KEY, BULK_PLAN_STORAGE_KEY,
-    BULK_ARTICLES_STORAGE_KEY, CUSTOM_MODELS_STORAGE_KEY,
-    // *** FIX: Import SITEMAP_STORAGE_KEY ***
-    SITEMAP_STORAGE_KEY
+    BULK_ARTICLES_STORAGE_KEY, CUSTOM_MODELS_STORAGE_KEY, SITEMAP_STORAGE_KEY
 } from './article-config.js';
 import { logToConsole } from './article-helpers.js';
 
 // --- In-Memory State ---
-let appState = { ...defaultSettings }; // Initialize with defaults
+let appState = { ...defaultSettings, articleStructure: '' };
 let customModels = { text: {}, image: {} };
-let bulkPlan = []; // Array of { keyword, title, slug, intent, status, filename, error? }
-let bulkArticles = {}; // Dictionary: { 'filename.md': 'markdown content...' }
+let bulkPlan = [];
+let bulkArticles = {};
 
 // --- State Getters ---
 export function getState() {
-    return { ...appState }; // Return a copy to prevent direct mutation
+    return { ...appState, articleStructure: appState.articleStructure || '' };
 }
 export function getCustomModels() {
     return { ...customModels };
@@ -37,41 +35,38 @@ export function loadState() {
     try {
         const savedState = localStorage.getItem(APP_STATE_STORAGE_KEY);
         if (savedState) {
-            // Merge saved state with defaults to ensure new defaults are included
-            appState = { ...defaultSettings, ...JSON.parse(savedState) };
+            const parsed = JSON.parse(savedState);
+            // Merge saved state with defaults, ensuring articleStructure is included
+            appState = { ...defaultSettings, articleStructure: '', ...parsed };
             logToConsole('App state loaded from local storage.', 'info');
         } else {
-            appState = { ...defaultSettings }; // Use defaults if nothing saved
+            // Use defaults, including the empty articleStructure
+            appState = { ...defaultSettings, articleStructure: '' };
             logToConsole('No saved app state found, using defaults.', 'info');
         }
-        // Load other specific states
         loadCustomModelsState();
         loadBulkPlanState();
         loadBulkArticlesState();
-
-        // Note: Sitemap URLs are loaded into appState directly if saved,
-        // so no separate sitemap load needed here unless stored separately.
-        // The reset function below *does* clear the separate key if it exists.
-
     } catch (error) {
         logToConsole(`Error loading app state: ${error.message}`, 'error');
-        appState = { ...defaultSettings }; // Reset to defaults on error
+        appState = { ...defaultSettings, articleStructure: '' }; // Reset to defaults on error
     }
-    return getState(); // Return the loaded/default state
+    return getState();
 }
 
 export function saveState() {
     try {
+        // Ensure articleStructure is included when saving
         localStorage.setItem(APP_STATE_STORAGE_KEY, JSON.stringify(appState));
-        // logToConsole('App state saved.', 'info'); // Can be noisy
     } catch (error) {
         logToConsole(`Error saving app state: ${error.message}`, 'error');
     }
 }
 
 export function updateState(newState) {
+    // Merge new state, preserving existing keys including articleStructure if not in newState
     appState = { ...appState, ...newState };
-    saveState(); // Save whenever state is updated
+    saveState();
 }
 
 // Custom Models
@@ -193,4 +188,4 @@ export function resetAllData() {
     }
 }
 
-console.log("article-state.js loaded");
+console.log("article-state.js v8.12 loaded (with articleStructure)");

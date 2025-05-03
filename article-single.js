@@ -1,20 +1,19 @@
-// article-single.js (v8.11 showElement Import Fix)
+// article-single.js (v8.12 Save/Clear Structure)
 import { getState, updateState } from './article-state.js';
-// *** FIX: Import showElement from article-helpers ***
 import { logToConsole, callAI, getArticleOutlines, constructImagePrompt, sanitizeFilename, slugify, showLoading, disableElement, delay, showElement } from './article-helpers.js';
 import { getElement, updateProgressBar, hideProgressBar, updateUIFromState } from './article-ui.js';
 import { languageOptions } from './article-config.js';
 
-let singleModeImagesToUpload = []; // State specific to single mode image uploads
+let singleModeImagesToUpload = [];
 
 // --- Generate Structure (and Title if needed) ---
 export async function handleGenerateStructure() {
     logToConsole("handleGenerateStructure called", "info");
-    const state = getState();
+    const state = getState(); // Get current state *before* clearing
     const ui = {
         keywordInput: getElement('keywordInput'),
         articleTitleInput: getElement('articleTitleInput'),
-        articleStructureTextarea: getElement('articleStructureTextarea'),
+        articleStructureTextarea: getElement('articleStructureTextarea'), // JS Key is 'articleStructureTextarea'
         step2Section: getElement('step2Section'),
         structureContainer: getElement('structureContainer'),
         toggleStructureVisibilityBtn: getElement('toggleStructureVisibilityBtn'),
@@ -24,34 +23,48 @@ export async function handleGenerateStructure() {
         button: getElement('generateSingleBtn'),
     };
 
-    if (!ui.articleTitleInput) { logToConsole("Article title input element not found.", "error"); alert("Error: Could not find the article title input field."); return; }
+    if (!ui.articleTitleInput || !ui.articleStructureTextarea || !ui.button ) {
+        logToConsole("Missing critical elements (title input, structure textarea, or button). Cannot proceed.", "error");
+        alert("Error: Could not find necessary input fields or button.");
+        return;
+    }
 
+    // --- Generate Title Logic (remains the same) ---
     let articleTitle = ui.articleTitleInput.value.trim();
-    logToConsole(`Initial article title from input: "${articleTitle}"`, "debug");
-
     if (!articleTitle) {
+        // ... (title generation logic as before) ...
         logToConsole('Article title is blank, generating one...', 'info');
         const titlePrompt = buildTitlePrompt();
         const titlePayload = { providerKey: state.textProvider, model: state.textModel, prompt: titlePrompt };
-        showLoading(ui.loadingIndicator, true);
-        disableElement(ui.button, true);
+        showLoading(ui.loadingIndicator, true); disableElement(ui.button, true);
         const titleResult = await callAI('generate', titlePayload, null, null);
-        showLoading(ui.loadingIndicator, false);
+        showLoading(ui.loadingIndicator, false); // Hide loader after title attempt
 
         if (titleResult?.success && titleResult.text) {
             articleTitle = titleResult.text.trim().replace(/^"|"$/g, '');
             logToConsole(`Generated Title: ${articleTitle}`, 'success');
             ui.articleTitleInput.value = articleTitle;
-            updateState({ articleTitle: articleTitle });
+            updateState({ articleTitle: articleTitle }); // Save title state
         } else {
             logToConsole('Failed to generate article title.', 'error');
             alert('Failed to generate article title. Please provide one manually or try again.');
-            disableElement(ui.button, false);
+            disableElement(ui.button, false); // Re-enable button
             return;
         }
     } else {
+        // Save manually entered title to state
         updateState({ articleTitle: articleTitle });
     }
+    // --- End Title Logic ---
+
+
+    // --- *** Clear Existing Structure Before Generating New One *** ---
+    logToConsole("Clearing previous structure before generating new one...", "info");
+    ui.articleStructureTextarea.value = ''; // Clear textarea visually
+    updateState({ articleStructure: '' }); // Clear structure from state
+    // Optionally hide Step 2 until new structure is generated? Or leave visible?
+    // showElement(getElement('step2Section'), false);
+    // --- End Clear Structure ---
 
     // --- 2. Generate Structure ---
     logToConsole('Generating article structure...', 'info');
@@ -64,20 +77,26 @@ export async function handleGenerateStructure() {
     disableElement(ui.button, false);
 
     if (structureResult?.success && structureResult.text) {
-        if (ui.articleStructureTextarea) { ui.articleStructureTextarea.value = structureResult.text; }
-        else { logToConsole("Article structure textarea not found to display results.", "error"); }
-
-        // *** FIX: Ensure showElement is available here ***
-        showElement(getElement('step2Section'), true); // Show Step 2
-        showElement(getElement('structureContainer'), true); // Show structure container
-        if(ui.toggleStructureVisibilityBtn) ui.toggleStructureVisibilityBtn.textContent = 'Hide';
-        showElement(getElement('step3Section'), false); // Hide Step 3
-        showElement(getElement('step4Section'), false); // Hide Step 4
-
+        const generatedStructure = structureResult.text;
         logToConsole('Structure generated successfully.', 'success');
+        ui.articleStructureTextarea.value = generatedStructure; // Display in textarea
+
+        // *** Save the newly generated structure to state ***
+        updateState({ articleStructure: generatedStructure });
+        logToConsole('Saved generated structure to state.', 'info');
+
+        // Show Step 2 and related elements
+        showElement(getElement('step2Section'), true);
+        showElement(getElement('structureContainer'), true);
+        if(ui.toggleStructureVisibilityBtn) ui.toggleStructureVisibilityBtn.textContent = 'Hide';
+        showElement(getElement('step3Section'), false);
+        showElement(getElement('step4Section'), false);
+
     } else {
         logToConsole('Failed to generate structure.', 'error');
         alert(`Failed to generate structure. Error: ${structureResult?.error || 'Unknown error'}`);
+        // Leave Step 2 hidden or show with empty textarea? Let's hide it again.
+        showElement(getElement('step2Section'), false);
     }
 }
 
@@ -372,4 +391,4 @@ function replacePlaceholderInTextarea(textarea, placeholderId, filename, finalIm
     // }
 }
 
-console.log("article-single.js loaded (v8.11 fix)"); // Update version marker
+console.log("article-single.js loaded (v8.12 structure state)");

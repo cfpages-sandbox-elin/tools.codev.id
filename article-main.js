@@ -183,6 +183,8 @@ function setupStep2Listeners() {
     const linkTypeText = getElement('linkTypeText');
     const generateArticleBtn = getElement('generateArticleBtn');
     const articleTitleInput = getElement('articleTitleInput');
+    // *** Get the structure textarea element ***
+    const articleStructureTextarea = getElement('articleStructureTextarea');
 
     toggleStructureVisibilityBtn?.addEventListener('click', () => {
         if (structureContainer) { const isHidden = structureContainer.classList.toggle('hidden'); toggleStructureVisibilityBtn.textContent = isHidden ? 'Show' : 'Hide'; }
@@ -193,6 +195,16 @@ function setupStep2Listeners() {
     });
     articleTitleInput?.addEventListener('blur', (e) => { updateState({ articleTitle: e.target.value }); });
     generateArticleBtn?.addEventListener('click', handleGenerateArticle);
+
+    // *** Add listener to save manual structure edits ***
+    articleStructureTextarea?.addEventListener('blur', (e) => {
+        const currentStructure = e.target.value;
+        // Only update state if the content has actually changed from what's stored
+        if (getState().articleStructure !== currentStructure) {
+            logToConsole("Saving manually edited structure to state...", 'info');
+            updateState({ articleStructure: currentStructure });
+        }
+    });
 }
 function setupStep3Listeners() {
     const previewHtmlCheckbox = getElement('previewHtmlCheckbox');
@@ -261,4 +273,4 @@ function setupBulkModeListeners() {
 logToConsole("article-main.js evaluating. Setting up DOMContentLoaded listener.", "debug");
 document.addEventListener('DOMContentLoaded', initializeApp, { once: true });
 
-console.log("article-main.js loaded (v8.10 State Sync Fix)"); // Update version marker
+console.log("article-main.js loaded (v8.12 structure state)");
