@@ -1,11 +1,12 @@
-// article-bulk.js
-import { getState, getBulkPlan, updateBulkPlanItem, addBulkArticle, saveBulkArticlesState, getBulkArticle, getAllBulkArticles, setBulkPlan } from './article-state.js'; // Added setBulkPlan
-import { logToConsole, callAI, sanitizeFilename, slugify, getArticleOutlines, constructImagePrompt, delay } from './article-helpers.js'; // Import helpers
+// article-bulk.js (v8.13 OutlineV2 Alignment)
+import { getState, getBulkPlan, updateBulkPlanItem, addBulkArticle, saveBulkArticlesState, getBulkArticle, getAllBulkArticles, setBulkPlan } from './article-state.js';
+import { logToConsole, callAI, sanitizeFilename, slugify, getArticleOutlinesV2, constructImagePrompt, delay } from './article-helpers.js';
 import { getElement, updatePlanItemStatusUI, updateProgressBar, hideProgressBar, renderPlanningTable } from './article-ui.js';
 import { languageOptions } from './article-config.js';
 
 let bulkImagesToUpload = [];
 let isBulkRunning = false;
+let currentBulkPlan = []; // Keep a local copy during generation
 
 // --- Parse and Prepare Keywords ---
 export function prepareKeywords() {
@@ -51,105 +52,132 @@ export async function handleGeneratePlan() {
 // --- Start Bulk Generation ---
 export async function handleStartBulkGeneration() {
     if (isBulkRunning) { logToConsole("Bulk generation already running.", "warn"); return; }
-    const plan = getBulkPlan();
-    if (plan.length === 0) { alert("Planning table is empty."); return; }
-    // if (!validateInputs()) return; // Optional re-validation
+    currentBulkPlan = getBulkPlan(); // Get a fresh copy at the start
+    if (currentBulkPlan.length === 0) { alert("Planning table is empty."); return; }
 
     isBulkRunning = true;
     logToConsole("Starting bulk article generation...", "info");
-    const ui = { button: getElement('startBulkGenerationBtn'), bulkGenProgress: getElement('bulkGenerationProgress'), bulkCurrentNum: getElement('bulkCurrentNum'), bulkTotalNum: getElement('bulkTotalNum'), bulkCurrentKeyword: getElement('bulkCurrentKeyword'), uploadProgressContainer: getElement('bulkUploadProgressContainer'), uploadProgressBar: getElement('bulkUploadProgressBar'), uploadProgressText: getElement('bulkUploadProgressText') };
+    const ui = { 
+        button: getElement('startBulkGenerationBtn'),
+        bulkGenProgress: getElement('bulkGenerationProgress'),
+        bulkCurrentNum: getElement('bulkCurrentNum'),
+        bulkTotalNum: getElement('bulkTotalNum'),
+        bulkCurrentKeyword: getElement('bulkCurrentKeyword'),
+        uploadProgressContainer: getElement('bulkUploadProgressContainer'),
+        uploadProgressBar: getElement('bulkUploadProgressBar'),
+        uploadProgressText: getElement('bulkUploadProgressText')
+    };
     disableElement(ui.button, true); showElement(ui.bulkGenProgress, true);
-    ui.bulkTotalNum.textContent = plan.length;
-    hideProgressBar(null, ui.uploadProgressContainer, ui.uploadProgressText);
-    bulkImagesToUpload = [];
+    if(ui.bulkTotalNum) ui.bulkTotalNum.textContent = currentBulkPlan.length;
+    hideProgressBar(ui.uploadProgressBar, ui.uploadProgressContainer, ui.uploadProgressText);
+    bulkImagesToUpload = []; // Reset image queue
 
-    for (let i = 0; i < plan.length; i++) {
-        const item = plan[i];
-        if (item.status === 'Completed' || item.status?.startsWith('Completed')) { logToConsole(`Skipping completed item: ${item.keyword}`, 'info'); continue; }
+    for (let i = 0; i < currentBulkPlan.length; i++) {
+        const item = currentBulkPlan[i]; // Use the local copy
+        // Check status based on potentially updated state (if user interacted)
+        const currentItemState = getBulkPlan().find(p => p.keyword === item.keyword); // Find current status
+        if (currentItemState?.status === 'Completed' || currentItemState?.status?.startsWith('Completed')) {
+            logToConsole(`Skipping completed item: ${item.keyword}`, 'info');
+            // Ensure UI reflects completion if not already done
+            updatePlanItemStatusUI(i, currentItemState.status, currentItemState.error);
+            continue;
+        }
 
-        ui.bulkCurrentNum.textContent = i + 1; ui.bulkCurrentKeyword.textContent = item.keyword;
-        updatePlanItemStatusUI(i, 'Generating'); updateBulkPlanItem(i, { status: 'Generating', error: null });
+
+        if(ui.bulkCurrentNum) ui.bulkCurrentNum.textContent = i + 1;
+        if(ui.bulkCurrentKeyword) ui.bulkCurrentKeyword.textContent = item.keyword;
+        updatePlanItemStatusUI(i, 'Generating');
+        updateBulkPlanItem(i, { status: 'Generating', error: null }); // Update main state
 
         try {
-            // Generate Structure
+            // Generate Structure string first
             logToConsole(`Generating structure for: ${item.keyword}`, 'info');
-            const structurePrompt = buildBulkStructurePrompt(item); // Use local helper
-            const structurePayload = buildBulkPayload(structurePrompt); // Use local helper
+            const structurePrompt = buildBulkStructurePrompt(item);
+            const structurePayload = buildBulkPayload(structurePrompt);
             const structureResult = await callAI('generate', structurePayload, null, null);
             if (!structureResult?.success || !structureResult.text) throw new Error(`Structure failed: ${structureResult?.error || 'No text'}`);
+
             const structure = structureResult.text;
-            const outlines = getArticleOutlines(structure); // Use helper
-            if (outlines.length === 0) throw new Error("No outlines parsed.");
+            // *** Use the V2 parser ***
+            const outlineSections = getArticleOutlinesV2(structure); // [{heading, points}, ...]
+            if (outlineSections.length === 0) throw new Error("No primary sections parsed from structure.");
 
-            // Generate Sections & Images
+            // Generate Sections & Images based on V2 outlines
             let combinedArticleContent = ''; let previousSectionContent = '';
-            const state = getState(); // Get current state for image settings
+            const state = getState(); // Get current global state for image/linking settings
             const doImageGeneration = state.generateImages;
+            const imageStorageType = doImageGeneration ? state.imageStorage : 'none';
 
-            for (let j = 0; j < outlines.length; j++) {
-                const currentOutline = outlines[j];
-                logToConsole(`Generating section ${j+1}/${outlines.length} for: ${item.keyword}`, 'info');
+            // *** Loop through V2 outline sections ***
+            for (let j = 0; j < outlineSections.length; j++) {
+                const section = outlineSections[j]; // section = { heading, points }
+                logToConsole(`Generating section ${j+1}/${outlineSections.length} ("${section.heading}") for: ${item.keyword}`, 'info');
 
-                // Text
-                const textPrompt = buildBulkTextPrompt(item, currentOutline, previousSectionContent); // Use local helper
-                const textPayload = buildBulkPayload(textPrompt); // Use local helper
+                // --- Text Generation ---
+                // *** Use new payload builder V2 ***
+                const textPrompt = buildBulkTextPayloadV2(item, section, previousSectionContent);
+                const textPayload = buildBulkPayload(textPrompt); // buildBulkPayload just wraps provider/model
                 const textResult = await callAI('generate', textPayload, null, null);
-                if (!textResult?.success || !textResult.text) throw new Error(`Text failed section ${j+1}: ${textResult?.error || 'No text'}`);
-                const currentSectionText = textResult.text.trim() + '\n\n';
-                combinedArticleContent += currentSectionText; previousSectionContent = currentSectionText;
+                if (!textResult?.success || !textResult.text) throw new Error(`Text failed section ${j+1} ("${section.heading}"): ${textResult?.error || 'No text'}`);
 
-                // Image
+                const currentSectionText = textResult.text.trim() + '\n\n'; // Use Markdown newlines
+                combinedArticleContent += currentSectionText;
+                previousSectionContent = currentSectionText;
+
+                // --- Image Generation (if enabled) ---
                 if (doImageGeneration) {
-                    const imagePayload = buildBulkImagePayload(item, currentSectionText, currentOutline, j + 1); // Use local helper
+                    // Use section.heading for context
+                    const imagePayload = buildBulkImagePayload(item, currentSectionText, section.heading, j + 1);
                     const imageResult = await callAI('generate_image', imagePayload, null, null);
                     if (imageResult?.success && imageResult.imageData) {
                         const filename = imagePayload.filename;
-                        const altText = `Image for ${currentOutline.substring(0, 50)}`;
+                        const altText = `Image for ${section.heading.substring(0, 50)}`; // Use heading
                         const placeholderId = `img-placeholder-${filename.replace(/\./g, '-')}`;
-                        if (state.imageStorage === 'github') {
-                            bulkImagesToUpload.push({ filename: filename, base64: imageResult.imageData, articleFilename: item.filename, placeholderId: placeholderId }); // Pass placeholderId
-                            combinedArticleContent += `[Uploading image: ${filename}...]` + '\n\n'; // Markdown placeholder
+                        if (imageStorageType === 'github') {
+                            bulkImagesToUpload.push({ filename: filename, base64: imageResult.imageData, articleFilename: item.filename, placeholderId: placeholderId });
+                            combinedArticleContent += `[Uploading image: ${filename}...]` + '\n\n';
                             logToConsole(`Image ${filename} queued for GitHub upload.`, 'info');
-                        } else {
+                        } else { // base64
                             combinedArticleContent += `![${altText}](data:image/png;base64,${imageResult.imageData})` + '\n\n';
                             logToConsole(`Image for section ${j+1} embedded as base64.`, 'success');
                         }
                     } else {
-                        logToConsole(`Failed image gen section ${j+1}. Error: ${imageResult?.error}`, 'warn');
+                        logToConsole(`Failed image gen section ${j+1}. Error: ${imageResult?.error || 'Unknown'}`, 'warn');
                         combinedArticleContent += `[Image generation failed for this section]\n\n`;
                     }
                 }
+                await delay(200); // Small delay between sections
             } // End section loop
 
             // Save Article & Update Status
-            const articleFilename = item.filename || `${item.slug}.md`; // Use existing filename or default
-            addBulkArticle(articleFilename, combinedArticleContent);
+            const articleFilename = item.filename || `${slugify(item.slug || item.keyword)}.md`;
+            addBulkArticle(articleFilename, combinedArticleContent); // Save to memory/localStorage
             updatePlanItemStatusUI(i, 'Completed');
-            updateBulkPlanItem(i, { status: 'Completed', filename: articleFilename, generatedContent: combinedArticleContent }); // Store content temporarily if needed
+            updateBulkPlanItem(i, { status: 'Completed', filename: articleFilename }); // Update main state
             logToConsole(`Article generation completed for: ${item.keyword}`, 'success');
 
         } catch (error) {
             logToConsole(`Failed processing item ${i+1} (${item.keyword}): ${error.message}`, 'error');
             updatePlanItemStatusUI(i, 'Failed', error.message);
-            updateBulkPlanItem(i, { status: 'Failed', error: error.message });
+            updateBulkPlanItem(i, { status: 'Failed', error: error.message }); // Update main state
         }
-        await delay(500);
+        await delay(500); // Delay between keywords
     } // End main bulk loop
 
-    saveBulkArticlesState(); // Save all generated articles
+    saveBulkArticlesState(); // Persist all generated articles
 
     // Upload Images if needed
     const finalState = getState();
     if (finalState.generateImages && finalState.imageStorage === 'github' && bulkImagesToUpload.length > 0) {
-        await uploadBulkImagesToGithub(); // Use local helper
+        await uploadBulkImagesToGithub();
     } else {
-        hideProgressBar(null, ui.uploadProgressContainer, ui.uploadProgressText);
+        hideProgressBar(ui.uploadProgressBar, ui.uploadProgressContainer, ui.uploadProgressText);
     }
 
     // Finalize
     isBulkRunning = false; disableElement(ui.button, false); showElement(ui.bulkGenProgress, false);
     logToConsole("Bulk generation process finished.", "info");
-    alert("Bulk generation process complete.");
+    alert("Bulk generation process complete. Check statuses and download ZIP if needed.");
 }
 
 // --- Build Payload Functions (Bulk Mode Specific Helpers) ---
@@ -174,6 +202,45 @@ function buildBulkStructurePrompt(planItem) {
     return `Generate a detailed article structure/outline for an article titled "${planItem.title}" (intent: ${planItem.intent}) about the keyword "${planItem.keyword}".\n- Language: ${state.language}${state.dialect ? ` (${state.dialect} dialect)` : ''}\n- Target Audience: ${state.audience}\n- Tone: ${state.tone}\n${state.gender ? `- Author Gender: ${state.gender}` : ''}\n${state.age ? `- Author Age: ${state.age}` : ''}\n- Purpose(s): ${state.purpose.join(', ')}\n${state.purposeUrl && state.purpose.includes('Promote URL') ? ` - Promo URL: ${state.purposeUrl}` : ''}\n${state.purposeCta && state.purpose.some(p => p.startsWith('Promote') || p === 'Generate Leads') ? ` - CTA: ${state.purposeCta}` : ''}\n${state.readerName ? `- Reader Name: ${state.readerName}` : ''}\n${state.customSpecs ? `- Other Details: ${state.customSpecs}` : ''}\nInstructions: Output ONLY the structure using clear headings/bullets. No intro/conclusion.`;
 }
 
+// *** NEW: V2 Payload builder for Bulk Text ***
+function buildBulkTextPayloadV2(planItem, section, previousContext) {
+    const state = getState(); // Get global settings like linking preferences
+    const allPlanItems = getBulkPlan(); // Get full plan for internal linking context
+
+    // Internal Linking Context
+    const otherSlugs = allPlanItems
+        .filter(p => p.slug && p.slug !== planItem.slug) // Exclude self
+        .map(p => `/${p.slug}`) // Format as relative paths
+        .slice(0, 8); // Limit suggestions
+
+    // External Linking Context (from sitemap)
+    const sitemapUrls = state.sitemapUrls || [];
+    const externalUrls = sitemapUrls.slice(0, 5); // Limit suggestions
+
+    // Build Linking Instructions
+    let linkingInstructions = '\n\nLinking Instructions (Optional):\n';
+    const linkTypePref = state.linkTypeInternal ? 'Internal (use relative paths like /slug)' : 'External (use full URLs)';
+    linkingInstructions += `- Link Type Preference: ${linkTypePref}.\n`;
+    if (otherSlugs.length > 0 && state.linkTypeInternal) {
+        linkingInstructions += `- Consider linking naturally to related internal topics: ${otherSlugs.join(', ')}\n`;
+    }
+    if (externalUrls.length > 0 && !state.linkTypeInternal) {
+        linkingInstructions += `- Consider linking naturally to relevant external URLs:\n${externalUrls.join('\n')}\n`;
+    }
+    linkingInstructions += '- Aim for 1-3 relevant links total within this section, only if contextually appropriate.\n';
+
+    // Build Points Guidance
+    let pointsGuidance = '';
+    if (section.points && section.points.length > 0) {
+        pointsGuidance = `\nKey points/subtopics to cover in this section:\n- ${section.points.join('\n- ')}\n`;
+    }
+
+    // Construct the Main Prompt
+    const prompt = `Generate the Markdown article content ONLY for the section titled or about: "${section.heading}".\nThis section belongs to an article about the keyword "${planItem.keyword}" with the title "${planItem.title}" (User Intent: ${planItem.intent}).\n${pointsGuidance}\nContinue naturally from the previous context.\nPrevious Context (end of last section):\n---\n${previousContext ? previousContext.slice(-500) : '(Start of article)'}\n---\n\nOverall Article Specifications:\n- Language: ${state.language}${state.dialect ? ` (${state.dialect} dialect)` : ''}\n- Audience: ${state.audience}\n- Tone: ${state.tone}\n${state.gender ? `- Author Gender: ${state.gender}\n` : ''}${state.age ? `- Author Age: ${state.age}\n` : ''}- Purpose(s): ${state.purpose.join(', ')}\n${state.purposeUrl && state.purpose.includes('Promote URL') ? ` - Promo URL: ${state.purposeUrl}\n` : ''}${state.purposeCta && state.purpose.some(p => p.startsWith('Promote') || p === 'Generate Leads') ? ` - CTA: ${state.purposeCta}\n` : ''}${state.readerName ? `- Reader Name: ${state.readerName}\n` : ''}${state.customSpecs ? `- Other Details: ${state.customSpecs}\n` : ''}${linkingInstructions}\nInstructions:\n- Write ONLY the Markdown content for the current section: "${section.heading}".\n- Use the provided key points as essential guidance for the content.\n- Do NOT repeat the main section heading ("${section.heading}") unless it fits naturally as a Markdown heading (e.g., ## Sub Heading).\n- Ensure smooth transition from previous context.\n- Use standard Markdown formatting ONLY.\n- Do NOT add introductory or concluding remarks about the writing process or the section itself. Focus solely on generating the body content for this specific section.`;
+
+    return prompt;
+}
+
 function buildBulkTextPrompt(planItem, currentOutline, previousContext) {
     const state = getState(); const plan = getBulkPlan();
     const otherSlugs = plan.filter(p => p.slug && p.slug !== planItem.slug).map(p => p.slug).slice(0, 10);
@@ -184,12 +251,14 @@ function buildBulkTextPrompt(planItem, currentOutline, previousContext) {
     return `Generate the Markdown article content ONLY for the section/outline: "${currentOutline}"\nThis is part of an article titled "${planItem.title}" about keyword "${planItem.keyword}".\nPrevious Context (end of last section):\n---\n${previousContext ? previousContext.slice(-500) : '(Start)'}\n---\nOverall Specs:\n- Language: ${state.language}${state.dialect ? ` (${state.dialect})` : ''} - Audience: ${state.audience} - Tone: ${state.tone} ${state.gender ? `- Gender: ${state.gender}` : ''} ${state.age ? `- Age: ${state.age}` : ''} - Purpose(s): ${state.purpose.join(', ')} ${state.purposeUrl && state.purpose.includes('Promote URL') ? ` - Promo URL: ${state.purposeUrl}` : ''} ${state.purposeCta && state.purpose.some(p => p.startsWith('Promote') || p === 'Generate Leads') ? ` - CTA: ${state.purposeCta}` : ''} ${state.readerName ? `- Reader: ${state.readerName}` : ''} ${state.customSpecs ? `- Details: ${state.customSpecs}` : ''}\n${linkingInstructions}\nInstructions:\n- Write ONLY Markdown content for "${currentOutline}". Do NOT repeat heading. Ensure smooth transition. Use standard Markdown. No intro/concluding remarks.`;
 }
 
-function buildBulkImagePayload(planItem, sectionContent, sectionTitle, sectionIndex) {
+function buildBulkImagePayload(planItem, sectionContent, sectionHeading, sectionIndex) {
     const state = getState();
-    const filename = sanitizeFilename(`${planItem.slug}-${slugify(sectionTitle)}-${Date.now()}-${sectionIndex}.png`);
+    const baseFilename = sanitizeFilename(`${slugify(planItem.slug || planItem.keyword)}-${slugify(sectionHeading)}`);
+    const filename = `${baseFilename}-${Date.now()}-${sectionIndex}.png`;
     const imageSettings = { imageSubject: state.imageSubject, imageStyle: state.imageStyle, imageStyleModifiers: state.imageStyleModifiers, imageText: state.imageText };
-    const imagePrompt = constructImagePrompt(sectionContent, sectionTitle, imageSettings); // Use helper
-    return { providerKey: state.imageProvider, model: state.imageModel, prompt: imagePrompt, filename: filename, numImages: state.numImages || 1, aspectRatio: state.imageAspectRatio, style: state.imageStyle || undefined, text: state.imageText || undefined };
+    const imagePrompt = constructImagePrompt(sectionContent, sectionHeading, imageSettings); // Use sectionHeading
+    const imageModel = state.useCustomImageModel ? state.customImageModel : state.imageModel;
+    return { providerKey: state.imageProvider, model: imageModel, prompt: imagePrompt, filename: filename, aspectRatio: state.imageAspectRatio };
 }
 
 // --- GitHub Image Upload Function (Bulk Mode Helper) ---
@@ -260,4 +329,4 @@ export async function handleDownloadZip() {
     } catch (error) { logToConsole(`Error generating ZIP: ${error.message}`, 'error'); alert("Failed to generate ZIP file."); }
 }
 
-console.log("article-bulk.js loaded");
+console.log("article-bulk.js loaded (v8.13 OutlineV2 Alignment)");
