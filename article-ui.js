@@ -1,7 +1,8 @@
-// article-ui.js (Load structure state)
+// article-ui.js (v8.13 Counts + Content State)
 import { textProviders, imageProviders, languageOptions, defaultSettings } from './article-config.js';
 import { getState, getCustomModelState, updateState } from './article-state.js';
-import { logToConsole, showElement, findCheapestModel, callAI, disableElement } from './article-helpers.js';
+// *** Import getArticleOutlinesV2 for counting ***
+import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2 } from './article-helpers.js';
 
 // --- DOM Element References (Centralized) ---
 let domElements = {}; // Keep private to this module
@@ -98,7 +99,10 @@ const elementIdMap = {
     spinOutputContainer: 'spin_output_container',
     spunArticleDisplay: 'spun_article_display',
     consoleLogContainer: 'consoleLogContainer',
-    consoleLog: 'consoleLog'
+    consoleLog: 'consoleLog',
+    structureCountDisplay: 'structureCountDisplay', // ADDED
+    wordCountDisplay: 'wordCountDisplay',           // ADDED
+    charCountDisplay: 'charCountDisplay'            // ADDED
 };
 
 // Keys for elements retrieved with querySelectorAll
@@ -111,7 +115,6 @@ const querySelectorAllKeys = {
 const querySelectorKeys = {
     planningTableBody: '#planningTable tbody'
 };
-
 
 export function cacheDomElements() {
     logToConsole("Attempting to cache DOM elements...", "info");
@@ -455,6 +458,35 @@ export function updateUIBasedOnMode(isBulkMode) {
     // logToConsole(`--- Finished updateUIBasedOnMode ---`, "debug");
 }
 
+// *** NEW: Update Word/Character Counts ***
+export function updateCounts(text) {
+    const wordCountEl = getElement('wordCountDisplay');
+    const charCountEl = getElement('charCountDisplay');
+    if (!wordCountEl || !charCountEl) return;
+
+    const textContent = text || ''; // Handle null/undefined
+    const wordCount = textContent.trim().split(/\s+/).filter(Boolean).length; // Split by whitespace, filter empty
+    const charCount = textContent.length;
+
+    wordCountEl.textContent = `Words: ${wordCount}`;
+    charCountEl.textContent = `Chars: ${charCount}`;
+}
+
+// *** NEW: Update Structure Section Count Display ***
+export function updateStructureCountDisplay(structureText) {
+    const countDisplayEl = getElement('structureCountDisplay');
+    if (!countDisplayEl) return;
+
+    if (!structureText) {
+        countDisplayEl.textContent = `Sections: 0`;
+        return;
+    }
+
+    // Use the V2 parser logic just to get the count
+    const sections = getArticleOutlinesV2(structureText);
+    countDisplayEl.textContent = `Sections: ${sections.length}`;
+}
+
 export function updateUIFromState(state) {
     logToConsole("Updating UI from loaded state...", "info");
     if (!state) { logToConsole("Cannot update UI: state is null.", "error"); return; }
@@ -529,29 +561,51 @@ export function updateUIFromState(state) {
 
     // 8. Update Step 2+ Elements
     const articleTitleInputElement = getElement('articleTitleInput'); if (articleTitleInputElement) articleTitleInputElement.value = state.articleTitle || '';
+    const linkTypeToggleElement = getElement('linkTypeToggle'); if(linkTypeToggleElement) linkTypeToggleElement.checked = !(state.linkTypeInternal ?? defaultSettings.linkTypeInternal);
+    const linkTypeTextElement = getElement('linkTypeText'); if(linkTypeTextElement) linkTypeTextElement.textContent = (state.linkTypeInternal ?? defaultSettings.linkTypeInternal) ? 'Internal' : 'External';
+    
+    // Load Saved Structure
     const articleStructureTextarea = getElement('articleStructureTextarea');
+    let initialStructure = ''; // Keep track for count update
     if (articleStructureTextarea) {
-        // Populate textarea ONLY if structure exists in state AND we are in SINGLE mode
         if (state.articleStructure && !state.bulkMode) {
-            articleStructureTextarea.value = state.articleStructure;
+            initialStructure = state.articleStructure;
+            articleStructureTextarea.value = initialStructure;
             logToConsole("Loaded saved article structure into textarea.", "info");
-            // Make Step 2 visible if structure exists
             showElement(getElement('step2Section'), true);
-            showElement(getElement('structureContainer'), true); // Ensure container is visible
+            showElement(getElement('structureContainer'), true);
             const toggleBtn = getElement('toggleStructureVisibilityBtn');
-            if (toggleBtn) toggleBtn.textContent = 'Hide'; // Assume user wants to see it initially
+            if (toggleBtn) toggleBtn.textContent = 'Hide';
         } else {
-             articleStructureTextarea.value = ''; // Clear if no structure or in bulk mode
-             // Keep Step 2 hidden unless bulkMode logic already hid it
-             if (!state.bulkMode) {
-                 showElement(getElement('step2Section'), false);
-             }
-        }
+             articleStructureTextarea.value = '';
+             if (!state.bulkMode) showElement(getElement('step2Section'), false);
+        } 
     } else {
         logToConsole("Structure textarea not found during UI update.", "warn");
     }
-    const linkTypeToggleElement = getElement('linkTypeToggle'); if(linkTypeToggleElement) linkTypeToggleElement.checked = !(state.linkTypeInternal ?? defaultSettings.linkTypeInternal);
-    const linkTypeTextElement = getElement('linkTypeText'); if(linkTypeTextElement) linkTypeTextElement.textContent = (state.linkTypeInternal ?? defaultSettings.linkTypeInternal) ? 'Internal' : 'External';
+    // *** Update structure count display on load ***
+    updateStructureCountDisplay(initialStructure);
+
+    // *** Load Saved Generated Article ***
+    const generatedArticleTextarea = getElement('generatedArticleTextarea');
+    let initialArticleContent = ''; // Keep track for count update
+    if (generatedArticleTextarea) {
+        if (state.generatedArticleContent && !state.bulkMode) {
+             initialArticleContent = state.generatedArticleContent;
+             generatedArticleTextarea.value = initialArticleContent;
+             logToConsole("Loaded saved generated article content.", "info");
+             // Show Step 3 if content exists?
+             showElement(getElement('step3Section'), true);
+        } else {
+             generatedArticleTextarea.value = '';
+              // Keep Step 3 hidden unless bulkMode logic hid it
+             if (!state.bulkMode) {
+                 showElement(getElement('step3Section'), false);
+             }
+        }
+    }
+    // *** Update word/char counts on load ***
+    updateCounts(initialArticleContent);
 
     // 9. Bulk Plan Rendering
     if (state.bulkMode) { renderPlanningTable(getBulkPlan()); }
@@ -613,4 +667,4 @@ export function displaySitemapUrlsUI(urls = []) {
     logToConsole(`Displayed ${urls.length} sitemap URLs.`, 'info');
 }
 
-console.log("article-ui.js loaded (v8.12 structure state)");
+console.log("article-ui.js loaded (v8.13 Counts + Content State)");
