@@ -1,4 +1,4 @@
-// article-state.js v8.12 (Add articleStructure)
+// article-state.js (v8.13 Add generatedArticleContent)
 import {
     defaultSettings, APP_STATE_STORAGE_KEY, BULK_PLAN_STORAGE_KEY,
     BULK_ARTICLES_STORAGE_KEY, CUSTOM_MODELS_STORAGE_KEY, SITEMAP_STORAGE_KEY
@@ -6,14 +6,23 @@ import {
 import { logToConsole } from './article-helpers.js';
 
 // --- In-Memory State ---
-let appState = { ...defaultSettings, articleStructure: '' };
+let appState = {
+    ...defaultSettings,
+    articleStructure: '',
+    generatedArticleContent: '' // Add state for generated article
+};
 let customModels = { text: {}, image: {} };
 let bulkPlan = [];
 let bulkArticles = {};
 
 // --- State Getters ---
 export function getState() {
-    return { ...appState, articleStructure: appState.articleStructure || '' };
+    // Ensure new keys are always part of the returned state copy
+    return {
+        ...appState,
+        articleStructure: appState.articleStructure || '',
+        generatedArticleContent: appState.generatedArticleContent || ''
+    };
 }
 export function getCustomModels() {
     return { ...customModels };
@@ -36,12 +45,16 @@ export function loadState() {
         const savedState = localStorage.getItem(APP_STATE_STORAGE_KEY);
         if (savedState) {
             const parsed = JSON.parse(savedState);
-            // Merge saved state with defaults, ensuring articleStructure is included
-            appState = { ...defaultSettings, articleStructure: '', ...parsed };
+            // Merge, ensuring new defaults are present if not in saved state
+            appState = {
+                ...defaultSettings,
+                articleStructure: '',
+                generatedArticleContent: '',
+                ...parsed
+            };
             logToConsole('App state loaded from local storage.', 'info');
         } else {
-            // Use defaults, including the empty articleStructure
-            appState = { ...defaultSettings, articleStructure: '' };
+            appState = { ...defaultSettings, articleStructure: '', generatedArticleContent: '' };
             logToConsole('No saved app state found, using defaults.', 'info');
         }
         loadCustomModelsState();
@@ -49,14 +62,13 @@ export function loadState() {
         loadBulkArticlesState();
     } catch (error) {
         logToConsole(`Error loading app state: ${error.message}`, 'error');
-        appState = { ...defaultSettings, articleStructure: '' }; // Reset to defaults on error
+        appState = { ...defaultSettings, articleStructure: '', generatedArticleContent: '' }; // Reset
     }
     return getState();
 }
 
 export function saveState() {
     try {
-        // Ensure articleStructure is included when saving
         localStorage.setItem(APP_STATE_STORAGE_KEY, JSON.stringify(appState));
     } catch (error) {
         logToConsole(`Error saving app state: ${error.message}`, 'error');
@@ -64,7 +76,6 @@ export function saveState() {
 }
 
 export function updateState(newState) {
-    // Merge new state, preserving existing keys including articleStructure if not in newState
     appState = { ...appState, ...newState };
     saveState();
 }
@@ -188,4 +199,4 @@ export function resetAllData() {
     }
 }
 
-console.log("article-state.js v8.12 loaded (with articleStructure)");
+console.log("article-state.js v8.13 loaded (with structure/article content)");
