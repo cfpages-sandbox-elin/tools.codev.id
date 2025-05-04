@@ -1,7 +1,8 @@
-// article-single.js (v8.12 Save/Clear Structure)
+// article-single.js (v8.13 Use New Parser & State)
 import { getState, updateState } from './article-state.js';
-import { logToConsole, callAI, getArticleOutlines, constructImagePrompt, sanitizeFilename, slugify, showLoading, disableElement, delay, showElement } from './article-helpers.js';
-import { getElement, updateProgressBar, hideProgressBar, updateUIFromState } from './article-ui.js';
+// *** Import getArticleOutlinesV2 ***
+import { logToConsole, callAI, getArticleOutlinesV2, constructImagePrompt, sanitizeFilename, slugify, showLoading, disableElement, delay, showElement } from './article-helpers.js';
+import { getElement, updateProgressBar, hideProgressBar, updateStructureCountDisplay } from './article-ui.js'; // Add updateStructureCountDisplay
 import { languageOptions } from './article-config.js';
 
 let singleModeImagesToUpload = [];
@@ -59,9 +60,10 @@ export async function handleGenerateStructure() {
 
 
     // --- *** Clear Existing Structure Before Generating New One *** ---
-    logToConsole("Clearing previous structure before generating new one...", "info");
-    ui.articleStructureTextarea.value = ''; // Clear textarea visually
-    updateState({ articleStructure: '' }); // Clear structure from state
+    logToConsole("Clearing previous structure...", "info");
+    ui.articleStructureTextarea.value = '';
+    updateState({ articleStructure: '' });
+    updateStructureCountDisplay(''); // Update count display
     // Optionally hide Step 2 until new structure is generated? Or leave visible?
     // showElement(getElement('step2Section'), false);
     // --- End Clear Structure ---
@@ -70,33 +72,31 @@ export async function handleGenerateStructure() {
     logToConsole('Generating article structure...', 'info');
     const structurePrompt = buildStructurePrompt(articleTitle);
     const structurePayload = { providerKey: state.textProvider, model: state.textModel, prompt: structurePrompt };
-    showLoading(ui.loadingIndicator, true);
-    disableElement(ui.button, true);
+    showLoading(ui.loadingIndicator, true); disableElement(ui.button, true);
     const structureResult = await callAI('generate', structurePayload, null, null);
-    showLoading(ui.loadingIndicator, false);
-    disableElement(ui.button, false);
+    showLoading(ui.loadingIndicator, false); disableElement(ui.button, false);
 
     if (structureResult?.success && structureResult.text) {
         const generatedStructure = structureResult.text;
         logToConsole('Structure generated successfully.', 'success');
-        ui.articleStructureTextarea.value = generatedStructure; // Display in textarea
-
-        // *** Save the newly generated structure to state ***
-        updateState({ articleStructure: generatedStructure });
+        ui.articleStructureTextarea.value = generatedStructure;
+        updateState({ articleStructure: generatedStructure }); // Save raw structure
         logToConsole('Saved generated structure to state.', 'info');
 
-        // Show Step 2 and related elements
+        // *** Update the structure count display ***
+        updateStructureCountDisplay(generatedStructure);
+
         showElement(getElement('step2Section'), true);
         showElement(getElement('structureContainer'), true);
-        if(ui.toggleStructureVisibilityBtn) ui.toggleStructureVisibilityBtn.textContent = 'Hide';
+        const toggleBtn = getElement('toggleStructureVisibilityBtn');
+        if(toggleBtn) toggleBtn.textContent = 'Hide';
         showElement(getElement('step3Section'), false);
         showElement(getElement('step4Section'), false);
-
     } else {
         logToConsole('Failed to generate structure.', 'error');
         alert(`Failed to generate structure. Error: ${structureResult?.error || 'Unknown error'}`);
-        // Leave Step 2 hidden or show with empty textarea? Let's hide it again.
         showElement(getElement('step2Section'), false);
+        updateStructureCountDisplay(''); // Clear count on failure
     }
 }
 
@@ -124,10 +124,12 @@ export async function handleGenerateArticle() {
     if (!ui.articleStructureTextarea || !ui.generatedArticleTextarea || !ui.articleTitleInput || !ui.button) { logToConsole("Missing essential UI elements for article generation.", "error"); alert("Error: Cannot generate article due to missing UI components."); return; }
     const structure = ui.articleStructureTextarea.value.trim();
     if (!structure) { alert('Article structure is empty.'); return; }
-    const outlines = getArticleOutlines(structure);
-    if (outlines.length === 0) { alert('Could not parse outlines from the structure.'); return; }
+    const outlineSections = getArticleOutlinesV2(structure); // Returns [{heading, points}, ...]
+    if (outlineSections.length === 0) { alert('Could not parse primary sections from the structure. Please check format or simplify.'); return; }
 
+    // Reset UI and state
     ui.generatedArticleTextarea.value = '';
+    updateState({ generatedArticleContent: '' }); // Clear saved content state
     singleModeImagesToUpload = [];
     let previousSectionContent = '';
     let combinedArticleContent = '';
@@ -136,34 +138,40 @@ export async function handleGenerateArticle() {
     const outputFormat = state.format;
     const articleTitle = ui.articleTitleInput.value.trim() || state.keyword || 'untitled-article';
 
-    showElement(ui.generationProgressDiv, true); // Uses imported showElement implicitly
-    if(ui.totalSectionNumSpan) ui.totalSectionNumSpan.textContent = outlines.length;
-    hideProgressBar(ui.uploadProgressBar, ui.uploadProgressContainer, ui.uploadProgressText);
+    // Setup Progress Indicators
+    showElement(ui.generationProgressDiv, true);
+    if(ui.totalSectionNumSpan) ui.totalSectionNumSpan.textContent = outlineSections.length; // Use new outline length
+    hideProgressBar(getElement('uploadProgressBar'), getElement('uploadProgressContainer'), getElement('uploadProgressText'));
     disableElement(ui.button, true);
-    showLoading(ui.loadingIndicator, true); // Uses showElement internally
+    showLoading(getElement('articleLoadingIndicator'), true);
 
     try {
-        for (let i = 0; i < outlines.length; i++) {
-            const currentOutline = outlines[i];
+        // *** Loop through section objects ***
+        for (let i = 0; i < outlineSections.length; i++) {
+            const section = outlineSections[i]; // section = { heading, points }
             if(ui.currentSectionNumSpan) ui.currentSectionNumSpan.textContent = i + 1;
-            logToConsole(`Processing outline ${i+1}/${outlines.length}: "${currentOutline}"`, 'info');
+            logToConsole(`Processing Section ${i+1}/${outlineSections.length}: "${section.heading}"`, 'info');
 
-            const textPayload = buildSingleTextPayload(currentOutline, previousSectionContent, articleTitle);
+            const textPayload = buildSingleTextPayloadV2(section, previousSectionContent, articleTitle);
             const textResult = await callAI('generate', textPayload, null, null);
-            if (!textResult?.success || !textResult.text) { throw new Error(`Text generation failed for section ${i + 1} ("${currentOutline}"): ${textResult?.error || 'No text returned'}`); }
+            if (!textResult?.success || !textResult.text) { throw new Error(`Text generation failed for section ${i + 1} ("${section.heading}"): ${textResult?.error || 'No text returned'}`); }
+            
             const currentSectionText = textResult.text.trim() + (outputFormat === 'html' ? '\n\n' : '\n\n');
             combinedArticleContent += currentSectionText;
-            ui.generatedArticleTextarea.value = combinedArticleContent;
+            ui.generatedArticleTextarea.value = combinedArticleContent; // Update textarea
+            updateState({ generatedArticleContent: combinedArticleContent }); // Update state incrementally
             previousSectionContent = currentSectionText;
 
+            // --- Generate Image (if enabled) ---
             let imagePlaceholder = '';
             if (doImageGeneration) {
-                logToConsole(`Generating image for section ${i + 1}...`, 'info');
-                const imagePayload = buildSingleImagePayload(currentSectionText, currentOutline, articleTitle, i + 1);
+                logToConsole(`Generating image for section "${section.heading}"...`, 'info');
+                // Pass section text *and* heading to payload builder
+                const imagePayload = buildSingleImagePayload(currentSectionText, section.heading, articleTitle, i + 1);
                 const imageResult = await callAI('generate_image', imagePayload, null, null);
                 if (imageResult?.success && imageResult.imageData) {
                     const filename = imagePayload.filename;
-                    const altText = `Image for ${currentOutline.substring(0, 50)}`;
+                    const altText = `Image for ${section.heading.substring(0, 50)}`; // Use heading for alt
                     const placeholderId = `img-placeholder-${filename.replace(/\./g, '-')}`;
                     if (imageStorageType === 'github') {
                         singleModeImagesToUpload.push({ filename: filename, base64: imageResult.imageData, placeholderId: placeholderId });
@@ -179,10 +187,11 @@ export async function handleGenerateArticle() {
                 }
                 combinedArticleContent += imagePlaceholder;
                 ui.generatedArticleTextarea.value = combinedArticleContent;
+                updateState({ generatedArticleContent: combinedArticleContent }); // Update state
             }
             ui.generatedArticleTextarea.scrollTop = ui.generatedArticleTextarea.scrollHeight;
             await delay(200);
-        }
+        } // End section loop
 
         showElement(ui.generationProgressDiv, false); // Uses imported showElement implicitly
 
@@ -223,7 +232,7 @@ function buildStructurePrompt(articleTitle) {
     return `Generate a detailed article structure/outline for an article titled "${articleTitle}" about the keyword "${state.keyword}".\n- Language: ${state.language}${state.dialect ? ` (${state.dialect} dialect)` : ''}\n- Target Audience: ${state.audience}\n- Tone: ${state.tone}\n${state.gender ? `- Author Gender Persona: ${state.gender}` : ''}\n${state.age ? `- Author Age Persona: ${state.age}` : ''}\n- Article Purpose(s): ${state.purpose.join(', ')}\n${state.purposeUrl && state.purpose.includes('Promote URL') ? `  - Promotional URL: ${state.purposeUrl}` : ''}\n${state.purposeCta && state.purpose.some(p => p.startsWith('Promote') || p === 'Generate Leads') ? `  - Desired Call to Action: ${state.purposeCta}` : ''}\n${state.readerName ? `- Address Reader As: ${state.readerName}` : ''}\n${state.customSpecs ? `- Other Details: ${state.customSpecs}` : ''}\n\nInstructions:\n- Create a logical structure covering the topic comprehensively.\n- Output only the structure using clear headings or bullet points.\n- Do not include intro/concluding remarks about the structure itself.`;
 }
 
-function buildSingleTextPayload(currentOutline, previousContext, articleTitle) {
+function buildSingleTextPayloadV2(section, previousContext, articleTitle) {
     const state = getState();
     let linkingInstructions = '';
     if (state.sitemapUrls && state.sitemapUrls.length > 0) {
@@ -231,12 +240,17 @@ function buildSingleTextPayload(currentOutline, previousContext, articleTitle) {
          linkingInstructions = `\n- Consider linking naturally to relevant URLs from this list if appropriate:\n${urlList}\n- Link Type Preference: ${state.linkTypeInternal ? 'Internal (relative paths like /slug)' : 'External (full URLs)'}. Aim for 1-2 relevant links per section if possible.`;
     }
 
-    const prompt = `Generate the article content ONLY for the following section/outline of an article titled "${articleTitle}", continuing naturally from the previous context if provided.\n\nSection Outline: "${currentOutline}"\n\nPrevious Context (end of last section):\n---\n${previousContext ? previousContext.slice(-500) : '(Start of article)'}\n---\n\nOverall Article Specifications:\n- Keyword: "${state.keyword}"\n- Language: ${state.language}${state.dialect ? ` (${state.dialect} dialect)` : ''}\n- Target Audience: ${state.audience}\n- Tone: ${state.tone}\n${state.gender ? `- Author Gender: ${state.gender}` : ''}\n${state.age ? `- Author Age: ${state.age}` : ''}\n- Purpose(s): ${state.purpose.join(', ')}\n${state.purposeUrl && state.purpose.includes('Promote URL') ? ` - Promo URL: ${state.purposeUrl}\n` : ''}${state.purposeCta && state.purpose.some(p => p.startsWith('Promote') || p === 'Generate Leads') ? ` - CTA: ${state.purposeCta}\n` : ''}${state.readerName ? `- Reader Name: ${state.readerName}\n` : ''}- Output Format: ${state.format}\n${state.customSpecs ? `- Other Details: ${state.customSpecs}\n` : ''}${linkingInstructions}\n\nInstructions:\n- Write ONLY the content for the current section outline: "${currentOutline}".\n- Do NOT repeat the outline heading unless it fits naturally within the flow (e.g., as an <h2>).\n- Ensure smooth transition from previous context.\n- Adhere strictly to ${state.format} format (${state.format === 'html' ? 'use only <p>, <h2>-<h6>, <ul>, <ol>, <li>, <b>, <i>, <a> tags' : 'use standard Markdown'}).\n- Do NOT add introductory or concluding remarks about the writing process or the section itself.`;
+    // Construct prompt using heading and points
+    let pointsGuidance = '';
+    if (section.points && section.points.length > 0) {
+        pointsGuidance = `\nKey points/subtopics to cover in this section:\n- ${section.points.join('\n- ')}\n`;
+    }
+    const prompt = `Generate the article content ONLY for the section titled or about: "${section.heading}".\nThis section is part of a larger article titled "${articleTitle}".\n${pointsGuidance}\nContinue naturally from the previous context if provided.\nPrevious Context (end of last section):\n---\n${previousContext ? previousContext.slice(-500) : '(Start of article)'}\n---\n\nOverall Article Specifications:\n- Keyword: "${state.keyword}"\n- Language: ${state.language}${state.dialect ? ` (${state.dialect} dialect)` : ''}\n- Target Audience: ${state.audience}\n- Tone: ${state.tone}\n${state.gender ? `- Author Gender: ${state.gender}\n` : ''}${state.age ? `- Author Age: ${state.age}\n` : ''}- Purpose(s): ${state.purpose.join(', ')}\n${state.purposeUrl && state.purpose.includes('Promote URL') ? ` - Promo URL: ${state.purposeUrl}\n` : ''}${state.purposeCta && state.purpose.some(p => p.startsWith('Promote') || p === 'Generate Leads') ? ` - CTA: ${state.purposeCta}\n` : ''}${state.readerName ? `- Reader Name: ${state.readerName}\n` : ''}- Output Format: ${state.format}\n${state.customSpecs ? `- Other Details: ${state.customSpecs}\n` : ''}${linkingInstructions}\n\nInstructions:\n- Write ONLY the content for the current section: "${section.heading}".\n- Use the provided key points as guidance for the content.\n- Do NOT repeat the main section heading ("${section.heading}") unless it fits naturally (e.g., as an <h2>).\n- Ensure smooth transition from previous context.\n- Adhere strictly to ${state.format} format (${state.format === 'html' ? 'use only <p>, <h2>-<h6>, <ul>, <ol>, <li>, <b>, <i>, <a> tags' : 'use standard Markdown'}).\n- Do NOT add introductory or concluding remarks about the writing process or the section itself. Focus solely on generating the body content for this specific section.`;
 
     return { providerKey: state.textProvider, model: state.textModel, prompt: prompt };
 }
 
-function buildSingleImagePayload(sectionContent, sectionTitle, articleTitle, sectionIndex) {
+function buildSingleImagePayload(sectionContent, sectionHeading, articleTitle, sectionIndex) {
     const state = getState();
     const baseFilename = sanitizeFilename(`${slugify(articleTitle)}-${slugify(sectionTitle)}`);
     const filename = `${baseFilename}-${Date.now()}-${sectionIndex}.png`;
@@ -391,4 +405,4 @@ function replacePlaceholderInTextarea(textarea, placeholderId, filename, finalIm
     // }
 }
 
-console.log("article-single.js loaded (v8.12 structure state)");
+console.log("article-single.js loaded (v8.13 OutlineV2 + Content State)");
