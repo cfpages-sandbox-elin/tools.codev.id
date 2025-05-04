@@ -299,11 +299,100 @@
         </div> 
     </section>
     
-    <section id="step1_5" class="compact-section hidden"> <h2 class="text-lg font-semibold mb-3 text-gray-600 border-b pb-2">Step 1.5: Planning Table 📊</h2> <p class="text-sm text-gray-600 mb-2">Review and optionally edit the generated plan before starting bulk generation.</p> <div id="planningTableContainer"> <table id="planningTable" class="min-w-full divide-y divide-gray-200 text-sm"> <thead> <tr> <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Keyword</th> <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Title</th> <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Slug</th> <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Intent</th> <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Status</th> </tr> </thead> <tbody class="bg-white divide-y divide-gray-200"> </tbody> </table> </div> <div class="mt-4 text-right space-x-2"> <button id="startBulkGenerationBtn" class="compact-button"> Start Bulk Generation ▶️ <span id="bulkLoadingIndicator" class="hidden"><span class="loader"></span></span> </button> <button id="downloadBulkZipBtn" class="compact-button bg-green-600 hover:bg-green-700"> Download as Zip 💾 </button> </div> <div id="bulkGenerationProgress" class="text-sm text-center text-gray-600 mt-2 hidden">Generating article <span id="bulkCurrentNum">1</span> of <span id="bulkTotalNum">1</span> (<span id="bulkCurrentKeyword">...</span>)...</div> <div id="bulkUploadProgressContainer" class="w-full bg-gray-200 rounded-full h-2.5 mt-2 hidden"> <div id="bulkUploadProgressBar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div> </div> <div id="bulkUploadProgressText" class="text-sm text-center text-gray-600 mt-1 hidden">Uploading article 1 of 1...</div> </section>
-    <section id="step2" class="compact-section hidden"> <div class="flex justify-between items-center mb-2 border-b pb-2"> <h2 class="text-lg font-semibold text-gray-600">Step 2: Refine Title, Structure & Links 📐🔗</h2> <button id="toggleStructureVisibility" class="text-sm text-indigo-600 hover:underline">Hide</button> </div> <div class="mb-3"> <label for="articleTitle" class="compact-label">Article Title (Optional - AI will generate if blank):</label><br> <input type="text" id="articleTitle" class="compact-input w-2/3" placeholder="Enter article title..."> </div> <div id="structureContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4"> <div class="md:col-span-2"> <label for="article_structure" class="compact-label">Generated Structure (Editable):</label> <br><textarea id="article_structure" rows="10" class="compact-textarea w-full" placeholder="AI will generate the article structure here..."></textarea> </div> <div class="md:col-span-1"> <label for="sitemapUrlsList" class="compact-label">Sitemap URLs (for Linking):</label> <div id="sitemapUrlsList" class="mb-2"> <em class="text-gray-400">No sitemap loaded.</em> </div> <div class="flex items-center justify-between text-sm"> <span class="text-gray-700">Link Type:</span> <label for="linkTypeToggle" class="toggle-switch"> <input type="checkbox" id="linkTypeToggle"> <span class="slider"><span class="dot"></span></span> </label> <span id="linkTypeText" class="font-medium text-indigo-700 w-16 text-right">Internal</span> </div> <p class="text-xs text-gray-500 mt-1">Toggle for Internal (relative) or External (absolute) links.</p> </div> </div> <div class="mt-3 text-right"> <button id="generateArticleBtn" class="compact-button"> Generate Full Article ✍️🖼️ <span id="articleLoadingIndicator" class="hidden"><span class="loader"></span></span> </button> </div> <div id="generationProgress" class="text-sm text-center text-gray-600 mt-2 hidden">Generating section <span id="currentSectionNum">1</span> of <span id="totalSectionNum">1</span>...</div> <div id="uploadProgressContainer" class="w-full bg-gray-200 rounded-full h-2.5 mt-2 hidden"> <div id="uploadProgressBar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div> </div> <div id="uploadProgressText" class="text-sm text-center text-gray-600 mt-1 hidden">Uploading image 1 of 1...</div> </section>
-    <section id="step3" class="compact-section hidden"> <h2 class="text-lg font-semibold mb-3 text-gray-600 border-b pb-2">Step 3: Review & Edit Article 📝</h2> <label for="generated_article" class="compact-label">Generated Article (Editable):</label> <div id="article_output_container" class="border border-gray-300 rounded-md p-1 bg-gray-50 min-h-[200px] max-h-[450px] overflow-y-auto"> <textarea id="generated_article" rows="12" class="compact-textarea w-full h-full border-none focus:ring-0 bg-transparent" placeholder="AI will generate the full article here..."></textarea> <div id="html_preview" class="prose max-w-none hidden p-2"></div> </div> <div class="mt-2 flex justify-between items-center"> <label class="flex items-center space-x-2 text-sm cursor-pointer"> <input type="checkbox" id="preview_html_checkbox" class="rounded text-indigo-600 focus:ring-indigo-500"> <span>Preview HTML</span> </label> <button id="enableSpinningBtn" class="compact-button"> Enable Spinning 🔄 <span id="spinLoadingIndicator" class="hidden"><span class="loader"></span></span> </button> </div> </section>
-    <section id="step4" class="compact-section hidden"> <h2 class="text-lg font-semibold mb-3 text-gray-600 border-b pb-2">Step 4: Spin Content 🌀</h2> <p class="text-sm text-gray-600 mb-2">Select text in the article area below, then click the "Spin Selected Text" button.</p> <div class="mb-2 text-right"> <button id="spinSelectedBtn" class="compact-button" disabled> Spin Selected Text ✨ <span id="spinActionLoadingIndicator" class="hidden"><span class="loader"></span></span> </button> </div> <label for="spun_article_display" class="compact-label">Spinnable Article (Editable):</label> <div id="spin_output_container" class="border border-gray-300 rounded-md p-2 bg-gray-50 min-h-[200px] max-h-[450px] overflow-y-auto"> <div id="spun_article_display" contenteditable="true" class="compact-textarea w-full h-full border-none focus:outline-none focus:ring-0 min-h-[200px]" placeholder="Article content will appear here for spinning..."></div> </div> <p class="text-xs text-gray-500 mt-2">Spintax: <code class="bg-gray-200 px-1 rounded">{opt1|opt2}</code> Nested: <code class="bg-gray-200 px-1 rounded">{opt1|{nest1|nest2}|opt3}</code>.</p> </section>
-    <div id="consoleLogContainer"> <h3 class="text-md font-semibold mb-2 text-gray-400">Console Log 🪵</h3> <pre id="consoleLog"></pre> </div>
+    <section id="step1_5" class="compact-section hidden"> 
+        <h2 class="text-lg font-semibold mb-3 text-gray-600 border-b pb-2">Step 1.5: Planning Table 📊</h2> 
+        <p class="text-sm text-gray-600 mb-2">Review and optionally edit the generated plan before starting bulk generation.</p> 
+        <div id="planningTableContainer"> 
+            <table id="planningTable" class="min-w-full divide-y divide-gray-200 text-sm"> 
+                <thead> 
+                    <tr> 
+                        <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Keyword</th> 
+                        <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Title</th> 
+                        <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Slug</th> 
+                        <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Intent</th> 
+                        <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Status</th> 
+                    </tr> 
+                </thead> 
+                <tbody class="bg-white divide-y divide-gray-200"> </tbody> 
+            </table> 
+        </div> 
+        <div class="mt-4 text-right space-x-2"> 
+            <button id="startBulkGenerationBtn" class="compact-button"> Start Bulk Generation ▶️ <span id="bulkLoadingIndicator" class="hidden"><span class="loader"></span></span> </button> 
+            <button id="downloadBulkZipBtn" class="compact-button bg-green-600 hover:bg-green-700"> Download as Zip 💾 </button> 
+        </div> 
+        <div id="bulkGenerationProgress" class="text-sm text-center text-gray-600 mt-2 hidden">Generating article 
+            <span id="bulkCurrentNum">1</span> of <span id="bulkTotalNum">1</span> (<span id="bulkCurrentKeyword">...</span>)...
+        </div> 
+        <div id="bulkUploadProgressContainer" class="w-full bg-gray-200 rounded-full h-2.5 mt-2 hidden"> 
+            <div id="bulkUploadProgressBar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div> 
+        </div> 
+        <div id="bulkUploadProgressText" class="text-sm text-center text-gray-600 mt-1 hidden">Uploading article 1 of 1...</div> 
+    </section>
+    
+    <section id="step2" class="compact-section hidden"> 
+        <div class="flex justify-between items-center mb-2 border-b pb-2"> 
+            <h2 class="text-lg font-semibold text-gray-600">Step 2: Refine Title, Structure & Links 📐🔗</h2> 
+            <button id="toggleStructureVisibility" class="text-sm text-indigo-600 hover:underline">Hide</button> 
+        </div> 
+        <div class="mb-3"> 
+            <label for="articleTitle" class="compact-label">Article Title (Optional - AI will generate if blank):</label><br> 
+            <input type="text" id="articleTitle" class="compact-input w-2/3" placeholder="Enter article title..."> 
+        </div> 
+        <div id="structureContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4"> 
+            <div class="md:col-span-2"> 
+                <label for="article_structure" class="compact-label">Generated Structure (Editable):</label> <br>
+                <textarea id="article_structure" rows="10" class="compact-textarea w-full" placeholder="AI will generate the article structure here..."></textarea> 
+            </div> 
+            <div class="md:col-span-1"> 
+                <label for="sitemapUrlsList" class="compact-label">Sitemap URLs (for Linking):</label> 
+                <div id="sitemapUrlsList" class="mb-2"> <em class="text-gray-400">No sitemap loaded.</em> </div> 
+                <div class="flex items-center justify-between text-sm"> 
+                    <span class="text-gray-700">Link Type:</span> <label for="linkTypeToggle" class="toggle-switch"> <input type="checkbox" id="linkTypeToggle"> <span class="slider"><span class="dot"></span></span> </label> 
+                    <span id="linkTypeText" class="font-medium text-indigo-700 w-16 text-right">Internal</span> 
+                </div> 
+                <p class="text-xs text-gray-500 mt-1">Toggle for Internal (relative) or External (absolute) links.</p> 
+            </div> 
+        </div> 
+        <div class="mt-3 text-right"> 
+            <button id="generateArticleBtn" class="compact-button"> Generate Full Article ✍️🖼️ <span id="articleLoadingIndicator" class="hidden"><span class="loader"></span></span> </button> 
+        </div> 
+        <div id="generationProgress" class="text-sm text-center text-gray-600 mt-2 hidden">Generating section <span id="currentSectionNum">1</span> of <span id="totalSectionNum">1</span>...</div> 
+        <div id="uploadProgressContainer" class="w-full bg-gray-200 rounded-full h-2.5 mt-2 hidden"> 
+            <div id="uploadProgressBar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div> 
+        </div> 
+        <div id="uploadProgressText" class="text-sm text-center text-gray-600 mt-1 hidden">Uploading image 1 of 1...</div> 
+    </section>
+    
+    <section id="step3" class="compact-section hidden"> 
+        <h2 class="text-lg font-semibold mb-3 text-gray-600 border-b pb-2">Step 3: Review & Edit Article 📝</h2> 
+        <label for="generated_article" class="compact-label">Generated Article (Editable):</label> 
+        <div id="article_output_container" class="border border-gray-300 rounded-md p-1 bg-gray-50 min-h-[200px] max-h-[450px] overflow-y-auto"> 
+            <textarea id="generated_article" rows="12" class="compact-textarea w-full h-full border-none focus:ring-0 bg-transparent" placeholder="AI will generate the full article here..."></textarea> 
+            <div id="html_preview" class="prose max-w-none hidden p-2"></div> 
+        </div> 
+        <div class="mt-2 flex justify-between items-center"> 
+            <label class="flex items-center space-x-2 text-sm cursor-pointer"> <input type="checkbox" id="preview_html_checkbox" class="rounded text-indigo-600 focus:ring-indigo-500"> <span>Preview HTML</span> </label> 
+            <button id="enableSpinningBtn" class="compact-button"> Enable Spinning 🔄 <span id="spinLoadingIndicator" class="hidden"><span class="loader"></span></span> </button> 
+        </div> 
+    </section>
+
+    <section id="step4" class="compact-section hidden"> 
+        <h2 class="text-lg font-semibold mb-3 text-gray-600 border-b pb-2">Step 4: Spin Content 🌀</h2> 
+        <p class="text-sm text-gray-600 mb-2">Select text in the article area below, then click the "Spin Selected Text" button.</p> 
+        <div class="mb-2 text-right"> 
+            <button id="spinSelectedBtn" class="compact-button" disabled> Spin Selected Text ✨ <span id="spinActionLoadingIndicator" class="hidden"><span class="loader"></span></span> </button> 
+        </div> 
+        <label for="spun_article_display" class="compact-label">Spinnable Article (Editable):</label> 
+        <div id="spin_output_container" class="border border-gray-300 rounded-md p-2 bg-gray-50 min-h-[200px] max-h-[450px] overflow-y-auto"> 
+            <div id="spun_article_display" contenteditable="true" class="compact-textarea w-full h-full border-none focus:outline-none focus:ring-0 min-h-[200px]" placeholder="Article content will appear here for spinning..."></div> 
+        </div> 
+        <p class="text-xs text-gray-500 mt-2">Spintax: <code class="bg-gray-200 px-1 rounded">{opt1|opt2}</code> Nested: <code class="bg-gray-200 px-1 rounded">{opt1|{nest1|nest2}|opt3}</code>.</p> 
+    </section>
+
+    <div id="consoleLogContainer"> 
+        <h3 class="text-md font-semibold mb-2 text-gray-400">Console Log 🪵</h3> 
+        <pre id="consoleLog"></pre> 
+    </div>
 
     <script type="module" src="article-config.js"></script>
     <script type="module" src="article-helpers.js"></script>
