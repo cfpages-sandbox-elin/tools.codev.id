@@ -1,8 +1,8 @@
-// article-single.js (v8.13 Use New Parser & State)
+// article-single.js (v8.13 + Live Counts Fix)
 import { getState, updateState } from './article-state.js';
-// *** Import getArticleOutlinesV2 ***
 import { logToConsole, callAI, getArticleOutlinesV2, constructImagePrompt, sanitizeFilename, slugify, showLoading, disableElement, delay, showElement } from './article-helpers.js';
-import { getElement, updateProgressBar, hideProgressBar, updateStructureCountDisplay } from './article-ui.js'; // Add updateStructureCountDisplay
+// *** Import updateCounts ***
+import { getElement, updateProgressBar, hideProgressBar, updateStructureCountDisplay, updateCounts } from './article-ui.js';
 import { languageOptions } from './article-config.js';
 
 let singleModeImagesToUpload = [];
@@ -122,17 +122,19 @@ export async function handleGenerateArticle() {
     };
 
     if (!ui.articleStructureTextarea || !ui.generatedArticleTextarea || !ui.articleTitleInput || !ui.button) { logToConsole("Missing essential UI elements for article generation.", "error"); alert("Error: Cannot generate article due to missing UI components."); return; }
+    
     const structure = ui.articleStructureTextarea.value.trim();
     if (!structure) { alert('Article structure is empty.'); return; }
-    const outlineSections = getArticleOutlinesV2(structure); // Returns [{heading, points}, ...]
-    if (outlineSections.length === 0) { alert('Could not parse primary sections from the structure. Please check format or simplify.'); return; }
+    const outlineSections = getArticleOutlinesV2(structure);
+    if (outlineSections.length === 0) { alert('Could not parse primary sections from the structure.'); return; }
 
     // Reset UI and state
     ui.generatedArticleTextarea.value = '';
     updateState({ generatedArticleContent: '' }); // Clear saved content state
+    updateCounts(''); // Reset counts visually
     singleModeImagesToUpload = [];
     let previousSectionContent = '';
-    let combinedArticleContent = '';
+    let combinedArticleContent = ''; // Use this to build the full text
     const doImageGeneration = state.generateImages;
     const imageStorageType = doImageGeneration ? state.imageStorage : 'none';
     const outputFormat = state.format;
@@ -140,38 +142,39 @@ export async function handleGenerateArticle() {
 
     // Setup Progress Indicators
     showElement(ui.generationProgressDiv, true);
-    if(ui.totalSectionNumSpan) ui.totalSectionNumSpan.textContent = outlineSections.length; // Use new outline length
+    if(ui.totalSectionNumSpan) ui.totalSectionNumSpan.textContent = outlineSections.length;
     hideProgressBar(getElement('uploadProgressBar'), getElement('uploadProgressContainer'), getElement('uploadProgressText'));
     disableElement(ui.button, true);
     showLoading(getElement('articleLoadingIndicator'), true);
 
     try {
-        // *** Loop through section objects ***
         for (let i = 0; i < outlineSections.length; i++) {
-            const section = outlineSections[i]; // section = { heading, points }
+            const section = outlineSections[i];
             if(ui.currentSectionNumSpan) ui.currentSectionNumSpan.textContent = i + 1;
             logToConsole(`Processing Section ${i+1}/${outlineSections.length}: "${section.heading}"`, 'info');
 
             const textPayload = buildSingleTextPayloadV2(section, previousSectionContent, articleTitle);
             const textResult = await callAI('generate', textPayload, null, null);
             if (!textResult?.success || !textResult.text) { throw new Error(`Text generation failed for section ${i + 1} ("${section.heading}"): ${textResult?.error || 'No text returned'}`); }
-            
+
             const currentSectionText = textResult.text.trim() + (outputFormat === 'html' ? '\n\n' : '\n\n');
-            combinedArticleContent += currentSectionText;
-            ui.generatedArticleTextarea.value = combinedArticleContent; // Update textarea
-            updateState({ generatedArticleContent: combinedArticleContent }); // Update state incrementally
+            combinedArticleContent += currentSectionText; // Append to combined content
+            ui.generatedArticleTextarea.value = combinedArticleContent; // Update textarea visually
+            updateState({ generatedArticleContent: combinedArticleContent }); // Update state
+            // *** FIX: Call updateCounts after updating content ***
+            updateCounts(combinedArticleContent); // Update counts display
+
             previousSectionContent = currentSectionText;
 
-            // --- Generate Image (if enabled) ---
+            // --- Generate Image ---
             let imagePlaceholder = '';
             if (doImageGeneration) {
                 logToConsole(`Generating image for section "${section.heading}"...`, 'info');
-                // Pass section text *and* heading to payload builder
                 const imagePayload = buildSingleImagePayload(currentSectionText, section.heading, articleTitle, i + 1);
                 const imageResult = await callAI('generate_image', imagePayload, null, null);
                 if (imageResult?.success && imageResult.imageData) {
                     const filename = imagePayload.filename;
-                    const altText = `Image for ${section.heading.substring(0, 50)}`; // Use heading for alt
+                    const altText = `Image for ${section.heading.substring(0, 50)}`;
                     const placeholderId = `img-placeholder-${filename.replace(/\./g, '-')}`;
                     if (imageStorageType === 'github') {
                         singleModeImagesToUpload.push({ filename: filename, base64: imageResult.imageData, placeholderId: placeholderId });
@@ -181,17 +184,28 @@ export async function handleGenerateArticle() {
                         imagePlaceholder = outputFormat === 'html' ? `<img src="data:image/png;base64,${imageResult.imageData}" alt="${altText}" class="mx-auto my-4 rounded shadow">\n\n` : `![${altText}](data:image/png;base64,${imageResult.imageData})\n\n`;
                         logToConsole(`Image for section ${i + 1} embedded as base64.`, 'success');
                     }
+                    combinedArticleContent += imagePlaceholder; // Append placeholder
+                    ui.generatedArticleTextarea.value = combinedArticleContent; // Update textarea again
+                    updateState({ generatedArticleContent: combinedArticleContent }); // Update state
+                    // *** FIX: Call updateCounts again after adding placeholder/image ***
+                    updateCounts(combinedArticleContent); // Update counts display
+
                 } else {
-                    logToConsole(`Failed image gen for section ${i + 1}. Error: ${imageResult?.error || 'Unknown'}`, 'warn');
+                    logToConsole(`Failed image gen section ${i + 1}. Error: ${imageResult?.error || 'Unknown'}`, 'warn');
                     imagePlaceholder = outputFormat === 'html' ? `\n\n<!-- Image generation failed -->\n\n` : `\n\n[Image generation failed]\n\n`;
+                    combinedArticleContent += imagePlaceholder; // Append failure message
+                    ui.generatedArticleTextarea.value = combinedArticleContent; // Update textarea
+                    updateState({ generatedArticleContent: combinedArticleContent }); // Update state
+                    // *** FIX: Call updateCounts again after adding failure message ***
+                     updateCounts(combinedArticleContent); // Update counts display
                 }
-                combinedArticleContent += imagePlaceholder;
-                ui.generatedArticleTextarea.value = combinedArticleContent;
-                updateState({ generatedArticleContent: combinedArticleContent }); // Update state
             }
             ui.generatedArticleTextarea.scrollTop = ui.generatedArticleTextarea.scrollHeight;
             await delay(200);
         } // End section loop
+
+        // Final update just in case
+        updateCounts(combinedArticleContent);
 
         showElement(ui.generationProgressDiv, false); // Uses imported showElement implicitly
 
@@ -383,26 +397,20 @@ function replacePlaceholderInTextarea(textarea, placeholderId, filename, finalIm
     }
 
     let replaced = false;
-    // Try replacing div placeholder first (HTML format)
     if (format === 'html' && textarea.value.includes(placeholderId)) {
          textarea.value = textarea.value.replace(placeholderDivRegex, replacementText);
          replaced = true;
-         // logToConsole(`Replaced DIV placeholder ${placeholderId} with: ${replacementText.substring(0,50)}...`, 'debug');
     }
-
-    // If div wasn't found/replaced, try text placeholder (Markdown or fallback)
     if (!replaced) {
         const originalLength = textarea.value.length;
         textarea.value = textarea.value.replace(placeholderTextRegex, replacementText);
-        if (textarea.value.length !== originalLength) {
-            replaced = true;
-             // logToConsole(`Replaced TEXT placeholder for ${filename} with: ${replacementText.substring(0,50)}...`, 'debug');
-        }
+        if (textarea.value.length !== originalLength) replaced = true;
     }
-
-    // if (!replaced) {
-    //      logToConsole(`Could not find placeholder for ${filename} (ID: ${placeholderId})`, 'warn');
-    // }
+    // *** FIX: Update counts after placeholder is replaced ***
+    if (replaced) {
+        updateCounts(textarea.value);
+        updateState({ generatedArticleContent: textarea.value }); // Also update state
+    }
 }
 
-console.log("article-single.js loaded (v8.13 OutlineV2 + Content State)");
+console.log("article-single.js loaded (v8.13 OutlineV2 + Content State + fix update count)");
