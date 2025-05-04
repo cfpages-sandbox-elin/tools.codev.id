@@ -82,6 +82,7 @@ export async function callAI(action, payload, loadingIndicator = null, buttonToD
     } catch (error) { console.error(`Action '${action}' Failed:`, error); logToConsole(`Error during action '${action}': ${error.message}`, 'error'); return { success: false, error: error.message }; }
     finally { if (loadingIndicator) showLoading(loadingIndicator, false); if (buttonToDisable) disableElement(buttonToDisable, false); else disableActionButtons(false); }
 }
+async function fetchWithRetry(url, options) { console.warn("Using dummy fetchWithRetry"); return fetch(url, options); } // Dummy
 
 // --- Model Helpers ---
 export function findCheapestModel(models = []) {
@@ -164,101 +165,138 @@ export async function fetchAndParseSitemap(sitemapUrl) {
 export const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 // --- Outline Parser ---
-export function getArticleOutlines(structureText) {
+export function getArticleOutlinesV2(structureText) {
     if (!structureText) return [];
-    logToConsole("Parsing article structure for outlines...", "info");
+    logToConsole("Parsing structure V2 (grouping enabled)...", "info");
 
     // Simple detection: check for common HTML tags
     const isHtmlLikely = /<[a-z][\s\S]*>/i.test(structureText) && (structureText.includes('<h') || structureText.includes('<li') || structureText.includes('<p>'));
 
     let outlines = [];
     if (isHtmlLikely) {
-        logToConsole("Detected HTML-like structure. Using DOM parser.", "debug");
-        outlines = parseHtmlStructure(structureText);
+        logToConsole("Detected HTML-like structure. Using DOM parser V2.", "debug");
+        outlines = parseHtmlStructureV2(structureText);
     } else {
-        logToConsole("Detected Markdown-like structure. Using Regex parser.", "debug");
-        outlines = parseMarkdownStructure(structureText);
+        logToConsole("Detected Markdown-like structure. Using Regex parser V2.", "debug");
+        outlines = parseMarkdownStructureV2(structureText);
     }
 
-    logToConsole(`Finished parsing. Found ${outlines.length} outlines.`, "info");
+    logToConsole(`Finished parsing V2. Found ${outlines.length} primary outline sections.`, "info");
     if (outlines.length === 0) {
-         logToConsole("Warning: No outlines were parsed from the structure text. Article generation might fail.", "warn");
+         logToConsole("Warning: No primary outlines parsed V2. Generation might use raw text or fail.", "warn");
+    } else if (outlines.length > 15) { // Add a sanity check
+        logToConsole(`Warning: Parsed ${outlines.length} primary sections. Structure might be too granular.`, "warn");
     }
+    // Returns array of objects: [{ heading: "...", points: ["...", "..."] }, ...]
     return outlines;
 }
 
-// --- *** NEW: HTML Structure Parser *** ---
-function parseHtmlStructure(htmlString) {
-    const outlines = [];
+// --- *** V2 HTML Parser - Grouping Logic *** ---
+function parseHtmlStructureV2(htmlString) {
+    const sections = [];
+    let currentSection = null;
+
     try {
-        // Create a temporary container element (doesn't need to be added to DOM)
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = htmlString;
 
-        // Select potential heading and list item elements
-        // Prioritize headings, then list items if headings are sparse? Or just combine? Let's combine for now.
-        const nodes = tempDiv.querySelectorAll('h1, h2, h3, h4, h5, h6, li');
+        // Iterate through direct children or relevant tags
+        // Querying all and then processing might be easier to handle nesting
+        const nodes = tempDiv.querySelectorAll('h1, h2, h3, h4, h5, h6, ul, ol, li, p'); // Include p for potential points
 
         nodes.forEach(node => {
-            // Get text content, which strips inner tags
-            let potentialOutline = node.textContent?.trim();
+            const tagName = node.tagName.toLowerCase();
+            const text = node.textContent?.trim();
+            if (!text) return; // Skip empty nodes
 
-            // Clean and Add if valid
-            if (potentialOutline) {
-                // Remove potential list numbers/bullets if they are part of textContent
-                potentialOutline = potentialOutline.replace(/^(\d+\.|[a-zA-Z]\.|[IVXLCDM]+\.|\*|-)\s*/, '').trim();
-                // Further filter out very short lines or lines that look like comments/instructions
-                if (potentialOutline.length > 3 && !potentialOutline.startsWith('(')) {
-                   logToConsole(`Parsed HTML Outline: "${potentialOutline}"`, "debug");
-                   outlines.push(potentialOutline);
-                } else {
-                    logToConsole(`Filtered out potential HTML outline: "${potentialOutline}"`, "debug");
+            // Check if it's a primary heading tag (adjust levels as needed)
+            if (['h1', 'h2', 'h3'].includes(tagName)) {
+                // If a section was already open, push it
+                if (currentSection) {
+                    sections.push(currentSection);
                 }
+                // Start new section
+                currentSection = { heading: text, points: [] };
+                 logToConsole(`V2 HTML Parser: New Section - Heading: "${text}"`, "debug");
             }
+            // Check if it's a list item and a section is active
+            else if (tagName === 'li' && currentSection) {
+                 let pointText = text.replace(/^(\d+\.|[a-zA-Z]\.|[IVXLCDM]+\.|\*|-)\s*/, '').trim(); // Clean list marker
+                 if (pointText.length > 3) {
+                     currentSection.points.push(pointText);
+                     logToConsole(`V2 HTML Parser: Added Point - "${pointText}"`, "debug");
+                 }
+            }
+             // Consider paragraphs as points if they follow a heading closely? (More complex)
+             // else if (tagName === 'p' && currentSection && currentSection.points.length === 0) {
+             //    // Maybe add if it seems like descriptive text for the heading? Heuristic needed.
+             // }
         });
+
+        // Push the last section if it exists
+        if (currentSection) {
+            sections.push(currentSection);
+        }
+
     } catch (error) {
-        logToConsole(`Error parsing HTML structure: ${error.message}. Falling back to simple split.`, "error");
-        // Fallback to basic line splitting if DOM parsing fails catastrophically
-        return htmlString.split('\n').map(line => line.trim()).filter(line => line.length > 3);
+        logToConsole(`Error parsing HTML structure V2: ${error.message}.`, "error");
+        // No reliable fallback for grouped parsing if HTML is broken
     }
-    return outlines;
+    return sections;
 }
 
-// --- *** Markdown Structure Parser (from previous version) *** ---
-function parseMarkdownStructure(markdownString) {
+
+// --- *** V2 Markdown Parser - Grouping Logic *** ---
+function parseMarkdownStructureV2(markdownString) {
     const lines = markdownString.split('\n');
-    const outlines = [];
-    const headingRegex = /^(#{1,6})\s+(.*)/;
-    const listRegex = /^(\s*)([-*]|\d+\.|[a-zA-Z]\.|[IVXLCDM]+\.)\s+(.*)/;
-    const boldRegex = /^\s*\*\*(.*?)\*\*\s*$/;
+    const sections = [];
+    let currentSection = null;
+
+    // Regex for primary headings (Markdown # or Bolded List Item like "- **I. ...**")
+    const primaryHeadingRegex = /^(?:(#{1,4})\s+(.*)|(\s*[-*]\s*\*\*)(.*?)(\*\*))/;
+    // Regex for secondary points (indented list items)
+    const pointRegex = /^(\s+)([-*]|\d+\.|[a-zA-Z]\.|[IVXLCDM]+\.)\s+(.*)/;
 
     lines.forEach(line => {
         const trimmedLine = line.trim();
         if (trimmedLine.length === 0) return;
 
-        let potentialOutline = null;
-        let match = trimmedLine.match(headingRegex);
-        if (match) { potentialOutline = match[2].trim(); }
-        else {
-            match = line.match(listRegex); // Use original line for list marker check
-            if (match) { potentialOutline = match[3].trim(); }
-            else {
-                 match = trimmedLine.match(boldRegex);
-                 if(match) { potentialOutline = match[1].trim(); }
-            }
-        }
+        let primaryMatch = line.match(primaryHeadingRegex); // Match on original line maybe needed for indent check? Use trimmed for content.
 
-        if (potentialOutline) {
-             potentialOutline = potentialOutline.replace(/^\**|\**$/g, '').trim(); // Clean surrounding asterisks
-             if (potentialOutline.length > 3 && !potentialOutline.startsWith('(')) {
-                // logToConsole(`Parsed MD Outline: "${potentialOutline}"`, "debug"); // Already logged in main func
-                outlines.push(potentialOutline);
-             } else {
-                 // logToConsole(`Filtered out potential MD outline: "${potentialOutline}"`, "debug");
-             }
+        if (primaryMatch) {
+            // Extract heading text (group 2 for #, group 4 for bolded list)
+            const headingText = (primaryMatch[2] || primaryMatch[4])?.trim();
+
+            if (headingText && headingText.length > 1) { // Basic validation
+                // Push previous section if exists
+                if (currentSection) {
+                    sections.push(currentSection);
+                }
+                // Start new section
+                currentSection = { heading: headingText, points: [] };
+                logToConsole(`V2 MD Parser: New Section - Heading: "${headingText}"`, "debug");
+            }
+        } else {
+            // If not a primary heading, check if it's a supporting point *for the current section*
+            let pointMatch = line.match(pointRegex);
+            if (pointMatch && currentSection) {
+                const pointText = pointMatch[3]?.trim();
+                // Add if valid point text
+                if (pointText && pointText.length > 3 && !pointText.startsWith('(') ) {
+                     currentSection.points.push(pointText);
+                     logToConsole(`V2 MD Parser: Added Point - "${pointText}"`, "debug");
+                }
+            }
+             // Ignore lines that are neither primary headings nor secondary points of an active section
         }
     });
-    return outlines;
+
+    // Push the last section after the loop finishes
+    if (currentSection) {
+        sections.push(currentSection);
+    }
+
+    return sections;
 }
 // --- End Outline Parsers ---
 
