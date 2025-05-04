@@ -1,11 +1,11 @@
-// article-main.js (v8.10 State Sync Fix)
+// article-main.js (v8.13 Add structure/content listeners)
 import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
-import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js'; // Correct imports
+import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
 import {
     cacheDomElements, getElement, populateAiProviders, populateTextModels,
     populateImageModels, updateUIFromState, updateUIBasedOnMode, toggleCustomModelUI,
     populateLanguagesUI, populateDialectsUI, toggleGithubOptions, checkApiStatus,
-    displaySitemapUrlsUI
+    displaySitemapUrlsUI, updateCounts, updateStructureCountDisplay
 } from './article-ui.js';
 import { languageOptions, imageProviders } from './article-config.js';
 import { handleGenerateStructure, handleGenerateArticle } from './article-single.js';
@@ -183,7 +183,6 @@ function setupStep2Listeners() {
     const linkTypeText = getElement('linkTypeText');
     const generateArticleBtn = getElement('generateArticleBtn');
     const articleTitleInput = getElement('articleTitleInput');
-    // *** Get the structure textarea element ***
     const articleStructureTextarea = getElement('articleStructureTextarea');
 
     toggleStructureVisibilityBtn?.addEventListener('click', () => {
@@ -199,13 +198,19 @@ function setupStep2Listeners() {
     // *** Add listener to save manual structure edits ***
     articleStructureTextarea?.addEventListener('blur', (e) => {
         const currentStructure = e.target.value;
-        // Only update state if the content has actually changed from what's stored
         if (getState().articleStructure !== currentStructure) {
             logToConsole("Saving manually edited structure to state...", 'info');
             updateState({ articleStructure: currentStructure });
         }
+        // *** Update count display after edit ***
+        updateStructureCountDisplay(currentStructure);
+    });
+     // Also update count on input for slightly more responsive feel (optional)
+     articleStructureTextarea?.addEventListener('input', (e) => {
+        updateStructureCountDisplay(e.target.value);
     });
 }
+
 function setupStep3Listeners() {
     const previewHtmlCheckbox = getElement('previewHtmlCheckbox');
     const generatedArticleTextarea = getElement('generatedArticleTextarea');
@@ -234,7 +239,20 @@ function setupStep3Listeners() {
             spunArticleDisplay.focus();
         } else { logToConsole("Could not enable spinning - required elements missing.", 'error'); }
     });
+    // *** Add listener for generated article textarea edits ***
+    generatedArticleTextarea?.addEventListener('input', (e) => {
+        const currentContent = e.target.value;
+        // Update counts live
+        updateCounts(currentContent);
+        // Optional: Debounce state saving if performance is an issue
+        // For simplicity, save on input for now (might trigger often)
+        // Check if content actually differs before saving might be good
+        if (getState().generatedArticleContent !== currentContent) {
+             updateState({ generatedArticleContent: currentContent });
+        }
+    });
 }
+
 function setupStep4Listeners() {
     const spunArticleDisplay = getElement('spunArticleDisplay');
     const spinSelectedBtn = getElement('spinSelectedBtn');
@@ -244,6 +262,7 @@ function setupStep4Listeners() {
     spunArticleDisplay?.addEventListener('focus', handleSelection);
     spinSelectedBtn?.addEventListener('click', handleSpinSelectedText);
 }
+
 function setupBulkModeListeners() {
     const startBulkGenerationBtn = getElement('startBulkGenerationBtn');
     const downloadBulkZipBtn = getElement('downloadBulkZipBtn');
@@ -273,4 +292,4 @@ function setupBulkModeListeners() {
 logToConsole("article-main.js evaluating. Setting up DOMContentLoaded listener.", "debug");
 document.addEventListener('DOMContentLoaded', initializeApp, { once: true });
 
-console.log("article-main.js loaded (v8.12 structure state)");
+console.log("article-main.js loaded (v8.13 Counts + Content State)");
