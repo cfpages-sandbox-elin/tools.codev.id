@@ -341,7 +341,8 @@
         <div id="structureContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4"> 
             <div class="md:col-span-2"> 
                 <label for="article_structure" class="compact-label">Generated Structure (Editable):</label> <br>
-                <textarea id="article_structure" rows="10" class="compact-textarea w-full" placeholder="AI will generate the article structure here..."></textarea> 
+                <textarea id="article_structure" rows="10" class="compact-textarea w-full" placeholder="AI will generate the article structure here..."></textarea>
+                <div id="structureCountDisplay" class="text-xs text-right text-gray-500 mt-1 pr-1">Sections: 0</div> 
             </div> 
             <div class="md:col-span-1"> 
                 <label for="sitemapUrlsList" class="compact-label">Sitemap URLs (for Linking):</label> 
@@ -369,6 +370,9 @@
         <div id="article_output_container" class="border border-gray-300 rounded-md p-1 bg-gray-50 min-h-[200px] max-h-[450px] overflow-y-auto"> 
             <textarea id="generated_article" rows="12" class="compact-textarea w-full h-full border-none focus:ring-0 bg-transparent" placeholder="AI will generate the full article here..."></textarea> 
             <div id="html_preview" class="prose max-w-none hidden p-2"></div> 
+            <div class="text-xs text-right text-gray-500 mt-1 pr-1">
+                <span id="wordCountDisplay">Words: 0</span> | <span id="charCountDisplay">Chars: 0</span>
+            </div>
         </div> 
         <div class="mt-2 flex justify-between items-center"> 
             <label class="flex items-center space-x-2 text-sm cursor-pointer"> <input type="checkbox" id="preview_html_checkbox" class="rounded text-indigo-600 focus:ring-indigo-500"> <span>Preview HTML</span> </label> 
