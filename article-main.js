@@ -1,4 +1,5 @@
-// article-main.js (v8.13 Add structure/content listeners)
+// article-main.js (v8.15 Spun Display Cache Fix)
+
 import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
 import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
 import {
@@ -21,18 +22,15 @@ function initializeApp() {
     logToConsole("DOMContentLoaded event fired. Initializing application...", "info");
     cacheDomElements();
 
-    // --- CRITICAL CHECK ---
+    // Critical Check (using JS keys)
     const criticalElementsCheck = [ 'aiProviderSelect', 'languageSelect', 'apiStatusDiv', 'audienceInput', 'bulkModeCheckbox' ];
     let criticalMissing = false;
     criticalElementsCheck.forEach(jsKey => { if (!getElement(jsKey)) { logToConsole(`FATAL: Critical element with JS key '${jsKey}' missing after cache attempt. Cannot initialize UI.`, "error"); criticalMissing = true; } });
     if (criticalMissing) { return; }
-    // --- End Critical Check ---
 
     logToConsole("Loading application state...", "info");
-    const initialState = loadState(); // Load state once
-
+    const initialState = loadState();
     logToConsole("Applying loaded state to UI...", "info");
-    // *** updateUIFromState now handles state synchronization internally ***
     updateUIFromState(initialState);
 
     logToConsole("Setting up event listeners...", "info");
@@ -232,24 +230,31 @@ function setupStep3Listeners() {
         }
     });
     enableSpinningBtn?.addEventListener('click', () => {
-        if (spunArticleDisplay && generatedArticleTextarea && step4Section) {
-            spunArticleDisplay.innerHTML = generatedArticleTextarea.value;
-            showElement(step4Section, true); // Uses imported showElement implicitly
-            highlightSpintax(spunArticleDisplay);
-            spunArticleDisplay.focus();
-        } else { logToConsole("Could not enable spinning - required elements missing.", 'error'); }
+        // Re-get elements within the handler for safety, in case they were removed/re-added
+        const currentGeneratedText = getElement('generatedArticleTextarea')?.value;
+        const spunDisplayTarget = getElement('spunArticleDisplay');
+        const step4Target = getElement('step4Section');
+
+        if (spunDisplayTarget && step4Target && currentGeneratedText !== undefined) {
+            logToConsole("Enable Spinning button clicked.", 'info');
+            spunDisplayTarget.innerHTML = currentGeneratedText; // Copy content
+            showElement(step4Target, true); // Show Step 4
+            highlightSpintax(spunDisplayTarget); // Highlight existing spintax
+            logToConsole("Spinning enabled, content copied to Step 4.", 'info');
+            spunDisplayTarget.focus(); // Focus the editable area
+        } else {
+             logToConsole("Could not enable spinning - required elements (spun display, step 4, or generated text) missing or unavailable.", 'error');
+             if(!spunDisplayTarget) console.error("spunArticleDisplay element is missing!");
+             if(!step4Target) console.error("step4Section element is missing!");
+             if(currentGeneratedText === undefined) console.error("generatedArticleTextarea element or its value is missing!");
+             alert("Error enabling spinning. Please check console.");
+        }
     });
     // *** Add listener for generated article textarea edits ***
     generatedArticleTextarea?.addEventListener('input', (e) => {
         const currentContent = e.target.value;
-        // Update counts live
-        updateCounts(currentContent);
-        // Optional: Debounce state saving if performance is an issue
-        // For simplicity, save on input for now (might trigger often)
-        // Check if content actually differs before saving might be good
-        if (getState().generatedArticleContent !== currentContent) {
-             updateState({ generatedArticleContent: currentContent });
-        }
+        updateCounts(currentContent); // Update counts live
+        if (getState().generatedArticleContent !== currentContent) { updateState({ generatedArticleContent: currentContent }); }
     });
 }
 
@@ -292,4 +297,4 @@ function setupBulkModeListeners() {
 logToConsole("article-main.js evaluating. Setting up DOMContentLoaded listener.", "debug");
 document.addEventListener('DOMContentLoaded', initializeApp, { once: true });
 
-console.log("article-main.js loaded (v8.13 Counts + Content State)");
+console.log("article-main.js loaded (v8.15 Spun Display Cache Fix)");

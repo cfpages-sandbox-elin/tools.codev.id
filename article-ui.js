@@ -1,7 +1,6 @@
-// article-ui.js (v8.13 Counts + Content State)
+// article-ui.js (v8.15 Spun Display Cache Fix)
 import { textProviders, imageProviders, languageOptions, defaultSettings } from './article-config.js';
 import { getState, getCustomModelState, updateState } from './article-state.js';
-// *** Import getArticleOutlinesV2 for counting ***
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2 } from './article-helpers.js';
 
 // --- DOM Element References (Centralized) ---
@@ -100,9 +99,9 @@ const elementIdMap = {
     spunArticleDisplay: 'spun_article_display',
     consoleLogContainer: 'consoleLogContainer',
     consoleLog: 'consoleLog',
-    structureCountDisplay: 'structureCountDisplay', // ADDED
-    wordCountDisplay: 'wordCountDisplay',           // ADDED
-    charCountDisplay: 'charCountDisplay'            // ADDED
+    structureCountDisplay: 'structureCountDisplay',
+    wordCountDisplay: 'wordCountDisplay',
+    charCountDisplay: 'charCountDisplay'
 };
 
 // Keys for elements retrieved with querySelectorAll
@@ -129,8 +128,12 @@ export function cacheDomElements() {
             domElements[key] = element;
         } else {
             logToConsole(`Failed to cache element with ID: '${htmlId}' (JS Key: ${key})`, 'error');
-            allFound = false;
-            domElements[key] = null;
+            // Only set allFound to false for *critical* elements if needed,
+            // but log error for all missing IDs regardless.
+            // if (['aiProviderSelect', 'languageSelect', ...].includes(key)) {
+            //     allFound = false;
+            // }
+             domElements[key] = null;
         }
     }
 
@@ -138,29 +141,24 @@ export function cacheDomElements() {
     for (const key in querySelectorAllKeys) {
         const selector = querySelectorAllKeys[key];
         const elements = document.querySelectorAll(selector);
-        if (elements && elements.length > 0) {
-            domElements[key] = elements; // Store the NodeList
-        } else {
-            logToConsole(`Failed to cache elements with selector: ${selector} (JS Key: ${key})`, 'warn');
-            domElements[key] = null; // Indicate not found or empty
-        }
+        if (elements && elements.length > 0) { domElements[key] = elements; }
+        else { logToConsole(`Failed/Empty cache for querySelectorAll: ${selector} (JS Key: ${key})`, 'warn'); domElements[key] = null; }
     }
 
     // Cache elements using querySelector
     for (const key in querySelectorKeys) {
         const selector = querySelectorKeys[key];
         const element = document.querySelector(selector);
-        if (element) {
-            domElements[key] = element;
-        } else {
-            logToConsole(`Failed to cache element with selector: ${selector} (JS Key: ${key})`, 'error');
-            allFound = false; // Consider single elements from querySelector critical
-            domElements[key] = null;
-        }
+        if (element) { domElements[key] = element; }
+        else { logToConsole(`Failed to cache element with querySelector: ${selector} (JS Key: ${key})`, 'error'); domElements[key] = null; /* allFound = false; */ } // Decide if these are critical
     }
 
-    if (allFound) { logToConsole("Core DOM Elements cached successfully.", "success"); }
-    else { logToConsole("One or more critical DOM elements failed to cache! UI will likely malfunction.", "error"); }
+    // Final log based on whether *all* getElementById attempts succeeded
+    const idKeys = Object.keys(elementIdMap);
+    const failedIdCount = idKeys.filter(key => domElements[key] === null).length;
+
+    if (failedIdCount === 0) { logToConsole("All getElementById elements cached successfully.", "success"); }
+    else { logToConsole(`${failedIdCount}/${idKeys.length} getElementById elements failed to cache! UI may malfunction.`, "error"); }
 }
 
 // getElement can now return single elements or NodeLists
@@ -667,4 +665,4 @@ export function displaySitemapUrlsUI(urls = []) {
     logToConsole(`Displayed ${urls.length} sitemap URLs.`, 'info');
 }
 
-console.log("article-ui.js loaded (v8.13 Counts + Content State)");
+console.log("article-ui.js loaded (v8.15 Spun Display Cache Fix)");
