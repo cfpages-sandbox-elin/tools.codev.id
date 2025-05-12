@@ -33,12 +33,14 @@ function initializeApp() {
     logToConsole("Applying loaded state to UI...", "info");
     updateUIFromState(initialState);
 
-    logToConsole("Setting up event listeners...", "info");
+    // Set up Step 4 listeners *after* state is loaded and applied
+    setupStep4Listeners();
+
+    logToConsole("Setting up other event listeners...", "info");
     setupConfigurationListeners();
     setupStep1Listeners();
     setupStep2Listeners();
     setupStep3Listeners();
-    setupStep4Listeners();
     setupBulkModeListeners();
 
     // Final mode check might be redundant now but doesn't hurt
