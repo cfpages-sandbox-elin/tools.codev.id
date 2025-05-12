@@ -238,6 +238,8 @@ function setupStep3Listeners() {
         if (spunDisplayTarget && step4Target && currentGeneratedText !== undefined) {
             logToConsole("Enable Spinning button clicked.", 'info');
             spunDisplayTarget.innerHTML = currentGeneratedText; // Copy content
+            spunDisplayTarget.textContent = currentGeneratedText; // Copy content while preserving line breaks
+            spunDisplayTarget.style.whiteSpace = 'pre-wrap'; // Ensure line breaks are displayed
             showElement(step4Target, true); // Show Step 4
             highlightSpintax(spunDisplayTarget); // Highlight existing spintax
             logToConsole("Spinning enabled, content copied to Step 4.", 'info');
