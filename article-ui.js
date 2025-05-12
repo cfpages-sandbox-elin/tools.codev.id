@@ -1,4 +1,4 @@
-// article-ui.js (v8.15 Spun Display Cache Fix)
+// article-ui.js (v8.16 fix warn supn_article_display)
 import { textProviders, imageProviders, languageOptions, defaultSettings } from './article-config.js';
 import { getState, getCustomModelState, updateState } from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2 } from './article-helpers.js';
@@ -164,14 +164,25 @@ export function cacheDomElements() {
 // getElement can now return single elements or NodeLists
 export function getElement(id) {
     const element = domElements[id];
+    
     // Check if the key exists and has a value (could be element or NodeList)
     if (element === undefined || element === null) {
-        // Check if it was expected to be a NodeList but was empty
-        if (querySelectorAllKeys[id] && element === null) {
-             logToConsole(`Attempted to get NodeList for key '${id}', but it was empty or not found during caching.`, 'warn');
+        // If not found in cache, try fetching directly from the DOM
+        const htmlId = elementIdMap[id];
+        if (htmlId) {
+            const liveElement = document.getElementById(htmlId);
+            if (liveElement) {
+                // Cache the live element for future use
+                domElements[id] = liveElement;
+                // logToConsole(`Found element '${id}' (${htmlId}) directly in DOM.`, 'debug'); // Optional: debug log
+                return liveElement;
+            }
         } else {
-            logToConsole(`Attempted to get element/NodeList '${id}', but it was not found during caching or is null.`, 'warn');
+             // Check if it was expected to be a NodeList but was empty
+             if (querySelectorAllKeys[id] && element === null) { logToConsole(`Attempted to get NodeList for key '${id}' (selector: ${querySelectorAllKeys[id]}), but it was empty or not found during caching.`, 'warn'); }
         }
+        // If still not found after trying cache and direct fetch
+        logToConsole(`Attempted to get element/NodeList '${id}', but it was not found during caching or directly in DOM.`, 'warn');
     }
     return element; // Return the element, NodeList, or null/undefined
 }
@@ -665,4 +676,4 @@ export function displaySitemapUrlsUI(urls = []) {
     logToConsole(`Displayed ${urls.length} sitemap URLs.`, 'info');
 }
 
-console.log("article-ui.js loaded (v8.15 Spun Display Cache Fix)");
+console.log("article-ui.js loaded (v8.16 fix warn)");
