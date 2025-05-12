@@ -2,7 +2,7 @@
 // Contains logic for spintax generation and highlighting
 
 import { getState } from './article-state.js';
-import { logToConsole, callAI } from './article-helpers.js';
+import { logToConsole, callAI, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
 import { getElement } from './article-ui.js';
 import { languageOptions } from './article-config.js'; // Import language options if needed for context
 
