@@ -60,7 +60,7 @@ export function highlightSpintax(element) {
 
 // --- Text Selection Handling ---
 export function handleSelection() {
-    const spunArticleDisplay = getElement('spun_article_display');
+    const spunArticleDisplay = getElement('spunArticleDisplay'); // Corrected ID
     const spinSelectedBtn = getElement('spinSelectedBtn');
     if (!spunArticleDisplay || !spinSelectedBtn) return;
 
@@ -86,7 +86,7 @@ export function handleSelection() {
 // --- Spin Selected Text ---
 export async function handleSpinSelectedText() {
     const spinSelectedBtn = getElement('spinSelectedBtn');
-    const spunArticleDisplay = getElement('spun_article_display');
+    const spunArticleDisplay = getElement('spunArticleDisplay'); // Corrected ID
     const loadingIndicator = getElement('spinActionLoadingIndicator');
 
     if (!selectedTextInfo || !selectedTextInfo.text || !spinSelectedBtn || !spunArticleDisplay) {
