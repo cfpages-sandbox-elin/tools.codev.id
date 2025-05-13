@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Website Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Basic styling inspired by article.html */
+ body { font-family: 'Inter', sans-serif; @apply bg-gray-100 text-gray-800 p-4 max-w-5xl mx-auto; }
+ input, textarea, button { padding: 0 5px !important;}
+ button, input, optgroup, select, textarea { border: 2px solid; }
+ .compact-section { @apply bg-white p-4 mb-4 rounded-lg shadow-md; }
+ .compact-label { @apply block text-sm font-medium text-gray-700 mb-1 whitespace-nowrap; }
+ .compact-input, .compact-select, .compact-textarea { @apply block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm; }
+ .compact-button { @apply inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed; }
+ .input-group { @apply mb-3; }
+ #output {
+ margin-top: 20px;
+ border: 1px solid #ccc;
+ padding: 10px;
+ background-color: #f9f9f9;
+ white-space: pre-wrap;
+ word-wrap: break-word;
+ overflow-x: auto; /* Add scroll for wide code */
+ }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+ <h1 class="text-2xl font-bold text-indigo-700 mb-4">AI Website Generator 🌐</h1>
+
+ <section id="websiteInputSection" class="compact-section">
+ <h2 class="text-lg font-semibold mb-3 text-gray-600 border-b pb-2">Website Details ✨</h2>
+ <div class="input-group">
+ <label for="websiteTitle" class="compact-label">Website Title / Business Name: <span class="text-red-500">*</span></label>
+ <input type="text" id="websiteTitle" class="compact-input" placeholder="e.g., My Awesome Business">
+ </div>
+ <div class="input-group">
+ <label for="websiteDescription" class="compact-label">Website Description / Purpose: <span class="text-red-500">*</span></label>
+ <textarea id="websiteDescription" rows="3" class="compact-textarea" placeholder="e.g., A single page website to showcase our services and contact information..."></textarea>
+ </div>
+ <div class="input-group">
+ <label for="targetAudience" class="compact-label">Target Audience: <span class="text-red-500">*</span></label>
+ <input type="text" id="targetAudience" class="compact-input" placeholder="e.g., Local homeowners looking for plumbing services">
+ </div>
+ </section>
+
+ <section id="googleMapsSection" class="compact-section">
+ <h2 class="text-lg font-semibold mb-3 text-gray-600 border-b pb-2">Google Maps Business Data (Optional) 📍</h2>
+ <p class="text-sm text-gray-600 mb-2">Paste the JSON data from Google Maps scraping here. This will be used to populate content.</p>
+ <div class="input-group">
+ <label for="googleMapsJson" class="compact-label">Google Maps JSON Data:</label>
+ <textarea id="googleMapsJson" rows="8" class="compact-textarea" placeholder='Paste your JSON data here, e.g., {"ll": "...", "places": [...]}'></textarea>
+ </div>
+ </section>
+
+ <section id="additionalInstructionsSection" class="compact-section">
+ <h2 class="text-lg font-semibold mb-3 text-gray-600 border-b pb-2">Additional Instructions (Optional) 📝</h2>
+ <p class="text-sm text-gray-600 mb-2">Provide any extra details or specific requirements for the AI.</p>
+ <div class="input-group">
+ <label for="additionalInstructions" class="compact-label">Custom Notes / Requirements:</label>
+ <textarea id="additionalInstructions" rows="4" class="compact-textarea" placeholder="e.g., Ensure the contact form is prominently displayed, Use a blue and white color scheme..."></textarea>
+ </div>
+ </section>
+
+ <!-- Section for Displaying Parsed Business Data and Selection -->
+ <section id="businessesListSection" class="compact-section">
+ <h2 class="text-lg font-semibold mb-3 text-gray-600 border-b pb-2">Select Businesses and Customize Style 📍🎨</h2>
+ <p class="text-sm text-gray-600 mb-2">After pasting JSON, businesses will appear here. Select which ones to include and set style preferences.</p>
+ <!-- This div will be populated by JavaScript with the list of businesses from the JSON -->
+ <div id="businessesList" class="mb-4">
+ <!-- Business items will be inserted here dynamically -->
+ </div>
+ <!-- Placeholder or area for color selection if needed (e.g., no logo detected, Google Place URL) -->
+ <!-- This can also be generated dynamically per business item -->
+ </section>
+
+ <section id="promptDraftSection" class="compact-section">
+ <h2 class="text-lg font-semibold mb-3 text-gray-600 border-b pb-2">Markdown Prompt Draft (Editable) 📄</h2>
+ <p class="text-sm text-gray-600 mb-2">Review and edit the prompt that will be sent to the AI.</p>
+ <textarea id="markdownPrompt" rows="10" class="compact-textarea" readonly></textarea>
+ <div class="mt-4 text-right">
+ <button id="generateWebsiteBtn" class="compact-button"> Generate Website Code 🤖 </button>
+ </div>
+ </section>
+
+ <section id="outputSection" class="compact-section hidden">
+ <h2 class="text-lg font-semibold mb-3 text-gray-600 border-b pb-2">Generated Website Code 💻</h2>
+ <pre id="output"></pre>
+ </section>
+
+    <!-- Future JavaScript -->
+    <script>
+        // --- Element References ---
+        const websiteTitleInput = document.getElementById('websiteTitle');
+        const websiteDescriptionTextarea = document.getElementById('websiteDescription');
+        const additionalInstructionsTextarea = document.getElementById('additionalInstructions'); // Fix ID
+        const markdownPromptTextarea = document.getElementById('markdownPrompt');
+        const generateWebsiteBtn = document.getElementById('generateWebsiteBtn');
+        const outputSection = document.getElementById('outputSection'); // Get output section
+        const outputPre = document.getElementById('output'); // Get output pre tag
+
+        // --- Local Storage Keys ---
+        const businessesListDiv = document.getElementById('businessesList'); // Get reference to businesses list div
+        const STORAGE_KEYS = {
+            websiteTitle: 'websiteTitle', 
+            websiteDescription: 'websiteDescription',
+            targetAudience: 'targetAudience',
+            googleMapsJson: 'googleMapsJson',
+            additionalInstructions: 'additionalInstructions',
+        };
+        const targetAudienceInput = document.getElementById('targetAudience'); // Correct variable name
+
+         // --- Load from Local Storage ---
+        function loadFromLocalStorage() {
+            targetAudienceInput.value = localStorage.getItem(STORAGE_KEYS.targetAudience) || ''; // Correct variable name
+            googleMapsJsonTextarea.value = localStorage.getItem(STORAGE_KEYS.googleMapsJson) || ''; // Correct variable name
+            additionalInstructionsTextarea.value = localStorage.getItem(STORAGE_KEYS.additionalInstructions) || ''; // Correct variable name
+        }
+
+        // --- Save to Local Storage ---
+        function saveToLocalStorage() {
+            localStorage.setItem(STORAGE_KEYS.googleMapsJson, googleMapsJsonTextarea.value); // Correct variable name
+            localStorage.setItem(STORAGE_KEYS.additionalInstructions, additionalInstructionsTextarea.value); // Correct variable name
+            localStorage.setItem(STORAGE_KEYS.websiteTitle, websiteTitleInput.value);
+            localStorage.setItem(STORAGE_KEYS.websiteDescription, websiteDescriptionTextarea.value);
+            localStorage.setItem(STORAGE_KEYS.targetAudience, targetAudienceInput.value);
+
+        }
+
+        // Variable to store parsed business data
+ let parsedBusinesses = [];
+
+ // --- Basic Client-Side Image Color Analysis ---
+ // Very simplified function to analyze a few pixels of an image for color.
+ // This is a heuristic and may not find the most representative colors.
+ // CORS issues might prevent loading images from certain domains.
+ async function analyzeImageColors(imageUrl) {
+    console.log('Attempting to analyze image for colors:', imageUrl);
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous'; // Helps with CORS, but not always sufficient
+
+        img.onload = () => {
+            try {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+
+                // *** Basic Color Analysis ***
+                // Sample a few pixels for a very basic color palette.
+                // More advanced algorithms are needed for robust color extraction.
+                const sampledColors = [];
+                const samplePoints = [
+                    { x: 0, y: 0 }, // Top-left
+                    { x: canvas.width - 1, y: 0 }, // Top-right
+                    { x: 0, y: canvas.height - 1 }, // Bottom-left
+                    { x: canvas.width - 1, y: canvas.height - 1 }, // Bottom-right
+                    { x: Math.floor(canvas.width / 2), y: Math.floor(canvas.height / 2) } // Center
+                ];
+
+                samplePoints.forEach(point => {
+                    if (point.x >= 0 && point.x < canvas.width && point.y >= 0 && point.y < canvas.height) {
+                        const i = (point.y * canvas.width + point.x) * 4;
+                        const r = imageData[i];
+                        const g = imageData[i + 1];
+                        const b = imageData[i + 2];
+                        // Convert RGB to hex
+                        const hex = `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase()}`;
+                        sampledColors.push(hex);
+                    }
+                });
+
+                console.log('Analyzed colors:', sampledColors);
+                resolve(sampledColors);
+            } catch (error) {
+                console.error('Error analyzing image colors:', error);
+                reject(error);
+            }
+        };
+
+        img.onerror = (error) => {
+            console.error('Error loading image for analysis:', error);
+            reject(error);
+        };
+
+        img.src = imageUrl; // Start loading the image
+
+        // Handle cases where the image might already be in cache or load instantly
+        if (img.complete && img.naturalHeight !== 0) {
+             // Image is already loaded, manually trigger onload logic
+             img.onload();
+        }
+    });
+}
+
+        // --- Parse Google Maps JSON and Display Businesses ---
+        function parseAndDisplayBusinesses() {
+            // This function parses the JSON from the textarea and displays a list with checkboxes.
+            const jsonString = googleMapsJsonTextarea.value;
+            parsedBusinesses = []; // Clear previous data
+
+            businessesListDiv.innerHTML = ''; // Clear previous list
+
+            if (!jsonString.trim()) {
+                return; // Do nothing if textarea is empty
+            }
+
+            try {
+                const data = JSON.parse(jsonString);
+
+                // *** Assumption: The JSON data is either an array of business objects,
+                // or an object with a 'businesses' property that is an array. ***
+                const businesses = Array.isArray(data) ? data : (data.businesses ? data.businesses : null);
+
+                if (businesses && Array.isArray(businesses)) { // Check if businesses is a valid array
+                    parsedBusinesses = businesses; // Store the parsed data
+
+                    businesses.forEach((business, index) => {
+                        // Create a div for each business entry
+                        const businessDiv = document.createElement('div');
+                        businessDiv.classList.add('flex', 'items-center', 'mb-2'); // Simple flex styling
+
+                        // Add data attribute to link checkbox to the business data index
+                        businessDiv.dataset.index = index;
+                        // Create checkbox for selection
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.value = business.name || `business-${index}`; // Use name or index as value
+                        checkbox.id = `business-${index}`; // Unique ID
+                        checkbox.classList.add('mr-2');
+
+                        checkbox.dataset.index = index; // Store index on the checkbox itself
+                        // Create label for checkbox (displays business name)
+                        const label = document.createElement('label');
+                        label.htmlFor = `business-${index}`;
+                        label.textContent = business.name || `Unnamed Business ${index + 1}`;
+                        label.classList.add('text-gray-700');
+
+                        // Add more business details
+ if (business.address) {
+ const addressEl = document.createElement('p');
+ addressEl.classList.add('text-sm', 'text-gray-600', 'ml-7', 'mb-0'); // Add margin to align
+ addressEl.textContent = `Address: ${business.address}`;
+ businessDiv.appendChild(addressEl);
+ }
+ if (business.phone) {
+ const phoneEl = document.createElement('p');
+ phoneEl.classList.add('text-sm', 'text-gray-600', 'ml-7', 'mb-0'); // Add margin
+ phoneEl.textContent = `Phone: ${business.phone}`;
+ businessDiv.appendChild(phoneEl);
+ }
+ if (business.website) {
+ const websiteEl = document.createElement('p');
+ websiteEl.classList.add('text-sm', 'text-gray-600', 'ml-7', 'mb-0'); // Add margin
+ // Create a link if it's a valid URL
+ if (business.website.startsWith('http')) {
+ const websiteLink = document.createElement('a');
+ websiteLink.href = business.website;
+ websiteLink.textContent = business.website;
+ websiteLink.target = '_blank'; // Open in new tab
+ websiteEl.appendChild(document.createTextNode('Website: '));
+ websiteEl.appendChild(websiteLink);
+ } else { websiteEl.textContent = `Website: ${business.website}`; }
+ businessDiv.appendChild(websiteEl);
+ }
+
+                        // Append checkbox and label to the business div
+                        businessDiv.appendChild(checkbox);
+                        businessDiv.appendChild(label);
+
+                        // Append the business div to the list container
+                        businessesListDiv.appendChild(businessDiv);
+                    });
+
+                    // *** Conditional Color Input Display (Needs Refinement) ***
+                    // Add conditional color input for cases without a clear business website
+                    // This is a simplified check and can be improved later.
+                    const needsColorInput = businesses.some(b => !b.website || b.website.includes('google.com/maps'));
+
+                    if (needsColorInput) {
+                        const colorInputDiv = document.createElement('div');
+ colorInputDiv.classList.add('mt-4', 'pt-3', 'border-t', 'border-gray-200');
+ // Add data-index to the color input if needed for later retrieval
+ const colorLabel = document.createElement('label');
+ // The color input itself should likely be associated with a specific business if bulk generation allows multiple colors
+ colorLabel.classList.add('compact-label');
+ colorLabel.textContent = 'Select a general color theme for businesses without websites:';
+ const colorInput = document.createElement('input');
+ colorInput.type = 'color';
+ colorInputDiv.appendChild(colorLabel);
+ colorInputDiv.appendChild(colorInput);
+ businessesListDiv.appendChild(colorInputDiv); // Add this below the business list
+                    }
+                } else {
+                    businessesListDiv.textContent = 'Invalid or unexpected JSON data structure. Expected an array or an object with a "businesses" array.';
+                }
+            } catch (error) {
+                businessesListDiv.textContent = 'Invalid JSON data: ' + error.message;
+                console.error('JSON parsing error:', error);
+            }
+        }
+
+        // --- Event Listeners ---
+        window.addEventListener('load', () => {
+            loadFromLocalStorage(); // Load saved data first
+            generateMarkdownPrompt(); // Then generate the initial prompt draft
+            parseAndDisplayBusinesses(); // Also parse and display businesses if JSON was loaded
+            if(outputPre.textContent.trim() && outputPre.textContent.trim() !== 'Generating website code... Please wait.') {
+                outputSection.classList.remove('hidden');
+            }
+        });
+        
+        // Add event listener to the Google Maps JSON textarea for parsing and displaying
+        googleMapsJsonTextarea.addEventListener('input', () => {
+            saveToLocalStorage(); // Save JSON input
+            parseAndDisplayBusinesses(); // Parse and display the businesses list
+            generateMarkdownPrompt(); // Update prompt (optional, prompt uses raw JSON for now)
+        });
+
+        // Add event listeners to input fields to save and update the prompt draft
+        [websiteTitleInput, websiteDescriptionTextarea, targetAudienceInput, googleMapsJsonTextarea, additionalInstructionsTextarea].forEach(element => { // All relevant inputs
+            element.addEventListener('input', () => { // Use 'input' event for real-time updates
+                saveToLocalStorage(); // Save all input on any change
+                // Note: parseAndDisplayBusinesses() is called by googleMapsJsonTextarea's input listener
+                // generateMarkdownPrompt(); // Call this if you want the prompt to update on any input change
+ // For now, prompt updates primarily via JSON input
+            });
+        });
+
+        // --- Handle AI Generation Button Click ---
+        generateWebsiteBtn.addEventListener('click', async () => {
+            let originalButtonText = generateWebsiteBtn.textContent;
+            generateWebsiteBtn.disabled = true;
+            generateWebsiteBtn.textContent = 'Generating...';
+            outputSection.classList.remove('hidden');
+            outputPre.textContent = 'Generating website code... Please wait.'; // Show a loading message
+
+            const checkboxes = document.querySelectorAll('#businessesList input[type="checkbox"]');
+            const selectedBusinessIndices = Array.from(checkboxes)
+                .filter(cb => cb.checked)
+                .map(cb => parseInt(cb.dataset.index));
+
+            const finalSelectedBusinesses = []; // Array to store businesses with processed data
+
+            for (const index of selectedBusinessIndices) {
+                const business = parsedBusinesses[index]; // Get the original business data
+                const businessWithColor = { ...business }; // Create a copy to add color data
+
+                console.log('Processing selected business:', businessWithColor.name || 'Unnamed Business');
+
+                let colorProcessed = false; // Flag to track if color was successfully processed
+
+                if (businessWithColor.website && businessWithColor.website.trim() !== '' && !businessWithColor.website.includes('google.com/maps')) {
+                    console.log('Attempting browser.js for:', businessWithColor.website);
+                    try {
+                        const response = await fetch('/browser.js', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ url: businessWithColor.website }),
+                        });
+                        const data = await response.json();
+
+                        if (response.ok && data.success && Array.isArray(data.potentialImageUrls) && data.potentialImageUrls.length > 0) {
+                            console.log('Potential images found:', data.potentialImageUrls);
+                            const imageUrlToAnalyze = data.potentialImageUrls[0]; // Select the first image
+                            try {
+                                const analyzedColors = await analyzeImageColors(imageUrlToAnalyze);
+                                if (analyzedColors && analyzedColors.length > 0) {
+                                    console.log('Analyzed colors:', analyzedColors);
+                                    businessWithColor.colorPalette = analyzedColors; // Store the analyzed colors
+                                    colorProcessed = true; // Color derived from image
+                                } else {
+                                    console.warn('Color analysis returned no colors for', imageUrlToAnalyze);
+                                }
+                            } catch (analysisError) {
+                                console.error('Error during client-side color analysis:', analysisError);
+                            }
+                        } else {
+                            console.warn('Could not get images from', businessWithColor.website, data.error || 'No images found or browser.js failed.');
+                        }
+                    } catch (error) {
+                        console.error('Error fetching from browser.js:', error);
+                    }
+                }
+
+                // If color was not processed from image, check for user-selected color
+                if (!colorProcessed) {
+                    const businessDiv = businessesListDiv.querySelector(`div[data-index="${index}"]`);
+                    if (businessDiv) {
+                        const colorInput = businessDiv.querySelector('input[type="color"]');
+                        if (colorInput) {
+                            const selectedColor = colorInput.value;
+                            console.log('User selected color for', businessWithColor.name, ':', selectedColor);
+                            businessWithColor.selectedColor = selectedColor; // Store the user-selected color
+                        } else {
+                             console.log('No user-selected color input found for', businessWithColor.name);
+                        }
+                    }
+                }
+
+                finalSelectedBusinesses.push(businessWithColor); // Add the processed business data
+            }
+
+            // Generate and update the markdown prompt with the collected data
+            const finalPrompt = generateMarkdownPrompt(finalSelectedBusinesses);
+            markdownPromptTextarea.value = finalPrompt;
+
+            // --- Existing AI API Call ---
+            try {
+                const response = await fetch('/ai-api', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'generate',
+                        providerKey: 'google',
+                        model: 'gemini-pro',
+                        prompt: finalPrompt,
+                    }),
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    outputPre.textContent = result.text || 'No code generated, but API call succeeded.';
+                } else {
+                    const errorMessage = result.error || 'Unknown API error.';
+                    console.error('API Error:', errorMessage);
+                    outputPre.textContent = `Error generating website: ${errorMessage}`;
+                }
+
+            } catch (error) {
+                console.error('Error during fetch:', error);
+                outputPre.textContent = `Network error or failed request: ${error.message}`;
+            } finally {
+                generateWebsiteBtn.disabled = false;
+                generateWebsiteBtn.textContent = originalButtonText;
+            }
+        });
+
+        // Initial generation of the prompt draft on page load
+        // This is already called in the window.load listener, but leaving this here
+        // as a reminder that the prompt should be updated whenever inputs change.
+        // --- Generate Markdown Prompt ---\n"
+        function generateMarkdownPrompt(selectedBusinesses) {
+            const websiteTitle = websiteTitleInput.value;
+            const websiteDescription = websiteDescriptionTextarea.value;
+            const targetAudience = targetAudienceInput.value;
+            const additionalInstructions = additionalInstructionsTextarea.value;
+
+            let promptContent = `# AI Website Generation Prompt\n\n`;
+            promptContent += `Generate a complete single-page website (HTML, CSS, and JavaScript all in one file) based on the following details:\n\n`;
+
+            if (websiteTitle) promptContent += `## Overall Goal\nWebsite Title/Business Name: ${websiteTitle}\n`;
+            if (websiteDescription) promptContent += `Website Description/Purpose: ${websiteDescription}\n`;
+            if (targetAudience) promptContent += `Target Audience: ${targetAudience}\n\n`;
+
+            // ## Style Guide - Dynamically Generated
+            promptContent += `## Style Guide\n`;
+            if (selectedBusinesses && selectedBusinesses.length > 0) {
+                selectedBusinesses.forEach(business => {
+                    promptContent += `### Style Notes for ${business.name || 'Selected Business'}\n`;
+                    if (business.colorPalette && business.colorPalette.length > 0) {
+                        promptContent += `- **Color Palette (derived from logo):** ${business.colorPalette.join(', ')}\n`;
+                        promptContent += `  Use these colors as inspiration for the website's color scheme (backgrounds, text, accents).\n`;
+                    } else if (business.selectedColor) {
+                        promptContent += `- **Primary Color (user selected):** ${business.selectedColor}\n`;
+                        promptContent += `  Use this color as a primary color for the website, and choose complementary colors.\n`;
+                    } else {
+                        promptContent += `- **Color Scheme:** Please suggest a suitable color scheme based on the business type and target audience.\n`;
+                    }
+                    // Add other style notes if needed (e.g., typography hints based on business type)
+                    promptContent += `\n`; // Add a newline between style notes for different businesses
+                });
+            } else {
+                promptContent += `<!-- No businesses selected or processed for style guide -->\n\n`;
+            }
+
+
+            // ## Business Data - Dynamically Generated
+            promptContent += `## Business Data\n`;
+            if (selectedBusinesses && selectedBusinesses.length > 0) {
+                selectedBusinesses.forEach(business => {
+                    promptContent += `### ${business.name || 'Unnamed Business'}\n`;
+                    if (business.address) promptContent += `- **Address:** ${business.address}\n`;
+                    if (business.phone) promptContent += `- **Phone:** ${business.phone}\n`;
+                    if (business.website) promptContent += `- **Website:** ${business.website}\n`;
+                    // Add other relevant business properties you want the AI to use (e.g., type, hours, description)
+                    if (business.type) promptContent += `- **Type:** ${business.type}\n`;
+                    if (business.openingHours) promptContent += `- **Hours:** ${Array.isArray(business.openingHours) ? business.openingHours.join(', ') : business.openingHours}\n`; // Handle array or string hours
+                    if (business.description) promptContent += `- **Description:** ${business.description}\n`; // If description is available
+                    promptContent += `\n`; // Add a newline between businesses
+                });
+            } else {
+                promptContent += `<!-- No businesses selected or processed -->\n\n`;
+            }
+
+            // ## Content Requirements
+            promptContent += `## Content Requirements\n`;
+            promptContent += `* Create a single-page website.\n`;
+            promptContent += `* Display information for the businesses provided in the 'Business Data' section as distinct cards or sections.\n`;
+            promptContent += `* For each business, prominently feature: Business Name (as a heading), Key contact information (phone, website link if available), Address and a link to Google Maps, Business Type and Categories, Opening Hours.\n`;
+            promptContent += `* Use relevant emojis as labels for data points within the cards (e.g., 📝 Name, 📞 Contact, 📍 Address, ⏰ Hours).\n`;
+            promptContent += `* Prioritize content readability and visual hierarchy according to the Style Guide.\n\n`;
+
+            // ## Technical Requirements
+            promptContent += `## Technical Requirements\n`;
+            promptContent += `* Provide the complete website code as a single HTML file.\n`;
+            promptContent += `* Include all CSS within <style> tags in the <head>.\n`;
+            promptContent += `* Include all JavaScript within <script> tags before the closing </body> tag.\n`;
+            promptContent += `* Ensure the HTML is well-structured and semantic.\n`;
+            promptContent += `* Make the website responsive for various screen sizes.\n\n`;
+
+            if (additionalInstructions) {
+                promptContent += `## Additional Instructions\n`;
+                promptContent += `${additionalInstructions}\n\n`;
+            }
+
+            return promptContent; // Return the generated markdown string
+        }
+    </script>
+</body>
+</html>
