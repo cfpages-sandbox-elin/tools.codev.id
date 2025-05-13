@@ -1,7 +1,7 @@
 // article-spinner.js (v8.16 Spun Logic Improved)
 
 import { getState, updateState } from './article-state.js';
-import { logToConsole, callAI, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement, getElement } from './article-helpers.js'; // Ensure getElement is imported
+import { logToConsole, callAI, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js'; // Ensure getElement is imported
 import { getElement } from './article-ui.js';
 import { languageOptions } from './article-config.js'; // Import language options if needed for context
 
