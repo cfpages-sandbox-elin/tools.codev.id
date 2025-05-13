@@ -11,7 +11,7 @@ import {
 import { languageOptions, imageProviders } from './article-config.js';
 import { handleGenerateStructure, handleGenerateArticle } from './article-single.js';
 import { handleGeneratePlan, handleStartBulkGeneration, handleDownloadZip } from './article-bulk.js';
-import { handleSpinSelectedText, handleSelection, highlightSpintax } from './article-spinner.js';
+import { handleSpinSelectedText, handleSelection, highlightSpintax, handleSpinArticle } from './article-spinner.js';
 
 // Flag to prevent multiple initializations
 let appInitialized = false;
