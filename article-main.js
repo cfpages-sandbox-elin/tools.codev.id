@@ -1,4 +1,4 @@
-// article-main.js (v8.15 Spun Display Cache Fix)
+// article-main.js (v8.16 Spun Logic Improved)
 
 import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
 import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
@@ -219,6 +219,11 @@ function setupStep3Listeners() {
     const spunArticleDisplay = getElement('spunArticleDisplay');
     const step4Section = getElement('step4Section');
 
+    // Change button text
+    if (enableSpinningBtn) {
+        enableSpinningBtn.textContent = 'Spin Article';
+    }
+
     previewHtmlCheckbox?.addEventListener('change', (e) => {
         const showPreview = e.target.checked;
         showElement(generatedArticleTextarea, !showPreview); // Uses imported showElement implicitly
@@ -226,34 +231,32 @@ function setupStep3Listeners() {
         if (showPreview && htmlPreviewDiv && generatedArticleTextarea) {
             let unsafeHTML = generatedArticleTextarea.value;
             let sanitizedHTML = unsafeHTML.replace(/<script.*?>.*?<\/script>/gis, '');
-             sanitizedHTML = sanitizedHTML.replace(/onerror=".*?"/gi, '');
-             sanitizedHTML = sanitizedHTML.replace(/onload=".*?"/gi, '');
+             sanitizedHTML = sanitizedHTML.replace(/onerror=\".*?\"/gi, '');
+             sanitizedHTML = sanitizedHTML.replace(/onload=\".*?\"/gi, '');
             htmlPreviewDiv.innerHTML = sanitizedHTML;
         }
     });
-    enableSpinningBtn?.addEventListener('click', () => {
-        // Re-get elements within the handler for safety, in case they were removed/re-added
-        const currentGeneratedText = getElement('generatedArticleTextarea')?.value;
-        const spunDisplayTarget = getElement('spunArticleDisplay');
-        const step4Target = getElement('step4Section');
 
-        if (spunDisplayTarget && step4Target && currentGeneratedText !== undefined) {
-            logToConsole("Enable Spinning button clicked.", 'info');
-            spunDisplayTarget.innerHTML = currentGeneratedText; // Copy content
-            spunDisplayTarget.textContent = currentGeneratedText; // Copy content while preserving line breaks
-            spunDisplayTarget.style.whiteSpace = 'pre-wrap'; // Ensure line breaks are displayed
-            showElement(step4Target, true); // Show Step 4
-            highlightSpintax(spunDisplayTarget); // Highlight existing spintax
-            logToConsole("Spinning enabled, content copied to Step 4.", 'info');
-            spunDisplayTarget.focus(); // Focus the editable area
+    // Modified event listener for the Spin Article button
+    enableSpinningBtn?.addEventListener('click', () => {
+        const generatedTextarea = getElement('generatedArticleTextarea');
+        const spunDisplay = getElement('spunArticleDisplay');
+        const step4 = getElement('step4Section');
+
+        if (generatedTextarea && spunDisplay && step4) {
+             logToConsole("Spin Article button clicked.", 'info');
+             showElement(step4, true); // Show Step 4 section
+             // Call the new function to handle the spinning process
+             handleSpinArticle(generatedTextarea, spunDisplay);
         } else {
-             logToConsole("Could not enable spinning - required elements (spun display, step 4, or generated text) missing or unavailable.", 'error');
-             if(!spunDisplayTarget) console.error("spunArticleDisplay element is missing!");
-             if(!step4Target) console.error("step4Section element is missing!");
-             if(currentGeneratedText === undefined) console.error("generatedArticleTextarea element or its value is missing!");
-             alert("Error enabling spinning. Please check console.");
+             logToConsole("Could not start spinning - required elements (generated text area, spun display, or step 4 section) missing.", 'error');
+             if(!generatedTextarea) console.error("generatedArticleTextarea element is missing!");
+             if(!spunDisplay) console.error("spunArticleDisplay element is missing!");
+             if(!step4) console.error("step4Section element is missing!");
+             alert("Error starting spinning process. Please check console.");
         }
     });
+
     // *** Add listener for generated article textarea edits ***
     generatedArticleTextarea?.addEventListener('input', (e) => {
         const currentContent = e.target.value;
@@ -265,11 +268,17 @@ function setupStep3Listeners() {
 function setupStep4Listeners() {
     const spunArticleDisplay = getElement('spunArticleDisplay');
     const spinSelectedBtn = getElement('spinSelectedBtn');
+    // These listeners are for manual selection and spinning AFTER automatic spin
     spunArticleDisplay?.addEventListener('input', () => highlightSpintax(spunArticleDisplay));
     spunArticleDisplay?.addEventListener('mouseup', handleSelection);
     spunArticleDisplay?.addEventListener('keyup', handleSelection);
     spunArticleDisplay?.addEventListener('focus', handleSelection);
     spinSelectedBtn?.addEventListener('click', handleSpinSelectedText);
+
+     // Also ensure highlightSpintax is called initially if content is loaded
+     if(spunArticleDisplay?.textContent) {
+         highlightSpintax(spunArticleDisplay);
+     }
 }
 
 function setupBulkModeListeners() {
@@ -301,4 +310,4 @@ function setupBulkModeListeners() {
 logToConsole("article-main.js evaluating. Setting up DOMContentLoaded listener.", "debug");
 document.addEventListener('DOMContentLoaded', initializeApp, { once: true });
 
-console.log("article-main.js loaded (v8.15 Spun Display Cache Fix)");
+console.log("article-main.js loaded (v8.16 Spun Logic Improved)");

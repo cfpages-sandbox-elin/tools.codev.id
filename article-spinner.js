@@ -1,8 +1,7 @@
-// article-spinner.js
-// Contains logic for spintax generation and highlighting
+// article-spinner.js (v8.16 Spun Logic Improved)
 
-import { getState } from './article-state.js';
-import { logToConsole, callAI, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
+import { getState, updateState } from './article-state.js';
+import { logToConsole, callAI, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement, getElement } from './article-helpers.js'; // Ensure getElement is imported
 import { getElement } from './article-ui.js';
 import { languageOptions } from './article-config.js'; // Import language options if needed for context
 
@@ -60,7 +59,7 @@ export function highlightSpintax(element) {
 
 // --- Text Selection Handling ---
 export function handleSelection() {
-    const spunArticleDisplay = getElement('spunArticleDisplay'); // Corrected ID
+    const spunArticleDisplay = getElement('spunArticleDisplay');
     const spinSelectedBtn = getElement('spinSelectedBtn');
     if (!spunArticleDisplay || !spinSelectedBtn) return;
 
@@ -86,7 +85,7 @@ export function handleSelection() {
 // --- Spin Selected Text ---
 export async function handleSpinSelectedText() {
     const spinSelectedBtn = getElement('spinSelectedBtn');
-    const spunArticleDisplay = getElement('spunArticleDisplay'); // Corrected ID
+    const spunArticleDisplay = getElement('spunArticleDisplay');
     const loadingIndicator = getElement('spinActionLoadingIndicator');
 
     if (!selectedTextInfo || !selectedTextInfo.text || !spinSelectedBtn || !spunArticleDisplay) {
@@ -102,15 +101,25 @@ export async function handleSpinSelectedText() {
     const dialect = state.dialect; // Assuming dialect is stored in state correctly
     const tone = state.tone === 'custom' ? state.customTone : state.tone;
 
-    const prompt = `Take the following text and generate 2-4 variations that mean the same thing, suitable for spintax.
-    - Language: ${language}${dialect ? ` (${dialect} dialect)` : ''}
-    - Tone: ${tone} (Maintain this tone)
-    - Output Format: Return ONLY the spintax string in the format {original|variation1|variation2|...}. Do not include the original text you were given unless it's one of the variations. Do not include any explanation or surrounding text.
+    // Enhanced prompt with example and instruction to exclude punctuation
+    const prompt = `Take the following text and generate 2-4 variations that mean the same thing, suitable for spintax. Exclude the final punctuation mark from the generated spintax.
+
+    Example:
+    Text to Spin: Budi makan soto di rumah makan
+    Spintax Output: {Budi makan soto di rumah makan|Di rumah makan Budi makan soto|Di rumah makan soto dimakan Budi|Budi di rumah makan makan soto|Soto dimakan Budi di rumah makan|Soto di rumah makan dimakan Budi}
+
+    Instructions:
+    - Generate 2-4 variations.
+    - Maintain the original meaning.
+    - Maintain the specified Language (${language}${dialect ? `, ${dialect} dialect` : ''}) and Tone (${tone}).
+    - Output Format: Return ONLY the spintax string in the format {original|variation1|variation2|...}.
+    - DO NOT include the final punctuation mark from the original text in the spintax output.
 
     Text to Spin:
     ---
     ${textToSpin}
     ---`;
+
 
      const payload = {
         providerKey: state.textProvider, // Use main text provider
@@ -165,4 +174,112 @@ export async function handleSpinSelectedText() {
     }
 }
 
-console.log("article-spinner.js loaded");
+// --- Automatic Article Spinning ---
+export async function handleSpinArticle(generatedTextarea, spunDisplay) {
+    logToConsole("Starting automatic article spinning...", "info");
+    const articleText = generatedTextarea.value;
+    spunDisplay.textContent = ''; // Clear the spun display area
+
+    // Robust sentence extraction (handles various punctuation and multiple spaces/newlines)
+    const sentences = articleText.match(/([^.!?]+[.!?]+|[^.!?]+$)/g) || [];
+
+    const loadingIndicator = getElement('spinActionLoadingIndicator'); // Assuming you have a loading indicator for this process
+    const spinArticleBtn = getElement('enableSpinningBtn'); // Get the button to disable
+
+    disableElement(spinArticleBtn, true); // Disable button during spinning
+    showLoading(loadingIndicator, true); // Show loading indicator
+
+    for (const sentenceMatch of sentences) {
+        let sentence = sentenceMatch.trim();
+        if (!sentence) continue;
+
+        // Extract punctuation at the end of the sentence
+        const punctuationMatch = sentence.match(/[.!?]+$/);
+        const punctuation = punctuationMatch ? punctuationMatch[0] : '';
+        const sentenceWithoutPunctuation = sentence.replace(/[.!?]+$/, '').trim();
+
+        if (!sentenceWithoutPunctuation) {
+             // If only punctuation was found, just append it and continue
+             spunDisplay.textContent += punctuation + ' ';
+             continue;
+        }
+
+
+        const state = getState(); // Get current language/tone settings
+
+        // Get language/tone for spinning context
+        const language = state.language === 'custom' ? state.customLanguage : languageOptions[state.language]?.name || state.language;
+        const dialect = state.dialect;
+        const tone = state.tone === 'custom' ? state.customTone : state.tone;
+
+        // Enhanced prompt with example and instruction to exclude punctuation
+        const prompt = `Take the following text (which is a single sentence without its final punctuation) and generate 2-4 variations that mean the same thing, suitable for spintax. Focus on rephrasing or reordering sentence components (subject, predicate, object, information) as shown in the example.
+
+        Example:
+        Text to Spin (without punctuation): Budi makan soto di rumah makan
+        Spintax Output (without punctuation): {Budi makan soto di rumah makan|Di rumah makan Budi makan soto|Di rumah makan soto dimakan Budi|Budi di rumah makan makan soto|Soto dimakan Budi di rumah makan|Soto di rumah makan dimakan Budi}
+
+        Instructions:
+        - Generate 2-4 variations.
+        - Maintain the original meaning.
+        - Maintain the specified Language (${language}${dialect ? `, ${dialect} dialect` : ''}) and Tone (${tone}).
+        - Output Format: Return ONLY the spintax string in the format {original|variation1|variation2|...}.
+        - The output should NOT include the final punctuation mark that was removed from the original text.
+
+        Text to Spin (without punctuation):
+        ---
+        ${sentenceWithoutPunctuation}
+        ---`;
+
+
+        const payload = {
+            providerKey: state.textProvider,
+            model: state.textModel,
+            prompt: prompt
+        };
+
+        logToConsole(`--- Spinning Sentence ---`, 'info');
+        logToConsole(`Original: "${sentence}"`, 'debug');
+        logToConsole(`Prompting AI for: "${sentenceWithoutPunctuation}"`, 'debug');
+
+        const result = await callAI('generate', payload); // No need to pass button/indicator here, handled by the main function
+
+        if (result?.success && result.text) {
+            let spintaxResult = result.text.trim();
+
+            // Basic cleanup: remove leading/trailing curly braces if AI added them unexpectedly
+            if (spintaxResult.startsWith('{') && spintaxResult.endsWith('}')) {
+                 // Check if it looks like valid spintax before removing braces
+                 if (spintaxResult.includes('|')) {
+                     // Keep braces if it's valid spintax
+                 } else {
+                     // If no pipe, it's likely not valid spintax, remove braces
+                     spintaxResult = spintaxResult.substring(1, spintaxResult.length - 1).trim();
+                 }
+            } else {
+                // If no braces, just use the result as a single option
+                 spintaxResult = `{${spintaxResult}}`;
+            }
+
+
+            // Append the generated spintax followed by the original punctuation and a space
+            spunDisplay.textContent += spintaxResult + punctuation + ' ';
+            logToConsole(`Appended Spintax + Punctuation: "${spintaxResult}${punctuation}"`, 'success');
+
+        } else {
+             // If AI call failed, append the original sentence as is
+             spunDisplay.textContent += sentence + ' ';
+             logToConsole(`AI spinning failed for sentence. Appending original: "${sentence}"`, 'error');
+        }
+
+        // Add a small delay to show progress and avoid overwhelming the UI/AI
+        await new Promise(resolve => setTimeout(resolve, 100)); // Adjust delay as needed
+    }
+
+    disableElement(spinArticleBtn, false); // Re-enable button
+    showLoading(loadingIndicator, false); // Hide loading indicator
+    logToConsole("Automatic article spinning finished.", "info");
+    highlightSpintax(spunDisplay); // Highlight spintax in the final output
+}
+
+console.log("article-spinner.js loaded"); // v8.16 Spun Logic Improved
