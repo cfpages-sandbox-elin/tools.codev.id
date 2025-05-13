@@ -1,8 +1,7 @@
-// article-spinner.js (v8.17 Domain Handling and Pause/Stop)
+// article-spinner.js (v8.18 Refined Sentence Splitting and Robust Pause/Stop)
 
 import { getState, updateState } from './article-state.js';
-// Import callAI and other helpers from article-helpers.js
-import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement, callAI } from './article-helpers.js';
+import { logToConsole, callAI, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
 import { getElement } from './article-ui.js'; // Keep this import for getElement
 import { languageOptions } from './article-config.js'; // Import language options if needed for context
 
@@ -111,7 +110,7 @@ export async function handleSpinSelectedText() {
     const prompt = `Take the following text and generate 3-6 variations that mean the same thing, suitable for spintax. Exclude the final punctuation mark from the generated spintax.
 
     Example:
-    Text to Spin: Budi makan soto di rumah makan
+    Text to Spin: Budi makan soto di rumah makan.
     Spintax Output: {Budi makan soto di rumah makan|Di rumah makan Budi makan soto|Di rumah makan soto dimakan Budi|Budi di rumah makan makan soto|Soto dimakan Budi di rumah makan|Soto di rumah makan dimakan Budi}
 
     Instructions:
@@ -140,16 +139,16 @@ export async function handleSpinSelectedText() {
 
         // Basic cleanup: remove leading/trailing curly braces if AI added them unexpectedly
         if (spintaxResult.startsWith('{') && spintaxResult.endsWith('}')) {
-             // Check if it looks like valid spintax before removing braces
-             if (spintaxResult.includes('|')) {
-                 // Keep braces if it's valid spintax
-             } else {
-                 // If no pipe, it's likely not valid spintax, remove braces
-                 spintaxResult = spintaxResult.substring(1, spintaxResult.length - 1).trim();
-             }
+            // Check if it looks like valid spintax before removing braces
+            if (spintaxResult.includes('|')) {
+                // Keep braces if it's valid spintax
+            } else {
+                // If no pipe, it's likely not valid spintax, remove braces
+                spintaxResult = spintaxResult.substring(1, spintaxResult.length - 1).trim();
+            }
         } else {
             // If no braces, just use the result as a single option wrapped in braces
-             spintaxResult = `{${spintaxResult}}`;
+            spintaxResult = `{${spintaxResult}}`;
         }
 
         const selection = window.getSelection();
@@ -216,20 +215,27 @@ export async function handleSpinArticle(generatedTextarea, spunDisplay) {
     showLoading(loadingIndicator, true); // Show loading indicator
 
     // Refined Sentence Extraction
-    // This regex splits by . ! ? followed by a space or end of string,
-    // but tries to avoid splitting after a single dot not followed by a space (like in URLs).
+    // This regex attempts to split by . ! ? followed by a space or end of string ($),
+    // but avoids splitting if a dot is NOT followed by a space (like in URLs).
+    // It also handles cases where a sentence might start without a preceding space.
     const sentences = articleText.match(/([^.!?]+[.!?]+(?=\s|$)|[^.!?]+$)/g) || [];
 
-    for (const sentenceMatch of sentences) {
+    let processedText = '';
+
+    for (let i = 0; i < sentences.length; i++) {
+        let sentence = sentences[i];
+
+        // Check for stop request at the beginning of each sentence processing
         if (stopSpinning) {
             logToConsole("Spinning stopped by user.", "info");
             break; // Exit loop if stop is requested
         }
 
+        // Pause logic
         if (isPaused) {
             logToConsole("Spinning paused...", "info");
-            disableElement(pauseSpinBtn, false); // Keep Pause button enabled
-            disableElement(stopSpinBtn, false); // Keep Stop button enabled
+            disableElement(pauseSpinBtn, false);
+            disableElement(stopSpinBtn, false);
             await new Promise(resolve => {
                 const interval = setInterval(() => {
                     if (!isPaused) {
@@ -247,7 +253,19 @@ export async function handleSpinArticle(generatedTextarea, spunDisplay) {
              if (stopSpinning) break; // Check again after resuming
         }
 
-        let sentence = sentenceMatch.trim();
+        // More careful sentence boundary check based on context
+        // If it's not the very first sentence and there's no space before it in the original text,
+        // it's likely not a new sentence. This is a heuristic and might need further tuning.
+        const originalIndex = articleText.indexOf(sentence, processedText.length);
+        if (i > 0 && originalIndex > 0 && articleText[originalIndex - 1] !== ' ' && articleText[originalIndex - 1] !== '\n') {
+            // If no space before and not the first sentence, append to the previous one (heuristics)
+            spunDisplay.textContent += sentence; // Append without adding a space
+            processedText += sentence;
+            logToConsole(`Appended potential non-sentence part: "${sentence}"`, 'debug');
+            continue; // Skip spinning this part as a separate sentence
+        }
+
+        sentence = sentence.trim();
         if (!sentence) continue;
 
         // Extract punctuation at the end of the sentence
@@ -256,8 +274,9 @@ export async function handleSpinArticle(generatedTextarea, spunDisplay) {
         const sentenceWithoutPunctuation = sentence.replace(/[.!?]+$/, '').trim();
 
         if (!sentenceWithoutPunctuation) {
-             // If only punctuation was found (e.g., a line with just "."), just append it and continue
+             // If only punctuation was found, just append it and continue
              spunDisplay.textContent += punctuation + ' ';
+             processedText += punctuation + ' ';
              continue;
         }
 
@@ -319,11 +338,13 @@ export async function handleSpinArticle(generatedTextarea, spunDisplay) {
 
             // Append the generated spintax followed by the original punctuation and a space
             spunDisplay.textContent += spintaxResult + punctuation + ' ';
+            processedText += spintaxResult + punctuation + ' ';
             logToConsole(`Appended Spintax + Punctuation: "${spintaxResult}${punctuation}"`, 'success');
 
         } else {
              // If AI call failed, append the original sentence as is
              spunDisplay.textContent += sentence + ' ';
+             processedText += sentence + ' ';
              logToConsole(`AI spinning failed for sentence. Appending original: "${sentence}"`, 'error');
         }
 
@@ -347,18 +368,17 @@ export async function handleSpinArticle(generatedTextarea, spunDisplay) {
 
 // --- Pause Spinning ---
 export function pauseSpinning() {
+    const pauseSpinBtn = getElement('pauseSpinBtn');
     if (isSpinning && !isPaused) {
         isPaused = true;
         logToConsole("Spinning paused.", "info");
-        const pauseSpinBtn = getElement('pauseSpinBtn');
         if(pauseSpinBtn) {
             pauseSpinBtn.textContent = 'Resume Spinning';
         }
     } else if (isSpinning && isPaused) {
         isPaused = false;
         logToConsole("Spinning resumed.", "info");
-         const pauseSpinBtn = getElement('pauseSpinBtn');
-        if(pauseSpinBtn) {
+         if(pauseSpinBtn) {
             pauseSpinBtn.textContent = 'Pause Spinning';
         }
     }
@@ -374,7 +394,15 @@ export function stopSpinningProcess() {
          if(pauseSpinBtn) {
              pauseSpinBtn.textContent = 'Pause Spinning'; // Reset button text
          }
+         const stopSpinBtn = getElement('stopSpinBtn');
+         if(stopSpinBtn) {
+             disableElement(stopSpinBtn, true); // Optionally disable stop button once clicked
+         }
+          const spinArticleBtn = getElement('enableSpinningBtn');
+         if(spinArticleBtn) {
+             disableElement(spinArticleBtn, false); // Re-enable spin button immediately
+         }
     }
 }
 
-console.log("article-spinner.js loaded"); // v8.17 Domain Handling and Pause/Stop
+console.log("article-spinner.js loaded"); // v8.18 Refined Sentence Splitting and Robust Pause/Stop
