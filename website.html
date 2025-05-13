@@ -32,22 +32,6 @@
 <body>
  <h1 class="text-2xl font-bold text-indigo-700 mb-4">AI Website Generator 🌐</h1>
 
- <section id="websiteInputSection" class="compact-section">
- <h2 class="text-lg font-semibold mb-3 text-gray-600 border-b pb-2">Website Details ✨</h2>
- <div class="input-group">
- <label for="websiteTitle" class="compact-label">Website Title / Business Name: <span class="text-red-500">*</span></label>
- <input type="text" id="websiteTitle" class="compact-input" placeholder="e.g., My Awesome Business">
- </div>
- <div class="input-group">
- <label for="websiteDescription" class="compact-label">Website Description / Purpose: <span class="text-red-500">*</span></label>
- <textarea id="websiteDescription" rows="3" class="compact-textarea" placeholder="e.g., A single page website to showcase our services and contact information..."></textarea>
- </div>
- <div class="input-group">
- <label for="targetAudience" class="compact-label">Target Audience: <span class="text-red-500">*</span></label>
- <input type="text" id="targetAudience" class="compact-input" placeholder="e.g., Local homeowners looking for plumbing services">
- </div>
- </section>
-
  <section id="googleMapsSection" class="compact-section">
  <h2 class="text-lg font-semibold mb-3 text-gray-600 border-b pb-2">Google Maps Business Data (Optional) 📍</h2>
  <p class="text-sm text-gray-600 mb-2">Paste the JSON data from Google Maps scraping here. This will be used to populate content.</p>
@@ -96,9 +80,7 @@
     <script>
         // --- Element References ---
         const websiteTitleInput = document.getElementById('websiteTitle');
-        const websiteDescriptionTextarea = document.getElementById('websiteDescription');
-        const additionalInstructionsTextarea = document.getElementById('additionalInstructions'); // Fix ID
-        const markdownPromptTextarea = document.getElementById('markdownPrompt');
+        const googleMapsJsonTextarea = document.getElementById('googleMapsJson');
         const generateWebsiteBtn = document.getElementById('generateWebsiteBtn');
         const outputSection = document.getElementById('outputSection'); // Get output section
         const outputPre = document.getElementById('output'); // Get output pre tag
@@ -106,17 +88,13 @@
         // --- Local Storage Keys ---
         const businessesListDiv = document.getElementById('businessesList'); // Get reference to businesses list div
         const STORAGE_KEYS = {
-            websiteTitle: 'websiteTitle', 
-            websiteDescription: 'websiteDescription',
-            targetAudience: 'targetAudience',
             googleMapsJson: 'googleMapsJson',
             additionalInstructions: 'additionalInstructions',
         };
-        const targetAudienceInput = document.getElementById('targetAudience'); // Correct variable name
+        const additionalInstructionsTextarea = document.getElementById('additionalInstructions'); // Fix ID
 
          // --- Load from Local Storage ---
         function loadFromLocalStorage() {
-            targetAudienceInput.value = localStorage.getItem(STORAGE_KEYS.targetAudience) || ''; // Correct variable name
             googleMapsJsonTextarea.value = localStorage.getItem(STORAGE_KEYS.googleMapsJson) || ''; // Correct variable name
             additionalInstructionsTextarea.value = localStorage.getItem(STORAGE_KEYS.additionalInstructions) || ''; // Correct variable name
         }
@@ -125,9 +103,6 @@
         function saveToLocalStorage() {
             localStorage.setItem(STORAGE_KEYS.googleMapsJson, googleMapsJsonTextarea.value); // Correct variable name
             localStorage.setItem(STORAGE_KEYS.additionalInstructions, additionalInstructionsTextarea.value); // Correct variable name
-            localStorage.setItem(STORAGE_KEYS.websiteTitle, websiteTitleInput.value);
-            localStorage.setItem(STORAGE_KEYS.websiteDescription, websiteDescriptionTextarea.value);
-            localStorage.setItem(STORAGE_KEYS.targetAudience, targetAudienceInput.value);
 
         }
 
@@ -325,9 +300,9 @@
         });
 
         // Add event listeners to input fields to save and update the prompt draft
-        [websiteTitleInput, websiteDescriptionTextarea, targetAudienceInput, googleMapsJsonTextarea, additionalInstructionsTextarea].forEach(element => { // All relevant inputs
+        [googleMapsJsonTextarea, additionalInstructionsTextarea].forEach(element => { // All relevant inputs
             element.addEventListener('input', () => { // Use 'input' event for real-time updates
-                saveToLocalStorage(); // Save all input on any change
+                saveToLocalStorage(); // Save relevant input on change
                 // Note: parseAndDisplayBusinesses() is called by googleMapsJsonTextarea's input listener
                 // generateMarkdownPrompt(); // Call this if you want the prompt to update on any input change
  // For now, prompt updates primarily via JSON input
@@ -450,16 +425,9 @@
         // --- Generate Markdown Prompt ---\n"
         function generateMarkdownPrompt(selectedBusinesses) {
             const websiteTitle = websiteTitleInput.value;
-            const websiteDescription = websiteDescriptionTextarea.value;
-            const targetAudience = targetAudienceInput.value;
             const additionalInstructions = additionalInstructionsTextarea.value;
 
             let promptContent = `# AI Website Generation Prompt\n\n`;
-            promptContent += `Generate a complete single-page website (HTML, CSS, and JavaScript all in one file) based on the following details:\n\n`;
-
-            if (websiteTitle) promptContent += `## Overall Goal\nWebsite Title/Business Name: ${websiteTitle}\n`;
-            if (websiteDescription) promptContent += `Website Description/Purpose: ${websiteDescription}\n`;
-            if (targetAudience) promptContent += `Target Audience: ${targetAudience}\n\n`;
 
             // ## Style Guide - Dynamically Generated
             promptContent += `## Style Guide\n`;
