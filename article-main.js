@@ -1,4 +1,4 @@
-// article-main.js (v8.16 Spun Logic Improved)
+// article-main.js (v8.17 add pause stop spin)
 
 import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
 import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
@@ -11,7 +11,7 @@ import {
 import { languageOptions, imageProviders } from './article-config.js';
 import { handleGenerateStructure, handleGenerateArticle } from './article-single.js';
 import { handleGeneratePlan, handleStartBulkGeneration, handleDownloadZip } from './article-bulk.js';
-import { handleSpinSelectedText, handleSelection, highlightSpintax, handleSpinArticle } from './article-spinner.js';
+import { handleSpinSelectedText, handleSelection, highlightSpintax, handleSpinArticle, pauseSpinning, stopSpinningProcess } from './article-spinner.js';
 
 // Flag to prevent multiple initializations
 let appInitialized = false;
@@ -216,12 +216,14 @@ function setupStep3Listeners() {
     const generatedArticleTextarea = getElement('generatedArticleTextarea');
     const htmlPreviewDiv = getElement('htmlPreviewDiv');
     const enableSpinningBtn = getElement('enableSpinningBtn');
+    const pauseSpinBtn = getElement('pauseSpinBtn');
+    const stopSpinBtn = getElement('stopSpinBtn');
     const spunArticleDisplay = getElement('spunArticleDisplay');
     const step4Section = getElement('step4Section');
 
     // Change button text
     if (enableSpinningBtn) {
-        enableSpinningBtn.textContent = 'Spin Article';
+        enableSpinningBtn.textContent = ' Spin Article 🔄 ';
     }
 
     previewHtmlCheckbox?.addEventListener('change', (e) => {
@@ -255,6 +257,16 @@ function setupStep3Listeners() {
              if(!step4) console.error("step4Section element is missing!");
              alert("Error starting spinning process. Please check console.");
         }
+    });
+
+    pauseSpinBtn?.addEventListener('click', () => {
+        logToConsole("Pause/Resume Spin button clicked.", "info");
+        pauseSpinning(); // Call the function from article-spinner.js
+    });
+
+    stopSpinBtn?.addEventListener('click', () => {
+        logToConsole("Stop Spin button clicked.", "info");
+        stopSpinningProcess(); // Call the function from article-spinner.js
     });
 
     // *** Add listener for generated article textarea edits ***
@@ -310,4 +322,4 @@ function setupBulkModeListeners() {
 logToConsole("article-main.js evaluating. Setting up DOMContentLoaded listener.", "debug");
 document.addEventListener('DOMContentLoaded', initializeApp, { once: true });
 
-console.log("article-main.js loaded (v8.16 Spun Logic Improved)");
+console.log("article-main.js loaded (v8.17 add pause stop spin)");

@@ -1,11 +1,17 @@
-// article-spinner.js (v8.16 Spun Logic Improved)
+// article-spinner.js (v8.17 Domain Handling and Pause/Stop)
 
 import { getState, updateState } from './article-state.js';
-import { logToConsole, callAI, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js'; // Ensure getElement is imported
-import { getElement } from './article-ui.js';
+// Import callAI and other helpers from article-helpers.js
+import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement, callAI } from './article-helpers.js';
+import { getElement } from './article-ui.js'; // Keep this import for getElement
 import { languageOptions } from './article-config.js'; // Import language options if needed for context
 
 let selectedTextInfo = null; // Store { text: '...', range: Range }
+
+// --- Pause/Stop Control Variables ---
+let isSpinning = false;
+let isPaused = false;
+let stopSpinning = false;
 
 // --- Spintax Highlighting ---
 export function highlightSpintax(element) {
@@ -102,14 +108,14 @@ export async function handleSpinSelectedText() {
     const tone = state.tone === 'custom' ? state.customTone : state.tone;
 
     // Enhanced prompt with example and instruction to exclude punctuation
-    const prompt = `Take the following text and generate 2-4 variations that mean the same thing, suitable for spintax. Exclude the final punctuation mark from the generated spintax.
+    const prompt = `Take the following text and generate 3-6 variations that mean the same thing, suitable for spintax. Exclude the final punctuation mark from the generated spintax.
 
     Example:
     Text to Spin: Budi makan soto di rumah makan
     Spintax Output: {Budi makan soto di rumah makan|Di rumah makan Budi makan soto|Di rumah makan soto dimakan Budi|Budi di rumah makan makan soto|Soto dimakan Budi di rumah makan|Soto di rumah makan dimakan Budi}
 
     Instructions:
-    - Generate 2-4 variations.
+    - Generate 3-6 variations.
     - Maintain the original meaning.
     - Maintain the specified Language (${language}${dialect ? `, ${dialect} dialect` : ''}) and Tone (${tone}).
     - Output Format: Return ONLY the spintax string in the format {original|variation1|variation2|...}.
@@ -130,7 +136,22 @@ export async function handleSpinSelectedText() {
     const result = await callAI('generate', payload, loadingIndicator, spinSelectedBtn); // Pass button to disable
 
     if (result?.success && result.text) {
-        const spintaxResult = result.text.trim();
+        let spintaxResult = result.text.trim();
+
+        // Basic cleanup: remove leading/trailing curly braces if AI added them unexpectedly
+        if (spintaxResult.startsWith('{') && spintaxResult.endsWith('}')) {
+             // Check if it looks like valid spintax before removing braces
+             if (spintaxResult.includes('|')) {
+                 // Keep braces if it's valid spintax
+             } else {
+                 // If no pipe, it's likely not valid spintax, remove braces
+                 spintaxResult = spintaxResult.substring(1, spintaxResult.length - 1).trim();
+             }
+        } else {
+            // If no braces, just use the result as a single option wrapped in braces
+             spintaxResult = `{${spintaxResult}}`;
+        }
+
         const selection = window.getSelection();
         if (selection && selectedTextInfo.range) {
             try {
@@ -177,19 +198,55 @@ export async function handleSpinSelectedText() {
 // --- Automatic Article Spinning ---
 export async function handleSpinArticle(generatedTextarea, spunDisplay) {
     logToConsole("Starting automatic article spinning...", "info");
+    isSpinning = true;
+    isPaused = false;
+    stopSpinning = false;
+
     const articleText = generatedTextarea.value;
     spunDisplay.textContent = ''; // Clear the spun display area
 
-    // Robust sentence extraction (handles various punctuation and multiple spaces/newlines)
-    const sentences = articleText.match(/([^.!?]+[.!?]+|[^.!?]+$)/g) || [];
+    const loadingIndicator = getElement('spinActionLoadingIndicator');
+    const spinArticleBtn = getElement('enableSpinningBtn'); // Spin Article button
+    const pauseSpinBtn = getElement('pauseSpinBtn'); // New Pause button
+    const stopSpinBtn = getElement('stopSpinBtn'); // New Stop button
 
-    const loadingIndicator = getElement('spinActionLoadingIndicator'); // Assuming you have a loading indicator for this process
-    const spinArticleBtn = getElement('enableSpinningBtn'); // Get the button to disable
-
-    disableElement(spinArticleBtn, true); // Disable button during spinning
+    disableElement(spinArticleBtn, true); // Disable Spin Article button
+    disableElement(pauseSpinBtn, false); // Enable Pause button
+    disableElement(stopSpinBtn, false); // Enable Stop button
     showLoading(loadingIndicator, true); // Show loading indicator
 
+    // Refined Sentence Extraction
+    // This regex splits by . ! ? followed by a space or end of string,
+    // but tries to avoid splitting after a single dot not followed by a space (like in URLs).
+    const sentences = articleText.match(/([^.!?]+[.!?]+(?=\s|$)|[^.!?]+$)/g) || [];
+
     for (const sentenceMatch of sentences) {
+        if (stopSpinning) {
+            logToConsole("Spinning stopped by user.", "info");
+            break; // Exit loop if stop is requested
+        }
+
+        if (isPaused) {
+            logToConsole("Spinning paused...", "info");
+            disableElement(pauseSpinBtn, false); // Keep Pause button enabled
+            disableElement(stopSpinBtn, false); // Keep Stop button enabled
+            await new Promise(resolve => {
+                const interval = setInterval(() => {
+                    if (!isPaused) {
+                        clearInterval(interval);
+                        logToConsole("Spinning resumed.", "info");
+                        resolve();
+                    }
+                     if (stopSpinning) {
+                         clearInterval(interval);
+                         logToConsole("Spinning stopped by user during pause.", "info");
+                         resolve();
+                     }
+                }, 100); // Check every 100ms
+            });
+             if (stopSpinning) break; // Check again after resuming
+        }
+
         let sentence = sentenceMatch.trim();
         if (!sentence) continue;
 
@@ -199,11 +256,10 @@ export async function handleSpinArticle(generatedTextarea, spunDisplay) {
         const sentenceWithoutPunctuation = sentence.replace(/[.!?]+$/, '').trim();
 
         if (!sentenceWithoutPunctuation) {
-             // If only punctuation was found, just append it and continue
+             // If only punctuation was found (e.g., a line with just "."), just append it and continue
              spunDisplay.textContent += punctuation + ' ';
              continue;
         }
-
 
         const state = getState(); // Get current language/tone settings
 
@@ -213,14 +269,14 @@ export async function handleSpinArticle(generatedTextarea, spunDisplay) {
         const tone = state.tone === 'custom' ? state.customTone : state.tone;
 
         // Enhanced prompt with example and instruction to exclude punctuation
-        const prompt = `Take the following text (which is a single sentence without its final punctuation) and generate 2-4 variations that mean the same thing, suitable for spintax. Focus on rephrasing or reordering sentence components (subject, predicate, object, information) as shown in the example.
+        const prompt = `Take the following text (which is a single sentence without its final punctuation) and generate 3-6 variations (or as much as possible) that mean the same thing, suitable for spintax. Focus on rephrasing or reordering sentence components (subject, predicate, object, information) as shown in the example.
 
         Example:
         Text to Spin (without punctuation): Budi makan soto di rumah makan
         Spintax Output (without punctuation): {Budi makan soto di rumah makan|Di rumah makan Budi makan soto|Di rumah makan soto dimakan Budi|Budi di rumah makan makan soto|Soto dimakan Budi di rumah makan|Soto di rumah makan dimakan Budi}
 
         Instructions:
-        - Generate 2-4 variations.
+        - Generate 3-6 variations.
         - Maintain the original meaning.
         - Maintain the specified Language (${language}${dialect ? `, ${dialect} dialect` : ''}) and Tone (${tone}).
         - Output Format: Return ONLY the spintax string in the format {original|variation1|variation2|...}.
@@ -230,7 +286,6 @@ export async function handleSpinArticle(generatedTextarea, spunDisplay) {
         ---
         ${sentenceWithoutPunctuation}
         ---`;
-
 
         const payload = {
             providerKey: state.textProvider,
@@ -257,7 +312,7 @@ export async function handleSpinArticle(generatedTextarea, spunDisplay) {
                      spintaxResult = spintaxResult.substring(1, spintaxResult.length - 1).trim();
                  }
             } else {
-                // If no braces, just use the result as a single option
+                // If no braces, just use the result as a single option wrapped in braces
                  spintaxResult = `{${spintaxResult}}`;
             }
 
@@ -273,13 +328,53 @@ export async function handleSpinArticle(generatedTextarea, spunDisplay) {
         }
 
         // Add a small delay to show progress and avoid overwhelming the UI/AI
-        await new Promise(resolve => setTimeout(resolve, 100)); // Adjust delay as needed
+        if (!stopSpinning && !isPaused) { // Only delay if not stopping or pausing
+            await new Promise(resolve => setTimeout(resolve, 100)); // Adjust delay as needed
+        }
     }
 
-    disableElement(spinArticleBtn, false); // Re-enable button
+    isSpinning = false;
+    isPaused = false;
+    stopSpinning = false; // Reset stop flag
+
+    disableElement(spinArticleBtn, false); // Re-enable Spin Article button
+    disableElement(pauseSpinBtn, true); // Disable Pause button
+    disableElement(stopSpinBtn, true); // Disable Stop button
     showLoading(loadingIndicator, false); // Hide loading indicator
     logToConsole("Automatic article spinning finished.", "info");
     highlightSpintax(spunDisplay); // Highlight spintax in the final output
 }
 
-console.log("article-spinner.js loaded"); // v8.16 Spun Logic Improved
+// --- Pause Spinning ---
+export function pauseSpinning() {
+    if (isSpinning && !isPaused) {
+        isPaused = true;
+        logToConsole("Spinning paused.", "info");
+        const pauseSpinBtn = getElement('pauseSpinBtn');
+        if(pauseSpinBtn) {
+            pauseSpinBtn.textContent = 'Resume Spinning';
+        }
+    } else if (isSpinning && isPaused) {
+        isPaused = false;
+        logToConsole("Spinning resumed.", "info");
+         const pauseSpinBtn = getElement('pauseSpinBtn');
+        if(pauseSpinBtn) {
+            pauseSpinBtn.textContent = 'Pause Spinning';
+        }
+    }
+}
+
+// --- Stop Spinning ---
+export function stopSpinningProcess() {
+    if (isSpinning) {
+        stopSpinning = true;
+        isPaused = false; // Ensure not paused if stopping
+        logToConsole("Spinning will stop shortly.", "info");
+         const pauseSpinBtn = getElement('pauseSpinBtn');
+         if(pauseSpinBtn) {
+             pauseSpinBtn.textContent = 'Pause Spinning'; // Reset button text
+         }
+    }
+}
+
+console.log("article-spinner.js loaded"); // v8.17 Domain Handling and Pause/Stop
