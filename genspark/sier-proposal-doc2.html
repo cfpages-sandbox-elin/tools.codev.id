@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PROPOSAL FEASIBILITY STUDY & BASIC DESIGN - KREANOVASI CONSULTING</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap');
+
+        :root {
+            --primary-color: #2A6DBF;   /* Biru utama */
+            --secondary-color: #1E4E8C; /* Biru yang lebih gelap */
+            --accent-color: #000000;    /* Hitam */
+            --text-dark: #1C1C1C;       /* Abu-abu sangat gelap untuk teks */
+            --text-light: #FFFFFF;      /* Putih untuk teks */
+            --light-bg: #FFFFFF;        /* Putih untuk area latar belakang terang */
+            --very-light-blue-bg: rgba(42, 109, 191, 0.05); /* Untuk strip tabel, bg-red-50 */
+            --light-blue-highlight: rgba(42, 109, 191, 0.08); /* Untuk preview-box */
+            --light-blue-border-accent: rgba(42, 109, 191, 0.03); /* Untuk accent-border-left */
+            --medium-light-blue-bg: rgba(42, 109, 191, 0.1); /* Untuk bg-red-100 */
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            color: var(--text-dark); /* Default warna heading */
+        }
+
+        /* Khusus untuk judul di dalam .cover-page agar tetap putih */
+        .cover-page h1, .cover-page h2, .cover-page h3, .cover-page h4, .cover-page h5, .cover-page h6, .cover-page p {
+            color: var(--text-light);
+        }
+
+        .cover-page {
+            min-height: 100vh;
+            position: relative;
+            /* Gradasi diubah ke nuansa biru */
+            background: linear-gradient(135deg, rgba(42, 109, 191, 0.9) 0%, rgba(30, 78, 140, 0.95) 100%);
+            color: var(--text-light); /* Teks di cover page menggunakan text-light */
+        }
+
+        .cover-overlay {
+            background: rgba(0, 0, 0, 0.25); 
+        }
+
+        .section-heading {
+            position: relative;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+            color: var(--primary-color); /* Judul bagian menggunakan warna primer (biru) */
+        }
+
+        .section-heading:after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 0;
+            width: 80px;
+            height: 4px;
+            background-color: var(--primary-color); /* Garis bawah biru */
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-left: 30px;
+            margin-bottom: 20px;
+        }
+
+        .timeline-item:before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 8px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--primary-color); /* Titik timeline biru */
+        }
+
+        .timeline-item:after {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 24px;
+            width: 2px;
+            height: calc(100% - 12px);
+            background-color: var(--primary-color); /* Garis timeline biru */
+        }
+
+        .timeline-item:last-child:after {
+            display: none;
+        }
+
+        .team-member-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .team-member-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .methodology-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+            background-color: var(--light-bg);
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .methodology-card:hover {
+            border-left: 4px solid var(--primary-color); /* Border kiri biru saat hover */
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .table-striped tr:nth-child(even) {
+            background-color: var(--very-light-blue-bg); /* Warna strip tabel biru muda */
+        }
+
+        .page-break-avoid {
+            page-break-inside: avoid;
+        }
+
+        .accent-border-left {
+            border-left: 4px solid var(--primary-color); /* Border kiri biru */
+            padding-left: 15px;
+            background-color: var(--light-blue-border-accent); /* Latar belakang biru sangat halus */
+            margin-bottom: 15px;
+        }
+
+        .preview-box {
+            background-color: var(--light-blue-highlight); /* Latar belakang biru muda untuk preview box */
+            border-left: 4px solid var(--primary-color); /* Border kiri biru */
+            padding: 1rem;
+            border-radius: 0.25rem;
+            margin-top: 1rem;
+        }
+
+        /* Overrides for Tailwind red classes to make them blue */
+        /* TEXT COLORS */
+        .text-red-800,
+        h2.text-red-800 { /* For Executive Summary title, etc. */
+            color: var(--secondary-color) !important;
+        }
+        .text-red-700,
+        strong.text-red-700 { /* For various highlight texts */
+            color: var(--primary-color) !important;
+        }
+        .text-red-600 { /* For icons, etc. */
+            color: var(--primary-color) !important;
+        }
+        .team-member-card .text-red-700 { /* Specific for strong tag within team member card */
+            color: var(--primary-color) !important;
+        }
+
+
+        /* BORDER COLORS */
+        .border-red-500 {
+            border-color: var(--primary-color) !important;
+        }
+
+        /* BACKGROUND COLORS */
+        .bg-red-50 {
+            background-color: var(--very-light-blue-bg) !important;
+        }
+        .bg-red-100 {
+            background-color: var(--medium-light-blue-bg) !important;
+        }
+        .bg-red-600 {
+            background-color: var(--primary-color) !important;
+        }
+        .bg-red-700 { /* For team member card headers */
+            background-color: var(--primary-color) !important;
+        }
+        .bg-red-800 { /* For team member card headers, Footer */
+            background-color: var(--secondary-color) !important;
+        }
+
+        /* Ensure specific title styles are blue if they were red */
+        .section-heading.text-red-800 {
+            color: var(--primary-color) !important; /* Match general section-heading color */
+        }
+        .executive-summary h2.text-red-800 {
+            color: var(--primary-color) !important;
+        }
+        .methodology-card h4.text-red-700 {
+            color: var(--primary-color) !important;
+        }
+        .market-analysis h3.text-red-700, .market-analysis h4.text-red-700 {
+            color: var(--primary-color) !important;
+        }
+        .budget strong.text-red-800 { /* If budget had such specific strong tag */
+            color: var(--primary-color) !important;
+        }
+
+        /* Specific override for closing contact icons if they were red */
+        .closing-contact-box .text-red-600 {
+            color: var(--primary-color) !important;
+        }
+
+        /* Ensure text within blue backgrounds is light/white for contrast */
+        .bg-red-600.text-white,
+        .bg-red-700.text-white,
+        .bg-red-800.text-white {
+            color: var(--text-light) !important;
+        }
+        /* Overriding the above with blue versions */
+        .bg-blue-primary.text-white, /* Assuming you'd use a class like .bg-blue-primary if changing HTML */
+        .bg-blue-secondary.text-white {
+            color: var(--text-light) !important;
+        }
+        /* Explicitly for overridden red classes that should have white text: */
+        /* .bg-red-600, .bg-red-700, .bg-red-800 { These are now blue via earlier overrides */
+            /* Tailwind usually handles text color with bg, but if it was explicitly .text-white, it's fine.
+            If not, and the text color was default dark, we might need to force it white.
+            The original HTML already has .text-white on these elements, so it should be okay.
+            Example: <tr class="bg-red-600 text-white">
+            This will become background blue, text white.
+            */
+        /*}*/ 
+    </style>
+    
+</head>
+
+<body class="bg-gray-50">
+    <!-- Cover Page -->
+    <div class="cover-page flex flex-col justify-center items-center p-8 md:p-12">
+        <div class="cover-overlay absolute inset-0"></div>
+        <div class="z-10 text-center relative w-full max-w-4xl mx-auto">
+            
+            <p class="text-lg md:text-xl uppercase tracking-wider mb-4">Proposal</p>
+            <h1 class="text-3xl md:text-5xl font-bold mb-3 leading-tight">FEASIBILITY STUDY & BASIC DESIGN</h1>
+            <h2 class="text-2xl md:text-4xl font-semibold mb-8">Pembangunan Fasilitas Olahraga
+                <span class="block text-xl md:text-3xl mt-2">Driving Range & Paddle Tennis</span>
+                <span class="block text-lg md:text-3xl mt-2">Beserta Meeting Point di Kawasan Industri PT SIER</span>
+            </h2>
+
+            <div class="my-10">
+                <img src="https://kreanovasi.id/assets/images/logo.png" alt="Kreanovasi Consulting Logo" class="mx-auto mb-6 h-20 md:h-28">
+            </div>
+            
+            <div class="mb-10">
+                <p class="text-md md:text-lg mb-1">Diajukan kepada:</p>
+                <h3 class="text-xl md:text-3xl font-semibold">PT SURABAYA INDUSTRIAL ESTATE RUNGKUT (SIER)</h3>
+            </div>
+
+            <div>
+                <p class="text-md md:text-lg mb-1">Disusun oleh:</p>
+                <h4 class="text-xl md:text-3xl font-bold">KREANOVASI CONSULTING</h4>
+                <p class="text-sm md:text-base mt-1">Established 2012 - Surabaya</p>
+            </div>
+            
+            <div class="bottom-4 left-0 right-0 text-center">
+                <p class="text-xs opacity-80">© 2025 - Kreanovasi Consulting - Hak Cipta Dilindungi</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Executive Summary -->
+    <div class="container mx-auto px-6 py-16">
+        <h2 class="section-heading text-3xl font-bold text-center mb-12">EXECUTIVE SUMMARY</h2>
+        
+        <div class="bg-white rounded-lg shadow-lg p-8 max-w-4xl mx-auto">
+            <p class="mb-6 text-lg">
+                Kreanovasi Consulting dengan bangga mengajukan proposal untuk melaksanakan <strong>Feasibility Study dan Basic Design Pembangunan Fasilitas Olahraga (Driving Range dan Paddle Tennis) serta Meeting Point</strong> di kawasan PT Surabaya Industrial Estate Rungkut (SIER).
+            </p>
+            
+            <p class="mb-6">
+                Proyek ini bertujuan untuk menilai kelayakan bisnis dari berbagai aspek dan menyediakan desain dasar sebagai panduan implementasi. Dengan keahlian tim kami dalam analisis bisnis, perencanaan strategis, dan desain teknis, kami siap memberikan solusi komprehensif yang akan membantu PT SIER mengembangkan fasilitas olahraga yang inovatif dan bernilai ekonomis.
+            </p>
+            
+            <p class="mb-6">
+                Kreanovasi Consulting akan melaksanakan studi kelayakan yang mencakup analisis pasar, aspek teknis, operasional, legal, lingkungan, sosial, strategi, manajemen risiko, dan keuangan, disertai dengan rekomendasi yang actionable. Dilengkapi dengan basic design yang meliputi siteplan, desain visual 3D, dan rencana anggaran biaya.
+            </p>
+            
+            <div class="bg-red-50 p-6 rounded-lg border-l-4 border-red-500 mt-8">
+                <p class="font-semibold text-red-700">
+                    Kami menawarkan jasa ini dengan total investasi sebesar Rp 180.000.000 (seratus delapan puluh juta rupiah) dengan jangka waktu pengerjaan 60 hari kerja.
+                </p>
+                <p class="mt-2 text-gray-700">
+                    Kreanovasi Consulting siap menjadi mitra terpercaya PT SIER dalam mewujudkan fasilitas olahraga yang berkualitas dan berkelanjutan.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Understanding -->
+    <div class="container mx-auto px-6 py-16">
+        <h2 class="section-heading text-3xl font-bold text-center mb-12">PEMAHAMAN PROYEK</h2>
+        
+        <div class="max-w-4xl mx-auto">
+            <div class="bg-white rounded-lg shadow-lg p-8 mb-10">
+                <h3 class="text-2xl font-semibold mb-6 text-gray-800">Latar Belakang</h3>
+                
+                <p class="mb-4 text-gray-700">
+                    PT Surabaya Industrial Estate Rungkut (SIER) merupakan perusahaan pengelola kawasan industri yang didirikan pemerintah sejak tanggal 28 Februari 1974 di Surabaya. PT SIER pada awal berdirinya memiliki wilayah ± 245 Ha di wilayah Rungkut Surabaya yang masuk pada tiga wilayah kecamatan (Kecamatan Rungkut, Kecamatan Tenggilis, dan Kecamatan Gunung Anyar). Pada tahun 1985, PT SIER memperluas wilayah ke arah selatan dengan mengakuisisi ± 87 Ha di wilayah Berbek dan Waru.
+                </p>
+                
+                <p class="mb-4 text-gray-700">
+                    PT SIER juga memiliki usaha berupa penyewaan fasilitas olahraga yang berlokasi di Wisma SIER Surabaya. Dalam upaya peningkatan ragam jenis fasilitas olahraga yang ada, PT SIER berencana untuk membangun fasilitas olahraga driving range dan paddle tennis di Kawasan dan didukung dengan adanya meeting point.
+                </p>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-lg p-8">
+                <h3 class="text-2xl font-semibold mb-6 text-gray-800">Tujuan Proyek</h3>
+                
+                <p class="mb-4 text-gray-700">Tujuan penyusunan Feasibility Study (FS) dan Basic Design ini adalah:</p>
+                
+                <ul class="list-disc pl-6 mb-4 text-gray-700">
+                    <li class="mb-2">Untuk mengetahui kelayakan bisnis dalam pembangunan fasilitas olahraga (driving range dan paddle tennis) serta meeting point berdasarkan berbagai aspek terkait</li>
+                    <li class="mb-2">Menyediakan dasar pertimbangan bagi manajemen PT SIER dalam mengambil keputusan</li>
+                    <li class="mb-2">Memberikan rencana pelaksanaan pembangunan fasilitas olahraga (driving range dan paddle tennis) serta meeting point</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Methodology & Approach -->
+    <div class="bg-gray-100 py-16">
+        <div class="container mx-auto px-6">
+            <h2 class="section-heading text-3xl font-bold text-center mb-12">METODOLOGI & PENDEKATAN</h2>
+            
+            <div class="max-w-4xl mx-auto">
+                <p class="mb-8 text-gray-700">
+                    Dalam melaksanakan feasibility study dan basic design untuk pembangunan fasilitas olahraga dan meeting point di PT SIER, Kreanovasi Consulting akan menggunakan pendekatan komprehensif yang mencakup:
+                </p>
+                
+                <div class="mb-10">
+                    <h3 class="text-2xl font-semibold mb-6 text-gray-800">1. Pendekatan Studi Kelayakan</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="methodology-card bg-white p-6 rounded-lg shadow-md">
+                            <h4 class="text-xl font-semibold mb-4 text-red-700">Tahap 1: Pengumpulan Data & Analisis Pendahuluan</h4>
+                            <ul class="list-disc pl-6 text-gray-600">
+                                <li class="mb-2">Kajian literatur dan data sekunder</li>
+                                <li class="mb-2">Wawancara dengan stakeholder kunci PT SIER</li>
+                                <li class="mb-2">Observasi lokasi dan survei kondisi eksisting</li>
+                                <li class="mb-2">Pengumpulan data primer pasar</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="methodology-card bg-white p-6 rounded-lg shadow-md">
+                            <h4 class="text-xl font-semibold mb-4 text-red-700">Tahap 2: Analisis Multi-Aspek</h4>
+                            <ul class="list-disc pl-6 text-gray-600">
+                                <li class="mb-2">Aspek Bisnis: Analisis pasar, segmentasi, positioning, model bisnis</li>
+                                <li class="mb-2">Aspek Teknis dan Operasional: Desain fasilitas, kebutuhan peralatan, SOP operasional</li>
+                                <li class="mb-2">Aspek Legal, Lingkungan dan Sosial: Regulasi, dampak lingkungan, sosial</li>
+                                <li class="mb-2">Aspek Strategi: Analisis SWOT, Porter's Five Forces, Blue Ocean Strategy</li>
+                                <li class="mb-2">Aspek Manajemen Risiko: Identifikasi risiko, mitigasi, dan pengelolaan</li>
+                                <li class="mb-2">Aspek Keuangan: CAPEX, OPEX, proyeksi pendapatan, NPV, IRR, Payback Period, Break Even Point</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="methodology-card bg-white p-6 rounded-lg shadow-md">
+                            <h4 class="text-xl font-semibold mb-4 text-red-700">Tahap 3: Sintesis & Rekomendasi</h4>
+                            <ul class="list-disc pl-6 text-gray-600">
+                                <li class="mb-2">Integrasi hasil analisis multi-aspek</li>
+                                <li class="mb-2">Penyusunan skenario alternatif</li>
+                                <li class="mb-2">Formulasi rekomendasi dan action plan</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-2xl font-semibold mb-6 text-gray-800">2. Pendekatan Basic Design</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="methodology-card bg-white p-6 rounded-lg shadow-md">
+                            <h4 class="text-xl font-semibold mb-4 text-red-700">Tahap 1: Konseptualisasi Desain</h4>
+                            <ul class="list-disc pl-6 text-gray-600">
+                                <li class="mb-2">Penyusunan design brief dan requirement</li>
+                                <li class="mb-2">Brainstorming dan ideasi konsep</li>
+                                <li class="mb-2">Analisis referensi dan benchmark desain</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="methodology-card bg-white p-6 rounded-lg shadow-md">
+                            <h4 class="text-xl font-semibold mb-4 text-red-700">Tahap 2: Pengembangan Desain</h4>
+                            <ul class="list-disc pl-6 text-gray-600">
+                                <li class="mb-2">Penyusunan plotting kebutuhan luas area</li>
+                                <li class="mb-2">Pengembangan siteplan dan layout</li>
+                                <li class="mb-2">Perancangan basic design fasilitas</li>
+                                <li class="mb-2">Analisis kebutuhan utilitas (listrik, air, limbah)</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="methodology-card bg-white p-6 rounded-lg shadow-md">
+                            <h4 class="text-xl font-semibold mb-4 text-red-700">Tahap 3: Visualisasi & Estimasi Biaya</h4>
+                            <ul class="list-disc pl-6 text-gray-600">
+                                <li class="mb-2">Pembuatan model visual 3D</li>
+                                <li class="mb-2">Penyusunan Rencana Anggaran Biaya (RAB)/Engineering Estimate (EE)</li>
+                                <li class="mb-2">Finalisasi desain dan dokumentasi</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Market Analysis -->
+    <div class="container mx-auto px-6 py-16">
+        <h2 class="section-heading text-3xl font-bold text-center mb-12">ANALISIS PASAR</h2>
+        
+        <div class="max-w-5xl mx-auto">
+            <p class="mb-8 text-gray-700 text-center">Berikut adalah ringkasan dan detail analisis pasar untuk fasilitas yang direncanakan.</p>
+
+            <!-- PREVIEW ANALISIS PASAR -->
+            <div class="mb-12 bg-white p-6 md:p-8 rounded-lg shadow-lg">
+                <h3 class="text-2xl font-semibold text-center mb-8 text-red-700">RINGKASAN ANALISIS PASAR</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div>
+                        <h4 class="text-xl font-semibold mb-3 text-gray-800">Potensi Pasar Driving Range</h4>
+                        <p class="text-sm text-gray-600 mb-4">Berdasarkan penelitian awal kami, driving range di Surabaya dan Jawa Timur menunjukkan potensi yang menjanjikan:</p>
+                        <table class="w-full text-sm mb-4 table-striped border">
+                            <thead class="bg-red-100">
+                                <tr>
+                                    <th class="p-2 border text-left">Fasilitas Eksisting</th>
+                                    <th class="p-2 border text-left">Lokasi</th>
+                                    <th class="p-2 border text-left">Harga (Rp)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td class="p-2 border">Ciputra Golf</td><td class="p-2 border">Surabaya Barat</td><td class="p-2 border">80.000 - 120.000</td></tr>
+                                <tr><td class="p-2 border">Pakuwon Golf</td><td class="p-2 border">Surabaya Barat</td><td class="p-2 border">75.000 - 100.000</td></tr>
+                                <tr><td class="p-2 border">Brawijaya Driving Range</td><td class="p-2 border">Surabaya Tengah</td><td class="p-2 border">60.000 - 90.000</td></tr>
+                                <tr><td class="p-2 border">Golf Graha Famili</td><td class="p-2 border">Surabaya Barat</td><td class="p-2 border">80.000 - 110.000</td></tr>
+                                <tr><td class="p-2 border">Araya Golf (Malang)</td><td class="p-2 border">Jawa Timur</td><td class="p-2 border">60.000 - 80.000</td></tr>
+                            </tbody>
+                        </table>
+                        <h5 class="font-semibold mt-3 mb-1 text-gray-700">Model Pendapatan:</h5>
+                        <ul class="list-disc list-inside text-sm text-gray-600 mb-3">
+                            <li>Penjualan bucket bola (50-100 bola)</li>
+                            <li>Keanggotaan tahunan (Rp 5-6 juta/tahun)</li>
+                            <li>Layanan pelatihan golf profesional</li>
+                            <li>Penyewaan peralatan golf</li>
+                            <li>Pendapatan F&B dari fasilitas pendukung</li>
+                        </ul>
+                        <div class="preview-box text-sm text-gray-700">
+                            Berdasarkan studi awal, profitabilitas driving range dengan 25 bay dapat mencapai Rp 80-100 juta per bulan dengan investasi awal Rp 3-5 miliar (estimasi kasar).
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="text-xl font-semibold mb-3 text-gray-800">Potensi Pasar Paddle Tennis</h4>
+                        <p class="text-sm text-gray-600 mb-4">Paddle Tennis (Padel) merupakan olahraga yang sedang tumbuh pesat di Indonesia, termasuk di Surabaya:</p>
+                        <table class="w-full text-sm mb-4 table-striped border">
+                            <thead class="bg-red-100">
+                                <tr>
+                                    <th class="p-2 border text-left">Fasilitas Eksisting</th>
+                                    <th class="p-2 border text-left">Lokasi</th>
+                                    <th class="p-2 border text-left">Harga Sewa (Rp)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td class="p-2 border">Playground Padel Club</td><td class="p-2 border">Lenmarc Mall</td><td class="p-2 border">250.000/jam</td></tr>
+                                <tr><td class="p-2 border">Uno Padel Royal</td><td class="p-2 border">Surabaya</td><td class="p-2 border">150.000/jam</td></tr>
+                                <tr><td class="p-2 border">Margomulyo Sports Center</td><td class="p-2 border">Surabaya</td><td class="p-2 border">170.000/jam</td></tr>
+                                <tr><td class="p-2 border">Jungle Padel</td><td class="p-2 border">Bali (referensi)</td><td class="p-2 border">300.000/jam</td></tr>
+                            </tbody>
+                        </table>
+                        <h5 class="font-semibold mt-3 mb-1 text-gray-700">Kelebihan Padel Tennis:</h5>
+                        <ul class="list-disc list-inside text-sm text-gray-600 mb-3">
+                            <li>Lebih mudah dimainkan dibanding tenis tradisional</li>
+                            <li>Lebih sosial dan mendorong interaksi</li>
+                            <li>Membutuhkan lahan yang lebih kecil</li>
+                            <li>Menarik bagi eksekutif dan profesional</li>
+                            <li>Tren yang sedang berkembang secara global</li>
+                        </ul>
+                        <div class="preview-box text-sm text-gray-700">
+                            Padel tennis memiliki biaya investasi awal sekitar Rp 500 juta - 1 miliar per lapangan dengan potensi pengembalian investasi dalam 2-3 tahun jika dikelola dengan baik.
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-xl font-semibold mb-4 text-center text-gray-800">Sinergi Driving Range, Paddle Tennis, dan Meeting Point</h4>
+                    <p class="text-sm text-gray-600 mb-6 text-center">Kombinasi fasilitas ini memiliki potensi sinergi yang dapat meningkatkan profitabilitas keseluruhan:</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+                        <div class="bg-red-50 p-4 rounded">
+                            <h5 class="font-semibold mb-2 text-red-700">Target Pengguna:</h5>
+                            <ul class="list-disc list-inside text-gray-700">
+                                <li>Eksekutif dan karyawan di kawasan industri</li>
+                                <li>Pebisnis dan profesional Surabaya</li>
+                                <li>Komunitas golf dan padel</li>
+                                <li>Perusahaan untuk kegiatan tim building</li>
+                            </ul>
+                        </div>
+                        <div class="bg-red-50 p-4 rounded">
+                            <h5 class="font-semibold mb-2 text-red-700">Strategi Pemasaran:</h5>
+                            <ul class="list-disc list-inside text-gray-700">
+                                <li>Paket korporat untuk perusahaan di kawasan</li>
+                                <li>Keanggotaan dengan akses ke semua fasilitas</li>
+                                <li>Program loyalitas terintegrasi</li>
+                                <li>Event turnamen dan kompetisi rutin</li>
+                            </ul>
+                        </div>
+                        <div class="bg-red-50 p-4 rounded">
+                            <h5 class="font-semibold mb-2 text-red-700">Potensi Pendapatan:</h5>
+                            <ul class="list-disc list-inside text-gray-700">
+                                <li>Penyewaan lapangan/bay</li>
+                                <li>Keanggotaan premium</li>
+                                <li>F&B di area meeting point</li>
+                                <li>Penyewaan peralatan olahraga</li>
+                                <li>Pelatihan dan kursus</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- END PREVIEW ANALISIS PASAR -->
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-2xl font-semibold mb-4 text-red-700">1. Tren Pasar Driving Range di Surabaya & Jawa Timur</h3>
+                    <p class="mb-4 text-gray-700">Driving range golf saat ini menjadi salah satu fasilitas olahraga premium yang terus berkembang di Surabaya. Beberapa driving range terkemuka di Surabaya:</p>
+                    <ul class="list-disc pl-6 mb-4 text-gray-700">
+                        <li class="mb-2">Ciputra Golf & Family Club - Menyediakan driving range akuatik yang dapat dinikmati dari Selasa-Minggu pukul 05.00-21.00.</li>
+                        <li class="mb-2">Pakuwon Golf - Memiliki driving range luas dengan fasilitas lengkap.</li>
+                        <li class="mb-2">Brawijaya Driving Range - Berlokasi di Jl. Hayam Wuruk No. 54A, Surabaya. Buka setiap hari dari pukul 07.00-21.00. Mereka juga menyediakan simulator golf.</li>
+                        <li class="mb-2">Golf Graha Famili - Menawarkan fasilitas driving range di kawasan Surabaya Barat.</li>
+                    </ul>
+                    <p class="text-gray-700">Rata-rata tarif sewa driving range di Surabaya berkisar antara Rp 50.000 - Rp 150.000 per sesi, tergantung jumlah bola dan durasi. Fasilitas premium dapat menarik tarif lebih tinggi dengan pelayanan tambahan.</p>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-2xl font-semibold mb-4 text-red-700">2. Perkembangan Paddle Tennis di Indonesia</h3>
+                    <p class="mb-4 text-gray-700">Paddle tennis (padel) sedang mengalami pertumbuhan eksplosif di Indonesia, termasuk Surabaya. Menurut data terbaru:</p>
+                    <ul class="list-disc pl-6 mb-4 text-gray-700">
+                        <li class="mb-2">Padel telah menjadi tren olahraga yang berkembang sangat pesat di Indonesia sepanjang tahun 2023-2025.</li>
+                        <li class="mb-2">Pertumbuhan lapangan padel di Indonesia meningkat drastis, termasuk di Surabaya, Jakarta, Bandung, dan Bali.</li>
+                        <li class="mb-2">Di Surabaya sendiri, terdapat beberapa fasilitas padel yang telah beroperasi:
+                            <ul class="list-disc pl-6 mt-2">
+                                <li class="mb-2">Jungle Padel Surabaya - Fasilitas padel premium dengan sistem booking berbasis aplikasi.</li>
+                                <li class="mb-2">Uno Padel Surabaya - Menjadi pionir komunitas padel di Surabaya.</li>
+                                <li class="mb-2">Playground Padel Club - Lapangan padel indoor pertama di Indonesia dengan pendingin udara dan lantai tahan air.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    <p class="text-gray-700">Biaya pembangunan court padel berkisar antara Rp 350 juta hingga Rp 700 juta per lapangan, tergantung spesifikasi dan material yang digunakan. Biaya sewa lapangan padel di Surabaya berkisar antara Rp 150.000 - Rp 300.000 per jam.</p>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-2xl font-semibold mb-4 text-red-700">3. Analisis Kompetitor</h3>
+                    <div class="mb-6">
+                        <h4 class="text-xl font-semibold mb-2 text-gray-800">Driving Range:</h4>
+                        <ul class="list-disc pl-6 text-gray-700">
+                            <li class="mb-2">Ciputra Golf - Keunggulan: Lokasi strategis, fasilitas lengkap, brand kuat. Kelemahan: Tarif premium, akses terbatas.</li>
+                            <li class="mb-2">Pakuwon Golf - Keunggulan: Fasilitas modern, integrasi dengan kawasan hunian. Kelemahan: Fokus pada member, kurang aksesibel untuk umum.</li>
+                            <li class="mb-2">Brawijaya Driving Range - Keunggulan: Lokasi sentral, harga terjangkau. Kelemahan: Luas area terbatas.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="text-xl font-semibold mb-2 text-gray-800">Paddle Tennis:</h4>
+                        <ul class="list-disc pl-6 text-gray-700">
+                            <li class="mb-2">Jungle Padel Surabaya - Keunggulan: Desain modern, sistem booking canggih. Kelemahan: Targetnya kalangan premium.</li>
+                            <li class="mb-2">Uno Padel Surabaya - Keunggulan: Komunitas kuat, program pengembangan. Kelemahan: Fasilitas pendukung terbatas.</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-2xl font-semibold mb-4 text-red-700">4. Peluang Pasar</h3>
+                    <ul class="list-disc pl-6 text-gray-700">
+                        <li class="mb-4"><strong>Sinergi dengan Kawasan Industri</strong> - Fasilitas olahraga di kawasan industri PT SIER dapat menjadi nilai tambah bagi tenant dan karyawan industri di sekitarnya.</li>
+                        <li class="mb-4"><strong>Potensi Korporat</strong> - Perusahaan-perusahaan di kawasan industri dapat menjadi pelanggan potensial untuk paket corporate membership atau event.</li>
+                        <li class="mb-4"><strong>Komunitas Olahraga</strong> - Komunitas golf dan padel yang berkembang di Surabaya dapat menjadi target pasar utama.</li>
+                        <li class="mb-4"><strong>Integrasi Meeting Point</strong> - Kombinasi fasilitas olahraga dengan meeting point membuka peluang pasar untuk kegiatan team building, corporate gathering, dan acara sosial bisnis.</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-2xl font-semibold mb-4 text-red-700">5. Potensi Pasar Driving Range</h3>
+                    <p class="mb-4 text-gray-700">Potensi pasar untuk fasilitas driving range di kawasan industri dan sekitarnya cukup menjanjikan. Targeting segmen pasar profesional dan ekspatriat yang bekerja di kawasan SIER, serta komunitas golf di Surabaya. Dengan lokasi strategis, fasilitas premium, dan harga yang kompetitif, driving range dapat menarik volume kunjungan yang tinggi.</p>
+                    <ul class="list-disc pl-6 mb-4 text-gray-700">
+                        <li class="mb-2"><strong>Demografi Pengguna:</strong> Karyawan dan manajemen di kawasan industri, pegolf rekreasi, komunitas golf.</li>
+                        <li class="mb-2"><strong>Faktor Penarik:</strong> Ketersediaan waktu luang (terutama setelah jam kerja atau akhir pekan), lokasi yang mudah diakses dari tempat kerja/tinggal, fasilitas berkualitas.</li>
+                        <li class="mb-2"><strong>Peluang Khusus:</strong> Kerjasama dengan perusahaan di kawasan SIER untuk program karyawan atau corporate event.</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-2xl font-semibold mb-4 text-red-700">6. Model Pendapatan</h3>
+                    <p class="mb-4 text-gray-700">Model pendapatan untuk fasilitas olahraga ini akan berasal dari beberapa sumber:</p>
+                    <ul class="list-disc pl-6 mb-4 text-gray-700">
+                        <li class="mb-2"><strong>Sewa Driving Range:</strong> Tarif per sesi atau per keranjang bola. Potensi pendapatan tambahan dari penyewaan stik dan instruksi golf.</li>
+                        <li class="mb-2"><strong>Sewa Lapangan Paddle Tennis:</strong> Tarif per jam per lapangan.</li>
+                        <li class="mb-2"><strong>Membership:</strong> Paket keanggotaan bulanan atau tahunan dengan benefit eksklusif.</li>
+                        <li class="mb-2"><strong>Meeting Point:</strong> Pendapatan dari penyewaan ruang meeting, penjualan makanan & minuman (F&B), serta event/gathering korporat.</li>
+                        <li class="mb-2"><strong>Kerjasama/Sponsor:</strong> Potensi kerjasama dengan brand olahraga atau perusahaan terkait.</li>
+                    </ul>
+                </div>
+            
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-2xl font-semibold mb-4 text-red-700">7. Potensi Pasar Paddle Tennis</h3>
+                    <p class="mb-4 text-gray-700">Dengan pertumbuhan padel yang pesat, fasilitas ini memiliki potensi pasar yang besar, terutama dari kalangan muda dan profesional yang mencari olahraga baru yang sosial dan menyenangkan. Keberadaan di kawasan industri dapat menarik karyawan yang ingin berolahraga setelah jam kerja.</p>
+                    <ul class="list-disc pl-6 mb-4 text-gray-700">
+                        <li class="mb-2"><strong>Demografi Pengguna:</strong> Profesional muda, ekspatriat, penggemar olahraga raket, komunitas padel.</li>
+                        <li class="mb-2"><strong>Faktor Penarik:</strong> Olahraga yang mudah dipelajari, dimensi lapangan yang lebih kecil (lebih cepat bermain), aspek sosial (biasanya dimainkan berpasangan).</li>
+                        <li class="mb-2"><strong>Peluang Khusus:</strong> Turnamen antar-perusahaan atau turnamen terbuka untuk komunitas.</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-lg p-6">
+                    <h3 class="text-2xl font-semibold mb-4 text-red-700">8. Kelebihan Padel Tennis</h3>
+                    <ul class="list-disc pl-6 mb-4 text-gray-700">
+                        <li class="mb-2"><strong>Aksesibilitas:</strong> Lebih mudah dipelajari dan dimainkan dibanding tenis atau golf, cocok untuk berbagai tingkat keahlian.</li>
+                        <li class="mb-2"><strong>Sosial:</strong> Selalu dimainkan berpasangan, meningkatkan interaksi sosial antar pemain.</li>
+                        <li class="mb-2"><strong>Latihan Fisik:</strong> Menyediakan latihan kardio yang efektif dan membakar kalori.</li>
+                        <li class="mb-2"><strong>Permintaan Tinggi:</strong> Tren global dan lokal menunjukkan permintaan yang terus meningkat untuk fasilitas padel.</li>
+                    </ul>
+                </div>
+    
+                <div class="bg-white rounded-lg shadow-lg p-6 md:col-span-2"> <!-- Span full width on medium screens -->
+                    <h3 class="text-2xl font-semibold mb-4 text-red-700">9. Sinergi Driving Range, Paddle Tennis, dan Meeting Point</h3>
+                    <p class="text-gray-700">
+                        Kombinasi ketiga fasilitas ini menciptakan ekosistem yang unik di kawasan SIER. Driving range dan paddle tennis menarik pengunjung yang aktif berolahraga, sementara meeting point menyediakan tempat untuk bersantai, bersosialisasi, mengadakan pertemuan bisnis, atau event. Sinergi ini meningkatkan nilai jual fasilitas secara keseluruhan dan menciptakan potensi pendapatan silang (cross-selling) antar layanan. Misalnya, peserta meeting dapat mencoba driving range atau padel, atau sebaliknya.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scope of Work -->
+    <div class="bg-gray-100 py-16">
+        <div class="container mx-auto px-6">
+            <h2 class="section-heading text-3xl font-bold text-center mb-12">RUANG LINGKUP PEKERJAAN</h2>
+            
+            <div class="max-w-4xl mx-auto">
+                <p class="mb-8 text-gray-700">
+                    Sesuai dengan Kerangka Acuan Kerja (KAK) PT SIER, Kreanovasi Consulting akan melaksanakan pekerjaan yang mencakup:
+                </p>
+                
+                <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+                    <h3 class="text-2xl font-semibold mb-6 text-gray-800">A. Lingkup Pelayanan (Scope of Service)</h3>
+                    
+                    <ul class="list-disc pl-6 text-gray-700">
+                        <li class="mb-3">
+                            Melaksanakan pembuatan penyusunan Feasibility Study (FS) dan Basic Design Pembangunan Fasilitas Olahraga dan Meeting Point di Kawasan SIER dalam rangka membantu Pengguna Jasa dalam menganalisis kelayakan rencana pengembangan bisnis ini.
+                        </li>
+                        <li class="mb-3">
+                            Melakukan diskusi dan pembahasan secara berkala (weekly meeting), serta menyampaikan kegiatan/pekerjaan sesuai dengan kesepakatan.
+                        </li>
+                        <li class="mb-3">
+                            Melakukan presentasi hasil laporan kepada PT SIER serta melakukan revisi terhadap hasil laporan apabila diperlukan.
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-lg p-8">
+                    <h3 class="text-2xl font-semibold mb-6 text-gray-800">B. Lingkup Pekerjaan (Scope of Work)</h3>
+                    
+                    <div class="mb-6">
+                        <h4 class="text-xl font-semibold mb-4 text-gray-800">1. Laporan Feasibility Study (FS):</h4>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-gray-700">
+                            <div>
+                                <h5 class="font-semibold mb-2">Pendahuluan</h5>
+                                <ul class="list-disc pl-6 mb-4">
+                                    <li>Latar Belakang</li>
+                                    <li>Tujuan</li>
+                                    <li>Sasaran</li>
+                                    <li>Metodologi</li>
+                                    <li>Tim Pelaksana</li>
+                                </ul>
+                                
+                                <h5 class="font-semibold mb-2">Aspek Bisnis</h5>
+                                <ul class="list-disc pl-6 mb-4">
+                                    <li>Analisis Permintaan Pasar</li>
+                                    <li>Analisis Penawaran (Kompetitor)</li>
+                                    <li>Analisis Kesenjangan (Gap Analysis)</li>
+                                    <li>Segmentasi, Target, dan Positioning</li>
+                                    <li>Strategi Pemasaran</li>
+                                    <li>Model Bisnis (Business Model Canvas)</li>
+                                </ul>
+                                
+                                <h5 class="font-semibold mb-2">Aspek Teknis dan Operasional</h5>
+                                <ul class="list-disc pl-6 mb-4">
+                                    <li>Analisis Lokasi</li>
+                                    <li>Kebutuhan Fasilitas dan Peralatan</li>
+                                    <li>Desain dan Layout</li>
+                                    <li>Kapasitas</li>
+                                    <li>Teknologi</li>
+                                    <li>Struktur Organisasi</li>
+                                    <li>SOP Operasional</li>
+                                </ul>
+                                
+                                <h5 class="font-semibold mb-2">Aspek Legal, Lingkungan dan Sosial</h5>
+                                <ul class="list-disc pl-6 mb-4">
+                                    <li>Analisis Perizinan</li>
+                                    <li>Dampak Lingkungan</li>
+                                    <li>Dampak Sosial</li>
+                                    <li>Compliance Requirements</li>
+                                </ul>
+                            </div>
+                            
+                            <div>
+                                <h5 class="font-semibold mb-2">Aspek Strategi</h5>
+                                <ul class="list-disc pl-6 mb-4">
+                                    <li>Analisis SWOT</li>
+                                    <li>Analisis Porter's Five Forces</li>
+                                    <li>Analisis Blue Ocean Strategy</li>
+                                </ul>
+                                
+                                <h5 class="font-semibold mb-2">Aspek Manajemen Risiko</h5>
+                                <ul class="list-disc pl-6 mb-4">
+                                    <li>Identifikasi Risiko</li>
+                                    <li>Penilaian Risiko</li>
+                                    <li>Strategi Mitigasi Risiko</li>
+                                </ul>
+                                
+                                <h5 class="font-semibold mb-2">Aspek Keuangan</h5>
+                                <ul class="list-disc pl-6 mb-4">
+                                    <li>Asumsi-asumsi Keuangan</li>
+                                    <li>Proyeksi Biaya Investasi (CAPEX)</li>
+                                    <li>Proyeksi Biaya Operasional (OPEX)</li>
+                                    <li>Proyeksi Pendapatan</li>
+                                    <li>Proyeksi Laba Rugi</li>
+                                    <li>Proyeksi Arus Kas</li>
+                                    <li>Analisis Kelayakan Investasi (NPV, IRR, Payback Period)</li>
+                                    <li>Analisis Sensitivitas</li>
+                                </ul>
+                                
+                                <h5 class="font-semibold mb-2">Aspek Lain</h5>
+                                <ul class="list-disc pl-6 mb-4">
+                                    <li>Benchmarking</li>
+                                    <li>Best Practices</li>
+                                    <li>Inovasi</li>
+                                </ul>
+                                
+                                <h5 class="font-semibold mb-2">Kesimpulan dan Rekomendasi</h5>
+                                <ul class="list-disc pl-6 mb-4">
+                                    <li>Kesimpulan Kelayakan</li>
+                                    <li>Rekomendasi Strategis</li>
+                                    <li>Action Plan</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-xl font-semibold mb-4 text-gray-800">2. Laporan Basic Design</h4>
+                        
+                        <ul class="list-disc pl-6 text-gray-700">
+                            <li class="mb-2">Penyusunan plotting kebutuhan luas area</li>
+                            <li class="mb-2">Penyusunan rancangan induk berupa Gambar Basic Design</li>
+                            <li class="mb-2">Penyusunan Siteplan</li>
+                            <li class="mb-2">Penyusunan kebutuhan daya listrik, air bersih, dan air limbah</li>
+                            <li class="mb-2">Permodelan visual 3D Bangunan</li>
+                            <li class="mb-2">Penyusunan Rencana Anggaran Biaya (RAB)/Engineering Estimate (EE)</li>
+                            <li class="mb-2">Desain fasilitas pendukung lainnya seperti kamar mandi, mushola dan lain-lain (apabila diperlukan)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Deliverables & Timeline -->
+    <div class="container mx-auto px-6 py-16">
+        <h2 class="section-heading text-3xl font-bold text-center mb-12">DELIVERABLES & TIMELINE</h2>
+        
+        <div class="max-w-4xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                <div class="bg-white rounded-lg shadow-lg p-8">
+                    <h3 class="text-2xl font-semibold mb-6 text-gray-800">Deliverables</h3>
+                    
+                    <div class="mb-6">
+                        <div class="flex items-center mb-3">
+                            <div class="bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center mr-4 text-lg font-bold">1</div>
+                            <h4 class="text-xl font-semibold text-gray-800">Laporan Pendahuluan</h4>
+                        </div>
+                        <ul class="list-disc pl-14 text-gray-700">
+                            <li>Metodologi dan pendekatan</li>
+                            <li>Rencana kerja detail</li>
+                            <li>Data dan informasi awal</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <div class="flex items-center mb-3">
+                            <div class="bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center mr-4 text-lg font-bold">2</div>
+                            <h4 class="text-xl font-semibold text-gray-800">Laporan Antara</h4>
+                        </div>
+                        <ul class="list-disc pl-14 text-gray-700">
+                            <li>Draft analisis aspek-aspek feasibility study</li>
+                            <li>Konsep awal basic design</li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <div class="flex items-center mb-3">
+                            <div class="bg-red-600 text-white rounded-full w-10 h-10 flex items-center justify-center mr-4 text-lg font-bold">3</div>
+                            <h4 class="text-xl font-semibold text-gray-800">Laporan Akhir</h4>
+                        </div>
+                        <ul class="list-disc pl-14 text-gray-700">
+                            <li>Feasibility study lengkap dengan semua aspek analisis</li>
+                            <li>Basic design final dengan semua komponen</li>
+                            <li>Presentasi hasil studi</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg shadow-lg p-8">
+                    <h3 class="text-2xl font-semibold mb-6 text-gray-800">Timeline</h3>
+                    
+                    <p class="mb-4 text-gray-700">
+                        Jangka waktu pelaksanaan pekerjaan adalah <strong>60 hari kerja</strong> sejak Surat Perintah Mulai Kerja diterbitkan dengan pembagian sebagai berikut:
+                    </p>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white table-striped text-gray-700">
+                            <thead>
+                                <tr class="bg-red-600 text-white">
+                                    <th class="py-3 px-4 text-left font-semibold">Tahap</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Kegiatan</th>
+                                    <th class="py-3 px-4 text-center font-semibold">Durasi</th>
+                                    <th class="py-3 px-4 text-left font-semibold">Output</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="py-3 px-4 border-b border-gray-200">1</td>
+                                    <td class="py-3 px-4 border-b border-gray-200">Persiapan dan Pengumpulan Data</td>
+                                    <td class="py-3 px-4 border-b border-gray-200 text-center">10 hari</td>
+                                    <td class="py-3 px-4 border-b border-gray-200">Laporan Pendahuluan</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 border-b border-gray-200">2</td>
+                                    <td class="py-3 px-4 border-b border-gray-200">Analisis Aspek Bisnis, Teknis dan Operasional</td>
+                                    <td class="py-3 px-4 border-b border-gray-200 text-center">15 hari</td>
+                                    <td class="py-3 px-4 border-b border-gray-200">Draft Analisis</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 border-b border-gray-200">3</td>
+                                    <td class="py-3 px-4 border-b border-gray-200">Analisis Aspek Legal, Strategi, Risiko, dan Keuangan</td>
+                                    <td class="py-3 px-4 border-b border-gray-200 text-center">15 hari</td>
+                                    <td class="py-3 px-4 border-b border-gray-200">Draft Analisis</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 border-b border-gray-200">4</td>
+                                    <td class="py-3 px-4 border-b border-gray-200">Penyusunan Basic Design</td>
+                                    <td class="py-3 px-4 border-b border-gray-200 text-center">15 hari</td>
+                                    <td class="py-3 px-4 border-b border-gray-200">Draft Design</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4">5</td>
+                                    <td class="py-3 px-4">Finalisasi Laporan dan Presentasi</td>
+                                    <td class="py-3 px-4 text-center">5 hari</td>
+                                    <td class="py-3 px-4">Laporan Akhir</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget -->
+    <div class="bg-gray-100 py-16">
+        <div class="container mx-auto px-6">
+            <h2 class="section-heading text-3xl font-bold text-center mb-12">ANGGARAN</h2>
+            
+            <div class="max-w-4xl mx-auto">
+                <div class="bg-white rounded-lg shadow-lg p-8">
+                    <p class="mb-6 text-gray-700">
+                        Berdasarkan ruang lingkup pekerjaan yang telah dijabarkan, Kreanovasi Consulting menawarkan jasa konsultasi dengan total investasi sebesar <strong class="text-red-700">Rp 180.000.000 (seratus delapan puluh juta rupiah)</strong> dengan rincian sebagai berikut:
+                    </p>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white table-striped border text-gray-700">
+                            <thead>
+                                <tr class="bg-red-600 text-white">
+                                    <th class="py-3 px-4 border text-left font-semibold">No</th>
+                                    <th class="py-3 px-4 border text-left font-semibold">Komponen Biaya</th>
+                                    <th class="py-3 px-4 border text-right font-semibold">Jumlah (Rp)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="py-3 px-4 border">1</td>
+                                    <td class="py-3 px-4 border font-semibold">Biaya Tenaga Ahli</td>
+                                    <td class="py-3 px-4 border text-right font-semibold">105.000.000</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 border"></td>
+                                    <td class="py-3 px-4 border pl-8">- Team Leader/Ahli Bisnis</td>
+                                    <td class="py-3 px-4 border text-right">30.000.000</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 border"></td>
+                                    <td class="py-3 px-4 border pl-8">- Ahli Pemasaran dan Strategis</td>
+                                    <td class="py-3 px-4 border text-right">20.000.000</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 border"></td>
+                                    <td class="py-3 px-4 border pl-8">- Ahli Teknik/Arsitektur</td>
+                                    <td class="py-3 px-4 border text-right">20.000.000</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 border"></td>
+                                    <td class="py-3 px-4 border pl-8">- Ahli Keuangan</td>
+                                    <td class="py-3 px-4 border text-right">20.000.000</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 border"></td>
+                                    <td class="py-3 px-4 border pl-8">- Ahli Legal dan Lingkungan</td>
+                                    <td class="py-3 px-4 border text-right">15.000.000</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 border">2</td>
+                                    <td class="py-3 px-4 border font-semibold">Biaya Operasional</td>
+                                    <td class="py-3 px-4 border text-right font-semibold">45.000.000</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 border"></td>
+                                    <td class="py-3 px-4 border pl-8">- Survei dan Pengumpulan Data</td>
+                                    <td class="py-3 px-4 border text-right">15.000.000</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 border"></td>
+                                    <td class="py-3 px-4 border pl-8">- Analisis dan Pengolahan Data</td>
+                                    <td class="py-3 px-4 border text-right">10.000.000</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 border"></td>
+                                    <td class="py-3 px-4 border pl-8">- Desain dan Visualisasi</td>
+                                    <td class="py-3 px-4 border text-right">15.000.000</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 border"></td>
+                                    <td class="py-3 px-4 border pl-8">- Transportasi dan Akomodasi</td>
+                                    <td class="py-3 px-4 border text-right">5.000.000</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 border">3</td>
+                                    <td class="py-3 px-4 border font-semibold">Biaya Dokumen dan Pelaporan</td>
+                                    <td class="py-3 px-4 border text-right font-semibold">15.000.000</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 border"></td>
+                                    <td class="py-3 px-4 border pl-8">- Laporan Pendahuluan</td>
+                                    <td class="py-3 px-4 border text-right">3.000.000</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 border"></td>
+                                    <td class="py-3 px-4 border pl-8">- Laporan Antara</td>
+                                    <td class="py-3 px-4 border text-right">4.000.000</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 border"></td>
+                                    <td class="py-3 px-4 border pl-8">- Laporan Akhir</td>
+                                    <td class="py-3 px-4 border text-right">5.000.000</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 border"></td>
+                                    <td class="py-3 px-4 border pl-8">- Presentasi dan Rapat</td>
+                                    <td class="py-3 px-4 border text-right">3.000.000</td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-4 border">4</td>
+                                    <td class="py-3 px-4 border font-semibold">Biaya Tak Terduga (Contingency)</td>
+                                    <td class="py-3 px-4 border text-right font-semibold">15.000.000</td>
+                                </tr>
+                                <tr class="bg-red-50">
+                                    <td class="py-3 px-4 border font-bold text-gray-800"></td>
+                                    <td class="py-3 px-4 border font-bold text-gray-800">TOTAL</td>
+                                    <td class="py-3 px-4 border text-right font-bold text-gray-800">180.000.000</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-8 text-gray-700">
+                        <h4 class="text-xl font-semibold mb-4 text-gray-800">Catatan:</h4>
+                        <ul class="list-disc pl-6">
+                            <li class="mb-2">Biaya di atas sudah termasuk pajak-pajak yang berlaku.</li>
+                            <li class="mb-2">Pembayaran dilakukan dalam 3 tahap: 30% di awal, 30% setelah laporan antara, dan 40% setelah laporan akhir.</li>
+                            <li class="mb-2">Biaya di atas belum termasuk biaya perizinan dan legalisasi dokumen (jika diperlukan).</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Company Profile -->
+    <div class="bg-gray-100 py-16">
+        <div class="container mx-auto px-6">
+            <h2 class="section-heading text-3xl font-bold text-center mb-12">PROFIL PERUSAHAAN</h2>
+            
+            <div class="max-w-4xl mx-auto">
+                <h3 class="text-2xl font-semibold mb-6 text-gray-800">Tentang Kreanovasi Consulting</h3>
+                
+                <p class="mb-4 text-gray-700">
+                    Didirikan pada tahun 2012 di Surabaya, Kreanovasi Consulting telah menjadi pelopor dalam memberikan solusi bisnis inovatif di seluruh Indonesia. Dengan fondasi yang kuat yang dibangun atas kreativitas dan inovasi, kami memberdayakan bisnis untuk mengatasi tantangan dan memanfaatkan peluang baru untuk pertumbuhan.
+                </p>
+                
+                <p class="mb-6 text-gray-700">
+                    Kami mengkhususkan diri dalam menyediakan layanan komprehensif yang mendorong kesuksesan bagi para profesional dan korporasi. Keahlian kami meliputi:
+                </p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                    <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                        <div class="text-red-600 text-4xl mb-4">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                        <h4 class="text-xl font-semibold mb-2 text-gray-800">Business & Management Training</h4>
+                        <p class="text-gray-600">Membekali tim Anda dengan keterampilan yang diperlukan untuk mencapai keunggulan.</p>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                        <div class="text-red-600 text-4xl mb-4">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h4 class="text-xl font-semibold mb-2 text-gray-800">Business & Management Consulting</h4>
+                        <p class="text-gray-600">Menawarkan saran strategis dan solusi yang dapat ditindaklanjuti sesuai dengan kebutuhan unik Anda.</p>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                        <div class="text-red-600 text-4xl mb-4">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <h4 class="text-xl font-semibold mb-2 text-gray-800">Executive Development</h4>
+                        <p class="text-gray-600">Memberdayakan para pemimpin dengan alat untuk menginspirasi dan unggul di pasar yang kompetitif saat ini.</p>
+                    </div>
+                </div>
+                
+                <h3 class="text-2xl font-semibold mb-6 text-gray-800">Struktur Organisasi</h3>
+                
+                <div class="bg-white p-6 rounded-lg shadow-md mb-10">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-gray-700">
+                        <div>
+                            <p class="mb-2"><strong>Komisaris:</strong> Prof. Dr. Putu Anom M.</p>
+                            <p class="mb-2"><strong>Direktur Utama:</strong> Prof. Dr. Fitri Ismiyanti, SE, MSi.</p>
+                            <p class="mb-2"><strong>Administrator:</strong> Cely Orta Barani, S.T.</p>
+                        </div>
+                        <div>
+                            <p class="mb-2"><strong>Bendahara:</strong> Ria Puspita, S.M.</p>
+                            <p class="mb-2"><strong>Sekretaris:</strong> Rizki Putri Rifani, S.E.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Team Experts -->
+    <section id="team" class="container mx-auto px-6 py-16">
+        <h2 class="section-heading text-3xl font-bold text-center mb-12">TIM KONSULTAN</h2>
+    
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Team Member: Windijarto (Team Leader) -->
+            <div class="team-member-card bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="bg-red-700 text-white text-center p-4">
+                    <h3 class="font-bold text-lg text-white">Dr. Windijarto, SE., MBA. (Team Leader)</h3>
+                    <p class="text-sm">Ahli Financial Modeling dan Manajemen Bisnis</p>
+                </div>
+                <div class="p-6 text-gray-700 text-sm">
+                    <p class="mb-2"><strong class="text-red-700">Pengalaman:</strong> Memiliki 30 tahun keahlian di bidang Financial Modeling dan Manajemen Bisnis. Beliau membawa kekayaan pengetahuan dan keterampilan praktis dalam membangun model keuangan yang canggih serta mengelola operasi bisnis yang kompleks. Pengalamannya yang luas memungkinkan beliau untuk memberikan wawasan keuangan strategis dan membantu bisnis mengoptimalkan proses pengambilan keputusan, meningkatkan kinerja keuangan, serta mendorong pertumbuhan.</p>
+                </div>
+            </div>
+    
+            <!-- Team Member: Fitri Ismiyanti -->
+            <div class="team-member-card bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="bg-red-700 text-white text-center p-4">
+                    <h3 class="font-bold text-lg text-white">Prof. Dr. Fitri Ismiyanti, SE., M.Si.</h3>
+                    <p class="text-sm">Ahli Manajemen Keuangan dan Manajemen Keuangan Strategis</p>
+                </div>
+                <div class="p-6 text-gray-700 text-sm">
+                    <p class="mb-2"><strong class="text-red-700">Pengalaman:</strong> Memiliki 19 tahun pengalaman di bidang Manajemen Keuangan dan Manajemen Keuangan Strategis. Beliau membawa pengetahuan mendalam dan keahlian praktis untuk membantu bisnis mengoptimalkan strategi keuangan mereka dan mencapai kesuksesan jangka panjang. Mengkhususkan diri dalam mengelola operasi keuangan, perencanaan strategis, dan proses pengambilan keputusan, beliau telah berhasil membimbing organisasi melalui lanskap keuangan yang kompleks, memberikan hasil yang berdampak.</p>
+                </div>
+            </div>
+    
+            <!-- Team Member: Putu Anom -->
+            <div class="team-member-card bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="bg-red-700 text-white text-center p-4">
+                    <h3 class="font-bold text-lg text-white">Prof. Dr. Putu Anom, S.E., M.M., CSA, CIB</h3>
+                    <p class="text-sm">Ahli Penilaian Bisnis dan Merger & Akuisisi</p>
+                </div>
+                <div class="p-6 text-gray-700 text-sm">
+                    <p class="mb-2"><strong class="text-red-700">Pengalaman:</strong> Dengan 20 tahun keahlian di bidang Penilaian Bisnis dan Merger & Akuisisi, beliau menawarkan wawasan mendalam dan strategi yang terbukti untuk membantu bisnis menavigasi kompleksitas proses penilaian dan M&A. Pengetahuannya yang luas memungkinkan beliau untuk secara akurat menilai nilai bisnis dan memfasilitasi merger atau akuisisi yang sukses yang selaras dengan tujuan strategis.</p>
+                </div>
+            </div>
+    
+            <!-- Team Member: Dyah Wulan Sari -->
+            <div class="team-member-card bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="bg-red-700 text-white text-center p-4">
+                    <h3 class="font-bold text-lg text-white">Prof. Dr. Dyah Wulan Sari, M.Ec.</h3>
+                    <p class="text-sm">Ahli Ekonomi dan Ilmu Sosial</p>
+                </div>
+                <div class="p-6 text-gray-700 text-sm">
+                    <p class="mb-2"><strong class="text-red-700">Pengalaman:</strong> Memiliki 30 tahun keahlian di bidang Ekonomi dan Ilmu Sosial. Beliau membawa wawasan yang tak ternilai dan pemahaman mendalam tentang sistem ekonomi dan dinamika sosial. Latar belakangnya yang luas memungkinkan beliau untuk menganalisis tren ekonomi yang kompleks dan isu-isu sosial, memberikan rekomendasi strategis yang mendorong pertumbuhan berkelanjutan dan dampak sosial yang positif.</p>
+                </div>
+            </div>
+    
+            <!-- Team Member: Puput Trikomalasari -->
+            <div class="team-member-card bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="bg-red-700 text-white text-center p-4">
+                    <h3 class="font-bold text-lg text-white">Dr. Puput Trikomalasari, SE., M.Si., MM.</h3>
+                    <p class="text-sm">Ahli Akuntansi</p>
+                </div>
+                <div class="p-6 text-gray-700 text-sm">
+                    <p class="mb-2"><strong class="text-red-700">Pengalaman:</strong> Dengan 20 tahun keahlian di bidang Akuntansi, beliau menawarkan pengetahuan mendalam dan dasar yang kuat dalam pelaporan keuangan, audit, perencanaan pajak, dan kepatuhan. Pengalamannya yang luas memungkinkan beliau untuk memberikan wawasan keuangan yang akurat dan memastikan bisnis mempertahankan praktik keuangan yang transparan dan efektif sesuai dengan standar dan peraturan industri.</p>
+                </div>
+            </div>
+    
+            <!-- Team Member: Manik Mahachandra -->
+            <div class="team-member-card bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="bg-red-700 text-white text-center p-4">
+                    <h3 class="font-bold text-lg text-white">Dr. Manik Mahachandra, S.T., M.Sc.</h3>
+                    <p class="text-sm">Ahli Teknik Industri</p>
+                </div>
+                <div class="p-6 text-gray-700 text-sm">
+                    <p class="mb-2"><strong class="text-red-700">Pengalaman:</strong> Memiliki 10 tahun keahlian di bidang Teknik Industri. Beliau membawa pemahaman komprehensif tentang optimalisasi proses yang kompleks, peningkatan efisiensi operasional, dan peningkatan produktivitas di berbagai industri. Pengalamannya yang luas memungkinkan beliau untuk menerapkan prinsip-prinsip rekayasa untuk merampingkan operasi, mengurangi limbah, dan mendorong solusi hemat biaya.</p>
+                </div>
+            </div>
+    
+            <!-- Team Member: Masmira Kurniawati -->
+            <div class="team-member-card bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="bg-red-700 text-white text-center p-4">
+                    <h3 class="font-bold text-lg text-white">Dr. Masmira Kurniawati, SE., M.Si.</h3>
+                    <p class="text-sm">Ahli Intelijen Pemasaran</p>
+                </div>
+                <div class="p-6 text-gray-700 text-sm">
+                    <p class="mb-2"><strong class="text-red-700">Pengalaman:</strong> Memiliki 19 tahun keahlian di bidang Intelijen Pemasaran. Beliau membawa pengetahuan mendalam dan wawasan strategis dalam memahami tren pasar, perilaku konsumen, dan dinamika persaingan. Pengalamannya yang luas memungkinkan beliau untuk menyediakan solusi berbasis data yang memungkinkan bisnis membuat keputusan pemasaran yang terinformasi, mengoptimalkan strategi, dan mendapatkan keunggulan kompetitif.</p>
+                </div>
+            </div>
+    
+            <!-- Team Member: Afif Navir Refani -->
+            <div class="team-member-card bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="bg-red-700 text-white text-center p-4">
+                    <h3 class="font-bold text-lg text-white">Dr. Eng. Ir. Afif Navir Refani, S.T., M.T.</h3>
+                    <p class="text-sm">Ahli Teknik Infrastruktur Sipil</p>
+                </div>
+                <div class="p-6 text-gray-700 text-sm">
+                    <p class="mb-2"><strong class="text-red-700">Pengalaman:</strong> Memiliki 10 tahun keahlian di bidang Teknik Infrastruktur Sipil. Beliau membawa pemahaman yang solid tentang perancangan, perencanaan, dan pengelolaan proyek infrastruktur, memastikan proyek tersebut memenuhi standar teknis dan peraturan. Pengalamannya yang luas memungkinkan beliau untuk memberikan solusi inovatif untuk tantangan teknik sipil yang kompleks, memastikan pelaksanaan proyek infrastruktur yang sukses yang meningkatkan pembangunan sektor publik dan swasta.</p>
+                </div>
+            </div>
+    
+            <!-- Team Member: Jovi Sulistiawan -->
+            <div class="team-member-card bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="bg-red-700 text-white text-center p-4">
+                    <h3 class="font-bold text-lg text-white">Dr. Jovi Sulistiawan, SE., MSM.</h3>
+                    <p class="text-sm">Ahli Manajemen Sumber Daya Manusia</p>
+                </div>
+                <div class="p-6 text-gray-700 text-sm">
+                    <p class="mb-2"><strong class="text-red-700">Pengalaman:</strong> Memiliki 7 tahun keahlian di bidang Manajemen Sumber Daya Manusia. Beliau membawa pemahaman komprehensif tentang akuisisi bakat, pengembangan karyawan, manajemen kinerja, dan efektivitas organisasi. Pengalamannya yang luas memungkinkan beliau untuk memberikan solusi SDM strategis yang selaras dengan tujuan bisnis, meningkatkan budaya tempat kerja, dan mendorong keterlibatan karyawan.</p>
+                </div>
+            </div>
+    
+            <!-- Team Member: Andri Rianawati -->
+            <div class="team-member-card bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="bg-red-700 text-white text-center p-4">
+                    <h3 class="font-bold text-lg text-white">Andri Rianawati, S.M., MBA.</h3>
+                    <p class="text-sm">Ahli Manajemen Risiko dan Strategis</p>
+                </div>
+                <div class="p-6 text-gray-700 text-sm">
+                    <p class="mb-2"><strong class="text-red-700">Pengalaman:</strong> Memiliki 7 tahun keahlian di bidang Manajemen Risiko dan Strategis. Beliau membawa pemahaman mendalam tentang identifikasi, penilaian, dan mitigasi risiko sambil merumuskan strategi untuk memastikan kesuksesan bisnis jangka panjang. Pengalamannya yang luas memungkinkan beliau untuk memberikan solusi komprehensif yang membantu organisasi menavigasi ketidakpastian, memanfaatkan peluang, dan mencapai pertumbuhan berkelanjutan.</p>
+                </div>
+            </div>
+    
+            <!-- Team Member: Phima Ruthia Dwikesumasari -->
+            <div class="team-member-card bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="bg-red-700 text-white text-center p-4">
+                    <h3 class="font-bold text-lg text-white">Phima Ruthia Dwikesumasari, SE., M.Si.</h3>
+                    <p class="text-sm">Ahli Pemasaran Digital dan Pemasaran Strategis</p>
+                </div>
+                <div class="p-6 text-gray-700 text-sm">
+                    <p class="mb-2"><strong class="text-red-700">Pengalaman:</strong> Memiliki 7 tahun keahlian di bidang Pemasaran Digital dan Pemasaran Strategis. Beliau membawa kekayaan pengetahuan dalam memanfaatkan platform dan strategi digital untuk mendorong visibilitas merek, keterlibatan pelanggan, dan pertumbuhan bisnis. Pengalamannya yang luas memungkinkan beliau untuk membuat strategi pemasaran berbasis data yang secara efektif menargetkan audiens yang tepat, mengoptimalkan kampanye pemasaran, dan menghasilkan hasil yang terukur.</p>
+                </div>
+            </div>
+    
+            <!-- Team Member: Saifullah Fatah -->
+            <div class="team-member-card bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="bg-red-700 text-white text-center p-4">
+                    <h3 class="font-bold text-lg text-white">Saifullah Fatah, SE., MMT.</h3>
+                    <p class="text-sm">Ahli Financial Modeling</p>
+                </div>
+                <div class="p-6 text-gray-700 text-sm">
+                    <p class="mb-2"><strong class="text-red-700">Pengalaman:</strong> Dengan 5 tahun pengalaman khusus di bidang Financial Modeling, beliau membawa dasar yang kuat dalam membuat model keuangan terperinci yang membantu bisnis membuat keputusan yang terinformasi, menilai kinerja keuangan, dan merencanakan masa depan. Pengalamannya yang luas memungkinkan beliau untuk membangun model yang akurat dan dinamis yang disesuaikan dengan kebutuhan spesifik setiap organisasi.</p>
+                </div>
+            </div>
+        </div>
+    </section>    
+
+    <!-- Why Choose Us -->
+    <div class="bg-gray-100 py-16">
+        <div class="container mx-auto px-6">
+            <h2 class="section-heading text-3xl font-bold text-center mb-12">MENGAPA MEMILIH KREANOVASI CONSULTING</h2>
+            
+            <div class="max-w-5xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+                        <div class="text-red-600 text-4xl mb-4 text-center md:text-left">
+                            <i class="fas fa-award"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-gray-800">Pengalaman Terbukti</h3>
+                        <p class="text-gray-700">
+                            Didirikan tahun 2012, Kreanovasi Consulting memiliki lebih dari 10 tahun pengalaman dalam konsultasi bisnis di berbagai sektor termasuk recreational business.
+                        </p>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+                        <div class="text-red-600 text-4xl mb-4 text-center md:text-left">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-gray-800">Tim Ahli Multidisiplin</h3>
+                        <p class="text-gray-700">
+                            Tim kami terdiri dari para ahli dan profesional dengan latar belakang akademis dan pengalaman praktis yang komprehensif, mencakup semua aspek yang diperlukan dalam studi kelayakan.
+                        </p>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+                        <div class="text-red-600 text-4xl mb-4 text-center md:text-left">
+                            <i class="fas fa-sync-alt"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-gray-800">Pendekatan Holistik</h3>
+                        <p class="text-gray-700">
+                            Kami menggunakan pendekatan holistik yang mempertimbangkan semua aspek penting dalam menentukan kelayakan proyek, tidak hanya finansial tetapi juga teknis, operasional, dan strategi.
+                        </p>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+                        <div class="text-red-600 text-4xl mb-4 text-center md:text-left">
+                            <i class="fas fa-puzzle-piece"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-gray-800">Solusi Kustom</h3>
+                        <p class="text-gray-700">
+                            Kreanovasi Consulting mendesain solusi yang disesuaikan dengan kebutuhan spesifik klien, bukan solusi generik yang sama untuk semua proyek.
+                        </p>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+                        <div class="text-red-600 text-4xl mb-4 text-center md:text-left">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-gray-800">Fokus pada Implementasi</h3>
+                        <p class="text-gray-700">
+                            Kami tidak hanya memberikan rekomendasi teoretis, tetapi juga action plan yang praktis dan implementable.
+                        </p>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+                        <div class="text-red-600 text-4xl mb-4 text-center md:text-left">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-gray-800">Komitmen pada Kualitas</h3>
+                        <p class="text-gray-700">
+                            Kami berkomitmen untuk memberikan hasil kerja dengan standar kualitas tertinggi, tepat waktu, dan dalam anggaran yang disepakati.
+                        </p>
+                    </div>
+                    
+                    <div class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow col-span-full md:col-span-3">
+                        <div class="text-red-600 text-4xl mb-4 text-center md:text-left">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3 text-gray-800">Local Expertise</h3>
+                        <p class="text-gray-700">
+                            Berbasis di Surabaya, kami memiliki pemahaman mendalam tentang pasar lokal dan dinamika bisnis di Jawa Timur, khususnya Surabaya.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Closing -->
+    <div class="container mx-auto px-6 py-16">
+        <div class="max-w-4xl mx-auto">
+            <h2 class="section-heading text-3xl font-bold text-center mb-12">PENUTUP</h2>
+            
+            <div class="bg-white rounded-lg shadow-lg p-8 mb-8 text-gray-700">
+                <p class="mb-6">
+                    Kreanovasi Consulting berkomitmen untuk memberikan layanan konsultasi terbaik bagi PT SIER dalam mewujudkan pembangunan fasilitas olahraga driving range dan paddle tennis beserta meeting point yang layak secara bisnis dan teknis.
+                </p>
+                
+                <p class="mb-6">
+                    Kami siap bekerja sama secara profesional dan membangun komunikasi yang intensif dengan tim PT SIER untuk memastikan keberhasilan proyek ini.
+                </p>
+                
+                <p class="mb-6">
+                    Terima kasih atas kesempatan yang diberikan, dan kami siap melakukan diskusi lebih lanjut terkait proposal ini.
+                </p>
+            </div>
+            
+            <div class="text-center text-gray-800">
+                <p class="text-lg font-semibold mb-1">Hormat kami,</p>
+                <img src="/ttd-tanda-tangan-windijarto.png" alt="Tanda Tangan Windijarto" class="mx-auto my-4 h-20">
+                <p class="text-xl font-bold mb-1">Dr. Windijarto, SE., MBA.</p>
+                <p class="font-semibold">Team Leader</p>
+                <p>Kreanovasi Consulting</p>
+            </div>
+            
+            <div class="mt-12 text-center bg-red-50 p-6 rounded-lg shadow text-gray-700">
+                <h3 class="text-xl font-semibold mb-4 text-gray-800">Kontak:</h3>
+                <p class="mb-1"><i class="far fa-envelope mr-2 text-red-600"></i> Email: info@kreanovasi-consulting.com</p>
+                <p class="mb-1"><i class="fas fa-phone-alt mr-2 text-red-600"></i> Telepon: (031) 567-8910</p>
+                <p><i class="fas fa-map-marker-alt mr-2 text-red-600"></i> Alamat: Jl. Kertajaya Indah No. 123, Surabaya 60292</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-red-800 text-white py-8">
+        <div class="container mx-auto px-6 text-center">
+            <img src="https://kreanovasi.id/assets/images/logo.png" alt="Kreanovasi Consulting Logo" class="mx-auto mb-4 h-12 md:h-16">
+            <p>© 2025 Kreanovasi Consulting. Hak Cipta Dilindungi.</p>
+            <p class="mt-2 text-sm opacity-75">Didirikan 2012 - Surabaya</p>
+        </div>
+    </footer>
+</body>
+</html>
