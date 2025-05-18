@@ -1,4 +1,4 @@
-// article-helpers.js v8.14 (better md parser)
+// article-helpers.js v8.15 (better html parser)
 import { CLOUDFLARE_FUNCTION_URL } from './article-config.js';
 
 // --- Logging ---
@@ -193,58 +193,236 @@ export function getArticleOutlinesV2(structureText) {
 
 // --- *** V2 HTML Parser - Grouping Logic *** ---
 function parseHtmlStructureV2(htmlString) {
+    logToConsole("Starting HTML parsing...", "info");
     const sections = [];
     let currentSection = null;
 
-    try {
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = htmlString;
+    // Use DOMParser to parse the HTML string
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlString, 'text/html');
 
-        // Iterate through direct children or relevant tags
-        // Querying all and then processing might be easier to handle nesting
-        const nodes = tempDiv.querySelectorAll('h1, h2, h3, h4, h5, h6, ul, ol, li, p'); // Include p for potential points
+    // Get the body element, as that's where most visible content resides
+    const body = doc.body;
 
-        nodes.forEach(node => {
-            const tagName = node.tagName.toLowerCase();
-            const text = node.textContent?.trim();
-            if (!text) return; // Skip empty nodes
+    if (!body) {
+        logToConsole("HTML parsing failed: Could not find body element.", "error");
+        return sections; // Return empty sections if no body
+    }
 
-            // Check if it's a primary heading tag (adjust levels as needed)
-            if (['h1', 'h2', 'h3'].includes(tagName)) {
-                // If a section was already open, push it
-                if (currentSection) {
-                    sections.push(currentSection);
-                }
-                // Start new section
-                currentSection = { heading: text, points: [] };
-                 logToConsole(`V2 HTML Parser: New Section - Heading: "${text}"`, "debug");
-            }
-            // Check if it's a list item and a section is active
-            else if (tagName === 'li' && currentSection) {
-                 let pointText = text.replace(/^(\d+\.|[a-zA-Z]\.|[IVXLCDM]+\.|\*|-)\s*/, '').trim(); // Clean list marker
-                 if (pointText.length > 3) {
-                     currentSection.points.push(pointText);
-                     logToConsole(`V2 HTML Parser: Added Point - "${pointText}"`, "debug");
-                 }
-            }
-             // Consider paragraphs as points if they follow a heading closely? (More complex)
-             // else if (tagName === 'p' && currentSection && currentSection.points.length === 0) {
-             //    // Maybe add if it seems like descriptive text for the heading? Heuristic needed.
-             // }
-        });
+    // Traverse the DOM tree to extract text and identify inline tags
+    traverseNodes(body);
 
-        // Push the last section if it exists
-        if (currentSection) {
-            sections.push(currentSection);
+    logToConsole(`Finished HTML parsing. Found ${sections.length} sections.`, "info");
+    return sections;
+
+    function traverseNodes(node) {
+        // Skip script and style elements
+        if (node.nodeName === 'SCRIPT' || node.nodeName === 'STYLE') {
+            return;
         }
 
-    } catch (error) {
-        logToConsole(`Error parsing HTML structure V2: ${error.message}.`, "error");
-        // No reliable fallback for grouped parsing if HTML is broken
-    }
-    return sections;
-}
+        // If it's a text node, process its content
+        if (node.nodeType === Node.TEXT_NODE) {
+            const text = node.textContent.trim();
+            if (text) {
+                // Need to find the closest block-level parent to determine context
+                let parentElement = node.parentElement;
+                while(parentElement && !isBlockLevelElement(parentElement)) {
+                    parentElement = parentElement.parentElement;
+                }
 
+                if (parentElement) {
+                     // Process sentences within this text node, considering its parent element context
+                     processTextNodeContent(text, parentElement);
+                } else {
+                     // Handle text nodes without a block-level parent (less common)
+                     logToConsole(`HTML Parsing: Found text node without block-level parent: "${text.substring(0, 50)}..."`, "warn");
+                     // Maybe add to a default section?
+                     if (!sections[0] || sections[0].heading !== 'Introduction') {
+                          sections.unshift({ heading: 'Introduction', points: [] });
+                     }
+                      sections[0].points.push({ text: text, inlineSyntax: [] }); // Simplified for now
+                }
+            }
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+            // If it's an element node, check if it's a heading or other block-level element
+            const tagName = node.tagName.toLowerCase();
+
+            if (tagName.startsWith('h') && tagName.length === 2 && parseInt(tagName[1]) >= 1 && parseInt(tagName[1]) <= 6) {
+                // Found a heading
+                const headingText = node.textContent.trim();
+                if (headingText) {
+                    // Push previous section if exists
+                    if (currentSection) {
+                        sections.push(currentSection);
+                    }
+                    // Start new section
+                    currentSection = { heading: headingText, points: [] };
+                    logToConsole(`HTML Parsing: Found Heading: "${headingText}"`, "debug");
+                }
+                 // Continue traversing children of headings as they might contain inline elements
+                 for (const childNode of node.childNodes) {
+                     traverseNodes(childNode);
+                 }
+
+            } else if (isBlockLevelElement(node)) {
+                 // Found another block-level element (like p, div, li, etc.)
+                 // We'll process its children to find text nodes and inline elements.
+
+                // If it's a list item, treat it as a point
+                if (tagName === 'li') {
+                     const pointText = node.textContent.trim();
+                     if (pointText) {
+                         const { cleanText, inlineSyntax } = extractInlineTags(node); // Pass the node to extract inline tags within it
+                         if (currentSection) {
+                             currentSection.points.push({ text: cleanText, inlineSyntax: inlineSyntax });
+                             logToConsole(`HTML Parsing: Found List Item Point: "${cleanText.substring(0, 100)}..."`, "debug");
+                         } else {
+                             // Handle list items before a heading
+                              if (!sections[0] || sections[0].heading !== 'Introduction') {
+                                  sections.unshift({ heading: 'Introduction', points: [] });
+                             }
+                             sections[0].points.push({ text: cleanText, inlineSyntax: inlineSyntax });
+                              logToConsole(`HTML Parsing: Found Introductory List Item Point: "${cleanText.substring(0, 100)}..."`, "debug");
+                         }
+                     }
+                      // Don't traverse children for list items as we've processed the whole item's text content
+                      return;
+                } else if (tagName === 'p') {
+                    // Handle paragraph content
+                     const paragraphText = node.textContent.trim();
+                     if (paragraphText) {
+                          const { cleanText, inlineSyntax } = extractInlineTags(node); // Pass the node to extract inline tags within it
+                           if (currentSection) {
+                               currentSection.points.push({ text: cleanText, inlineSyntax: inlineSyntax, type: 'paragraph' });
+                                logToConsole(`HTML Parsing: Found Paragraph: "${cleanText.substring(0, 100)}..."`, "debug");
+                           } else {
+                                // Handle paragraphs before a heading
+                                 if (!sections[0] || sections[0].heading !== 'Introduction') {
+                                     sections.unshift({ heading: 'Introduction', points: [] });
+                                }
+                                sections[0].points.push({ text: cleanText, inlineSyntax: inlineSyntax, type: 'paragraph' });
+                                logToConsole(`HTML Parsing: Found Introductory Paragraph: "${cleanText.substring(0, 100)}..."`, "debug");
+                           }
+                     }
+                     // Don't traverse children for paragraphs as we've processed the whole paragraph text content
+                     return;
+                }
+
+                 // For other block-level elements, continue traversing children
+                 for (const childNode of node.childNodes) {
+                     traverseNodes(childNode);
+                 }
+
+            } else {
+                // Found an inline element or other non-block element
+                // Continue traversing its children
+                for (const childNode of node.childNodes) {
+                    traverseNodes(childNode);
+                }
+            }
+        }
+    }
+
+    function isBlockLevelElement(node) {
+         if (node.nodeType !== Node.ELEMENT_NODE) return false;
+         const tagName = node.tagName.toLowerCase();
+         // Common block-level tags (this list can be expanded)
+         const blockTags = ['address', 'article', 'aside', 'blockquote', 'canvas', 'dd', 'div', 'dl', 'dt', 'fieldset', 'figcaption', 'figure', 'footer', 'form', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'header', 'hgroup', 'hr', 'li', 'main', 'nav', 'noscript', 'ol', 'p', 'pre', 'section', 'table', 'tfoot', 'ul', 'video'];
+         return blockTags.includes(tagName);
+    }
+
+    // --- Helper function to process text content within a node ---
+    // This function will be responsible for:
+    // 1. Splitting the text into sentences.
+    // 2. Identifying and extracting inline tags within the sentence context.
+    // 3. Creating sentence objects with clean text and inline syntax information.
+    // 4. Adding these sentence objects as points to the current section.
+    function processTextNodeContent(text, parentElement) {
+         // This is a placeholder for now. We'll implement the sentence splitting
+         // and inline tag extraction logic here, adapting it for HTML.
+
+         // For now, just add the whole text as a point
+         // Need to rethink how to get inline syntax for just this text node accurately.
+         // The extractInlineTags function currently works on a node's entire content.
+         if (currentSection) {
+             // This is not quite right, as extractInlineTags will get tags from the whole parent.
+             // We need to find a way to relate the text node to its inline tag ancestors and siblings.
+             currentSection.points.push({ text: text, inlineSyntax: [] }); // Simplified
+              logToConsole(`HTML Parsing: Added Text Node Content (simplified): "${text.substring(0, 100)}..."`, "debug");
+
+         } else {
+             // Handle text nodes before a heading
+              if (!sections[0] || sections[0].heading !== 'Introduction') {
+                  sections.unshift({ heading: 'Introduction', points: [] });
+             }
+              sections[0].points.push({ text: text, inlineSyntax: [] }); // Simplified
+              logToConsole(`HTML Parsing: Added Introductory Text Node Content (simplified): "${text.substring(0, 100)}..."`, "debug");
+         }
+
+    }
+
+    // --- Helper function to extract inline HTML tags ---
+    // This function will traverse the children of a node and identify inline tags
+    // within the text content, storing their tag name, content, and position.
+    function extractInlineTags(node) {
+        const inlineSyntax = [];
+        let cleanText = '';
+        let textIndex = 0;
+
+        function traverseForInline(currentNode) {
+             if (currentNode.nodeType === Node.TEXT_NODE) {
+                 const text = currentNode.textContent;
+                 cleanText += text;
+                 // This is a simplified approach to position.
+                 // A more robust approach would track the position within the *original* text stream
+                 // or within the parent element's text content.
+                 textIndex += text.length; // Update index for clean text
+             } else if (currentNode.nodeType === Node.ELEMENT_NODE) {
+                 const tagName = currentNode.tagName.toLowerCase();
+                 // Check if it's an inline element and not a block element within inline traversal
+                 if (isInlineElement(currentNode)) {
+                      // Store inline tag information
+                      inlineSyntax.push({
+                          type: tagName, // Use tag name as type
+                          content: currentNode.textContent, // Content within the tag
+                          // Placeholder index: This needs to be accurately calculated
+                          // based on the position within the flattened text content.
+                          index: textIndex // Using the index *before* processing the content of this inline tag
+                      });
+                     // Recursively traverse children of inline elements to get their text content
+                     for (const childNode of currentNode.childNodes) {
+                          traverseForInline(childNode);
+                     }
+                 } else {
+                     // If it's a block-level element within the traversal of a potentially inline context,
+                     // it indicates a boundary, stop traversing this branch for inline tags.
+                     return;
+                 }
+             }
+        }
+
+        traverseForInline(node);
+
+         // Sort inline syntax by index (placeholder index for now)
+         // Once accurate indices are implemented, this will ensure correct order.
+        inlineSyntax.sort((a, b) => a.index - b.index);
+
+         // Note: Returning cleanText correctly with accurate inline positions is complex
+         // and might require building the clean text and tracking positions simultaneously
+         // during the traversal. For now, we're focusing on extracting the syntax.
+
+        return { cleanText: node.textContent.trim(), inlineSyntax: inlineSyntax }; // Simplified cleanText for now
+    }
+
+     function isInlineElement(node) {
+          if (node.nodeType !== Node.ELEMENT_NODE) return false;
+          const tagName = node.tagName.toLowerCase();
+          // Common inline-level tags (this list can be expanded)
+          const inlineTags = ['a', 'abbr', 'acronym', 'b', 'bdo', 'big', 'br', 'button', 'cite', 'code', 'dfn', 'em', 'i', 'img', 'input', 'kbd', 'label', 'map', 'object', 'q', 'samp', 'script', 'select', 'small', 'span', 'strong', 'sub', 'sup', 'textarea', 'time', 'tt', 'var'];
+          return inlineTags.includes(tagName);
+     }
+}
 
 // --- *** V2 Markdown Parser - Grouping Logic *** ---
 function parseMarkdownStructureV2(markdownString) {
@@ -435,4 +613,4 @@ function parseMarkdownStructureV2(markdownString) {
 
 }
 
-console.log("article-helpers.js v8.14 better md parser.");
+console.log("article-helpers.js v8.15 better html parser.");
