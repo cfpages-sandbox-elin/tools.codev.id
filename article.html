@@ -110,8 +110,12 @@
             </div> 
         </div> 
         <div id="bulkKeywordsContainer" class="hidden mb-4"> 
-            <label for="bulkKeywords" class="compact-label">Enter Keywords (one per line):</label> <textarea id="bulkKeywords" rows="5" class="compact-textarea" placeholder="keyword one&#10;keyword two&#10;another keyword"></textarea> 
-            <p class="text-xs text-gray-500 mt-1">Duplicates and leading/trailing symbols/spaces will be removed.</p> 
+            <div class="flex justify-between items-center mb-1">
+                 <label for="bulkKeywords" class="compact-label">Keywords (one per line for planning, or seed for ideas):</label>
+                 <button id="generateIdeasBtn" class="compact-button bg-teal-500 hover:bg-teal-600 text-xs !py-1 !px-2">Generate Ideas ✨ <span id="ideasLoadingIndicator" class="hidden"><span class="loader !w-3 !h-3"></span></span></button>
+            </div>
+            <textarea id="bulkKeywords" rows="5" class="compact-textarea" placeholder="keyword one (seed for ideas if generating)&#10;keyword two&#10;another keyword"></textarea> 
+            <p class="text-xs text-gray-500 mt-1">Idea generation uses the first keyword. For planning, duplicates and symbols will be removed.</p> 
         </div> 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6"> 
             <div> 
@@ -377,8 +381,8 @@
         <div class="mt-2 flex justify-between items-center"> 
             <label class="flex items-center space-x-2 text-sm cursor-pointer"> <input type="checkbox" id="preview_html_checkbox" class="rounded text-indigo-600 focus:ring-indigo-500"> <span>Preview HTML</span> </label> 
             <button id="enableSpinningBtn" class="compact-button"> Spin Article 🔄 <span id="spinLoadingIndicator" class="hidden"><span class="loader"></span></span> </button>
-            <button id="pauseSpinBtn" class="control-button" disabled> ❚❚ </button> <!-- Initially disabled -->
-            <button id="stopSpinBtn" class="control-button" disabled> 🛑 STOP ❗ </button>   <!-- Initially disabled -->
+            <button id="pauseSpinBtn" class="compact-button bg-yellow-500 hover:bg-yellow-600" disabled> Pause Spinning </button> <!-- Initially disabled -->
+            <button id="stopSpinBtn" class="compact-button bg-red-500 hover:bg-red-600" disabled> Stop Spinning 🛑 </button>   <!-- Initially disabled -->
         </div> 
     </section>
 
@@ -406,6 +410,7 @@
     <script type="module" src="article-ui.js"></script>
     <script type="module" src="article-single.js"></script>
     <script type="module" src="article-bulk.js"></script>
+    <script type="module" src="article-ideas.js"></script>
     <script type="module" src="article-spinner.js"></script>
     <script type="module" src="article-main.js"></script>
 

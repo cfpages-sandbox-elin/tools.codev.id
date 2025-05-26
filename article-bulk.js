@@ -1,4 +1,4 @@
-// article-bulk.js (v8.13 OutlineV2 Alignment)
+// article-bulk.js (v8.13 OutlineV2 Alignment - with internal fix)
 import { getState, getBulkPlan, updateBulkPlanItem, addBulkArticle, saveBulkArticlesState, getBulkArticle, getAllBulkArticles, setBulkPlan } from './article-state.js';
 import { logToConsole, callAI, sanitizeFilename, slugify, getArticleOutlinesV2, constructImagePrompt, delay } from './article-helpers.js';
 import { getElement, updatePlanItemStatusUI, updateProgressBar, hideProgressBar, renderPlanningTable } from './article-ui.js';
@@ -286,7 +286,7 @@ async function uploadBulkImagesToGithub() {
         const fullPath = basePath + img.filename;
         const payload = { owner: owner, repo: repo, path: fullPath, content: img.base64, message: `Upload image: ${img.filename} via AI Tool` };
         const result = await callAI('upload_image', payload, null, null);
-        if (result?.success) { const finalImageUrl = `https://${repoDomain}/${fullPath}`; logToConsole(`Uploaded ${img.filename}. URL: ${finalImageUrl}`, 'success'); uploadedUrls[img.filename] = finalImageUrl; uploadedCount++; } // Store URL against filename
+        if (result?.success) { const finalImageUrl = result.download_url || `https://${repoDomain}/${fullPath}`; logToConsole(`Uploaded ${img.filename}. URL: ${finalImageUrl}`, 'success'); uploadedUrls[img.filename] = finalImageUrl; uploadedCount++; } // Store URL against filename
         else { logToConsole(`Failed to upload ${img.filename}. Error: ${result?.error || 'Unknown'}`, 'error'); uploadedUrls[img.filename] = `[Upload failed: ${img.filename}]`; const planIndex = getBulkPlan().findIndex(item => item.filename === img.articleFilename); if (planIndex !== -1) { updatePlanItemStatusUI(planIndex, 'Completed (Image Upload Failed)'); updateBulkPlanItem(planIndex, { status: 'Completed (Image Upload Failed)', error: `Image upload failed: ${img.filename}` }); } }
         const progressPercent = Math.round(((i + 1) / totalImages) * 100); ui.uploadProgressBar.style.width = `${progressPercent}%`;
     }
@@ -294,18 +294,26 @@ async function uploadBulkImagesToGithub() {
     // Replace Placeholders
     logToConsole("Replacing image placeholders in generated bulk articles...", "info");
     const plan = getBulkPlan();
+    const currentBulkArticles = getAllBulkArticles(); // Get current articles from state
+
     plan.forEach(item => {
-        if (item.filename && bulkArticles[item.filename]) {
-            let content = bulkArticles[item.filename]; let updated = false;
+        if (item.filename && currentBulkArticles[item.filename]) { // Use the fetched articles
+            let content = currentBulkArticles[item.filename]; // Use the fetched articles
+            let updated = false;
             const placeholderRegex = /\[Uploading image: (.*?)\.\.\.\]/g;
             content = content.replace(placeholderRegex, (match, filename) => {
-                if (uploadedUrls[filename]) { updated = true; return uploadedUrls[filename].startsWith('[') ? uploadedUrls[filename] : `![${filename}](${uploadedUrls[filename]})`; }
+                if (uploadedUrls[filename]) {
+                    updated = true;
+                    return uploadedUrls[filename].startsWith('[') ? uploadedUrls[filename] : `![${filename}](${uploadedUrls[filename]})`;
+                }
                 return match; // Keep placeholder if upload failed or filename mismatch
             });
-            if (updated) { addBulkArticle(item.filename, content); }
+            if (updated) {
+                addBulkArticle(item.filename, content); // This updates the state
+            }
         }
     });
-    saveBulkArticlesState();
+    saveBulkArticlesState(); // Persist all changes
 
     ui.uploadProgressText.textContent = `Upload complete (${uploadedCount}/${totalImages} successful). Placeholders replaced.`;
     logToConsole(`GitHub upload process finished. Placeholders replaced.`, 'info');
@@ -329,4 +337,4 @@ export async function handleDownloadZip() {
     } catch (error) { logToConsole(`Error generating ZIP: ${error.message}`, 'error'); alert("Failed to generate ZIP file."); }
 }
 
-console.log("article-bulk.js loaded (v8.13 OutlineV2 Alignment)");
+console.log("article-bulk.js loaded (v8.13 OutlineV2 Alignment - internal fix applied)");

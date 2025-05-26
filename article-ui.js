@@ -1,4 +1,4 @@
-// article-ui.js (v8.16 fix warn supn_article_display)
+// article-ui.js (v8.16 fix warn spun_article_display - extended for ideas)
 import { textProviders, imageProviders, languageOptions, defaultSettings } from './article-config.js';
 import { getState, getCustomModelState, updateState } from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2 } from './article-helpers.js';
@@ -20,6 +20,8 @@ const elementIdMap = {
     bulkModeCheckbox: 'bulkModeCheckbox',
     bulkKeywordsContainer: 'bulkKeywordsContainer',
     bulkKeywords: 'bulkKeywords',
+    generateIdeasBtn: 'generateIdeasBtn', // New
+    ideasLoadingIndicator: 'ideasLoadingIndicator', // New
     languageSelect: 'language',
     customLanguageInput: 'custom_language',
     dialectSelect: 'dialect',
@@ -82,9 +84,9 @@ const elementIdMap = {
     generationProgressDiv: 'generationProgress',
     currentSectionNumSpan: 'currentSectionNum',
     totalSectionNumSpan: 'totalSectionNum',
-    uploadProgressContainer: 'uploadProgressContainer',
-    uploadProgressBar: 'uploadProgressBar',
-    uploadProgressText: 'uploadProgressText',
+    uploadProgressContainer: 'uploadProgressContainer', // Note: This ID is duplicated, one for single, one for bulk. Should be distinct if used simultaneously.
+    uploadProgressBar: 'uploadProgressBar', // Same as above
+    uploadProgressText: 'uploadProgressText', // Same as above
     step3Section: 'step3',
     articleOutputContainer: 'article_output_container',
     generatedArticleTextarea: 'generated_article',
@@ -92,6 +94,8 @@ const elementIdMap = {
     previewHtmlCheckbox: 'preview_html_checkbox',
     enableSpinningBtn: 'enableSpinningBtn',
     spinLoadingIndicator: 'spinLoadingIndicator',
+    pauseSpinBtn: 'pauseSpinBtn', // Added
+    stopSpinBtn: 'stopSpinBtn',   // Added
     step4Section: 'step4',
     spinSelectedBtn: 'spinSelectedBtn',
     spinActionLoadingIndicator: 'spinActionLoadingIndicator',
@@ -127,13 +131,9 @@ export function cacheDomElements() {
         if (element) {
             domElements[key] = element;
         } else {
+            // Log error for all missing IDs, but don't set allFound to false unless critical
             logToConsole(`Failed to cache element with ID: '${htmlId}' (JS Key: ${key})`, 'error');
-            // Only set allFound to false for *critical* elements if needed,
-            // but log error for all missing IDs regardless.
-            // if (['aiProviderSelect', 'languageSelect', ...].includes(key)) {
-            //     allFound = false;
-            // }
-             domElements[key] = null;
+            domElements[key] = null; // Ensure missing elements are explicitly null in cache
         }
     }
 
@@ -150,10 +150,9 @@ export function cacheDomElements() {
         const selector = querySelectorKeys[key];
         const element = document.querySelector(selector);
         if (element) { domElements[key] = element; }
-        else { logToConsole(`Failed to cache element with querySelector: ${selector} (JS Key: ${key})`, 'error'); domElements[key] = null; /* allFound = false; */ } // Decide if these are critical
+        else { logToConsole(`Failed to cache element with querySelector: ${selector} (JS Key: ${key})`, 'error'); domElements[key] = null; }
     }
 
-    // Final log based on whether *all* getElementById attempts succeeded
     const idKeys = Object.keys(elementIdMap);
     const failedIdCount = idKeys.filter(key => domElements[key] === null).length;
 
@@ -161,34 +160,44 @@ export function cacheDomElements() {
     else { logToConsole(`${failedIdCount}/${idKeys.length} getElementById elements failed to cache! UI may malfunction.`, "error"); }
 }
 
-// getElement can now return single elements or NodeLists
 export function getElement(id) {
     const element = domElements[id];
-    
-    // Check if the key exists and has a value (could be element or NodeList)
     if (element === undefined || element === null) {
-        // If not found in cache, try fetching directly from the DOM
         const htmlId = elementIdMap[id];
         if (htmlId) {
             const liveElement = document.getElementById(htmlId);
             if (liveElement) {
-                // Cache the live element for future use
                 domElements[id] = liveElement;
-                // logToConsole(`Found element '${id}' (${htmlId}) directly in DOM.`, 'debug'); // Optional: debug log
                 return liveElement;
             }
-        } else {
-             // Check if it was expected to be a NodeList but was empty
-             if (querySelectorAllKeys[id] && element === null) { logToConsole(`Attempted to get NodeList for key '${id}' (selector: ${querySelectorAllKeys[id]}), but it was empty or not found during caching.`, 'warn'); }
         }
-        // If still not found after trying cache and direct fetch
-        logToConsole(`Attempted to get element/NodeList '${id}', but it was not found during caching or directly in DOM.`, 'warn');
+        const selectorAll = querySelectorAllKeys[id];
+        if(selectorAll){
+            const liveElements = document.querySelectorAll(selectorAll);
+            if(liveElements && liveElements.length > 0){
+                domElements[id] = liveElements;
+                return liveElements;
+            }
+        }
+        const selectorOne = querySelectorKeys[id];
+        if(selectorOne){
+            const liveElementOne = document.querySelector(selectorOne);
+            if(liveElementOne){
+                domElements[id] = liveElementOne;
+                return liveElementOne;
+            }
+        }
+        // logToConsole(`Attempted to get element/NodeList '${id}', but it was not found during caching or directly in DOM.`, 'warn');
+        // For non-critical elements that might not always be present (like spunArticleDisplay if step 4 is hidden),
+        // this warning can be noisy. Consider logging level or specific checks.
+        if (id !== 'spunArticleDisplay' && id !== 'pauseSpinBtn' && id !== 'stopSpinBtn') { // Example of less critical elements
+            logToConsole(`Element/NodeList '${id}' not found. This might be expected if the UI section is hidden.`, 'debug');
+        }
     }
-    return element; // Return the element, NodeList, or null/undefined
+    return element; 
 }
 
 // --- UI Update Functions ---
-
 function populateSelect(selectElement, options, selectedValue = null, addEmptyOption = false, emptyText = "-- Select --") {
     if (!selectElement) { return 0; }
     const elementName = selectElement.id || selectElement.name || 'Unnamed Select';
@@ -197,17 +206,12 @@ function populateSelect(selectElement, options, selectedValue = null, addEmptyOp
     if (addEmptyOption) { const emptyOpt = document.createElement('option'); emptyOpt.value = ""; emptyOpt.textContent = emptyText; selectElement.appendChild(emptyOpt); optionsAdded++; }
     options.forEach(option => { const opt = document.createElement('option'); if (typeof option === 'string') { opt.value = option; opt.textContent = option; } else { opt.value = option.value; opt.textContent = option.text; } selectElement.appendChild(opt); optionsAdded++; });
 
-    // Explicitly check if selectedValue exists in the new options
     const valueExists = Array.from(selectElement.options).some(opt => opt.value === selectedValue);
 
     if (selectedValue !== null && selectedValue !== undefined && valueExists) {
         selectElement.value = selectedValue;
-        // logToConsole(`Selected value '${selectedValue}' exists in ${elementName}. Setting value.`, 'debug');
     } else if (selectElement.options.length > 0) {
-        selectElement.selectedIndex = 0; // Default to the first option
-        // if (selectedValue !== null && selectedValue !== undefined) {
-        //     logToConsole(`Selected value '${selectedValue}' NOT found in ${elementName}. Defaulting to index 0.`, 'debug');
-        // }
+        selectElement.selectedIndex = 0; 
     }
     return optionsAdded;
 }
@@ -229,15 +233,17 @@ export async function checkApiStatus() {
     const statusDiv = getElement('apiStatusDiv');
     const statusIndicator = getElement('apiStatusIndicator');
     if (!statusDiv) { return; }
-    statusDiv.innerHTML = '';
-    showElement(statusIndicator, false);
+    statusDiv.innerHTML = ''; // Clear previous status text
+    showElement(statusIndicator, false); // Ensure loader is hidden initially
     if (!providerKey) { statusDiv.innerHTML = `<span class="status-error">Select Provider</span>`; logToConsole("API Status Check skipped: Provider missing.", "warn"); return; }
-    if (!model) { statusDiv.innerHTML = `<span class="status-error">Select Model</span>`; logToConsole("API Status Check skipped: Model missing.", "warn"); return; }
+    if (!model && !state.useCustomTextModel) { statusDiv.innerHTML = `<span class="status-error">Select Model</span>`; logToConsole("API Status Check skipped: Model missing (standard).", "warn"); return; }
+    if (state.useCustomTextModel && !model) { statusDiv.innerHTML = `<span class="status-error">Enter Custom Model</span>`; logToConsole("API Status Check skipped: Model missing (custom).", "warn"); return; }
+
     logToConsole(`Checking API Status for Provider: ${providerKey}, Model: ${model} (Custom: ${state.useCustomTextModel})`, "info");
-    statusDiv.innerHTML = `<span class="status-checking">Checking ${providerKey} (${model})...</span>`;
-    showElement(statusIndicator, true);
+    statusDiv.innerHTML = `<span class="status-checking">Checking ${providerKey} (${model.length > 20 ? model.substring(0,20)+'...' : model})...</span>`;
+    showElement(statusIndicator, true); // Show loader
     try {
-        const result = await callAI('check_status', { providerKey, model }, null, null);
+        const result = await callAI('check_status', { providerKey, model }, null, null); // callAI handles its own loading/disabling
         if (!result?.success) { throw new Error(result?.error || `Status check failed`); }
         if(getElement('apiStatusDiv')) getElement('apiStatusDiv').innerHTML = `<span class="status-ok">✅ Ready (${providerKey})</span>`;
         logToConsole(`API Status OK for ${providerKey} (${model})`, 'success');
@@ -245,9 +251,9 @@ export async function checkApiStatus() {
         console.error("API Status Check Failed:", error);
         logToConsole(`API Status Error: ${error.message}`, 'error');
         const displayError = error.message.includes(':') ? error.message.substring(error.message.indexOf(':') + 1).trim() : error.message;
-        if(getElement('apiStatusDiv')) getElement('apiStatusDiv').innerHTML = `<span class="status-error">❌ Error: ${displayError}</span>`;
+        if(getElement('apiStatusDiv')) getElement('apiStatusDiv').innerHTML = `<span class="status-error">❌ Error: ${displayError.substring(0, 30)}</span>`;
     } finally {
-         showElement(getElement('apiStatusIndicator'), false);
+        showElement(getElement('apiStatusIndicator'), false); // Hide loader
     }
 }
 
@@ -258,18 +264,11 @@ export function populateTextModels(setDefault = false) {
     const useCustomCheckbox = getElement('useCustomAiModelCheckbox');
     const customInput = getElement('customAiModelInput');
 
-    logToConsole(`--- Running populateTextModels ---`, "debug");
-    logToConsole(`State Provider: ${providerKey}`, "debug");
-    logToConsole(`State Use Custom: ${state.useCustomTextModel}`, "debug");
-    logToConsole(`State Standard Model: ${state.textModel}`, "debug");
-    logToConsole(`State Custom Model (raw): ${state.customTextModel}`, "debug");
-    logToConsole(`Custom Model for Provider (${providerKey}): ${getCustomModelState('text', providerKey)}`, "debug");
-
     if (!aiModelSelect || !useCustomCheckbox || !customInput) { logToConsole("Missing elements for populateTextModels.", "error"); return; }
-    logToConsole(`Populating text models for provider: ${providerKey}`, "info");
+    // logToConsole(`Populating text models for provider: ${providerKey}`, "info");
 
     if (!providerKey || !textProviders[providerKey]) {
-        logToConsole(`Cannot populate text models: Invalid provider key '${providerKey}'. Clearing select.`, "warn");
+        // logToConsole(`Cannot populate text models: Invalid provider key '${providerKey}'. Clearing select.`, "warn");
         aiModelSelect.innerHTML = '<option value="">-- Select Provider --</option>';
         disableElement(aiModelSelect, true);
         useCustomCheckbox.checked = false;
@@ -280,38 +279,35 @@ export function populateTextModels(setDefault = false) {
 
     const providerConfig = textProviders[providerKey];
     const models = providerConfig?.models || [];
-    // logToConsole(`Models found for ${providerKey}: ${JSON.stringify(models)}`, "debug");
     const standardModelFromState = state.textModel;
     populateSelect(aiModelSelect, models);
     let modelToSelectInDropdown = '';
-    if (setDefault && !state.useCustomTextModel && models.length > 0) {
-        modelToSelectInDropdown = findCheapestModel(models);
-        if (modelToSelectInDropdown) logToConsole(`Default text model determined: ${modelToSelectInDropdown}`, 'debug');
-    } else if (!state.useCustomTextModel && standardModelFromState && models.includes(standardModelFromState)) {
-        modelToSelectInDropdown = standardModelFromState;
-        logToConsole(`Selecting standard model from state: ${modelToSelectInDropdown}`, 'debug');
-    } else if (!state.useCustomTextModel && models.length > 0) {
-        modelToSelectInDropdown = models[0];
-        logToConsole(`Falling back to first model: ${modelToSelectInDropdown}`, 'debug');
-    } else {
-         logToConsole(`No standard model selection needed (using custom or no models).`, 'debug');
-    }
 
+    if (state.useCustomTextModel) {
+        // If using custom, dropdown is disabled, value doesn't matter as much but set for consistency
+        if (models.includes(standardModelFromState)) modelToSelectInDropdown = standardModelFromState;
+        else if (models.length > 0) modelToSelectInDropdown = models[0];
+    } else { // Not using custom
+        if (setDefault) { // Explicitly set default (e.g. on provider change)
+            modelToSelectInDropdown = findCheapestModel(models);
+        } else if (standardModelFromState && models.includes(standardModelFromState)) { // Restore from state
+            modelToSelectInDropdown = standardModelFromState;
+        } else if (models.length > 0) { // Fallback to first if state value invalid or not set
+            modelToSelectInDropdown = models[0];
+        }
+    }
+    
     if (modelToSelectInDropdown) {
         aiModelSelect.value = modelToSelectInDropdown;
-        logToConsole(`-> Set text model dropdown value to: ${modelToSelectInDropdown}`, 'info');
+        // logToConsole(`-> Set text model dropdown value to: ${modelToSelectInDropdown}`, 'info');
     } else if (!state.useCustomTextModel && aiModelSelect.options.length > 0) {
          aiModelSelect.selectedIndex = 0;
-         logToConsole(`-> No specific text model to select, defaulted dropdown to index 0.`, 'info');
-    } else {
-         logToConsole(`-> Dropdown value not explicitly set.`, 'debug');
+        //  logToConsole(`-> No specific text model to select, defaulted dropdown to index 0.`, 'info');
     }
 
     useCustomCheckbox.checked = state.useCustomTextModel || false;
-    customInput.value = getCustomModelState('text', providerKey);
-    toggleCustomModelUI('text');
-    if (!state.useCustomTextModel && aiModelSelect.options.length === 0) { disableElement(aiModelSelect, true); }
-    // logToConsole(`--- Finished populateTextModels ---`, "debug");
+    customInput.value = getCustomModelState('text', providerKey); // Always load saved custom model for provider
+    toggleCustomModelUI('text'); // This will disable/enable select based on checkbox
 }
 
 export function populateImageModels(setDefault = false) {
@@ -323,10 +319,10 @@ export function populateImageModels(setDefault = false) {
     const customInput = getElement('customImageModelInput');
 
     if (!imageModelSelect || !imageAspectRatioSelect || !useCustomCheckbox || !customInput) { logToConsole("Missing elements for populateImageModels.", "error"); return; }
-    logToConsole(`Populating image models for provider: ${providerKey}`, "info");
+    // logToConsole(`Populating image models for provider: ${providerKey}`, "info");
 
     if (!providerKey || !imageProviders[providerKey]) {
-        logToConsole(`Cannot populate image models: Invalid provider key '${providerKey}'. Clearing selects.`, "warn");
+        // logToConsole(`Cannot populate image models: Invalid provider key '${providerKey}'. Clearing selects.`, "warn");
         imageModelSelect.innerHTML = '<option value="">-- Select Provider --</option>';
         imageAspectRatioSelect.innerHTML = '<option value="">-- N/A --</option>';
         disableElement(imageModelSelect, true);
@@ -345,17 +341,33 @@ export function populateImageModels(setDefault = false) {
     populateSelect(imageModelSelect, models);
     const validAspectRatio = aspectRatios.includes(aspectRatioFromState) ? aspectRatioFromState : aspectRatios[0];
     populateSelect(imageAspectRatioSelect, aspectRatios, validAspectRatio);
-    disableElement(imageAspectRatioSelect, false);
+    disableElement(imageAspectRatioSelect, false); // Usually enabled if provider exists
+
     let modelToSelectInDropdown = '';
-    if (setDefault && !state.useCustomImageModel && models.length > 0) { modelToSelectInDropdown = findCheapestModel(models); if (modelToSelectInDropdown) logToConsole(`Default image model set to: ${modelToSelectInDropdown}`, 'info'); }
-    else if (!state.useCustomImageModel && standardModelFromState && models.includes(standardModelFromState)) { modelToSelectInDropdown = standardModelFromState; }
-    else if (!state.useCustomImageModel && models.length > 0) { modelToSelectInDropdown = models[0]; }
-    if (modelToSelectInDropdown) { imageModelSelect.value = modelToSelectInDropdown; logToConsole(`Setting image model dropdown value to: ${modelToSelectInDropdown}`, 'info'); }
-    else if (!state.useCustomImageModel && imageModelSelect.options.length > 0) { imageModelSelect.selectedIndex = 0; logToConsole(`No specific image model to select, defaulting dropdown to index 0.`, 'info'); }
+    if (state.useCustomImageModel) {
+        if (models.includes(standardModelFromState)) modelToSelectInDropdown = standardModelFromState;
+        else if (models.length > 0) modelToSelectInDropdown = models[0];
+    } else {
+        if (setDefault) {
+            modelToSelectInDropdown = findCheapestModel(models);
+        } else if (standardModelFromState && models.includes(standardModelFromState)) {
+            modelToSelectInDropdown = standardModelFromState;
+        } else if (models.length > 0) {
+            modelToSelectInDropdown = models[0];
+        }
+    }
+
+    if (modelToSelectInDropdown) {
+        imageModelSelect.value = modelToSelectInDropdown;
+        // logToConsole(`Setting image model dropdown value to: ${modelToSelectInDropdown}`, 'info');
+    } else if (!state.useCustomImageModel && imageModelSelect.options.length > 0) {
+        imageModelSelect.selectedIndex = 0;
+        // logToConsole(`No specific image model to select, defaulting dropdown to index 0.`, 'info');
+    }
+
     useCustomCheckbox.checked = state.useCustomImageModel || false;
     customInput.value = getCustomModelState('image', providerKey);
     toggleCustomModelUI('image');
-    if (!state.useCustomImageModel && imageModelSelect.options.length === 0) { disableElement(imageModelSelect, true); }
 }
 
 export function toggleCustomModelUI(type) {
@@ -363,11 +375,14 @@ export function toggleCustomModelUI(type) {
     const modelSelect = type === 'text' ? getElement('aiModelSelect') : getElement('imageModelSelect');
     const customInput = type === 'text' ? getElement('customAiModelInput') : getElement('customImageModelInput');
     if (!useCustomCheckbox || !modelSelect || !customInput) { return; }
-    const useStandard = !useCustomCheckbox.checked;
-    disableElement(modelSelect, !useStandard);
-    showElement(customInput, !useStandard);
-    customInput.classList.toggle('custom-input-visible', !useStandard);
-    if (useStandard) {
+
+    const isChecked = useCustomCheckbox.checked;
+    disableElement(modelSelect, isChecked);
+    showElement(customInput, isChecked); // Show custom input if checkbox is checked
+    customInput.classList.toggle('custom-input-visible', isChecked);
+
+    // If not using custom, ensure modelSelect is enabled only if there are models
+    if (!isChecked) {
         const providerKey = getState()[type === 'text' ? 'textProvider' : 'imageProvider'];
         const providerConfig = type === 'text' ? textProviders[providerKey] : imageProviders[providerKey];
         const hasModels = providerConfig?.models?.length > 0;
@@ -376,7 +391,7 @@ export function toggleCustomModelUI(type) {
 }
 
 export function populateLanguagesUI(state) {
-    logToConsole("Populating languages...", "info");
+    // logToConsole("Populating languages...", "info");
     const languageSelect = getElement('languageSelect');
     if (!languageSelect) {
         logToConsole("Language select ('languageSelect') element not found.", "error");
@@ -384,61 +399,51 @@ export function populateLanguagesUI(state) {
     }
     const options = Object.keys(languageOptions).map(k => ({ value: k, text: languageOptions[k].name }));
     const count = populateSelect(languageSelect, options, state.language);
-    if (count === 0) { logToConsole("Language select populated with 0 options!", "error"); }
-    else { logToConsole(`Populated languages. Selected: ${languageSelect.value}`, 'info'); }
-    populateDialectsUI(state); // Use the same state that was used to set the language
+    // if (count === 0) { logToConsole("Language select populated with 0 options!", "error"); }
+    // else { logToConsole(`Populated languages. Selected: ${languageSelect.value}`, 'info'); }
+    populateDialectsUI(state); 
 }
 
 export function populateDialectsUI(state) {
-    const selectedLangKey = state.language; // Use the language from the passed state
+    const selectedLangKey = state.language; 
     const dialectSelect = getElement('dialectSelect');
     const customLanguageInput = getElement('customLanguageInput');
-
-    logToConsole(`--- Running populateDialectsUI ---`, "debug");
-    logToConsole(`State Language: ${selectedLangKey}`, "debug");
-    logToConsole(`State Dialect: ${state.dialect}`, "debug");
-    logToConsole(`State Custom Lang: ${state.customLanguage}`, "debug");
 
     if (!dialectSelect) {
          logToConsole("Dialect select ('dialectSelect') element not found. Cannot populate dialects.", "error");
          showElement(customLanguageInput, false);
          return;
     }
-    logToConsole(`Populating dialects for language key: ${selectedLangKey}`, "info");
+    // logToConsole(`Populating dialects for language key: ${selectedLangKey}`, "info");
     dialectSelect.innerHTML = '';
     disableElement(dialectSelect, true);
     const showCustom = selectedLangKey === 'custom';
      if(customLanguageInput) {
         showElement(customLanguageInput, showCustom);
         customLanguageInput.classList.toggle('custom-input-visible', showCustom);
-        if (showCustom) { customLanguageInput.value = state.customLanguage || ''; logToConsole(`Show Custom Language Input: true, Value: "${customLanguageInput.value}"`, "debug"); }
-        else { logToConsole(`Show Custom Language Input: false`, "debug"); }
+        if (showCustom) { customLanguageInput.value = state.customLanguage || ''; }
      } else if (showCustom) { logToConsole("Custom language selected, but input element ('customLanguageInput') not found.", "warn"); }
 
-    if (!selectedLangKey) { dialectSelect.innerHTML = '<option value="">-- Select Language --</option>'; logToConsole("-> No language selected, disabling dialects.", 'warn'); logToConsole(`--- Finished populateDialectsUI ---`, "debug"); return; }
-    else if (selectedLangKey === 'custom') { dialectSelect.innerHTML = '<option value="">-- N/A --</option>'; logToConsole("-> Custom language selected, disabling dialects.", 'info'); logToConsole(`--- Finished populateDialectsUI ---`, "debug"); return; }
+    if (!selectedLangKey) { dialectSelect.innerHTML = '<option value="">-- Select Language --</option>'; return; }
+    else if (selectedLangKey === 'custom') { dialectSelect.innerHTML = '<option value="">-- N/A --</option>'; return; }
 
     const langConfig = languageOptions[selectedLangKey];
     const dialects = langConfig?.dialects || [];
-    // ** FIX: Use the dialect from the passed state IF it's valid for the current language, otherwise default **
     const dialectFromState = state.dialect;
-    const dialectToSelect = dialects.includes(dialectFromState) ? dialectFromState : (dialects.length > 0 ? dialects[0] : ''); // Default to first dialect if state one is invalid
+    const dialectToSelect = dialects.includes(dialectFromState) ? dialectFromState : (dialects.length > 0 ? dialects[0] : '');
 
-    // logToConsole(`Dialects found for ${selectedLangKey}: ${JSON.stringify(dialects)}`, "debug");
     if (dialects.length > 0) {
-        populateSelect(dialectSelect, dialects, dialectToSelect, false); // Populate and select the determined dialect
+        populateSelect(dialectSelect, dialects, dialectToSelect, false); 
         disableElement(dialectSelect, false);
-        logToConsole(`-> Populated ${dialects.length} dialects for ${selectedLangKey}. Selected: ${dialectSelect.value} (State was: ${dialectFromState}, Determined: ${dialectToSelect})`, 'info');
+        // logToConsole(`-> Populated ${dialects.length} dialects for ${selectedLangKey}. Selected: ${dialectSelect.value}`, 'info');
     } else {
         dialectSelect.innerHTML = '<option value="">-- N/A --</option>';
         disableElement(dialectSelect, true);
-        logToConsole(`-> No dialects found for ${selectedLangKey}. Disabling select.`, 'info');
+        // logToConsole(`-> No dialects found for ${selectedLangKey}. Disabling select.`, 'info');
     }
-    // logToConsole(`--- Finished populateDialectsUI ---`, "debug");
 }
 
 export function updateUIBasedOnMode(isBulkMode) {
-    // logToConsole(`--- Running updateUIBasedOnMode ---`, "debug"); // Keep logs if needed
     logToConsole(`Setting UI for Bulk Mode: ${isBulkMode}`, 'info');
     const singleKeywordGroup = getElement('keywordInput')?.closest('.input-group');
     const generateSingleBtn = getElement('generateSingleBtn');
@@ -449,39 +454,47 @@ export function updateUIBasedOnMode(isBulkMode) {
     const bulkKeywordsContainer = getElement('bulkKeywordsContainer');
     const generatePlanBtn = getElement('generatePlanBtn');
     const step1_5Section = getElement('step1_5Section');
-    // logToConsole(`Setting Single Mode elements visibility: ${!isBulkMode}`, "debug");
+    
     showElement(singleKeywordGroup, !isBulkMode);
     showElement(generateSingleBtn, !isBulkMode);
-    showElement(step2Section, !isBulkMode);
-    showElement(step3Section, !isBulkMode);
-    showElement(step4Section, !isBulkMode);
-    // logToConsole(`Setting Bulk Mode elements visibility: ${isBulkMode}`, "debug");
+    // Only hide step 2/3/4 if switching TO bulk mode. If already in bulk, they might be shown by bulk logic.
+    if (isBulkMode) {
+        showElement(step2Section, false);
+        showElement(step3Section, false);
+        showElement(step4Section, false);
+    } else { // Switching to single mode, ensure bulk sections are hidden.
+        showElement(step2Section, getElement('articleStructureTextarea')?.value.trim() !== ''); // Show if structure exists
+        showElement(step3Section, getElement('generatedArticleTextarea')?.value.trim() !== ''); // Show if article exists
+        // Step 4 visibility usually depends on Step 3.
+    }
+
     showElement(bulkKeywordsContainer, isBulkMode);
     showElement(generatePlanBtn, isBulkMode);
-    showElement(step1_5Section, isBulkMode);
+    showElement(step1_5Section, isBulkMode && getElement('planningTableBody')?.children.length > 0 && getElement('planningTableBody')?.children[0].textContent !== "No plan generated or loaded.");
+
     if (formatSelect) {
-        // logToConsole(`Setting Format Select disabled: ${isBulkMode}`, "debug");
         disableElement(formatSelect, isBulkMode);
-        if (isBulkMode) { formatSelect.value = 'markdown'; logToConsole('Format forced to Markdown for Bulk Mode.', 'info'); }
+        if (isBulkMode) { 
+            formatSelect.value = 'markdown'; 
+            updateState({ format: 'markdown' }); // Also update state
+            logToConsole('Format forced to Markdown for Bulk Mode.', 'info'); 
+        }
     } else { logToConsole("Format select element not found for mode update.", "warn"); }
-    // logToConsole(`--- Finished updateUIBasedOnMode ---`, "debug");
 }
 
-// *** NEW: Update Word/Character Counts ***
 export function updateCounts(text) {
     const wordCountEl = getElement('wordCountDisplay');
     const charCountEl = getElement('charCountDisplay');
     if (!wordCountEl || !charCountEl) return;
 
-    const textContent = text || ''; // Handle null/undefined
-    const wordCount = textContent.trim().split(/\s+/).filter(Boolean).length; // Split by whitespace, filter empty
+    const textContent = text || ''; 
+    const wordCount = textContent.trim() === '' ? 0 : textContent.trim().split(/\s+/).filter(Boolean).length;
     const charCount = textContent.length;
 
     wordCountEl.textContent = `Words: ${wordCount}`;
     charCountEl.textContent = `Chars: ${charCount}`;
 }
 
-// *** NEW: Update Structure Section Count Display ***
 export function updateStructureCountDisplay(structureText) {
     const countDisplayEl = getElement('structureCountDisplay');
     if (!countDisplayEl) return;
@@ -490,8 +503,6 @@ export function updateStructureCountDisplay(structureText) {
         countDisplayEl.textContent = `Sections: 0`;
         return;
     }
-
-    // Use the V2 parser logic just to get the count
     const sections = getArticleOutlinesV2(structureText);
     countDisplayEl.textContent = `Sections: ${sections.length}`;
 }
@@ -501,12 +512,16 @@ export function updateUIFromState(state) {
     if (!state) { logToConsole("Cannot update UI: state is null.", "error"); return; }
     if (Object.keys(domElements).length === 0) { logToConsole("DOM elements not cached yet. Cannot update UI.", "error"); return; }
 
-    // 1. Populate Provider Selects first
     populateAiProviders(state);
 
-    // 2. Set simple values from state BEFORE populating models/dialects
     const keywordInput = getElement('keywordInput'); if (keywordInput) keywordInput.value = state.keyword || '';
     const bulkModeCheckbox = getElement('bulkModeCheckbox'); if (bulkModeCheckbox) bulkModeCheckbox.checked = state.bulkMode || defaultSettings.bulkMode;
+    // Ensure bulkKeywords textarea is also populated if needed (e.g., from a previous session)
+    const bulkKeywordsTextarea = getElement('bulkKeywords');
+    if (bulkKeywordsTextarea && state.bulkKeywordsContent) { // Assuming you might save bulkKeywordsContent to state
+        bulkKeywordsTextarea.value = state.bulkKeywordsContent;
+    }
+
     const audienceInputElement = getElement('audienceInput'); if(audienceInputElement) audienceInputElement.value = state.audience || defaultSettings.audience;
     const readerNameInputElement = getElement('readerNameInput'); if(readerNameInputElement) readerNameInputElement.value = state.readerName || defaultSettings.readerName;
     const toneSelectElement = getElement('toneSelect'); if(toneSelectElement) toneSelectElement.value = state.tone || defaultSettings.tone;
@@ -517,10 +532,8 @@ export function updateUIFromState(state) {
     const sitemapUrlInputElement = getElement('sitemapUrlInput'); if(sitemapUrlInputElement) sitemapUrlInputElement.value = state.sitemapUrl || defaultSettings.sitemapUrl;
     const customSpecsInputElement = getElement('customSpecsInput'); if(customSpecsInputElement) customSpecsInputElement.value = state.customSpecs || defaultSettings.customSpecs;
 
-    // 3. Language and Dialect (this sets the UI dropdowns)
-    populateLanguagesUI(state); // Calls populateDialectsUI internally
+    populateLanguagesUI(state); 
 
-    // 4. Purpose
     const savedPurposes = state.purpose || defaultSettings.purpose;
     let showPurposeUrl = false; let showPurposeCta = false;
     const purposeCheckboxes = getElement('purposeCheckboxes');
@@ -531,7 +544,6 @@ export function updateUIFromState(state) {
     showElement(getElement('purposeCtaInput'), showPurposeCta);
     showElement(getElement('customToneInput'), state.tone === 'custom');
 
-    // 5. Images
     const generateImagesCheckboxElement = getElement('generateImagesCheckbox'); if (generateImagesCheckboxElement) generateImagesCheckboxElement.checked = state.generateImages || defaultSettings.generateImages;
     const numImagesSelectElement = getElement('numImagesSelect'); if(numImagesSelectElement) numImagesSelectElement.value = state.numImages || defaultSettings.numImages;
     const imageSubjectInputElement = getElement('imageSubjectInput'); if(imageSubjectInputElement) imageSubjectInputElement.value = state.imageSubject || defaultSettings.imageSubject;
@@ -545,42 +557,46 @@ export function updateUIFromState(state) {
     const githubRepoUrlInputElement = getElement('githubRepoUrlInput'); if(githubRepoUrlInputElement) githubRepoUrlInputElement.value = state.githubRepoUrl || defaultSettings.githubRepoUrl;
     const githubCustomPathInputElement = getElement('githubCustomPathInput'); if(githubCustomPathInputElement) githubCustomPathInputElement.value = state.githubCustomPath || defaultSettings.githubCustomPath;
 
-    // 6. Populate Models (this sets the UI dropdowns based on state or defaults)
     populateTextModels();
     populateImageModels();
 
-    // *** FIX: Synchronize state AFTER populating UI ***
-    logToConsole("Syncing state with default UI selections after population...", "debug");
-    const defaultTextModel = getElement('aiModelSelect')?.value || '';
-    const defaultImageModel = getElement('imageModelSelect')?.value || '';
-    const defaultImageAspect = getElement('imageAspectRatioSelect')?.value || '';
-    const updatesNeeded = {};
-    if (defaultTextModel && state.textModel !== defaultTextModel) updatesNeeded.textModel = defaultTextModel;
-    if (defaultImageModel && state.imageModel !== defaultImageModel) updatesNeeded.imageModel = defaultImageModel;
-    if (defaultImageAspect && state.imageAspectRatio !== defaultImageAspect) updatesNeeded.imageAspectRatio = defaultImageAspect;
-    if (updatesNeeded.textModel) updatesNeeded.useCustomTextModel = false;
-    if (updatesNeeded.imageModel) updatesNeeded.useCustomImageModel = false;
-    if (Object.keys(updatesNeeded).length > 0) { updateState(updatesNeeded); state = getState(); }
-    // *** End Fix ***
+    const currentTextModel = getElement('aiModelSelect')?.value;
+    const currentImageModel = getElement('imageModelSelect')?.value;
+    const currentImageAspect = getElement('imageAspectRatioSelect')?.value;
+    const currentLanguage = getElement('languageSelect')?.value;
+    const currentDialect = getElement('dialectSelect')?.value;
 
-    // 7. Set Visibility based on the potentially updated state
+    const updatesToState = {};
+    if (!state.useCustomTextModel && currentTextModel && state.textModel !== currentTextModel) updatesToState.textModel = currentTextModel;
+    if (!state.useCustomImageModel && currentImageModel && state.imageModel !== currentImageModel) updatesToState.imageModel = currentImageModel;
+    if (currentImageAspect && state.imageAspectRatio !== currentImageAspect) updatesToState.imageAspectRatio = currentImageAspect;
+    if (currentLanguage && state.language !== currentLanguage) updatesToState.language = currentLanguage;
+    // Only update dialect if language isn't custom and dialect is valid for selected language
+    if (currentLanguage !== 'custom' && currentDialect && state.dialect !== currentDialect && (languageOptions[currentLanguage]?.dialects || []).includes(currentDialect)) {
+        updatesToState.dialect = currentDialect;
+    } else if (currentLanguage !== 'custom' && !(languageOptions[currentLanguage]?.dialects || []).includes(state.dialect)) {
+        // If current state dialect is invalid for the (potentially newly set) language, reset dialect
+        updatesToState.dialect = (languageOptions[currentLanguage]?.dialects || [])[0] || '';
+    }
+
+    if (Object.keys(updatesToState).length > 0) { 
+        updateState(updatesToState); 
+        state = getState(); // Re-fetch state if it was modified
+    }
+    
     showElement(getElement('imageOptionsContainer'), state.generateImages);
     toggleGithubOptions();
-    updateUIBasedOnMode(state.bulkMode); // Set initial mode visibility
-
-    // 8. Update Step 2+ Elements
+    
     const articleTitleInputElement = getElement('articleTitleInput'); if (articleTitleInputElement) articleTitleInputElement.value = state.articleTitle || '';
     const linkTypeToggleElement = getElement('linkTypeToggle'); if(linkTypeToggleElement) linkTypeToggleElement.checked = !(state.linkTypeInternal ?? defaultSettings.linkTypeInternal);
     const linkTypeTextElement = getElement('linkTypeText'); if(linkTypeTextElement) linkTypeTextElement.textContent = (state.linkTypeInternal ?? defaultSettings.linkTypeInternal) ? 'Internal' : 'External';
     
-    // Load Saved Structure
     const articleStructureTextarea = getElement('articleStructureTextarea');
-    let initialStructure = ''; // Keep track for count update
+    let initialStructure = ''; 
     if (articleStructureTextarea) {
         if (state.articleStructure && !state.bulkMode) {
             initialStructure = state.articleStructure;
             articleStructureTextarea.value = initialStructure;
-            logToConsole("Loaded saved article structure into textarea.", "info");
             showElement(getElement('step2Section'), true);
             showElement(getElement('structureContainer'), true);
             const toggleBtn = getElement('toggleStructureVisibilityBtn');
@@ -589,37 +605,39 @@ export function updateUIFromState(state) {
              articleStructureTextarea.value = '';
              if (!state.bulkMode) showElement(getElement('step2Section'), false);
         } 
-    } else {
-        logToConsole("Structure textarea not found during UI update.", "warn");
     }
-    // *** Update structure count display on load ***
     updateStructureCountDisplay(initialStructure);
 
-    // *** Load Saved Generated Article ***
     const generatedArticleTextarea = getElement('generatedArticleTextarea');
-    let initialArticleContent = ''; // Keep track for count update
+    let initialArticleContent = ''; 
     if (generatedArticleTextarea) {
         if (state.generatedArticleContent && !state.bulkMode) {
              initialArticleContent = state.generatedArticleContent;
              generatedArticleTextarea.value = initialArticleContent;
-             logToConsole("Loaded saved generated article content.", "info");
-             // Show Step 3 if content exists?
-             showElement(getElement('step3Section'), true);
+             if (initialArticleContent) showElement(getElement('step3Section'), true);
         } else {
              generatedArticleTextarea.value = '';
-              // Keep Step 3 hidden unless bulkMode logic hid it
-             if (!state.bulkMode) {
-                 showElement(getElement('step3Section'), false);
-             }
+             if (!state.bulkMode) showElement(getElement('step3Section'), false);
         }
     }
-    // *** Update word/char counts on load ***
     updateCounts(initialArticleContent);
+    
+    // Update UI based on mode *after* individual elements are set up
+    updateUIBasedOnMode(state.bulkMode); 
 
-    // 9. Bulk Plan Rendering
-    if (state.bulkMode) { renderPlanningTable(getBulkPlan()); }
-
-    // 10. Final API Status Check (uses the fully updated state)
+    // Render bulk plan if in bulk mode and plan exists
+    if (state.bulkMode) { 
+        const currentBulkPlan = getBulkPlan(); // from article-state
+        if (currentBulkPlan.length > 0) {
+            renderPlanningTable(currentBulkPlan);
+            showElement(getElement('step1_5Section'), true);
+        } else {
+            const tableBody = getElement('planningTableBody');
+            if (tableBody) tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500 py-4">No plan generated or loaded.</td></tr>';
+            // Do not automatically show step1_5 if plan is empty
+            // showElement(getElement('step1_5Section'), false); 
+        }
+    }
     checkApiStatus();
     logToConsole("UI update from state finished.", "info");
 }
@@ -629,7 +647,7 @@ export function renderPlanningTable(plan) {
     if (!tableBody) { logToConsole("Planning table body not found.", "error"); return; }
     tableBody.innerHTML = '';
     if (!plan || plan.length === 0) { tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500 py-4">No plan generated or loaded.</td></tr>'; return; }
-    plan.forEach((item, index) => { const row = tableBody.insertRow(); row.dataset.index = index; let cell; cell = row.insertCell(); cell.textContent = item.keyword || 'N/A'; cell.classList.add('px-3', 'py-2', 'whitespace-nowrap'); cell = row.insertCell(); const titleInput = document.createElement('input'); titleInput.type = 'text'; titleInput.value = item.title || ''; titleInput.dataset.field = 'title'; titleInput.classList.add('compact-input', 'p-1', 'text-xs', 'w-full'); cell.appendChild(titleInput); cell.classList.add('px-3', 'py-2'); cell = row.insertCell(); const slugInput = document.createElement('input'); slugInput.type = 'text'; slugInput.value = item.slug || ''; slugInput.dataset.field = 'slug'; slugInput.classList.add('compact-input', 'p-1', 'text-xs', 'w-full'); cell.appendChild(slugInput); cell.classList.add('px-3', 'py-2'); cell = row.insertCell(); const intentInput = document.createElement('input'); intentInput.type = 'text'; intentInput.value = item.intent || ''; intentInput.dataset.field = 'intent'; intentInput.classList.add('compact-input', 'p-1', 'text-xs', 'w-full'); cell.appendChild(intentInput); cell.classList.add('px-3', 'py-2'); cell = row.insertCell(); cell.classList.add('px-3', 'py-2', 'whitespace-nowrap'); updatePlanItemStatusUI(row, item.status || 'Pending', item.error); });
+    plan.forEach((item, index) => { const row = tableBody.insertRow(); row.dataset.index = index; let cell; cell = row.insertCell(); cell.textContent = item.keyword || 'N/A'; cell.classList.add('px-3', 'py-2', 'whitespace-nowrap', 'text-xs'); cell = row.insertCell(); const titleInput = document.createElement('input'); titleInput.type = 'text'; titleInput.value = item.title || ''; titleInput.dataset.field = 'title'; titleInput.classList.add('compact-input', 'p-1', 'text-xs', 'w-full'); cell.appendChild(titleInput); cell.classList.add('px-3', 'py-2'); cell = row.insertCell(); const slugInput = document.createElement('input'); slugInput.type = 'text'; slugInput.value = item.slug || ''; slugInput.dataset.field = 'slug'; slugInput.classList.add('compact-input', 'p-1', 'text-xs', 'w-full'); cell.appendChild(slugInput); cell.classList.add('px-3', 'py-2'); cell = row.insertCell(); const intentInput = document.createElement('input'); intentInput.type = 'text'; intentInput.value = item.intent || ''; intentInput.dataset.field = 'intent'; intentInput.classList.add('compact-input', 'p-1', 'text-xs', 'w-full'); cell.appendChild(intentInput); cell.classList.add('px-3', 'py-2'); cell = row.insertCell(); cell.classList.add('px-3', 'py-2', 'whitespace-nowrap', 'text-xs'); updatePlanItemStatusUI(row, item.status || 'Pending', item.error); });
      logToConsole(`Rendered planning table with ${plan.length} items.`, 'info');
 }
 
@@ -638,12 +656,12 @@ export function updatePlanItemStatusUI(rowElementOrIndex, status, errorMsg = nul
     const tableBody = getElement('planningTableBody');
     if (!tableBody) return;
     if (typeof rowElementOrIndex === 'number') { row = tableBody.querySelector(`tr[data-index="${rowElementOrIndex}"]`); }
-    else { row = rowElementOrIndex; }
-    if (!row || row.cells.length < 5) { logToConsole(`Could not find row or cell for status update (Index/Element: ${rowElementOrIndex})`, 'warn'); return; }
+    else { row = rowElementOrIndex; } // Assumes rowElementOrIndex is the <tr> element
+    if (!row || row.cells.length < 5) { return; }
     const statusCell = row.cells[4]; if (!statusCell) return;
-    statusCell.className = 'px-3 py-2 whitespace-nowrap'; statusCell.title = '';
+    statusCell.className = 'px-3 py-2 whitespace-nowrap text-xs'; statusCell.title = ''; // Reset classes, add text-xs
     const statusText = status || 'Pending';
-    switch (statusText.toLowerCase().split('(')[0].trim()) { case 'pending': statusCell.textContent = 'Pending'; statusCell.classList.add('status-pending'); break; case 'generating': statusCell.textContent = 'Generating...'; statusCell.classList.add('status-generating'); break; case 'uploading': statusCell.textContent = 'Uploading...'; statusCell.classList.add('status-uploading'); break; case 'completed': statusCell.textContent = 'Completed'; statusCell.classList.add('status-completed'); if (statusText.includes('Image Upload Failed')) { statusCell.textContent = 'Completed (Img Fail)'; statusCell.classList.remove('status-completed'); statusCell.classList.add('status-warn'); statusCell.title = errorMsg || 'One or more image uploads failed.'; } break; case 'failed': statusCell.classList.add('status-failed'); if (errorMsg) { const shortError = errorMsg.length > 50 ? errorMsg.substring(0, 50) + '...' : errorMsg; statusCell.textContent = `Failed: ${shortError}`; statusCell.title = errorMsg; } else { statusCell.textContent = 'Failed'; } break; default: statusCell.textContent = statusText; statusCell.classList.add('status-pending'); break; }
+    switch (statusText.toLowerCase().split('(')[0].trim()) { case 'pending': statusCell.textContent = 'Pending'; statusCell.classList.add('status-pending'); break; case 'generating': statusCell.textContent = 'Generating...'; statusCell.classList.add('status-generating'); break; case 'uploading': statusCell.textContent = 'Uploading...'; statusCell.classList.add('status-uploading'); break; case 'completed': statusCell.textContent = 'Completed'; statusCell.classList.add('status-completed'); if (statusText.includes('Image Upload Failed')) { statusCell.textContent = 'Completed (Img Fail)'; statusCell.classList.remove('status-completed'); statusCell.classList.add('status-warn', 'text-yellow-600'); statusCell.title = errorMsg || 'One or more image uploads failed.'; } break; case 'failed': statusCell.classList.add('status-failed'); if (errorMsg) { const shortError = errorMsg.length > 30 ? errorMsg.substring(0, 30) + '...' : errorMsg; statusCell.textContent = `Failed: ${shortError}`; statusCell.title = errorMsg; } else { statusCell.textContent = 'Failed'; } break; default: statusCell.textContent = statusText; statusCell.classList.add('status-pending'); break; }
 }
 
 export function updateProgressBar(barElement, containerElement, textElement, current, total, textPrefix = '') {
@@ -661,7 +679,7 @@ export function hideProgressBar(barElement, containerElement, textElement) {
 }
 
 export function toggleGithubOptions() {
-    const storageType = document.querySelector('input[name="imageStorage"]:checked')?.value;
+    const storageType = getElement('imageStorageRadios') ? Array.from(getElement('imageStorageRadios')).find(r => r.checked)?.value : 'base64';
     const githubOptionsContainer = getElement('githubOptionsContainer');
     const generateImages = getElement('generateImagesCheckbox')?.checked;
     showElement(githubOptionsContainer, generateImages && storageType === 'github');
@@ -676,4 +694,4 @@ export function displaySitemapUrlsUI(urls = []) {
     logToConsole(`Displayed ${urls.length} sitemap URLs.`, 'info');
 }
 
-console.log("article-ui.js loaded (v8.16 fix warn)");
+console.log("article-ui.js loaded (v8.16 extended for ideas)");
