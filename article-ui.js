@@ -1,6 +1,6 @@
-// article-ui.js (v8.16 fix warn spun_article_display - extended for ideas)
+// article-ui.js (v8.16 extended for ideas - fix getBulkPlan ref)
 import { textProviders, imageProviders, languageOptions, defaultSettings } from './article-config.js';
-import { getState, getCustomModelState, updateState } from './article-state.js';
+import { getState, getCustomModelState, updateState, getBulkPlan } from './article-state.js'; // Added getBulkPlan
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2 } from './article-helpers.js';
 
 // --- DOM Element References (Centralized) ---
@@ -20,8 +20,8 @@ const elementIdMap = {
     bulkModeCheckbox: 'bulkModeCheckbox',
     bulkKeywordsContainer: 'bulkKeywordsContainer',
     bulkKeywords: 'bulkKeywords',
-    generateIdeasBtn: 'generateIdeasBtn', // New
-    ideasLoadingIndicator: 'ideasLoadingIndicator', // New
+    generateIdeasBtn: 'generateIdeasBtn', 
+    ideasLoadingIndicator: 'ideasLoadingIndicator', 
     languageSelect: 'language',
     customLanguageInput: 'custom_language',
     dialectSelect: 'dialect',
@@ -84,9 +84,9 @@ const elementIdMap = {
     generationProgressDiv: 'generationProgress',
     currentSectionNumSpan: 'currentSectionNum',
     totalSectionNumSpan: 'totalSectionNum',
-    uploadProgressContainer: 'uploadProgressContainer', // Note: This ID is duplicated, one for single, one for bulk. Should be distinct if used simultaneously.
-    uploadProgressBar: 'uploadProgressBar', // Same as above
-    uploadProgressText: 'uploadProgressText', // Same as above
+    uploadProgressContainer: 'uploadProgressContainer', 
+    uploadProgressBar: 'uploadProgressBar', 
+    uploadProgressText: 'uploadProgressText', 
     step3Section: 'step3',
     articleOutputContainer: 'article_output_container',
     generatedArticleTextarea: 'generated_article',
@@ -94,8 +94,8 @@ const elementIdMap = {
     previewHtmlCheckbox: 'preview_html_checkbox',
     enableSpinningBtn: 'enableSpinningBtn',
     spinLoadingIndicator: 'spinLoadingIndicator',
-    pauseSpinBtn: 'pauseSpinBtn', // Added
-    stopSpinBtn: 'stopSpinBtn',   // Added
+    pauseSpinBtn: 'pauseSpinBtn', 
+    stopSpinBtn: 'stopSpinBtn',   
     step4Section: 'step4',
     spinSelectedBtn: 'spinSelectedBtn',
     spinActionLoadingIndicator: 'spinActionLoadingIndicator',
@@ -131,9 +131,8 @@ export function cacheDomElements() {
         if (element) {
             domElements[key] = element;
         } else {
-            // Log error for all missing IDs, but don't set allFound to false unless critical
             logToConsole(`Failed to cache element with ID: '${htmlId}' (JS Key: ${key})`, 'error');
-            domElements[key] = null; // Ensure missing elements are explicitly null in cache
+            domElements[key] = null; 
         }
     }
 
@@ -187,10 +186,7 @@ export function getElement(id) {
                 return liveElementOne;
             }
         }
-        // logToConsole(`Attempted to get element/NodeList '${id}', but it was not found during caching or directly in DOM.`, 'warn');
-        // For non-critical elements that might not always be present (like spunArticleDisplay if step 4 is hidden),
-        // this warning can be noisy. Consider logging level or specific checks.
-        if (id !== 'spunArticleDisplay' && id !== 'pauseSpinBtn' && id !== 'stopSpinBtn') { // Example of less critical elements
+        if (id !== 'spunArticleDisplay' && id !== 'pauseSpinBtn' && id !== 'stopSpinBtn' && id !== 'ideasLoadingIndicator' && id !== 'generateIdeasBtn') { 
             logToConsole(`Element/NodeList '${id}' not found. This might be expected if the UI section is hidden.`, 'debug');
         }
     }
@@ -233,17 +229,17 @@ export async function checkApiStatus() {
     const statusDiv = getElement('apiStatusDiv');
     const statusIndicator = getElement('apiStatusIndicator');
     if (!statusDiv) { return; }
-    statusDiv.innerHTML = ''; // Clear previous status text
-    showElement(statusIndicator, false); // Ensure loader is hidden initially
+    statusDiv.innerHTML = ''; 
+    showElement(statusIndicator, false); 
     if (!providerKey) { statusDiv.innerHTML = `<span class="status-error">Select Provider</span>`; logToConsole("API Status Check skipped: Provider missing.", "warn"); return; }
     if (!model && !state.useCustomTextModel) { statusDiv.innerHTML = `<span class="status-error">Select Model</span>`; logToConsole("API Status Check skipped: Model missing (standard).", "warn"); return; }
     if (state.useCustomTextModel && !model) { statusDiv.innerHTML = `<span class="status-error">Enter Custom Model</span>`; logToConsole("API Status Check skipped: Model missing (custom).", "warn"); return; }
 
     logToConsole(`Checking API Status for Provider: ${providerKey}, Model: ${model} (Custom: ${state.useCustomTextModel})`, "info");
     statusDiv.innerHTML = `<span class="status-checking">Checking ${providerKey} (${model.length > 20 ? model.substring(0,20)+'...' : model})...</span>`;
-    showElement(statusIndicator, true); // Show loader
+    showElement(statusIndicator, true); 
     try {
-        const result = await callAI('check_status', { providerKey, model }, null, null); // callAI handles its own loading/disabling
+        const result = await callAI('check_status', { providerKey, model }, null, null); 
         if (!result?.success) { throw new Error(result?.error || `Status check failed`); }
         if(getElement('apiStatusDiv')) getElement('apiStatusDiv').innerHTML = `<span class="status-ok">✅ Ready (${providerKey})</span>`;
         logToConsole(`API Status OK for ${providerKey} (${model})`, 'success');
@@ -253,7 +249,7 @@ export async function checkApiStatus() {
         const displayError = error.message.includes(':') ? error.message.substring(error.message.indexOf(':') + 1).trim() : error.message;
         if(getElement('apiStatusDiv')) getElement('apiStatusDiv').innerHTML = `<span class="status-error">❌ Error: ${displayError.substring(0, 30)}</span>`;
     } finally {
-        showElement(getElement('apiStatusIndicator'), false); // Hide loader
+        showElement(getElement('apiStatusIndicator'), false); 
     }
 }
 
@@ -265,14 +261,12 @@ export function populateTextModels(setDefault = false) {
     const customInput = getElement('customAiModelInput');
 
     if (!aiModelSelect || !useCustomCheckbox || !customInput) { logToConsole("Missing elements for populateTextModels.", "error"); return; }
-    // logToConsole(`Populating text models for provider: ${providerKey}`, "info");
 
     if (!providerKey || !textProviders[providerKey]) {
-        // logToConsole(`Cannot populate text models: Invalid provider key '${providerKey}'. Clearing select.`, "warn");
         aiModelSelect.innerHTML = '<option value="">-- Select Provider --</option>';
         disableElement(aiModelSelect, true);
-        useCustomCheckbox.checked = false;
-        customInput.value = '';
+        if (useCustomCheckbox) useCustomCheckbox.checked = false;
+        if (customInput) customInput.value = '';
         toggleCustomModelUI('text');
         return;
     }
@@ -284,30 +278,27 @@ export function populateTextModels(setDefault = false) {
     let modelToSelectInDropdown = '';
 
     if (state.useCustomTextModel) {
-        // If using custom, dropdown is disabled, value doesn't matter as much but set for consistency
         if (models.includes(standardModelFromState)) modelToSelectInDropdown = standardModelFromState;
         else if (models.length > 0) modelToSelectInDropdown = models[0];
-    } else { // Not using custom
-        if (setDefault) { // Explicitly set default (e.g. on provider change)
+    } else { 
+        if (setDefault) { 
             modelToSelectInDropdown = findCheapestModel(models);
-        } else if (standardModelFromState && models.includes(standardModelFromState)) { // Restore from state
+        } else if (standardModelFromState && models.includes(standardModelFromState)) { 
             modelToSelectInDropdown = standardModelFromState;
-        } else if (models.length > 0) { // Fallback to first if state value invalid or not set
+        } else if (models.length > 0) { 
             modelToSelectInDropdown = models[0];
         }
     }
     
     if (modelToSelectInDropdown) {
         aiModelSelect.value = modelToSelectInDropdown;
-        // logToConsole(`-> Set text model dropdown value to: ${modelToSelectInDropdown}`, 'info');
     } else if (!state.useCustomTextModel && aiModelSelect.options.length > 0) {
          aiModelSelect.selectedIndex = 0;
-        //  logToConsole(`-> No specific text model to select, defaulted dropdown to index 0.`, 'info');
     }
 
-    useCustomCheckbox.checked = state.useCustomTextModel || false;
-    customInput.value = getCustomModelState('text', providerKey); // Always load saved custom model for provider
-    toggleCustomModelUI('text'); // This will disable/enable select based on checkbox
+    if (useCustomCheckbox) useCustomCheckbox.checked = state.useCustomTextModel || false;
+    if (customInput) customInput.value = getCustomModelState('text', providerKey); 
+    toggleCustomModelUI('text'); 
 }
 
 export function populateImageModels(setDefault = false) {
@@ -319,16 +310,14 @@ export function populateImageModels(setDefault = false) {
     const customInput = getElement('customImageModelInput');
 
     if (!imageModelSelect || !imageAspectRatioSelect || !useCustomCheckbox || !customInput) { logToConsole("Missing elements for populateImageModels.", "error"); return; }
-    // logToConsole(`Populating image models for provider: ${providerKey}`, "info");
 
     if (!providerKey || !imageProviders[providerKey]) {
-        // logToConsole(`Cannot populate image models: Invalid provider key '${providerKey}'. Clearing selects.`, "warn");
         imageModelSelect.innerHTML = '<option value="">-- Select Provider --</option>';
         imageAspectRatioSelect.innerHTML = '<option value="">-- N/A --</option>';
         disableElement(imageModelSelect, true);
         disableElement(imageAspectRatioSelect, true);
-        useCustomCheckbox.checked = false;
-        customInput.value = '';
+        if(useCustomCheckbox) useCustomCheckbox.checked = false;
+        if(customInput) customInput.value = '';
         toggleCustomModelUI('image');
         return;
     }
@@ -338,10 +327,11 @@ export function populateImageModels(setDefault = false) {
     const aspectRatios = providerConfig?.aspectRatios || ["1:1"];
     const standardModelFromState = state.imageModel;
     const aspectRatioFromState = state.imageAspectRatio;
+
     populateSelect(imageModelSelect, models);
     const validAspectRatio = aspectRatios.includes(aspectRatioFromState) ? aspectRatioFromState : aspectRatios[0];
     populateSelect(imageAspectRatioSelect, aspectRatios, validAspectRatio);
-    disableElement(imageAspectRatioSelect, false); // Usually enabled if provider exists
+    disableElement(imageAspectRatioSelect, false); 
 
     let modelToSelectInDropdown = '';
     if (state.useCustomImageModel) {
@@ -359,14 +349,12 @@ export function populateImageModels(setDefault = false) {
 
     if (modelToSelectInDropdown) {
         imageModelSelect.value = modelToSelectInDropdown;
-        // logToConsole(`Setting image model dropdown value to: ${modelToSelectInDropdown}`, 'info');
     } else if (!state.useCustomImageModel && imageModelSelect.options.length > 0) {
         imageModelSelect.selectedIndex = 0;
-        // logToConsole(`No specific image model to select, defaulting dropdown to index 0.`, 'info');
     }
 
-    useCustomCheckbox.checked = state.useCustomImageModel || false;
-    customInput.value = getCustomModelState('image', providerKey);
+    if (useCustomCheckbox) useCustomCheckbox.checked = state.useCustomImageModel || false;
+    if (customInput) customInput.value = getCustomModelState('image', providerKey);
     toggleCustomModelUI('image');
 }
 
@@ -378,10 +366,9 @@ export function toggleCustomModelUI(type) {
 
     const isChecked = useCustomCheckbox.checked;
     disableElement(modelSelect, isChecked);
-    showElement(customInput, isChecked); // Show custom input if checkbox is checked
+    showElement(customInput, isChecked); 
     customInput.classList.toggle('custom-input-visible', isChecked);
 
-    // If not using custom, ensure modelSelect is enabled only if there are models
     if (!isChecked) {
         const providerKey = getState()[type === 'text' ? 'textProvider' : 'imageProvider'];
         const providerConfig = type === 'text' ? textProviders[providerKey] : imageProviders[providerKey];
@@ -391,16 +378,13 @@ export function toggleCustomModelUI(type) {
 }
 
 export function populateLanguagesUI(state) {
-    // logToConsole("Populating languages...", "info");
     const languageSelect = getElement('languageSelect');
     if (!languageSelect) {
         logToConsole("Language select ('languageSelect') element not found.", "error");
         populateDialectsUI(state); return;
     }
     const options = Object.keys(languageOptions).map(k => ({ value: k, text: languageOptions[k].name }));
-    const count = populateSelect(languageSelect, options, state.language);
-    // if (count === 0) { logToConsole("Language select populated with 0 options!", "error"); }
-    // else { logToConsole(`Populated languages. Selected: ${languageSelect.value}`, 'info'); }
+    populateSelect(languageSelect, options, state.language);
     populateDialectsUI(state); 
 }
 
@@ -411,10 +395,9 @@ export function populateDialectsUI(state) {
 
     if (!dialectSelect) {
          logToConsole("Dialect select ('dialectSelect') element not found. Cannot populate dialects.", "error");
-         showElement(customLanguageInput, false);
+         if(customLanguageInput) showElement(customLanguageInput, false);
          return;
     }
-    // logToConsole(`Populating dialects for language key: ${selectedLangKey}`, "info");
     dialectSelect.innerHTML = '';
     disableElement(dialectSelect, true);
     const showCustom = selectedLangKey === 'custom';
@@ -435,11 +418,9 @@ export function populateDialectsUI(state) {
     if (dialects.length > 0) {
         populateSelect(dialectSelect, dialects, dialectToSelect, false); 
         disableElement(dialectSelect, false);
-        // logToConsole(`-> Populated ${dialects.length} dialects for ${selectedLangKey}. Selected: ${dialectSelect.value}`, 'info');
     } else {
         dialectSelect.innerHTML = '<option value="">-- N/A --</option>';
         disableElement(dialectSelect, true);
-        // logToConsole(`-> No dialects found for ${selectedLangKey}. Disabling select.`, 'info');
     }
 }
 
@@ -457,27 +438,35 @@ export function updateUIBasedOnMode(isBulkMode) {
     
     showElement(singleKeywordGroup, !isBulkMode);
     showElement(generateSingleBtn, !isBulkMode);
-    // Only hide step 2/3/4 if switching TO bulk mode. If already in bulk, they might be shown by bulk logic.
+    
     if (isBulkMode) {
         showElement(step2Section, false);
         showElement(step3Section, false);
         showElement(step4Section, false);
-    } else { // Switching to single mode, ensure bulk sections are hidden.
-        showElement(step2Section, getElement('articleStructureTextarea')?.value.trim() !== ''); // Show if structure exists
-        showElement(step3Section, getElement('generatedArticleTextarea')?.value.trim() !== ''); // Show if article exists
-        // Step 4 visibility usually depends on Step 3.
+    } else { 
+        const structureText = getElement('articleStructureTextarea')?.value || "";
+        const articleText = getElement('generatedArticleTextarea')?.value || "";
+        showElement(step2Section, structureText.trim() !== '');
+        showElement(step3Section, articleText.trim() !== ''); 
+        showElement(step4Section, getElement('spunArticleDisplay')?.textContent.trim() !== '' && articleText.trim() !== '');
     }
 
     showElement(bulkKeywordsContainer, isBulkMode);
     showElement(generatePlanBtn, isBulkMode);
-    showElement(step1_5Section, isBulkMode && getElement('planningTableBody')?.children.length > 0 && getElement('planningTableBody')?.children[0].textContent !== "No plan generated or loaded.");
+
+    const currentPlan = getBulkPlan();
+    const planningTableBody = getElement('planningTableBody');
+    const planExists = currentPlan && currentPlan.length > 0 && planningTableBody && planningTableBody.children.length > 0 && planningTableBody.children[0].textContent !== "No plan generated or loaded.";
+    showElement(step1_5Section, isBulkMode && planExists);
 
     if (formatSelect) {
         disableElement(formatSelect, isBulkMode);
         if (isBulkMode) { 
-            formatSelect.value = 'markdown'; 
-            updateState({ format: 'markdown' }); // Also update state
-            logToConsole('Format forced to Markdown for Bulk Mode.', 'info'); 
+            if (formatSelect.value !== 'markdown') {
+                formatSelect.value = 'markdown'; 
+                updateState({ format: 'markdown' }); 
+                logToConsole('Format forced to Markdown for Bulk Mode.', 'info'); 
+            }
         }
     } else { logToConsole("Format select element not found for mode update.", "warn"); }
 }
@@ -510,15 +499,19 @@ export function updateStructureCountDisplay(structureText) {
 export function updateUIFromState(state) {
     logToConsole("Updating UI from loaded state...", "info");
     if (!state) { logToConsole("Cannot update UI: state is null.", "error"); return; }
-    if (Object.keys(domElements).length === 0) { logToConsole("DOM elements not cached yet. Cannot update UI.", "error"); return; }
-
+    if (Object.keys(domElements).length === 0 && Object.keys(elementIdMap).length > 0) { 
+        logToConsole("DOM elements not cached, attempting now before UI update.", "warn");
+        cacheDomElements();
+        if (Object.keys(domElements).length === 0 && Object.keys(elementIdMap).length > 0){
+             logToConsole("DOM elements still not cached. Cannot update UI.", "error"); return;
+        }
+    }
     populateAiProviders(state);
 
     const keywordInput = getElement('keywordInput'); if (keywordInput) keywordInput.value = state.keyword || '';
     const bulkModeCheckbox = getElement('bulkModeCheckbox'); if (bulkModeCheckbox) bulkModeCheckbox.checked = state.bulkMode || defaultSettings.bulkMode;
-    // Ensure bulkKeywords textarea is also populated if needed (e.g., from a previous session)
     const bulkKeywordsTextarea = getElement('bulkKeywords');
-    if (bulkKeywordsTextarea && state.bulkKeywordsContent) { // Assuming you might save bulkKeywordsContent to state
+    if (bulkKeywordsTextarea && state.bulkKeywordsContent) {
         bulkKeywordsTextarea.value = state.bulkKeywordsContent;
     }
 
@@ -542,7 +535,7 @@ export function updateUIFromState(state) {
     const purposeCtaInputElement = getElement('purposeCtaInput'); if(purposeCtaInputElement) purposeCtaInputElement.value = state.purposeCta || defaultSettings.purposeCta;
     showElement(getElement('purposeUrlInput'), showPurposeUrl);
     showElement(getElement('purposeCtaInput'), showPurposeCta);
-    showElement(getElement('customToneInput'), state.tone === 'custom');
+    if(getElement('customToneInput')) showElement(getElement('customToneInput'), state.tone === 'custom');
 
     const generateImagesCheckboxElement = getElement('generateImagesCheckbox'); if (generateImagesCheckboxElement) generateImagesCheckboxElement.checked = state.generateImages || defaultSettings.generateImages;
     const numImagesSelectElement = getElement('numImagesSelect'); if(numImagesSelectElement) numImagesSelectElement.value = state.numImages || defaultSettings.numImages;
@@ -571,20 +564,19 @@ export function updateUIFromState(state) {
     if (!state.useCustomImageModel && currentImageModel && state.imageModel !== currentImageModel) updatesToState.imageModel = currentImageModel;
     if (currentImageAspect && state.imageAspectRatio !== currentImageAspect) updatesToState.imageAspectRatio = currentImageAspect;
     if (currentLanguage && state.language !== currentLanguage) updatesToState.language = currentLanguage;
-    // Only update dialect if language isn't custom and dialect is valid for selected language
-    if (currentLanguage !== 'custom' && currentDialect && state.dialect !== currentDialect && (languageOptions[currentLanguage]?.dialects || []).includes(currentDialect)) {
+    
+    if (currentLanguage !== 'custom' && currentDialect && currentDialect !== "" && state.dialect !== currentDialect && (languageOptions[currentLanguage]?.dialects || []).includes(currentDialect)) {
         updatesToState.dialect = currentDialect;
-    } else if (currentLanguage !== 'custom' && !(languageOptions[currentLanguage]?.dialects || []).includes(state.dialect)) {
-        // If current state dialect is invalid for the (potentially newly set) language, reset dialect
+    } else if (currentLanguage !== 'custom' && (!(languageOptions[currentLanguage]?.dialects || []).includes(state.dialect) || state.dialect === "" ) ) {
         updatesToState.dialect = (languageOptions[currentLanguage]?.dialects || [])[0] || '';
     }
 
     if (Object.keys(updatesToState).length > 0) { 
         updateState(updatesToState); 
-        state = getState(); // Re-fetch state if it was modified
+        state = getState(); 
     }
     
-    showElement(getElement('imageOptionsContainer'), state.generateImages);
+    if(getElement('imageOptionsContainer')) showElement(getElement('imageOptionsContainer'), state.generateImages);
     toggleGithubOptions();
     
     const articleTitleInputElement = getElement('articleTitleInput'); if (articleTitleInputElement) articleTitleInputElement.value = state.articleTitle || '';
@@ -597,13 +589,13 @@ export function updateUIFromState(state) {
         if (state.articleStructure && !state.bulkMode) {
             initialStructure = state.articleStructure;
             articleStructureTextarea.value = initialStructure;
-            showElement(getElement('step2Section'), true);
-            showElement(getElement('structureContainer'), true);
+            // showElement(getElement('step2Section'), true); // Visibility handled by updateUIBasedOnMode
+            if(getElement('structureContainer')) showElement(getElement('structureContainer'), true);
             const toggleBtn = getElement('toggleStructureVisibilityBtn');
             if (toggleBtn) toggleBtn.textContent = 'Hide';
         } else {
              articleStructureTextarea.value = '';
-             if (!state.bulkMode) showElement(getElement('step2Section'), false);
+            //  if (!state.bulkMode) showElement(getElement('step2Section'), false); // Visibility handled by updateUIBasedOnMode
         } 
     }
     updateStructureCountDisplay(initialStructure);
@@ -614,28 +606,25 @@ export function updateUIFromState(state) {
         if (state.generatedArticleContent && !state.bulkMode) {
              initialArticleContent = state.generatedArticleContent;
              generatedArticleTextarea.value = initialArticleContent;
-             if (initialArticleContent) showElement(getElement('step3Section'), true);
+            //  if (initialArticleContent) showElement(getElement('step3Section'), true); // Visibility handled by updateUIBasedOnMode
         } else {
              generatedArticleTextarea.value = '';
-             if (!state.bulkMode) showElement(getElement('step3Section'), false);
+            //  if (!state.bulkMode) showElement(getElement('step3Section'), false); // Visibility handled by updateUIBasedOnMode
         }
     }
     updateCounts(initialArticleContent);
     
-    // Update UI based on mode *after* individual elements are set up
     updateUIBasedOnMode(state.bulkMode); 
 
-    // Render bulk plan if in bulk mode and plan exists
     if (state.bulkMode) { 
-        const currentBulkPlan = getBulkPlan(); // from article-state
-        if (currentBulkPlan.length > 0) {
-            renderPlanningTable(currentBulkPlan);
-            showElement(getElement('step1_5Section'), true);
+        const currentBulkPlanItems = getBulkPlan(); // Use imported function
+        if (currentBulkPlanItems.length > 0) {
+            renderPlanningTable(currentBulkPlanItems);
+            showElement(getElement('step1_5Section'), true); // Show if plan exists
         } else {
             const tableBody = getElement('planningTableBody');
             if (tableBody) tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500 py-4">No plan generated or loaded.</td></tr>';
-            // Do not automatically show step1_5 if plan is empty
-            // showElement(getElement('step1_5Section'), false); 
+             if(getElement('step1_5Section')) showElement(getElement('step1_5Section'), false); // Hide if plan is empty
         }
     }
     checkApiStatus();
@@ -656,10 +645,10 @@ export function updatePlanItemStatusUI(rowElementOrIndex, status, errorMsg = nul
     const tableBody = getElement('planningTableBody');
     if (!tableBody) return;
     if (typeof rowElementOrIndex === 'number') { row = tableBody.querySelector(`tr[data-index="${rowElementOrIndex}"]`); }
-    else { row = rowElementOrIndex; } // Assumes rowElementOrIndex is the <tr> element
+    else { row = rowElementOrIndex; } 
     if (!row || row.cells.length < 5) { return; }
     const statusCell = row.cells[4]; if (!statusCell) return;
-    statusCell.className = 'px-3 py-2 whitespace-nowrap text-xs'; statusCell.title = ''; // Reset classes, add text-xs
+    statusCell.className = 'px-3 py-2 whitespace-nowrap text-xs'; statusCell.title = ''; 
     const statusText = status || 'Pending';
     switch (statusText.toLowerCase().split('(')[0].trim()) { case 'pending': statusCell.textContent = 'Pending'; statusCell.classList.add('status-pending'); break; case 'generating': statusCell.textContent = 'Generating...'; statusCell.classList.add('status-generating'); break; case 'uploading': statusCell.textContent = 'Uploading...'; statusCell.classList.add('status-uploading'); break; case 'completed': statusCell.textContent = 'Completed'; statusCell.classList.add('status-completed'); if (statusText.includes('Image Upload Failed')) { statusCell.textContent = 'Completed (Img Fail)'; statusCell.classList.remove('status-completed'); statusCell.classList.add('status-warn', 'text-yellow-600'); statusCell.title = errorMsg || 'One or more image uploads failed.'; } break; case 'failed': statusCell.classList.add('status-failed'); if (errorMsg) { const shortError = errorMsg.length > 30 ? errorMsg.substring(0, 30) + '...' : errorMsg; statusCell.textContent = `Failed: ${shortError}`; statusCell.title = errorMsg; } else { statusCell.textContent = 'Failed'; } break; default: statusCell.textContent = statusText; statusCell.classList.add('status-pending'); break; }
 }
@@ -679,10 +668,18 @@ export function hideProgressBar(barElement, containerElement, textElement) {
 }
 
 export function toggleGithubOptions() {
-    const storageType = getElement('imageStorageRadios') ? Array.from(getElement('imageStorageRadios')).find(r => r.checked)?.value : 'base64';
+    const imageStorageRadios = getElement('imageStorageRadios');
+    let storageType = 'base64'; // Default
+    if (imageStorageRadios) {
+        const checkedRadio = Array.from(imageStorageRadios).find(r => r.checked);
+        if (checkedRadio) storageType = checkedRadio.value;
+    }
+    
     const githubOptionsContainer = getElement('githubOptionsContainer');
-    const generateImages = getElement('generateImagesCheckbox')?.checked;
-    showElement(githubOptionsContainer, generateImages && storageType === 'github');
+    const generateImagesCheckbox = getElement('generateImagesCheckbox');
+    const generateImages = generateImagesCheckbox ? generateImagesCheckbox.checked : false;
+    
+    if (githubOptionsContainer) showElement(githubOptionsContainer, generateImages && storageType === 'github');
 }
 
 export function displaySitemapUrlsUI(urls = []) {
@@ -694,4 +691,4 @@ export function displaySitemapUrlsUI(urls = []) {
     logToConsole(`Displayed ${urls.length} sitemap URLs.`, 'info');
 }
 
-console.log("article-ui.js loaded (v8.16 extended for ideas)");
+console.log("article-ui.js loaded (v8.16 extended for ideas - fix getBulkPlan ref)");
