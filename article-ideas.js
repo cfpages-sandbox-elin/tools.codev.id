@@ -1,7 +1,7 @@
 // article-ideas.js
 import { getState } from './article-state.js';
-import { logToConsole, callAI, delay } from './article-helpers.js';
-import { getElement, disableElement, showLoading } from './article-ui.js'; // Assuming showLoading and disableElement are in article-ui.js or helpers.js
+import { logToConsole, callAI, delay, disableElement, showLoading } from './article-helpers.js';
+import { getElement } from './article-ui.js'; // getElement is correctly from article-ui.js
 
 const W_H_QUESTIONS = {
     "Who": "keywords that explore 'Who is related to/affected by/involved with [SEED_KEYWORD]?' or 'Who is the target audience for [SEED_KEYWORD]?'",
