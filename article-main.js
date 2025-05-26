@@ -1,4 +1,4 @@
-// article-main.js (v8.17 add pause stop spin - extended for ideas)
+// article-main.js (v8.17 extended for ideas - with formatSingleMode handling)
 
 import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
 import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
@@ -8,10 +8,10 @@ import {
     populateLanguagesUI, populateDialectsUI, toggleGithubOptions, checkApiStatus,
     displaySitemapUrlsUI, updateCounts, updateStructureCountDisplay
 } from './article-ui.js';
-import { languageOptions, imageProviders } from './article-config.js';
+import { languageOptions, imageProviders, defaultSettings } from './article-config.js'; // Import defaultSettings
 import { handleGenerateStructure, handleGenerateArticle } from './article-single.js';
 import { handleGeneratePlan, handleStartBulkGeneration, handleDownloadZip } from './article-bulk.js';
-import { handleGenerateIdeas } from './article-ideas.js'; // New Import
+import { handleGenerateIdeas } from './article-ideas.js'; 
 import { handleSpinSelectedText, handleSelection, highlightSpintax, handleSpinArticle, pauseSpinning, stopSpinningProcess } from './article-spinner.js';
 
 // Flag to prevent multiple initializations
@@ -163,11 +163,36 @@ function setupStep1Listeners() {
     const sitemapUrlInput = getElement('sitemapUrlInput');
     const generateSingleBtn = getElement('generateSingleBtn');
     const generatePlanBtn = getElement('generatePlanBtn');
-    const generateIdeasBtn = getElement('generateIdeasBtn'); // New
+    const generateIdeasBtn = getElement('generateIdeasBtn'); 
     const sitemapLoadingIndicator = getElement('sitemapLoadingIndicator');
-    const bulkKeywordsTextarea = getElement('bulkKeywords'); // For saving content
+    const bulkKeywordsTextarea = getElement('bulkKeywords'); 
 
-    bulkModeCheckbox?.addEventListener('change', (e) => { const isBulk = e.target.checked; updateState({ bulkMode: isBulk }); updateUIBasedOnMode(isBulk); });
+    bulkModeCheckbox?.addEventListener('change', (e) => {
+        const isBulk = e.target.checked;
+        const currentState = getState();
+        let newFormat = currentState.format; // Start with current format
+
+        if (isBulk) {
+            // Switching TO bulk mode
+            newFormat = 'markdown'; // Force to markdown for bulk
+            updateState({
+                bulkMode: true,
+                formatSingleMode: currentState.format, // Save current format as single mode preference
+                format: newFormat
+            });
+            logToConsole(`Switched to Bulk Mode. Format set to Markdown. Single mode format saved: ${currentState.format}`, 'info');
+        } else {
+            // Switching TO single mode
+            newFormat = currentState.formatSingleMode || defaultSettings.format; // Restore single mode format or use default
+            updateState({
+                bulkMode: false,
+                format: newFormat
+            });
+            logToConsole(`Switched to Single Mode. Format restored to: ${newFormat}`, 'info');
+        }
+        updateUIBasedOnMode(isBulk); // Update UI based on the new bulkMode state
+    });
+
     languageSelect?.addEventListener('change', (e) => { const newLang = e.target.value; const newLangConfig = languageOptions[newLang]; const defaultDialect = newLangConfig?.dialects?.[0] || ''; updateState({ language: newLang, dialect: defaultDialect, customLanguage: '' }); populateDialectsUI(getState()); });
     customLanguageInput?.addEventListener('blur', (e) => { if (getElement('languageSelect')?.value === 'custom') { updateState({ customLanguage: e.target.value }); } });
     dialectSelect?.addEventListener('change', (e) => { updateState({ dialect: e.target.value }); });
@@ -180,7 +205,6 @@ function setupStep1Listeners() {
     if (imageStorageRadios) { imageStorageRadios.forEach(radio => { radio.addEventListener('change', (e) => { if (e.target.checked) { const storageType = e.target.value; updateState({ imageStorage: storageType }); toggleGithubOptions(); } }); }); } else { logToConsole("Could not attach listeners to imageStorageRadios (not found).", "warn"); }
     fetchSitemapBtn?.addEventListener('click', async () => { const url = sitemapUrlInput?.value.trim(); if (!url) { alert('Please enter a Sitemap URL.'); return; } showLoading(sitemapLoadingIndicator, true); disableElement(fetchSitemapBtn, true); try { const parsedUrls = await fetchAndParseSitemap(url); updateState({ sitemapUrls: parsedUrls, sitemapFetchedUrl: url }); displaySitemapUrlsUI(parsedUrls); } catch (error) { logToConsole(`Sitemap fetch failed: ${error.message}`, 'error'); alert(`Failed to fetch or parse sitemap: ${error.message}`); updateState({ sitemapUrls: [], sitemapFetchedUrl: '' }); displaySitemapUrlsUI([]); } finally { showLoading(sitemapLoadingIndicator, false); disableElement(fetchSitemapBtn, false); } });
     
-    // Save bulk keywords content on blur
     bulkKeywordsTextarea?.addEventListener('blur', (e) => {
         updateState({ bulkKeywordsContent: e.target.value });
     });
@@ -189,7 +213,7 @@ function setupStep1Listeners() {
     inputsToSave.forEach(item => { const element = getElement(item.id); element?.addEventListener(item.event, (e) => { let value = e.target.value; if (e.target.type === 'select-one' && item.stateKey === 'numImages') { value = parseInt(value, 10) || 1; } updateState({ [item.stateKey]: value }); }); });
     generateSingleBtn?.addEventListener('click', handleGenerateStructure);
     generatePlanBtn?.addEventListener('click', handleGeneratePlan);
-    generateIdeasBtn?.addEventListener('click', handleGenerateIdeas); // New Listener
+    generateIdeasBtn?.addEventListener('click', handleGenerateIdeas); 
 }
 
 function setupStep2Listeners() {
@@ -318,4 +342,4 @@ function setupBulkModeListeners() {
 logToConsole("article-main.js evaluating. Setting up DOMContentLoaded listener.", "debug");
 document.addEventListener('DOMContentLoaded', initializeApp, { once: true });
 
-console.log("article-main.js loaded (v8.17 extended for ideas)");
+console.log("article-main.js loaded (v8.17 with formatSingleMode handling)");

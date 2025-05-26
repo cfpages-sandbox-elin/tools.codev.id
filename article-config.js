@@ -50,15 +50,16 @@ export const defaultSettings = {
     tone: 'Informative',
     gender: '',
     age: '',
-    purpose: ['Inform'], // Default purpose
+    purpose: ['Inform'], 
     purposeUrl: '',
     purposeCta: '',
-    format: 'html', // Default for single mode
+    format: 'html', 
+    formatSingleMode: 'html', // Add this, defaults to the main format
     sitemapUrl: '',
     customSpecs: '',
     generateImages: false,
     numImages: 1,
-    imageAspectRatio: '1:1', // Default, will be updated based on provider
+    imageAspectRatio: '1:1', 
     imageSubject: '',
     imageStyle: '',
     imageStyleModifiers: '',
@@ -66,11 +67,14 @@ export const defaultSettings = {
     imageStorage: 'base64',
     githubRepoUrl: '',
     githubCustomPath: '',
-    linkTypeInternal: true, // Corresponds to linkTypeToggle being unchecked
+    linkTypeInternal: true, 
     bulkMode: false,
-    // Add custom model defaults if needed, or handle via loading logic
-    // customTextModel: '',
-    // customImageModel: '',
+    articleTitle: '',
+    articleStructure: '',
+    generatedArticleContent: '',
+    bulkKeywordsContent: '', 
+    sitemapFetchedUrl: '', 
+    sitemapUrls: [], // Initialize as empty array
 };
 
 // --- Other Constants ---

@@ -1,16 +1,22 @@
-// article-state.js (v8.13 Add generatedArticleContent)
+// article-state.js (v8.13 Add generatedArticleContent - with formatSingleMode)
 import {
-    defaultSettings, APP_STATE_STORAGE_KEY, BULK_PLAN_STORAGE_KEY,
+    defaultSettings as importedDefaultSettings, // Rename to avoid conflict
+    APP_STATE_STORAGE_KEY, BULK_PLAN_STORAGE_KEY,
     BULK_ARTICLES_STORAGE_KEY, CUSTOM_MODELS_STORAGE_KEY, SITEMAP_STORAGE_KEY
 } from './article-config.js';
 import { logToConsole } from './article-helpers.js';
 
 // --- In-Memory State ---
-let appState = {
-    ...defaultSettings,
+const appDefaultSettings = {
+    ...importedDefaultSettings,
+    formatSingleMode: importedDefaultSettings.format, // Default single mode format is the overall default format
     articleStructure: '',
-    generatedArticleContent: '' // Add state for generated article
+    generatedArticleContent: '',
+    bulkKeywordsContent: '', // For storing bulk keywords textarea content
+    sitemapFetchedUrl: '', // To store the URL from which sitemap was last fetched
 };
+// --- In-Memory State ---
+let appState = { ...appDefaultSettings }; // Initialize with our extended defaults
 let customModels = { text: {}, image: {} };
 let bulkPlan = [];
 let bulkArticles = {};
@@ -19,9 +25,13 @@ let bulkArticles = {};
 export function getState() {
     // Ensure new keys are always part of the returned state copy
     return {
-        ...appState,
+        ...appState, // Spread current appState
+        // Ensure all expected keys from appDefaultSettings are present, even if appState was loaded from an older version
+        formatSingleMode: appState.formatSingleMode || appDefaultSettings.formatSingleMode,
         articleStructure: appState.articleStructure || '',
-        generatedArticleContent: appState.generatedArticleContent || ''
+        generatedArticleContent: appState.generatedArticleContent || '',
+        bulkKeywordsContent: appState.bulkKeywordsContent || '',
+        sitemapFetchedUrl: appState.sitemapFetchedUrl || ''
     };
 }
 export function getCustomModels() {
@@ -47,14 +57,19 @@ export function loadState() {
             const parsed = JSON.parse(savedState);
             // Merge, ensuring new defaults are present if not in saved state
             appState = {
-                ...defaultSettings,
-                articleStructure: '',
-                generatedArticleContent: '',
-                ...parsed
+                ...appDefaultSettings, // Start with all our current defaults
+                ...parsed             // Then overwrite with whatever was saved
             };
+            // Explicitly ensure crucial new defaults if they were missing from an old save
+            appState.formatSingleMode = appState.formatSingleMode || appDefaultSettings.formatSingleMode;
+            appState.articleStructure = appState.articleStructure || '';
+            appState.generatedArticleContent = appState.generatedArticleContent || '';
+            appState.bulkKeywordsContent = appState.bulkKeywordsContent || '';
+            appState.sitemapFetchedUrl = appState.sitemapFetchedUrl || '';
+
             logToConsole('App state loaded from local storage.', 'info');
         } else {
-            appState = { ...defaultSettings, articleStructure: '', generatedArticleContent: '' };
+            appState = { ...appDefaultSettings }; // No saved state, use full defaults
             logToConsole('No saved app state found, using defaults.', 'info');
         }
         loadCustomModelsState();
@@ -62,9 +77,9 @@ export function loadState() {
         loadBulkArticlesState();
     } catch (error) {
         logToConsole(`Error loading app state: ${error.message}`, 'error');
-        appState = { ...defaultSettings, articleStructure: '', generatedArticleContent: '' }; // Reset
+        appState = { ...appDefaultSettings }; // Reset on error
     }
-    return getState();
+    return getState(); // Return a consistent copy
 }
 
 export function saveState() {
@@ -85,7 +100,7 @@ function loadCustomModelsState() {
     try {
         const stored = localStorage.getItem(CUSTOM_MODELS_STORAGE_KEY);
         customModels = stored ? JSON.parse(stored) : { text: {}, image: {} };
-        customModels.text = customModels.text || {}; // Ensure structure
+        customModels.text = customModels.text || {}; 
         customModels.image = customModels.image || {};
         logToConsole('Custom models loaded.', 'info');
     } catch (error) {
@@ -115,7 +130,7 @@ export function getCustomModelState(type, provider) {
 
 // Bulk Plan
 function loadBulkPlanState() {
-     try {
+    try {
         const storedPlan = localStorage.getItem(BULK_PLAN_STORAGE_KEY);
         bulkPlan = storedPlan ? JSON.parse(storedPlan) : [];
         logToConsole(`Bulk plan loaded (${bulkPlan.length} items).`, 'info');
@@ -126,7 +141,7 @@ function loadBulkPlanState() {
 }
 
 export function saveBulkPlanState() {
-     try {
+    try {
         localStorage.setItem(BULK_PLAN_STORAGE_KEY, JSON.stringify(bulkPlan));
         logToConsole('Bulk plan saved.', 'info');
     } catch (error) {
@@ -135,14 +150,14 @@ export function saveBulkPlanState() {
 }
 
 export function setBulkPlan(newPlan) {
-    bulkPlan = [...newPlan]; // Replace entire plan
+    bulkPlan = [...newPlan]; 
     saveBulkPlanState();
 }
 
 export function updateBulkPlanItem(index, updates) {
     if (bulkPlan[index]) {
         bulkPlan[index] = { ...bulkPlan[index], ...updates };
-        saveBulkPlanState(); // Save on item update
+        saveBulkPlanState(); 
     } else {
         logToConsole(`Attempted to update non-existent bulk plan item at index ${index}`, 'warn');
     }
@@ -150,7 +165,7 @@ export function updateBulkPlanItem(index, updates) {
 
 // Bulk Articles
 function loadBulkArticlesState() {
-     try {
+    try {
         const storedArticles = localStorage.getItem(BULK_ARTICLES_STORAGE_KEY);
         bulkArticles = storedArticles ? JSON.parse(storedArticles) : {};
         logToConsole(`Bulk articles loaded (${Object.keys(bulkArticles).length} articles).`, 'info');
@@ -161,9 +176,8 @@ function loadBulkArticlesState() {
 }
 
 export function saveBulkArticlesState() {
-     try {
+    try {
         localStorage.setItem(BULK_ARTICLES_STORAGE_KEY, JSON.stringify(bulkArticles));
-        // logToConsole('Bulk articles saved.', 'info'); // Can be noisy
     } catch (error) {
         logToConsole(`Error saving bulk articles (might be too large): ${error.message}`, 'error');
     }
@@ -182,21 +196,18 @@ export function resetAllData() {
         localStorage.removeItem(CUSTOM_MODELS_STORAGE_KEY);
         localStorage.removeItem(BULK_PLAN_STORAGE_KEY);
         localStorage.removeItem(BULK_ARTICLES_STORAGE_KEY);
-        // *** FIX: Use the imported SITEMAP_STORAGE_KEY ***
         localStorage.removeItem(SITEMAP_STORAGE_KEY);
 
-        // Reset in-memory state
-        appState = { ...defaultSettings };
+        appState = { ...appDefaultSettings }; // Reset to full defaults
         customModels = { text: {}, image: {} };
         bulkPlan = [];
         bulkArticles = {};
 
         logToConsole('All application data has been reset.', 'warn');
-        // Reload the page to apply default UI state cleanly
         window.location.reload();
     } else {
-         logToConsole('Reset cancelled by user.', 'info');
+        logToConsole('Reset cancelled by user.', 'info');
     }
 }
 
-console.log("article-state.js v8.13 loaded (with structure/article content)");
+console.log("article-state.js loaded (v8.13 with formatSingleMode, bulkKeywordsContent, sitemapFetchedUrl)");

@@ -1,6 +1,6 @@
-// article-ui.js (v8.16 extended for ideas - fix getBulkPlan ref)
+// article-ui.js (v8.16 with formatSingleMode handling)
 import { textProviders, imageProviders, languageOptions, defaultSettings } from './article-config.js';
-import { getState, getCustomModelState, updateState, getBulkPlan } from './article-state.js'; // Added getBulkPlan
+import { getState, getCustomModelState, updateState, getBulkPlan } from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2 } from './article-helpers.js';
 
 // --- DOM Element References (Centralized) ---
@@ -426,6 +426,7 @@ export function populateDialectsUI(state) {
 
 export function updateUIBasedOnMode(isBulkMode) {
     logToConsole(`Setting UI for Bulk Mode: ${isBulkMode}`, 'info');
+    const appState = getState(); // Get the current canonical state
     const singleKeywordGroup = getElement('keywordInput')?.closest('.input-group');
     const generateSingleBtn = getElement('generateSingleBtn');
     const step2Section = getElement('step2Section');
@@ -436,39 +437,59 @@ export function updateUIBasedOnMode(isBulkMode) {
     const generatePlanBtn = getElement('generatePlanBtn');
     const step1_5Section = getElement('step1_5Section');
     
+    // Single mode elements
     showElement(singleKeywordGroup, !isBulkMode);
     showElement(generateSingleBtn, !isBulkMode);
     
-    if (isBulkMode) {
-        showElement(step2Section, false);
-        showElement(step3Section, false);
-        showElement(step4Section, false);
-    } else { 
-        const structureText = getElement('articleStructureTextarea')?.value || "";
-        const articleText = getElement('generatedArticleTextarea')?.value || "";
-        showElement(step2Section, structureText.trim() !== '');
-        showElement(step3Section, articleText.trim() !== ''); 
-        showElement(step4Section, getElement('spunArticleDisplay')?.textContent.trim() !== '' && articleText.trim() !== '');
-    }
-
+    // Bulk mode elements
     showElement(bulkKeywordsContainer, isBulkMode);
     showElement(generatePlanBtn, isBulkMode);
 
-    const currentPlan = getBulkPlan();
-    const planningTableBody = getElement('planningTableBody');
-    const planExists = currentPlan && currentPlan.length > 0 && planningTableBody && planningTableBody.children.length > 0 && planningTableBody.children[0].textContent !== "No plan generated or loaded.";
-    showElement(step1_5Section, isBulkMode && planExists);
+    if (isBulkMode) {
+        // Switching TO Bulk Mode: Hide single-mode workflow sections
+        showElement(step2Section, false);
+        showElement(step3Section, false);
+        showElement(step4Section, false);
 
-    if (formatSelect) {
-        disableElement(formatSelect, isBulkMode);
-        if (isBulkMode) { 
-            if (formatSelect.value !== 'markdown') {
-                formatSelect.value = 'markdown'; 
-                updateState({ format: 'markdown' }); 
-                logToConsole('Format forced to Markdown for Bulk Mode.', 'info'); 
-            }
+        const currentPlan = getBulkPlan(); 
+        const planningTableBody = getElement('planningTableBody');
+        const planExists = currentPlan && currentPlan.length > 0 && 
+                           planningTableBody && planningTableBody.children.length > 0 && 
+                           planningTableBody.children[0].textContent !== "No plan generated or loaded.";
+        showElement(step1_5Section, planExists); 
+
+        if(formatSelect) {
+            disableElement(formatSelect, true);
+            // Value already set to 'markdown' by the event listener in article-main.js
+            // formatSelect.value = 'markdown'; 
         }
-    } else { logToConsole("Format select element not found for mode update.", "warn"); }
+
+    } else {
+        // Switching TO Single Mode: Show single-mode workflow sections based on their state
+        showElement(step1_5Section, false); 
+
+        const articleStructureTextarea = getElement('articleStructureTextarea');
+        if (articleStructureTextarea) articleStructureTextarea.value = appState.articleStructure || '';
+        
+        const generatedArticleTextarea = getElement('generatedArticleTextarea');
+        if (generatedArticleTextarea) generatedArticleTextarea.value = appState.generatedArticleContent || '';
+        
+        const spunArticleDisplay = getElement('spunArticleDisplay'); 
+
+        showElement(step2Section, (appState.articleStructure || '').trim() !== '');
+        showElement(step3Section, (appState.generatedArticleContent || '').trim() !== '');
+        showElement(step4Section, 
+            (appState.generatedArticleContent || '').trim() !== '' && 
+            (spunArticleDisplay?.textContent || '').trim() !== '' 
+        );
+        
+        if(formatSelect) {
+            disableElement(formatSelect, false);
+            // The format in appState should have been restored by the event listener in article-main.js
+            formatSelect.value = appState.format; 
+            logToConsole(`Format select value set to: ${appState.format} for single mode.`, 'debug');
+        }
+    }
 }
 
 export function updateCounts(text) {
@@ -691,4 +712,4 @@ export function displaySitemapUrlsUI(urls = []) {
     logToConsole(`Displayed ${urls.length} sitemap URLs.`, 'info');
 }
 
-console.log("article-ui.js loaded (v8.16 extended for ideas - fix getBulkPlan ref)");
+console.log("article-ui.js loaded (v8.16 with formatSingleMode handling)");
