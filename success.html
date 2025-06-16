@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goal Fulfillment Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-r from-blue-500 to-purple-600 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Goal Fulfillment Tracker</h1>
+
+        <div id="goalInputSection" class="mb-6">
+            <label for="goalInput" class="block text-lg font-medium text-gray-700 mb-2">What is your goal?</label>
+            <input type="text" id="goalInput" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., Learn a new programming language">
+            <button id="addGoalBtn" class="mt-4 w-full bg-blue-600 text-white p-3 rounded-md hover:bg-blue-700 transition duration-300">Add Goal</button>
+        </div>
+
+        <div id="goalsList" class="space-y-6">
+            </div>
+    </div>
+
+    <script>
+        const goalInput = document.getElementById('goalInput');
+        const addGoalBtn = document.getElementById('addGoalBtn');
+        const goalsList = document.getElementById('goalsList');
+
+        let goals = JSON.parse(localStorage.getItem('goals')) || [];
+
+        function saveGoals() {
+            localStorage.setItem('goals', JSON.stringify(goals));
+        }
+
+        function renderGoals() {
+            goalsList.innerHTML = '';
+            goals.forEach((goal, index) => {
+                const goalCard = document.createElement('div');
+                goalCard.classList.add('bg-gray-50', 'p-6', 'rounded-lg', 'shadow-md', 'border-l-4', 'border-blue-500');
+
+                let deadlineDisplay = goal.deadline ? `<p class="text-gray-600 mb-2"><strong>Deadline:</strong> ${goal.deadline}</p>` : '';
+                let planDisplay = goal.plan ? `<p class="text-gray-600 mb-2"><strong>Plan:</strong> ${goal.plan}</p>` : '';
+                let actionsDisplay = '';
+
+                if (goal.actions && Object.keys(goal.actions).length > 0) {
+                    actionsDisplay = '<p class="text-gray-700 font-semibold mt-4">Actions:</p>';
+                    for (const type in goal.actions) {
+                        actionsDisplay += `<p class="text-gray-600 ml-4 capitalize"><strong>${type}:</strong></p>`;
+                        goal.actions[type].forEach(action => {
+                            actionsDisplay += `<p class="text-gray-600 ml-8">- ${action}</p>`;
+                        });
+                    }
+                }
+
+                goalCard.innerHTML = `
+                    <h3 class="text-xl font-semibold text-gray-800 mb-3">${goal.text}</h3>
+                    ${deadlineDisplay}
+                    ${planDisplay}
+                    <button class="edit-goal-btn bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 transition duration-300 mr-2" data-index="${index}">Edit</button>
+                    <button class="delete-goal-btn bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition duration-300" data-index="${index}">Delete</button>
+                    <button class="set-deadline-btn bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 transition duration-300 mt-2 ${goal.deadline ? 'hidden' : ''}" data-index="${index}">Set Deadline</button>
+                    <button class="set-plan-btn bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600 transition duration-300 mt-2 ${goal.deadline && !goal.plan ? '' : 'hidden'}" data-index="${index}">Set Plan</button>
+                    <button class="set-action-btn bg-indigo-500 text-white px-4 py-2 rounded-md hover:bg-indigo-600 transition duration-300 mt-2 ${goal.plan && !goal.actions ? '' : 'hidden'}" data-index="${index}">Set Actions</button>
+
+                    <div id="deadlineInputSection-${index}" class="mt-4 ${goal.deadline ? 'hidden' : ''}">
+                        <label for="deadlineInput-${index}" class="block text-sm font-medium text-gray-700 mb-1">Deadline for "${goal.text}" (YYYY-MM-DD):</label>
+                        <input type="date" id="deadlineInput-${index}" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <button class="save-deadline-btn bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-300 mt-2" data-index="${index}">Save Deadline</button>
+                    </div>
+
+                    <div id="planInputSection-${index}" class="mt-4 ${goal.plan || !goal.deadline ? 'hidden' : ''}">
+                        <label for="planInput-${index}" class="block text-sm font-medium text-gray-700 mb-1">Plan for "${goal.text}":</label>
+                        <textarea id="planInput-${index}" rows="3" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="e.g., Break down the language into modules..."></textarea>
+                        <button class="save-plan-btn bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-300 mt-2" data-index="${index}">Save Plan</button>
+                    </div>
+
+                    <div id="actionInputSection-${index}" class="mt-4 ${goal.actions || !goal.plan ? 'hidden' : ''}">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Actions for "${goal.text}":</label>
+                        <div id="actionFields-${index}"></div>
+                        <button class="save-actions-btn bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-300 mt-2" data-index="${index}">Save Actions</button>
+                    </div>
+
+                    ${actionsDisplay}
+                `;
+                goalsList.appendChild(goalCard);
+            });
+
+            addEventListeners();
+        }
+
+        function addEventListeners() {
+            document.querySelectorAll('.delete-goal-btn').forEach(button => {
+                button.onclick = (e) => {
+                    const index = e.target.dataset.index;
+                    goals.splice(index, 1);
+                    saveGoals();
+                    renderGoals();
+                };
+            });
+
+            document.querySelectorAll('.edit-goal-btn').forEach(button => {
+                button.onclick = (e) => {
+                    const index = e.target.dataset.index;
+                    const newText = prompt('Edit goal:', goals[index].text);
+                    if (newText !== null && newText.trim() !== '') {
+                        goals[index].text = newText.trim();
+                        saveGoals();
+                        renderGoals();
+                    }
+                };
+            });
+
+            document.querySelectorAll('.set-deadline-btn').forEach(button => {
+                button.onclick = (e) => {
+                    const index = e.target.dataset.index;
+                    document.getElementById(`deadlineInputSection-${index}`).classList.remove('hidden');
+                    e.target.classList.add('hidden'); // Hide the set deadline button
+                };
+            });
+
+            document.querySelectorAll('.save-deadline-btn').forEach(button => {
+                button.onclick = (e) => {
+                    const index = e.target.dataset.index;
+                    const deadlineInput = document.getElementById(`deadlineInput-${index}`);
+                    const deadline = deadlineInput.value;
+                    if (deadline) {
+                        goals[index].deadline = deadline;
+                        goals[index].deadlineSetDate = new Date().toISOString().slice(0, 10); // Store date when deadline was set
+                        saveGoals();
+                        renderGoals();
+                    } else {
+                        alert('Please enter a deadline.');
+                    }
+                };
+            });
+
+            document.querySelectorAll('.set-plan-btn').forEach(button => {
+                button.onclick = (e) => {
+                    const index = e.target.dataset.index;
+                    document.getElementById(`planInputSection-${index}`).classList.remove('hidden');
+                    e.target.classList.add('hidden'); // Hide the set plan button
+                };
+            });
+
+            document.querySelectorAll('.save-plan-btn').forEach(button => {
+                button.onclick = (e) => {
+                    const index = e.target.dataset.index;
+                    const planInput = document.getElementById(`planInput-${index}`);
+                    const plan = planInput.value.trim();
+                    if (plan) {
+                        goals[index].plan = plan;
+                        saveGoals();
+                        renderGoals();
+                    } else {
+                        alert('Please enter a plan.');
+                    }
+                };
+            });
+
+            document.querySelectorAll('.set-action-btn').forEach(button => {
+                button.onclick = (e) => {
+                    const index = e.target.dataset.index;
+                    const goal = goals[index];
+                    const actionFieldsDiv = document.getElementById(`actionFields-${index}`);
+                    actionFieldsDiv.innerHTML = ''; // Clear previous fields
+
+                    if (goal.deadline && goal.deadlineSetDate) {
+                        const deadlineDate = new Date(goal.deadline);
+                        const setDate = new Date(goal.deadlineSetDate);
+
+                        const diffTime = Math.abs(deadlineDate - setDate);
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                        let showDaily = false;
+                        let showWeekly = false;
+                        let showMonthly = false;
+
+                        if (diffDays <= 30) { // Up to a month
+                            showDaily = true;
+                            showWeekly = true;
+                        } else if (diffDays <= 365) { // Up to a year
+                            showWeekly = true;
+                            showMonthly = true;
+                        } else { // More than a year
+                            showMonthly = true;
+                        }
+
+                        if (showDaily) {
+                            actionFieldsDiv.innerHTML += `
+                                <label for="dailyAction-${index}" class="block text-sm font-medium text-gray-700 mb-1 mt-2">Daily Actions:</label>
+                                <textarea id="dailyAction-${index}" rows="2" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="e.g., Study for 1 hour"></textarea>
+                            `;
+                            if (goal.actions && goal.actions.daily) {
+                                document.getElementById(`dailyAction-${index}`).value = goal.actions.daily.join('\n');
+                            }
+                        }
+                        if (showWeekly) {
+                            actionFieldsDiv.innerHTML += `
+                                <label for="weeklyAction-${index}" class="block text-sm font-medium text-gray-700 mb-1 mt-2">Weekly Actions:</label>
+                                <textarea id="weeklyAction-${index}" rows="2" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="e.g., Review concepts on Sunday"></textarea>
+                            `;
+                            if (goal.actions && goal.actions.weekly) {
+                                document.getElementById(`weeklyAction-${index}`).value = goal.actions.weekly.join('\n');
+                            }
+                        }
+                        if (showMonthly) {
+                            actionFieldsDiv.innerHTML += `
+                                <label for="monthlyAction-${index}" class="block text-sm font-medium text-gray-700 mb-1 mt-2">Monthly Actions:</label>
+                                <textarea id="monthlyAction-${index}" rows="2" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="e.g., Take a progress assessment"></textarea>
+                            `;
+                            if (goal.actions && goal.actions.monthly) {
+                                document.getElementById(`monthlyAction-${index}`).value = goal.actions.monthly.join('\n');
+                            }
+                        }
+
+                        document.getElementById(`actionInputSection-${index}`).classList.remove('hidden');
+                        e.target.classList.add('hidden'); // Hide the set action button
+                    } else {
+                        alert('Please set a deadline and plan first to define actions.');
+                    }
+                };
+            });
+
+            document.querySelectorAll('.save-actions-btn').forEach(button => {
+                button.onclick = (e) => {
+                    const index = e.target.dataset.index;
+                    const goal = goals[index];
+                    goal.actions = {};
+
+                    const dailyActionInput = document.getElementById(`dailyAction-${index}`);
+                    if (dailyActionInput && dailyActionInput.value.trim() !== '') {
+                        goal.actions.daily = dailyActionInput.value.split('\n').map(action => action.trim()).filter(action => action !== '');
+                    }
+
+                    const weeklyActionInput = document.getElementById(`weeklyAction-${index}`);
+                    if (weeklyActionInput && weeklyActionInput.value.trim() !== '') {
+                        goal.actions.weekly = weeklyActionInput.value.split('\n').map(action => action.trim()).filter(action => action !== '');
+                    }
+
+                    const monthlyActionInput = document.getElementById(`monthlyAction-${index}`);
+                    if (monthlyActionInput && monthlyActionInput.value.trim() !== '') {
+                        goal.actions.monthly = monthlyActionInput.value.split('\n').map(action => action.trim()).filter(action => action !== '');
+                    }
+
+                    saveGoals();
+                    renderGoals();
+                };
+            });
+        }
+
+        addGoalBtn.addEventListener('click', () => {
+            const goalText = goalInput.value.trim();
+            if (goalText) {
+                goals.push({ text: goalText, deadline: '', plan: '', actions: null, deadlineSetDate: '' });
+                goalInput.value = '';
+                saveGoals();
+                renderGoals();
+            } else {
+                alert('Please enter a goal.');
+            }
+        });
+
+        // Initial render
+        renderGoals();
+    </script>
+</body>
+</html>
