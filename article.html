@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Article Generator & Spinner v8.8</title>
+    <title>AI Article Generator & Spinner v8.18</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
@@ -157,6 +157,15 @@
                 <div class="input-group grid grid-cols-3 items-center gap-x-2 mt-1"> 
                     <label for="readerName" class="compact-label">Reader Name 👋:</label> 
                     <input type="text" id="readerName" class="compact-input col-span-2" placeholder="e.g., Boss, Bro, Anda"> 
+                </div> 
+                <div class="input-group grid grid-cols-3 items-center gap-x-2 mt-1">
+                    <label for="humanizeContent" class="compact-label">Humanize Content 🧑‍🎨:</label>
+                    <div class="col-span-2">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="humanizeContent" checked>
+                            <span class="slider"><span class="dot"></span></span>
+                        </label>
+                    </div>
                 </div> 
             </div> 
             <div> 

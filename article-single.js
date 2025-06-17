@@ -1,4 +1,4 @@
-// article-single.js (v8.13 + Live Counts Fix)
+// article-single.js (v8.18 Humanize content)
 import { getState, updateState } from './article-state.js';
 import { logToConsole, callAI, getArticleOutlinesV2, constructImagePrompt, sanitizeFilename, slugify, showLoading, disableElement, delay, showElement } from './article-helpers.js';
 // *** Import updateCounts ***
@@ -253,13 +253,42 @@ function buildSingleTextPayloadV2(section, previousContext, articleTitle) {
          const urlList = state.sitemapUrls.slice(0, 5).join('\n'); // Limit shown URLs
          linkingInstructions = `\n- Consider linking naturally to relevant URLs from this list if appropriate:\n${urlList}\n- Link Type Preference: ${state.linkTypeInternal ? 'Internal (relative paths like /slug)' : 'External (full URLs)'}. Aim for 1-2 relevant links per section if possible.`;
     }
-
     // Construct prompt using heading and points
     let pointsGuidance = '';
     if (section.points && section.points.length > 0) {
         pointsGuidance = `\nKey points/subtopics to cover in this section:\n- ${section.points.join('\n- ')}\n`;
     }
-    const prompt = `Generate the article content ONLY for the section titled or about: "${section.heading}".\nThis section is part of a larger article titled "${articleTitle}".\n${pointsGuidance}\nContinue naturally from the previous context if provided.\nPrevious Context (end of last section):\n---\n${previousContext ? previousContext.slice(-500) : '(Start of article)'}\n---\n\nOverall Article Specifications:\n- Keyword: "${state.keyword}"\n- Language: ${state.language}${state.dialect ? ` (${state.dialect} dialect)` : ''}\n- Target Audience: ${state.audience}\n- Tone: ${state.tone}\n${state.gender ? `- Author Gender: ${state.gender}\n` : ''}${state.age ? `- Author Age: ${state.age}\n` : ''}- Purpose(s): ${state.purpose.join(', ')}\n${state.purposeUrl && state.purpose.includes('Promote URL') ? ` - Promo URL: ${state.purposeUrl}\n` : ''}${state.purposeCta && state.purpose.some(p => p.startsWith('Promote') || p === 'Generate Leads') ? ` - CTA: ${state.purposeCta}\n` : ''}${state.readerName ? `- Reader Name: ${state.readerName}\n` : ''}- Output Format: ${state.format}\n${state.customSpecs ? `- Other Details: ${state.customSpecs}\n` : ''}${linkingInstructions}\n\nInstructions:\n- Write ONLY the content for the current section: "${section.heading}".\n- Use the provided key points as guidance for the content.\n- Do NOT repeat the main section heading ("${section.heading}") unless it fits naturally (e.g., as an <h2>).\n- Ensure smooth transition from previous context.\n- Adhere strictly to ${state.format} format (${state.format === 'html' ? 'use only <p>, <h2>-<h6>, <ul>, <ol>, <li>, <b>, <i>, <a> tags' : 'use standard Markdown'}).\n- Do NOT add introductory or concluding remarks about the writing process or the section itself. Focus solely on generating the body content for this specific section.`;
+    const humanizeInstructions = `\n- Humanization Style: Write in a direct and clear style. Prefer shorter sentences and break content into smaller, more digestible paragraphs. Avoid complex sentence structures and obvious AI conversational patterns or procedural rhetoric. Do not use phrases like "In conclusion", "In the world of", "It's important to note", or "delve into". If an author persona (gender/age) is provided, subtly weave in a brief, relevant personal anecdote or observation to build connection with the reader.`;
+    const prompt = `Generate the article content ONLY for the section titled or about: "${section.heading}".
+    \nThis section is part of a larger article titled "${articleTitle}".
+    \n${pointsGuidance}
+    \nContinue naturally from the previous context if provided.
+    \nPrevious Context (end of last section):
+    \n---
+    \n${previousContext ? previousContext.slice(-500) : '(Start of article)'}
+    \n---
+    \n\nOverall Article Specifications:
+    \n- Keyword: "${state.keyword}"
+    \n- Language: ${state.language}${state.dialect ? ` (${state.dialect} dialect)` : ''}
+    \n- Target Audience: ${state.audience}
+    \n- Tone: ${state.tone}
+    \n${state.gender ? `- Author Gender: ${state.gender}
+    \n` : ''}${state.age ? `- Author Age: ${state.age}
+    \n` : ''}- Purpose(s): ${state.purpose.join(', ')}
+    \n${state.purposeUrl && state.purpose.includes('Promote URL') ? ` - Promo URL: ${state.purposeUrl}
+    \n` : ''}${state.purposeCta && state.purpose.some(p => p.startsWith('Promote') || p === 'Generate Leads') ? ` - CTA: ${state.purposeCta}
+    \n` : ''}${state.readerName ? `- Reader Name: ${state.readerName}
+    \n` : ''}- Output Format: ${state.format}
+    \n${state.customSpecs ? `- Other Details: ${state.customSpecs}
+    \n` : ''}${linkingInstructions}
+    \n${state.humanizeContent ? humanizeInstructions : ''}
+    \n\nInstructions:
+    \n- Write ONLY the content for the current section: "${section.heading}".
+    \n- Use the provided key points as guidance for the content.
+    \n- Do NOT repeat the main section heading ("${section.heading}") unless it fits naturally (e.g., as an <h2>).
+    \n- Ensure smooth transition from previous context.
+    \n- Adhere strictly to ${state.format} format (${state.format === 'html' ? 'use only <p>, <h2>-<h6>, <ul>, <ol>, <li>, <b>, <i>, <a> tags' : 'use standard Markdown'}).
+    \n- Do NOT add introductory or concluding remarks about the writing process or the section itself. Focus solely on generating the body content for this specific section.`;
 
     return { providerKey: state.textProvider, model: state.textModel, prompt: prompt };
 }
@@ -413,4 +442,4 @@ function replacePlaceholderInTextarea(textarea, placeholderId, filename, finalIm
     }
 }
 
-console.log("article-single.js loaded (v8.13 OutlineV2 + Content State + fix update count)");
+console.log("article-single.js loaded (v8.18 Humanize content)");

@@ -1,4 +1,4 @@
-// article-config.js (v8.7 fix google model)
+// article-config.js (v8.18 Humanize content)
 
 export const CLOUDFLARE_FUNCTION_URL = '/ai-api';
 
@@ -57,6 +57,7 @@ export const defaultSettings = {
     formatSingleMode: 'html', // Add this, defaults to the main format
     sitemapUrl: '',
     customSpecs: '',
+    humanizeContent: true,
     generateImages: false,
     numImages: 1,
     imageAspectRatio: '1:1', 
@@ -80,4 +81,4 @@ export const defaultSettings = {
 // --- Other Constants ---
 export const GITHUB_API_BASE = 'https://api.github.com';
 
-console.log("article-config.js loaded");
+console.log("article-config.js loaded (v8.18 Humanize content)");

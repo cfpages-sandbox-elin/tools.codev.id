@@ -1,4 +1,4 @@
-// article-bulk.js (v8.13 OutlineV2 Alignment - with internal fix)
+// article-bulk.js (v8.18 Humanize content)
 import { getState, getBulkPlan, updateBulkPlanItem, addBulkArticle, saveBulkArticlesState, getBulkArticle, getAllBulkArticles, setBulkPlan } from './article-state.js';
 import { logToConsole, callAI, sanitizeFilename, slugify, getArticleOutlinesV2, constructImagePrompt, delay } from './article-helpers.js';
 import { getElement, updatePlanItemStatusUI, updateProgressBar, hideProgressBar, renderPlanningTable } from './article-ui.js';
@@ -235,8 +235,38 @@ function buildBulkTextPayloadV2(planItem, section, previousContext) {
         pointsGuidance = `\nKey points/subtopics to cover in this section:\n- ${section.points.join('\n- ')}\n`;
     }
 
+    // Humanize Content
+    const humanizeInstructions = `\n- Humanization Style: Write in a direct and clear style. Prefer shorter sentences and break content into smaller, more digestible paragraphs. Avoid complex sentence structures and obvious AI conversational patterns or procedural rhetoric. Do not use phrases like "In conclusion", "In the world of", "It's important to note", or "delve into". If an author persona (gender/age) is provided, subtly weave in a brief, relevant personal anecdote or observation to build connection with the reader.`;
+
     // Construct the Main Prompt
-    const prompt = `Generate the Markdown article content ONLY for the section titled or about: "${section.heading}".\nThis section belongs to an article about the keyword "${planItem.keyword}" with the title "${planItem.title}" (User Intent: ${planItem.intent}).\n${pointsGuidance}\nContinue naturally from the previous context.\nPrevious Context (end of last section):\n---\n${previousContext ? previousContext.slice(-500) : '(Start of article)'}\n---\n\nOverall Article Specifications:\n- Language: ${state.language}${state.dialect ? ` (${state.dialect} dialect)` : ''}\n- Audience: ${state.audience}\n- Tone: ${state.tone}\n${state.gender ? `- Author Gender: ${state.gender}\n` : ''}${state.age ? `- Author Age: ${state.age}\n` : ''}- Purpose(s): ${state.purpose.join(', ')}\n${state.purposeUrl && state.purpose.includes('Promote URL') ? ` - Promo URL: ${state.purposeUrl}\n` : ''}${state.purposeCta && state.purpose.some(p => p.startsWith('Promote') || p === 'Generate Leads') ? ` - CTA: ${state.purposeCta}\n` : ''}${state.readerName ? `- Reader Name: ${state.readerName}\n` : ''}${state.customSpecs ? `- Other Details: ${state.customSpecs}\n` : ''}${linkingInstructions}\nInstructions:\n- Write ONLY the Markdown content for the current section: "${section.heading}".\n- Use the provided key points as essential guidance for the content.\n- Do NOT repeat the main section heading ("${section.heading}") unless it fits naturally as a Markdown heading (e.g., ## Sub Heading).\n- Ensure smooth transition from previous context.\n- Use standard Markdown formatting ONLY.\n- Do NOT add introductory or concluding remarks about the writing process or the section itself. Focus solely on generating the body content for this specific section.`;
+    const prompt = `Generate the Markdown article content ONLY for the section titled or about: "${section.heading}".
+    \nThis section belongs to an article about the keyword "${planItem.keyword}" with the title "${planItem.title}" (User Intent: ${planItem.intent}).
+    \n${pointsGuidance}
+    \nContinue naturally from the previous context.
+    \nPrevious Context (end of last section):
+    \n---
+    \n${previousContext ? previousContext.slice(-500) : '(Start of article)'}
+    \n---\n
+    \nOverall Article Specifications:
+    \n- Language: ${state.language}${state.dialect ? ` (${state.dialect} dialect)` : ''}
+    \n- Audience: ${state.audience}
+    \n- Tone: ${state.tone}
+    \n${state.gender ? `- Author Gender: ${state.gender}
+    \n` : ''}${state.age ? `- Author Age: ${state.age}
+    \n` : ''}- Purpose(s): ${state.purpose.join(', ')}
+    \n${state.purposeUrl && state.purpose.includes('Promote URL') ? ` - Promo URL: ${state.purposeUrl}
+    \n` : ''}${state.purposeCta && state.purpose.some(p => p.startsWith('Promote') || p === 'Generate Leads') ? ` - CTA: ${state.purposeCta}
+    \n` : ''}${state.readerName ? `- Reader Name: ${state.readerName}
+    \n` : ''}${state.customSpecs ? `- Other Details: ${state.customSpecs}
+    \n` : ''}${linkingInstructions}
+    \n${state.humanizeContent ? humanizeInstructions : ''}
+    \nInstructions:
+    \n- Write ONLY the Markdown content for the current section: "${section.heading}".
+    \n- Use the provided key points as essential guidance for the content.
+    \n- Do NOT repeat the main section heading ("${section.heading}") unless it fits naturally as a Markdown heading (e.g., ## Sub Heading).
+    \n- Ensure smooth transition from previous context.
+    \n- Use standard Markdown formatting ONLY.
+    \n- Do NOT add introductory or concluding remarks about the writing process or the section itself. Focus solely on generating the body content for this specific section.`;
 
     return prompt;
 }
@@ -337,4 +367,4 @@ export async function handleDownloadZip() {
     } catch (error) { logToConsole(`Error generating ZIP: ${error.message}`, 'error'); alert("Failed to generate ZIP file."); }
 }
 
-console.log("article-bulk.js loaded (v8.13 OutlineV2 Alignment - internal fix applied)");
+console.log("article-bulk.js loaded (v8.18 Humanize content)");

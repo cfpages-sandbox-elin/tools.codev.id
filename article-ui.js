@@ -1,4 +1,4 @@
-// article-ui.js (v8.16 with formatSingleMode handling)
+// article-ui.js (v8.18 Humanize content)
 import { textProviders, imageProviders, languageOptions, defaultSettings } from './article-config.js';
 import { getState, getCustomModelState, updateState, getBulkPlan } from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2 } from './article-helpers.js';
@@ -27,6 +27,7 @@ const elementIdMap = {
     dialectSelect: 'dialect',
     audienceInput: 'audience',
     readerNameInput: 'readerName',
+    humanizeContentCheckbox: 'humanizeContent',
     toneSelect: 'tone',
     customToneInput: 'custom_tone',
     genderSelect: 'gender',
@@ -538,6 +539,7 @@ export function updateUIFromState(state) {
 
     const audienceInputElement = getElement('audienceInput'); if(audienceInputElement) audienceInputElement.value = state.audience || defaultSettings.audience;
     const readerNameInputElement = getElement('readerNameInput'); if(readerNameInputElement) readerNameInputElement.value = state.readerName || defaultSettings.readerName;
+    const humanizeContentCheckbox = getElement('humanizeContentCheckbox'); if(humanizeContentCheckbox) humanizeContentCheckbox.checked = state.humanizeContent ?? defaultSettings.humanizeContent; 
     const toneSelectElement = getElement('toneSelect'); if(toneSelectElement) toneSelectElement.value = state.tone || defaultSettings.tone;
     const customToneInputElement = getElement('customToneInput'); if(customToneInputElement) customToneInputElement.value = state.customTone || '';
     const genderSelectElement = getElement('genderSelect'); if(genderSelectElement) genderSelectElement.value = state.gender || defaultSettings.gender;
@@ -712,4 +714,4 @@ export function displaySitemapUrlsUI(urls = []) {
     logToConsole(`Displayed ${urls.length} sitemap URLs.`, 'info');
 }
 
-console.log("article-ui.js loaded (v8.16 with formatSingleMode handling)");
+console.log("article-ui.js loaded (v8.18 Humanize content)");

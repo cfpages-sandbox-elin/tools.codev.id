@@ -1,4 +1,4 @@
-// article-main.js (v8.17 extended for ideas - with formatSingleMode handling)
+// article-main.js (v8.18 Humanize content)
 
 import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
 import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
@@ -209,8 +209,36 @@ function setupStep1Listeners() {
         updateState({ bulkKeywordsContent: e.target.value });
     });
     
-    const inputsToSave = [ { id: 'keywordInput', stateKey: 'keyword', event: 'blur' }, { id: 'audienceInput', stateKey: 'audience', event: 'blur' }, { id: 'readerNameInput', stateKey: 'readerName', event: 'blur' }, { id: 'genderSelect', stateKey: 'gender', event: 'change' }, { id: 'ageSelect', stateKey: 'age', event: 'change' }, { id: 'formatSelect', stateKey: 'format', event: 'change' }, { id: 'sitemapUrlInput', stateKey: 'sitemapUrl', event: 'blur' }, { id: 'customSpecsInput', stateKey: 'customSpecs', event: 'blur' }, { id: 'numImagesSelect', stateKey: 'numImages', event: 'change' }, { id: 'imageSubjectInput', stateKey: 'imageSubject', event: 'blur' }, { id: 'imageStyleSelect', stateKey: 'imageStyle', event: 'change' }, { id: 'imageStyleModifiersInput', stateKey: 'imageStyleModifiers', event: 'blur' }, { id: 'imageTextInput', stateKey: 'imageText', event: 'blur' }, { id: 'githubRepoUrlInput', stateKey: 'githubRepoUrl', event: 'blur' }, { id: 'githubCustomPathInput', stateKey: 'githubCustomPath', event: 'blur' } ];
-    inputsToSave.forEach(item => { const element = getElement(item.id); element?.addEventListener(item.event, (e) => { let value = e.target.value; if (e.target.type === 'select-one' && item.stateKey === 'numImages') { value = parseInt(value, 10) || 1; } updateState({ [item.stateKey]: value }); }); });
+    const inputsToSave = [ 
+        { id: 'keywordInput', stateKey: 'keyword', event: 'blur' }, 
+        { id: 'audienceInput', stateKey: 'audience', event: 'blur' }, 
+        { id: 'readerNameInput', stateKey: 'readerName', event: 'blur' }, 
+        { id: 'humanizeContentCheckbox', stateKey: 'humanizeContent', event: 'change', type: 'checkbox' },
+        { id: 'genderSelect', stateKey: 'gender', event: 'change' }, 
+        { id: 'ageSelect', stateKey: 'age', event: 'change' }, 
+        { id: 'formatSelect', stateKey: 'format', event: 'change' }, 
+        { id: 'sitemapUrlInput', stateKey: 'sitemapUrl', event: 'blur' }, 
+        { id: 'customSpecsInput', stateKey: 'customSpecs', event: 'blur' }, 
+        { id: 'numImagesSelect', stateKey: 'numImages', event: 'change' }, 
+        { id: 'imageSubjectInput', stateKey: 'imageSubject', event: 'blur' }, 
+        { id: 'imageStyleSelect', stateKey: 'imageStyle', event: 'change' }, 
+        { id: 'imageStyleModifiersInput', stateKey: 'imageStyleModifiers', event: 'blur' }, 
+        { id: 'imageTextInput', stateKey: 'imageText', event: 'blur' }, 
+        { id: 'githubRepoUrlInput', stateKey: 'githubRepoUrl', event: 'blur' }, 
+        { id: 'githubCustomPathInput', stateKey: 'githubCustomPath', event: 'blur' } ];
+    inputsToSave.forEach(item => {
+        const element = getElement(item.id);
+        element?.addEventListener(item.event, (e) => {
+            let value = e.target.value;
+            if (item.type === 'checkbox') {
+                value = e.target.checked;
+            }
+            if (e.target.type === 'select-one' && item.stateKey === 'numImages') {
+                value = parseInt(value, 10) || 1;
+            }
+            updateState({ [item.stateKey]: value });
+        });
+    });
     generateSingleBtn?.addEventListener('click', handleGenerateStructure);
     generatePlanBtn?.addEventListener('click', handleGeneratePlan);
     generateIdeasBtn?.addEventListener('click', handleGenerateIdeas); 
@@ -342,4 +370,4 @@ function setupBulkModeListeners() {
 logToConsole("article-main.js evaluating. Setting up DOMContentLoaded listener.", "debug");
 document.addEventListener('DOMContentLoaded', initializeApp, { once: true });
 
-console.log("article-main.js loaded (v8.17 with formatSingleMode handling)");
+console.log("article-main.js loaded (v8.18 Humanize content)");

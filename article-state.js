@@ -1,4 +1,4 @@
-// article-state.js (v8.13 Add generatedArticleContent - with formatSingleMode)
+// article-state.js (v8.18 Humanize content)
 import {
     defaultSettings as importedDefaultSettings, // Rename to avoid conflict
     APP_STATE_STORAGE_KEY, BULK_PLAN_STORAGE_KEY,
@@ -9,6 +9,7 @@ import { logToConsole } from './article-helpers.js';
 // --- In-Memory State ---
 const appDefaultSettings = {
     ...importedDefaultSettings,
+    humanizeContent: importedDefaultSettings.humanizeContent ?? true,
     formatSingleMode: importedDefaultSettings.format, // Default single mode format is the overall default format
     articleStructure: '',
     generatedArticleContent: '',
@@ -27,6 +28,7 @@ export function getState() {
     return {
         ...appState, // Spread current appState
         // Ensure all expected keys from appDefaultSettings are present, even if appState was loaded from an older version
+        humanizeContent: appState.humanizeContent ?? true, 
         formatSingleMode: appState.formatSingleMode || appDefaultSettings.formatSingleMode,
         articleStructure: appState.articleStructure || '',
         generatedArticleContent: appState.generatedArticleContent || '',
@@ -66,6 +68,7 @@ export function loadState() {
             appState.generatedArticleContent = appState.generatedArticleContent || '';
             appState.bulkKeywordsContent = appState.bulkKeywordsContent || '';
             appState.sitemapFetchedUrl = appState.sitemapFetchedUrl || '';
+            appState.humanizeContent = appState.humanizeContent ?? appDefaultSettings.humanizeContent;
 
             logToConsole('App state loaded from local storage.', 'info');
         } else {
@@ -210,4 +213,4 @@ export function resetAllData() {
     }
 }
 
-console.log("article-state.js loaded (v8.13 with formatSingleMode, bulkKeywordsContent, sitemapFetchedUrl)");
+console.log("article-state.js loaded (v8.18 Humanize content)");
