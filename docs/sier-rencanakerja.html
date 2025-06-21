@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rencana Kerja Proyek</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        th, td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+            text-align: left;
+        }
+        th {
+            background-color: #4f46e5; /* Indigo-600 */
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        tr:nth-child(even) {
+            background-color: #f9fafb; /* Gray-50 */
+        }
+        tr:hover {
+            background-color: #eef2ff; /* Indigo-50 */
+        }
+        .task-group {
+            background-color: #6366f1; /* Indigo-500 */
+            color: white;
+            font-weight: 700;
+            text-align: center;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .bg-green-100 { background-color: #dcfce7; } /* Light green for completed/milestone */
+        .bg-yellow-100 { background-color: #fef9c3; } /* Light yellow for in progress */
+    </style>
+</head>
+<body>
+    <div class="container rounded-lg">
+        <h1 class="text-3xl font-bold text-center py-6 text-indigo-700">Rencana Kerja Proyek</h1>
+        <p class="text-center text-gray-600 mb-6">Target penyelesaian laporan dalam 4 minggu.</p>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead>
+                    <tr>
+                        <th class="rounded-tl-lg">Minggu</th>
+                        <th>Aktivitas Utama</th>
+                        <th>Detail Tugas</th>
+                        <th>Durasi (Hari)</th>
+                        <th>Catatan</th>
+                        <th class="rounded-tr-lg">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Minggu 1 -->
+                    <tr>
+                        <td class="task-group" colspan="6">Minggu Ke-1: Survei Data Primer</td>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>Survei Data Primer</td>
+                        <td>Survei Lokasi</td>
+                        <td>1</td>
+                        <td></td>
+                        <td class="bg-yellow-100 text-center rounded-br-lg sm:rounded-none">Berlangsung</td>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>Survei Data Primer</td>
+                        <td>Survei Alternatif Lokasi</td>
+                        <td>1</td>
+                        <td></td>
+                        <td class="bg-yellow-100 text-center rounded-br-lg sm:rounded-none">Berlangsung</td>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>Survei Data Primer</td>
+                        <td>Survei Persaingan (Hari 1: Bukit Darmo, Graha Family, Ciputra, Pakuwon Golf)</td>
+                        <td>1</td>
+                        <td></td>
+                        <td class="bg-yellow-100 text-center rounded-br-lg sm:rounded-none">Berlangsung</td>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>Survei Data Primer</td>
+                        <td>Survei Persaingan (Hari 2: Brawijaya, Le Grande, Yani Golf)</td>
+                        <td>1</td>
+                        <td></td>
+                        <td class="bg-yellow-100 text-center rounded-br-lg sm:rounded-none">Berlangsung</td>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>Survei Data Primer</td>
+                        <td>Survei Persaingan (Hari 3: Taman Dayu, Fina Golf)</td>
+                        <td>1</td>
+                        <td>Total 5 hari survei persaingan</td>
+                        <td class="bg-yellow-100 text-center rounded-br-lg sm:rounded-none">Berlangsung</td>
+                    </tr>
+                    <tr>
+                        <td colspan="5" class="font-bold text-right">Total Hari Kerja Minggu 1:</td>
+                        <td class="font-bold text-center">5 Hari</td>
+                    </tr>
+
+                    <!-- Minggu 2 -->
+                    <tr>
+                        <td class="task-group" colspan="6">Minggu Ke-2: Analisis Data & Awal Penyusunan Laporan</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Analisis Data</td>
+                        <td>Pengumpulan dan Pengolahan Data Hasil Survei</td>
+                        <td>3</td>
+                        <td>Mulai penyusunan draft laporan</td>
+                        <td class="bg-yellow-100 text-center rounded-br-lg sm:rounded-none">Berlangsung</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Penyusunan Laporan</td>
+                        <td>Presentasi Draft Laporan (Internal)</td>
+                        <td>1</td>
+                        <td>Mendapatkan masukan awal</td>
+                        <td class="bg-yellow-100 text-center rounded-br-lg sm:rounded-none">Berlangsung</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Penyusunan Laporan</td>
+                        <td>Revisi Hasil Presentasi (Bagian 1 dari 3 hari)</td>
+                        <td>1</td>
+                        <td>Berdasarkan masukan presentasi</td>
+                        <td class="bg-yellow-100 text-center rounded-br-lg sm:rounded-none">Berlangsung</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Aktivitas Umum</td>
+                        <td>Weekly Meeting</td>
+                        <td>1</td>
+                        <td>Koordinasi tim</td>
+                        <td class="text-center rounded-br-lg sm:rounded-none">Terjadwal</td>
+                    </tr>
+                    <tr>
+                        <td colspan="5" class="font-bold text-right">Total Hari Kerja Minggu 2:</td>
+                        <td class="font-bold text-center">5 Hari</td>
+                    </tr>
+
+                    <!-- Minggu 3 -->
+                    <tr>
+                        <td class="task-group" colspan="6">Minggu Ke-3: Penyusunan Laporan Lanjutan</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Penyusunan Laporan</td>
+                        <td>Revisi Hasil Presentasi (Bagian 2 & 3 dari 3 hari)</td>
+                        <td>2</td>
+                        <td>Melanjutkan revisi dan pendalaman laporan</td>
+                        <td class="bg-yellow-100 text-center rounded-br-lg sm:rounded-none">Berlangsung</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Penyusunan Laporan</td>
+                        <td>Analisis Pasar</td>
+                        <td>1</td>
+                        <td></td>
+                        <td class="bg-yellow-100 text-center rounded-br-lg sm:rounded-none">Berlangsung</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Penyusunan Laporan</td>
+                        <td>Analisis Aspek Teknis</td>
+                        <td>1</td>
+                        <td></td>
+                        <td class="bg-yellow-100 text-center rounded-br-lg sm:rounded-none">Berlangsung</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Penyusunan Laporan</td>
+                        <td>Analisis Legal, Organisasi, dan Lingkungan</td>
+                        <td>1</td>
+                        <td></td>
+                        <td class="bg-yellow-100 text-center rounded-br-lg sm:rounded-none">Berlangsung</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Aktivitas Umum</td>
+                        <td>Weekly Meeting</td>
+                        <td>1</td>
+                        <td>Koordinasi tim</td>
+                        <td class="text-center rounded-br-lg sm:rounded-none">Terjadwal</td>
+                    </tr>
+                    <tr>
+                        <td colspan="5" class="font-bold text-right">Total Hari Kerja Minggu 3:</td>
+                        <td class="font-bold text-center">5 Hari</td>
+                    </tr>
+
+                    <!-- Minggu 4 -->
+                    <tr>
+                        <td class="task-group" colspan="6">Minggu Ke-4: Finalisasi Laporan</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Penyusunan Laporan</td>
+                        <td>Analisis Ekonomi</td>
+                        <td>1</td>
+                        <td></td>
+                        <td class="bg-yellow-100 text-center rounded-br-lg sm:rounded-none">Berlangsung</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Penyusunan Laporan</td>
+                        <td>Analisis Keuangan</td>
+                        <td>1</td>
+                        <td></td>
+                        <td class="bg-yellow-100 text-center rounded-br-lg sm:rounded-none">Berlangsung</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Penyusunan Laporan</td>
+                        <td>Manajemen Risiko</td>
+                        <td>1</td>
+                        <td></td>
+                        <td class="bg-yellow-100 text-center rounded-br-lg sm:rounded-none">Berlangsung</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Penyusunan Laporan</td>
+                        <td>Finalisasi Laporan</td>
+                        <td>2</td>
+                        <td>Review akhir, proofreading, dan penyempurnaan</td>
+                        <td class="bg-green-100 text-center rounded-br-lg sm:rounded-none">Selesai</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Aktivitas Umum</td>
+                        <td>Weekly Meeting</td>
+                        <td>1</td>
+                        <td>Koordinasi tim</td>
+                        <td class="text-center rounded-br-lg sm:rounded-none">Terjadwal</td>
+                    </tr>
+                    <tr>
+                        <td colspan="5" class="font-bold text-right">Total Hari Kerja Minggu 4:</td>
+                        <td class="font-bold text-center">5 Hari</td>
+                    </tr>
+                    <tr>
+                        <td colspan="5" class="font-bold text-right">Total Hari Kerja Keseluruhan:</td>
+                        <td class="font-bold text-center">20 Hari</td>
+                    </tr>
+                    <tr class="bg-indigo-700 text-white font-bold">
+                        <td colspan="6" class="text-center rounded-b-lg py-4">Laporan Akhir Diserahkan (Akhir Minggu Ke-4)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
