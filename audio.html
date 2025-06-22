@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Audio Tools</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons (alternative to emoji for consistency) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- FFmpeg.wasm - Core library -->
+    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+    <style>
+        /* Custom styles for progress bar markers */
+        .marker {
+            position: absolute;
+            top: -4px;
+            width: 2px;
+            height: 16px; /* Taller than the progress bar */
+            background-color: #f56565; /* red-500 */
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans">
+
+    <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-70 z-50 flex-col items-center justify-center hidden">
+        <div class="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-blue-500"></div>
+        <p id="loading-text" class="text-white text-xl mt-4">Loading...</p>
+    </div>
+
+    <div class="container mx-auto p-4 md:p-8 max-w-4xl">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-700">Simple Audio Tools</h1>
+            <p class="text-gray-500 mt-2">Perform simple operations on your audio files, right in your browser.</p>
+        </header>
+
+        <!-- Tabs -->
+        <div class="mb-4 border-b border-gray-200">
+            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center">
+                <li class="mr-2">
+                    <!-- Active Tab -->
+                    <a href="#" class="inline-flex items-center p-4 border-b-2 border-blue-500 rounded-t-lg text-blue-600">
+                        <i class="fa-solid fa-scissors mr-2"></i>
+                        Split Audio
+                    </a>
+                </li>
+                <!-- Add other tabs here in the future -->
+                <!-- <li class="mr-2">
+                    <a href="#" class="inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300">
+                        <i class="fa-solid fa-sliders mr-2"></i>
+                        Another Tool
+                    </a>
+                </li> -->
+            </ul>
+        </div>
+
+        <!-- Tool Content -->
+        <main id="app-content" class="bg-white p-6 rounded-lg shadow-md">
+            
+            <!-- 1. File Selection View -->
+            <div id="file-select-view">
+                <h2 class="text-2xl font-semibold mb-4">1. Select an Audio File</h2>
+                <div class="flex items-center justify-center w-full">
+                    <label for="file-input" class="flex flex-col items-center justify-center w-full h-48 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                            <i class="fa-solid fa-cloud-arrow-up text-4xl text-gray-400"></i>
+                            <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Click to upload</span> or drag and drop</p>
+                            <p class="text-xs text-gray-500">MP3, M4A, WAV, FLAC, etc.</p>
+                        </div>
+                        <input id="file-input" type="file" class="hidden" accept="audio/*" />
+                    </label>
+                </div>
+            </div>
+
+            <!-- 2. Editor View (Initially hidden) -->
+            <div id="editor-view" class="hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-semibold">2. Split Your Audio</h2>
+                    <button id="reset-button" class="text-sm text-blue-500 hover:underline">Start over with a new file</button>
+                </div>
+
+                <div class="mb-4 p-4 border rounded-lg bg-gray-50">
+                    <p class="font-mono text-sm break-all" id="file-name-display"></p>
+                </div>
+
+                <audio id="audio-player" controls class="w-full mb-2"></audio>
+                
+                <div class="relative mb-6">
+                    <progress id="progress-bar" class="w-full h-4 rounded-lg overflow-hidden" value="0" max="100"></progress>
+                    <div id="timeline-markers" class="absolute top-0 left-0 w-full h-full"></div>
+                </div>
+
+                <div class="text-center mb-6">
+                    <button id="split-button" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg text-lg shadow-md transition-transform transform hover:scale-105 disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                        <i class="fa-solid fa-scissors mr-2"></i>Split at Current Time
+                    </button>
+                    <p class="text-sm text-gray-500 mt-2">Play the audio and click the button to add a split point.</p>
+                </div>
+
+                <!-- 3. Parts List -->
+                <div id="parts-section" class="hidden">
+                    <h2 class="text-2xl font-semibold mb-4">3. Download Parts</h2>
+                     <div class="flex items-center space-x-4 mb-4">
+                        <button id="download-selected-button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed">
+                            <i class="fa-solid fa-download mr-2"></i>Download Selected
+                        </button>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="select-all-checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                            <label for="select-all-checkbox" class="ml-2 block text-sm text-gray-900">Select All</label>
+                        </div>
+                    </div>
+                    <ul id="parts-list" class="space-y-2">
+                        <!-- Parts will be dynamically inserted here -->
+                    </ul>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const { createFFmpeg, fetchFile } = FFmpeg;
+            let ffmpeg;
+            let audioFile = null;
+            let splitPoints = []; // Stores split times in seconds
+
+            // UI Elements
+            const fileInput = document.getElementById('file-input');
+            const fileSelectView = document.getElementById('file-select-view');
+            const editorView = document.getElementById('editor-view');
+            const audioPlayer = document.getElementById('audio-player');
+            const progressBar = document.getElementById('progress-bar');
+            const timelineMarkers = document.getElementById('timeline-markers');
+            const splitButton = document.getElementById('split-button');
+            const partsSection = document.getElementById('parts-section');
+            const partsList = document.getElementById('parts-list');
+            const downloadSelectedButton = document.getElementById('download-selected-button');
+            const selectAllCheckbox = document.getElementById('select-all-checkbox');
+            const fileNameDisplay = document.getElementById('file-name-display');
+            const resetButton = document.getElementById('reset-button');
+            const loadingOverlay = document.getElementById('loading-overlay');
+            const loadingText = document.getElementById('loading-text');
+
+            // --- FFmpeg Initialization ---
+            const initFFmpeg = async () => {
+                if (!ffmpeg || !ffmpeg.isLoaded()) {
+                    showLoading('Loading FFmpeg Core...');
+                    ffmpeg = createFFmpeg({ 
+                        log: false, // Set to true for detailed logs in console
+                        corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js',
+                    });
+                    await ffmpeg.load();
+                    hideLoading();
+                }
+            };
+            
+            // --- UI Helper Functions ---
+            const showLoading = (text) => {
+                loadingText.textContent = text;
+                loadingOverlay.classList.remove('hidden');
+                loadingOverlay.classList.add('flex');
+            };
+            
+            const hideLoading = () => {
+                loadingOverlay.classList.add('hidden');
+                loadingOverlay.classList.remove('flex');
+            };
+
+            // --- Event Listeners ---
+            fileInput.addEventListener('change', handleFileSelect);
+            resetButton.addEventListener('click', resetApp);
+            
+            audioPlayer.addEventListener('loadedmetadata', () => {
+                splitButton.disabled = false;
+            });
+            
+            audioPlayer.addEventListener('timeupdate', () => {
+                const percentage = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+                progressBar.value = percentage;
+            });
+
+            progressBar.addEventListener('click', (e) => {
+                const rect = progressBar.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const width = rect.width;
+                audioPlayer.currentTime = (x / width) * audioPlayer.duration;
+            });
+
+            splitButton.addEventListener('click', addSplitPoint);
+            downloadSelectedButton.addEventListener('click', downloadParts);
+            selectAllCheckbox.addEventListener('change', (e) => {
+                document.querySelectorAll('.part-checkbox').forEach(checkbox => {
+                    checkbox.checked = e.target.checked;
+                });
+                updateDownloadButtonState();
+            });
+
+            // --- Core Logic ---
+            async function handleFileSelect(event) {
+                audioFile = event.target.files[0];
+                if (!audioFile) return;
+
+                await initFFmpeg();
+
+                const fileURL = URL.createObjectURL(audioFile);
+                audioPlayer.src = fileURL;
+                fileNameDisplay.textContent = audioFile.name;
+                
+                fileSelectView.classList.add('hidden');
+                editorView.classList.remove('hidden');
+            }
+
+            function addSplitPoint() {
+                const currentTime = audioPlayer.currentTime;
+                if (currentTime > 0 && currentTime < audioPlayer.duration && !splitPoints.includes(currentTime)) {
+                    splitPoints.push(currentTime);
+                    splitPoints.sort((a, b) => a - b);
+                    renderParts();
+                }
+            }
+
+            function renderParts() {
+                partsList.innerHTML = '';
+                timelineMarkers.innerHTML = '';
+                
+                const segments = getSegments();
+                if (segments.length === 0) {
+                    partsSection.classList.add('hidden');
+                    return;
+                }
+
+                partsSection.classList.remove('hidden');
+
+                segments.forEach((segment, index) => {
+                    // Create list item
+                    const li = document.createElement('li');
+                    li.className = 'flex items-center justify-between p-3 bg-gray-100 rounded-lg';
+                    li.innerHTML = `
+                        <div class="flex items-center">
+                            <input type="checkbox" class="part-checkbox h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" data-index="${index}">
+                            <label class="ml-3">
+                                <span class="font-bold">Part ${index + 1}</span>
+                                <span class="text-sm text-gray-600 ml-2">${formatTime(segment.start)} - ${formatTime(segment.end)}</span>
+                            </label>
+                        </div>
+                        <button class="play-segment-btn text-blue-500 hover:text-blue-700" data-start="${segment.start}" data-end="${segment.end}">
+                            <i class="fa-solid fa-play"></i>
+                        </button>
+                    `;
+                    partsList.appendChild(li);
+
+                    // Create timeline marker
+                    if (segment.start > 0) {
+                        const marker = document.createElement('div');
+                        marker.className = 'marker';
+                        marker.style.left = `${(segment.start / audioPlayer.duration) * 100}%`;
+                        timelineMarkers.appendChild(marker);
+                    }
+                });
+
+                // Add listeners to new elements
+                document.querySelectorAll('.part-checkbox').forEach(cb => cb.addEventListener('change', updateDownloadButtonState));
+                document.querySelectorAll('.play-segment-btn').forEach(btn => btn.addEventListener('click', playSegment));
+                updateDownloadButtonState();
+            }
+
+            function getSegments() {
+                if (splitPoints.length === 0) return [];
+                
+                const points = [0, ...splitPoints, audioPlayer.duration];
+                const segments = [];
+                for (let i = 0; i < points.length - 1; i++) {
+                    // Avoid creating zero-length segments at the end
+                    if (points[i] < points[i+1]) {
+                        segments.push({ start: points[i], end: points[i+1] });
+                    }
+                }
+                return segments;
+            }
+
+            async function downloadParts() {
+                const selectedCheckboxes = document.querySelectorAll('.part-checkbox:checked');
+                if (selectedCheckboxes.length === 0) return;
+
+                showLoading('Preparing files for splitting...');
+
+                try {
+                    const originalName = audioFile.name;
+                    await ffmpeg.FS('writeFile', originalName, await fetchFile(audioFile));
+                    
+                    const segments = getSegments();
+                    const baseName = originalName.substring(0, originalName.lastIndexOf('.'));
+                    const extension = originalName.substring(originalName.lastIndexOf('.'));
+
+                    for (let i = 0; i < selectedCheckboxes.length; i++) {
+                        const checkbox = selectedCheckboxes[i];
+                        const partIndex = parseInt(checkbox.dataset.index, 10);
+                        const partNumber = partIndex + 1;
+                        const segment = segments[partIndex];
+                        
+                        showLoading(`Splitting Part ${partNumber} of ${segments.length}...`);
+
+                        const outputName = `${baseName}-split-part-${partNumber}${extension}`;
+
+                        // FFmpeg command: -i [input] -ss [start] -to [end] -c copy [output]
+                        // '-c copy' is used to avoid re-encoding, which is much faster.
+                        await ffmpeg.run(
+                            '-i', originalName,
+                            '-ss', formatTime(segment.start),
+                            '-to', formatTime(segment.end),
+                            '-c', 'copy',
+                            outputName
+                        );
+
+                        const data = ffmpeg.FS('readFile', outputName);
+                        triggerDownload(data, outputName);
+                        ffmpeg.FS('unlink', outputName); // Clean up the virtual file system
+                    }
+                    
+                    ffmpeg.FS('unlink', originalName); // Clean up the original file
+
+                } catch (error) {
+                    console.error(error);
+                    alert("An error occurred during splitting. Check the console for details.");
+                } finally {
+                    hideLoading();
+                }
+            }
+
+            function triggerDownload(data, filename) {
+                const blob = new Blob([data.buffer], { type: audioFile.type });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            function updateDownloadButtonState() {
+                const anyChecked = document.querySelectorAll('.part-checkbox:checked').length > 0;
+                downloadSelectedButton.disabled = !anyChecked;
+            }
+
+            function playSegment(event) {
+                const button = event.currentTarget;
+                const start = parseFloat(button.dataset.start);
+                const end = parseFloat(button.dataset.end);
+                
+                audioPlayer.currentTime = start;
+                audioPlayer.play();
+
+                const checkTime = () => {
+                    if (audioPlayer.currentTime >= end) {
+                        audioPlayer.pause();
+                        audioPlayer.removeEventListener('timeupdate', checkTime);
+                    }
+                };
+                audioPlayer.addEventListener('timeupdate', checkTime);
+            }
+            
+            function resetApp() {
+                audioFile = null;
+                splitPoints = [];
+                audioPlayer.src = '';
+                URL.revokeObjectURL(audioPlayer.src); // Clean up old object URL
+                
+                editorView.classList.add('hidden');
+                fileSelectView.classList.remove('hidden');
+                partsSection.classList.add('hidden');
+                
+                partsList.innerHTML = '';
+                timelineMarkers.innerHTML = '';
+                progressBar.value = 0;
+                fileInput.value = ''; // Allow re-selecting the same file
+                splitButton.disabled = true;
+            }
+
+            function formatTime(seconds) {
+                const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+                const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+                const s = (seconds % 60).toFixed(3).padStart(6, '0');
+                return `${h}:${m}:${s}`;
+            }
+        });
+    </script>
+</body>
+</html>
