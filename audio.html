@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simple Audio Tools</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Local, pre-built Tailwind CSS -->
+    <link rel="stylesheet" href="style.css">
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     
@@ -111,8 +111,8 @@
         </main>
     </div>
 
-    <!-- FFmpeg.wasm - Core library -->
-    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.0/dist/ffmpeg.min.js"></script>
+    <!-- Point to our LOCAL FFmpeg library -->
+    <script src="./ffmpeg/ffmpeg.min.js"></script>
     <!-- Our Application Logic -->
     <script src="audio.js" defer></script>
 </body>
