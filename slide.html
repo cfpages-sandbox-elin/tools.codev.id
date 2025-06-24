@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Slide Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.27.0/min/vs/editor/editor.main.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">AI Slide Generator</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Left Column: Inputs -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-2xl font-semibold mb-4">1. Configuration</h2>
+
+                <!-- API Provider -->
+                <div class="mb-4">
+                    <label for="api-provider" class="block text-gray-700 font-medium mb-2">AI Provider</label>
+                    <select id="api-provider" class="w-full p-2 border border-gray-300 rounded-md">
+                        <option value="google">Google</option>
+                        <option value="openai">OpenAI</option>
+                        <option value="anthropic">Anthropic</option>
+                        <option value="deepseek">DeepSeek</option>
+                        <option value="xai">XAI</option>
+                    </select>
+                </div>
+                
+                <!-- Model -->
+                <div class="mb-4">
+                    <label for="model" class="block text-gray-700 font-medium mb-2">Model</label>
+                    <input type="text" id="model" placeholder="e.g., gemini-1.5-flash" class="w-full p-2 border border-gray-300 rounded-md">
+                </div>
+
+                <!-- Google Slide URL -->
+                <div class="mb-4">
+                    <label for="google-slide-url" class="block text-gray-700 font-medium mb-2">Google Slide URL</label>
+                    <input type="url" id="google-slide-url" placeholder="https://docs.google.com/presentation/d/..." class="w-full p-2 border border-gray-300 rounded-md">
+                </div>
+
+                <h2 class="text-2xl font-semibold mb-4 mt-6">2. Content Source</h2>
+                
+                <!-- File Input -->
+                <div class="mb-4">
+                    <label for="file-input" class="block text-gray-700 font-medium mb-2">Upload Document</label>
+                    <input type="file" id="file-input" accept=".pdf,.doc,.docx,.txt" class="w-full p-2 border border-gray-300 rounded-md">
+                    <p class="text-sm text-gray-500 mt-1">Accepts .pdf, .doc, .docx, .txt files.</p>
+                </div>
+
+                <!-- Text Area -->
+                <div>
+                    <label for="text-input" class="block text-gray-700 font-medium mb-2">Or Paste Text</label>
+                    <textarea id="text-input" rows="10" class="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter your text here..."></textarea>
+                </div>
+
+                 <button id="generate-btn" class="mt-6 w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Generate Slides
+                </button>
+            </div>
+
+            <!-- Right Column: Preview -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h2 class="text-2xl font-semibold mb-4">Slide Preview</h2>
+                <div id="preview-container" class="w-full h-96 bg-gray-200 rounded-md flex items-center justify-center">
+                    <p class="text-gray-500">Your generated slide preview will appear here.</p>
+                </div>
+                <div id="slide-navigation" class="mt-4 flex justify-between items-center hidden">
+                    <button id="prev-slide" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-l">
+                        Prev
+                    </button>
+                    <span id="slide-counter" class="text-gray-700"></span>
+                    <button id="next-slide" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-r">
+                        Next
+                    </button>
+                </div>
+                 <button id="push-to-gslide-btn" class="mt-6 w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 hidden">
+                    Push to Google Slides
+                </button>
+            </div>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-md mt-5">
+            <h2 class="text-2xl font-semibold mb-4">Generated JSON</h2>
+            <div id="json-output" class="w-full h-96 bg-gray-200 rounded-md"></div>
+        </div>
+
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.18/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.27.0/min/vs/loader.min.js"></script>
+
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
+
+        const fileInput = document.getElementById('file-input');
+        const textInput = document.getElementById('text-input');
+        const generateBtn = document.getElementById('generate-btn');
+
+        const previewContainer = document.getElementById('preview-container');
+        const slideNavigation = document.getElementById('slide-navigation');
+        const prevSlideBtn = document.getElementById('prev-slide');
+        const nextSlideBtn = document.getElementById('next-slide');
+        const slideCounter = document.getElementById('slide-counter');
+        const pushToGslideBtn = document.getElementById('push-to-gslide-btn');
+        const jsonOutputContainer = document.getElementById('json-output');
+
+        let slides = [];
+        let currentSlide = 0;
+        let editor;
+
+        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.27.0/min/vs' }});
+        require(['vs/editor/editor.main'], function() {
+            editor = monaco.editor.create(jsonOutputContainer, {
+                value: "{\n\t\"message\": \"JSON output will be displayed here.\"\n}",
+                language: 'json',
+                theme: 'vs-dark',
+                readOnly: true
+            });
+        });
+
+        fileInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            textInput.value = '';
+            let text = '';
+
+            if (file.type === 'application/pdf') {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const typedarray = new Uint8Array(e.target.result);
+                    const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const content = await page.getTextContent();
+                        text += content.items.map(item => item.str).join(' ');
+                    }
+                    textInput.value = text;
+                };
+                reader.readAsArrayBuffer(file);
+            } else if (file.name.endsWith('.docx') || file.name.endsWith('.doc')) {
+                 const reader = new FileReader();
+                 reader.onload = async (e) => {
+                    const arrayBuffer = e.target.result;
+                    const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+                    textInput.value = result.value;
+                };
+                reader.readAsArrayBuffer(file);
+            } else if (file.type === 'text/plain') {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    textInput.value = e.target.result;
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        generateBtn.addEventListener('click', async () => {
+            const sourceText = textInput.value;
+            if (!sourceText.trim()) {
+                alert('Please provide some text content or upload a document.');
+                return;
+            }
+
+            const provider = document.getElementById('api-provider').value;
+            const model = document.getElementById('model').value;
+
+            // Simple validation
+            if (!model) {
+                alert('Please enter a model name.');
+                return;
+            }
+
+            const prompt = `
+                Based on the following text, create a JSON structure for a slide presentation.
+                The JSON should be an array of slide objects.
+                Each slide object should have a "type" and a "content" property.
+                The "type" can be "title", "content", "image", or "quote".
+                The "content" property should be an object with relevant fields like "title", "subtitle", "points" (as an array of strings), "imageUrl", or "text" and "author".
+                The presentation should have a logical flow, starting with a title slide, followed by content slides, and ending with a summary or Q&A slide.
+                Generate a suitable number of slides based on the text length.
+
+                Source Text:
+                ---
+                ${sourceText.substring(0, 8000)}
+                ---
+                
+                Return ONLY the JSON array, with no other text or markdown.
+            `;
+
+            try {
+                previewContainer.innerHTML = '<div class="text-center"><p class="text-lg">Generating slides...</p><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mt-4"></div></div>';
+                
+                const response = await fetch('/functions/ai-api', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'generate',
+                        providerKey: provider,
+                        model: model,
+                        prompt: prompt,
+                    }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to generate slides.');
+                }
+                
+                const data = await response.json();
+                const rawJson = data.text.replace(/```json/g, '').replace(/```/g, '').trim();
+                
+                slides = JSON.parse(rawJson);
+                editor.setValue(JSON.stringify(slides, null, 2));
+
+                if (slides && slides.length > 0) {
+                    currentSlide = 0;
+                    displaySlide(currentSlide);
+                    slideNavigation.classList.remove('hidden');
+                    pushToGslideBtn.classList.remove('hidden');
+                } else {
+                    previewContainer.innerHTML = '<p class="text-gray-500">Could not generate slides. The AI returned an empty or invalid structure.</p>';
+                    slideNavigation.classList.add('hidden');
+                    pushToGslideBtn.classList.add('hidden');
+                }
+
+            } catch (error) {
+                console.error('Generation Error:', error);
+                previewContainer.innerHTML = `<p class="text-red-500">Error: ${error.message}</p>`;
+                editor.setValue(JSON.stringify({ error: error.message }, null, 2));
+            }
+        });
+
+        function displaySlide(index) {
+            const slide = slides[index];
+            let html = '<div class="w-full h-full p-8 flex flex-col justify-center items-center bg-white text-black">';
+
+            switch (slide.type) {
+                case 'title':
+                    html += `<h1 class="text-4xl font-bold text-center">${slide.content.title}</h1>`;
+                    if (slide.content.subtitle) {
+                        html += `<p class="text-xl mt-4 text-center">${slide.content.subtitle}</p>`;
+                    }
+                    break;
+                case 'content':
+                    html += `<h2 class="text-3xl font-semibold self-start">${slide.content.title}</h2>`;
+                    if (slide.content.points) {
+                        html += '<ul class="list-disc self-start pl-6 mt-4 text-lg">';
+                        slide.content.points.forEach(point => {
+                            html += `<li class="mb-2">${point}</li>`;
+                        });
+                        html += '</ul>';
+                    }
+                    break;
+                 case 'image':
+                    html += `<h2 class="text-3xl font-semibold mb-4">${slide.content.title}</h2>`;
+                    html += `<img src="${slide.content.imageUrl}" alt="${slide.content.title}" class="max-h-64 object-contain">`;
+                    if (slide.content.caption) {
+                        html += `<p class="text-sm mt-2">${slide.content.caption}</p>`;
+                    }
+                    break;
+                case 'quote':
+                     html += `<blockquote class="text-2xl italic">"${slide.content.text}"</blockquote>`;
+                     if(slide.content.author){
+                        html += `<cite class="block text-right mt-4">- ${slide.content.author}</cite>`;
+                     }
+                     break;
+                 default:
+                    html += `<p>Unsupported slide type: ${slide.type}</p>`
+            }
+            html += '</div>';
+
+            previewContainer.innerHTML = html;
+            slideCounter.textContent = `Slide ${index + 1} of ${slides.length}`;
+        }
+        
+        prevSlideBtn.addEventListener('click', () => {
+            if (currentSlide > 0) {
+                currentSlide--;
+                displaySlide(currentSlide);
+            }
+        });
+
+        nextSlideBtn.addEventListener('click', () => {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                displaySlide(currentSlide);
+            }
+        });
+        
+        pushToGslideBtn.addEventListener('click', () => {
+            const googleSlideUrl = document.getElementById('google-slide-url').value;
+            if (!googleSlideUrl) {
+                alert('Please provide the Google Slide URL.');
+                return;
+            }
+            alert('Pushing to Google Slides is not yet implemented.');
+            // Here you would add the logic to interact with the Google Slides API
+        });
+
+
+    </script>
+
+</body>
+</html>
