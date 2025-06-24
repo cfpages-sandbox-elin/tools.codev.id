@@ -1,3 +1,6 @@
+// --- Import configuration ---
+import { aiTextProviders } from './ai-config.js';
+
 // --- Setup for PDF.js ---
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
 
@@ -22,15 +25,6 @@ let slides = [];
 let currentSlide = 0;
 let editor;
 
-// --- Model Mapping ---
-const modelsByProvider = {
-    google: ['gemini-1.5-flash', 'gemini-1.0-pro', 'gemini-1.5-pro'],
-    openai: ['gpt-4o', 'gpt-4-turbo', 'gpt-3.5-turbo'],
-    anthropic: ['claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307'],
-    deepseek: ['deepseek-chat', 'deepseek-coder'],
-    xai: ['grok-1.5-flash']
-};
-
 // --- Monaco Editor Initialization ---
 require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.27.0/min/vs' }});
 require(['vs/editor/editor.main'], function() {
@@ -45,11 +39,19 @@ require(['vs/editor/editor.main'], function() {
 // --- Functions ---
 
 /**
+ * Populates the AI provider dropdown from the config file.
+ */
+function populateProviders() {
+    const providers = Object.keys(aiTextProviders);
+    apiProviderSelect.innerHTML = providers.map(p => `<option value="${p}">${p.charAt(0).toUpperCase() + p.slice(1)}</option>`).join('');
+}
+
+/**
  * Updates the model dropdown based on the selected provider.
  */
 function updateModels() {
     const selectedProvider = apiProviderSelect.value;
-    const models = modelsByProvider[selectedProvider] || [];
+    const models = aiTextProviders[selectedProvider]?.models || [];
     modelSelect.innerHTML = models.map(model => `<option value="${model}">${model}</option>`).join('');
     statusMessage.textContent = ''; // Clear status on change
 }
@@ -59,6 +61,7 @@ function updateModels() {
  * @param {number} index - The index of the slide to display.
  */
 function displaySlide(index) {
+    // This function remains the same as the previous version
     const slide = slides[index];
     let html = '<div class="w-full h-full p-8 flex flex-col justify-center items-center bg-white text-black text-left">';
 
@@ -152,6 +155,7 @@ function displaySlide(index) {
 }
 
 // --- Event Listeners ---
+// (All event listeners remain the same as the previous version)
 
 apiProviderSelect.addEventListener('change', updateModels);
 
@@ -364,4 +368,7 @@ pushToGslideBtn.addEventListener('click', () => {
 });
         
 // --- Initial Page Load Setup ---
-updateModels();
+document.addEventListener('DOMContentLoaded', () => {
+    populateProviders();
+    updateModels();
+});

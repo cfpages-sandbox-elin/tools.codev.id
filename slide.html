@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Slide Generator v2</title>
+    <title>AI Slide Generator v3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.27.0/min/vs/editor/editor.main.min.css" rel="stylesheet">
 </head>
@@ -16,19 +16,15 @@
             <div class="bg-white p-6 rounded-lg shadow-md">
                 <h2 class="text-2xl font-semibold mb-4">1. Configuration</h2>
 
-                <!-- AI Provider -->
+                <!-- AI Provider (will be populated by JS) -->
                 <div class="mb-4">
                     <label for="api-provider" class="block text-gray-700 font-medium mb-2">AI Provider</label>
                     <select id="api-provider" class="w-full p-2 border border-gray-300 rounded-md">
-                        <option value="google">Google</option>
-                        <option value="openai">OpenAI</option>
-                        <option value="anthropic">Anthropic</option>
-                        <option value="deepseek">DeepSeek</option>
-                        <option value="xai">XAI</option>
+                        <!-- Options will be loaded from ai-config.js -->
                     </select>
                 </div>
                 
-                <!-- Model (now a dropdown) -->
+                <!-- Model -->
                 <div class="mb-4">
                     <label for="model" class="block text-gray-700 font-medium mb-2">Model</label>
                     <div class="flex items-center space-x-2">
@@ -37,10 +33,8 @@
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
                         </button>
                     </div>
-                     <!-- Status Message -->
                     <p id="status-message" class="text-sm mt-2 h-4"></p>
                 </div>
-
 
                 <!-- Google Slide URL -->
                 <div class="mb-4">
@@ -50,14 +44,12 @@
 
                 <h2 class="text-2xl font-semibold mb-4 mt-6">2. Content Source</h2>
                 
-                <!-- File Input -->
                 <div class="mb-4">
                     <label for="file-input" class="block text-gray-700 font-medium mb-2">Upload Document</label>
                     <input type="file" id="file-input" accept=".pdf,.doc,.docx,.txt" class="w-full p-2 border border-gray-300 rounded-md">
                     <p class="text-sm text-gray-500 mt-1">Accepts .pdf, .doc, .docx, .txt files.</p>
                 </div>
 
-                <!-- Text Area -->
                 <div>
                     <label for="text-input" class="block text-gray-700 font-medium mb-2">Or Paste Text</label>
                     <textarea id="text-input" rows="10" class="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter your text here..."></textarea>
@@ -95,7 +87,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.18/mammoth.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.27.0/min/vs/loader.min.js"></script>
 
-    <!-- Your application logic -->
-    <script src="slide.js" defer></script>
+    <!-- Your application logic - loaded as a module -->
+    <script type="module" src="slide.js" defer></script>
 </body>
 </html>
