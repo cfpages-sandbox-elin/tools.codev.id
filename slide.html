@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Slide Generator</title>
+    <title>AI Slide Generator v2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.27.0/min/vs/editor/editor.main.min.css" rel="stylesheet">
 </head>
@@ -16,7 +16,7 @@
             <div class="bg-white p-6 rounded-lg shadow-md">
                 <h2 class="text-2xl font-semibold mb-4">1. Configuration</h2>
 
-                <!-- API Provider -->
+                <!-- AI Provider -->
                 <div class="mb-4">
                     <label for="api-provider" class="block text-gray-700 font-medium mb-2">AI Provider</label>
                     <select id="api-provider" class="w-full p-2 border border-gray-300 rounded-md">
@@ -28,11 +28,19 @@
                     </select>
                 </div>
                 
-                <!-- Model -->
+                <!-- Model (now a dropdown) -->
                 <div class="mb-4">
                     <label for="model" class="block text-gray-700 font-medium mb-2">Model</label>
-                    <input type="text" id="model" placeholder="e.g., gemini-1.5-flash" class="w-full p-2 border border-gray-300 rounded-md">
+                    <div class="flex items-center space-x-2">
+                        <select id="model" class="w-full p-2 border border-gray-300 rounded-md"></select>
+                        <button id="check-status-btn" class="px-3 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300" title="Check API Status">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                        </button>
+                    </div>
+                     <!-- Status Message -->
+                    <p id="status-message" class="text-sm mt-2 h-4"></p>
                 </div>
+
 
                 <!-- Google Slide URL -->
                 <div class="mb-4">
@@ -63,17 +71,13 @@
             <!-- Right Column: Preview -->
             <div class="bg-white p-6 rounded-lg shadow-md">
                 <h2 class="text-2xl font-semibold mb-4">Slide Preview</h2>
-                <div id="preview-container" class="w-full h-96 bg-gray-200 rounded-md flex items-center justify-center">
+                <div id="preview-container" class="w-full h-96 bg-gray-200 rounded-md flex items-center justify-center border">
                     <p class="text-gray-500">Your generated slide preview will appear here.</p>
                 </div>
                 <div id="slide-navigation" class="mt-4 flex justify-between items-center hidden">
-                    <button id="prev-slide" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-l">
-                        Prev
-                    </button>
+                    <button id="prev-slide" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-l">Prev</button>
                     <span id="slide-counter" class="text-gray-700"></span>
-                    <button id="next-slide" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-r">
-                        Next
-                    </button>
+                    <button id="next-slide" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-r">Next</button>
                 </div>
                  <button id="push-to-gslide-btn" class="mt-6 w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 hidden">
                     Push to Google Slides
@@ -82,7 +86,7 @@
         </div>
         <div class="bg-white p-6 rounded-lg shadow-md mt-5">
             <h2 class="text-2xl font-semibold mb-4">Generated JSON</h2>
-            <div id="json-output" class="w-full h-96 bg-gray-200 rounded-md"></div>
+            <div id="json-output" class="w-full h-96 bg-gray-800 rounded-md"></div>
         </div>
 
     </div>
@@ -97,6 +101,11 @@
         const textInput = document.getElementById('text-input');
         const generateBtn = document.getElementById('generate-btn');
 
+        const apiProviderSelect = document.getElementById('api-provider');
+        const modelSelect = document.getElementById('model');
+        const checkStatusBtn = document.getElementById('check-status-btn');
+        const statusMessage = document.getElementById('status-message');
+
         const previewContainer = document.getElementById('preview-container');
         const slideNavigation = document.getElementById('slide-navigation');
         const prevSlideBtn = document.getElementById('prev-slide');
@@ -108,6 +117,23 @@
         let slides = [];
         let currentSlide = 0;
         let editor;
+        
+        // --- NEW: Model mapping ---
+        const modelsByProvider = {
+            google: ['gemini-1.5-flash', 'gemini-1.0-pro', 'gemini-1.5-pro'],
+            openai: ['gpt-4o', 'gpt-4-turbo', 'gpt-3.5-turbo'],
+            anthropic: ['claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307'],
+            deepseek: ['deepseek-chat', 'deepseek-coder'],
+            xai: ['grok-1.5-flash']
+        };
+
+        // --- NEW: Update model dropdown based on provider ---
+        function updateModels() {
+            const selectedProvider = apiProviderSelect.value;
+            const models = modelsByProvider[selectedProvider] || [];
+            modelSelect.innerHTML = models.map(model => `<option value="${model}">${model}</option>`).join('');
+            statusMessage.textContent = ''; // Clear status on change
+        }
 
         require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.27.0/min/vs' }});
         require(['vs/editor/editor.main'], function() {
@@ -119,12 +145,16 @@
             });
         });
 
+        // --- Event Listeners ---
+        apiProviderSelect.addEventListener('change', updateModels);
+        
         fileInput.addEventListener('change', async (event) => {
             const file = event.target.files[0];
             if (!file) return;
 
             textInput.value = '';
             let text = '';
+            previewContainer.innerHTML = '<p class="text-gray-500">Parsing document...</p>'
 
             if (file.type === 'application/pdf') {
                 const reader = new FileReader();
@@ -137,6 +167,7 @@
                         text += content.items.map(item => item.str).join(' ');
                     }
                     textInput.value = text;
+                    previewContainer.innerHTML = '<p class="text-gray-500">Document parsed. Ready to generate.</p>'
                 };
                 reader.readAsArrayBuffer(file);
             } else if (file.name.endsWith('.docx') || file.name.endsWith('.doc')) {
@@ -145,14 +176,48 @@
                     const arrayBuffer = e.target.result;
                     const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
                     textInput.value = result.value;
+                    previewContainer.innerHTML = '<p class="text-gray-500">Document parsed. Ready to generate.</p>'
                 };
                 reader.readAsArrayBuffer(file);
             } else if (file.type === 'text/plain') {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     textInput.value = e.target.result;
+                    previewContainer.innerHTML = '<p class="text-gray-500">Document parsed. Ready to generate.</p>'
                 };
                 reader.readAsText(file);
+            }
+        });
+
+        // --- NEW: Check Status button logic ---
+        checkStatusBtn.addEventListener('click', async () => {
+            const provider = apiProviderSelect.value;
+            const model = modelSelect.value;
+            if (!model) {
+                statusMessage.textContent = 'Please select a model first.';
+                statusMessage.className = 'text-sm mt-2 text-yellow-600';
+                return;
+            }
+
+            statusMessage.textContent = 'Checking...';
+            statusMessage.className = 'text-sm mt-2 text-gray-500';
+
+            try {
+                const response = await fetch('/functions/ai-api', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'check_status', providerKey: provider, model: model }),
+                });
+                const data = await response.json();
+                if (data.success) {
+                    statusMessage.textContent = `Status: OK`;
+                    statusMessage.className = 'text-sm mt-2 text-green-600';
+                } else {
+                    throw new Error(data.error || 'Unknown error');
+                }
+            } catch (error) {
+                statusMessage.textContent = `Error: ${error.message}`;
+                statusMessage.className = 'text-sm mt-2 text-red-600';
             }
         });
 
@@ -163,30 +228,62 @@
                 return;
             }
 
-            const provider = document.getElementById('api-provider').value;
-            const model = document.getElementById('model').value;
+            const provider = apiProviderSelect.value;
+            const model = modelSelect.value;
 
-            // Simple validation
             if (!model) {
-                alert('Please enter a model name.');
+                alert('Please select a model.');
                 return;
             }
-
+            
+            // --- NEW: Expanded and more detailed prompt ---
             const prompt = `
-                Based on the following text, create a JSON structure for a slide presentation.
-                The JSON should be an array of slide objects.
-                Each slide object should have a "type" and a "content" property.
-                The "type" can be "title", "content", "image", or "quote".
-                The "content" property should be an object with relevant fields like "title", "subtitle", "points" (as an array of strings), "imageUrl", or "text" and "author".
-                The presentation should have a logical flow, starting with a title slide, followed by content slides, and ending with a summary or Q&A slide.
-                Generate a suitable number of slides based on the text length.
+                Based on the following source text, create a JSON structure for a slide presentation.
+                The JSON must be an array of slide objects, and nothing else.
+                Analyze the text to create a logical, engaging, and varied presentation.
+
+                Here are the available slide types and their JSON schemas. Use them appropriately.
+
+                1.  **title**: The main title slide. Use only for the first slide.
+                    Schema: { "type": "title", "content": { "title": "...", "subtitle": "..." } }
+
+                2.  **section_header**: To introduce a new major section.
+                    Schema: { "type": "section_header", "content": { "title": "..." } }
+
+                3.  **content**: A standard slide with a title and bullet points. This should be common.
+                    Schema: { "type": "content", "content": { "title": "...", "points": ["...", "...", "..."] } }
+                
+                4.  **comparison**: Compare two items side-by-side. Use when the text presents a clear comparison.
+                    Schema: { "type": "comparison", "content": { "title": "...", "itemA": { "name": "...", "points": ["..."] }, "itemB": { "name": "...", "points": ["..."] } } }
+                
+                5.  **pros_cons**: A specific comparison for advantages and disadvantages.
+                    Schema: { "type": "pros_cons", "content": { "title": "...", "pros": ["...", "..."], "cons": ["...", "..."] } }
+
+                6.  **timeline**: For chronological events or steps in a sequence.
+                    Schema: { "type": "timeline", "content": { "title": "...", "events": [{ "time": "...", "description": "..." }, { "time": "...", "description": "..." }] } }
+
+                7.  **quote**: To highlight a powerful quote from the text.
+                    Schema: { "type": "quote", "content": { "text": "...", "author": "..." } }
+                
+                8.  **image**: For when the text describes something visual. **Important**: For the "imageUrl", use a placeholder from "https://placehold.co/600x400?text=AI+Placeholder".
+                    Schema: { "type": "image", "content": { "title": "...", "imageUrl": "https://placehold.co/600x400?text=AI+Placeholder", "caption": "..." } }
+
+                9.  **summary**: A concluding slide with key takeaways. Use for the second to last slide.
+                    Schema: { "type": "summary", "content": { "title": "Key Takeaways", "points": ["...", "...", "..."] } }
+
+                10. **qa**: The final slide.
+                    Schema: { "type": "qa", "content": { "title": "Q&A", "subtitle": "Thank You" } }
+
+                Your task is to convert the following text into a JSON array of these slide objects.
+                Ensure a logical flow: start with a 'title', use 'section_header' where appropriate, vary the content slides with 'comparison', 'timeline', etc., and end with 'summary' and 'qa'.
+                The number of slides should be appropriate for the text length.
 
                 Source Text:
                 ---
                 ${sourceText.substring(0, 8000)}
                 ---
                 
-                Return ONLY the JSON array, with no other text or markdown.
+                Return ONLY the JSON array. Do not include any other text, explanations, or markdown formatting like \`\`\`json.
             `;
 
             try {
@@ -195,12 +292,7 @@
                 const response = await fetch('/functions/ai-api', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'generate',
-                        providerKey: provider,
-                        model: model,
-                        prompt: prompt,
-                    }),
+                    body: JSON.stringify({ action: 'generate', providerKey: provider, model: model, prompt: prompt }),
                 });
 
                 if (!response.ok) {
@@ -209,7 +301,14 @@
                 }
                 
                 const data = await response.json();
-                const rawJson = data.text.replace(/```json/g, '').replace(/```/g, '').trim();
+                let rawJson = data.text;
+                // Clean the response: remove markdown, find the start of the array
+                const arrayStartIndex = rawJson.indexOf('[');
+                const arrayEndIndex = rawJson.lastIndexOf(']');
+                if (arrayStartIndex === -1 || arrayEndIndex === -1) {
+                    throw new Error("AI did not return a valid JSON array.");
+                }
+                rawJson = rawJson.substring(arrayStartIndex, arrayEndIndex + 1);
                 
                 slides = JSON.parse(rawJson);
                 editor.setValue(JSON.stringify(slides, null, 2));
@@ -220,54 +319,105 @@
                     slideNavigation.classList.remove('hidden');
                     pushToGslideBtn.classList.remove('hidden');
                 } else {
-                    previewContainer.innerHTML = '<p class="text-gray-500">Could not generate slides. The AI returned an empty or invalid structure.</p>';
-                    slideNavigation.classList.add('hidden');
-                    pushToGslideBtn.classList.add('hidden');
+                    throw new Error("AI returned an empty array.");
                 }
 
             } catch (error) {
                 console.error('Generation Error:', error);
-                previewContainer.innerHTML = `<p class="text-red-500">Error: ${error.message}</p>`;
-                editor.setValue(JSON.stringify({ error: error.message }, null, 2));
+                previewContainer.innerHTML = `<p class="text-red-500 p-4"><b>Error:</b> ${error.message}. <br><br>Please check the 'Generated JSON' tab for the raw AI output that may have caused the parsing issue.</p>`;
+                editor.setValue(JSON.stringify({ error: error.message, rawResponse: slides }, null, 2));
+                slideNavigation.classList.add('hidden');
+                pushToGslideBtn.classList.add('hidden');
             }
         });
-
+        
+        // --- NEW: displaySlide function updated with new slide types ---
         function displaySlide(index) {
             const slide = slides[index];
-            let html = '<div class="w-full h-full p-8 flex flex-col justify-center items-center bg-white text-black">';
+            let html = '<div class="w-full h-full p-8 flex flex-col justify-center items-center bg-white text-black text-left">';
 
             switch (slide.type) {
                 case 'title':
-                    html += `<h1 class="text-4xl font-bold text-center">${slide.content.title}</h1>`;
+                    html += `<div class="text-center"><h1 class="text-4xl font-bold">${slide.content.title}</h1>`;
                     if (slide.content.subtitle) {
-                        html += `<p class="text-xl mt-4 text-center">${slide.content.subtitle}</p>`;
+                        html += `<p class="text-xl mt-4">${slide.content.subtitle}</p>`;
                     }
+                    html += `</div>`;
+                    break;
+                case 'section_header':
+                    html += `<div class="text-center"><h2 class="text-5xl font-bold text-blue-600">${slide.content.title}</h2></div>`;
                     break;
                 case 'content':
-                    html += `<h2 class="text-3xl font-semibold self-start">${slide.content.title}</h2>`;
+                    html += `<h2 class="text-3xl font-semibold self-start w-full mb-4">${slide.content.title}</h2>`;
                     if (slide.content.points) {
-                        html += '<ul class="list-disc self-start pl-6 mt-4 text-lg">';
+                        html += '<ul class="list-disc self-start pl-6 text-lg w-full">';
                         slide.content.points.forEach(point => {
                             html += `<li class="mb-2">${point}</li>`;
                         });
                         html += '</ul>';
                     }
                     break;
+                case 'comparison':
+                     html += `<h2 class="text-3xl font-semibold w-full text-center mb-4">${slide.content.title}</h2>`;
+                     html += `<div class="w-full grid grid-cols-2 gap-4">`;
+                     html += `<div><h3 class="text-xl font-bold mb-2">${slide.content.itemA.name}</h3><ul class="list-disc pl-5">`;
+                     slide.content.itemA.points.forEach(p => html += `<li>${p}</li>`);
+                     html += `</ul></div>`;
+                     html += `<div><h3 class="text-xl font-bold mb-2">${slide.content.itemB.name}</h3><ul class="list-disc pl-5">`;
+                     slide.content.itemB.points.forEach(p => html += `<li>${p}</li>`);
+                     html += `</ul></div>`;
+                     html += `</div>`;
+                    break;
+                case 'pros_cons':
+                     html += `<h2 class="text-3xl font-semibold w-full text-center mb-4">${slide.content.title}</h2>`;
+                     html += `<div class="w-full grid grid-cols-2 gap-4">`;
+                     html += `<div><h3 class="text-xl font-bold text-green-600 mb-2">Pros</h3><ul class="list-disc pl-5">`;
+                     slide.content.pros.forEach(p => html += `<li>${p}</li>`);
+                     html += `</ul></div>`;
+                     html += `<div><h3 class="text-xl font-bold text-red-600 mb-2">Cons</h3><ul class="list-disc pl-5">`;
+                     slide.content.cons.forEach(p => html += `<li>${p}</li>`);
+                     html += `</ul></div>`;
+                     html += `</div>`;
+                    break;
+                case 'timeline':
+                    html += `<h2 class="text-3xl font-semibold w-full mb-6">${slide.content.title}</h2>`;
+                    html += `<div class="relative border-l-4 border-blue-300 w-full">`;
+                    slide.content.events.forEach(event => {
+                         html += `<div class="mb-8 ml-8"><h4 class="text-xl font-bold text-blue-600">${event.time}</h4><p>${event.description}</p></div>`;
+                    });
+                    html += `</div>`;
+                    break;
                  case 'image':
                     html += `<h2 class="text-3xl font-semibold mb-4">${slide.content.title}</h2>`;
-                    html += `<img src="${slide.content.imageUrl}" alt="${slide.content.title}" class="max-h-64 object-contain">`;
+                    html += `<img src="${slide.content.imageUrl}" alt="${slide.content.title}" class="max-h-60 object-contain my-4">`;
                     if (slide.content.caption) {
-                        html += `<p class="text-sm mt-2">${slide.content.caption}</p>`;
+                        html += `<p class="text-sm mt-2 italic">${slide.content.caption}</p>`;
                     }
                     break;
                 case 'quote':
-                     html += `<blockquote class="text-2xl italic">"${slide.content.text}"</blockquote>`;
+                     html += `<div class="text-center"><blockquote class="text-2xl italic">" ${slide.content.text} "</blockquote>`;
                      if(slide.content.author){
                         html += `<cite class="block text-right mt-4">- ${slide.content.author}</cite>`;
                      }
+                     html += `</div>`;
                      break;
+                case 'summary':
+                case 'qa':
+                    html += `<div class="text-center"><h1 class="text-4xl font-bold">${slide.content.title}</h1>`;
+                    if (slide.content.subtitle) {
+                        html += `<p class="text-xl mt-4">${slide.content.subtitle}</p>`;
+                    }
+                     if (slide.content.points) {
+                        html += '<ul class="list-disc mt-6 text-lg inline-block text-left">';
+                        slide.content.points.forEach(point => {
+                            html += `<li class="mb-2">${point}</li>`;
+                        });
+                        html += '</ul>';
+                    }
+                    html += `</div>`;
+                    break;
                  default:
-                    html += `<p>Unsupported slide type: ${slide.type}</p>`
+                    html += `<p>Unsupported slide type: ${slide.type}</p><pre>${JSON.stringify(slide.content, null, 2)}</pre>`
             }
             html += '</div>';
 
@@ -296,11 +446,11 @@
                 return;
             }
             alert('Pushing to Google Slides is not yet implemented.');
-            // Here you would add the logic to interact with the Google Slides API
         });
-
+        
+        // Initial setup
+        updateModels();
 
     </script>
-
 </body>
 </html>
