@@ -1,4 +1,4 @@
-// article-ui.js (v8.18 Humanize content)
+// article-ui.js (v8.19 Add idea generation progress bar)
 import { textProviders, imageProviders, languageOptions, defaultSettings } from './article-config.js';
 import { getState, getCustomModelState, updateState, getBulkPlan } from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2 } from './article-helpers.js';
@@ -22,6 +22,9 @@ const elementIdMap = {
     bulkKeywords: 'bulkKeywords',
     generateIdeasBtn: 'generateIdeasBtn', 
     ideasLoadingIndicator: 'ideasLoadingIndicator', 
+    ideasProgressContainer: 'ideasProgressContainer',
+    ideasProgressBar: 'ideasProgressBar',
+    ideasProgressText: 'ideasProgressText',
     languageSelect: 'language',
     customLanguageInput: 'custom_language',
     dialectSelect: 'dialect',
