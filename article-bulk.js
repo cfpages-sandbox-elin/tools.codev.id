@@ -1,7 +1,7 @@
 // article-bulk.js (v8.19 Fix import showelement)
 import { getState, getBulkPlan, updateBulkPlanItem, addBulkArticle, saveBulkArticlesState, getBulkArticle, getAllBulkArticles, setBulkPlan } from './article-state.js';
-import { logToConsole, callAI, sanitizeFilename, slugify, getArticleOutlinesV2, constructImagePrompt, delay } from './article-helpers.js';
-import { getElement, updatePlanItemStatusUI, updateProgressBar, hideProgressBar, renderPlanningTable, showElement } from './article-ui.js';
+import { logToConsole, callAI, sanitizeFilename, slugify, getArticleOutlinesV2, constructImagePrompt, delay, showElement } from './article-helpers.js';
+import { getElement, updatePlanItemStatusUI, updateProgressBar, hideProgressBar, renderPlanningTable } from './article-ui.js';
 import { languageOptions } from './article-config.js';
 
 let bulkImagesToUpload = [];
