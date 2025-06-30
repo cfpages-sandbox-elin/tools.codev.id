@@ -115,6 +115,10 @@
                  <button id="generateIdeasBtn" class="compact-button bg-teal-500 hover:bg-teal-600 text-xs !py-1 !px-2">Generate Ideas ✨ <span id="ideasLoadingIndicator" class="hidden"><span class="loader !w-3 !h-3"></span></span></button>
             </div>
             <textarea id="bulkKeywords" rows="8" class="w-full textarea" placeholder="keyword one (seed for ideas if generating)&#10;keyword two&#10;another keyword"></textarea> 
+            <div id="ideasProgressContainer" class="w-full bg-gray-200 rounded-full h-2.5 mt-2 hidden">
+                <div id="ideasProgressBar" class="bg-teal-500 h-2.5 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+            </div>
+            <div id="ideasProgressText" class="text-sm text-center text-gray-600 mt-1 hidden">Generating ideas...</div>
             <p class="text-xs text-gray-500 mt-1">Idea generation uses the first keyword. For planning, duplicates and symbols will be removed.</p> 
         </div> 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6"> 

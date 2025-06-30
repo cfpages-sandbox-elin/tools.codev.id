@@ -1,7 +1,7 @@
-// article-ideas.js
+// article-ideas.js v8.19 progress bar update
 import { getState } from './article-state.js';
 import { logToConsole, callAI, delay, disableElement, showLoading } from './article-helpers.js';
-import { getElement } from './article-ui.js'; // getElement is correctly from article-ui.js
+import { getElement, updateProgressBar } from './article-ui.js';
 
 const W_H_QUESTIONS = {
     "Who": "keywords that explore 'Who is related to/affected by/involved with [SEED_KEYWORD]?' or 'Who is the target audience for [SEED_KEYWORD]?'",
@@ -57,10 +57,14 @@ export async function handleGenerateIdeas() {
     const ui = {
         bulkKeywordsTextarea: getElement('bulkKeywords'),
         generateIdeasBtn: getElement('generateIdeasBtn'),
-        ideasLoadingIndicator: getElement('ideasLoadingIndicator')
+        ideasLoadingIndicator: getElement('ideasLoadingIndicator'),
+        // Add new UI elements
+        progressContainer: getElement('ideasProgressContainer'),
+        progressBar: getElement('ideasProgressBar'),
+        progressText: getElement('ideasProgressText')
     };
 
-    if (!ui.bulkKeywordsTextarea || !ui.generateIdeasBtn || !ui.ideasLoadingIndicator) {
+    if (!ui.bulkKeywordsTextarea || !ui.generateIdeasBtn || !ui.progressContainer) {
         logToConsole("Required UI elements for idea generation are missing.", "error");
         alert("Error: Could not find necessary UI elements for idea generation.");
         return;
@@ -79,43 +83,66 @@ export async function handleGenerateIdeas() {
 
     disableElement(ui.generateIdeasBtn, true);
     showLoading(ui.ideasLoadingIndicator, true);
+    // Initialize and show the progress bar
+    updateProgressBar(ui.progressBar, ui.progressContainer, ui.progressText, 0, 1, "Initializing...");
 
     const state = getState();
     let allGeneratedKeywords = [];
+    const questionEntries = Object.entries(W_H_QUESTIONS);
+    const totalSteps = questionEntries.length;
 
-    for (const [questionType, questionDetail] of Object.entries(W_H_QUESTIONS)) {
-        logToConsole(`Generating ideas for aspect: ${questionType}`, "info");
-        const prompt = buildIdeaPrompt(seedKeyword, questionType, questionDetail.replace(/\[SEED_KEYWORD\]/g, seedKeyword), state);
-        const payload = {
-            providerKey: state.textProvider,
-            model: state.textModel,
-            prompt: prompt
-        };
+    try {
+        for (let i = 0; i < totalSteps; i++) {
+            const [questionType, questionDetail] = questionEntries[i];
+            
+            // Update status text for the current step
+            ui.progressText.textContent = `Generating ideas for "${questionType}"... (${i + 1}/${totalSteps})`;
+            logToConsole(`Generating ideas for aspect: ${questionType}`, "info");
+            
+            const prompt = buildIdeaPrompt(seedKeyword, questionType, questionDetail.replace(/\[SEED_KEYWORD\]/g, seedKeyword), state);
+            const payload = {
+                providerKey: state.textProvider,
+                model: state.textModel,
+                prompt: prompt
+            };
 
-        const result = await callAI('generate', payload, null, null); // Individual callAI calls, manage main button state outside
+            const result = await callAI('generate', payload, null, null); 
 
-        if (result?.success && result.text) {
-            const parsedKeywords = parseIdeaResponse(result.text);
-            logToConsole(`Generated ${parsedKeywords.length} ideas for ${questionType}: ${parsedKeywords.join('; ')}`, "info");
-            allGeneratedKeywords.push(...parsedKeywords);
-        } else {
-            logToConsole(`Failed to generate ideas for ${questionType}. Error: ${result?.error || 'No text returned'}`, "error");
+            if (result?.success && result.text) {
+                const parsedKeywords = parseIdeaResponse(result.text);
+                logToConsole(`Generated ${parsedKeywords.length} ideas for ${questionType}: ${parsedKeywords.join('; ')}`, "info");
+                allGeneratedKeywords.push(...parsedKeywords);
+            } else {
+                logToConsole(`Failed to generate ideas for ${questionType}. Error: ${result?.error || 'No text returned'}`, "error");
+            }
+            
+            // Update progress bar after each step
+            const progressPercent = Math.round(((i + 1) / totalSteps) * 100);
+            ui.progressBar.style.width = `${progressPercent}%`;
+
+            await delay(300); 
         }
-        await delay(300); // Small delay between AI calls
+
+        ui.progressText.textContent = 'Finalizing and de-duplicating keyword list...';
+        const uniqueGeneratedKeywords = cleanAndUniqueKeywords(allGeneratedKeywords);
+        const combinedKeywords = [...existingKeywords, ...uniqueGeneratedKeywords];
+        const finalUniqueKeywords = cleanAndUniqueKeywords(combinedKeywords);
+
+        ui.bulkKeywordsTextarea.value = finalUniqueKeywords.join('\n');
+        logToConsole(`Idea generation complete. Total unique keywords: ${finalUniqueKeywords.length}. Populated bulk keywords textarea.`, "success");
+        alert(`Generated ${uniqueGeneratedKeywords.length} new unique ideas. The keyword list has been updated.`);
+
+    } catch (error) {
+        logToConsole(`An error occurred during idea generation: ${error.message}`, 'error');
+        alert('An error occurred during idea generation. Please check the console log.');
+    } finally {
+        // Hide all indicators
+        showLoading(ui.ideasLoadingIndicator, false);
+        disableElement(ui.generateIdeasBtn, false);
+        showElement(ui.progressContainer, false);
+        showElement(ui.progressText, false);
+        ui.progressBar.style.width = '0%';
     }
-
-    const uniqueGeneratedKeywords = cleanAndUniqueKeywords(allGeneratedKeywords);
-    
-    // Combine with existing keywords (if any, beyond the seed), then deduplicate again
-    const combinedKeywords = [...existingKeywords, ...uniqueGeneratedKeywords];
-    const finalUniqueKeywords = cleanAndUniqueKeywords(combinedKeywords);
-
-    ui.bulkKeywordsTextarea.value = finalUniqueKeywords.join('\n');
-    logToConsole(`Idea generation complete. Total unique keywords: ${finalUniqueKeywords.length}. Populated bulk keywords textarea.`, "success");
-
-    showLoading(ui.ideasLoadingIndicator, false);
-    disableElement(ui.generateIdeasBtn, false);
-    alert(`Generated ${uniqueGeneratedKeywords.length} new unique ideas. The keyword list has been updated.`);
 }
 
 console.log("article-ideas.js loaded");
