@@ -1,6 +1,6 @@
 // article-ideas.js v8.19 progress bar update
 import { getState } from './article-state.js';
-import { logToConsole, callAI, delay, disableElement, showLoading } from './article-helpers.js';
+import { logToConsole, callAI, delay, disableElement, showLoading, showElement } from './article-helpers.js';
 import { getElement, updateProgressBar } from './article-ui.js';
 
 const W_H_QUESTIONS = {
