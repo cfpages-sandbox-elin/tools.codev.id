@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dasbor Feasibility Study - Kawasan SIER Surabaya</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Leaflet.js (Peta) CDN -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <style>
+        /* Custom styles untuk leaflet pop-up agar sesuai tema gelap */
+        .leaflet-popup-content-wrapper {
+            background-color: #1F2937; /* bg-gray-800 */
+            color: #F9FAFB; /* text-gray-50 */
+            border-radius: 0.5rem;
+        }
+        .leaflet-popup-content {
+            margin: 12px;
+        }
+        .leaflet-popup-tip {
+            background: #1F2937; /* bg-gray-800 */
+        }
+        .leaflet-popup-close-button {
+            color: #F9FAFB !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-200 font-sans">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-white mb-2">Dasbor Analisis Data untuk Studi Kelayakan</h1>
+            <p class="text-xl text-cyan-400">Kawasan Sekitar Surabaya Industrial Estate Rungkut (SIER)</p>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+            <!-- 1. Populasi Kota Surabaya -->
+            <section class="bg-gray-800 p-6 rounded-lg shadow-lg col-span-1 lg:col-span-2">
+                <h2 class="text-2xl font-semibold mb-4 text-white border-l-4 border-cyan-400 pl-4">1. Populasi Kota Surabaya: Tren & Proyeksi</h2>
+                <p class="mb-6 text-gray-300">Grafik garis ini memvisualisasikan pertumbuhan penduduk Kota Surabaya. Tren historis yang stabil dan proyeksi yang terus meningkat menunjukkan pasar yang sehat dan berkembang. Ini merupakan indikator kunci adanya permintaan yang berkelanjutan untuk properti, barang, dan jasa.</p>
+                <div class="h-96 w-full">
+                    <canvas id="surabayaPopulationChart"></canvas>
+                </div>
+                <div class="mt-6 overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-400">
+                        <thead class="text-xs text-gray-100 uppercase bg-gray-700">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">Tahun</th>
+                                <th scope="col" class="px-6 py-3">Jumlah Penduduk</th>
+                                <th scope="col" class="px-6 py-3">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="bg-gray-800 border-b border-gray-700"><td class="px-6 py-4">2020</td><td class="px-6 py-4">2.904.751</td><td class="px-6 py-4">Historis</td></tr>
+                            <tr class="bg-gray-800 border-b border-gray-700"><td class="px-6 py-4">2021</td><td class="px-6 py-4">2.880.284</td><td class="px-6 py-4">Historis</td></tr>
+                            <tr class="bg-gray-800 border-b border-gray-700"><td class="px-6 py-4">2022</td><td class="px-6 py-4">2.887.223</td><td class="px-6 py-4">Historis</td></tr>
+                            <tr class="bg-gray-800 border-b border-gray-700"><td class="px-6 py-4">2023</td><td class="px-6 py-4">2.997.547</td><td class="px-6 py-4">Historis</td></tr>
+                            <tr class="bg-gray-800 border-b border-gray-700"><td class="px-6 py-4">2024</td><td class="px-6 py-4">3.021.043</td><td class="px-6 py-4">Historis</td></tr>
+                            <tr class="bg-cyan-900/50 border-b border-gray-700"><td class="px-6 py-4">2025</td><td class="px-6 py-4">3.043.518</td><td class="px-6 py-4">Proyeksi</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-xs text-gray-500 mt-4">Sumber: Data diolah dari BPS Kota Surabaya, Pemkot Surabaya, dan sumber berita terpercaya lainnya.</p>
+            </section>
+
+            <!-- 2. Peta Kawasan & Universitas -->
+            <section class="bg-gray-800 p-6 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-semibold mb-4 text-white border-l-4 border-cyan-400 pl-4">2. Peta Sebaran Penduduk & Universitas</h2>
+                <p class="mb-6 text-gray-300">Peta interaktif ini menggabungkan dua data krusial. Warna pada kecamatan menunjukkan kepadatan populasi—semakin gelap warnanya, semakin tinggi populasinya. Titik biru menandai lokasi universitas-universitas besar. Visualisasi ini membantu mengidentifikasi pusat populasi dan klaster talenta secara geografis untuk penentuan lokasi strategis.</p>
+                <div id="sierMap" class="h-96 w-full rounded-lg z-0"></div>
+                <p class="text-xs text-gray-500 mt-4">Sumber: Estimasi populasi per kecamatan dari BPS. Lokasi universitas dari data publik.</p>
+            </section>
+
+            <!-- 3. Perbandingan Populasi Sekitar SIER -->
+            <section class="bg-gray-800 p-6 rounded-lg shadow-lg">
+                <h2 class="text-2xl font-semibold mb-4 text-white border-l-4 border-cyan-400 pl-4">3. Populasi di Kecamatan Sekitar SIER</h2>
+                <p class="mb-6 text-gray-300">Grafik batang ini membandingkan total populasi di kecamatan-kecamatan kunci di sekitar SIER. Kecamatan Rungkut dan Waru (Sidoarjo) menonjol sebagai kantong populasi terbesar, menjadikannya target utama untuk pemasaran, penyediaan perumahan, dan rekrutmen tenaga kerja.</p>
+                 <div class="h-96 w-full">
+                    <canvas id="sierPopulationChart"></canvas>
+                </div>
+                 <p class="text-xs text-gray-500 mt-4">Sumber: Data BPS tahun 2020-2024, data bervariasi tergantung ketersediaan per kecamatan.</p>
+            </section>
+            
+            <!-- 4. Demografi Usia Produktif -->
+            <section class="bg-gray-800 p-6 rounded-lg shadow-lg col-span-1 lg:col-span-2">
+                <h2 class="text-2xl font-semibold mb-4 text-white border-l-4 border-cyan-400 pl-4">4. Analisis Demografi: Usia Produktif (15-70 Tahun)</h2>
+                <p class="mb-6 text-gray-300">Grafik ini memecah populasi per kecamatan menjadi dua segmen: usia produktif (potensi tenaga kerja & konsumen utama) dan usia lainnya. Kecamatan dengan proporsi batang biru yang besar, seperti Waru dan Rungkut, menunjukkan ketersediaan sumber daya manusia yang melimpah dan pasar konsumen yang aktif.</p>
+                <div class="h-96 w-full">
+                    <canvas id="demographicChart"></canvas>
+                </div>
+                 <div class="mt-6 overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-400">
+                        <thead class="text-xs text-gray-100 uppercase bg-gray-700">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">Kecamatan</th>
+                                <th scope="col" class="px-6 py-3">Total Penduduk</th>
+                                <th scope="col" class="px-6 py-3">Estimasi Usia 15-70 Thn (74%)</th>
+                                <th scope="col" class="px-6 py-3">Estimasi Usia Lainnya (26%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                             <tr class="bg-gray-800 border-b border-gray-700"><td class="px-6 py-4">Rungkut</td><td class="px-6 py-4">123.757</td><td class="px-6 py-4">~91.580</td><td class="px-6 py-4">~32.177</td></tr>
+                             <tr class="bg-gray-800 border-b border-gray-700"><td class="px-6 py-4">Gunung Anyar</td><td class="px-6 py-4">62.342</td><td class="px-6 py-4">~46.133</td><td class="px-6 py-4">~16.209</td></tr>
+                             <tr class="bg-gray-800 border-b border-gray-700"><td class="px-6 py-4">Tenggilis Mejoyo</td><td class="px-6 py-4">54.861</td><td class="px-6 py-4">~40.597</td><td class="px-6 py-4">~14.264</td></tr>
+                             <tr class="bg-gray-800 border-b border-gray-700"><td class="px-6 py-4">Waru, Sidoarjo</td><td class="px-6 py-4">194.084</td><td class="px-6 py-4">~143.622</td><td class="px-6 py-4">~50.462</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-xs text-gray-500 mt-4">Sumber: Estimasi dihitung berdasarkan data BPS Kota Surabaya 2024, dimana ~74% populasi masuk dalam kategori usia produktif.</p>
+            </section>
+
+        </main>
+
+        <footer class="text-center mt-12 text-gray-500 text-sm">
+            <p>Dasbor ini dibuat untuk tujuan ilustrasi dan studi kelayakan.</p>
+            <p>Data dikumpulkan dari sumber publik yang tersedia per Juli 2025.</p>
+        </footer>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    // Konfigurasi umum untuk teks grafik pada tema gelap
+    const chartTextColor = '#E5E7EB'; // text-gray-200
+    const chartGridColor = 'rgba(255, 255, 255, 0.1)';
+
+    // --- DATA ---
+    const surabayaPopulation = {
+        labels: ['2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029'],
+        historicalData: [2904751, 2880284, 2887223, 2997547, 3021043, null, null, null, null, null],
+        projectedData: [null, null, null, null, 3021043, 3043518, 3065133, 3085996, 3106108, 3125548]
+    };
+
+    const sierPopulation = {
+        labels: ['Rungkut', 'Gunung Anyar', 'Tenggilis Mejoyo', 'Waru, Sidoarjo'],
+        data: [123757, 62342, 54861, 194084]
+    };
+    
+    const demographicData = {
+        labels: ['Rungkut', 'Gunung Anyar', 'Tenggilis Mejoyo', 'Waru, Sidoarjo'],
+        productiveAge: [91580, 46133, 40597, 143622],
+        otherAge: [32177, 16209, 14264, 50462]
+    };
+
+    const kecamatanData = [
+        { name: 'Rungkut', population: 123757, color: '#164E63', coords: [[-7.316, 112.793], [-7.339, 112.783], [-7.333, 112.812], [-7.315, 112.810]] },
+        { name: 'Gunung Anyar', population: 62342, color: '#0E7490', coords: [[-7.339, 112.783], [-7.363, 112.793], [-7.348, 112.825], [-7.333, 112.812]] },
+        { name: 'Tenggilis Mejoyo', population: 54861, color: '#06B6D4', coords: [[-7.315, 112.760], [-7.338, 112.761], [-7.339, 112.783], [-7.316, 112.793]] },
+        { name: 'Waru, Sidoarjo', population: 194084, color: '#083344', coords: [[-7.338, 112.761], [-7.375, 112.730], [-7.388, 112.775], [-7.363, 112.793]] }
+    ];
+
+    const universities = [
+        { name: 'UPN "Veteran" Jatim', students: '22,882', coords: [-7.332, 112.802] },
+        { name: 'Univ. Surabaya (UBAYA)', students: '11,000+', coords: [-7.324, 112.774] },
+        { name: 'UK Petra', students: '~10,000', coords: [-7.320, 112.734] },
+        { name: 'Univ. Airlangga (Kampus C)', students: '~38,000', coords: [-7.267, 112.785] }
+    ];
+
+    // --- CHART 1: SURABAYA POPULATION ---
+    const ctx1 = document.getElementById('surabayaPopulationChart').getContext('2d');
+    new Chart(ctx1, {
+        type: 'line',
+        data: {
+            labels: surabayaPopulation.labels,
+            datasets: [
+                {
+                    label: 'Jumlah Penduduk (Historis)',
+                    data: surabayaPopulation.historicalData,
+                    borderColor: '#67E8F9', // cyan-300
+                    backgroundColor: 'rgba(103, 232, 249, 0.2)',
+                    fill: false,
+                    tension: 0.1,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#67E8F9'
+                },
+                {
+                    label: 'Jumlah Penduduk (Proyeksi)',
+                    data: surabayaPopulation.projectedData,
+                    borderColor: '#0891B2', // cyan-600
+                    backgroundColor: 'rgba(8, 145, 178, 0.2)',
+                    fill: false,
+                    borderDash: [5, 5],
+                    tension: 0.1,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#0891B2'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: chartTextColor } } },
+            scales: {
+                y: { ticks: { color: chartTextColor }, grid: { color: chartGridColor } },
+                x: { ticks: { color: chartTextColor }, grid: { color: chartGridColor } }
+            }
+        }
+    });
+
+    // --- CHART 2: SIER POPULATION ---
+    const ctx2 = document.getElementById('sierPopulationChart').getContext('2d');
+    new Chart(ctx2, {
+        type: 'bar',
+        data: {
+            labels: sierPopulation.labels,
+            datasets: [{
+                label: 'Jumlah Penduduk',
+                data: sierPopulation.data,
+                backgroundColor: ['#0E7490', '#06B6D4', '#67E8F9', '#155E75'],
+                borderColor: '#1F2937',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { ticks: { color: chartTextColor }, grid: { color: 'transparent' } },
+                x: { ticks: { color: chartTextColor }, grid: { color: chartGridColor } }
+            }
+        }
+    });
+    
+    // --- CHART 3: DEMOGRAPHIC STACKED BAR ---
+    const ctx3 = document.getElementById('demographicChart').getContext('2d');
+    new Chart(ctx3, {
+        type: 'bar',
+        data: {
+            labels: demographicData.labels,
+            datasets: [
+                {
+                    label: 'Usia Produktif (15-70 Thn)',
+                    data: demographicData.productiveAge,
+                    backgroundColor: '#06B6D4', // cyan-500
+                },
+                {
+                    label: 'Usia Lainnya',
+                    data: demographicData.otherAge,
+                    backgroundColor: '#1F2937', // gray-800 border
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: chartTextColor } } },
+            scales: {
+                x: { stacked: true, ticks: { color: chartTextColor }, grid: { color: chartGridColor } },
+                y: { stacked: true, ticks: { color: chartTextColor }, grid: { color: 'transparent' } }
+            }
+        }
+    });
+
+    // --- MAP: LEAFLET.JS ---
+    const map = L.map('sierMap').setView([-7.325, 112.780], 12);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: 'abcd',
+        maxZoom: 20
+    }).addTo(map);
+
+    // Add Kecamatan polygons
+    kecamatanData.forEach(kec => {
+        L.polygon(kec.coords, { 
+            color: '#F9FAFB', // white
+            weight: 1,
+            fillColor: kec.color,
+            fillOpacity: 0.6 
+        }).bindPopup(`<b>${kec.name}</b><br>Populasi: ${kec.population.toLocaleString('id-ID')}`).addTo(map);
+    });
+
+    // Add University markers
+    universities.forEach(uni => {
+        L.circleMarker(uni.coords, {
+            radius: 8,
+            fillColor: "#22D3EE", // cyan-400
+            color: "#F9FAFB",
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.8
+        }).bindPopup(`<b>${uni.name}</b><br>Mahasiswa: ${uni.students}`).addTo(map);
+    });
+});
+</script>
+
+</body>
+</html>
