@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proposal Teknis - Penilaian SROI dan IKM BRI Peduli - LPMB FEB UNAIR</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        .section-title {
+            @apply text-3xl font-bold text-brand-blue border-b-2 border-brand-gold pb-2 mb-6;
+        }
+        .subsection-title {
+            @apply text-xl font-bold text-brand-blue mb-4 mt-6;
+        }
+        .brand-gold-text {
+            color: #c5a55d;
+        }
+        .brand-blue-bg {
+            background-color: #003d7a;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'brand-blue': '#003d7a',
+                        'brand-gold': '#c5a55d',
+                        'brand-gray': '#f3f4f6',
+                        'brand-dark': '#111827',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-white text-gray-800">
+
+    <div class="max-w-5xl mx-auto p-4 md:p-8">
+
+        <!-- KOP SURAT / HEADER -->
+        <header class="mb-12">
+            <div class="flex justify-between items-center border-b-4 border-brand-blue pb-4">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold text-brand-blue">LPMB FEB UNIVERSITAS AIRLANGGA</h1>
+                    <p class="text-sm text-gray-600">Laboratorium Pengembangan Manajemen dan Bisnis</p>
+                </div>
+                <img src="/img/logo-unair-biru.png" alt="Logo UNAIR" class="h-16 md:h-20">
+            </div>
+            <div class="text-right mt-6">
+                <p>Nomor: 215/LPMB-FEB/PRO/X/2023</p>
+                <p>Tanggal: 26 Oktober 2023</p>
+            </div>
+        </header>
+
+        <!-- TUJUAN SURAT -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-center mb-2">DOKUMEN PENAWARAN TEKNIS</h2>
+            <p class="text-lg text-center font-semibold text-gray-700 mb-8">Pengadaan Jasa Konsultan Penilaian SROI dan IKM Program BRI Peduli</p>
+
+            <div>
+                <p class="font-semibold">Kepada Yth.</p>
+                <p class="font-bold">Panitia Pengadaan Barang dan Jasa</p>
+                <p>PT Bank Rakyat Indonesia (Persero), Tbk.</p>
+                <p>Procurement & Logistic Operation Division KP BRI</p>
+                <p>Gedung Menara BRILIAN Lt. 2</p>
+                <p>Jakarta</p>
+            </div>
+        </section>
+
+        <!-- DAFTAR ISI -->
+        <nav class="bg-brand-gray p-6 rounded-lg mb-12 shadow-md">
+            <h2 class="text-2xl font-bold text-brand-blue mb-4">Daftar Isi</h2>
+            <ol class="list-decimal list-inside space-y-2 text-gray-700">
+                <li><a href="#profil" class="hover:text-brand-gold hover:underline">Profil Lembaga: LPMB FEB UNAIR</a></li>
+                <li><a href="#pendahuluan" class="hover:text-brand-gold hover:underline">Bab 1: Pendahuluan</a></li>
+                <li><a href="#metodologi" class="hover:text-brand-gold hover:underline">Bab 2: Metodologi Pelaksanaan</a></li>
+                <li><a href="#organisasi" class="hover:text-brand-gold hover:underline">Bab 3: Organisasi, Tim Ahli, dan Jadwal Kerja</a></li>
+                <li><a href="#penutup" class="hover:text-brand-gold hover:underline">Penutup</a></li>
+            </ol>
+        </nav>
+        
+        <!-- PROFIL PERUSAHAAN -->
+        <section id="profil" class="mb-12">
+            <h2 class="section-title">Profil Lembaga: LPMB FEB UNAIR</h2>
+            <p class="mb-6">Laboratorium Pengembangan Manajemen dan Bisnis Fakultas Ekonomi dan Bisnis Universitas Airlangga (LPMB FEB-UNAIR) adalah lembaga profesional yang mengemban misi Tri Dharma Perguruan Tinggi. Dengan sejarah sejak 1975, kami memiliki rekam jejak yang terbukti dalam membantu BUMN dan instansi terkemuka di Indonesia melalui kajian, penelitian, dan pengembangan manajemen.</p>
+
+            <div class="grid md:grid-cols-2 gap-8 mb-8">
+                <div class="bg-brand-blue text-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-bold brand-gold-text mb-2">Visi</h3>
+                    <p>Sebagai lembaga pengembangan manajemen dan bisnis yang professional untuk mewujudkan Tri Dharma Perguruan Tinggi.</p>
+                </div>
+                <div class="bg-brand-blue text-white p-6 rounded-lg shadow-lg">
+                    <h3 class="text-xl font-bold brand-gold-text mb-2">Misi</h3>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>Menjadi wadah bagi civitas akademik dalam melaksanakan Tri Dharma Perguruan Tinggi.</li>
+                        <li>Menjadi tempat belajar bagi mahasiswa untuk persiapan memasuki pasar tenaga kerja.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">Bidang Kajian dan Keahlian Inti</h3>
+            <p class="mb-4">Keahlian kami mencakup spektrum yang luas, relevan untuk menjawab kebutuhan BRI dalam penilaian dampak program TJSL, termasuk:</p>
+            <ul class="list-disc list-inside space-y-2 pl-4 mb-6">
+                <li>Manajemen Proyek dan Studi Kelayakan</li>
+                <li>Ekonomi Makro (Regional dan Nasional)</li>
+                <li>Manajemen Keuangan, Investasi, dan Perbankan</li>
+                <li>Manajemen Sumber Daya Manusia dan Pemasaran</li>
+                <li>Pengembangan Koperasi, Industri Kecil, dan UMKM</li>
+                <li>Social Return on Investment (SROI) & Impact Assessment</li>
+            </ul>
+
+            <h3 class="subsection-title">Pengelola Inti</h3>
+            <div class="grid sm:grid-cols-1 md:grid-cols-3 gap-4 text-center mb-8">
+                <div class="bg-brand-gray p-4 rounded-lg">
+                    <p class="font-bold text-brand-blue">Dr. Windijarto, S.E., MBA</p>
+                    <p class="text-sm text-gray-600">Ketua LPMB</p>
+                </div>
+                <div class="bg-brand-gray p-4 rounded-lg">
+                    <p class="font-bold text-brand-blue">Dr. Dien Mardhiyah, S.E., M.Si.</p>
+                    <p class="text-sm text-gray-600">Kepala Divisi Penelitian</p>
+                </div>
+                <div class="bg-brand-gray p-4 rounded-lg">
+                    <p class="font-bold text-brand-blue">Dr. Wisudanto, SE.,MM.,CFP</p>
+                    <p class="text-sm text-gray-600">Kepala Divisi Pelatihan</p>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">Portofolio Kerjasama</h3>
+            <p class="mb-4">Kami memiliki rekam jejak kerjasama yang panjang dengan berbagai instansi, yang menunjukkan kepercayaan tinggi terhadap kapabilitas kami. Mitra kami antara lain:</p>
+            <div class="p-6 bg-brand-gray rounded-lg">
+                <div class="columns-2 md:columns-3 text-sm space-y-2">
+                    <p><strong>PT. (Persero) Bank BRI</strong></p>
+                    <p>PT. (Persero) Pelabuhan Indonesia III & IV</p>
+                    <p>PT. Pertamina</p>
+                    <p>PT. (Persero) Semen Indonesia</p>
+                    <p>Bank Indonesia (BI)</p>
+                    <p>PT. Pembangkitan Jawa-Bali (PJB)</p>
+                    <p>PT. (Persero) Petro Kimia - Gresik</p>
+                    <p>Kementerian Koperasi</p>
+                    <p>BAPPEDA Jawa Timur</p>
+                    <p>Dan puluhan instansi lainnya...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- BAB 1 -->
+        <section id="pendahuluan" class="mb-12">
+            <h2 class="section-title">Bab 1: Pendahuluan</h2>
+            <h3 class="subsection-title">1.1 Latar Belakang dan Pemahaman atas TOR</h3>
+            <p class="text-justify">LPMB FEB UNAIR memahami sepenuhnya bahwa PT Bank Rakyat Indonesia (Persero) Tbk (BRI), sebagai BUMN terkemuka, memiliki kewajiban strategis untuk mengukur dampak program Tanggung Jawab Sosial dan Lingkungan (TJSL) "BRI Peduli". Sesuai dengan Peraturan Menteri BUMN dan Surat Kementerian BUMN No. S-468/MBU/09/2024, penilaian dampak melalui Social Return on Investment (SROI) telah menjadi Key Performance Indicator (KPI) utama dengan bobot 35%. Hal ini menandakan pergeseran dari sekadar filantropi menjadi investasi sosial yang terukur dan akuntabel.</p>
+            <p class="mt-4 text-justify">Proposal ini diajukan untuk menjadi mitra strategis BRI dalam melakukan Penilaian SROI dan Indeks Kepuasan Masyarakat (IKM) secara objektif, reliabel, dan independen, guna menyediakan basis data yang kuat untuk evaluasi dan peningkatan program di masa depan.</p>
+            
+            <h3 class="subsection-title">1.2 Tujuan Proyek</h3>
+            <ul class="list-disc list-inside space-y-2 pl-4">
+                <li>Menghitung nilai dampak sosial (SROI) program BRI Peduli secara kuantitatif dan objektif.</li>
+                <li>Mengukur tingkat kepuasan masyarakat (IKM) terhadap pelaksanaan program.</li>
+                <li>Memenuhi mandat Peraturan Menteri BUMN terkait pelaporan dampak TJSL.</li>
+                <li>Menyediakan rekomendasi strategis berbasis data untuk peningkatan kinerja program BRI Peduli.</li>
+            </ul>
+
+            <h3 class="subsection-title">1.3 Ruang Lingkup Pekerjaan dan Deliverables</h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow">
+                    <thead class="brand-blue-bg text-white">
+                        <tr>
+                            <th class="py-3 px-4 text-left">Ruang Lingkup</th>
+                            <th class="py-3 px-4 text-left">Keluaran (Deliverables)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-700">
+                        <tr class="border-b">
+                            <td class="py-3 px-4 font-semibold">Penilaian SROI & IKM</td>
+                            <td class="py-3 px-4">Laporan Akhir Konsolidasi & Laporan per Program (SROI & IKM)</td>
+                        </tr>
+                        <tr class="border-b bg-brand-gray">
+                            <td class="py-3 px-4 font-semibold">Saran Perbaikan Program</td>
+                            <td class="py-3 px-4">Rekomendasi Strategis dan Rencana Aksi Perbaikan</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="py-3 px-4 font-semibold">Penyajian Laporan</td>
+                            <td class="py-3 px-4">Materi Presentasi (Slide Deck) Profesional dan Infografis</td>
+                        </tr>
+                        <tr class="bg-brand-gray">
+                            <td class="py-3 px-4 font-semibold">Kreativitas Komunikasi</td>
+                            <td class="py-3 px-4">Draf Siaran Pers & Konten Media Sosial berbasis temuan</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- BAB 2 -->
+        <section id="metodologi" class="mb-12">
+            <h2 class="section-title">Bab 2: Metodologi Pelaksanaan</h2>
+            <h3 class="subsection-title">2.1 Alur Kerja Proyek</h3>
+            <div class="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 md:space-x-2 text-center text-sm">
+                <div class="p-4 bg-brand-gray rounded-lg shadow w-full md:w-1/4">
+                    <p class="font-bold text-brand-blue">Tahap 1: Persiapan</p>
+                    <p>Kick-off, Desain Riset, Finalisasi Instrumen</p>
+                </div>
+                <div class="text-2xl font-bold brand-gold-text">→</div>
+                <div class="p-4 bg-brand-gray rounded-lg shadow w-full md:w-1/4">
+                    <p class="font-bold text-brand-blue">Tahap 2: Lapangan</p>
+                    <p>Survei Kuantitatif & Wawancara Kualitatif</p>
+                </div>
+                <div class="text-2xl font-bold brand-gold-text">→</div>
+                <div class="p-4 bg-brand-gray rounded-lg shadow w-full md:w-1/4">
+                    <p class="font-bold text-brand-blue">Tahap 3: Analisis</p>
+                    <p>Perhitungan SROI & IKM, Analisis Tematik</p>
+                </div>
+                 <div class="text-2xl font-bold brand-gold-text">→</div>
+                <div class="p-4 bg-brand-gray rounded-lg shadow w-full md:w-1/4">
+                    <p class="font-bold text-brand-blue">Tahap 4: Pelaporan</p>
+                    <p>Laporan, Presentasi, & Rekomendasi</p>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">2.2 Metode Penilaian SROI</h3>
+             <p class="mb-4">Kami akan menerapkan kerangka kerja SROI yang diakui secara internasional melalui tahapan berikut:</p>
+            <ol class="list-decimal list-inside space-y-3 pl-4">
+                <li><strong>Identifikasi Stakeholder & Pemetaan Outcome:</strong> Menentukan siapa yang terdampak dan perubahan signifikan (sosial, ekonomi, lingkungan) yang mereka alami.</li>
+                <li><strong>Monetisasi & Pengukuran Dampak:</strong> Menetapkan proksi finansial (nilai uang) yang valid dan dapat dipertanggungjawabkan untuk setiap outcome yang teridentifikasi.</li>
+                <li><strong>Menetapkan Dampak (Establishing Impact):</strong> Melakukan atenuasi nilai dengan memperhitungkan faktor-faktor kunci:
+                    <ul class="list-disc list-inside pl-6 mt-2 space-y-1 text-sm bg-blue-50 p-3 rounded-md">
+                        <li><strong class="text-brand-blue">Deadweight:</strong> Seberapa besar perubahan yang akan terjadi tanpa adanya program BRI Peduli.</li>
+                        <li><strong class="text-brand-blue">Attribution:</strong> Kontribusi pihak lain terhadap perubahan yang terjadi.</li>
+                        <li><strong class="text-brand-blue">Drop-off:</strong> Penurunan dampak seiring berjalannya waktu.</li>
+                    </ul>
+                </li>
+                <li><strong>Perhitungan Rasio SROI:</strong> Menghitung Net Present Value (NPV) dari total dampak bersih dan membandingkannya dengan nilai investasi awal untuk mendapatkan rasio akhir.</li>
+            </ol>
+
+            <h3 class="subsection-title">2.3 Metode Penilaian IKM</h3>
+            <p>Penilaian IKM akan mengacu penuh pada <strong>PermenPAN-RB No. 14 Tahun 2017</strong>. Kami akan mengukur kepuasan masyarakat terhadap 9 unsur pelayanan, termasuk kompetensi pelaksana, kecepatan layanan, sarana prasarana, dan penanganan pengaduan. Hasilnya akan disajikan dalam skor IKM terkonversi (skala 25-100) untuk kemudahan interpretasi.</p>
+        </section>
+        
+        <!-- BAB 3 -->
+        <section id="organisasi" class="mb-12">
+            <h2 class="section-title">Bab 3: Organisasi, Tim Ahli, dan Jadwal Kerja</h2>
+            <h3 class="subsection-title">3.1 Kualifikasi Tim Ahli</h3>
+            <p class="mb-6">Kekuatan utama LPMB FEB UNAIR terletak pada tim ahli yang terdiri dari akademisi dan praktisi berpengalaman. Proyek ini akan dipimpin langsung oleh Ketua LPMB untuk memastikan kualitas tertinggi.</p>
+            
+            <!-- PROFIL KETUA TIM -->
+            <div class="bg-white border-2 border-brand-gold rounded-lg shadow-xl p-6 mb-8">
+                <div class="flex flex-col md:flex-row items-center gap-6">
+                    <div class="w-32 h-32 bg-brand-gray rounded-full flex items-center justify-center text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                    </div>
+                    <div>
+                        <h4 class="text-2xl font-bold text-brand-blue">Dr. Windijarto, S.E., MBA</h4>
+                        <p class="font-semibold brand-gold-text">Team Leader</p>
+                        <p class="text-sm text-gray-600">Ketua LPMB FEB UNAIR | Ahli Ekonomi dan Manajemen Keuangan</p>
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <h5 class="font-bold text-lg text-brand-blue mb-2">Ringkasan Kualifikasi</h5>
+                    <p class="text-justify">Dengan pengalaman lebih dari 27 tahun sebagai Dosen, Peneliti, dan Konsultan, Dr. Windijarto memiliki keahlian mendalam di bidang ekonomi dan manajemen keuangan. Pengalamannya sebagai Ketua LPMB, Wakil Dekan III FEB UNAIR, serta keterlibatannya dalam puluhan proyek studi kelayakan, social mapping, dan transformasi manajemen untuk BUMN seperti Pertamina dan Semen Indonesia, menjadikannya figur yang paling kompeten untuk memimpin dan menjamin keberhasilan proyek ini.</p>
+                    
+                    <h5 class="font-bold text-lg text-brand-blue mb-2 mt-4">Pengalaman Proyek Relevan</h5>
+                     <ul class="list-disc list-inside space-y-1 pl-4 text-sm">
+                        <li>Ketua Tim Konsultan Transformasi Sistem Manajemen Semen Indonesia</li>
+                        <li>Legal Aspek dan Sosial Mapping PT. Pertamina (Kilang Bontang)</li>
+                        <li>Sosial Mapping PT Pertamina Balikpapan, PT Pertagas, & PT WMO</li>
+                        <li>Tim Ahli Keuangan & Ekonomi Sosial untuk berbagai Proyek Studi Kelayakan</li>
+                        <li>Penyusunan RPJMD dan Audit Manajemen untuk Pemerintah Daerah dan Koperasi</li>
+                     </ul>
+                </div>
+            </div>
+
+            <h3 class="subsection-title">3.2 Jadwal Pelaksanaan Pekerjaan (120 Hari Kalender)</h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm border-collapse border border-gray-300">
+                    <thead class="brand-blue-bg text-white text-center">
+                        <tr>
+                            <th class="border border-gray-300 p-2" rowspan="2">Kegiatan</th>
+                            <th class="border border-gray-300 p-2" colspan="4">Bulan 1</th>
+                            <th class="border border-gray-300 p-2" colspan="4">Bulan 2</th>
+                            <th class="border border-gray-300 p-2" colspan="4">Bulan 3</th>
+                            <th class="border border-gray-300 p-2" colspan="4">Bulan 4</th>
+                        </tr>
+                        <tr>
+                            <!-- Weeks -->
+                            <script>for(let i=1; i<=16; i++) document.write(`<th class="border border-gray-300 font-normal w-8">${(i-1)%4+1}</th>`)</script>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="bg-brand-gray"><td colspan="17" class="p-1 font-semibold text-brand-blue">Tahap 1: Persiapan</td></tr>
+                        <tr>
+                            <td class="border border-gray-300 p-2">Kick-off & Desain Riset</td>
+                            <td class="bg-blue-400"></td><td class="bg-blue-400"></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        </tr>
+                        <tr class="bg-brand-gray"><td colspan="17" class="p-1 font-semibold text-brand-blue">Tahap 2: Pengumpulan Data Lapangan</td></tr>
+                        <tr>
+                            <td class="border border-gray-300 p-2">Survei & Wawancara</td>
+                            <td></td><td></td><td class="bg-blue-400"></td><td class="bg-blue-400"></td><td class="bg-blue-400"></td><td class="bg-blue-400"></td><td class="bg-blue-400"></td><td class="bg-blue-400"></td><td class="bg-blue-400"></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                        </tr>
+                        <tr class="bg-brand-gray"><td colspan="17" class="p-1 font-semibold text-brand-blue">Tahap 3: Analisis Data</td></tr>
+                        <tr>
+                            <td class="border border-gray-300 p-2">Analisis SROI & IKM</td>
+                            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td class="bg-blue-400"></td><td class="bg-blue-400"></td><td class="bg-blue-400"></td><td class="bg-blue-400"></td><td class="bg-blue-400"></td><td></td><td></td><td></td><td></td>
+                        </tr>
+                        <tr class="bg-brand-gray"><td colspan="17" class="p-1 font-semibold text-brand-blue">Tahap 4: Pelaporan</td></tr>
+                        <tr>
+                            <td class="border border-gray-300 p-2">Penyusunan & Diskusi Laporan</td>
+                            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td class="bg-blue-400"></td><td class="bg-blue-400"></td><td class="bg-blue-400"></td><td></td><td></td>
+                        </tr>
+                        <tr>
+                            <td class="border border-gray-300 p-2">Finalisasi & Penyerahan Akhir</td>
+                            <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td class="bg-blue-400"></td><td class="bg-blue-400"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </section>
+
+        <!-- PENUTUP -->
+        <section id="penutup" class="mt-12 text-center">
+            <p class="text-lg mb-8">Demikian Dokumen Penawaran Teknis ini kami ajukan. Kami yakin dengan rekam jejak, metodologi yang solid, dan tim ahli yang kompeten, LPMB FEB UNAIR adalah mitra ideal bagi BRI untuk menyukseskan penilaian dampak program BRI Peduli. Besar harapan kami untuk dapat berpartisipasi lebih lanjut dalam proses ini.</p>
+            
+            <div class="flex justify-end">
+                <div class="w-full md:w-1/3">
+                    <p>Hormat kami,</p>
+                    <p class="font-bold text-brand-blue">LPMB FEB Universitas Airlangga</p>
+                    <div class="my-4 h-24 flex items-center justify-center">
+                        <img src="/img/ttd-windijarto.png" alt="Tanda Tangan" class="h-20">
+                    </div>
+                    <p class="font-bold border-t pt-2">Dr. Windijarto, S.E., MBA</p>
+                    <p class="text-sm">Ketua LPMB FEB UNAIR</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="mt-16 pt-6 border-t-2 border-brand-gold text-center text-sm text-gray-500">
+            <p class="font-bold text-brand-blue">Laboratorium Pengembangan Manajemen dan Bisnis (LPMB) FEB UNAIR</p>
+            <p>Jl. Dharmawangsa Dalam, Surabaya – 60286</p>
+            <p>Telp/Fax: (031) 503 8393, 505 4839</p>
+        </footer>
+
+    </div>
+
+</body>
+</html>
