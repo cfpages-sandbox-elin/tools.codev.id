@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced PDF Splitter - The Final Version</title>
+    <title>Advanced PDF Splitter - Fixed Version</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- PDF.js from Mozilla -->
@@ -17,12 +17,14 @@
         .cut-line { position: absolute; left: 0; right: 0; height: 5px; background-color: rgba(239, 68, 68, 0.7); cursor: ns-resize; border-top: 1px dashed white; border-bottom: 1px dashed white; display: flex; align-items: center; justify-content: center; z-index: 10; }
         .cut-line:hover { background-color: rgba(220, 38, 38, 1); }
         .cut-line .handle { width: 60px; height: 20px; background-color: rgb(239, 68, 68); border-radius: 10px; color: white; font-size: 10px; text-align: center; line-height: 20px; font-family: sans-serif; pointer-events: none; }
+        .padding-zone { position: absolute; left: 0; right: 0; background-color: rgba(59, 130, 246, 0.2); border: 1px dashed rgba(59, 130, 246, 0.5); pointer-events: none; z-index: 5; }
+        .content-boundary { position: absolute; left: 0; right: 0; height: 2px; background-color: rgba(34, 197, 94, 0.8); z-index: 8; pointer-events: none; }
     </style>
 </head>
 <body class="bg-slate-100 font-sans">
     <div class="w-full max-w-5xl mx-auto p-4 sm:p-8 my-10 bg-white rounded-xl shadow-lg">
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter v4.2</h1>
+            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter v4.4 - Claude</h1>
             <p class="text-slate-500 mt-2">Upload, preview, and adjust split lines before creating your multi-page PDF.</p>
         </div>
 
@@ -63,10 +65,17 @@
 
         <div id="preview-section" class="hidden">
             <h3 class="text-lg font-semibold text-slate-700 mb-2 text-center">4. Adjust Split Lines</h3>
-            <p class="text-sm text-slate-500 text-center mb-4">Click and drag a red line. The line will snap to a pixel grid.</p>
+            <p class="text-sm text-slate-500 text-center mb-2">Red lines show where pages will be split. Blue zones show padding areas. Green lines show actual content boundaries.</p>
+            <div class="flex items-center justify-center gap-4 text-xs mb-4">
+                <span class="flex items-center gap-1"><div class="w-4 h-4 bg-red-500"></div> Cut Line</span>
+                <span class="flex items-center gap-1"><div class="w-4 h-4 bg-blue-300"></div> Padding Zone</span>
+                <span class="flex items-center gap-1"><div class="w-4 h-4 bg-green-500"></div> Content Boundary</span>
+            </div>
             <div id="preview-container" class="relative w-full max-h-[80vh] overflow-y-auto border-2 border-slate-300 bg-slate-200">
                 <canvas id="pdf-canvas" class="w-full h-auto"></canvas>
                 <div id="cut-lines-container" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
+                <div id="padding-zones-container" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
+                <div id="content-boundaries-container" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
             </div>
         </div>
     </div>
@@ -78,6 +87,7 @@
     let originalPageSize = { width: 0, height: 0, scale: 1 };
     let cutPositions = [];
     let maxSliceHeightPixels = 0;
+    let paddingPixels = 0;
     let activeDrag = { lineIndex: -1, startY: 0, originalCutPositions: [] };
     
     const fileInput = document.getElementById('file-upload');
@@ -91,6 +101,8 @@
     const previewSection = document.getElementById('preview-section');
     const canvas = document.getElementById('pdf-canvas');
     const cutLinesContainer = document.getElementById('cut-lines-container');
+    const paddingZonesContainer = document.getElementById('padding-zones-container');
+    const contentBoundariesContainer = document.getElementById('content-boundaries-container');
     const downloadLink = document.getElementById('download-link');
 
     const paperDimensions = { A4: { width: 595.28, height: 841.89 }, A5: { width: 419.53, height: 595.28 }, Letter: { width: 612, height: 792 }, Legal: { width: 612, height: 1008 }, F4: { width: 595.28, height: 935.43 } };
@@ -100,6 +112,16 @@
     generateButton.addEventListener('click', createFinalPdf);
     paddingSelect.addEventListener('change', () => {
         customPaddingInput.classList.toggle('hidden', paddingSelect.value !== 'custom');
+        if (cutPositions.length > 0) {
+            calculateInitialCutLines();
+            drawAllVisualElements();
+        }
+    });
+    paperSizeSelect.addEventListener('change', () => {
+        if (cutPositions.length > 0) {
+            calculateInitialCutLines();
+            drawAllVisualElements();
+        }
     });
 
     function getPaddingValue() {
@@ -145,7 +167,7 @@
             await page.render(renderContext).promise;
 
             calculateInitialCutLines();
-            drawCutLines();
+            drawAllVisualElements();
             
             previewSection.classList.remove('hidden');
             generateButton.classList.remove('hidden');
@@ -164,7 +186,11 @@
         const targetRatio = targetDims.height / targetDims.width;
         
         const paddingPoints = getPaddingValue();
-        const targetContentHeightPoints = (originalPageSize.width * targetRatio) - (2 * paddingPoints);
+        paddingPixels = paddingPoints * originalPageSize.scale;
+        
+        // Calculate the actual content height available on each page
+        const targetHeightPoints = originalPageSize.width * targetRatio;
+        const targetContentHeightPoints = targetHeightPoints - (2 * paddingPoints);
 
         if (targetContentHeightPoints <= 0) {
             showStatus('error', 'Padding is too large for the selected paper size.');
@@ -173,10 +199,81 @@
 
         maxSliceHeightPixels = targetContentHeightPoints * originalPageSize.scale;
         cutPositions = [];
-        let currentY = 0;
+        
+        // First page has no top padding, so it can fit more content
+        const firstPageContentHeight = (targetHeightPoints - paddingPoints) * originalPageSize.scale;
+        let currentY = firstPageContentHeight;
+        
+        // Add first cut
+        if (currentY < canvas.height) {
+            cutPositions.push(Math.round(currentY));
+        }
+        
+        // Add subsequent cuts
         while (currentY < canvas.height) {
             currentY += maxSliceHeightPixels;
-            if (currentY < canvas.height) cutPositions.push(Math.round(currentY));
+            if (currentY < canvas.height) {
+                cutPositions.push(Math.round(currentY));
+            }
+        }
+    }
+
+    function drawAllVisualElements() {
+        drawPaddingZones();
+        drawContentBoundaries();
+        drawCutLines();
+    }
+
+    function drawPaddingZones() {
+        paddingZonesContainer.innerHTML = '';
+        
+        // For each page section, draw padding zones
+        const allCuts = [0, ...cutPositions, canvas.height];
+        
+        for (let i = 0; i < allCuts.length - 1; i++) {
+            const pageTop = allCuts[i];
+            const pageBottom = allCuts[i + 1];
+            
+            // Top padding (except for first page)
+            if (i > 0) {
+                const topPadding = document.createElement('div');
+                topPadding.className = 'padding-zone';
+                topPadding.style.top = `${pageTop}px`;
+                topPadding.style.height = `${paddingPixels}px`;
+                paddingZonesContainer.appendChild(topPadding);
+            }
+            
+            // Bottom padding
+            const bottomPadding = document.createElement('div');
+            bottomPadding.className = 'padding-zone';
+            bottomPadding.style.top = `${pageBottom - paddingPixels}px`;
+            bottomPadding.style.height = `${paddingPixels}px`;
+            paddingZonesContainer.appendChild(bottomPadding);
+        }
+    }
+
+    function drawContentBoundaries() {
+        contentBoundariesContainer.innerHTML = '';
+        
+        const allCuts = [0, ...cutPositions, canvas.height];
+        
+        for (let i = 0; i < allCuts.length - 1; i++) {
+            const pageTop = allCuts[i];
+            const pageBottom = allCuts[i + 1];
+            
+            // Top content boundary (where content actually starts)
+            if (i > 0) {
+                const topBoundary = document.createElement('div');
+                topBoundary.className = 'content-boundary';
+                topBoundary.style.top = `${pageTop + paddingPixels}px`;
+                contentBoundariesContainer.appendChild(topBoundary);
+            }
+            
+            // Bottom content boundary (where content actually ends)
+            const bottomBoundary = document.createElement('div');
+            bottomBoundary.className = 'content-boundary';
+            bottomBoundary.style.top = `${pageBottom - paddingPixels}px`;
+            contentBoundariesContainer.appendChild(bottomBoundary);
         }
     }
 
@@ -212,44 +309,40 @@
         const originalY = activeDrag.originalCutPositions[index];
         let newY = originalY + deltaY;
         
-        const prevLineY = index > 0 ? cutPositions[index - 1] : 0;
-        const minAllowedY = prevLineY + 20;
-        const maxAllowedY = prevLineY + maxSliceHeightPixels;
-
-        newY = Math.max(minAllowedY, newY);
-        newY = Math.min(maxAllowedY, newY);
+        // Calculate constraints based on content areas
+        const prevCutY = index > 0 ? cutPositions[index - 1] : 0;
+        const minY = prevCutY + paddingPixels + 20; // Previous cut + padding + minimum content
+        const maxY = prevCutY + paddingPixels + maxSliceHeightPixels;
+        
+        // Ensure the cut doesn't go into the padding zone of the current page
+        if (index === 0) {
+            // First cut: account for no top padding on first page
+            const firstPageMaxContent = (paperDimensions[paperSizeSelect.value].height / paperDimensions[paperSizeSelect.value].width * originalPageSize.width - paddingPixels / originalPageSize.scale) * originalPageSize.scale;
+            newY = Math.min(newY, firstPageMaxContent);
+        }
+        
+        newY = Math.max(minY, Math.min(maxY, newY, canvas.height - paddingPixels));
         
         const snappedY = Math.round(newY);
         if (cutPositions[index] === snappedY) return;
+        
         cutPositions[index] = snappedY;
         
-        const sliceHeight = snappedY - prevLineY;
+        // Adjust subsequent cuts to maintain valid spacing
         for (let i = index + 1; i < cutPositions.length; i++) {
-            cutPositions[i] = Math.round(cutPositions[i - 1] + sliceHeight);
+            const minNextY = cutPositions[i - 1] + paddingPixels + 20;
+            if (cutPositions[i] < minNextY) {
+                cutPositions[i] = minNextY;
+            }
         }
         
-        rebalanceCutLines();
-        drawCutLines();
+        drawAllVisualElements();
     }
 
     function endDrag() {
         activeDrag.lineIndex = -1;
         document.removeEventListener('mousemove', drag);
         document.removeEventListener('mouseup', endDrag);
-    }
-
-    function rebalanceCutLines() {
-        let lastY = cutPositions.length > 0 ? cutPositions[cutPositions.length - 1] : 0;
-        while (canvas.height - lastY > maxSliceHeightPixels + 10) {
-            const newCutY = lastY + maxSliceHeightPixels;
-            if (newCutY < canvas.height) {
-                cutPositions.push(Math.round(newCutY));
-                lastY = newCutY;
-            } else { break; }
-        }
-        while (cutPositions.length > 0 && cutPositions[cutPositions.length - 1] >= canvas.height) {
-            cutPositions.pop();
-        }
     }
     
     // FIXED PDF GENERATION FUNCTION
@@ -260,8 +353,7 @@
 
         try {
             const outputPdfDoc = await PDFDocument.create();
-            const sourcePdfDoc = await PDFDocument.load(originalPdfArrayBuffer.slice(0));
-            const [sourcePage] = await outputPdfDoc.embedPdf(originalPdfArrayBuffer.slice(0));
+            const [embeddedPage] = await outputPdfDoc.embedPdf(originalPdfArrayBuffer.slice(0));
             
             const selectedPaper = paperSizeSelect.value;
             const targetSize = paperDimensions[selectedPaper];
@@ -276,56 +368,61 @@
             for (let i = 0; i < cutPointsY.length - 1; i++) {
                 const sliceStartY = cutPointsY[i];
                 const sliceEndY = cutPointsY[i + 1];
-                const sliceHeight = sliceEndY - sliceStartY;
                 
                 // Create new page
                 const newPage = outputPdfDoc.addPage([targetSize.width, targetSize.height]);
                 
-                // Calculate positioning
-                // For first page, start at the top. For others, add top padding
-                const contentStartY = (i === 0) ? targetSize.height : (targetSize.height - paddingPoints);
+                // Calculate where to position the embedded page
+                let contentTopY;
+                if (i === 0) {
+                    // First page: content starts at top
+                    contentTopY = targetSize.height;
+                } else {
+                    // Other pages: content starts after top padding
+                    contentTopY = targetSize.height - paddingPoints;
+                }
                 
-                // The Y position where we place the bottom of the embedded page
-                // We need to show the content from sliceStartY to sliceEndY
-                const embeddedPageY = contentStartY - (originalPageSize.height - sliceStartY) * scaleFactor;
+                // Position the embedded page so the correct slice is visible
+                const embeddedPageY = contentTopY - (originalPageSize.height - sliceStartY) * scaleFactor;
                 
                 // Draw the page
-                newPage.drawPage(sourcePage, {
+                newPage.drawPage(embeddedPage, {
                     x: 0,
                     y: embeddedPageY,
                     width: targetSize.width,
                     height: originalPageSize.height * scaleFactor,
                 });
                 
-                // Cover unwanted areas with white rectangles
+                // Create white rectangles to mask unwanted content
                 const white = rgb(1, 1, 1);
                 
-                // Cover content above our slice (if any)
-                if (contentStartY < targetSize.height) {
+                // Mask content above the slice
+                if (contentTopY < targetSize.height) {
                     newPage.drawRectangle({
                         x: 0,
-                        y: contentStartY,
+                        y: contentTopY,
                         width: targetSize.width,
-                        height: targetSize.height - contentStartY,
+                        height: targetSize.height - contentTopY,
                         color: white,
                     });
                 }
                 
-                // Calculate where our slice ends on the new page
-                const sliceBottomOnPage = contentStartY - (sliceHeight * scaleFactor);
+                // Calculate where the slice ends on the page
+                const sliceHeight = (sliceEndY - sliceStartY) * scaleFactor;
+                const contentBottomY = contentTopY - sliceHeight;
                 
-                // Cover content below our slice, but leave bottom padding
-                if (sliceBottomOnPage > paddingPoints) {
+                // Mask content below the slice, preserving bottom padding
+                if (contentBottomY > paddingPoints) {
                     newPage.drawRectangle({
                         x: 0,
                         y: paddingPoints,
                         width: targetSize.width,
-                        height: sliceBottomOnPage - paddingPoints,
+                        height: contentBottomY - paddingPoints,
                         color: white,
                     });
                 }
                 
-                // Always ensure clean bottom margin
+                // Always ensure bottom padding is clean
                 newPage.drawRectangle({
                     x: 0,
                     y: 0,
