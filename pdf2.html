@@ -22,7 +22,7 @@
 <body class="bg-slate-100 font-sans">
     <div class="w-full max-w-5xl mx-auto p-4 sm:p-8 my-10 bg-white rounded-xl shadow-lg">
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter</h1>
+            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter v2.1</h1>
             <p class="text-slate-500 mt-2">Upload, preview, and adjust split lines before creating your multi-page PDF.</p>
         </div>
 
@@ -270,6 +270,8 @@
     }
     
     // --- Final PDF Generation ---
+        // --- Final PDF Generation (REPLACE THIS ENTIRE FUNCTION) ---
+
     async function createFinalPdf() {
         if (!originalPdfArrayBuffer) return;
         showStatus('loading', 'Generating final PDF...');
@@ -277,42 +279,46 @@
 
         try {
             const outputPdfDoc = await PDFDocument.create();
+            // Embed the original document's first page once. This is efficient.
             const [embeddedPage] = await outputPdfDoc.embedPdf(originalPdfArrayBuffer.slice(0));
             
             const selectedPaper = paperSizeSelect.value;
             const targetSize = paperDimensions[selectedPaper];
             const paddingPoints = getPaddingValue();
             
+            // Get the Y-coordinates for slicing, converting from canvas pixels back to PDF points.
+            // This array includes the very top (0) and very bottom of the document.
             const cutPointsY = [0, ...cutPositions.map(p => p / originalPageSize.scale), originalPageSize.height];
 
             for (let i = 0; i < cutPointsY.length - 1; i++) {
+                // Get the top and bottom Y-coordinates of the current slice from the original document.
                 const startY_pdf = cutPointsY[i];
                 const endY_pdf = cutPointsY[i + 1];
-                const sliceHeight_pdf = endY_pdf - startY_pdf;
 
+                // Create a new blank page with the target dimensions (e.g., A4).
                 const newPage = outputPdfDoc.addPage([targetSize.width, targetSize.height]);
 
+                // --- THE CORRECT AND SIMPLE LOGIC ---
+                // We need to calculate the vertical offset to draw the embedded page.
+                // The goal is to align the bottom of our desired "slice" with the bottom of the content area
+                // on the new page (which is at y = paddingPoints).
+                
+                // 1. Find the Y-coordinate of the bottom of the slice in the original page's coordinate system
+                //    (where Y=0 is the bottom of the page).
                 const sourcePage_bottomOfSlice_Y = originalPageSize.height - endY_pdf;
+
+                // 2. Calculate the final y-offset for the `drawPage` command.
                 const y_offset = paddingPoints - sourcePage_bottomOfSlice_Y;
 
-                // BUG FIX: The definitive, correct clipping logic
-                newPage.pushGraphicsState();
-                newPage.drawRectangle({
-                    x: 0,
-                    y: paddingPoints,
-                    width: newPage.getWidth(),
-                    height: sliceHeight_pdf,
-                });
-                newPage.clip();
-                newPage.endPath(); // Crucial to prevent the clipping rectangle from being drawn
-
+                // 3. Draw the entire embedded page at the calculated offset.
+                //    The new page's boundaries will automatically "clip" the content, so only the
+                //    desired slice is visible in the final output.
                 newPage.drawPage(embeddedPage, {
                     x: 0,
                     y: y_offset,
                     width: originalPageSize.width,
                     height: originalPageSize.height,
                 });
-                newPage.popGraphicsState();
             }
 
             const pdfBytes = await outputPdfDoc.save();
