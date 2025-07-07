@@ -64,7 +64,7 @@
 
         <!-- Header -->
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter v1.3</h1>
+            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter v1.4</h1>
             <p class="text-slate-500 mt-2">Upload, preview, and adjust split lines before creating your multi-page PDF.</p>
         </div>
 
@@ -333,40 +333,47 @@
         generateButton.disabled = true;
 
         try {
-            const sourcePdfDoc = await PDFDocument.load(originalPdfArrayBuffer.slice(0));
-            // Instead of copying, we will embed the original page into the new one.
-            // It's a more direct way to achieve the goal.
-            const [embeddedPage] = await sourcePdfDoc.embedPdf(sourcePdfDoc, [0]);
-            
             const outputPdfDoc = await PDFDocument.create();
+            
+            // Correctly embed the single page from the original PDF's raw data.
+            // This is the most robust way to handle it.
+            const [embeddedPage] = await outputPdfDoc.embedPdf(originalPdfArrayBuffer.slice(0));
             
             const selectedPaper = paperSizeSelect.value;
             const targetSize = paperDimensions[selectedPaper];
             const paddingPoints = parseFloat(paddingInput.value) || 0;
             
-            // FIX 1: Corrected typo from originalPageSiz to originalPageSize
+            // Get the Y-coordinates for slicing, converting from canvas pixels back to PDF points
             const cutPointsY = [0, ...cutPositions.map(p => p / originalPageSize.scale), originalPageSize.height];
 
             for (let i = 0; i < cutPointsY.length - 1; i++) {
-                const startY_pdf = cutPointsY[i];
-                const endY_pdf = cutPointsY[i + 1];
+                const startY_pdf = cutPointsY[i]; // Y from top of original
+                const endY_pdf = cutPointsY[i + 1]; // Y from top of original
                 const sliceHeight_pdf = endY_pdf - startY_pdf;
 
+                // Create a new blank page with the target dimensions
                 const newPage = outputPdfDoc.addPage([targetSize.width, targetSize.height]);
 
+                // Calculate where to position the embedded page so the correct slice appears
+                // in our clipped view.
                 const sourcePage_bottomOfSlice_Y = originalPageSize.height - endY_pdf;
                 const y_offset = paddingPoints - sourcePage_bottomOfSlice_Y;
 
+                // --- CORRECTED CLIPPING LOGIC ---
+                // Save the page's current state
                 newPage.pushGraphicsState();
-                
+
+                // Define a rectangular clipping path. Nothing will be drawn outside this path.
                 newPage.drawRectangle({
                     x: 0,
-                    y: paddingPoints,
+                    y: paddingPoints, // Start clipping at the bottom padding
                     width: newPage.getWidth(),
                     height: sliceHeight_pdf,
                 });
                 newPage.clip();
                 
+                // Now, draw the entire embedded page. Because of the clipping path,
+                // only the desired slice will actually be visible.
                 newPage.drawPage(embeddedPage, {
                     x: 0,
                     y: y_offset,
@@ -374,6 +381,7 @@
                     height: originalPageSize.height,
                 });
                 
+                // Restore the page's state to remove the clipping path
                 newPage.popGraphicsState();
             }
 
