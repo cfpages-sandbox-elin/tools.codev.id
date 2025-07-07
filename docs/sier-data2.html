@@ -184,31 +184,6 @@
             </div>
         </section>
 
-        <!-- Section Analisis Distribusi Pendapatan Detail -->
-        <section id="detailed-income-analysis" class="mt-12">
-            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-emerald-600 pl-4">Analisis Distribusi Pendapatan Detail</h2>
-            
-            <!-- Visualisasi 1: Bar Chart Perbandingan antar Kecamatan -->
-            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-                <h3 class="text-xl font-semibold mb-4 text-gray-700">Perbandingan Jumlah Penduduk Berdasarkan Tingkat Pendapatan</h3>
-                <canvas id="incomeDistributionByKecamatanChart"></canvas>
-                <p class="mt-4 text-sm text-gray-600">
-                    <strong>Penjelasan:</strong> Grafik ini membandingkan jumlah absolut penduduk di setiap kategori pendapatan (Low, Middle, High) antar kecamatan. Ini berguna untuk melihat kecamatan mana yang memiliki "kantong" populasi berpenghasilan menengah atau tinggi terbesar secara jumlah.
-                </p>
-            </div>
-
-            <!-- Visualisasi 2: Donut Chart Profil per Kecamatan -->
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <h3 class="text-xl font-semibold mb-4 text-gray-700">Profil Proporsi Pendapatan di Masing-Masing Kecamatan</h3>
-                <div id="kecamatanIncomeDonutsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mt-6">
-                    <!-- Canvas untuk donut chart setiap kecamatan akan dibuat oleh JavaScript di sini -->
-                </div>
-                 <p class="mt-4 text-sm text-gray-600">
-                    <strong>Penjelasan:</strong> Setiap bagan donat di atas menunjukkan "profil finansial" dari sebuah kecamatan. Ini tidak melihat jumlah absolut, melainkan <strong>proporsi (persentase)</strong>. Anda bisa dengan cepat melihat apakah sebuah kecamatan didominasi oleh populasi berpenghasilan menengah, atau memiliki persentase penduduk berpenghasilan tinggi yang signifikan.
-                </p>
-            </div>
-        </section>
-
         <!-- Section Estimasi Distribusi Pendapatan -->
         <section id="income-estimation" class="mt-12">
             <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-teal-600 pl-4">Estimasi Distribusi Pendapatan per Kelurahan</h2>
@@ -233,6 +208,31 @@
                         <!-- Data estimasi pendapatan akan dimasukkan di sini oleh JavaScript -->
                     </tbody>
                 </table>
+            </div>
+        </section>
+
+        <!-- Section Analisis Distribusi Pendapatan Detail -->
+        <section id="detailed-income-analysis" class="mt-12">
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-emerald-600 pl-4">Analisis Distribusi Pendapatan Detail</h2>
+            
+            <!-- Visualisasi 1: Bar Chart Perbandingan antar Kecamatan -->
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-gray-700">Perbandingan Jumlah Penduduk Berdasarkan Tingkat Pendapatan</h3>
+                <canvas id="incomeDistributionByKecamatanChart"></canvas>
+                <p class="mt-4 text-sm text-gray-600">
+                    <strong>Penjelasan:</strong> Grafik ini membandingkan jumlah absolut penduduk di setiap kategori pendapatan (Low, Middle, High) antar kecamatan. Ini berguna untuk melihat kecamatan mana yang memiliki "kantong" populasi berpenghasilan menengah atau tinggi terbesar secara jumlah.
+                </p>
+            </div>
+
+            <!-- Visualisasi 2: Donut Chart Profil per Kecamatan -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h3 class="text-xl font-semibold mb-4 text-gray-700">Profil Proporsi Pendapatan di Masing-Masing Kecamatan</h3>
+                <div id="kecamatanIncomeDonutsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mt-6">
+                    <!-- Canvas untuk donut chart setiap kecamatan akan dibuat oleh JavaScript di sini -->
+                </div>
+                 <p class="mt-4 text-sm text-gray-600">
+                    <strong>Penjelasan:</strong> Setiap bagan donat di atas menunjukkan "profil finansial" dari sebuah kecamatan. Ini tidak melihat jumlah absolut, melainkan <strong>proporsi (persentase)</strong>. Anda bisa dengan cepat melihat apakah sebuah kecamatan didominasi oleh populasi berpenghasilan menengah, atau memiliki persentase penduduk berpenghasilan tinggi yang signifikan.
+                </p>
             </div>
         </section>
 
