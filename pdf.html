@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Page Splitter</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- pdf-lib via CDN -->
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <style>
+        /* Simple spinner animation */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #09f;
+            animation: spin 1s ease infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 flex items-center justify-center min-h-screen font-sans">
+
+    <div class="w-full max-w-2xl mx-auto p-8 bg-white rounded-xl shadow-lg">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-slate-800">PDF Page Splitter</h1>
+            <p class="text-slate-500 mt-2">Split a long, single-page PDF into multiple pages of a standard size.</p>
+        </div>
+
+        <div class="space-y-6">
+            <!-- Step 1: File Upload -->
+            <div>
+                <label for="file-upload" class="block text-sm font-medium text-slate-700 mb-2">1. Upload your single-page PDF</label>
+                <label for="file-upload" class="w-full flex items-center justify-center px-4 py-6 bg-slate-50 border-2 border-slate-300 border-dashed rounded-md cursor-pointer hover:bg-slate-100">
+                    <div class="text-center">
+                        <svg class="mx-auto h-12 w-12 text-slate-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4V12a4 4 0 014-4h12l4 4h12a4 4 0 014 4z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                        <p id="file-name" class="mt-2 text-sm text-slate-600">
+                            <span class="font-semibold">Click to upload</span> or drag and drop
+                        </p>
+                        <p class="text-xs text-slate-500">PDF only</p>
+                    </div>
+                </label>
+                <input id="file-upload" name="file-upload" type="file" class="sr-only" accept=".pdf">
+            </div>
+
+            <!-- Step 2: Paper Size Selection -->
+            <div>
+                <label for="paper-size" class="block text-sm font-medium text-slate-700">2. Select target paper size</label>
+                <select id="paper-size" name="paper-size" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                    <option value="A4">A4 (210 x 297 mm)</option>
+                    <option value="A5">A5 (148 x 210 mm)</option>
+                    <option value="Letter">Letter (8.5 x 11 in)</option>
+                    <option value="Legal">Legal (8.5 x 14 in)</option>
+                    <option value="F4">F4 (210 x 330 mm)</option>
+                </select>
+            </div>
+
+            <!-- Step 3: Action Button -->
+            <div>
+                <button id="split-button" type="button" disabled class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-slate-400 disabled:cursor-not-allowed">
+                    Split PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- Status and Download Area -->
+        <div id="status-area" class="mt-8 text-center hidden">
+            <div id="loading" class="flex items-center justify-center space-x-2 hidden">
+                <div class="spinner"></div>
+                <p class="text-slate-600">Processing your PDF, please wait...</p>
+            </div>
+            <div id="success" class="hidden">
+                 <p class="text-lg font-semibold text-green-600 mb-4">✅ Splitting Complete!</p>
+                 <a id="download-link" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    Download Split PDF
+                 </a>
+            </div>
+            <div id="error-message" class="text-red-600 font-medium hidden"></div>
+        </div>
+    </div>
+
+    <script>
+        const { PDFDocument } = PDFLib;
+
+        // UI Elements
+        const fileInput = document.getElementById('file-upload');
+        const fileNameDisplay = document.getElementById('file-name');
+        const paperSizeSelect = document.getElementById('paper-size');
+        const splitButton = document.getElementById('split-button');
+        const statusArea = document.getElementById('status-area');
+        const loadingIndicator = document.getElementById('loading');
+        const successMessage = document.getElementById('success');
+        const errorMessage = document.getElementById('error-message');
+        const downloadLink = document.getElementById('download-link');
+        
+        let uploadedFile = null;
+
+        // Standard paper size aspect ratios (Height / Width)
+        const paperRatios = {
+            A4: 297 / 210,
+            A5: 210 / 148,
+            Letter: 11 / 8.5,
+            Legal: 14 / 8.5,
+            F4: 330 / 210
+        };
+
+        // Event Listeners
+        fileInput.addEventListener('change', (e) => {
+            uploadedFile = e.target.files[0];
+            if (uploadedFile) {
+                fileNameDisplay.textContent = uploadedFile.name;
+                splitButton.disabled = false;
+                resetStatus();
+            }
+        });
+
+        splitButton.addEventListener('click', () => {
+            if (uploadedFile) {
+                splitPdf();
+            }
+        });
+
+        function showStatus(type, message = '') {
+            statusArea.classList.remove('hidden');
+            loadingIndicator.classList.add('hidden');
+            successMessage.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+
+            if (type === 'loading') {
+                loadingIndicator.classList.remove('hidden');
+            } else if (type === 'success') {
+                successMessage.classList.remove('hidden');
+            } else if (type === 'error') {
+                errorMessage.classList.remove('hidden');
+                errorMessage.textContent = message;
+            }
+        }
+        
+        function resetStatus() {
+            statusArea.classList.add('hidden');
+            errorMessage.textContent = '';
+            downloadLink.href = '#';
+            downloadLink.removeAttribute('download');
+        }
+
+        async function splitPdf() {
+            splitButton.disabled = true;
+            showStatus('loading');
+            
+            try {
+                const fileReader = new FileReader();
+                fileReader.onload = async (event) => {
+                    try {
+                        const arrayBuffer = event.target.result;
+
+                        // Load the original PDF
+                        const pdfDoc = await PDFDocument.load(arrayBuffer);
+                        
+                        if (pdfDoc.getPageCount() !== 1) {
+                            throw new Error('This tool only works with single-page PDF documents.');
+                        }
+                        
+                        const originalPage = pdfDoc.getPages()[0];
+                        const { width: originalWidth, height: originalHeight } = originalPage.getSize();
+                        
+                        const selectedPaper = paperSizeSelect.value;
+                        const paperRatio = paperRatios[selectedPaper];
+                        
+                        // Calculate the height of the new pages based on the original width and target aspect ratio
+                        const targetHeight = originalWidth * paperRatio;
+
+                        // Create a new PDF document for the output
+                        const outputPdf = await PDFDocument.create();
+
+                        let yOffset = originalHeight;
+                        while (yOffset > 0) {
+                            // Add a new page with the target dimensions
+                            const newPage = outputPdf.addPage([originalWidth, targetHeight]);
+                            
+                            // Embed the original page into the new document
+                            // This is efficient as the page content is not re-rendered, just referenced.
+                            const [embeddedPage] = await outputPdf.embedPdf(pdfDoc, [0]);
+                            
+                            // Draw the embedded original page onto the new page.
+                            // We use a negative y-coordinate to "pan" the tall original page
+                            // up into the visible area of our new, shorter page.
+                            newPage.drawPage(embeddedPage, {
+                                x: 0,
+                                y: yOffset - originalHeight,
+                                width: originalWidth,
+                                height: originalHeight
+                            });
+                            
+                            yOffset -= targetHeight;
+                        }
+
+                        // Save the newly created PDF
+                        const pdfBytes = await outputPdf.save();
+                        
+                        // Create a blob and URL for downloading
+                        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                        const url = URL.createObjectURL(blob);
+
+                        const originalFileName = uploadedFile.name.replace(/\.pdf$/i, '');
+                        downloadLink.href = url;
+                        downloadLink.download = `${originalFileName}-split-${selectedPaper}.pdf`;
+                        
+                        showStatus('success');
+
+                    } catch (err) {
+                        console.error(err);
+                        showStatus('error', `An error occurred during splitting: ${err.message}`);
+                    } finally {
+                        splitButton.disabled = false;
+                    }
+                };
+                
+                fileReader.onerror = () => {
+                    showStatus('error', 'Failed to read the file.');
+                    splitButton.disabled = false;
+                };
+
+                fileReader.readAsArrayBuffer(uploadedFile);
+
+            } catch (err) {
+                console.error(err);
+                showStatus('error', `An unexpected error occurred: ${err.message}`);
+                splitButton.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
