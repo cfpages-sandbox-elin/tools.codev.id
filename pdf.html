@@ -30,7 +30,8 @@
         /* Styles for the draggable cut lines */
         .cut-line {
             position: absolute;
-            width: 100%;
+            left: 0;
+            right: 0;
             height: 5px;
             background-color: rgba(239, 68, 68, 0.7); /* Red-500 with transparency */
             cursor: ns-resize;
@@ -114,10 +115,12 @@
         <!-- Preview Section -->
         <div id="preview-section" class="hidden">
             <h3 class="text-lg font-semibold text-slate-700 mb-2 text-center">4. Adjust Split Lines</h3>
-            <p class="text-sm text-slate-500 text-center mb-4">Click and drag the red lines to change where the page splits. Changes will cascade downwards.</p>
-            <div id="preview-container" class="relative max-h-[80vh] w-fit mx-auto overflow-y-auto border-2 border-slate-300 bg-slate-200">
-                <canvas id="pdf-canvas"></canvas>
-                <div id="cut-lines-container"></div>
+            <p class="text-sm text-slate-500 text-center mb-4">Click and drag the red lines to position them in white space.</p>
+            <!-- IMPROVEMENT 1: Preview container is now w-full to prevent overflow -->
+            <div id="preview-container" class="relative w-full max-h-[80vh] overflow-y-auto border-2 border-slate-300 bg-slate-200">
+                <!-- Canvas will scale to fit the container width -->
+                <canvas id="pdf-canvas" class="w-full h-auto"></canvas>
+                <div id="cut-lines-container" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
             </div>
         </div>
         
@@ -136,7 +139,8 @@
     let originalPdfArrayBuffer = null;
     let originalPageSize = { width: 0, height: 0, scale: 1 };
     let cutPositions = []; // Store the Y-coordinate of each cut line in pixels
-    let activeDrag = { lineIndex: -1, startY: 0 };
+    let maxSliceHeightPixels = 0; // The max height of a slice in pixels, based on paper size and padding.
+    let activeDrag = { lineIndex: -1, startY: 0, originalCutPositions: [] };
     
     // --- UI Elements ---
     const fileInput = document.getElementById('file-upload');
@@ -147,13 +151,12 @@
     const generateButton = document.getElementById('generate-button');
     const statusDiv = document.getElementById('status');
     const previewSection = document.getElementById('preview-section');
-    const previewContainer = document.getElementById('preview-container');
     const canvas = document.getElementById('pdf-canvas');
     const cutLinesContainer = document.getElementById('cut-lines-container');
     const resultSection = document.getElementById('result-section');
     const downloadLink = document.getElementById('download-link');
 
-    // --- Paper Size Ratios (Height / Width in PDF points) ---
+    // --- Paper Size Ratios (in PDF points) ---
     // 1 inch = 72 points
     const paperDimensions = {
         A4: { width: 595.28, height: 841.89 },
@@ -176,7 +179,6 @@
         if (uploadedFile) {
             fileNameDisplay.textContent = uploadedFile.name;
             previewButton.disabled = false;
-            // Reset UI
             previewSection.classList.add('hidden');
             generateButton.classList.add('hidden');
             resultSection.classList.add('hidden');
@@ -186,52 +188,46 @@
 
     async function renderPreview() {
         if (!uploadedFile) return;
-
         showStatus('loading', 'Loading and rendering PDF preview...');
         previewButton.disabled = true;
         
         try {
-            const reader = new FileReader();
-            reader.onload = async (event) => {
-                originalPdfArrayBuffer = event.target.result;
-                const pdfjsDoc = await pdfjsLib.getDocument({ data: originalPdfArrayBuffer }).promise;
-                
-                if (pdfjsDoc.numPages !== 1) {
-                    showStatus('error', 'Error: This tool only supports single-page PDFs.');
-                    previewButton.disabled = false;
-                    return;
-                }
+            originalPdfArrayBuffer = await uploadedFile.arrayBuffer();
+            const pdfjsDoc = await pdfjsLib.getDocument({ data: originalPdfArrayBuffer.slice(0) }).promise;
+            
+            if (pdfjsDoc.numPages !== 1) {
+                showStatus('error', 'Error: This tool only supports single-page PDFs.');
+                return;
+            }
 
-                const page = await pdfjsDoc.getPage(1);
-                const viewport = page.getViewport({ scale: 1.5 }); // Use a higher scale for better quality
+            const page = await pdfjsDoc.getPage(1);
+            // Render at a decent resolution. The canvas element's CSS will scale it down.
+            const desiredWidth = 1000;
+            const viewport = page.getViewport({ scale: 1 });
+            const scale = desiredWidth / viewport.width;
+            const scaledViewport = page.getViewport({ scale });
 
-                // Store original page size in PDF points and the scale used for rendering
-                const unscaledViewport = page.getViewport({ scale: 1 });
-                originalPageSize = {
-                    width: unscaledViewport.width,
-                    height: unscaledViewport.height,
-                    scale: viewport.scale
-                };
-                
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
-                cutLinesContainer.style.width = `${viewport.width}px`;
-                cutLinesContainer.style.height = `${viewport.height}px`;
-
-                const renderContext = {
-                    canvasContext: canvas.getContext('2d'),
-                    viewport: viewport,
-                };
-                await page.render(renderContext).promise;
-
-                calculateInitialCutLines();
-                drawCutLines();
-                
-                previewSection.classList.remove('hidden');
-                generateButton.classList.remove('hidden');
-                showStatus('success', `Preview generated. Found ${cutPositions.length} potential pages.`);
+            originalPageSize = {
+                width: viewport.width, // in PDF points
+                height: viewport.height, // in PDF points
+                scale: scale // rendering scale
             };
-            reader.readAsArrayBuffer(uploadedFile);
+            
+            canvas.height = scaledViewport.height;
+            canvas.width = scaledViewport.width;
+
+            const renderContext = {
+                canvasContext: canvas.getContext('2d'),
+                viewport: scaledViewport,
+            };
+            await page.render(renderContext).promise;
+
+            calculateInitialCutLines();
+            drawCutLines();
+            
+            previewSection.classList.remove('hidden');
+            generateButton.classList.remove('hidden');
+            showStatus('success', `Preview generated. Found ${cutPositions.length + 1} potential pages.`);
         } catch (err) {
             showStatus('error', `Error rendering preview: ${err.message}`);
         } finally {
@@ -241,24 +237,25 @@
 
     function calculateInitialCutLines() {
         const selectedPaper = paperSizeSelect.value;
-        const targetRatio = paperDimensions[selectedPaper].height / paperDimensions[selectedPaper].width;
+        const targetDims = paperDimensions[selectedPaper];
+        const targetRatio = targetDims.height / targetDims.width;
         
         const paddingPoints = parseFloat(paddingInput.value) || 0;
-        // The effective height for content on the new page (in points)
         const targetContentHeightPoints = (originalPageSize.width * targetRatio) - (2 * paddingPoints);
 
         if (targetContentHeightPoints <= 0) {
             showStatus('error', 'Padding is too large for the selected paper size.');
+            cutPositions = [];
+            maxSliceHeightPixels = 0;
             return;
         }
 
-        // Convert this height to canvas pixels
-        const sliceHeightPixels = targetContentHeightPoints * originalPageSize.scale;
+        maxSliceHeightPixels = targetContentHeightPoints * originalPageSize.scale;
         
         cutPositions = [];
         let currentY = 0;
         while (currentY < canvas.height) {
-            currentY += sliceHeightPixels;
+            currentY += maxSliceHeightPixels;
             if (currentY < canvas.height) {
                 cutPositions.push(Math.round(currentY));
             }
@@ -272,6 +269,8 @@
             line.className = 'cut-line';
             line.style.top = `${yPos}px`;
             line.dataset.index = index;
+            // The cut-line itself is now a pointer-event target
+            line.style.pointerEvents = 'auto';
 
             const handle = document.createElement('div');
             handle.className = 'handle';
@@ -288,7 +287,11 @@
     function startDrag(e) {
         e.preventDefault();
         const lineIndex = parseInt(e.target.dataset.index, 10);
-        activeDrag = { lineIndex, startY: e.clientY };
+        activeDrag = {
+            lineIndex,
+            startY: e.clientY,
+            originalCutPositions: [...cutPositions] // Store positions at drag start
+        };
         document.addEventListener('mousemove', drag);
         document.addEventListener('mouseup', endDrag);
     }
@@ -298,30 +301,31 @@
 
         const deltaY = e.clientY - activeDrag.startY;
         const index = activeDrag.lineIndex;
-
-        // Calculate boundaries for the drag
-        const prevLineY = index > 0 ? cutPositions[index - 1] : 0;
-        // For the last line, the bottom is the canvas height
-        const nextLineY = (index < cutPositions.length - 1) ? cutPositions[index + 1] : canvas.height;
-
-        let newY = cutPositions[index] + deltaY;
+        const originalY = activeDrag.originalCutPositions[index];
+        let newY = originalY + deltaY;
         
-        // Constrain movement: cannot cross previous or next line (add a small buffer)
-        newY = Math.max(prevLineY + 20, newY);
-        newY = Math.min(nextLineY - 20, newY);
+        const prevLineY = index > 0 ? cutPositions[index - 1] : 0;
+
+        // IMPROVEMENT 2: Enforce dragging limits
+        // The page height cannot be smaller than a minimum (e.g., 20px)
+        const minAllowedY = prevLineY + 20;
+        // The page height cannot be larger than the max calculated from paper size
+        const maxAllowedY = prevLineY + maxSliceHeightPixels;
+
+        newY = Math.max(minAllowedY, newY);
+        newY = Math.min(maxAllowedY, newY);
         
         // Update the position of the dragged line
         cutPositions[index] = newY;
         
-        // Recalculate all subsequent lines based on the new position of the dragged one
+        // Recalculate all subsequent lines based on the new position
         const sliceHeight = newY - prevLineY;
         for (let i = index + 1; i < cutPositions.length; i++) {
+            // Subsequent pages maintain the height of the page that was just resized
             cutPositions[i] = cutPositions[i - 1] + sliceHeight;
         }
         
-        // Redraw all lines and update the start Y for the next drag frame
         drawCutLines();
-        activeDrag.startY = e.clientY;
     }
 
     function endDrag() {
@@ -339,47 +343,51 @@
 
         try {
             const sourcePdfDoc = await PDFDocument.load(originalPdfArrayBuffer);
+            const [embeddedPage] = await sourcePdfDoc.copyPages(sourcePdfDoc, [0]);
+            
             const outputPdfDoc = await PDFDocument.create();
             
             const selectedPaper = paperSizeSelect.value;
             const targetSize = paperDimensions[selectedPaper];
             const paddingPoints = parseFloat(paddingInput.value) || 0;
             
-            // The Y-coordinates for slicing, converted from canvas pixels back to PDF points
-            const cutPointsY = [0, ...cutPositions.map(p => p / originalPageSize.scale), originalPageSize.height];
+            // Y-coordinates for slicing, converted from canvas pixels back to PDF points
+            const cutPointsY = [0, ...cutPositions.map(p => p / originalPageSize.scale), originalPageSiz.height];
 
             for (let i = 0; i < cutPointsY.length - 1; i++) {
-                const startY_pdf = cutPointsY[i]; // Y from top
-                const endY_pdf = cutPointsY[i + 1]; // Y from top
+                const startY_pdf = cutPointsY[i];
+                const endY_pdf = cutPointsY[i + 1];
                 const sliceHeight_pdf = endY_pdf - startY_pdf;
 
                 const newPage = outputPdfDoc.addPage([targetSize.width, targetSize.height]);
 
-                // Embed the original page once, it's efficient
-                const [embeddedPage] = await outputPdfDoc.embedPdf(sourcePdfDoc, [0]);
+                // The Y coordinate in pdf-lib's `drawPage` is tricky. We want to align
+                // the bottom of our slice from the original page with the bottom of the
+                // content area (which is at `paddingPoints`) on the new page.
+                const sourcePage_bottomOfSlice_Y = originalPageSize.height - endY_pdf;
+                const y_offset = paddingPoints - sourcePage_bottomOfSlice_Y;
+
+                // CRITICAL FIX: Use the correct clipping API
+                newPage.pushGraphicsState();
                 
-                // PDF coordinates are from the bottom-left. We need to convert our top-down coordinates.
-                const y_in_page_coords = originalPageSize.height - endY_pdf;
+                // Define the rectangular clipping path
+                newPage.drawRectangle({
+                    x: 0,
+                    y: paddingPoints,
+                    width: newPage.getWidth(),
+                    height: sliceHeight_pdf,
+                });
+                newPage.clip();
                 
+                // Draw the embedded page. It will only be visible within the clipped area.
                 newPage.drawPage(embeddedPage, {
                     x: 0,
-                    y: paddingPoints, // Position the slice with bottom padding
+                    y: y_offset,
                     width: originalPageSize.width,
                     height: originalPageSize.height,
                 });
                 
-                // Add a clipping mask to only show the desired slice
-                newPage.pushOperators(
-                    newPage.drawRectangle({
-                        x: 0,
-                        y: paddingPoints, // The rectangle where content is visible
-                        width: originalPageSize.width,
-                        height: sliceHeight_pdf,
-                        // No fill/stroke, this is a clipping path
-                    }),
-                    outputPdfDoc.context.formXObject.getOperator('W'), // Set clipping path
-                    outputPdfDoc.context.formXObject.getOperator('n') // End path without stroking or filling
-                );
+                newPage.popGraphicsState(); // Restore graphics state to remove clipping
             }
 
             const pdfBytes = await outputPdfDoc.save();
@@ -388,7 +396,7 @@
             
             const originalFileName = uploadedFile.name.replace(/\.pdf$/i, '');
             downloadLink.href = url;
-            downloadLink.download = `${originalFileName}-split-interactive.pdf`;
+            downloadLink.download = `${originalFileName}-split-final.pdf`;
             resultSection.classList.remove('hidden');
             showStatus('success', 'PDF successfully created!');
 
