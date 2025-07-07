@@ -22,7 +22,7 @@
 <body class="bg-slate-100 font-sans">
     <div class="w-full max-w-5xl mx-auto p-4 sm:p-8 my-10 bg-white rounded-xl shadow-lg">
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter v4.1</h1>
+            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter v4.2</h1>
             <p class="text-slate-500 mt-2">Upload, preview, and adjust split lines before creating your multi-page PDF.</p>
         </div>
 
@@ -278,8 +278,8 @@
                 const scaledPageHeight = embeddedPage.height * scaleFactor;
 
                 // --- THE DEFINITIVE AND CORRECT POSITIONING MATH ---
-                // We calculate a single y_offset that positions the entire embedded page.
-                // This offset makes the top of the desired slice align with the top of the content area.
+                // We want to align the top of our slice with the top of the content area.
+                // The `drawPage` y-coordinate refers to the BOTTOM of the embedded page.
                 
                 // 1. Determine the Y-coordinate for the top of the content on the new page.
                 const contentTopOnNewPage = (i === 0) ? finalHeight : (finalHeight - paddingPoints);
@@ -287,7 +287,7 @@
                 // 2. Calculate the position of the top of our slice in the scaled-up coordinate system.
                 const scaledSliceTopY = startY_pdf * scaleFactor;
                 
-                // 3. The final `y` for `drawPage` must be the position of the *bottom* of the embedded page.
+                // 3. Calculate the final offset for the bottom of the embedded page.
                 const y_offset = contentTopOnNewPage - scaledSliceTopY;
                 
                 // 4. Draw the positioned content.
