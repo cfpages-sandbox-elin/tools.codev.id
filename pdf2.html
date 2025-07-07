@@ -22,7 +22,7 @@
 <body class="bg-slate-100 font-sans">
     <div class="w-full max-w-5xl mx-auto p-4 sm:p-8 my-10 bg-white rounded-xl shadow-lg">
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter v2.5</h1>
+            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter v2.6</h1>
             <p class="text-slate-500 mt-2">Upload, preview, and adjust split lines before creating your multi-page PDF.</p>
         </div>
 
@@ -269,8 +269,8 @@
         }
     }
     
-    // --- Final PDF Generation ---
-    
+        // --- Final PDF Generation (REPLACE THIS ENTIRE FUNCTION) ---
+
     async function createFinalPdf() {
         if (!originalPdfArrayBuffer) return;
         showStatus('loading', 'Generating final PDF...');
@@ -288,16 +288,28 @@
 
             for (let i = 0; i < cutPointsY.length - 1; i++) {
                 const startY_pdf = cutPointsY[i];
-                const endY_pdf = cutPointsY[i + 1];
 
                 const newPage = outputPdfDoc.addPage([targetSize.width, targetSize.height]);
                 
                 const scaleFactor = newPage.getWidth() / embeddedPage.width;
                 const scaledPageHeight = embeddedPage.height * scaleFactor;
 
-                const scaledSliceBottomY = scaledPageHeight - (endY_pdf * scaleFactor);
-                const y_offset = paddingPoints - scaledSliceBottomY;
+                // --- DEFINITIVE LOGIC FOR PAGE-SPECIFIC POSITIONING ---
+                let y_offset;
 
+                if (i === 0) {
+                    // --- FIRST PAGE LOGIC ---
+                    // Position the content so the top of the slice is flush with the top of the page.
+                    const contentTopOnNewPage = newPage.getHeight();
+                    y_offset = contentTopOnNewPage - scaledPageHeight + (startY_pdf * scaleFactor);
+                } else {
+                    // --- SUBSEQUENT PAGES LOGIC ---
+                    // Position the content so the top of the slice is just below the top padding.
+                    const contentTopOnNewPage = newPage.getHeight() - paddingPoints;
+                    y_offset = contentTopOnNewPage - scaledPageHeight + (startY_pdf * scaleFactor);
+                }
+
+                // Draw the positioned content page.
                 newPage.drawPage(embeddedPage, {
                     x: 0,
                     y: y_offset,
@@ -305,28 +317,23 @@
                     height: scaledPageHeight,
                 });
 
-                const {
-                    width: newWidth,
-                    height: newHeight
-                } = newPage.getSize();
+                // Mask the margins with white boxes for a clean final look.
+                const { width: newWidth, height: newHeight } = newPage.getSize();
+                const white = rgb(1, 1, 1);
 
-                // Draw a white box at the bottom to create the bottom padding
+                // Always add bottom padding.
                 newPage.drawRectangle({
-                    x: 0,
-                    y: 0,
-                    width: newWidth,
-                    height: paddingPoints,
-                    color: rgb(1, 1, 1), // CORRECTED
+                    x: 0, y: 0,
+                    width: newWidth, height: paddingPoints,
+                    color: white,
                 });
 
-                // Conditionally draw a white box at the top for all pages except the first
+                // Only add top padding for pages after the first.
                 if (i !== 0) {
                     newPage.drawRectangle({
-                        x: 0,
-                        y: newHeight - paddingPoints,
-                        width: newWidth,
-                        height: paddingPoints,
-                        color: rgb(1, 1, 1), // CORRECTED
+                        x: 0, y: newHeight - paddingPoints,
+                        width: newWidth, height: paddingPoints,
+                        color: white,
                     });
                 }
             }
