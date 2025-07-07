@@ -22,7 +22,7 @@
 <body class="bg-slate-100 font-sans">
     <div class="w-full max-w-5xl mx-auto p-4 sm:p-8 my-10 bg-white rounded-xl shadow-lg">
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter v3.1</h1>
+            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter v3.2</h1>
             <p class="text-slate-500 mt-2">Upload, preview, and adjust split lines before creating your multi-page PDF.</p>
         </div>
 
@@ -296,9 +296,10 @@
             const targetSize = paperDimensions[selectedPaper];
             const paddingPoints = getPaddingValue();
             
-            const cutPointsY = [0, ...cutPositions.map(p => p / originalPageSize.scale), originalPageSiz.height];
+            // --- TYPO FIX IS HERE ---
+            const cutPointsY = [0, ...cutPositions.map(p => p / originalPageSize.scale), originalPageSize.height];
 
-            // --- THE DEFINITIVE "CROP BOX" STRATEGY ---
+            // --- THE "CROP BOX" STRATEGY ---
             for (let i = 0; i < cutPointsY.length - 1; i++) {
                 // 1. Get the dimensions of the slice from the original document
                 const startY_pdf = cutPointsY[i];
@@ -316,8 +317,8 @@
                 // 3. Copy the original page into the temp document
                 const [copiedPage] = await tempDoc.copyPages(sourcePdfDoc, [0]);
                 
-                // 4. Set the CropBox. This is the key step. It redefines the visible area
-                //    of the page without any complex drawing. Y-coordinate is from the bottom.
+                // 4. Set the CropBox. This redefines the visible area of the page.
+                //    Y-coordinate is from the bottom of the page.
                 copiedPage.setCropBox(
                     0, // x
                     originalPageSize.height - endY_pdf, // y
