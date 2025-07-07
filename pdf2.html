@@ -22,7 +22,7 @@
 <body class="bg-slate-100 font-sans">
     <div class="w-full max-w-5xl mx-auto p-4 sm:p-8 my-10 bg-white rounded-xl shadow-lg">
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter v3</h1>
+            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter v3.1</h1>
             <p class="text-slate-500 mt-2">Upload, preview, and adjust split lines before creating your multi-page PDF.</p>
         </div>
 
@@ -289,41 +289,51 @@
 
         try {
             const outputPdfDoc = await PDFDocument.create();
+            // Load the source doc once to be able to copy from it
+            const sourcePdfDoc = await PDFDocument.load(originalPdfArrayBuffer.slice(0));
             
             const selectedPaper = paperSizeSelect.value;
             const targetSize = paperDimensions[selectedPaper];
             const paddingPoints = getPaddingValue();
             
-            const cutPointsY = [0, ...cutPositions.map(p => p / originalPageSize.scale), originalPageSize.height];
+            const cutPointsY = [0, ...cutPositions.map(p => p / originalPageSize.scale), originalPageSiz.height];
 
+            // --- THE DEFINITIVE "CROP BOX" STRATEGY ---
             for (let i = 0; i < cutPointsY.length - 1; i++) {
+                // 1. Get the dimensions of the slice from the original document
                 const startY_pdf = cutPointsY[i];
                 const endY_pdf = cutPointsY[i + 1];
-                const sliceHeight_pdf = endY_pdf - startY_pdf;
-                const sliceWidth_pdf = originalPageSize.width;
+                let sliceHeight_pdf = endY_pdf - startY_pdf;
 
-                if (isNaN(sliceWidth_pdf) || isNaN(sliceHeight_pdf) || sliceWidth_pdf <= 0 || sliceHeight_pdf <= 0) {
-                    console.error(`Skipping invalid slice #${i}.`);
-                    continue; 
+                if (isNaN(sliceHeight_pdf) || sliceHeight_pdf <= 0) {
+                    console.error(`Skipping invalid slice #${i}`);
+                    continue;
                 }
 
+                // 2. Create a temporary document to hold our perfectly cropped slice
                 const tempDoc = await PDFDocument.create();
-                const [tempOriginalPage] = await tempDoc.embedPdf(originalPdfArrayBuffer.slice(0));
-                const tempPage = tempDoc.addPage([sliceWidth_pdf, sliceHeight_pdf]);
-
-                tempPage.drawPage(tempOriginalPage, {
-                    x: 0,
-                    y: - (originalPageSize.height - endY_pdf), 
-                    width: originalPageSize.width,
-                    height: originalPageSize.height
-                });
-
-                const [embeddedSlice] = await outputPdfDoc.embedPdf(tempDoc);
                 
-                // --- THE CRITICAL BUG FIX ---
-                // We must pass an ARRAY [width, height], not an OBJECT {width, height}.
-                const finalPage = outputPdfDoc.addPage([targetSize.width, targetSize.height]);
+                // 3. Copy the original page into the temp document
+                const [copiedPage] = await tempDoc.copyPages(sourcePdfDoc, [0]);
+                
+                // 4. Set the CropBox. This is the key step. It redefines the visible area
+                //    of the page without any complex drawing. Y-coordinate is from the bottom.
+                copiedPage.setCropBox(
+                    0, // x
+                    originalPageSize.height - endY_pdf, // y
+                    originalPageSize.width, // width
+                    sliceHeight_pdf // height
+                );
+                
+                // 5. Add the page with its new, smaller crop box to the temp document.
+                tempDoc.addPage(copiedPage);
 
+                // 6. Embed the page from the temp doc (which is now perfectly cropped)
+                //    into our main output document.
+                const [embeddedSlice] = await outputPdfDoc.embedPdf(tempDoc);
+
+                // 7. Create the final A4 page and place the clean slice onto it.
+                const finalPage = outputPdfDoc.addPage([targetSize.width, targetSize.height]);
                 const { width: finalWidth, height: finalHeight } = finalPage.getSize();
                 
                 const scaleFactor = finalWidth / embeddedSlice.width;
