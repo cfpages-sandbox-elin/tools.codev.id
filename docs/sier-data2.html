@@ -218,16 +218,16 @@
                 <table class="w-full text-sm text-left text-gray-500">
                     <thead class="text-xs text-gray-700 uppercase bg-gray-50">
                         <tr>
-                            <th scope="col" class="px-6 py-3">Kecamatan</th>
-                            <th scope="col" class="px-6 py-3">Kelurahan / Desa</th>
-                            <th scope="col" class="px-6 py-3">Total Penduduk</th>
-                            <th scope="col" class="px-6 py-3">0-14 Thn</th>
-                            <th scope="col" class="px-6 py-3">15-24 Thn</th>
-                            <th scope="col" class="px-6 py-3">25-39 Thn</th>
-                            <th scope="col" class="px-6 py-3">40-54 Thn</th>
-                            <th scope="col" class="px-6 py-3">55-64 Thn</th>
-                            <th scope="col" class="px-6 py-3">65+ Thn</th>
-                            <th scope="col" class="px-6 py-3">Ring</th>
+                            <th scope="col" class="px-3 py-3">Kecamatan</th>
+                            <th scope="col" class="px-3 py-3">Kelurahan / Desa</th>
+                            <th scope="col" class="px-3 py-3 text-center">Total<br>Penduduk</th>
+                            <th scope="col" class="px-3 py-3 text-center">0-14 Thn</th>
+                            <th scope="col" class="px-3 py-3 text-center">15-24 Thn<br><span class="font-normal capitalize">(Awal Produktif)</span></th>
+                            <th scope="col" class="px-3 py-3 text-center">25-39 Thn<br><span class="font-normal capitalize">(Produktif Muda)</span></th>
+                            <th scope="col" class="px-3 py-3 text-center">40-54 Thn<br><span class="font-normal capitalize">(Produktif Matang)</span></th>
+                            <th scope="col" class="px-3 py-3 text-center">55-64 Thn<br><span class="font-normal capitalize">(Pra-Pensiun)</span></th>
+                            <th scope="col" class="px-3 py-3 text-center">65+ Thn</th>
+                            <th scope="col" class="px-3 py-3 text-center">Ring</th>
                         </tr>
                     </thead>
                     <tbody id="dataTableBody">
@@ -426,16 +426,16 @@
                 const tr = document.createElement('tr');
                 tr.className = 'bg-white border-b hover:bg-gray-50';
                 tr.innerHTML = `
-                    <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${row.kecamatan}</td>
-                    <td class="px-6 py-4">${row.kelurahan}</td>
-                    <td class="px-6 py-4">${formatNumber(row.total)}</td>
-                    <td class="px-6 py-4">${formatNumber(row.usia0_14)}</td>
-                    <td class="px-6 py-4">${formatNumber(row.usia15_24)}</td>
-                    <td class="px-6 py-4">${formatNumber(row.usia25_39)}</td>
-                    <td class="px-6 py-4">${formatNumber(row.usia40_54)}</td>
-                    <td class="px-6 py-4">${formatNumber(row.usia55_64)}</td>
-                    <td class="px-6 py-4">${formatNumber(row.usia65_plus)}</td>
-                    <td class="px-6 py-4">${row.ring}</td>
+                    <td class="px-3 py-4 font-medium text-gray-900 whitespace-nowrap">${row.kecamatan}</td>
+                    <td class="px-3 py-4">${row.kelurahan}</td>
+                    <td class="px-3 py-4 text-center">${formatNumber(row.total)}</td>
+                    <td class="px-3 py-4 text-center">${formatNumber(row.usia0_14)}</td>
+                    <td class="px-3 py-4 text-center">${formatNumber(row.usia15_24)}</td>
+                    <td class="px-3 py-4 text-center">${formatNumber(row.usia25_39)}</td>
+                    <td class="px-3 py-4 text-center">${formatNumber(row.usia40_54)}</td>
+                    <td class="px-3 py-4 text-center">${formatNumber(row.usia55_64)}</td>
+                    <td class="px-3 py-4 text-center">${formatNumber(row.usia65_plus)}</td>
+                    <td class="px-3 py-4 text-center">${row.ring}</td>
                 `;
                 tableBody.appendChild(tr);
             });
