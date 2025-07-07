@@ -22,7 +22,7 @@
 <body class="bg-slate-100 font-sans">
     <div class="w-full max-w-5xl mx-auto p-4 sm:p-8 my-10 bg-white rounded-xl shadow-lg">
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter v3.4</h1>
+            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter v3.5</h1>
             <p class="text-slate-500 mt-2">Upload, preview, and adjust split lines before creating your multi-page PDF.</p>
         </div>
 
@@ -289,67 +289,74 @@
 
         try {
             const outputPdfDoc = await PDFDocument.create();
-            
-            // Embed the original long page ONCE. This is efficient.
-            const [embeddedPage] = await outputPdfDoc.embedPdf(originalPdfArrayBuffer.slice(0));
+            // Load the source document once to be able to copy from it. This is efficient.
+            const sourcePdfDoc = await PDFDocument.load(originalPdfArrayBuffer.slice(0));
             
             const selectedPaper = paperSizeSelect.value;
             const targetSize = paperDimensions[selectedPaper];
             const paddingPoints = getPaddingValue();
             
+            // This is where the typo was before. It is now correct.
             const cutPointsY = [0, ...cutPositions.map(p => p / originalPageSize.scale), originalPageSize.height];
 
-            // --- THE ROBUST "MASKING" STRATEGY ---
+            // --- THE DEFINITIVE "CROP BOX" STRATEGY ---
             for (let i = 0; i < cutPointsY.length - 1; i++) {
+                // 1. Get the dimensions of the slice from the original document
                 const startY_pdf = cutPointsY[i];
+                const endY_pdf = cutPointsY[i + 1];
+                let sliceHeight_pdf = endY_pdf - startY_pdf;
 
-                // Create the final destination page (e.g., A4)
+                // Defensive check to prevent errors from invalid drags
+                if (isNaN(sliceHeight_pdf) || sliceHeight_pdf <= 0) {
+                    console.error(`Skipping invalid slice #${i}`);
+                    continue;
+                }
+
+                // 2. Create a temporary document to hold our perfectly cropped slice
+                const tempDoc = await PDFDocument.create();
+                
+                // 3. Copy the original page into the temp document
+                const [copiedPage] = await tempDoc.copyPages(sourcePdfDoc, [0]);
+                
+                // 4. Set the CropBox. This is the key step. It redefines the visible area
+                //    of the page without any complex drawing. Y-coordinate is from the bottom.
+                copiedPage.setCropBox(
+                    0, // x
+                    originalPageSize.height - endY_pdf, // y
+                    originalPageSize.width, // width
+                    sliceHeight_pdf // height
+                );
+                
+                // 5. Add the page with its new, smaller crop box to the temp document.
+                tempDoc.addPage(copiedPage);
+
+                // 6. Embed the page from the temp doc (which is now perfectly cropped)
+                //    into our main output document.
+                const [embeddedSlice] = await outputPdfDoc.embedPdf(tempDoc);
+
+                // 7. Create the final A4 page and place the clean slice onto it.
                 const finalPage = outputPdfDoc.addPage([targetSize.width, targetSize.height]);
                 const { width: finalWidth, height: finalHeight } = finalPage.getSize();
                 
-                const scaleFactor = finalWidth / embeddedPage.width;
-                const scaledPageHeight = embeddedPage.height * scaleFactor;
+                const scaleFactor = finalWidth / embeddedSlice.width;
+                const scaledSliceHeight = embeddedSlice.height * scaleFactor;
 
-                // --- Correctly calculate the vertical position for the content ---
-                let y_offset;
+                // 8. Correctly position the slice, handling the first page differently.
+                let y_pos;
                 if (i === 0) {
-                    // FIRST PAGE: Align the top of the content with the top of the page.
-                    y_offset = finalHeight - (startY_pdf * scaleFactor) - scaledPageHeight;
+                    // First page: Align top of slice with top of page.
+                    y_pos = finalHeight - scaledSliceHeight;
                 } else {
-                    // SUBSEQUENT PAGES: Align the top of the content just below the top padding.
-                    y_offset = finalHeight - paddingPoints - (startY_pdf * scaleFactor) - scaledPageHeight;
+                    // Subsequent pages: Align top of slice below the top padding.
+                    y_pos = finalHeight - paddingPoints - scaledSliceHeight;
                 }
 
-                // 1. Draw the positioned content. It may "bleed" into margin areas.
-                finalPage.drawPage(embeddedPage, {
+                finalPage.drawPage(embeddedSlice, {
                     x: 0,
-                    y: y_offset,
+                    y: y_pos,
                     width: finalWidth,
-                    height: scaledPageHeight,
+                    height: scaledSliceHeight
                 });
-
-                // 2. Draw white boxes ON TOP to create clean margins and a "hard cut".
-                const white = rgb(1, 1, 1);
-
-                // Always create a clean bottom margin.
-                finalPage.drawRectangle({
-                    x: 0,
-                    y: 0,
-                    width: finalWidth,
-                    height: paddingPoints,
-                    color: white,
-                });
-
-                // For all pages AFTER the first, create a clean top margin.
-                if (i !== 0) {
-                    finalPage.drawRectangle({
-                        x: 0,
-                        y: finalHeight - paddingPoints,
-                        width: finalWidth,
-                        height: paddingPoints,
-                        color: white,
-                    });
-                }
             }
 
             const pdfBytes = await outputPdfDoc.save();
