@@ -22,7 +22,7 @@
 <body class="bg-slate-100 font-sans">
     <div class="w-full max-w-5xl mx-auto p-4 sm:p-8 my-10 bg-white rounded-xl shadow-lg">
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter</h1>
+            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter v3.1</h1>
             <p class="text-slate-500 mt-2">Upload, preview, and adjust split lines before creating your multi-page PDF.</p>
         </div>
 
@@ -254,8 +254,91 @@
         }
     }
     
-    // FINAL FIX: This function uses the robust "Masking" technique with corrected positioning math.
+    // --- Final PDF Generation (REPLACE THIS ENTIRE FUNCTION) ---
+
     async function createFinalPdf() {
+        if (!originalPdfArrayBuffer) return;
+        showStatus('loading', 'Generating final PDF...');
+        generateButton.disabled = true;
+
+        try {
+            const outputPdfDoc = await PDFDocument.create();
+            const [embeddedPage] = await outputPdfDoc.embedPdf(originalPdfArrayBuffer.slice(0));
+            
+            const selectedPaper = paperSizeSelect.value;
+            const targetSize = paperDimensions[selectedPaper];
+            const paddingPoints = getPaddingValue();
+            
+            const cutPointsY = [0, ...cutPositions.map(p => p / originalPageSize.scale), originalPageSize.height];
+
+            for (let i = 0; i < cutPointsY.length - 1; i++) {
+                const startY_pdf = cutPointsY[i];
+
+                const finalPage = outputPdfDoc.addPage([targetSize.width, targetSize.height]);
+                const { width: finalWidth, height: finalHeight } = finalPage.getSize();
+                
+                const scaleFactor = finalWidth / embeddedPage.width;
+                const scaledPageHeight = embeddedPage.height * scaleFactor;
+
+                // --- THE DEFINITIVE AND CORRECT POSITIONING MATH ---
+                // We want to align the top of our slice with the top of the content area.
+                // The `drawPage` y-coordinate refers to the BOTTOM of the embedded page.
+                
+                // 1. Determine the Y-coordinate for the top of the content on the new page.
+                const contentTopOnNewPage = (i === 0) ? finalHeight : (finalHeight - paddingPoints);
+                
+                // 2. Calculate the position of the top of the slice in the scaled-up coordinate system.
+                const scaledSliceTopY = startY_pdf * scaleFactor;
+                
+                // 3. Calculate the final offset for the bottom of the embedded page.
+                const y_offset = contentTopOnNewPage - scaledSliceTopY;
+                
+                // 1. Draw the positioned content.
+                finalPage.drawPage(embeddedPage, {
+                    x: 0,
+                    y: y_offset - scaledPageHeight, // Correctly positions from the bottom
+                    width: finalWidth,
+                    height: scaledPageHeight,
+                });
+
+                // 2. Draw white boxes ON TOP to create clean margins and a "hard cut".
+                const white = rgb(1, 1, 1);
+
+                // Always create a clean bottom margin.
+                finalPage.drawRectangle({
+                    x: 0, y: 0,
+                    width: finalWidth, height: paddingPoints,
+                    color: white,
+                });
+
+                // For all pages AFTER the first, create a clean top margin.
+                if (i !== 0) {
+                    finalPage.drawRectangle({
+                        x: 0, y: finalHeight - paddingPoints,
+                        width: finalWidth, height: paddingPoints,
+                        color: white,
+                    });
+                }
+            }
+
+            const pdfBytes = await outputPdfDoc.save();
+            const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+            
+            const originalFileName = uploadedFile.name.replace(/\.pdf$/i, '');
+            downloadLink.href = url;
+            downloadLink.download = `${originalFileName}-split-final.pdf`;
+            downloadLink.classList.remove('hidden');
+            
+            showStatus('success', 'PDF successfully created!');
+
+        } catch (err) {
+            showStatus('error', `Failed to create PDF: ${err.message}`);
+            console.error(err);
+        } finally {
+            generateButton.disabled = false;
+        }
+    }
         if (!originalPdfArrayBuffer) return;
         showStatus('loading', 'Generating final PDF...');
         generateButton.disabled = true;
