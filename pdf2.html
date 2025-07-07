@@ -22,7 +22,7 @@
 <body class="bg-slate-100 font-sans">
     <div class="w-full max-w-5xl mx-auto p-4 sm:p-8 my-10 bg-white rounded-xl shadow-lg">
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter v2.7</h1>
+            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter v2.8</h1>
             <p class="text-slate-500 mt-2">Upload, preview, and adjust split lines before creating your multi-page PDF.</p>
         </div>
 
@@ -269,7 +269,7 @@
         }
     }
     
-    // --- Final PDF Generation (REPLACE THIS ENTIRE FUNCTION) ---
+        // --- Final PDF Generation (REPLACE THIS ENTIRE FUNCTION) ---
 
     async function createFinalPdf() {
         if (!originalPdfArrayBuffer) return;
@@ -278,7 +278,6 @@
 
         try {
             const outputPdfDoc = await PDFDocument.create();
-            const [embeddedPage] = await outputPdfDoc.embedPdf(originalPdfArrayBuffer.slice(0));
             
             const selectedPaper = paperSizeSelect.value;
             const targetSize = paperDimensions[selectedPaper];
@@ -286,60 +285,57 @@
             
             const cutPointsY = [0, ...cutPositions.map(p => p / originalPageSize.scale), originalPageSize.height];
 
+            // --- THE NEW "PRE-CLIPPING" STRATEGY ---
             for (let i = 0; i < cutPointsY.length - 1; i++) {
+                // 1. Define the dimensions of the slice from the original document
                 const startY_pdf = cutPointsY[i];
                 const endY_pdf = cutPointsY[i + 1];
                 const sliceHeight_pdf = endY_pdf - startY_pdf;
-
-                const newPage = outputPdfDoc.addPage([targetSize.width, targetSize.height]);
-                const { width: newWidth, height: newHeight } = newPage.getSize();
                 
-                const scaleFactor = newWidth / embeddedPage.width;
-                const scaledSliceHeight = sliceHeight_pdf * scaleFactor;
+                // 2. Create a temporary, in-memory document to hold just the clean slice
+                const tempDoc = await PDFDocument.create();
+                const [tempOriginalPage] = await tempDoc.embedPdf(originalPdfArrayBuffer.slice(0));
+                
+                // 3. Create a temporary page that is the *exact* size of our slice
+                const tempPage = tempDoc.addPage([originalPageSize.width, sliceHeight_pdf]);
 
-                // --- DEFINITIVE LOGIC FOR TRUE CLIPPING AND POSITIONING ---
+                // 4. Draw the original long page onto the temporary page, positioned so only the slice is visible.
+                //    The temp page's boundaries act as a perfect, error-free clipping mask.
+                tempPage.drawPage(tempOriginalPage, {
+                    x: 0,
+                    // This y-offset "pulls up" the content so the correct slice is shown
+                    y: - (originalPageSize.height - endY_pdf), 
+                    width: originalPageSize.width,
+                    height: originalPageSize.height
+                });
 
-                // Determine the Y coordinate for the bottom of the clipping rectangle
-                let clipY;
+                // 5. Now, embed the temporary, pre-clipped page into our main output document.
+                const [embeddedSlice] = await outputPdfDoc.embedPdf(tempDoc);
+
+                // 6. Create the final destination page (e.g., A4)
+                const finalPage = outputPdfDoc.addPage(targetSize);
+                const { width: finalWidth, height: finalHeight } = finalPage.getSize();
+                
+                // 7. Scale the clean slice to fit the width of the final page.
+                const scaleFactor = finalWidth / embeddedSlice.width;
+                const scaledSliceHeight = embeddedSlice.height * scaleFactor;
+
+                // 8. Position the clean slice correctly, accounting for first-page padding.
+                let y_pos;
                 if (i === 0) {
-                    // First page: Clip area starts from the bottom and goes up to just below the top of the page.
-                    clipY = newHeight - scaledSliceHeight;
+                    // First page: Position slice at the very top.
+                    y_pos = finalHeight - scaledSliceHeight;
                 } else {
-                    // Subsequent pages: Clip area starts from bottom padding and goes up.
-                    clipY = paddingPoints;
+                    // Subsequent pages: Position slice below the top padding.
+                    y_pos = finalHeight - paddingPoints - scaledSliceHeight;
                 }
-                
-                // Determine the Y coordinate for positioning the embedded page content
-                const contentOffsetY = (i === 0) 
-                    ? newHeight - (startY_pdf * scaleFactor) 
-                    : newHeight - paddingPoints - (startY_pdf * scaleFactor);
 
-                // This is the correct, robust way to perform a hard cut.
-                newPage.pushGraphicsState();
-                
-                // 1. Define the "window" or clipping area.
-                newPage.drawRectangle({
+                finalPage.drawPage(embeddedSlice, {
                     x: 0,
-                    y: clipY, // The bottom of our visible content area
-                    width: newWidth,
-                    height: scaledSliceHeight, // The height of the content slice
+                    y: y_pos,
+                    width: finalWidth,
+                    height: scaledSliceHeight
                 });
-                
-                // 2. Apply this rectangle as a clipping path.
-                newPage.clip();
-                newPage.endPath(); // Finalize the path so the rectangle itself isn't drawn.
-
-                // 3. Draw the full, long page, positioned correctly. 
-                //    Only the part inside the clipping "window" will be rendered.
-                newPage.drawPage(embeddedPage, {
-                    x: 0,
-                    y: contentOffsetY,
-                    width: newWidth,
-                    height: embeddedPage.height * scaleFactor,
-                });
-
-                // 4. Restore the graphics state to remove the clipping effect for any future drawing.
-                newPage.popGraphicsState();
             }
 
             const pdfBytes = await outputPdfDoc.save();
