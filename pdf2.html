@@ -22,7 +22,7 @@
 <body class="bg-slate-100 font-sans">
     <div class="w-full max-w-5xl mx-auto p-4 sm:p-8 my-10 bg-white rounded-xl shadow-lg">
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter v3.3</h1>
+            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter v3.4</h1>
             <p class="text-slate-500 mt-2">Upload, preview, and adjust split lines before creating your multi-page PDF.</p>
         </div>
 
@@ -290,7 +290,7 @@
         try {
             const outputPdfDoc = await PDFDocument.create();
             
-            // Embed the original long page ONCE before the loop. This is efficient.
+            // Embed the original long page ONCE. This is efficient.
             const [embeddedPage] = await outputPdfDoc.embedPdf(originalPdfArrayBuffer.slice(0));
             
             const selectedPaper = paperSizeSelect.value;
@@ -299,55 +299,57 @@
             
             const cutPointsY = [0, ...cutPositions.map(p => p / originalPageSize.scale), originalPageSize.height];
 
-            // --- THE DEFINITIVE TRUE CLIPPING STRATEGY ---
+            // --- THE ROBUST "MASKING" STRATEGY ---
             for (let i = 0; i < cutPointsY.length - 1; i++) {
                 const startY_pdf = cutPointsY[i];
-                const endY_pdf = cutPointsY[i + 1];
-                const sliceHeight_pdf = endY_pdf - startY_pdf;
 
                 // Create the final destination page (e.g., A4)
                 const finalPage = outputPdfDoc.addPage([targetSize.width, targetSize.height]);
                 const { width: finalWidth, height: finalHeight } = finalPage.getSize();
                 
                 const scaleFactor = finalWidth / embeddedPage.width;
-                const scaledSliceHeight = sliceHeight_pdf * scaleFactor;
+                const scaledPageHeight = embeddedPage.height * scaleFactor;
 
-                // --- Calculate positions for the clipping mask and the content ---
-                let clipY, contentOffsetY;
-
+                // --- Correctly calculate the vertical position for the content ---
+                let y_offset;
                 if (i === 0) {
-                    // FIRST PAGE: Content is flush with the top. Clip area starts from the top.
-                    clipY = finalHeight - scaledSliceHeight;
-                    // Position the embedded page so the top of its content aligns with the top of our page.
-                    contentOffsetY = finalHeight - (startY_pdf * scaleFactor);
+                    // FIRST PAGE: Align the top of the content with the top of the page.
+                    y_offset = finalHeight - (startY_pdf * scaleFactor) - scaledPageHeight;
                 } else {
-                    // SUBSEQUENT PAGES: Content is below top padding. Clip area starts below top padding.
-                    clipY = finalHeight - paddingPoints - scaledSliceHeight;
-                    // Position the embedded page so the top of its content aligns below the top padding.
-                    contentOffsetY = finalHeight - paddingPoints - (startY_pdf * scaleFactor);
+                    // SUBSEQUENT PAGES: Align the top of the content just below the top padding.
+                    y_offset = finalHeight - paddingPoints - (startY_pdf * scaleFactor) - scaledPageHeight;
                 }
 
-                // Apply the clipping path to create a "hard cut"
-                finalPage.pushGraphicsState();
-                
-                finalPage.drawRectangle({
-                    x: 0,
-                    y: clipY,
-                    width: finalWidth,
-                    height: scaledSliceHeight,
-                });
-                finalPage.clip();
-                finalPage.endPath(); // Crucial: Finalizes the path without drawing a border
-
-                // Draw the long embedded page. Only the part within the clip path will be visible.
+                // 1. Draw the positioned content. It may "bleed" into margin areas.
                 finalPage.drawPage(embeddedPage, {
                     x: 0,
-                    y: contentOffsetY,
+                    y: y_offset,
                     width: finalWidth,
-                    height: embeddedPage.height * scaleFactor,
+                    height: scaledPageHeight,
                 });
 
-                finalPage.popGraphicsState();
+                // 2. Draw white boxes ON TOP to create clean margins and a "hard cut".
+                const white = rgb(1, 1, 1);
+
+                // Always create a clean bottom margin.
+                finalPage.drawRectangle({
+                    x: 0,
+                    y: 0,
+                    width: finalWidth,
+                    height: paddingPoints,
+                    color: white,
+                });
+
+                // For all pages AFTER the first, create a clean top margin.
+                if (i !== 0) {
+                    finalPage.drawRectangle({
+                        x: 0,
+                        y: finalHeight - paddingPoints,
+                        width: finalWidth,
+                        height: paddingPoints,
+                        color: white,
+                    });
+                }
             }
 
             const pdfBytes = await outputPdfDoc.save();
