@@ -61,105 +61,105 @@ background-color: #f1f5f9;
     </div>
 
     <script>
-const ageLabels = ['0-14 Thn (Anak)', '15-24 Thn (Remaja)', '25-59 Thn (Produktif)', '60+ Thn (Lansia)'];
+    const ageLabels = ['0-14 Thn (Anak)', '15-24 Thn (Remaja)', '25-59 Thn (Produktif)', '60+ Thn (Lansia)'];
 
-const chartOptions = {
-responsive: true,
-maintainAspectRatio: false,
-plugins: {
-legend: {
-position: 'top',
-},
-tooltip: {
-callbacks: {
-label: function(context) {
-let label = context.dataset.label || '';
-if (label) {
-label += ': ';
-}
-if (context.parsed.y !== null) {
-label += new Intl.NumberFormat('id-ID').format(context.parsed.y) + ' Jiwa';
-}
-return label;
-}
-}
-}
-},
-scales: {
-y: {
-beginAtZero: true,
-ticks: {
-callback: function(value) {
-return new Intl.NumberFormat('id-ID', { notation: 'compact' }).format(value);
-}
-}
-}
-}
-};
+    const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+    legend: {
+    position: 'top',
+    },
+    tooltip: {
+    callbacks: {
+    label: function(context) {
+    let label = context.dataset.label || '';
+    if (label) {
+    label += ': ';
+    }
+    if (context.parsed.y !== null) {
+    label += new Intl.NumberFormat('id-ID').format(context.parsed.y) + ' Jiwa';
+    }
+    return label;
+    }
+    }
+    }
+    },
+    scales: {
+    y: {
+    beginAtZero: true,
+    ticks: {
+    callback: function(value) {
+    return new Intl.NumberFormat('id-ID', { notation: 'compact' }).format(value);
+    }
+    }
+    }
+    }
+    };
 
-// Data Kecamatan Rungkut (Estimasi berdasarkan BPS Kota Surabaya 2023)
-new Chart(document.getElementById('rungkutChart'), {
-type: 'bar',
-data: {
-labels: ageLabels,
-datasets: [{
-label: 'Jumlah Penduduk',
-data:,
-backgroundColor: 'rgba(59, 130, 246, 0.7)',
-borderColor: 'rgba(59, 130, 246, 1)',
-borderWidth: 1
-}]
-},
-options: chartOptions
-});
+    // Data Kecamatan Rungkut (Estimasi berdasarkan BPS Kota Surabaya 2023)
+    new Chart(document.getElementById('rungkutChart'), {
+    type: 'bar',
+    data: {
+    labels: ageLabels,
+    datasets: [{
+    label: 'Jumlah Penduduk',
+    data:,
+    backgroundColor: 'rgba(59, 130, 246, 0.7)',
+    borderColor: 'rgba(59, 130, 246, 1)',
+    borderWidth: 1
+    }]
+    },
+    options: chartOptions
+    });
 
-// Data Kecamatan Gunung Anyar (Estimasi berdasarkan BPS Kota Surabaya 2023)
-new Chart(document.getElementById('gunungAnyarChart'), {
-type: 'bar',
-data: {
-labels: ageLabels,
-datasets: [{
-label: 'Jumlah Penduduk',
-data:,
-backgroundColor: 'rgba(16, 185, 129, 0.7)',
-borderColor: 'rgba(16, 185, 129, 1)',
-borderWidth: 1
-}]
-},
-options: chartOptions
-});
+    // Data Kecamatan Gunung Anyar (Estimasi berdasarkan BPS Kota Surabaya 2023)
+    new Chart(document.getElementById('gunungAnyarChart'), {
+    type: 'bar',
+    data: {
+    labels: ageLabels,
+    datasets: [{
+    label: 'Jumlah Penduduk',
+    data:,
+    backgroundColor: 'rgba(16, 185, 129, 0.7)',
+    borderColor: 'rgba(16, 185, 129, 1)',
+    borderWidth: 1
+    }]
+    },
+    options: chartOptions
+    });
 
-// Data Kecamatan Tenggilis Mejoyo (Estimasi berdasarkan BPS Kota Surabaya 2023)
-new Chart(document.getElementById('tenggilisChart'), {
-type: 'bar',
-data: {
-labels: ageLabels,
-datasets: [{
-label: 'Jumlah Penduduk',
-data:,
-backgroundColor: 'rgba(249, 115, 22, 0.7)',
-borderColor: 'rgba(249, 115, 22, 1)',
-borderWidth: 1
-}]
-},
-options: chartOptions
-});
+    // Data Kecamatan Tenggilis Mejoyo (Estimasi berdasarkan BPS Kota Surabaya 2023)
+    new Chart(document.getElementById('tenggilisChart'), {
+    type: 'bar',
+    data: {
+    labels: ageLabels,
+    datasets: [{
+    label: 'Jumlah Penduduk',
+    data:,
+    backgroundColor: 'rgba(249, 115, 22, 0.7)',
+    borderColor: 'rgba(249, 115, 22, 1)',
+    borderWidth: 1
+    }]
+    },
+    options: chartOptions
+    });
 
-// Data Kecamatan Waru (Estimasi berdasarkan BPS Kab. Sidoarjo 2022)
-new Chart(document.getElementById('waruChart'), {
-type: 'bar',
-data: {
-labels: ageLabels,
-datasets: [{
-label: 'Jumlah Penduduk',
-data:,
-backgroundColor: 'rgba(139, 92, 246, 0.7)',
-borderColor: 'rgba(139, 92, 246, 1)',
-borderWidth: 1
-}]
-},
-options: chartOptions
-});
+    // Data Kecamatan Waru (Estimasi berdasarkan BPS Kab. Sidoarjo 2022)
+    new Chart(document.getElementById('waruChart'), {
+    type: 'bar',
+    data: {
+    labels: ageLabels,
+    datasets: [{
+    label: 'Jumlah Penduduk',
+    data:,
+    backgroundColor: 'rgba(139, 92, 246, 0.7)',
+    borderColor: 'rgba(139, 92, 246, 1)',
+    borderWidth: 1
+    }]
+    },
+    options: chartOptions
+    });
 
         </script>
     </body>
