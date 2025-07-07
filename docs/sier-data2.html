@@ -381,17 +381,17 @@
             document.getElementById('totalRing2').innerText = formatNumber(totalRing2);
             document.getElementById('dependencyRatio').innerText = dependencyRatio;
             // Fill Survey Sample Cards
-            // Total Population
+            document.getElementById('sampleSize10').innerText = formatNumber(sampleSize10) + ' Responden';
             document.getElementById('sampleSize5').innerText = formatNumber(sampleSize5) + ' Responden';
             document.getElementById('sampleSize3').innerText = formatNumber(sampleSize3) + ' Responden';
 
-            // Ring 1 Specific
             document.getElementById('totalPopRing1').innerText = `(Total Populasi N = ${formatNumber(totalRing1)})`;
+            document.getElementById('sampleSizeRing1_10').innerText = formatNumber(sampleSizeRing1_10);
             document.getElementById('sampleSizeRing1_5').innerText = formatNumber(sampleSizeRing1_5);
             document.getElementById('sampleSizeRing1_3').innerText = formatNumber(sampleSizeRing1_3);
 
-            // Ring 2 Specific
             document.getElementById('totalPopRing2').innerText = `(Total Populasi N = ${formatNumber(totalRing2)})`;
+            document.getElementById('sampleSizeRing2_10').innerText = formatNumber(sampleSizeRing2_10);
             document.getElementById('sampleSizeRing2_5').innerText = formatNumber(sampleSizeRing2_5);
             document.getElementById('sampleSizeRing2_3').innerText = formatNumber(sampleSizeRing2_3);
 
