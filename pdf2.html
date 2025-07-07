@@ -22,7 +22,7 @@
 <body class="bg-slate-100 font-sans">
     <div class="w-full max-w-5xl mx-auto p-4 sm:p-8 my-10 bg-white rounded-xl shadow-lg">
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter v2.92</h1>
+            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter v3</h1>
             <p class="text-slate-500 mt-2">Upload, preview, and adjust split lines before creating your multi-page PDF.</p>
         </div>
 
@@ -187,6 +187,7 @@
         let currentY = 0;
         while (currentY < canvas.height) {
             currentY += maxSliceHeightPixels;
+            // SUGGESTION IMPLEMENTED: Round the cut position to an integer.
             if (currentY < canvas.height) cutPositions.push(Math.round(currentY));
         }
     }
@@ -216,6 +217,8 @@
         document.addEventListener('mouseup', endDrag);
     }
 
+    // --- Drag and Drop Logic (REPLACE THIS ENTIRE FUNCTION) ---
+
     function drag(e) {
         if (activeDrag.lineIndex === -1) return;
 
@@ -231,17 +234,25 @@
         newY = Math.max(minAllowedY, newY);
         newY = Math.min(maxAllowedY, newY);
         
-        cutPositions[index] = newY;
+        // --- THE "GRID LOCK" FIX ---
+        // Round the final position to the nearest whole pixel.
+        // This ensures the visual position and the stored data are always
+        // perfectly aligned, eliminating floating-point errors.
+        const snappedY = Math.round(newY);
         
-        // Recalculate subsequent lines
-        const sliceHeight = newY - prevLineY;
+        // Only update if the snapped position has actually changed to avoid unnecessary redraws.
+        if (cutPositions[index] === snappedY) return;
+
+        cutPositions[index] = snappedY;
+        
+        // Recalculate subsequent lines based on the new, snapped position
+        const sliceHeight = snappedY - prevLineY;
         for (let i = index + 1; i < cutPositions.length; i++) {
-            cutPositions[i] = cutPositions[i - 1] + sliceHeight;
+            // Subsequent pages also snap to the grid
+            cutPositions[i] = Math.round(cutPositions[i - 1] + sliceHeight);
         }
         
-        // FEATURE: Dynamically add/remove lines
         rebalanceCutLines();
-
         drawCutLines();
     }
 
@@ -277,10 +288,6 @@
         generateButton.disabled = true;
 
         try {
-            // --- ENHANCED DEBUGGING ---
-            console.log('--- Starting PDF Creation Process ---');
-            console.log('Initial `originalPageSize` object:', JSON.stringify(originalPageSize, null, 2));
-
             const outputPdfDoc = await PDFDocument.create();
             
             const selectedPaper = paperSizeSelect.value;
@@ -288,43 +295,21 @@
             const paddingPoints = getPaddingValue();
             
             const cutPointsY = [0, ...cutPositions.map(p => p / originalPageSize.scale), originalPageSize.height];
-            console.log('Calculated Cut Points (in PDF units):', cutPointsY);
 
             for (let i = 0; i < cutPointsY.length - 1; i++) {
-                // 1. Get the dimensions of the slice
                 const startY_pdf = cutPointsY[i];
                 const endY_pdf = cutPointsY[i + 1];
                 const sliceHeight_pdf = endY_pdf - startY_pdf;
                 const sliceWidth_pdf = originalPageSize.width;
 
-                // --- ENHANCED DEBUGGING ---
-                console.group(`--- Processing Slice #${i} ---`);
-                console.log(`startY_pdf:`, startY_pdf);
-                console.log(`endY_pdf:`, endY_pdf);
-                console.log(`sliceHeight_pdf (calculated):`, sliceHeight_pdf);
-                console.log(`sliceWidth_pdf (from originalPageSize):`, sliceWidth_pdf);
-                
-                // 2. Aggressive validation check
                 if (isNaN(sliceWidth_pdf) || isNaN(sliceHeight_pdf) || sliceWidth_pdf <= 0 || sliceHeight_pdf <= 0) {
-                    console.error('Validation FAILED: Invalid slice dimensions detected. Skipping this slice.');
-                    console.groupEnd();
-                    continue; // Skip this iteration
-                } else {
-                    console.log('Validation PASSED: Slice dimensions are valid.');
+                    console.error(`Skipping invalid slice #${i}.`);
+                    continue; 
                 }
-                
-                // 3. Create a temporary document for "pre-clipping"
+
                 const tempDoc = await PDFDocument.create();
                 const [tempOriginalPage] = await tempDoc.embedPdf(originalPdfArrayBuffer.slice(0));
-                
-                // 4. THIS IS THE LINE THAT FAILS. The values above will tell us why.
-                console.log(`Attempting to add page with dimensions: [${sliceWidth_pdf}, ${sliceHeight_pdf}]`);
                 const tempPage = tempDoc.addPage([sliceWidth_pdf, sliceHeight_pdf]);
-                
-                console.log('Successfully added temporary page.');
-                console.groupEnd(); // End the log group for this slice
-                
-                // ... (rest of the logic remains the same)
 
                 tempPage.drawPage(tempOriginalPage, {
                     x: 0,
@@ -334,7 +319,11 @@
                 });
 
                 const [embeddedSlice] = await outputPdfDoc.embedPdf(tempDoc);
-                const finalPage = outputPdfDoc.addPage(targetSize);
+                
+                // --- THE CRITICAL BUG FIX ---
+                // We must pass an ARRAY [width, height], not an OBJECT {width, height}.
+                const finalPage = outputPdfDoc.addPage([targetSize.width, targetSize.height]);
+
                 const { width: finalWidth, height: finalHeight } = finalPage.getSize();
                 
                 const scaleFactor = finalWidth / embeddedSlice.width;
@@ -361,12 +350,10 @@
             downloadLink.download = `${originalFileName}-split-final.pdf`;
             resultSection.classList.remove('hidden');
             showStatus('success', 'PDF successfully created!');
-            console.log('--- PDF Creation Process Finished Successfully ---');
 
         } catch (err) {
-            console.error('!!! An error occurred during the PDF creation process !!!');
-            console.error(err);
             showStatus('error', `Failed to create PDF: ${err.message}`);
+            console.error(err);
         } finally {
             generateButton.disabled = false;
         }
