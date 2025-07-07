@@ -3,13 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Page Splitter</title>
-    <!-- Tailwind CSS via CDN -->
+    <title>Advanced PDF Splitter</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- pdf-lib via CDN -->
+    <!-- PDF.js from Mozilla -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <!-- pdf-lib -->
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <style>
-        /* Simple spinner animation */
+        /* Make sure the worker is loaded from the CDN */
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js`;
+
         .spinner {
             border: 4px solid rgba(0, 0, 0, 0.1);
             width: 36px;
@@ -22,38 +26,64 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        /* Styles for the draggable cut lines */
+        .cut-line {
+            position: absolute;
+            width: 100%;
+            height: 5px;
+            background-color: rgba(239, 68, 68, 0.7); /* Red-500 with transparency */
+            cursor: ns-resize;
+            border-top: 1px dashed white;
+            border-bottom: 1px dashed white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        .cut-line:hover {
+            background-color: rgba(220, 38, 38, 1); /* Red-600 */
+        }
+        .cut-line .handle {
+            width: 60px;
+            height: 20px;
+            background-color: rgb(239, 68, 68);
+            border-radius: 10px;
+            color: white;
+            font-size: 10px;
+            text-align: center;
+            line-height: 20px;
+            font-family: sans-serif;
+            pointer-events: none; /* Let the parent handle drag events */
+        }
     </style>
 </head>
-<body class="bg-slate-100 flex items-center justify-center min-h-screen font-sans">
+<body class="bg-slate-100 font-sans">
+    <div class="w-full max-w-5xl mx-auto p-4 sm:p-8 my-10 bg-white rounded-xl shadow-lg">
 
-    <div class="w-full max-w-2xl mx-auto p-8 bg-white rounded-xl shadow-lg">
+        <!-- Header -->
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-slate-800">PDF Page Splitter</h1>
-            <p class="text-slate-500 mt-2">Split a long, single-page PDF into multiple pages of a standard size.</p>
+            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter</h1>
+            <p class="text-slate-500 mt-2">Upload, preview, and adjust split lines before creating your multi-page PDF.</p>
         </div>
 
-        <div class="space-y-6">
-            <!-- Step 1: File Upload -->
+        <!-- Settings Section -->
+        <div id="settings-section" class="grid grid-cols-1 md:grid-cols-3 gap-6 border-b pb-6 mb-6">
+            <!-- File Upload -->
             <div>
-                <label for="file-upload" class="block text-sm font-medium text-slate-700 mb-2">1. Upload your single-page PDF</label>
-                <label for="file-upload" class="w-full flex items-center justify-center px-4 py-6 bg-slate-50 border-2 border-slate-300 border-dashed rounded-md cursor-pointer hover:bg-slate-100">
-                    <div class="text-center">
-                        <svg class="mx-auto h-12 w-12 text-slate-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                            <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4V12a4 4 0 014-4h12l4 4h12a4 4 0 014 4z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                        <p id="file-name" class="mt-2 text-sm text-slate-600">
-                            <span class="font-semibold">Click to upload</span> or drag and drop
-                        </p>
-                        <p class="text-xs text-slate-500">PDF only</p>
-                    </div>
-                </label>
-                <input id="file-upload" name="file-upload" type="file" class="sr-only" accept=".pdf">
+                <label class="block text-sm font-medium text-slate-700 mb-2">1. Upload PDF</label>
+                <input id="file-upload" type="file" class="block w-full text-sm text-slate-500
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-full file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-indigo-50 file:text-indigo-700
+                    hover:file:bg-indigo-100" accept=".pdf">
+                <p id="file-name" class="text-xs text-slate-500 mt-2truncate"></p>
             </div>
-
-            <!-- Step 2: Paper Size Selection -->
+            <!-- Paper Size -->
             <div>
-                <label for="paper-size" class="block text-sm font-medium text-slate-700">2. Select target paper size</label>
-                <select id="paper-size" name="paper-size" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-slate-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                <label for="paper-size" class="block text-sm font-medium text-slate-700 mb-2">2. Target Paper Size</label>
+                <select id="paper-size" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
                     <option value="A4">A4 (210 x 297 mm)</option>
                     <option value="A5">A5 (148 x 210 mm)</option>
                     <option value="Letter">Letter (8.5 x 11 in)</option>
@@ -61,180 +91,330 @@
                     <option value="F4">F4 (210 x 330 mm)</option>
                 </select>
             </div>
-
-            <!-- Step 3: Action Button -->
+             <!-- Padding -->
             <div>
-                <button id="split-button" type="button" disabled class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-slate-400 disabled:cursor-not-allowed">
-                    Split PDF
-                </button>
+                <label for="padding" class="block text-sm font-medium text-slate-700 mb-2">3. Top/Bottom Padding (pts)</label>
+                <input type="number" id="padding" value="36" class="mt-1 block w-full pl-3 pr-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" min="0" step="1">
+                <p class="text-xs text-slate-500 mt-2">72 pts = 1 inch</p>
             </div>
         </div>
 
-        <!-- Status and Download Area -->
-        <div id="status-area" class="mt-8 text-center hidden">
-            <div id="loading" class="flex items-center justify-center space-x-2 hidden">
-                <div class="spinner"></div>
-                <p class="text-slate-600">Processing your PDF, please wait...</p>
+        <!-- Action / Status Bar -->
+        <div id="action-bar" class="flex items-center justify-center space-x-4 mb-6">
+             <button id="preview-button" type="button" disabled class="px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-slate-400 disabled:cursor-not-allowed">
+                Generate Preview
+            </button>
+             <button id="generate-button" type="button" class="hidden px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                Create Final PDF
+            </button>
+        </div>
+        <div id="status" class="text-center mb-4 min-h-[2rem]"></div>
+
+
+        <!-- Preview Section -->
+        <div id="preview-section" class="hidden">
+            <h3 class="text-lg font-semibold text-slate-700 mb-2 text-center">4. Adjust Split Lines</h3>
+            <p class="text-sm text-slate-500 text-center mb-4">Click and drag the red lines to change where the page splits. Changes will cascade downwards.</p>
+            <div id="preview-container" class="relative max-h-[80vh] w-fit mx-auto overflow-y-auto border-2 border-slate-300 bg-slate-200">
+                <canvas id="pdf-canvas"></canvas>
+                <div id="cut-lines-container"></div>
             </div>
-            <div id="success" class="hidden">
-                 <p class="text-lg font-semibold text-green-600 mb-4">✅ Splitting Complete!</p>
-                 <a id="download-link" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                    Download Split PDF
-                 </a>
-            </div>
-            <div id="error-message" class="text-red-600 font-medium hidden"></div>
+        </div>
+        
+        <!-- Result Section -->
+        <div id="result-section" class="text-center mt-6 hidden">
+             <a id="download-link" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-emerald-600 hover:bg-emerald-700">
+                Download Split PDF
+             </a>
         </div>
     </div>
 
-    <script>
-        const { PDFDocument } = PDFLib;
+<script>
+    // --- Global State ---
+    const { PDFDocument } = PDFLib;
+    let uploadedFile = null;
+    let originalPdfArrayBuffer = null;
+    let originalPageSize = { width: 0, height: 0, scale: 1 };
+    let cutPositions = []; // Store the Y-coordinate of each cut line in pixels
+    let activeDrag = { lineIndex: -1, startY: 0 };
+    
+    // --- UI Elements ---
+    const fileInput = document.getElementById('file-upload');
+    const fileNameDisplay = document.getElementById('file-name');
+    const paperSizeSelect = document.getElementById('paper-size');
+    const paddingInput = document.getElementById('padding');
+    const previewButton = document.getElementById('preview-button');
+    const generateButton = document.getElementById('generate-button');
+    const statusDiv = document.getElementById('status');
+    const previewSection = document.getElementById('preview-section');
+    const previewContainer = document.getElementById('preview-container');
+    const canvas = document.getElementById('pdf-canvas');
+    const cutLinesContainer = document.getElementById('cut-lines-container');
+    const resultSection = document.getElementById('result-section');
+    const downloadLink = document.getElementById('download-link');
 
-        // UI Elements
-        const fileInput = document.getElementById('file-upload');
-        const fileNameDisplay = document.getElementById('file-name');
-        const paperSizeSelect = document.getElementById('paper-size');
-        const splitButton = document.getElementById('split-button');
-        const statusArea = document.getElementById('status-area');
-        const loadingIndicator = document.getElementById('loading');
-        const successMessage = document.getElementById('success');
-        const errorMessage = document.getElementById('error-message');
-        const downloadLink = document.getElementById('download-link');
-        
-        let uploadedFile = null;
+    // --- Paper Size Ratios (Height / Width in PDF points) ---
+    // 1 inch = 72 points
+    const paperDimensions = {
+        A4: { width: 595.28, height: 841.89 },
+        A5: { width: 419.53, height: 595.28 },
+        Letter: { width: 612, height: 792 },
+        Legal: { width: 612, height: 1008 },
+        F4: { width: 595.28, height: 935.43 }
+    };
 
-        // Standard paper size aspect ratios (Height / Width)
-        const paperRatios = {
-            A4: 297 / 210,
-            A5: 210 / 148,
-            Letter: 11 / 8.5,
-            Legal: 14 / 8.5,
-            F4: 330 / 210
-        };
+    // --- Event Listeners ---
+    fileInput.addEventListener('change', handleFileSelect);
+    previewButton.addEventListener('click', renderPreview);
+    generateButton.addEventListener('click', createFinalPdf);
 
-        // Event Listeners
-        fileInput.addEventListener('change', (e) => {
-            uploadedFile = e.target.files[0];
-            if (uploadedFile) {
-                fileNameDisplay.textContent = uploadedFile.name;
-                splitButton.disabled = false;
-                resetStatus();
-            }
-        });
 
-        splitButton.addEventListener('click', () => {
-            if (uploadedFile) {
-                splitPdf();
-            }
-        });
+    // --- Core Functions ---
 
-        function showStatus(type, message = '') {
-            statusArea.classList.remove('hidden');
-            loadingIndicator.classList.add('hidden');
-            successMessage.classList.add('hidden');
-            errorMessage.classList.add('hidden');
-
-            if (type === 'loading') {
-                loadingIndicator.classList.remove('hidden');
-            } else if (type === 'success') {
-                successMessage.classList.remove('hidden');
-            } else if (type === 'error') {
-                errorMessage.classList.remove('hidden');
-                errorMessage.textContent = message;
-            }
+    function handleFileSelect(e) {
+        uploadedFile = e.target.files[0];
+        if (uploadedFile) {
+            fileNameDisplay.textContent = uploadedFile.name;
+            previewButton.disabled = false;
+            // Reset UI
+            previewSection.classList.add('hidden');
+            generateButton.classList.add('hidden');
+            resultSection.classList.add('hidden');
+            statusDiv.innerHTML = '';
         }
+    }
+
+    async function renderPreview() {
+        if (!uploadedFile) return;
+
+        showStatus('loading', 'Loading and rendering PDF preview...');
+        previewButton.disabled = true;
         
-        function resetStatus() {
-            statusArea.classList.add('hidden');
-            errorMessage.textContent = '';
-            downloadLink.href = '#';
-            downloadLink.removeAttribute('download');
-        }
+        try {
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                originalPdfArrayBuffer = event.target.result;
+                const pdfjsDoc = await pdfjsLib.getDocument({ data: originalPdfArrayBuffer }).promise;
+                
+                if (pdfjsDoc.numPages !== 1) {
+                    showStatus('error', 'Error: This tool only supports single-page PDFs.');
+                    previewButton.disabled = false;
+                    return;
+                }
 
-        async function splitPdf() {
-            splitButton.disabled = true;
-            showStatus('loading');
-            
-            try {
-                const fileReader = new FileReader();
-                fileReader.onload = async (event) => {
-                    try {
-                        const arrayBuffer = event.target.result;
+                const page = await pdfjsDoc.getPage(1);
+                const viewport = page.getViewport({ scale: 1.5 }); // Use a higher scale for better quality
 
-                        // Load the original PDF
-                        const pdfDoc = await PDFDocument.load(arrayBuffer);
-                        
-                        if (pdfDoc.getPageCount() !== 1) {
-                            throw new Error('This tool only works with single-page PDF documents.');
-                        }
-                        
-                        const originalPage = pdfDoc.getPages()[0];
-                        const { width: originalWidth, height: originalHeight } = originalPage.getSize();
-                        
-                        const selectedPaper = paperSizeSelect.value;
-                        const paperRatio = paperRatios[selectedPaper];
-                        
-                        // Calculate the height of the new pages based on the original width and target aspect ratio
-                        const targetHeight = originalWidth * paperRatio;
-
-                        // Create a new PDF document for the output
-                        const outputPdf = await PDFDocument.create();
-
-                        let yOffset = originalHeight;
-                        while (yOffset > 0) {
-                            // Add a new page with the target dimensions
-                            const newPage = outputPdf.addPage([originalWidth, targetHeight]);
-                            
-                            // Embed the original page into the new document
-                            // This is efficient as the page content is not re-rendered, just referenced.
-                            const [embeddedPage] = await outputPdf.embedPdf(pdfDoc, [0]);
-                            
-                            // Draw the embedded original page onto the new page.
-                            // We use a negative y-coordinate to "pan" the tall original page
-                            // up into the visible area of our new, shorter page.
-                            newPage.drawPage(embeddedPage, {
-                                x: 0,
-                                y: yOffset - originalHeight,
-                                width: originalWidth,
-                                height: originalHeight
-                            });
-                            
-                            yOffset -= targetHeight;
-                        }
-
-                        // Save the newly created PDF
-                        const pdfBytes = await outputPdf.save();
-                        
-                        // Create a blob and URL for downloading
-                        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-                        const url = URL.createObjectURL(blob);
-
-                        const originalFileName = uploadedFile.name.replace(/\.pdf$/i, '');
-                        downloadLink.href = url;
-                        downloadLink.download = `${originalFileName}-split-${selectedPaper}.pdf`;
-                        
-                        showStatus('success');
-
-                    } catch (err) {
-                        console.error(err);
-                        showStatus('error', `An error occurred during splitting: ${err.message}`);
-                    } finally {
-                        splitButton.disabled = false;
-                    }
+                // Store original page size in PDF points and the scale used for rendering
+                const unscaledViewport = page.getViewport({ scale: 1 });
+                originalPageSize = {
+                    width: unscaledViewport.width,
+                    height: unscaledViewport.height,
+                    scale: viewport.scale
                 };
                 
-                fileReader.onerror = () => {
-                    showStatus('error', 'Failed to read the file.');
-                    splitButton.disabled = false;
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                cutLinesContainer.style.width = `${viewport.width}px`;
+                cutLinesContainer.style.height = `${viewport.height}px`;
+
+                const renderContext = {
+                    canvasContext: canvas.getContext('2d'),
+                    viewport: viewport,
                 };
+                await page.render(renderContext).promise;
 
-                fileReader.readAsArrayBuffer(uploadedFile);
+                calculateInitialCutLines();
+                drawCutLines();
+                
+                previewSection.classList.remove('hidden');
+                generateButton.classList.remove('hidden');
+                showStatus('success', `Preview generated. Found ${cutPositions.length} potential pages.`);
+            };
+            reader.readAsArrayBuffer(uploadedFile);
+        } catch (err) {
+            showStatus('error', `Error rendering preview: ${err.message}`);
+        } finally {
+            previewButton.disabled = false;
+        }
+    }
 
-            } catch (err) {
-                console.error(err);
-                showStatus('error', `An unexpected error occurred: ${err.message}`);
-                splitButton.disabled = false;
+    function calculateInitialCutLines() {
+        const selectedPaper = paperSizeSelect.value;
+        const targetRatio = paperDimensions[selectedPaper].height / paperDimensions[selectedPaper].width;
+        
+        const paddingPoints = parseFloat(paddingInput.value) || 0;
+        // The effective height for content on the new page (in points)
+        const targetContentHeightPoints = (originalPageSize.width * targetRatio) - (2 * paddingPoints);
+
+        if (targetContentHeightPoints <= 0) {
+            showStatus('error', 'Padding is too large for the selected paper size.');
+            return;
+        }
+
+        // Convert this height to canvas pixels
+        const sliceHeightPixels = targetContentHeightPoints * originalPageSize.scale;
+        
+        cutPositions = [];
+        let currentY = 0;
+        while (currentY < canvas.height) {
+            currentY += sliceHeightPixels;
+            if (currentY < canvas.height) {
+                cutPositions.push(Math.round(currentY));
             }
         }
-    </script>
+    }
+
+    function drawCutLines() {
+        cutLinesContainer.innerHTML = '';
+        cutPositions.forEach((yPos, index) => {
+            const line = document.createElement('div');
+            line.className = 'cut-line';
+            line.style.top = `${yPos}px`;
+            line.dataset.index = index;
+
+            const handle = document.createElement('div');
+            handle.className = 'handle';
+            handle.textContent = `Page ${index + 2}`;
+            line.appendChild(handle);
+            
+            line.addEventListener('mousedown', startDrag);
+            cutLinesContainer.appendChild(line);
+        });
+    }
+
+    // --- Drag and Drop Logic ---
+
+    function startDrag(e) {
+        e.preventDefault();
+        const lineIndex = parseInt(e.target.dataset.index, 10);
+        activeDrag = { lineIndex, startY: e.clientY };
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', endDrag);
+    }
+
+    function drag(e) {
+        if (activeDrag.lineIndex === -1) return;
+
+        const deltaY = e.clientY - activeDrag.startY;
+        const index = activeDrag.lineIndex;
+
+        // Calculate boundaries for the drag
+        const prevLineY = index > 0 ? cutPositions[index - 1] : 0;
+        // For the last line, the bottom is the canvas height
+        const nextLineY = (index < cutPositions.length - 1) ? cutPositions[index + 1] : canvas.height;
+
+        let newY = cutPositions[index] + deltaY;
+        
+        // Constrain movement: cannot cross previous or next line (add a small buffer)
+        newY = Math.max(prevLineY + 20, newY);
+        newY = Math.min(nextLineY - 20, newY);
+        
+        // Update the position of the dragged line
+        cutPositions[index] = newY;
+        
+        // Recalculate all subsequent lines based on the new position of the dragged one
+        const sliceHeight = newY - prevLineY;
+        for (let i = index + 1; i < cutPositions.length; i++) {
+            cutPositions[i] = cutPositions[i - 1] + sliceHeight;
+        }
+        
+        // Redraw all lines and update the start Y for the next drag frame
+        drawCutLines();
+        activeDrag.startY = e.clientY;
+    }
+
+    function endDrag() {
+        activeDrag.lineIndex = -1;
+        document.removeEventListener('mousemove', drag);
+        document.removeEventListener('mouseup', endDrag);
+    }
+    
+    // --- Final PDF Generation ---
+
+    async function createFinalPdf() {
+        if (!originalPdfArrayBuffer) return;
+        showStatus('loading', 'Generating final PDF...');
+        generateButton.disabled = true;
+
+        try {
+            const sourcePdfDoc = await PDFDocument.load(originalPdfArrayBuffer);
+            const outputPdfDoc = await PDFDocument.create();
+            
+            const selectedPaper = paperSizeSelect.value;
+            const targetSize = paperDimensions[selectedPaper];
+            const paddingPoints = parseFloat(paddingInput.value) || 0;
+            
+            // The Y-coordinates for slicing, converted from canvas pixels back to PDF points
+            const cutPointsY = [0, ...cutPositions.map(p => p / originalPageSize.scale), originalPageSize.height];
+
+            for (let i = 0; i < cutPointsY.length - 1; i++) {
+                const startY_pdf = cutPointsY[i]; // Y from top
+                const endY_pdf = cutPointsY[i + 1]; // Y from top
+                const sliceHeight_pdf = endY_pdf - startY_pdf;
+
+                const newPage = outputPdfDoc.addPage([targetSize.width, targetSize.height]);
+
+                // Embed the original page once, it's efficient
+                const [embeddedPage] = await outputPdfDoc.embedPdf(sourcePdfDoc, [0]);
+                
+                // PDF coordinates are from the bottom-left. We need to convert our top-down coordinates.
+                const y_in_page_coords = originalPageSize.height - endY_pdf;
+                
+                newPage.drawPage(embeddedPage, {
+                    x: 0,
+                    y: paddingPoints, // Position the slice with bottom padding
+                    width: originalPageSize.width,
+                    height: originalPageSize.height,
+                });
+                
+                // Add a clipping mask to only show the desired slice
+                newPage.pushOperators(
+                    newPage.drawRectangle({
+                        x: 0,
+                        y: paddingPoints, // The rectangle where content is visible
+                        width: originalPageSize.width,
+                        height: sliceHeight_pdf,
+                        // No fill/stroke, this is a clipping path
+                    }),
+                    outputPdfDoc.context.formXObject.getOperator('W'), // Set clipping path
+                    outputPdfDoc.context.formXObject.getOperator('n') // End path without stroking or filling
+                );
+            }
+
+            const pdfBytes = await outputPdfDoc.save();
+            const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+            
+            const originalFileName = uploadedFile.name.replace(/\.pdf$/i, '');
+            downloadLink.href = url;
+            downloadLink.download = `${originalFileName}-split-interactive.pdf`;
+            resultSection.classList.remove('hidden');
+            showStatus('success', 'PDF successfully created!');
+
+        } catch (err) {
+            showStatus('error', `Failed to create PDF: ${err.message}`);
+            console.error(err);
+        } finally {
+            generateButton.disabled = false;
+        }
+    }
+
+    function showStatus(type, message) {
+        let color = 'text-slate-600';
+        if (type === 'error') color = 'text-red-600';
+        if (type === 'success') color = 'text-green-600';
+        
+        const icon = type === 'loading' ? '<div class="spinner mx-auto"></div>' : '';
+        
+        statusDiv.innerHTML = `
+            <div class="flex items-center justify-center space-x-2 ${color}">
+                ${icon}
+                <p>${message}</p>
+            </div>
+        `;
+    }
+
+</script>
 </body>
 </html>
