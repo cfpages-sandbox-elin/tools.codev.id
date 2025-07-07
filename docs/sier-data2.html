@@ -122,6 +122,33 @@
             </div>
         </section>
 
+        <!-- Section Estimasi Distribusi Pendapatan -->
+        <section id="income-estimation" class="mt-12">
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-teal-600 pl-4">Estimasi Distribusi Pendapatan per Kelurahan</h2>
+            <div class="bg-white p-6 rounded-lg shadow-md mb-4">
+                <p class="text-gray-600 text-sm">
+                    <strong class="text-red-600">PENTING:</strong> Tabel di bawah ini adalah sebuah <strong>model estimasi</strong>, bukan data faktual. Pendapatan diperkirakan berdasarkan asumsi demografi usia produktif dan klasifikasi Ring. Data ini bertujuan untuk memberikan gambaran umum potensi pasar di setiap kelurahan.
+                </p>
+            </div>
+            <div class="overflow-x-auto bg-white rounded-lg shadow-md">
+                <table class="w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3">Kecamatan</th>
+                            <th scope="col" class="px-6 py-3">Kelurahan</th>
+                            <th scope="col" class="px-6 py-3 text-center bg-red-50">Dependent / No Income<br><span class="font-normal capitalize">(Usia 0-14 & 65+)</span></th>
+                            <th scope="col" class="px-6 py-3 text-center bg-yellow-50">Low Income<br><span class="font-normal capitalize">(Estimasi)</span></th>
+                            <th scope="col" class="px-6 py-3 text-center bg-green-50">Middle Income<br><span class="font-normal capitalize">(Estimasi)</span></th>
+                            <th scope="col" class="px-6 py-3 text-center bg-blue-50">High Income<br><span class="font-normal capitalize">(Estimasi)</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="incomeTableBody">
+                        <!-- Data estimasi pendapatan akan dimasukkan di sini oleh JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
         <!-- Section Tabel Data Asli -->
         <section id="raw-data" class="mt-12">
              <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-blue-600 pl-4">Data Mentah</h2>
@@ -232,6 +259,68 @@
         const sampleSize5 = Math.ceil(totalPopulation / (1 + totalPopulation * marginOfError5 * marginOfError5));
         const sampleSize3 = Math.ceil(totalPopulation / (1 + totalPopulation * marginOfError3 * marginOfError3));
 
+        // --- FUNGSI UNTUK MENGHITUNG ESTIMASI PENDAPATAN ---
+        function calculateIncomeDistribution(data) {
+            return data.map(row => {
+                // Kelompok Dependent adalah tetap
+                const dependent = row.usia0_14 + row.usia65_plus;
+                
+                // Asumsi awal: semua di kelompok awal produktif (15-24) adalah Low Income
+                let lowIncome = row.usia15_24;
+                let middleIncome = 0;
+                let highIncome = 0;
+
+                // Ambil populasi produktif utama (25-54) dan pra-pensiun (55-64)
+                const productivePopulation = row.usia25_39 + row.usia40_54;
+                const preRetirementPopulation = row.usia55_64;
+
+                if (row.ring === 1) {
+                    // Asumsi untuk Ring 1: Lebih banyak High Income
+                    // 35% dari produktif utama -> High, 65% -> Middle
+                    highIncome += Math.round(productivePopulation * 0.35);
+                    middleIncome += Math.round(productivePopulation * 0.65);
+                    // 20% dari pra-pensiun -> High, 80% -> Middle
+                    highIncome += Math.round(preRetirementPopulation * 0.20);
+                    middleIncome += Math.round(preRetirementPopulation * 0.80);
+                } else { // Ring 2
+                    // Asumsi untuk Ring 2: Lebih banyak Middle Income
+                    // 15% dari produktif utama -> High, 85% -> Middle
+                    highIncome += Math.round(productivePopulation * 0.15);
+                    middleIncome += Math.round(productivePopulation * 0.85);
+                    // 5% dari pra-pensiun -> High, 95% -> Middle
+                    highIncome += Math.round(preRetirementPopulation * 0.05);
+                    middleIncome += Math.round(preRetirementPopulation * 0.95);
+                }
+
+                return {
+                    ...row, // Salin semua data asli
+                    incomeDependent: dependent,
+                    incomeLow: lowIncome,
+                    incomeMiddle: middleIncome,
+                    incomeHigh: highIncome
+                };
+            });
+        }
+
+        // --- FUNGSI UNTUK MERENDER TABEL PENDAPATAN ---
+        function renderIncomeTable(incomeData) {
+            const tableBody = document.getElementById('incomeTableBody');
+            tableBody.innerHTML = ''; // Kosongkan tabel sebelum diisi
+
+            incomeData.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = 'bg-white border-b hover:bg-gray-50';
+                tr.innerHTML = `
+                    <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${row.kecamatan}</td>
+                    <td class="px-6 py-4">${row.kelurahan}</td>
+                    <td class="px-6 py-4 text-center">${formatNumber(row.incomeDependent)}</td>
+                    <td class="px-6 py-4 text-center">${formatNumber(row.incomeLow)}</td>
+                    <td class="px-6 py-4 text-center">${formatNumber(row.incomeMiddle)}</td>
+                    <td class="px-6 py-4 text-center">${formatNumber(row.incomeHigh)}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
 
         // --- DOM MANIPULATION & RENDER ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -353,6 +442,9 @@
                     }
                 }
             });
+
+            const estimatedIncomeData = calculateIncomeDistribution(demographyData);
+            renderIncomeTable(estimatedIncomeData);
 
         });
     </script>
