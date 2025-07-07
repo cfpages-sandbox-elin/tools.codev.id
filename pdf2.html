@@ -22,7 +22,7 @@
 <body class="bg-slate-100 font-sans">
     <div class="w-full max-w-5xl mx-auto p-4 sm:p-8 my-10 bg-white rounded-xl shadow-lg">
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter v2.4</h1>
+            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter v2.5</h1>
             <p class="text-slate-500 mt-2">Upload, preview, and adjust split lines before creating your multi-page PDF.</p>
         </div>
 
@@ -77,7 +77,7 @@
 
 <script>
     // --- Global State ---
-    const { PDFDocument } = PDFLib;
+    const { PDFDocument, rgb } = PDFLib;
     let uploadedFile = null;
     let originalPdfArrayBuffer = null;
     let originalPageSize = { width: 0, height: 0, scale: 1 };
@@ -292,18 +292,12 @@
 
                 const newPage = outputPdfDoc.addPage([targetSize.width, targetSize.height]);
                 
-                // Calculate the scale factor to fit the original content to the new page's width
                 const scaleFactor = newPage.getWidth() / embeddedPage.width;
                 const scaledPageHeight = embeddedPage.height * scaleFactor;
 
-                // --- ROBUST LOGIC FOR POSITIONING AND MASKING ---
-
-                // 1. Calculate the vertical offset to position the content slice.
                 const scaledSliceBottomY = scaledPageHeight - (endY_pdf * scaleFactor);
                 const y_offset = paddingPoints - scaledSliceBottomY;
 
-                // 2. Draw the entire embedded page at the calculated offset.
-                // This will have content bleeding into the margin areas.
                 newPage.drawPage(embeddedPage, {
                     x: 0,
                     y: y_offset,
@@ -311,16 +305,10 @@
                     height: scaledPageHeight,
                 });
 
-                // 3. Cover the bleeding content with white boxes to create clean margins.
                 const {
                     width: newWidth,
                     height: newHeight
                 } = newPage.getSize();
-                const white = {
-                    red: 1,
-                    green: 1,
-                    blue: 1
-                };
 
                 // Draw a white box at the bottom to create the bottom padding
                 newPage.drawRectangle({
@@ -328,7 +316,7 @@
                     y: 0,
                     width: newWidth,
                     height: paddingPoints,
-                    color: white,
+                    color: rgb(1, 1, 1), // CORRECTED
                 });
 
                 // Conditionally draw a white box at the top for all pages except the first
@@ -338,7 +326,7 @@
                         y: newHeight - paddingPoints,
                         width: newWidth,
                         height: paddingPoints,
-                        color: white,
+                        color: rgb(1, 1, 1), // CORRECTED
                     });
                 }
             }
