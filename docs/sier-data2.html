@@ -93,6 +93,35 @@
 
         </section>
 
+        <!-- Section Estimasi Sampel Survei -->
+        <section id="survey-sample" class="mt-12">
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-purple-600 pl-4">Estimasi Sampel Survei Pasar</h2>
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <p class="text-gray-600 mb-4">
+                    Untuk melakukan analisis minat pasar terhadap fasilitas seperti **driving range** atau **lapangan padel** di wilayah cakupan data, kita perlu menentukan jumlah responden (sampel) yang representatif. Di bawah ini adalah estimasi jumlah sampel yang dibutuhkan berdasarkan total populasi yang ada, menggunakan <strong>Rumus Slovin: n = N / (1 + N * e²)</strong>, di mana <strong>N</strong> adalah total populasi dan <strong>e</strong> adalah margin of error (tingkat kesalahan) yang diinginkan.
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                    <!-- Card Margin of Error 5% -->
+                    <div class="border border-gray-200 p-4 rounded-lg text-center bg-gray-50">
+                        <h3 class="font-semibold text-gray-700">Margin of Error 5% (0.05)</h3>
+                        <p class="text-xs text-gray-500 mb-2">(Tingkat kepercayaan 95%)</p>
+                        <p id="sampleSize5" class="text-3xl font-bold text-purple-700">0</p>
+                        <p class="text-sm text-gray-600 mt-1">Standar umum untuk riset pasar dan survei opini publik.</p>
+                    </div>
+                    <!-- Card Margin of Error 3% -->
+                    <div class="border border-gray-200 p-4 rounded-lg text-center bg-gray-50">
+                        <h3 class="font-semibold text-gray-700">Margin of Error 3% (0.03)</h3>
+                        <p class="text-xs text-gray-500 mb-2">(Tingkat kepercayaan 97%)</p>
+                        <p id="sampleSize3" class="text-3xl font-bold text-purple-700">0</p>
+                        <p class="text-sm text-gray-600 mt-1">Untuk penelitian yang membutuhkan presisi lebih tinggi.</p>
+                    </div>
+                </div>
+                <p class="mt-6 text-sm text-gray-500 italic">
+                    <strong>Catatan:</strong> Angka ini adalah estimasi awal. Untuk hasil yang lebih akurat, disarankan menggunakan metode sampling bertingkat (stratified sampling) dengan membagi sampel secara proporsional berdasarkan kecamatan atau kelompok usia produktif.
+                </p>
+            </div>
+        </section>
+
         <!-- Section Tabel Data Asli -->
         <section id="raw-data" class="mt-12">
              <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-blue-600 pl-4">Data Mentah</h2>
@@ -194,6 +223,15 @@
             return acc;
         }, {});
 
+        // 6. Estimasi Sampel Survei (Slovin's Formula)
+        const marginOfError5 = 0.05; // 5%
+        const marginOfError3 = 0.03; // 3%
+
+        // Rumus: n = N / (1 + N * e^2)
+        // Math.ceil() digunakan untuk membulatkan ke atas, karena tidak ada responden setengah.
+        const sampleSize5 = Math.ceil(totalPopulation / (1 + totalPopulation * marginOfError5 * marginOfError5));
+        const sampleSize3 = Math.ceil(totalPopulation / (1 + totalPopulation * marginOfError3 * marginOfError3));
+
 
         // --- DOM MANIPULATION & RENDER ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -202,6 +240,9 @@
             document.getElementById('totalRing1').innerText = formatNumber(totalRing1);
             document.getElementById('totalRing2').innerText = formatNumber(totalRing2);
             document.getElementById('dependencyRatio').innerText = dependencyRatio;
+            // Fill Survey Sample Cards
+            document.getElementById('sampleSize5').innerText = formatNumber(sampleSize5) + ' Responden';
+            document.getElementById('sampleSize3').innerText = formatNumber(sampleSize3) + ' Responden';
 
             // Fill Data Table
             const tableBody = document.getElementById('dataTableBody');
