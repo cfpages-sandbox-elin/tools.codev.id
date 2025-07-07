@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demografi Usia Penduduk di Sekitar SIER</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body {
+background-color: #f1f5f9;
+}
+</style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-800">Komposisi Usia Penduduk di Sekitar SIER</h1>
+            <p class="text-slate-600 mt-2">Analisis demografi di Kecamatan Rungkut, Gunung Anyar, Tenggilis Mejoyo, dan Waru (Data 2022/2023)</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
+
+            <!-- Card Kecamatan Rungkut -->
+            <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
+                <h2 class="text-xl font-bold text-slate-700 border-b pb-2 mb-4">Kecamatan Rungkut, Surabaya</h2>
+                <div class="chart-container" style="position: relative; height:300px;">
+                    <canvas id="rungkutChart"></canvas>
+                </div>
+                <p class="text-sm text-slate-500 mt-4">Didominasi oleh kelompok usia produktif, Rungkut menjadi pusat permukiman utama yang berbatasan langsung dengan SIER.</p>
+            </div>
+
+            <!-- Card Kecamatan Gunung Anyar -->
+            <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
+                <h2 class="text-xl font-bold text-slate-700 border-b pb-2 mb-4">Kecamatan Gunung Anyar, Surabaya</h2>
+                <div class="chart-container" style="position: relative; height:300px;">
+                    <canvas id="gunungAnyarChart"></canvas>
+                </div>
+                <p class="text-sm text-slate-500 mt-4">Sebagai area permukiman yang terus berkembang, Gunung Anyar menunjukkan proporsi usia muda dan produktif yang signifikan.</p>
+            </div>
+
+            <!-- Card Kecamatan Tenggilis Mejoyo -->
+            <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
+                <h2 class="text-xl font-bold text-slate-700 border-b pb-2 mb-4">Kecamatan Tenggilis Mejoyo, Surabaya</h2>
+                <div class="chart-container" style="position: relative; height:300px;">
+                    <canvas id="tenggilisChart"></canvas>
+                </div>
+                <p class="text-sm text-slate-500 mt-4">Dengan lokasi strategis, kecamatan ini memiliki struktur populasi matang yang didominasi angkatan kerja.</p>
+            </div>
+
+            <!-- Card Kecamatan Waru -->
+            <div class="bg-white p-6 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300">
+                <h2 class="text-xl font-bold text-slate-700 border-b pb-2 mb-4">Kecamatan Waru, Sidoarjo</h2>
+                <div class="chart-container" style="position: relative; height:300px;">
+                    <canvas id="waruChart"></canvas>
+                </div>
+                <p class="text-sm text-slate-500 mt-4">Sebagai gerbang masuk dari Sidoarjo, Waru memiliki jumlah penduduk usia produktif yang sangat tinggi, menopang aktivitas industri di perbatasan.</p>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+const ageLabels = ['0-14 Thn (Anak)', '15-24 Thn (Remaja)', '25-59 Thn (Produktif)', '60+ Thn (Lansia)'];
+
+const chartOptions = {
+responsive: true,
+maintainAspectRatio: false,
+plugins: {
+legend: {
+position: 'top',
+},
+tooltip: {
+callbacks: {
+label: function(context) {
+let label = context.dataset.label || '';
+if (label) {
+label += ': ';
+}
+if (context.parsed.y !== null) {
+label += new Intl.NumberFormat('id-ID').format(context.parsed.y) + ' Jiwa';
+}
+return label;
+}
+}
+}
+},
+scales: {
+y: {
+beginAtZero: true,
+ticks: {
+callback: function(value) {
+return new Intl.NumberFormat('id-ID', { notation: 'compact' }).format(value);
+}
+}
+}
+}
+};
+
+// Data Kecamatan Rungkut (Estimasi berdasarkan BPS Kota Surabaya 2023)
+new Chart(document.getElementById('rungkutChart'), {
+type: 'bar',
+data: {
+labels: ageLabels,
+datasets: [{
+label: 'Jumlah Penduduk',
+data:,
+backgroundColor: 'rgba(59, 130, 246, 0.7)',
+borderColor: 'rgba(59, 130, 246, 1)',
+borderWidth: 1
+}]
+},
+options: chartOptions
+});
+
+// Data Kecamatan Gunung Anyar (Estimasi berdasarkan BPS Kota Surabaya 2023)
+new Chart(document.getElementById('gunungAnyarChart'), {
+type: 'bar',
+data: {
+labels: ageLabels,
+datasets: [{
+label: 'Jumlah Penduduk',
+data:,
+backgroundColor: 'rgba(16, 185, 129, 0.7)',
+borderColor: 'rgba(16, 185, 129, 1)',
+borderWidth: 1
+}]
+},
+options: chartOptions
+});
+
+// Data Kecamatan Tenggilis Mejoyo (Estimasi berdasarkan BPS Kota Surabaya 2023)
+new Chart(document.getElementById('tenggilisChart'), {
+type: 'bar',
+data: {
+labels: ageLabels,
+datasets: [{
+label: 'Jumlah Penduduk',
+data:,
+backgroundColor: 'rgba(249, 115, 22, 0.7)',
+borderColor: 'rgba(249, 115, 22, 1)',
+borderWidth: 1
+}]
+},
+options: chartOptions
+});
+
+// Data Kecamatan Waru (Estimasi berdasarkan BPS Kab. Sidoarjo 2022)
+new Chart(document.getElementById('waruChart'), {
+type: 'bar',
+data: {
+labels: ageLabels,
+datasets: [{
+label: 'Jumlah Penduduk',
+data:,
+backgroundColor: 'rgba(139, 92, 246, 0.7)',
+borderColor: 'rgba(139, 92, 246, 1)',
+borderWidth: 1
+}]
+},
+options: chartOptions
+});
+
+        </script>
+    </body>
+</html>
