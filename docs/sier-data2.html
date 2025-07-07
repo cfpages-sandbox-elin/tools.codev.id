@@ -93,6 +93,31 @@
 
         </section>
 
+        <!-- Section Analisis Demografi Usia Detail -->
+        <section id="detailed-age-analysis" class="mt-12">
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-cyan-600 pl-4">Analisis Demografi Usia Lebih Detail</h2>
+            
+            <!-- Visualisasi 1: Distribusi Usia per Ring -->
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-gray-700">Perbandingan Distribusi Usia: Ring 1 vs. Ring 2</h3>
+                <canvas id="ageDistributionByRingChart"></canvas>
+                <p class="mt-4 text-sm text-gray-600">
+                    <strong>Penjelasan:</strong> Grafik batang berkelompok ini membandingkan secara langsung struktur populasi berdasarkan kelompok usia antara <strong>Ring 1</strong> dan <strong>Ring 2</strong>. Ini membantu mengidentifikasi perbedaan demografis fundamental antara kedua zona, misalnya apakah salah satu ring memiliki populasi yang relatif lebih muda atau lebih tua.
+                </p>
+            </div>
+
+            <!-- Visualisasi 2: Distribusi Usia per Kecamatan -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h3 class="text-xl font-semibold mb-4 text-gray-700">Distribusi Usia di Masing-Masing Kecamatan</h3>
+                <div id="kecamatanAgeChartsContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
+                    <!-- Canvas untuk setiap kecamatan akan dibuat oleh JavaScript di sini -->
+                </div>
+                 <p class="mt-4 text-sm text-gray-600">
+                    <strong>Penjelasan:</strong> Grafik di atas memberikan gambaran mikro untuk setiap kecamatan. Anda dapat melihat piramida usia spesifik untuk Rungkut, Gunung Anyar, Tenggilis Mejoyo, dan Waru. Informasi ini sangat berharga untuk merencanakan strategi pemasaran yang sangat tertarget, karena profil demografis bisa sangat bervariasi antar kecamatan.
+                </p>
+            </div>
+        </section>
+
         <!-- Section Estimasi Sampel Survei -->
         <section id="survey-sample" class="mt-12">
             <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-purple-600 pl-4">Estimasi Sampel Survei Pasar</h2>
@@ -507,6 +532,123 @@
                     }
                 }
             });
+
+            // --- DATA PROCESSING & CHARTING FOR DETAILED AGE ANALYSIS ---
+
+            // 1. Data Processing untuk Distribusi Usia per Ring
+            const ageLabels = ['0-14 Thn', '15-24 Thn', '25-39 Thn', '40-54 Thn', '55-64 Thn', '65+ Thn'];
+            const totalsByAgeRing1 = { '0-14 Thn': 0, '15-24 Thn': 0, '25-39 Thn': 0, '40-54 Thn': 0, '55-64 Thn': 0, '65+ Thn': 0 };
+            const totalsByAgeRing2 = { '0-14 Thn': 0, '15-24 Thn': 0, '25-39 Thn': 0, '40-54 Thn': 0, '55-64 Thn': 0, '65+ Thn': 0 };
+
+            demographyData.forEach(row => {
+                if (row.ring === 1) {
+                    totalsByAgeRing1['0-14 Thn'] += row.usia0_14;
+                    totalsByAgeRing1['15-24 Thn'] += row.usia15_24;
+                    totalsByAgeRing1['25-39 Thn'] += row.usia25_39;
+                    totalsByAgeRing1['40-54 Thn'] += row.usia40_54;
+                    totalsByAgeRing1['55-64 Thn'] += row.usia55_64;
+                    totalsByAgeRing1['65+ Thn'] += row.usia65_plus;
+                } else {
+                    totalsByAgeRing2['0-14 Thn'] += row.usia0_14;
+                    totalsByAgeRing2['15-24 Thn'] += row.usia15_24;
+                    totalsByAgeRing2['25-39 Thn'] += row.usia25_39;
+                    totalsByAgeRing2['40-54 Thn'] += row.usia40_54;
+                    totalsByAgeRing2['55-64 Thn'] += row.usia55_64;
+                    totalsByAgeRing2['65+ Thn'] += row.usia65_plus;
+                }
+            });
+
+            // Charting untuk Distribusi Usia per Ring (Grouped Bar Chart)
+            new Chart(document.getElementById('ageDistributionByRingChart'), {
+                type: 'bar',
+                data: {
+                    labels: ageLabels,
+                    datasets: [
+                        {
+                            label: 'Ring 1',
+                            data: Object.values(totalsByAgeRing1),
+                            backgroundColor: 'rgba(22, 163, 74, 0.7)', // Green
+                            borderColor: 'rgba(22, 163, 74, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Ring 2',
+                            data: Object.values(totalsByAgeRing2),
+                            backgroundColor: 'rgba(245, 158, 11, 0.7)', // Yellow/Orange
+                            borderColor: 'rgba(245, 158, 11, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: { y: { beginAtZero: true, ticks: { callback: (value) => formatNumber(value) } } },
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${formatNumber(context.raw)}` } }
+                    }
+                }
+            });
+
+
+            // 2. Data Processing untuk Distribusi Usia per Kecamatan
+            const totalsByAgeKecamatan = demographyData.reduce((acc, row) => {
+                const { kecamatan } = row;
+                if (!acc[kecamatan]) {
+                    acc[kecamatan] = { '0-14 Thn': 0, '15-24 Thn': 0, '25-39 Thn': 0, '40-54 Thn': 0, '55-64 Thn': 0, '65+ Thn': 0 };
+                }
+                acc[kecamatan]['0-14 Thn'] += row.usia0_14;
+                acc[kecamatan]['15-24 Thn'] += row.usia15_24;
+                acc[kecamatan]['25-39 Thn'] += row.usia25_39;
+                acc[kecamatan]['40-54 Thn'] += row.usia40_54;
+                acc[kecamatan]['55-64 Thn'] += row.usia55_64;
+                acc[kecamatan]['65+ Thn'] += row.usia65_plus;
+                return acc;
+            }, {});
+
+            // Charting untuk Setiap Kecamatan (Dynamically)
+            const kecamatanChartsContainer = document.getElementById('kecamatanAgeChartsContainer');
+            const kecamatanColors = ['rgba(59, 130, 246, 0.7)', 'rgba(139, 92, 246, 0.7)', 'rgba(236, 72, 153, 0.7)', 'rgba(20, 184, 166, 0.7)'];
+            let colorIndex = 0;
+
+            for (const kecamatanName in totalsByAgeKecamatan) {
+                const chartWrapper = document.createElement('div');
+                
+                const title = document.createElement('h4');
+                title.className = 'text-lg font-semibold text-center mb-2 text-gray-700';
+                title.innerText = kecamatanName;
+
+                const canvas = document.createElement('canvas');
+                // Memberi ID unik untuk setiap canvas jika diperlukan untuk debugging
+                canvas.id = `chart-kecamatan-${kecamatanName.replace(/\s+/g, '-').toLowerCase()}`;
+
+                chartWrapper.appendChild(title);
+                chartWrapper.appendChild(canvas);
+                kecamatanChartsContainer.appendChild(chartWrapper);
+
+                new Chart(canvas, {
+                    type: 'bar',
+                    data: {
+                        labels: ageLabels,
+                        datasets: [{
+                            label: `Populasi ${kecamatanName}`,
+                            data: Object.values(totalsByAgeKecamatan[kecamatanName]),
+                            backgroundColor: kecamatanColors[colorIndex % kecamatanColors.length],
+                            borderColor: kecamatanColors[colorIndex % kecamatanColors.length].replace('0.7', '1'),
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: { y: { beginAtZero: true, ticks: { callback: (value) => formatNumber(value) } } },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { callbacks: { label: (context) => formatNumber(context.raw) } }
+                        }
+                    }
+                });
+                colorIndex++;
+            }
 
         });
     </script>
