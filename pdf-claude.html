@@ -84,12 +84,35 @@
         .split-view-mode .page-section {
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+
+        .allowed-range-overlay {
+            position: absolute;
+            left: 0;
+            right: 0;
+            background-color: rgba(16, 185, 129, 0.1);
+            border: 2px dashed rgba(16, 185, 129, 0.5);
+            pointer-events: none;
+            z-index: 7;
+        }
+
+        .allowed-range-label {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(16, 185, 129, 0.9);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body class="bg-slate-100 font-sans">
     <div class="w-full max-w-5xl mx-auto p-4 sm:p-8 my-10 bg-white rounded-xl shadow-lg">
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter v5.0 - Fixed</h1>
+            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter v5.1 - Claude</h1>
             <p class="text-slate-500 mt-2">Upload, preview, and adjust split lines before creating your multi-page PDF.</p>
         </div>
 
@@ -325,24 +348,20 @@
         let newCutLines = [];
         
         for (let i = 0; i < cutLines.length; i++) {
-            if (cutLines[i].confirmed) {
-                newCutLines.push(cutLines[i]);
-                lastConfirmedPosition = cutLines[i].position;
-            } else {
-                // Recalculate position for unconfirmed line
-                let targetPosition;
-                if (lastConfirmedPosition === 0) {
-                    targetPosition = firstPageContentHeight;
-                } else {
-                    targetPosition = lastConfirmedPosition + maxSliceHeightPixels;
-                }
+            // In recalculateUnconfirmedLines(), when recalculating unconfirmed line positions:
+            if (!cutLines[i].confirmed) {
+                const constraints = getLineConstraints(i);
+                let targetPosition = constraints.prevPosition + (constraints.maxContentHeight * 0.9); // 90% of max
+                
+                // Ensure it doesn't exceed constraints
+                targetPosition = Math.min(targetPosition, constraints.maxPosition);
+                targetPosition = Math.max(targetPosition, constraints.minPosition);
                 
                 if (targetPosition < pdfCanvas.height - 10) {
                     newCutLines.push({
                         position: Math.round(targetPosition),
                         confirmed: false
                     });
-                    lastConfirmedPosition = targetPosition;
                 }
             }
         }
@@ -414,6 +433,25 @@
             pageSection.appendChild(bottomPadding);
             
             pagesContainer.appendChild(pageSection);
+
+            // Add allowed range overlay for unconfirmed lines
+            if (i < allPositions.length - 2 && !cutLines[i].confirmed) {
+                const constraints = getLineConstraints(i);
+                const overlayTop = constraints.prevPosition - allPositions[i];
+                const overlayHeight = constraints.maxContentHeight;
+                
+                const rangeOverlay = document.createElement('div');
+                rangeOverlay.className = 'allowed-range-overlay';
+                rangeOverlay.style.top = `${overlayTop}px`;
+                rangeOverlay.style.height = `${overlayHeight}px`;
+                
+                const rangeLabel = document.createElement('div');
+                rangeLabel.className = 'allowed-range-label';
+                rangeLabel.textContent = `Max page ${i + 1} content`;
+                rangeOverlay.appendChild(rangeLabel);
+                
+                pageSection.appendChild(rangeOverlay);
+            }
             
             // Add cut line if not the last page
             if (i < allPositions.length - 2) {
@@ -459,6 +497,8 @@
 
     function startDrag(e) {
         const line = e.target.closest('.cut-line-initial');
+        line.style.opacity = '0.7';
+        line.style.backgroundColor = 'rgba(239, 68, 68, 1)';
         if (!line) return;
         
         e.preventDefault();
@@ -486,16 +526,20 @@
         const deltaY = e.clientY - activeDrag.startY;
         let newPosition = activeDrag.startPosition + deltaY;
         
-        // Get constraints
-        const prevPosition = activeDrag.index > 0 ? cutLines[activeDrag.index - 1].position : 0;
-        const nextPosition = activeDrag.index < cutLines.length - 1 ? 
-            cutLines[activeDrag.index + 1].position : pdfCanvas.height;
+        // Get proper constraints
+        const constraints = getLineConstraints(activeDrag.index);
+        
+        // Also check against next line if it exists and is confirmed
+        let maxPosition = constraints.maxPosition;
+        if (activeDrag.index < cutLines.length - 1 && cutLines[activeDrag.index + 1].confirmed) {
+            maxPosition = Math.min(maxPosition, cutLines[activeDrag.index + 1].position - 50);
+        }
+        
+        // Don't allow dragging beyond document height
+        maxPosition = Math.min(maxPosition, pdfCanvas.height - paddingPixels);
         
         // Apply constraints
-        const minPosition = prevPosition + paddingPixels + 50;
-        const maxPosition = nextPosition - paddingPixels - 50;
-        
-        newPosition = Math.max(minPosition, Math.min(maxPosition, newPosition));
+        newPosition = Math.max(constraints.minPosition, Math.min(maxPosition, newPosition));
         
         // Update position
         cutLines[activeDrag.index].position = Math.round(newPosition);
@@ -503,6 +547,11 @@
     }
 
     function endDrag() {
+        const lines = document.querySelectorAll('.cut-line-initial');
+        lines.forEach(l => {
+            l.style.opacity = '';
+            l.style.backgroundColor = '';
+        });
         activeDrag = null;
         document.removeEventListener('mousemove', drag);
         document.removeEventListener('mouseup', endDrag);
@@ -630,6 +679,40 @@
                     (type === 'info' ? 'text-blue-600' : 'text-slate-600'));
         const icon = type === 'loading' ? '<div class="spinner mx-auto"></div>' : '';
         statusDiv.innerHTML = `<div class="flex items-center justify-center space-x-2 ${color}">${icon}<p>${message}</p></div>`;
+    }
+
+    function getLineConstraints(lineIndex) {
+        const selectedPaper = paperSizeSelect.value;
+        const targetDims = paperDimensions[selectedPaper];
+        const targetRatio = targetDims.height / targetDims.width;
+        const paddingPoints = getPaddingValue();
+        
+        // Convert to pixels
+        const pageHeightPixels = (originalPageSize.width * targetRatio) * originalPageSize.scale;
+        const paddingPixels = paddingPoints * originalPageSize.scale;
+        
+        // Get previous position
+        const prevPosition = lineIndex > 0 ? cutLines[lineIndex - 1].position : 0;
+        
+        // Calculate max content for this page
+        let maxContentHeight;
+        if (lineIndex === 0 || (lineIndex > 0 && !cutLines[lineIndex - 1].confirmed)) {
+            // First page or previous line not confirmed: only bottom padding
+            maxContentHeight = pageHeightPixels - paddingPixels;
+        } else {
+            // Subsequent pages: top and bottom padding
+            maxContentHeight = pageHeightPixels - (2 * paddingPixels);
+        }
+        
+        // Minimum content to show something meaningful (e.g., 100 pixels)
+        const minContentHeight = Math.min(100, maxContentHeight * 0.2);
+        
+        return {
+            minPosition: prevPosition + minContentHeight,
+            maxPosition: prevPosition + maxContentHeight,
+            prevPosition: prevPosition,
+            maxContentHeight: maxContentHeight
+        };
     }
 </script>
 </body>
