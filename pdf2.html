@@ -22,7 +22,7 @@
 <body class="bg-slate-100 font-sans">
     <div class="w-full max-w-5xl mx-auto p-4 sm:p-8 my-10 bg-white rounded-xl shadow-lg">
         <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter v2.91</h1>
+            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter v2.92</h1>
             <p class="text-slate-500 mt-2">Upload, preview, and adjust split lines before creating your multi-page PDF.</p>
         </div>
 
@@ -277,40 +277,55 @@
         generateButton.disabled = true;
 
         try {
+            // --- ENHANCED DEBUGGING ---
+            console.log('--- Starting PDF Creation Process ---');
+            console.log('Initial `originalPageSize` object:', JSON.stringify(originalPageSize, null, 2));
+
             const outputPdfDoc = await PDFDocument.create();
             
             const selectedPaper = paperSizeSelect.value;
             const targetSize = paperDimensions[selectedPaper];
             const paddingPoints = getPaddingValue();
             
-            // This calculation is correct.
             const cutPointsY = [0, ...cutPositions.map(p => p / originalPageSize.scale), originalPageSize.height];
             console.log('Calculated Cut Points (in PDF units):', cutPointsY);
 
-            // --- THE ROBUST "PRE-CLIPPING" STRATEGY ---
             for (let i = 0; i < cutPointsY.length - 1; i++) {
-                // 1. Get the dimensions of the slice from the original document
+                // 1. Get the dimensions of the slice
                 const startY_pdf = cutPointsY[i];
                 const endY_pdf = cutPointsY[i + 1];
                 const sliceHeight_pdf = endY_pdf - startY_pdf;
                 const sliceWidth_pdf = originalPageSize.width;
 
-                // 2. RADICALLY DEFENSIVE CHECK: This is the most important part.
-                //    We will validate every number before using it to create a page.
+                // --- ENHANCED DEBUGGING ---
+                console.group(`--- Processing Slice #${i} ---`);
+                console.log(`startY_pdf:`, startY_pdf);
+                console.log(`endY_pdf:`, endY_pdf);
+                console.log(`sliceHeight_pdf (calculated):`, sliceHeight_pdf);
+                console.log(`sliceWidth_pdf (from originalPageSize):`, sliceWidth_pdf);
+                
+                // 2. Aggressive validation check
                 if (isNaN(sliceWidth_pdf) || isNaN(sliceHeight_pdf) || sliceWidth_pdf <= 0 || sliceHeight_pdf <= 0) {
-                    console.error(`Skipping invalid slice #${i}. Dimensions: [${sliceWidth_pdf}, ${sliceHeight_pdf}]`);
-                    // If the slice has invalid dimensions, we skip it entirely instead of crashing.
-                    continue; 
+                    console.error('Validation FAILED: Invalid slice dimensions detected. Skipping this slice.');
+                    console.groupEnd();
+                    continue; // Skip this iteration
+                } else {
+                    console.log('Validation PASSED: Slice dimensions are valid.');
                 }
-
-                // 3. Create a temporary document to hold the clean slice.
+                
+                // 3. Create a temporary document for "pre-clipping"
                 const tempDoc = await PDFDocument.create();
                 const [tempOriginalPage] = await tempDoc.embedPdf(originalPdfArrayBuffer.slice(0));
                 
-                // 4. Create the temporary page. Because of the check above, this will not fail.
+                // 4. THIS IS THE LINE THAT FAILS. The values above will tell us why.
+                console.log(`Attempting to add page with dimensions: [${sliceWidth_pdf}, ${sliceHeight_pdf}]`);
                 const tempPage = tempDoc.addPage([sliceWidth_pdf, sliceHeight_pdf]);
+                
+                console.log('Successfully added temporary page.');
+                console.groupEnd(); // End the log group for this slice
+                
+                // ... (rest of the logic remains the same)
 
-                // 5. Draw the original long page onto the temporary page, positioned to show only the slice.
                 tempPage.drawPage(tempOriginalPage, {
                     x: 0,
                     y: - (originalPageSize.height - endY_pdf), 
@@ -318,17 +333,13 @@
                     height: originalPageSize.height
                 });
 
-                // 6. Embed the clean, pre-clipped page into our final output document.
                 const [embeddedSlice] = await outputPdfDoc.embedPdf(tempDoc);
-
-                // 7. Create the final page (e.g., A4) and add the slice.
                 const finalPage = outputPdfDoc.addPage(targetSize);
                 const { width: finalWidth, height: finalHeight } = finalPage.getSize();
                 
                 const scaleFactor = finalWidth / embeddedSlice.width;
                 const scaledSliceHeight = embeddedSlice.height * scaleFactor;
 
-                // 8. Position the slice, handling the first page differently.
                 let y_pos = (i === 0)
                     ? finalHeight - scaledSliceHeight
                     : finalHeight - paddingPoints - scaledSliceHeight;
@@ -350,10 +361,12 @@
             downloadLink.download = `${originalFileName}-split-final.pdf`;
             resultSection.classList.remove('hidden');
             showStatus('success', 'PDF successfully created!');
+            console.log('--- PDF Creation Process Finished Successfully ---');
 
         } catch (err) {
-            showStatus('error', `Failed to create PDF: ${err.message}`);
+            console.error('!!! An error occurred during the PDF creation process !!!');
             console.error(err);
+            showStatus('error', `Failed to create PDF: ${err.message}`);
         } finally {
             generateButton.disabled = false;
         }
