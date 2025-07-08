@@ -150,30 +150,33 @@
             <!-- Penjelasan Metodologi -->
             <div class="bg-white p-6 rounded-lg shadow-md mb-8">
                 <h3 class="text-xl font-semibold mb-4 text-gray-700">Metodologi Estimasi Pendapatan</h3>
-                <p class="text-gray-600 mb-4">Estimasi pendapatan per kelurahan di dasbor ini adalah sebuah model yang dibangun berdasarkan kombinasi data publik dan asumsi logis. Karena data pendapatan riil per kelurahan tidak tersedia secara publik, kami menggunakan pendekatan proksi sebagai berikut:</p>
+                <p class="text-gray-600 mb-4">Estimasi pendapatan per kelurahan ini adalah sebuah model yang dibangun berdasarkan kombinasi data makro, demografi, dan asumsi logis. Karena data pendapatan riil per kelurahan tidak tersedia, kami menggunakan pendekatan proksi sebagai berikut:</p>
                 
                 <div class="space-y-4">
                     <div>
-                        <h4 class="font-semibold text-gray-800">Langkah 1: Klasifikasi Kategori Pendapatan</h4>
-                        <p class="text-gray-600 text-sm">Patokan utama adalah UMK Surabaya & Sidoarjo 2024 (sekitar Rp 4,7 juta) dan data ekonomi nasional.</p>
-                        <ul class="list-disc pl-5 mt-2 text-sm text-gray-600 space-y-1">
-                            <li><strong>Low Income (< Rp 5 juta/bulan):</strong> Di bawah atau sedikit di atas UMK. Mencakup buruh, pekerja harian, UMKM mikro. Dalam model ini, diasumsikan seluruh populasi usia <strong>Awal Produktif (15-24 tahun)</strong> masuk dalam kategori ini.</li>
-                            <li><strong>Middle Income (Rp 5 - 20 juta/bulan):</strong> Karyawan, PNS, profesional, manajer tingkat awal, dan UMKM mapan.</li>
-                            <li><strong>High Income (> Rp 20 juta/bulan):</strong> Manajer senior, direksi, pengusaha besar, profesional spesialis.</li>
+                        <h4 class="font-semibold text-gray-800">Langkah 1: Data Dasar dan Kelompok Non-Produktif</h4>
+                        <ul class="list-disc pl-5 mt-2 text-sm text-gray-600 space-y-2">
+                            <li><strong>Jangkar Ekonomi Makro:</strong> Model ini berpatokan pada data <strong>PDRB per Kapita Surabaya (2023) sebesar Rp 245,68 juta/tahun</strong> (setara rata-rata ~Rp 20,47 juta/bulan). Angka ini menunjukkan kekuatan ekonomi regional yang sangat tinggi dan menjadi justifikasi adanya populasi berpenghasilan menengah-tinggi yang signifikan.</li>
+                            <li><strong>Asumsi Dependent / No Income:</strong> Kategori ini tidak diestimasi, melainkan dihitung langsung dari data demografi. Kelompok ini mencakup seluruh populasi dalam rentang usia non-produktif, yaitu <strong>0-14 tahun</strong> dan <strong>65+ tahun</strong>, yang diasumsikan tidak memiliki penghasilan mandiri.</li>
                         </ul>
                     </div>
-                    <div>
-                        <h4 class="font-semibold text-gray-800">Langkah 2: Model Estimasi Berbasis Usia dan Ring</h4>
-                        <p class="text-gray-600 text-sm">Distribusi populasi dari kelompok <strong>Middle</strong> dan <strong>High Income</strong> diperkirakan dari populasi usia produktif (25-64 tahun) dengan asumsi yang berbeda berdasarkan klasifikasi Ring:</p>
-                        <ul class="list-disc pl-5 mt-2 text-sm text-gray-600 space-y-1">
-                            <li><strong>Asumsi Ring 1 (Kawasan Lebih Mapan):</strong> Proporsi penduduk berpenghasilan tinggi (High Income) diasumsikan lebih besar. Model ini mengalokasikan persentase yang lebih tinggi dari populasi produktif ke kategori High Income.</li>
-                            <li><strong>Asumsi Ring 2 (Kawasan Berkembang/Industri):</strong> Proporsi penduduk berpenghasilan menengah (Middle Income) diasumsikan lebih dominan. Persentase alokasi untuk High Income lebih kecil dibandingkan Ring 1.</li>
+                     <div>
+                        <h4 class="font-semibold text-gray-800">Langkah 2: Estimasi Kelompok Pendapatan Produktif</h4>
+                        <p class="text-gray-600 text-sm">Populasi produktif (usia 15-64 tahun) kemudian didistribusikan ke dalam tiga kategori pendapatan:</p>
+                        <ul class="list-disc pl-5 mt-2 text-sm text-gray-600 space-y-2">
+                            <li><strong>Low Income (< Rp 5 juta/bulan):</strong> Mengacu pada level <strong>UMK Surabaya & Sidoarjo (~Rp 4,7 juta/bulan)</strong>. Dalam model ini, seluruh populasi usia <strong>Awal Produktif (15-24 tahun)</strong>—yang umumnya adalah pekerja level awal atau masih dalam masa transisi—diasumsikan masuk ke dalam kategori ini.</li>
+                            <li><strong>Middle Income (Rp 5 - 20 juta/bulan) & High Income (> Rp 20 juta/bulan):</strong> Sisa populasi, yaitu kelompok usia <strong>Produktif Inti (25-64 tahun)</strong>, didistribusikan ke dalam dua kategori ini. Alokasinya tidak merata, melainkan menggunakan <strong>Klasifikasi Ring</strong> sebagai proksi untuk karakteristik sosio-ekonomi:
+                                <ul class="list-disc pl-5 mt-2">
+                                    <li><strong>Asumsi Ring 1 (Kawasan Mapan):</strong> Proporsi yang lebih besar dari populasi produktif inti dialokasikan ke kategori <strong>High Income</strong>.</li>
+                                    <li><strong>Asumsi Ring 2 (Kawasan Berkembang/Industri):</strong> Proporsi yang dominan dialokasikan ke kategori <strong>Middle Income</strong>.</li>
+                                </ul>
+                            </li>
                         </ul>
                     </div>
                 </div>
 
                 <div class="mt-6 p-3 bg-red-50 border-l-4 border-red-400 text-red-700 text-sm">
-                    <strong>PENTING:</strong> Angka-angka ini adalah <strong>model estimasi</strong>, bukan data faktual dari survei pendapatan. Tujuannya adalah untuk memberikan gambaran umum potensi pasar dan profil ekonomi wilayah secara komparatif.
+                    <strong>PENTING:</strong> Angka-angka ini adalah <strong>model estimasi</strong>, bukan data faktual dari survei pendapatan. Tujuannya adalah untuk memberikan gambaran umum potensi pasar dan profil ekonomi wilayah secara komparatif, berdasarkan asumsi yang transparan.
                 </div>
             </div>
 
@@ -185,7 +188,7 @@
                         <tr>
                             <th scope="col" class="px-4 py-3">Kecamatan</th>
                             <th scope="col" class="px-4 py-3">Kelurahan</th>
-                            <th scope="col" class="px-2 py-3 text-center">Ring</th> <!-- KOLOM BARU -->
+                            <th scope="col" class="px-2 py-3 text-center">Ring</th>
                             <th scope="col" class="px-4 py-3 text-center bg-red-50">Dependent / No Income<br><span class="font-normal capitalize">(Usia 0-14 & 65+)</span></th>
                             <th scope="col" class="px-4 py-3 text-center bg-yellow-50">Low Income<br><span class="font-normal capitalize">(Estimasi)</span></th>
                             <th scope="col" class="px-4 py-3 text-center bg-green-50">Middle Income<br><span class="font-normal capitalize">(Estimasi)</span></th>
