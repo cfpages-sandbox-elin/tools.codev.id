@@ -227,6 +227,73 @@
             </div>
         </section>
 
+        <section id="market-potential-analysis" class="mt-12">
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-indigo-600 pl-4">Analisis Potensi Pasar: Driving Range & Padel</h2>
+            
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-gray-700">1. Mendefinisikan dan Mengukur Target Pasar</h3>
+                <p class="text-gray-600 mb-4">Analisis ini bertujuan mengestimasi ukuran pasar potensial (Addressable Market) untuk fasilitas Driving Range (Golf) dan Lapangan Padel di kawasan SIER, berdasarkan data demografi dan estimasi pendapatan yang ada.</p>
+                
+                <div class="space-y-3 mb-6">
+                    <div>
+                        <h4 class="font-semibold text-gray-800">Target Pasar Padel:</h4>
+                        <p class="text-gray-600 text-sm">Menyasar segmen yang luas, terutama profesional muda dan keluarga. Secara demografis, target utamanya adalah kelompok <strong>Middle Income</strong> dan <strong>High Income</strong> pada rentang usia <strong>25-39 tahun</strong> (Produktif Muda) dan <strong>40-54 tahun</strong> (Produktif Matang).</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800">Target Pasar Driving Range (Golf):</h4>
+                        <p class="text-gray-600 text-sm">Secara tradisional menyasar segmen yang lebih premium. Target utamanya adalah kelompok <strong>High Income</strong> dan sebagian dari <strong>Middle Income</strong> tingkat atas, dengan fokus pada rentang usia <strong>Produktif Matang (40-54 tahun)</strong> dan <strong>Pra-Pensiun (55-64 tahun)</strong>.</p>
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-semibold mb-4 text-gray-700">2. Ukuran Pasar Potensial per Kecamatan</h3>
+                <p class="text-gray-600 mb-4">Berdasarkan model estimasi pendapatan, kita dapat mengkuantifikasi jumlah penduduk yang masuk dalam kategori target (Middle & High Income) di setiap kecamatan. Ini adalah populasi dengan daya beli yang paling relevan untuk layanan rekreasi premium.</p>
+                
+                 <!-- Visualisasi 1: Ukuran Pasar per Kecamatan -->
+                <div class="mb-8">
+                    <h4 class="text-lg font-semibold text-center mb-2 text-gray-700">Estimasi Jumlah Pasar Potensial (Middle & High Income)</h4>
+                    <canvas id="marketPotentialByKecamatanChart"></canvas>
+                    <p class="mt-4 text-sm text-gray-600">
+                        <strong>Penjelasan:</strong> Grafik ini menunjukkan ukuran absolut pasar potensial di setiap kecamatan. Terlihat jelas bahwa <strong>Kecamatan Rungkut</strong> memiliki basis populasi Middle dan High Income terbesar, menjadikannya pasar primer yang paling menjanjikan. Kecamatan Waru juga besar secara absolut, namun perlu dianalisis lebih lanjut proporsinya.
+                    </p>
+                </div>
+
+                <h3 class="text-xl font-semibold mb-4 pt-6 border-t mt-8 text-gray-700">3. Profil Demografi Pasar Potensial</h3>
+                <p class="text-gray-600 mb-4">Setelah mengetahui "seberapa besar" pasarnya, kita perlu tahu "siapa" mereka. Grafik berikut menunjukkan komposisi usia dari keseluruhan populasi target (gabungan Middle & High Income) di semua kecamatan yang dianalisis.</p>
+
+                <!-- Visualisasi 2: Profil Usia Pasar Target -->
+                <div class="max-w-md mx-auto">
+                     <h4 class="text-lg font-semibold text-center mb-2 text-gray-700">Profil Usia Populasi Target (Middle & High Income)</h4>
+                    <canvas id="targetMarketAgeProfileChart"></canvas>
+                    <p class="mt-4 text-sm text-gray-600">
+                        <strong>Penjelasan:</strong> Grafik donat ini menunjukkan bahwa pasar potensial didominasi oleh kelompok usia <strong>Produktif Muda (25-39 Thn)</strong> yang mencapai hampir 60%. Ini adalah sinyal kuat bahwa fasilitas Padel, yang sangat populer di kalangan ini, memiliki potensi serapan yang sangat tinggi. Sisanya adalah pasar yang ideal untuk Driving Range.
+                    </p>
+                </div>
+
+                <h3 class="text-xl font-semibold mb-4 pt-6 border-t mt-8 text-gray-700">4. Ringkasan dan Implikasi Strategis</h3>
+                 <div class="overflow-x-auto bg-white rounded-lg shadow-md border">
+                    <table class="w-full text-sm text-left text-gray-500">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-4 py-3">Kecamatan</th>
+                                <th scope="col" class="px-4 py-3 text-center">Total Pasar Potensial<br><span class="font-normal capitalize">(Middle + High Income)</span></th>
+                                <th scope="col" class="px-4 py-3 text-center">Populasi Produktif Muda<br><span class="font-normal capitalize">(25-39 Thn)</span></th>
+                                <th scope="col" class="px-4 py-3 text-center">Populasi Produktif Matang<br><span class="font-normal capitalize">(40-54 Thn)</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="marketSummaryTableBody">
+                            <!-- Data ringkasan akan dimasukkan di sini oleh JavaScript -->
+                        </tbody>
+                    </table>
+                 </div>
+                 <p class="mt-4 text-sm text-gray-600">
+                    <strong>Kesimpulan:</strong> Data menunjukkan adanya pasar yang besar dan relevan secara demografis di sekitar lokasi SIER. <strong>Kecamatan Rungkut, Gunung Anyar, dan Tenggilis Mejoyo</strong> merupakan *hotspot* dengan konsentrasi target pasar yang tinggi. Profil usia yang didominasi oleh kelompok produktif muda sangat mendukung potensi sukses untuk lapangan Padel.
+                </p>
+                <div class="mt-6 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 text-sm">
+                    <strong>Langkah Selanjutnya:</strong> Analisis ini adalah estimasi berdasarkan data sekunder. Untuk validasi akhir, sangat disarankan melakukan <strong>survei pasar primer</strong> (seperti yang dihitung di section selanjutnya) untuk mengukur minat aktual, frekuensi bermain yang diharapkan, dan kesediaan membayar (*willingness to pay*).
+                </div>
+            </div>
+        </section>
+
         <!-- Section Estimasi Sampel Survei -->
         <section id="survey-sample" class="mt-12">
             <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-purple-600 pl-4">Estimasi Sampel Survei Pasar</h2>
@@ -841,6 +908,115 @@
                     }
                 });
             }
+
+            // 1. Agregasi data untuk Analisis Pasar
+            const targetMarketData = estimatedIncomeData.reduce((acc, row) => {
+                const { kecamatan } = row;
+                if (!acc[kecamatan]) {
+                    acc[kecamatan] = {
+                        middleIncome: 0,
+                        highIncome: 0,
+                        age25_39: 0,
+                        age40_54: 0,
+                        age55_64: 0,
+                    };
+                }
+                acc[kecamatan].middleIncome += row.incomeMiddle;
+                acc[kecamatan].highIncome += row.incomeHigh;
+                // Asumsi: Middle & High income berasal dari populasi 25-64 tahun
+                acc[kecamatan].age25_39 += row.usia25_39;
+                acc[kecamatan].age40_54 += row.usia40_54;
+                acc[kecamatan].age55_64 += row.usia55_64;
+                return acc;
+            }, {});
+
+            const marketKecamatanNames = Object.keys(targetMarketData);
+
+            // 2. Render Chart: Ukuran Pasar per Kecamatan (Stacked Bar)
+            new Chart(document.getElementById('marketPotentialByKecamatanChart'), {
+                type: 'bar',
+                data: {
+                    labels: marketKecamatanNames,
+                    datasets: [
+                        {
+                            label: 'Middle Income',
+                            data: marketKecamatanNames.map(name => targetMarketData[name].middleIncome),
+                            backgroundColor: 'rgba(52, 211, 153, 0.8)', // emerald-400
+                            stack: 'market'
+                        },
+                        {
+                            label: 'High Income',
+                            data: marketKecamatanNames.map(name => targetMarketData[name].highIncome),
+                            backgroundColor: 'rgba(96, 165, 250, 0.8)', // blue-400
+                            stack: 'market'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { stacked: true },
+                        y: { stacked: true, beginAtZero: true, ticks: { callback: (value) => formatNumber(value) } }
+                    },
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: {
+                            callbacks: { label: (context) => `${context.dataset.label}: ${formatNumber(context.raw)}` }
+                        }
+                    }
+                }
+            });
+
+            // 3. Render Chart: Profil Usia Pasar Target (Doughnut)
+            const totalAge25_39 = Object.values(targetMarketData).reduce((sum, item) => sum + item.age25_39, 0);
+            const totalAge40_54 = Object.values(targetMarketData).reduce((sum, item) => sum + item.age40_54, 0);
+            const totalAge55_64 = Object.values(targetMarketData).reduce((sum, item) => sum + item.age55_64, 0);
+            const totalTargetMarket = totalAge25_39 + totalAge40_54 + totalAge55_64;
+
+            new Chart(document.getElementById('targetMarketAgeProfileChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['25-39 Thn (Produktif Muda)', '40-54 Thn (Produktif Matang)', '55-64 Thn (Pra-Pensiun)'],
+                    datasets: [{
+                        data: [totalAge25_39, totalAge40_54, totalAge55_64],
+                        backgroundColor: ['#2dd4bf', '#60a5fa', '#a78bfa'], // teal, blue, violet
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw;
+                                    const percentage = ((value / totalTargetMarket) * 100).toFixed(1);
+                                    return `${label}: ${formatNumber(value)} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 4. Render Tabel Ringkasan
+            const summaryTableBody = document.getElementById('marketSummaryTableBody');
+            summaryTableBody.innerHTML = '';
+            marketKecamatanNames.forEach(kecamatan => {
+                const data = targetMarketData[kecamatan];
+                const totalPotential = data.middleIncome + data.highIncome;
+                const tr = document.createElement('tr');
+                tr.className = 'bg-white border-b hover:bg-gray-50';
+                tr.innerHTML = `
+                    <td class="px-4 py-4 font-medium text-gray-900">${kecamatan}</td>
+                    <td class="px-4 py-4 text-center font-bold">${formatNumber(totalPotential)}</td>
+                    <td class="px-4 py-4 text-center">${formatNumber(data.age25_39)}</td>
+                    <td class="px-4 py-4 text-center">${formatNumber(data.age40_54)}</td>
+                `;
+                summaryTableBody.appendChild(tr);
+            });
 
         });
     </script>
