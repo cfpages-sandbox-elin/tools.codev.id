@@ -144,24 +144,52 @@
              </div>
         </section>
 
-        <!-- Section Estimasi Distribusi Pendapatan -->
         <section id="income-estimation" class="mt-12">
-            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-teal-600 pl-4">Estimasi Distribusi Pendapatan per Kelurahan</h2>
-            <div class="bg-white p-6 rounded-lg shadow-md mb-4">
-                <p class="text-gray-600 text-sm">
-                    <strong class="text-red-600">PENTING:</strong> Tabel di bawah ini adalah sebuah <strong>model estimasi</strong>, bukan data faktual. Pendapatan diperkirakan berdasarkan asumsi demografi usia produktif dan klasifikasi Ring. Data ini bertujuan untuk memberikan gambaran umum potensi pasar di setiap kelurahan.
-                </p>
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-teal-600 pl-4">Estimasi Distribusi Pendapatan</h2>
+
+            <!-- Penjelasan Metodologi -->
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-gray-700">Metodologi Estimasi Pendapatan</h3>
+                <p class="text-gray-600 mb-4">Estimasi pendapatan per kelurahan di dasbor ini adalah sebuah model yang dibangun berdasarkan kombinasi data publik dan asumsi logis. Karena data pendapatan riil per kelurahan tidak tersedia secara publik, kami menggunakan pendekatan proksi sebagai berikut:</p>
+                
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="font-semibold text-gray-800">Langkah 1: Klasifikasi Kategori Pendapatan</h4>
+                        <p class="text-gray-600 text-sm">Patokan utama adalah UMK Surabaya & Sidoarjo 2024 (sekitar Rp 4,7 juta) dan data ekonomi nasional.</p>
+                        <ul class="list-disc pl-5 mt-2 text-sm text-gray-600 space-y-1">
+                            <li><strong>Low Income (< Rp 5 juta/bulan):</strong> Di bawah atau sedikit di atas UMK. Mencakup buruh, pekerja harian, UMKM mikro. Dalam model ini, diasumsikan seluruh populasi usia <strong>Awal Produktif (15-24 tahun)</strong> masuk dalam kategori ini.</li>
+                            <li><strong>Middle Income (Rp 5 - 20 juta/bulan):</strong> Karyawan, PNS, profesional, manajer tingkat awal, dan UMKM mapan.</li>
+                            <li><strong>High Income (> Rp 20 juta/bulan):</strong> Manajer senior, direksi, pengusaha besar, profesional spesialis.</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800">Langkah 2: Model Estimasi Berbasis Usia dan Ring</h4>
+                        <p class="text-gray-600 text-sm">Distribusi populasi dari kelompok <strong>Middle</strong> dan <strong>High Income</strong> diperkirakan dari populasi usia produktif (25-64 tahun) dengan asumsi yang berbeda berdasarkan klasifikasi Ring:</p>
+                        <ul class="list-disc pl-5 mt-2 text-sm text-gray-600 space-y-1">
+                            <li><strong>Asumsi Ring 1 (Kawasan Lebih Mapan):</strong> Proporsi penduduk berpenghasilan tinggi (High Income) diasumsikan lebih besar. Model ini mengalokasikan persentase yang lebih tinggi dari populasi produktif ke kategori High Income.</li>
+                            <li><strong>Asumsi Ring 2 (Kawasan Berkembang/Industri):</strong> Proporsi penduduk berpenghasilan menengah (Middle Income) diasumsikan lebih dominan. Persentase alokasi untuk High Income lebih kecil dibandingkan Ring 1.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="mt-6 p-3 bg-red-50 border-l-4 border-red-400 text-red-700 text-sm">
+                    <strong>PENTING:</strong> Angka-angka ini adalah <strong>model estimasi</strong>, bukan data faktual dari survei pendapatan. Tujuannya adalah untuk memberikan gambaran umum potensi pasar dan profil ekonomi wilayah secara komparatif.
+                </div>
             </div>
+
+            <!-- Tabel Estimasi Pendapatan -->
+            <h3 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-teal-600 pl-4">Tabel Estimasi Distribusi Pendapatan per Kelurahan</h3>
             <div class="overflow-x-auto bg-white rounded-lg shadow-md">
                 <table class="w-full text-sm text-left text-gray-500">
                     <thead class="text-xs text-gray-700 uppercase bg-gray-50">
                         <tr>
-                            <th scope="col" class="px-6 py-3">Kecamatan</th>
-                            <th scope="col" class="px-6 py-3">Kelurahan</th>
-                            <th scope="col" class="px-6 py-3 text-center bg-red-50">Dependent / No Income<br><span class="font-normal capitalize">(Usia 0-14 & 65+)</span></th>
-                            <th scope="col" class="px-6 py-3 text-center bg-yellow-50">Low Income<br><span class="font-normal capitalize">(Estimasi)</span></th>
-                            <th scope="col" class="px-6 py-3 text-center bg-green-50">Middle Income<br><span class="font-normal capitalize">(Estimasi)</span></th>
-                            <th scope="col" class="px-6 py-3 text-center bg-blue-50">High Income<br><span class="font-normal capitalize">(Estimasi)</span></th>
+                            <th scope="col" class="px-4 py-3">Kecamatan</th>
+                            <th scope="col" class="px-4 py-3">Kelurahan</th>
+                            <th scope="col" class="px-2 py-3 text-center">Ring</th> <!-- KOLOM BARU -->
+                            <th scope="col" class="px-4 py-3 text-center bg-red-50">Dependent / No Income<br><span class="font-normal capitalize">(Usia 0-14 & 65+)</span></th>
+                            <th scope="col" class="px-4 py-3 text-center bg-yellow-50">Low Income<br><span class="font-normal capitalize">(Estimasi)</span></th>
+                            <th scope="col" class="px-4 py-3 text-center bg-green-50">Middle Income<br><span class="font-normal capitalize">(Estimasi)</span></th>
+                            <th scope="col" class="px-4 py-3 text-center bg-blue-50">High Income<br><span class="font-normal capitalize">(Estimasi)</span></th>
                         </tr>
                     </thead>
                     <tbody id="incomeTableBody">
@@ -408,18 +436,58 @@
             const tableBody = document.getElementById('incomeTableBody');
             tableBody.innerHTML = ''; // Kosongkan tabel sebelum diisi
 
-            incomeData.forEach(row => {
+            let currentKecamatan = null;
+            let kecamatanTotals = { dependent: 0, low: 0, middle: 0, high: 0 };
+
+            // Fungsi helper untuk menambahkan baris total
+            const appendSummaryRow = (kecamatanName, totals) => {
+                const tr = document.createElement('tr');
+                tr.className = 'bg-gray-100 font-bold text-gray-800 border-t-2 border-b-2 border-gray-300';
+                tr.innerHTML = `
+                    <td colspan="3" class="px-4 py-3 text-right">Total ${kecamatanName}</td>
+                    <td class="px-4 py-3 text-center">${formatNumber(totals.dependent)}</td>
+                    <td class="px-4 py-3 text-center">${formatNumber(totals.low)}</td>
+                    <td class="px-4 py-3 text-center">${formatNumber(totals.middle)}</td>
+                    <td class="px-4 py-3 text-center">${formatNumber(totals.high)}</td>
+                `;
+                tableBody.appendChild(tr);
+            };
+
+            incomeData.forEach((row, index) => {
+                // Jika kecamatan berubah, cetak total untuk kecamatan sebelumnya
+                if (row.kecamatan !== currentKecamatan && currentKecamatan !== null) {
+                    appendSummaryRow(currentKecamatan, kecamatanTotals);
+                    // Reset total untuk kecamatan baru
+                    kecamatanTotals = { dependent: 0, low: 0, middle: 0, high: 0 };
+                }
+
+                // Set kecamatan saat ini
+                currentKecamatan = row.kecamatan;
+
+                // Akumulasi total
+                kecamatanTotals.dependent += row.incomeDependent;
+                kecamatanTotals.low += row.incomeLow;
+                kecamatanTotals.middle += row.incomeMiddle;
+                kecamatanTotals.high += row.incomeHigh;
+
+                // Buat baris untuk setiap kelurahan
                 const tr = document.createElement('tr');
                 tr.className = 'bg-white border-b hover:bg-gray-50';
                 tr.innerHTML = `
-                    <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${row.kecamatan}</td>
-                    <td class="px-6 py-4">${row.kelurahan}</td>
-                    <td class="px-6 py-4 text-center">${formatNumber(row.incomeDependent)}</td>
-                    <td class="px-6 py-4 text-center">${formatNumber(row.incomeLow)}</td>
-                    <td class="px-6 py-4 text-center">${formatNumber(row.incomeMiddle)}</td>
-                    <td class="px-6 py-4 text-center">${formatNumber(row.incomeHigh)}</td>
+                    <td class="px-4 py-4 font-medium text-gray-900 whitespace-nowrap">${row.kecamatan}</td>
+                    <td class="px-4 py-4">${row.kelurahan}</td>
+                    <td class="px-2 py-4 text-center">${row.ring}</td> <!-- Data Ring Ditambahkan -->
+                    <td class="px-4 py-4 text-center">${formatNumber(row.incomeDependent)}</td>
+                    <td class="px-4 py-4 text-center">${formatNumber(row.incomeLow)}</td>
+                    <td class="px-4 py-4 text-center">${formatNumber(row.incomeMiddle)}</td>
+                    <td class="px-4 py-4 text-center">${formatNumber(row.incomeHigh)}</td>
                 `;
                 tableBody.appendChild(tr);
+
+                // Jika ini adalah baris terakhir, cetak total untuk kecamatan terakhir
+                if (index === incomeData.length - 1) {
+                    appendSummaryRow(currentKecamatan, kecamatanTotals);
+                }
             });
         }
 
