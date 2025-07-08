@@ -3,304 +3,1388 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dasbor Feasibility Study - Kawasan SIER Surabaya</title>
-    
-    <!-- Tailwind CSS CDN -->
+    <title>Visualisasi Data Demografi</title>
+    <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Chart.js CDN -->
+    <!-- Chart.js via CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <!-- Leaflet.js (Peta) CDN -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-
     <style>
-        /* Custom styles untuk leaflet pop-up agar sesuai tema terang */
-        .leaflet-popup-content-wrapper {
-            background-color: #ffffff;
-            color: #374151; /* text-gray-700 */
-            border-radius: 0.5rem;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-        }
-        .leaflet-popup-content {
-            margin: 12px;
-        }
-        .leaflet-popup-tip {
-            background: #ffffff;
-        }
-        .leaflet-popup-close-button {
-            color: #374151 !important;
+        /* Optional: Custom font for better readability */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
         }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans">
+<body class="bg-gray-100 text-gray-800">
 
     <div class="container mx-auto p-4 md:p-8">
-        <header class="text-center mb-12">
-            <h1 class="text-4xl font-bold text-gray-900 mb-2">Dasbor Analisis Data untuk Studi Kelayakan</h1>
-            <p class="text-xl text-teal-600">Kawasan Sekitar Surabaya Industrial Estate Rungkut (SIER)</p>
+        <header class="text-center mb-10">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Visualisasi Data Demografi Penduduk</h1>
+            <p class="text-md text-gray-600 mt-2">Analisis Berdasarkan Kecamatan, Kelompok Usia, dan Klasifikasi Ring</p>
         </header>
 
-        <main class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-            <!-- 1. Populasi Kota Surabaya -->
-            <section class="bg-white p-6 rounded-lg shadow-lg border border-gray-200 col-span-1 lg:col-span-2">
-                <h2 class="text-2xl font-semibold mb-4 text-gray-900 border-l-4 border-teal-500 pl-4">1. Populasi Kota Surabaya: Tren & Proyeksi</h2>
-                <p class="mb-6 text-gray-600">Grafik garis ini memvisualisasikan pertumbuhan penduduk Kota Surabaya. Tren historis yang stabil dan proyeksi yang terus meningkat menunjukkan pasar yang sehat dan berkembang. Ini merupakan indikator kunci adanya permintaan yang berkelanjutan untuk properti, barang, dan jasa.</p>
-                <div class="h-96 w-full">
-                    <canvas id="surabayaPopulationChart"></canvas>
+        <!-- Section Ringkasan Data -->
+        <section id="summary" class="mb-12">
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-blue-600 pl-4">Ringkasan Data Utama</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Card Total Penduduk -->
+                <div class="bg-white p-6 rounded-lg shadow-md transition-transform transform hover:scale-105">
+                    <h3 class="text-sm font-medium text-gray-500">Total Seluruh Penduduk</h3>
+                    <p id="totalPenduduk" class="text-3xl font-bold text-blue-600 mt-2">0</p>
                 </div>
-                <div class="mt-6 overflow-x-auto">
-                    <h3 class="font-semibold text-lg mb-2 text-gray-700">Tabel Data Populasi</h3>
-                    <table class="w-full text-sm text-left text-gray-600">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-200">
-                            <tr>
-                                <th scope="col" class="px-6 py-3">Tahun</th>
-                                <th scope="col" class="px-6 py-3">Jumlah Penduduk</th>
-                                <th scope="col" class="px-6 py-3">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr class="bg-white border-b border-gray-200"><td class="px-6 py-4">2020</td><td class="px-6 py-4">2.904.751</td><td class="px-6 py-4">Historis</td></tr>
-                            <tr class="bg-white border-b border-gray-200"><td class="px-6 py-4">2021</td><td class="px-6 py-4">2.880.284</td><td class="px-6 py-4">Historis</td></tr>
-                            <tr class="bg-white border-b border-gray-200"><td class="px-6 py-4">2022</td><td class="px-6 py-4">2.887.223</td><td class="px-6 py-4">Historis</td></tr>
-                            <tr class="bg-white border-b border-gray-200"><td class="px-6 py-4">2023</td><td class="px-6 py-4">2.997.547</td><td class="px-6 py-4">Historis</td></tr>
-                            <tr class="bg-white border-b border-gray-200"><td class="px-6 py-4">2024</td><td class="px-6 py-4">3.021.043</td><td class="px-6 py-4">Historis</td></tr>
-                            <tr class="bg-teal-50 border-b border-gray-200"><td class="px-6 py-4 font-medium">2025</td><td class="px-6 py-4 font-medium">3.043.518</td><td class="px-6 py-4">Proyeksi</td></tr>
-                            <tr class="bg-teal-50 border-b border-gray-200"><td class="px-6 py-4 font-medium">2026</td><td class="px-6 py-4 font-medium">3.065.133</td><td class="px-6 py-4">Proyeksi</td></tr>
-                            <tr class="bg-teal-50 border-b border-gray-200"><td class="px-6 py-4 font-medium">2027</td><td class="px-6 py-4 font-medium">3.085.996</td><td class="px-6 py-4">Proyeksi</td></tr>
-                            <tr class="bg-teal-50 border-b border-gray-200"><td class="px-6 py-4 font-medium">2028</td><td class="px-6 py-4 font-medium">3.106.108</td><td class="px-6 py-4">Proyeksi</td></tr>
-                            <tr class="bg-teal-50 border-b border-gray-200"><td class="px-6 py-4 font-medium">2029</td><td class="px-6 py-4 font-medium">3.125.548</td><td class="px-6 py-4">Proyeksi</td></tr>
-                        </tbody>
-                    </table>
+                <!-- Card Penduduk Ring 1 -->
+                <div class="bg-white p-6 rounded-lg shadow-md transition-transform transform hover:scale-105">
+                    <h3 class="text-sm font-medium text-gray-500">Total Penduduk Ring 1</h3>
+                    <p id="totalRing1" class="text-3xl font-bold text-green-600 mt-2">0</p>
                 </div>
-                <p class="text-xs text-gray-500 mt-4"><b>Sumber:</b> Data historis diolah dari publikasi BPS "Kota Surabaya dalam Angka" (contoh: surabayakota.bps.go.id) dan portal berita kredibel seperti Databoks. Proyeksi dihitung berdasarkan laju pertumbuhan penduduk tahun-tahun sebelumnya.</p>
-            </section>
-
-            <!-- 2. Peta Kawasan & Universitas -->
-            <section class="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
-                <h2 class="text-2xl font-semibold mb-4 text-gray-900 border-l-4 border-teal-500 pl-4">2. Peta Sebaran Penduduk & Universitas</h2>
-                <p class="mb-6 text-gray-600">Peta interaktif ini menggabungkan dua data krusial. Warna pada kecamatan menunjukkan kepadatan populasi—semakin gelap warnanya, semakin tinggi populasinya. Titik biru menandai lokasi universitas-universitas besar. Visualisasi ini membantu mengidentifikasi pusat populasi dan klaster talenta secara geografis untuk penentuan lokasi strategis.</p>
-                <div id="sierMap" class="h-96 w-full rounded-lg z-0"></div>
-                <p class="text-xs text-gray-500 mt-4"><b>Sumber:</b> Estimasi populasi per kecamatan berdasarkan publikasi BPS di tingkat kecamatan (misal: "Kecamatan Rungkut dalam Angka"). Lokasi universitas dari data publik di website masing-masing institusi.</p>
-            </section>
-
-            <!-- 3. Perbandingan Populasi Sekitar SIER -->
-            <section class="bg-white p-6 rounded-lg shadow-lg border border-gray-200">
-                <h2 class="text-2xl font-semibold mb-4 text-gray-900 border-l-4 border-teal-500 pl-4">3. Populasi di Kecamatan Sekitar SIER</h2>
-                <p class="mb-6 text-gray-600">Grafik batang ini membandingkan total populasi di kecamatan-kecamatan kunci di sekitar SIER. Kecamatan Rungkut dan Waru (Sidoarjo) menonjol sebagai kantong populasi terbesar, menjadikannya target utama untuk pemasaran, penyediaan perumahan, dan rekrutmen tenaga kerja.</p>
-                 <div class="h-96 w-full">
-                    <canvas id="sierPopulationChart"></canvas>
+                <!-- Card Penduduk Ring 2 -->
+                <div class="bg-white p-6 rounded-lg shadow-md transition-transform transform hover:scale-105">
+                    <h3 class="text-sm font-medium text-gray-500">Total Penduduk Ring 2</h3>
+                    <p id="totalRing2" class="text-3xl font-bold text-yellow-600 mt-2">0</p>
                 </div>
-                 <p class="text-xs text-gray-500 mt-4"><b>Sumber:</b> Data populasi kecamatan dihimpun dari BPS Kota Surabaya & BPS Kabupaten Sidoarjo, tahun data bervariasi tergantung ketersediaan publikasi terakhir (2020-2024).</p>
-            </section>
+                 <!-- Card Angka Ketergantungan -->
+                <div class="bg-white p-6 rounded-lg shadow-md transition-transform transform hover:scale-105">
+                    <h3 class="text-sm font-medium text-gray-500">Angka Ketergantungan</h3>
+                    <p id="dependencyRatio" class="text-3xl font-bold text-red-600 mt-2">0</p>
+                    <p class="text-xs text-gray-400 mt-1">Jiwa non-produktif per 100 jiwa produktif</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section Visualisasi Chart -->
+        <section id="charts" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             
-            <!-- 4. Demografi Usia Produktif -->
-            <section class="bg-white p-6 rounded-lg shadow-lg border border-gray-200 col-span-1 lg:col-span-2">
-                <h2 class="text-2xl font-semibold mb-4 text-gray-900 border-l-4 border-teal-500 pl-4">4. Analisis Demografi: Usia Produktif (15-70 Tahun)</h2>
-                <p class="mb-6 text-gray-600">Grafik ini memecah populasi per kecamatan menjadi dua segmen: usia produktif (potensi tenaga kerja & konsumen utama) dan usia lainnya. Kecamatan dengan proporsi batang biru yang besar, seperti Waru dan Rungkut, menunjukkan ketersediaan sumber daya manusia yang melimpah dan pasar konsumen yang aktif.</p>
-                <div class="h-96 w-full">
-                    <canvas id="demographicChart"></canvas>
+            <!-- Chart 1: Populasi berdasarkan Ring -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h3 class="text-xl font-semibold mb-4 text-gray-700">Komposisi Penduduk Berdasarkan Ring</h3>
+                <canvas id="ringChart"></canvas>
+                <p class="mt-4 text-sm text-gray-600">
+                    <strong>Penjelasan:</strong> Bagan donat ini memvisualisasikan perbandingan jumlah total penduduk antara wilayah yang diklasifikasikan sebagai <strong>Ring 1</strong> dan <strong>Ring 2</strong>. Ini membantu memahami sebaran populasi di kedua area tersebut secara proporsional.
+                </p>
+            </div>
+
+            <!-- Chart 2: Distribusi Usia -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h3 class="text-xl font-semibold mb-4 text-gray-700">Distribusi Penduduk Berdasarkan Kelompok Usia</h3>
+                <canvas id="ageDistributionChart"></canvas>
+                <p class="mt-4 text-sm text-gray-600">
+                    <strong>Penjelasan:</strong> Grafik batang ini menunjukkan distribusi total penduduk di semua wilayah berdasarkan kelompok usia. Terlihat bahwa kelompok <strong>Produktif Muda (25-39 Thn)</strong> memiliki jumlah populasi terbesar, menandakan potensi demografi yang signifikan pada kelompok usia ini.
+                </p>
+            </div>
+
+            <!-- Chart 3: Produktif vs Non-Produktif -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h3 class="text-xl font-semibold mb-4 text-gray-700">Rasio Usia Produktif vs. Non-Produktif</h3>
+                <canvas id="productiveRatioChart"></canvas>
+                <p class="mt-4 text-sm text-gray-600">
+                    <strong>Penjelasan:</strong> Bagan ini mengilustrasikan perbandingan antara jumlah penduduk dalam rentang <strong>usia produktif (15-64 tahun)</strong> dengan <strong>usia non-produktif (0-14 dan 65+ tahun)</strong>. Rasio ini penting untuk mengukur <strong>Angka Ketergantungan (Dependency Ratio)</strong>, yang menunjukkan beban demografis yang ditanggung oleh populasi usia kerja.
+                </p>
+            </div>
+
+            <!-- Chart 4: Populasi per Kecamatan -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h3 class="text-xl font-semibold mb-4 text-gray-700">Total Populasi per Kecamatan</h3>
+                <canvas id="kecamatanChart"></canvas>
+                <p class="mt-4 text-sm text-gray-600">
+                    <strong>Penjelasan:</strong> Grafik batang horizontal ini membandingkan jumlah total penduduk di setiap kecamatan. Kecamatan <strong>Waru (Sidoarjo)</strong> menunjukkan populasi tertinggi secara agregat, yang disebabkan oleh banyaknya jumlah kelurahan/desa yang termasuk dalam data ini.
+                </p>
+            </div>
+
+        </section>
+
+        <!-- Section Analisis Demografi Usia Detail -->
+        <section id="detailed-age-analysis" class="mt-12">
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-cyan-600 pl-4">Analisis Demografi Usia Lebih Detail</h2>
+            
+            <!-- Visualisasi 1: Distribusi Usia per Ring -->
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-gray-700">Perbandingan Distribusi Usia: Ring 1 vs. Ring 2</h3>
+                <canvas id="ageDistributionByRingChart"></canvas>
+                <p class="mt-4 text-sm text-gray-600">
+                    <strong>Penjelasan:</strong> Grafik batang berkelompok ini membandingkan secara langsung struktur populasi berdasarkan kelompok usia antara <strong>Ring 1</strong> dan <strong>Ring 2</strong>. Ini membantu mengidentifikasi perbedaan demografis fundamental antara kedua zona, misalnya apakah salah satu ring memiliki populasi yang relatif lebih muda atau lebih tua.
+                </p>
+            </div>
+
+            <!-- Visualisasi 2: Distribusi Usia per Kecamatan -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h3 class="text-xl font-semibold mb-4 text-gray-700">Distribusi Usia di Masing-Masing Kecamatan</h3>
+                <div id="kecamatanAgeChartsContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
+                    <!-- Canvas untuk setiap kecamatan akan dibuat oleh JavaScript di sini -->
                 </div>
-                 <div class="mt-6 overflow-x-auto">
-                     <h3 class="font-semibold text-lg mb-2 text-gray-700">Tabel Estimasi Demografi</h3>
-                    <table class="w-full text-sm text-left text-gray-600">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-200">
+                 <p class="mt-4 text-sm text-gray-600">
+                    <strong>Penjelasan:</strong> Grafik di atas memberikan gambaran mikro untuk setiap kecamatan. Anda dapat melihat piramida usia spesifik untuk Rungkut, Gunung Anyar, Tenggilis Mejoyo, dan Waru. Informasi ini sangat berharga untuk merencanakan strategi pemasaran yang sangat tertarget, karena profil demografis bisa sangat bervariasi antar kecamatan.
+                </p>
+            </div>
+        </section>
+
+        <!-- Section Tabel Data Asli -->
+        <section id="raw-data" class="mt-12">
+             <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-blue-600 pl-4">Data Populasi Mentah</h2>
+             <div class="overflow-x-auto bg-white rounded-lg shadow-md">
+                <table class="w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-3 py-3">Kecamatan</th>
+                            <th scope="col" class="px-3 py-3">Kelurahan / Desa</th>
+                            <th scope="col" class="px-3 py-3 text-center">Total<br>Penduduk</th>
+                            <th scope="col" class="px-3 py-3 text-center">0-14 Thn</th>
+                            <th scope="col" class="px-3 py-3 text-center">15-24 Thn<br><span class="font-normal capitalize">(Awal Produktif)</span></th>
+                            <th scope="col" class="px-3 py-3 text-center">25-39 Thn<br><span class="font-normal capitalize">(Produktif Muda)</span></th>
+                            <th scope="col" class="px-3 py-3 text-center">40-54 Thn<br><span class="font-normal capitalize">(Produktif Matang)</span></th>
+                            <th scope="col" class="px-3 py-3 text-center">55-64 Thn<br><span class="font-normal capitalize">(Pra-Pensiun)</span></th>
+                            <th scope="col" class="px-3 py-3 text-center">65+ Thn</th>
+                            <th scope="col" class="px-3 py-3 text-center">Ring</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody">
+                        <!-- Data rows will be inserted here by JavaScript -->
+                    </tbody>
+                </table>
+             </div>
+        </section>
+
+        <section id="income-estimation" class="mt-12">
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-teal-600 pl-4">Estimasi Distribusi Pendapatan</h2>
+
+            <!-- Penjelasan Metodologi -->
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-gray-700">Metodologi Estimasi Pendapatan</h3>
+                <p class="text-gray-600 mb-4">Estimasi pendapatan per kelurahan ini adalah sebuah model yang dibangun berdasarkan kombinasi data makro, demografi, dan asumsi logis. Karena data pendapatan riil per kelurahan tidak tersedia, kami menggunakan pendekatan proksi sebagai berikut:</p>
+                
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="font-semibold text-gray-800">Langkah 1: Data Dasar dan Kelompok Non-Produktif</h4>
+                        <ul class="list-disc pl-5 mt-2 text-sm text-gray-600 space-y-2">
+                            <li><strong>Jangkar Ekonomi Makro:</strong> Model ini berpatokan pada data <strong>PDRB per Kapita Surabaya (2023) sebesar Rp 245,68 juta/tahun</strong> (setara rata-rata ~Rp 20,47 juta/bulan). Angka ini menunjukkan kekuatan ekonomi regional yang sangat tinggi dan menjadi justifikasi adanya populasi berpenghasilan menengah-tinggi yang signifikan.</li>
+                            <li><strong>Asumsi Dependent / No Income:</strong> Kategori ini tidak diestimasi, melainkan dihitung langsung dari data demografi. Kelompok ini mencakup seluruh populasi dalam rentang usia non-produktif, yaitu <strong>0-14 tahun</strong> dan <strong>65+ tahun</strong>, yang diasumsikan tidak memiliki penghasilan mandiri.</li>
+                        </ul>
+                    </div>
+                     <div>
+                        <h4 class="font-semibold text-gray-800">Langkah 2: Estimasi Kelompok Pendapatan Produktif</h4>
+                        <p class="text-gray-600 text-sm">Populasi produktif (usia 15-64 tahun) kemudian didistribusikan ke dalam tiga kategori pendapatan:</p>
+                        <ul class="list-disc pl-5 mt-2 text-sm text-gray-600 space-y-2">
+                            <li><strong>Low Income (< Rp 5 juta/bulan):</strong> Mengacu pada level <strong>UMK Surabaya & Sidoarjo (~Rp 4,7 juta/bulan)</strong>. Dalam model ini, seluruh populasi usia <strong>Awal Produktif (15-24 tahun)</strong>—yang umumnya adalah pekerja level awal atau masih dalam masa transisi—diasumsikan masuk ke dalam kategori ini.</li>
+                            <li><strong>Middle Income (Rp 5 - 20 juta/bulan) & High Income (> Rp 20 juta/bulan):</strong> Sisa populasi, yaitu kelompok usia <strong>Produktif Inti (25-64 tahun)</strong>, didistribusikan ke dalam dua kategori ini. Alokasinya tidak merata, melainkan menggunakan <strong>Klasifikasi Ring</strong> sebagai proksi untuk karakteristik sosio-ekonomi:
+                                <ul class="list-disc pl-5 mt-2">
+                                    <li><strong>Asumsi Ring 1 (Kawasan Mapan):</strong> Proporsi yang lebih besar dari populasi produktif inti dialokasikan ke kategori <strong>High Income</strong>.</li>
+                                    <li><strong>Asumsi Ring 2 (Kawasan Berkembang/Industri):</strong> Proporsi yang dominan dialokasikan ke kategori <strong>Middle Income</strong>.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="mt-6 p-3 bg-red-50 border-l-4 border-red-400 text-red-700 text-sm">
+                    <strong>PENTING:</strong> Angka-angka ini adalah <strong>model estimasi</strong>, bukan data faktual dari survei pendapatan. Tujuannya adalah untuk memberikan gambaran umum potensi pasar dan profil ekonomi wilayah secara komparatif, berdasarkan asumsi yang transparan.
+                </div>
+            </div>
+
+            <!-- Tabel Estimasi Pendapatan -->
+            <h3 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-teal-600 pl-4">Tabel Estimasi Distribusi Pendapatan per Kelurahan</h3>
+            <div class="overflow-x-auto bg-white rounded-lg shadow-md">
+                <table class="w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-4 py-3">Kecamatan</th>
+                            <th scope="col" class="px-4 py-3">Kelurahan</th>
+                            <th scope="col" class="px-2 py-3 text-center">Ring</th>
+                            <th scope="col" class="px-4 py-3 text-center bg-red-50">Dependent / No Income<br><span class="font-normal capitalize">(Usia 0-14 & 65+)</span></th>
+                            <th scope="col" class="px-4 py-3 text-center bg-yellow-50">Low Income<br><span class="font-normal capitalize">(Estimasi)</span></th>
+                            <th scope="col" class="px-4 py-3 text-center bg-green-50">Middle Income<br><span class="font-normal capitalize">(Estimasi)</span></th>
+                            <th scope="col" class="px-4 py-3 text-center bg-blue-50">High Income<br><span class="font-normal capitalize">(Estimasi)</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="incomeTableBody">
+                        <!-- Data estimasi pendapatan akan dimasukkan di sini oleh JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Section Analisis Distribusi Pendapatan Detail -->
+        <section id="detailed-income-analysis" class="mt-12">
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-emerald-600 pl-4">Analisis Distribusi Pendapatan Detail</h2>
+            
+            <!-- Visualisasi 1: Bar Chart Perbandingan antar Kecamatan -->
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-gray-700">Perbandingan Jumlah Penduduk Berdasarkan Tingkat Pendapatan</h3>
+                <canvas id="incomeDistributionByKecamatanChart"></canvas>
+                <p class="mt-4 text-sm text-gray-600">
+                    <strong>Penjelasan:</strong> Grafik ini membandingkan jumlah absolut penduduk di setiap kategori pendapatan (Low, Middle, High) antar kecamatan. Ini berguna untuk melihat kecamatan mana yang memiliki "kantong" populasi berpenghasilan menengah atau tinggi terbesar secara jumlah.
+                </p>
+            </div>
+
+            <!-- Visualisasi 2: Donut Chart Profil per Kecamatan -->
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h3 class="text-xl font-semibold mb-4 text-gray-700">Profil Proporsi Pendapatan di Masing-Masing Kecamatan</h3>
+                <div id="kecamatanIncomeDonutsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mt-6">
+                    <!-- Canvas untuk donut chart setiap kecamatan akan dibuat oleh JavaScript di sini -->
+                </div>
+                 <p class="mt-4 text-sm text-gray-600">
+                    <strong>Penjelasan:</strong> Setiap bagan donat di atas menunjukkan "profil finansial" dari sebuah kecamatan. Ini tidak melihat jumlah absolut, melainkan <strong>proporsi (persentase)</strong>. Anda bisa dengan cepat melihat apakah sebuah kecamatan didominasi oleh populasi berpenghasilan menengah, atau memiliki persentase penduduk berpenghasilan tinggi yang signifikan.
+                </p>
+            </div>
+        </section>
+
+        <section id="market-potential-analysis" class="mt-12">
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-indigo-600 pl-4">Analisis Potensi Pasar: Driving Range & Padel</h2>
+            
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-gray-700">1. Mendefinisikan dan Mengukur Target Pasar</h3>
+                <p class="text-gray-600 mb-4">Analisis ini bertujuan mengestimasi ukuran pasar potensial (Addressable Market) untuk fasilitas Driving Range (Golf) dan Lapangan Padel di kawasan SIER, berdasarkan data demografi dan estimasi pendapatan yang ada.</p>
+                
+                <div class="space-y-3 mb-6">
+                    <div>
+                        <h4 class="font-semibold text-gray-800">Target Pasar Padel:</h4>
+                        <p class="text-gray-600 text-sm">Menyasar segmen yang luas, terutama profesional muda dan keluarga. Secara demografis, target utamanya adalah kelompok <strong>Middle Income</strong> dan <strong>High Income</strong> pada rentang usia <strong>25-39 tahun</strong> (Produktif Muda) dan <strong>40-54 tahun</strong> (Produktif Matang).</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800">Target Pasar Driving Range (Golf):</h4>
+                        <p class="text-gray-600 text-sm">Secara tradisional menyasar segmen yang lebih premium. Target utamanya adalah kelompok <strong>High Income</strong> dan sebagian dari <strong>Middle Income</strong> tingkat atas, dengan fokus pada rentang usia <strong>Produktif Matang (40-54 tahun)</strong> dan <strong>Pra-Pensiun (55-64 tahun)</strong>.</p>
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-semibold mb-4 text-gray-700">2. Ukuran Pasar Potensial per Kecamatan</h3>
+                <p class="text-gray-600 mb-4">Berdasarkan model estimasi pendapatan, kita dapat mengkuantifikasi jumlah penduduk yang masuk dalam kategori target (Middle & High Income) di setiap kecamatan. Ini adalah populasi dengan daya beli yang paling relevan untuk layanan rekreasi premium.</p>
+                
+                 <!-- Visualisasi 1: Ukuran Pasar per Kecamatan -->
+                <div class="mb-8">
+                    <h4 class="text-lg font-semibold text-center mb-2 text-gray-700">Estimasi Jumlah Pasar Potensial (Middle & High Income)</h4>
+                    <canvas id="marketPotentialByKecamatanChart"></canvas>
+                    <p class="mt-4 text-sm text-gray-600">
+                        <strong>Penjelasan:</strong> Grafik ini menunjukkan ukuran absolut pasar potensial di setiap kecamatan. Terlihat jelas bahwa <strong>Kecamatan Rungkut</strong> memiliki basis populasi Middle dan High Income terbesar, menjadikannya pasar primer yang paling menjanjikan. Kecamatan Waru juga besar secara absolut, namun perlu dianalisis lebih lanjut proporsinya.
+                    </p>
+                </div>
+
+                <h3 class="text-xl font-semibold mb-4 pt-6 border-t mt-8 text-gray-700">3. Profil Demografi Pasar Potensial</h3>
+                <p class="text-gray-600 mb-4">Setelah mengetahui "seberapa besar" pasarnya, kita perlu tahu "siapa" mereka. Grafik berikut menunjukkan komposisi usia dari keseluruhan populasi target (gabungan Middle & High Income) di semua kecamatan yang dianalisis.</p>
+
+                <!-- Visualisasi 2: Profil Usia Pasar Target -->
+                <div class="max-w-md mx-auto">
+                     <h4 class="text-lg font-semibold text-center mb-2 text-gray-700">Profil Usia Populasi Target (Middle & High Income)</h4>
+                    <canvas id="targetMarketAgeProfileChart"></canvas>
+                    <p class="mt-4 text-sm text-gray-600">
+                        <strong>Penjelasan:</strong> Grafik donat ini menunjukkan bahwa pasar potensial didominasi oleh kelompok usia <strong>Produktif Muda (25-39 Thn)</strong> yang mencapai hampir 60%. Ini adalah sinyal kuat bahwa fasilitas Padel, yang sangat populer di kalangan ini, memiliki potensi serapan yang sangat tinggi. Sisanya adalah pasar yang ideal untuk Driving Range.
+                    </p>
+                </div>
+
+                <h3 class="text-xl font-semibold mb-4 pt-6 border-t mt-8 text-gray-700">4. Ringkasan dan Implikasi Strategis</h3>
+                 <div class="overflow-x-auto bg-white rounded-lg shadow-md border">
+                    <table class="w-full text-sm text-left text-gray-500">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
                             <tr>
-                                <th scope="col" class="px-6 py-3">Kecamatan</th>
-                                <th scope="col" class="px-6 py-3">Total Penduduk</th>
-                                <th scope="col" class="px-6 py-3">Estimasi Usia 15-70 Thn (74%)</th>
-                                <th scope="col" class="px-6 py-3">Estimasi Usia Lainnya (26%)</th>
+                                <th scope="col" class="px-4 py-3">Kecamatan</th>
+                                <th scope="col" class="px-4 py-3 text-center">Total Pasar Potensial<br><span class="font-normal capitalize">(Middle + High Income)</span></th>
+                                <th scope="col" class="px-4 py-3 text-center">Populasi Produktif Muda<br><span class="font-normal capitalize">(25-39 Thn)</span></th>
+                                <th scope="col" class="px-4 py-3 text-center">Populasi Produktif Matang<br><span class="font-normal capitalize">(40-54 Thn)</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="marketSummaryTableBody">
+                            <!-- Data ringkasan akan dimasukkan di sini oleh JavaScript -->
+                        </tbody>
+                    </table>
+                 </div>
+                 <p class="mt-4 text-sm text-gray-600">
+                    <strong>Kesimpulan:</strong> Data menunjukkan adanya pasar yang besar dan relevan secara demografis di sekitar lokasi SIER. <strong>Kecamatan Rungkut, Gunung Anyar, dan Tenggilis Mejoyo</strong> merupakan *hotspot* dengan konsentrasi target pasar yang tinggi. Profil usia yang didominasi oleh kelompok produktif muda sangat mendukung potensi sukses untuk lapangan Padel.
+                </p>
+                <div class="mt-6 p-3 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 text-sm">
+                    <strong>Langkah Selanjutnya:</strong> Analisis ini adalah estimasi berdasarkan data sekunder. Untuk validasi akhir, sangat disarankan melakukan <strong>survei pasar primer</strong> (seperti yang dihitung di section selanjutnya) untuk mengukur minat aktual, frekuensi bermain yang diharapkan, dan kesediaan membayar (*willingness to pay*).
+                </div>
+            </div>
+        </section>
+
+        <!-- PASTE KODE HTML INI DI SINI -->
+
+        <!-- Section Analisis Kompetitor Driving Range -->
+        <section id="competitor-analysis" class="mt-12">
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-purple-600 pl-4">Analisis Kompetitor (Driving Range)</h2>
+            
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-gray-700">Ringkasan Peta Persaingan</h3>
+                <p class="text-gray-600 mb-6">
+                    Analisis ini membandingkan beberapa driving range utama di Surabaya dan sekitarnya berdasarkan data yang tersedia. Fokusnya adalah pada harga, target pasar, serta kekuatan dan kelemahan yang dirasakan oleh pelanggan (berdasarkan ulasan online) untuk mengidentifikasi celah pasar dan peluang diferensiasi.
+                </p>
+
+                <!-- Tabel Analisis Kompetitor -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left text-gray-500">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-4 py-3">Kompetitor</th>
+                                <th scope="col" class="px-4 py-3 text-center">Benchmark Harga<br><span class="font-normal capitalize">(Guest/100 Bola)</span></th>
+                                <th scope="col" class="px-4 py-3 text-center">Target Pasar</th>
+                                <th scope="col" class="px-4 py-3">Kekuatan Utama (Ulasan)</th>
+                                <th scope="col" class="px-4 py-3">Kelemahan Utama (Ulasan)</th>
+                                <th scope="col" class="px-4 py-3 text-center">Rating<br><span class="font-normal capitalize">(Google)</span></th>
                             </tr>
                         </thead>
                         <tbody>
-                             <tr class="bg-white border-b border-gray-200"><td class="px-6 py-4">Rungkut</td><td class="px-6 py-4">123.757</td><td class="px-6 py-4">~91.580</td><td class="px-6 py-4">~32.177</td></tr>
-                             <tr class="bg-white border-b border-gray-200"><td class="px-6 py-4">Gunung Anyar</td><td class="px-6 py-4">62.342</td><td class="px-6 py-4">~46.133</td><td class="px-6 py-4">~16.209</td></tr>
-                             <tr class="bg-white border-b border-gray-200"><td class="px-6 py-4">Tenggilis Mejoyo</td><td class="px-6 py-4">54.861</td><td class="px-6 py-4">~40.597</td><td class="px-6 py-4">~14.264</td></tr>
-                             <tr class="bg-white border-b border-gray-200"><td class="px-6 py-4">Waru, Sidoarjo</td><td class="px-6 py-4">194.084</td><td class="px-6 py-4">~143.622</td><td class="px-6 py-4">~50.462</td></tr>
+                            <tr class="bg-white border-b hover:bg-gray-50">
+                                <td class="px-4 py-4 font-semibold text-gray-900">Bukit Darmo</td>
+                                <td class="px-4 py-4 text-center">Rp 151.500</td>
+                                <td class="px-4 py-4 text-center"><span class="bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">Mewah</span></td>
+                                <td class="px-4 py-4">Lapangan luas & asri, suasana bagus.</td>
+                                <td class="px-4 py-4">Manajemen reservasi buruk, harga tidak sebanding kualitas.</td>
+                                <td class="px-4 py-4 text-center font-bold">4.5 ★</td>
+                            </tr>
+                            <tr class="bg-white border-b hover:bg-gray-50">
+                                <td class="px-4 py-4 font-semibold text-gray-900">Graha Family</td>
+                                <td class="px-4 py-4 text-center">Rp 136.000</td>
+                                <td class="px-4 py-4 text-center"><span class="bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">Mewah</span></td>
+                                <td class="px-4 py-4">Pelayanan baik, fasilitas nyaman & menarik.</td>
+                                <td class="px-4 py-4">Staf kurang sigap, pelayanan terkadang buruk.</td>
+                                <td class="px-4 py-4 text-center font-bold">4.5 ★</td>
+                            </tr>
+                            <tr class="bg-white border-b hover:bg-gray-50">
+                                <td class="px-4 py-4 font-semibold text-gray-900">Ciputra</td>
+                                <td class="px-4 py-4 text-center">Rp 130.000</td>
+                                <td class="px-4 py-4 text-center"><span class="bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">Mewah</span></td>
+                                <td class="px-4 py-4">Lapangan terawat, staf ramah & profesional.</td>
+                                <td class="px-4 py-4">Kebersihan toilet sangat buruk, kurang perawatan rutin.</td>
+                                <td class="px-4 py-4 text-center font-bold">4.5 ★</td>
+                            </tr>
+                             <tr class="bg-white border-b hover:bg-gray-50">
+                                <td class="px-4 py-4 font-semibold text-gray-900">Pakuwon</td>
+                                <td class="px-4 py-4 text-center">Rp 150.000</td>
+                                <td class="px-4 py-4 text-center"><span class="bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">Mewah</span></td>
+                                <td class="px-4 py-4">Lokasi strategis, fasilitas olahraga lengkap.</td>
+                                <td class="px-4 py-4">Perilaku petugas (keamanan) tidak sopan.</td>
+                                <td class="px-4 py-4 text-center font-bold">4.6 ★</td>
+                            </tr>
+                            <tr class="bg-white border-b hover:bg-gray-50">
+                                <td class="px-4 py-4 font-semibold text-gray-900">Brawijaya</td>
+                                <td class="px-4 py-4 text-center">Rp 130.000</td>
+                                <td class="px-4 py-4 text-center"><span class="bg-green-100 text-green-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">Terjangkau</span></td>
+                                <td class="px-4 py-4">Pelayanan ramah, harga murah.</td>
+                                <td class="px-4 py-4">Ruang ganti kurang bersih, panas.</td>
+                                <td class="px-4 py-4 text-center font-bold">4.4 ★</td>
+                            </tr>
+                             <tr class="bg-white border-b hover:bg-gray-50">
+                                <td class="px-4 py-4 font-semibold text-gray-900">Le Grande</td>
+                                <td class="px-4 py-4 text-center">Rp 135.000</td>
+                                <td class="px-4 py-4 text-center"><span class="bg-green-100 text-green-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">Terjangkau</span></td>
+                                <td class="px-4 py-4">Fasilitas nyaman, ramah pemula.</td>
+                                <td class="px-4 py-4">Biaya coach mahal, banyak nyamuk.</td>
+                                <td class="px-4 py-4 text-center font-bold">4.5 ★</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
-                <p class="text-xs text-gray-500 mt-4"><b>Sumber:</b> Estimasi dihitung berdasarkan data BPS "Proyeksi Penduduk Menurut Kelompok Umur" (contoh: surabayakota.bps.go.id/indicator/12/...). Persentase ~74% adalah representasi dari kelompok usia produktif.</p>
-            </section>
 
-        </main>
+                <!-- Tambahan Analisis: Kehadiran Online & Pemasaran -->
+                <div class="mt-8 pt-6 border-t">
+                    <h4 class="text-lg font-semibold mb-4 text-gray-700">Analisis Kehadiran Online & Pemasaran</h4>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-500">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-4 py-3">Kompetitor</th>
+                                    <th scope="col" class="px-4 py-3 text-center">Website</th>
+                                    <th scope="col" class="px-4 py-3 text-center">Media Sosial Aktif</th>
+                                    <th scope="col" class="px-4 py-3">Kualitas Konten</th>
+                                    <th scope="col" class="px-4 py-3">Engagement</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="bg-white border-b hover:bg-gray-50">
+                                    <td class="px-4 py-4 font-semibold">Bukit Darmo</td>
+                                    <td class="px-4 py-4 text-center"><span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Buruk</span></td>
+                                    <td class="px-4 py-4 text-center">Instagram, TikTok</td>
+                                    <td class="px-4 py-4">Baik</td>
+                                    <td class="px-4 py-4 text-center"><span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Tinggi</span></td>
+                                </tr>
+                                <tr class="bg-white border-b hover:bg-gray-50">
+                                    <td class="px-4 py-4 font-semibold">Graha Family</td>
+                                    <td class="px-4 py-4 text-center"><span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Baik</span></td>
+                                    <td class="px-4 py-4 text-center">Instagram</td>
+                                    <td class="px-4 py-4">Baik</td>
+                                    <td class="px-4 py-4 text-center"><span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Tinggi</span></td>
+                                </tr>
+                                <tr class="bg-white border-b hover:bg-gray-50">
+                                    <td class="px-4 py-4 font-semibold">Ciputra</td>
+                                    <td class="px-4 py-4 text-center"><span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Baik</span></td>
+                                    <td class="px-4 py-4 text-center">IG, FB, YouTube</td>
+                                    <td class="px-4 py-4">Baik</td>
+                                    <td class="px-4 py-4 text-center"><span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Tinggi</span></td>
+                                </tr>
+                                <tr class="bg-white border-b hover:bg-gray-50">
+                                    <td class="px-4 py-4 font-semibold">Pakuwon</td>
+                                    <td class="px-4 py-4 text-center"><span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Cukup</span></td>
+                                    <td class="px-4 py-4 text-center">IG, FB, TikTok, YT</td>
+                                    <td class="px-4 py-4">Cukup</td>
+                                    <td class="px-4 py-4 text-center"><span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Tinggi</span></td>
+                                </tr>
+                                <tr class="bg-white border-b hover:bg-gray-50">
+                                    <td class="px-4 py-4 font-semibold">Brawijaya</td>
+                                    <td class="px-4 py-4 text-center"><span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Tidak Ada</span></td>
+                                    <td class="px-4 py-4 text-center">IG, TikTok</td>
+                                    <td class="px-4 py-4">Cukup</td>
+                                    <td class="px-4 py-4 text-center"><span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Rendah</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="mt-4 text-sm text-gray-600">
+                        <strong>Peluang:</strong> Terdapat celah signifikan untuk unggul melalui kehadiran digital yang profesional. Sebuah <strong>website yang modern dan fungsional</strong> untuk booking online, serta <strong>konten media sosial berkualitas tinggi</strong> yang konsisten (menampilkan fasilitas, testimoni, tips golf) akan menjadi pembeda yang kuat, terutama dari kompetitor seperti Bukit Darmo dan Brawijaya.
+                    </p>
+                </div>
 
-        <footer class="text-center mt-12 text-gray-500 text-sm">
-            <p>Dasbor ini dibuat untuk tujuan ilustrasi dan studi kelayakan.</p>
-            <p>Data dikumpulkan dari sumber publik yang tersedia per Juli 2025.</p>
-        </footer>
+                <!-- Tambahan Analisis: Fasilitas & Layanan Tambahan -->
+                <div class="mt-8 pt-6 border-t">
+                    <h4 class="text-lg font-semibold mb-4 text-gray-700">Analisis Fasilitas & Layanan Tambahan</h4>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 text-center">
+                        <div>
+                            <p class="font-semibold text-gray-800">Bukit Darmo</p>
+                            <p class="text-sm text-gray-500">Restoran, Pro Shop, Loker</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-800">Graha Family</p>
+                            <p class="text-sm text-gray-500">Restoran, Pro Shop, Loker</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-800">Ciputra</p>
+                            <p class="text-sm text-gray-500">Restoran, Pro Shop, Loker</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-800">Pakuwon</p>
+                            <p class="text-sm text-gray-500">Restoran, Pro Shop, Loker</p>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-800">Brawijaya</p>
+                            <p class="text-sm text-gray-500">Restoran, Pro Shop, Loker, Simulator</p>
+                        </div>
+                    </div>
+                     <p class="mt-4 text-sm text-gray-600">
+                        <strong>Peluang:</strong> Hampir semua kompetitor menawarkan paket standar (Restoran, Pro Shop, Loker). Brawijaya selangkah lebih maju dengan adanya **Golf Simulator**. Ini adalah area diferensiasi yang kuat. Menawarkan fasilitas modern seperti **simulator golf, area chipping/putting/bunker yang terawat baik, atau F&B dengan konsep kafe modern** (bukan sekadar restoran formal) dapat menarik segmen pasar yang lebih luas dan meningkatkan waktu yang dihabiskan pelanggan di lokasi.
+                    </p>
+                </div>
+
+                <!-- Tambahan Analisis: Target Audiens & Positioning -->
+                <div class="mt-8 pt-6 border-t">
+                    <h4 class="text-lg font-semibold mb-4 text-gray-700">Analisis Target Audiens & Positioning</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                        <div>
+                            <p class="font-semibold text-gray-800">Segmen Premium / Mewah</p>
+                            <p class="text-sm text-gray-600">Ditargetkan oleh <strong class="text-red-700">Bukit Darmo, Graha, Ciputra, dan Pakuwon</strong>. Mereka berfokus pada pegolf senior, ekspatriat, dan kalangan bisnis. Positioning mereka menekankan eksklusivitas, prestige, dan fasilitas golf course yang lengkap.</p>
+                        </div>
+                         <div>
+                            <p class="font-semibold text-gray-800">Segmen Terjangkau / Fungsional</p>
+                            <p class="text-sm text-gray-600">Ditargetkan oleh <strong class="text-green-700">Brawijaya dan Le Grande</strong>. Mereka menyasar pegolf pemula, pelajar/mahasiswa, dan keluarga yang sensitif terhadap harga. Positioning mereka berfokus pada aksesibilitas dan harga yang kompetitif.</p>
+                        </div>
+                    </div>
+                     <p class="mt-4 text-sm text-gray-600">
+                        <strong>Peluang:</strong> Terdapat "celah" di antara kedua segmen ini. Sebuah posisi sebagai **"Premium Value"** atau **"Affordable Luxury"** sangat menjanjikan. Anda dapat menargetkan <strong>profesional muda, keluarga modern, dan pegolf wanita</strong> yang mencari pengalaman berkualitas tinggi tanpa harga yang terlalu eksklusif. Mereka menginginkan fasilitas yang bagus, suasana yang nyaman, dan layanan yang prima, serta bersedia membayar lebih dari segmen fungsional, namun mengharapkan nilai yang lebih baik dari segmen premium.
+                    </p>
+                </div>
+
+                <!-- Visualisasi Harga -->
+                <div class="mt-8">
+                    <h4 class="text-lg font-semibold text-center mb-2 text-gray-700">Perbandingan Benchmark Harga (Guest/100 Bola)</h4>
+                    <canvas id="competitorPriceChart"></canvas>
+                </div>
+
+                <!-- Analisis Strategis -->
+                <div class="mt-8 pt-6 border-t">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Implikasi Strategis & Peluang</h3>
+                    <div class="space-y-4 text-gray-600">
+                        <div>
+                            <h4 class="font-semibold text-gray-800">1. Posisi Harga (Pricing)</h4>
+                            <p>Harga untuk non-member (guest) untuk 100 bola berada di rentang <strong>Rp 130.000 - Rp 151.500</strong>. Ini menetapkan ekspektasi pasar. Menawarkan harga di dalam rentang ini dengan nilai tambah (fasilitas lebih baik, layanan superior) bisa menjadi strategi yang kuat.</p>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-800">2. Celah di Kualitas Layanan & Fasilitas</h4>
+                            <p>Poin yang paling menonjol adalah <strong>kelemahan yang berulang</strong> di banyak kompetitor, bahkan yang premium sekalipun. Isu seperti <strong>kebersihan toilet, perawatan fasilitas, dan kesopanan staf</strong> adalah keluhan umum. Ini adalah <strong>PELUANG EMAS</strong>. Sebuah fasilitas baru yang berfokus pada keunggulan operasional—kebersihan total, staf yang terlatih dengan baik, dan proses yang mulus—dapat dengan cepat membangun reputasi yang unggul.</p>
+                        </div>
+                         <div>
+                            <h4 class="font-semibold text-gray-800">3. Diferensiasi Pasar</h4>
+                            <p>Pasar terbagi jelas antara segmen 'Mewah' dan 'Terjangkau'. Proyek baru ini dapat memposisikan diri sebagai <strong>"Premium Value"</strong> atau <strong>"Affordable Luxury"</strong>, yaitu menawarkan pengalaman dan fasilitas fisik yang setara dengan segmen mewah, namun dengan layanan yang jauh lebih superior dan mungkin harga yang sedikit lebih kompetitif, menjembatani celah antara kedua segmen.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Section Kerangka Strategis Proyek (Fokus Driving Range) -->
+        <section id="strategic-positioning" class="mt-12">
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-blue-600 pl-4">Kerangka Strategis & Posisi Kompetitif: Driving Range</h2>
+            
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                
+                <!-- 1. Value Proposition -->
+                <div class="mb-8 pb-6 border-b">
+                    <h3 class="text-xl font-semibold mb-3 text-gray-800">1. Value Proposition (Nilai Jual Unik)</h3>
+                    <p class="text-lg text-gray-700 italic bg-blue-50 p-4 rounded-md">
+                        "Menjadi destinasi Driving Range pilihan utama di Surabaya yang menawarkan <strong>fasilitas berteknologi modern</strong>, <strong>layanan berstandar perhotelan</strong>, dan <strong>kebersihan tak tertandingi</strong>, dengan harga yang memberikan nilai terbaik bagi para pegolf, dari pemula hingga profesional."
+                    </p>
+                    <ul class="list-disc pl-5 mt-4 space-y-2 text-gray-600">
+                        <li><strong>Fasilitas Modern:</strong> Menyediakan bay dengan teknologi ball-tracking, matras berkualitas tinggi, dan area lounge yang nyaman untuk bersosialisasi.</li>
+                        <li><strong>Layanan Superior:</strong> Staf yang proaktif, ramah, dan terlatih untuk memberikan bantuan teknis dasar. Proses booking yang mudah dan efisien.</li>
+                        <li><strong>Kebersihan & Kenyamanan Ekstra:</strong> Komitmen pada standar kebersihan tertinggi di semua area, terutama toilet dan ruang ganti—titik lemah utama para pesaing.</li>
+                    </ul>
+                </div>
+
+                <!-- 2. Peta Posisi Kompetitif (Positioning Map) -->
+                <div class="mb-8 pb-6 border-b">
+                    <h3 class="text-xl font-semibold mb-3 text-gray-800">2. Peta Posisi Kompetitif Driving Range</h3>
+                    <p class="text-gray-600 mb-4">Visualisasi ini memetakan pasar driving range berdasarkan dua sumbu utama: Harga/Eksklusivitas dan Kualitas Fasilitas/Layanan. Titik kosong di kuadran kanan atas adalah peluang pasar yang harus kita isi.</p>
+                    <div class="relative w-full h-80 border-2 border-gray-300 rounded-lg p-4">
+                        <!-- Y Axis Label -->
+                        <span class="absolute -left-16 top-1/2 -translate-y-1/2 -rotate-90 font-semibold text-gray-600">Harga / Eksklusivitas</span>
+                        <!-- X Axis Label -->
+                        <span class="absolute bottom-[-35px] left-1/2 -translate-x-1/2 font-semibold text-gray-600">Kualitas Fasilitas & Layanan</span>
+                        
+                        <!-- Competitors -->
+                        <div class="absolute bottom-4 left-4 p-2 bg-gray-100 rounded shadow text-sm">Brawijaya</div>
+                        <div class="absolute top-4 left-1/2 p-2 bg-gray-100 rounded shadow text-sm">Ciputra / Graha</div>
+                        <div class="absolute top-2 right-12 p-2 bg-gray-100 rounded shadow text-sm">Bukit Darmo</div>
+                        
+                        <!-- OUR PROJECT! -->
+                        <div class="absolute top-1/3 right-4 p-3 bg-blue-600 text-white rounded-lg shadow-lg text-center font-bold animate-pulse">
+                            PROYEK KITA<br><span class="text-xs font-normal">(Premium Value)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Tujuan Strategis (SMART Goals) -->
+                <div class="mb-8 pb-6 border-b">
+                    <h3 class="text-xl font-semibold mb-3 text-gray-800">3. Tujuan Strategis Utama (Tahun Pertama)</h3>
+                    <ul class="space-y-3">
+                        <li class="p-3 bg-gray-50 rounded-md"><strong>Brand Positioning:</strong> Menjadi Top 3 Driving Range yang paling direkomendasikan di Surabaya berdasarkan ulasan Google & komunitas golf dalam 12 bulan.</li>
+                        <li class="p-3 bg-gray-50 rounded-md"><strong>Occupancy Rate:</strong> Mencapai tingkat okupansi bay rata-rata 60% di akhir pekan dan 35% di hari kerja dalam 6 bulan setelah Grand Opening.</li>
+                        <li class="p-3 bg-gray-50 rounded-md"><strong>Customer Loyalty:</strong> Mengakuisisi 150 anggota driving range (membership) aktif di tahun pertama dengan program benefit yang jelas.</li>
+                        <li class="p-3 bg-gray-50 rounded-md"><strong>Operational Excellence:</strong> Mempertahankan rating kebersihan dan layanan pelanggan di atas 4.8/5.0 berdasarkan feedback internal dan ulasan online.</li>
+                    </ul>
+                </div>
+
+                <!-- 4. Saran Pendekatan & Rekomendasi Aksi -->
+                <div>
+                    <h3 class="text-xl font-semibold mb-3 text-gray-800">4. Saran Pendekatan & Rekomendasi Aksi (Driving Range)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Kolom Produk & Harga -->
+                        <div class="space-y-4">
+                            <div>
+                                <h4 class="font-bold text-lg text-blue-700">Produk & Layanan</h4>
+                                <ul class="list-disc pl-5 mt-2 text-gray-600 space-y-1">
+                                    <li><strong>Fokus pada "Pain Points" Pesaing:</strong> Investasi besar pada kebersihan toilet, kualitas matras, dan ketersediaan bola. Jadikan ini sebagai selling point utama.</li>
+                                    <li><strong>Pelatihan Staf Berstandar Tinggi:</strong> Staf bukan hanya penjaga, tetapi "Golf Experience Host" yang bisa memberikan tips dasar dan memastikan kenyamanan.</li>
+                                    <li><strong>Integrasi Teknologi:</strong> Tawarkan beberapa bay premium dengan teknologi ball-tracker (seperti Toptracer) sebagai daya tarik utama dan sumber pendapatan tambahan.</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-lg text-blue-700">Harga (Pricing)</h4>
+                                <ul class="list-disc pl-5 mt-2 text-gray-600 space-y-1">
+                                    <li><strong>Strategi *Premium Value*:</strong> Tetapkan harga per 100 bola sedikit di bawah kompetitor premium (misal: setara Ciputra/Graha), namun dengan kualitas layanan dan fasilitas yang jelas lebih superior.</li>
+                                    <li><strong>Struktur Membership Bertingkat:</strong> Tawarkan paket (misal: Bulanan, Tahunan) dengan benefit jelas seperti diskon, prioritas booking, dan akses ke event eksklusif.</li>
+                                     <li><strong>Happy Hour & Paket Pemula:</strong> Tawarkan harga khusus di jam-jam sepi (siang hari kerja) dan paket untuk pemula (termasuk sewa stik & pengarahan singkat) untuk menarik segmen baru.</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <!-- Kolom Promosi & Tempat -->
+                        <div class="space-y-4">
+                            <div>
+                                <h4 class="font-bold text-lg text-blue-700">Promosi (Marketing)</h4>
+                                <ul class="list-disc pl-5 mt-2 text-gray-600 space-y-1">
+                                    <li><strong>Kampanye "A New Standard for Golf":</strong> Fokus pada komunikasi yang menyoroti keunggulan fasilitas dan layanan Anda dibandingkan status quo.</li>
+                                    <li><strong>Kolaborasi dengan Komunitas Golf:</strong> Undang komunitas-komunitas golf di Surabaya untuk mengadakan acara atau mini-turnamen di tempat Anda.</li>
+                                    <li><strong>Penawaran Paket *Corporate*:</strong> Targetkan perusahaan di sekitar SIER untuk acara outing atau employee benefit.</li>
+                                </ul>
+                            </div>
+                             <div>
+                                <h4 class="font-bold text-lg text-blue-700">Tempat (Place & Atmosphere)</h4>
+                                <ul class="list-disc pl-5 mt-2 text-gray-600 space-y-1">
+                                    <li><strong>Ciptakan Atmosfer Modern & Nyaman:</strong> Desain lounge yang menarik, pencahayaan yang baik, dan musik latar yang sesuai untuk menciptakan suasana yang lebih dari sekadar tempat latihan.</li>
+                                    <li><strong>Integrasi F&B Berkualitas:</strong> Sediakan pilihan kopi, minuman, dan makanan ringan yang baik, menjadikan tempat ini destinasi untuk bersantai setelah berlatih.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Section Estimasi Sampel Survei -->
+        <section id="survey-sample" class="mt-12">
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-purple-600 pl-4">Estimasi Sampel Survei Pasar</h2>
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <p class="text-gray-600 mb-4">
+                    Estimasi jumlah responden yang dibutuhkan menggunakan <strong>Rumus Slovin: n = N / (1 + N * e²)</strong>, berdasarkan tingkat kesalahan (margin of error) yang bisa diterima.
+                </p>
+
+                <!-- Bagian untuk Populasi Total -->
+                <div class="mt-6">
+                    <h3 class="font-semibold text-lg text-gray-800 mb-3">1. Berdasarkan Populasi Total</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Card 10% -->
+                        <div class="border border-orange-200 p-4 rounded-lg text-center bg-orange-50">
+                            <h4 class="font-semibold text-gray-700">Margin of Error 10%</h4>
+                            <p class="text-xs text-gray-500 mb-2">(Tingkat kepercayaan 90%)</p>
+                            <p id="sampleSize10" class="text-3xl font-bold text-orange-600">0</p>
+                        </div>
+                        <!-- Card 5% -->
+                        <div class="border border-purple-200 p-4 rounded-lg text-center bg-purple-50">
+                            <h4 class="font-semibold text-gray-700">Margin of Error 5%</h4>
+                            <p class="text-xs text-gray-500 mb-2">(Tingkat kepercayaan 95%)</p>
+                            <p id="sampleSize5" class="text-3xl font-bold text-purple-700">0</p>
+                        </div>
+                        <!-- Card 3% -->
+                        <div class="border border-blue-200 p-4 rounded-lg text-center bg-blue-50">
+                            <h4 class="font-semibold text-gray-700">Margin of Error 3%</h4>
+                            <p class="text-xs text-gray-500 mb-2">(Tingkat kepercayaan 97%)</p>
+                            <p id="sampleSize3" class="text-3xl font-bold text-blue-700">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bagian untuk Rincian per Ring -->
+                <div class="mt-8 pt-6 border-t border-gray-200">
+                    <h3 class="font-semibold text-lg text-gray-800 mb-3">2. Berdasarkan Klasifikasi Ring (untuk Survei Terpisah)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Card untuk Ring 1 -->
+                        <div class="border border-green-200 p-4 rounded-lg bg-green-50">
+                            <h4 class="font-bold text-green-800 text-center">Sampel untuk RING 1</h4>
+                            <p id="totalPopRing1" class="text-xs text-gray-500 text-center mb-3">(Total Populasi N = 0)</p>
+                            <div class="flex justify-around items-center">
+                                <div class="text-center"><p class="text-sm font-semibold text-gray-600">Error 10%</p><p id="sampleSizeRing1_10" class="text-2xl font-bold text-green-700">0</p></div>
+                                <div class="text-center"><p class="text-sm font-semibold text-gray-600">Error 5%</p><p id="sampleSizeRing1_5" class="text-2xl font-bold text-green-700">0</p></div>
+                                <div class="text-center"><p class="text-sm font-semibold text-gray-600">Error 3%</p><p id="sampleSizeRing1_3" class="text-2xl font-bold text-green-700">0</p></div>
+                            </div>
+                        </div>
+                        <!-- Card untuk Ring 2 -->
+                        <div class="border border-yellow-200 p-4 rounded-lg bg-yellow-50">
+                            <h4 class="font-bold text-yellow-800 text-center">Sampel untuk RING 2</h4>
+                            <p id="totalPopRing2" class="text-xs text-gray-500 text-center mb-3">(Total Populasi N = 0)</p>
+                            <div class="flex justify-around items-center">
+                                <div class="text-center"><p class="text-sm font-semibold text-gray-600">Error 10%</p><p id="sampleSizeRing2_10" class="text-2xl font-bold text-yellow-700">0</p></div>
+                                <div class="text-center"><p class="text-sm font-semibold text-gray-600">Error 5%</p><p id="sampleSizeRing2_5" class="text-2xl font-bold text-yellow-700">0</p></div>
+                                <div class="text-center"><p class="text-sm font-semibold text-gray-600">Error 3%</p><p id="sampleSizeRing2_3" class="text-2xl font-bold text-yellow-700">0</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="mt-6 text-sm text-gray-500 italic">
+                    <strong>Catatan:</strong> Memilih margin of error yang lebih kecil (misal: 3%) akan memberikan hasil yang lebih presisi, namun membutuhkan jumlah responden yang lebih banyak. Pilihlah sesuai dengan kebutuhan dan budget riset Anda.
+                </p>
+            </div>
+        </section>
+
     </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', () => {
+    <script>
+        // DATASET
+        const demographyData = [
+            { kecamatan: "Rungkut", kelurahan: "Kali Rungkut", total: 23310, usia0_14: 5012, usia15_24: 3565, usia25_39: 7152, usia40_54: 4412, usia55_64: 1365, usia65_plus: 1804, ring: 1 },
+            { kecamatan: "Rungkut", kelurahan: "Kedung Baruk", total: 16102, usia0_14: 3462, usia15_24: 2463, usia25_39: 4941, usia40_54: 3048, usia55_64: 943, usia65_plus: 1250, ring: 1 },
+            { kecamatan: "Rungkut", kelurahan: "Penjaringan Sari", total: 19439, usia0_14: 4179, usia15_24: 2972, usia25_39: 5961, usia40_54: 3677, usia55_64: 1137, usia65_plus: 1506, ring: 1 },
+            { kecamatan: "Rungkut", kelurahan: "Rungkut Kidul", total: 13503, usia0_14: 2903, usia15_24: 2064, usia25_39: 4139, usia40_54: 2553, usia55_64: 790, usia65_plus: 1046, ring: 1 },
+            { kecamatan: "Rungkut", kelurahan: "Medokan Ayu", total: 29673, usia0_14: 6379, usia15_24: 4537, usia25_39: 9102, usia40_54: 5615, usia55_64: 1737, usia65_plus: 2295, ring: 2 },
+            { kecamatan: "Rungkut", kelurahan: "Wonorejo", total: 19429, usia0_14: 4176, usia15_24: 2970, usia25_39: 5957, usia40_54: 3675, usia55_64: 1136, usia65_plus: 1505, ring: 2 },
+            { kecamatan: "Gunung Anyar", kelurahan: "Rungkut Menanggal", total: 13357, usia0_14: 2899, usia15_24: 2083, usia25_39: 4092, usia40_54: 2563, usia55_64: 732, usia65_plus: 988, ring: 1 },
+            { kecamatan: "Gunung Anyar", kelurahan: "Rungkut Tengah", total: 13572, usia0_14: 2946, usia15_24: 2116, usia25_39: 4158, usia40_54: 2604, usia55_64: 744, usia65_plus: 1004, ring: 1 },
+            { kecamatan: "Gunung Anyar", kelurahan: "Gunung Anyar", total: 22936, usia0_14: 4980, usia15_24: 3577, usia25_39: 7029, usia40_54: 4402, usia55_64: 1254, usia65_plus: 1694, ring: 1 },
+            { kecamatan: "Gunung Anyar", kelurahan: "Gunung Anyar Tambak", total: 11337, usia0_14: 2461, usia15_24: 1768, usia25_39: 3474, usia40_54: 2176, usia55_64: 620, usia65_plus: 838, ring: 2 },
+            { kecamatan: "Tenggilis Mejoyo", kelurahan: "Kendangsari", total: 14805, usia0_14: 3139, usia15_24: 2296, usia25_39: 4606, usia40_54: 2801, usia55_64: 839, usia65_plus: 1124, ring: 1 },
+            { kecamatan: "Tenggilis Mejoyo", kelurahan: "Kutisari", total: 18598, usia0_14: 3943, usia15_24: 2884, usia25_39: 5786, usia40_54: 3519, usia55_64: 1054, usia65_plus: 1412, ring: 1 },
+            { kecamatan: "Tenggilis Mejoyo", kelurahan: "Panjang Jiwo", total: 13582, usia0_14: 2880, usia15_24: 2106, usia25_39: 4225, usia40_54: 2570, usia55_64: 769, usia65_plus: 1032, ring: 2 },
+            { kecamatan: "Tenggilis Mejoyo", kelurahan: "Tenggilis Mejoyo", total: 18892, usia0_14: 4005, usia15_24: 2930, usia25_39: 5877, usia40_54: 3575, usia55_64: 1070, usia65_plus: 1435, ring: 1 },
+            { kecamatan: "Waru (Sidoarjo)", kelurahan: "Berbek", total: 8614, usia0_14: 1826, usia15_24: 1294, usia25_39: 2678, usia40_54: 1638, usia55_64: 489, usia65_plus: 689, ring: 1 },
+            { kecamatan: "Waru (Sidoarjo)", kelurahan: "Tambak Sawah", total: 12016, usia0_14: 2547, usia15_24: 1805, usia25_39: 3736, usia40_54: 2285, usia55_64: 683, usia65_plus: 962, ring: 1 },
+            { kecamatan: "Waru (Sidoarjo)", kelurahan: "Tambak Sumur", total: 8825, usia0_14: 1871, usia15_24: 1326, usia25_39: 2744, usia40_54: 1678, usia55_64: 501, usia65_plus: 706, ring: 1 },
+            { kecamatan: "Waru (Sidoarjo)", kelurahan: "Tropodo", total: 22028, usia0_14: 4670, usia15_24: 3310, usia25_39: 6848, usia40_54: 4188, usia55_64: 1252, usia65_plus: 1762, ring: 1 },
+            { kecamatan: "Waru (Sidoarjo)", kelurahan: "Wadungasri", total: 11233, usia0_14: 2382, usia15_24: 1688, usia25_39: 3492, usia40_54: 2136, usia55_64: 639, usia65_plus: 898, ring: 1 },
+            { kecamatan: "Waru (Sidoarjo)", kelurahan: "Kepuh Kiriman", total: 17519, usia0_14: 3715, usia15_24: 2632, usia25_39: 5446, usia40_54: 3331, usia55_64: 996, usia65_plus: 1401, ring: 2 },
+            { kecamatan: "Waru (Sidoarjo)", kelurahan: "Pepelegi", total: 14383, usia0_14: 3051, usia15_24: 2161, usia25_39: 4471, usia40_54: 2734, usia55_64: 818, usia65_plus: 1149, ring: 2 },
+            { kecamatan: "Waru (Sidoarjo)", kelurahan: "Tambak Rejo", total: 15655, usia0_14: 3320, usia15_24: 2352, usia25_39: 4867, usia40_54: 2976, usia55_64: 890, usia65_plus: 1250, ring: 2 },
+            { kecamatan: "Waru (Sidoarjo)", kelurahan: "Bungurasih", total: 8589, usia0_14: 1822, usia15_24: 1291, usia25_39: 2671, usia40_54: 1634, usia55_64: 488, usia65_plus: 685, ring: 2 },
+            { kecamatan: "Waru (Sidoarjo)", kelurahan: "Janti", total: 5772, usia0_14: 1224, usia15_24: 867, usia25_39: 1795, usia40_54: 1098, usia55_64: 328, usia65_plus: 461, ring: 2 },
+            { kecamatan: "Waru (Sidoarjo)", kelurahan: "Kureksari", total: 14025, usia0_14: 2975, usia15_24: 2107, usia25_39: 4360, usia40_54: 2666, usia55_64: 797, usia65_plus: 1120, ring: 2 },
+            { kecamatan: "Waru (Sidoarjo)", kelurahan: "Medaeng", total: 9987, usia0_14: 2118, usia15_24: 1501, usia25_39: 3105, usia40_54: 1899, usia55_64: 568, usia65_plus: 798, ring: 2 },
+            { kecamatan: "Waru (Sidoarjo)", kelurahan: "Ngingas", total: 14047, usia0_14: 2979, usia15_24: 2111, usia25_39: 4367, usia40_54: 2671, usia55_64: 798, usia65_plus: 1122, ring: 2 },
+            { kecamatan: "Waru (Sidoarjo)", kelurahan: "Waru", total: 8643, usia0_14: 1833, usia15_24: 1299, usia25_39: 2687, usia40_54: 1644, usia55_64: 491, usia65_plus: 691, ring: 2 },
+            { kecamatan: "Waru (Sidoarjo)", kelurahan: "Wedoro", total: 14283, usia0_14: 3030, usia15_24: 2146, usia25_39: 4440, usia40_54: 2715, usia55_64: 812, usia65_plus: 1142, ring: 2 },
+            { kecamatan: "Waru (Sidoarjo)", kelurahan: "Kedungrejo", total: 16711, usia0_14: 3544, usia15_24: 2511, usia25_39: 5195, usia40_54: 3177, usia55_64: 950, usia65_plus: 1335, ring: 2 },
+            { kecamatan: "Waru (Sidoarjo)", kelurahan: "Tambak Oso", total: 2508, usia0_14: 532, usia15_24: 377, usia25_39: 780, usia40_54: 477, usia55_64: 142, usia65_plus: 200, ring: 2 },
+        ];
 
-    // Konfigurasi umum untuk teks grafik pada tema terang
-    const chartTextColor = '#374151'; // text-gray-700
-    const chartGridColor = 'rgba(0, 0, 0, 0.1)';
+        // Helper function to format numbers with dots
+        function formatNumber(num) {
+            return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+        }
 
-    // --- DATA (Sama seperti sebelumnya) ---
-    const surabayaPopulation = {
-        labels: ['2020', '2021', '2022', '2023', '2024', '2025', '2026', '2027', '2028', '2029'],
-        historicalData: [2904751, 2880284, 2887223, 2997547, 3021043, null, null, null, null, null],
-        projectedData: [null, null, null, null, 3021043, 3043518, 3065133, 3085996, 3106108, 3125548]
-    };
+        // --- DATA PROCESSING ---
+        // 1. Total Population
+        const totalPopulation = demographyData.reduce((sum, item) => sum + item.total, 0);
 
-    const sierPopulation = {
-        labels: ['Rungkut', 'Gunung Anyar', 'Tenggilis Mejoyo', 'Waru, Sidoarjo'],
-        data: [123757, 62342, 54861, 194084]
-    };
-    
-    const demographicData = {
-        labels: ['Rungkut', 'Gunung Anyar', 'Tenggilis Mejoyo', 'Waru, Sidoarjo'],
-        productiveAge: [91580, 46133, 40597, 143622],
-        otherAge: [32177, 16209, 14264, 50462]
-    };
-    
-    const kecamatanData = [
-        { name: 'Rungkut', population: 123757, color: '#164E63', coords: [[-7.316, 112.793], [-7.339, 112.783], [-7.333, 112.812], [-7.315, 112.810]] },
-        { name: 'Gunung Anyar', population: 62342, color: '#0E7490', coords: [[-7.339, 112.783], [-7.363, 112.793], [-7.348, 112.825], [-7.333, 112.812]] },
-        { name: 'Tenggilis Mejoyo', population: 54861, color: '#06B6D4', coords: [[-7.315, 112.760], [-7.338, 112.761], [-7.339, 112.783], [-7.316, 112.793]] },
-        { name: 'Waru, Sidoarjo', population: 194084, color: '#083344', coords: [[-7.338, 112.761], [-7.375, 112.730], [-7.388, 112.775], [-7.363, 112.793]] }
-    ];
+        // 2. Total by Ring
+        const totalRing1 = demographyData.filter(d => d.ring === 1).reduce((sum, item) => sum + item.total, 0);
+        const totalRing2 = demographyData.filter(d => d.ring === 2).reduce((sum, item) => sum + item.total, 0);
 
-    const universities = [
-        { name: 'UPN "Veteran" Jatim', students: '22,882', coords: [-7.332, 112.802] },
-        { name: 'Univ. Surabaya (UBAYA)', students: '11,000+', coords: [-7.324, 112.774] },
-        { name: 'UK Petra', students: '~10,000', coords: [-7.320, 112.734] },
-        { name: 'Univ. Airlangga (Kampus C)', students: '~38,000', coords: [-7.267, 112.785] }
-    ];
+        // 3. Total by Age Group
+        const totalsByAge = {
+            '0-14 Thn': demographyData.reduce((sum, item) => sum + item.usia0_14, 0),
+            '15-24 Thn': demographyData.reduce((sum, item) => sum + item.usia15_24, 0),
+            '25-39 Thn': demographyData.reduce((sum, item) => sum + item.usia25_39, 0),
+            '40-54 Thn': demographyData.reduce((sum, item) => sum + item.usia40_54, 0),
+            '55-64 Thn': demographyData.reduce((sum, item) => sum + item.usia55_64, 0),
+            '65+ Thn': demographyData.reduce((sum, item) => sum + item.usia65_plus, 0),
+        };
 
-    // --- CHART 1: SURABAYA POPULATION ---
-    const ctx1 = document.getElementById('surabayaPopulationChart').getContext('2d');
-    new Chart(ctx1, {
-        type: 'line',
-        data: {
-            labels: surabayaPopulation.labels,
-            datasets: [
-                {
-                    label: 'Jumlah Penduduk (Historis)',
-                    data: surabayaPopulation.historicalData,
-                    borderColor: '#14B8A6', // teal-500
-                    backgroundColor: 'rgba(20, 184, 166, 0.1)',
-                    fill: false,
-                    tension: 0.1,
-                    pointRadius: 4,
-                    pointBackgroundColor: '#14B8A6'
-                },
-                {
-                    label: 'Jumlah Penduduk (Proyeksi)',
-                    data: surabayaPopulation.projectedData,
-                    borderColor: '#0F766E', // teal-700
-                    backgroundColor: 'rgba(15, 118, 110, 0.1)',
-                    fill: false,
-                    borderDash: [5, 5],
-                    tension: 0.1,
-                    pointRadius: 4,
-                    pointBackgroundColor: '#0F766E'
+        // 4. Total Productive vs Non-Productive
+        const totalProductive = totalsByAge['15-24 Thn'] + totalsByAge['25-39 Thn'] + totalsByAge['40-54 Thn'] + totalsByAge['55-64 Thn'];
+        const totalNonProductive = totalsByAge['0-14 Thn'] + totalsByAge['65+ Thn'];
+        const dependencyRatio = ((totalNonProductive / totalProductive) * 100).toFixed(2);
+
+        // 5. Total by Kecamatan
+        const totalsByKecamatan = demographyData.reduce((acc, curr) => {
+            if (!acc[curr.kecamatan]) {
+                acc[curr.kecamatan] = 0;
+            }
+            acc[curr.kecamatan] += curr.total;
+            return acc;
+        }, {});
+
+        // 6. Estimasi Sampel Survei (Slovin's Formula)
+        const marginOfError10 = 0.10; // 10%
+        const marginOfError5 = 0.05;  // 5%
+        const marginOfError3 = 0.03;  // 3%
+
+        // Rumus: n = N / (1 + N * e^2)
+        const slovin = (N, e) => Math.ceil(N / (1 + N * e * e));
+
+        // Kalkulasi untuk Populasi Total
+        const sampleSize10 = slovin(totalPopulation, marginOfError10);
+        const sampleSize5 = slovin(totalPopulation, marginOfError5);
+        const sampleSize3 = slovin(totalPopulation, marginOfError3);
+
+        // Kalkulasi spesifik untuk Ring 1
+        const sampleSizeRing1_10 = slovin(totalRing1, marginOfError10);
+        const sampleSizeRing1_5 = slovin(totalRing1, marginOfError5);
+        const sampleSizeRing1_3 = slovin(totalRing1, marginOfError3);
+
+        // Kalkulasi spesifik untuk Ring 2
+        const sampleSizeRing2_10 = slovin(totalRing2, marginOfError10);
+        const sampleSizeRing2_5 = slovin(totalRing2, marginOfError5);
+        const sampleSizeRing2_3 = slovin(totalRing2, marginOfError3);
+
+        // --- FUNGSI UNTUK MENGHITUNG ESTIMASI PENDAPATAN ---
+        function calculateIncomeDistribution(data) {
+            return data.map(row => {
+                // Kelompok Dependent adalah tetap
+                const dependent = row.usia0_14 + row.usia65_plus;
+                
+                // Asumsi awal: semua di kelompok awal produktif (15-24) adalah Low Income
+                let lowIncome = row.usia15_24;
+                let middleIncome = 0;
+                let highIncome = 0;
+
+                // Ambil populasi produktif utama (25-54) dan pra-pensiun (55-64)
+                const productivePopulation = row.usia25_39 + row.usia40_54;
+                const preRetirementPopulation = row.usia55_64;
+
+                if (row.ring === 1) {
+                    // Asumsi untuk Ring 1: Lebih banyak High Income
+                    // 35% dari produktif utama -> High, 65% -> Middle
+                    highIncome += Math.round(productivePopulation * 0.35);
+                    middleIncome += Math.round(productivePopulation * 0.65);
+                    // 20% dari pra-pensiun -> High, 80% -> Middle
+                    highIncome += Math.round(preRetirementPopulation * 0.20);
+                    middleIncome += Math.round(preRetirementPopulation * 0.80);
+                } else { // Ring 2
+                    // Asumsi untuk Ring 2: Lebih banyak Middle Income
+                    // 15% dari produktif utama -> High, 85% -> Middle
+                    highIncome += Math.round(productivePopulation * 0.15);
+                    middleIncome += Math.round(productivePopulation * 0.85);
+                    // 5% dari pra-pensiun -> High, 95% -> Middle
+                    highIncome += Math.round(preRetirementPopulation * 0.05);
+                    middleIncome += Math.round(preRetirementPopulation * 0.95);
                 }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { labels: { color: chartTextColor } } },
-            scales: {
-                y: { ticks: { color: chartTextColor }, grid: { color: chartGridColor } },
-                x: { ticks: { color: chartTextColor }, grid: { color: chartGridColor } }
-            }
-        }
-    });
 
-    // --- CHART 2: SIER POPULATION ---
-    const ctx2 = document.getElementById('sierPopulationChart').getContext('2d');
-    new Chart(ctx2, {
-        type: 'bar',
-        data: {
-            labels: sierPopulation.labels,
-            datasets: [{
-                label: 'Jumlah Penduduk',
-                data: sierPopulation.data,
-                backgroundColor: ['#0F766E', '#14B8A6', '#5EEAD4', '#0D9488'],
-                borderColor: '#ffffff',
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            indexAxis: 'y',
-            plugins: { legend: { display: false } },
-            scales: {
-                y: { ticks: { color: chartTextColor }, grid: { color: 'transparent' } },
-                x: { ticks: { color: chartTextColor }, grid: { color: chartGridColor } }
-            }
+                return {
+                    ...row, // Salin semua data asli
+                    incomeDependent: dependent,
+                    incomeLow: lowIncome,
+                    incomeMiddle: middleIncome,
+                    incomeHigh: highIncome
+                };
+            });
         }
-    });
-    
-    // --- CHART 3: DEMOGRAPHIC STACKED BAR ---
-    const ctx3 = document.getElementById('demographicChart').getContext('2d');
-    new Chart(ctx3, {
-        type: 'bar',
-        data: {
-            labels: demographicData.labels,
-            datasets: [
-                {
-                    label: 'Usia Produktif (15-70 Thn)',
-                    data: demographicData.productiveAge,
-                    backgroundColor: '#14B8A6', // teal-500
-                },
-                {
-                    label: 'Usia Lainnya',
-                    data: demographicData.otherAge,
-                    backgroundColor: '#E5E7EB', // gray-200
+
+        // --- FUNGSI UNTUK MERENDER TABEL PENDAPATAN ---
+        function renderIncomeTable(incomeData) {
+            const tableBody = document.getElementById('incomeTableBody');
+            tableBody.innerHTML = ''; // Kosongkan tabel sebelum diisi
+
+            let currentKecamatan = null;
+            let kecamatanTotals = { dependent: 0, low: 0, middle: 0, high: 0 };
+
+            // Fungsi helper untuk menambahkan baris total
+            const appendSummaryRow = (kecamatanName, totals) => {
+                const tr = document.createElement('tr');
+                tr.className = 'bg-gray-100 font-bold text-gray-800 border-t-2 border-b-2 border-gray-300';
+                tr.innerHTML = `
+                    <td colspan="3" class="px-4 py-3 text-right">Total ${kecamatanName}</td>
+                    <td class="px-4 py-3 text-center">${formatNumber(totals.dependent)}</td>
+                    <td class="px-4 py-3 text-center">${formatNumber(totals.low)}</td>
+                    <td class="px-4 py-3 text-center">${formatNumber(totals.middle)}</td>
+                    <td class="px-4 py-3 text-center">${formatNumber(totals.high)}</td>
+                `;
+                tableBody.appendChild(tr);
+            };
+
+            incomeData.forEach((row, index) => {
+                // Jika kecamatan berubah, cetak total untuk kecamatan sebelumnya
+                if (row.kecamatan !== currentKecamatan && currentKecamatan !== null) {
+                    appendSummaryRow(currentKecamatan, kecamatanTotals);
+                    // Reset total untuk kecamatan baru
+                    kecamatanTotals = { dependent: 0, low: 0, middle: 0, high: 0 };
                 }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { labels: { color: chartTextColor } } },
-            scales: {
-                x: { stacked: true, ticks: { color: chartTextColor }, grid: { color: chartGridColor } },
-                y: { stacked: true, ticks: { color: chartTextColor }, grid: { color: 'transparent' } }
-            }
+
+                // Set kecamatan saat ini
+                currentKecamatan = row.kecamatan;
+
+                // Akumulasi total
+                kecamatanTotals.dependent += row.incomeDependent;
+                kecamatanTotals.low += row.incomeLow;
+                kecamatanTotals.middle += row.incomeMiddle;
+                kecamatanTotals.high += row.incomeHigh;
+
+                // Buat baris untuk setiap kelurahan
+                const tr = document.createElement('tr');
+                tr.className = 'bg-white border-b hover:bg-gray-50';
+                tr.innerHTML = `
+                    <td class="px-4 py-4 font-medium text-gray-900 whitespace-nowrap">${row.kecamatan}</td>
+                    <td class="px-4 py-4">${row.kelurahan}</td>
+                    <td class="px-2 py-4 text-center">${row.ring}</td> <!-- Data Ring Ditambahkan -->
+                    <td class="px-4 py-4 text-center">${formatNumber(row.incomeDependent)}</td>
+                    <td class="px-4 py-4 text-center">${formatNumber(row.incomeLow)}</td>
+                    <td class="px-4 py-4 text-center">${formatNumber(row.incomeMiddle)}</td>
+                    <td class="px-4 py-4 text-center">${formatNumber(row.incomeHigh)}</td>
+                `;
+                tableBody.appendChild(tr);
+
+                // Jika ini adalah baris terakhir, cetak total untuk kecamatan terakhir
+                if (index === incomeData.length - 1) {
+                    appendSummaryRow(currentKecamatan, kecamatanTotals);
+                }
+            });
         }
-    });
 
-    // --- MAP: LEAFLET.JS (Light Mode) ---
-    const map = L.map('sierMap').setView([-7.325, 112.780], 12);
-    // Menggunakan tile layer terang dari CartoDB
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
-        maxZoom: 20
-    }).addTo(map);
+        // --- DOM MANIPULATION & RENDER ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Fill Summary Cards
+            document.getElementById('totalPenduduk').innerText = formatNumber(totalPopulation);
+            document.getElementById('totalRing1').innerText = formatNumber(totalRing1);
+            document.getElementById('totalRing2').innerText = formatNumber(totalRing2);
+            document.getElementById('dependencyRatio').innerText = dependencyRatio;
+            // Fill Survey Sample Cards
+            document.getElementById('sampleSize10').innerText = formatNumber(sampleSize10) + ' Responden';
+            document.getElementById('sampleSize5').innerText = formatNumber(sampleSize5) + ' Responden';
+            document.getElementById('sampleSize3').innerText = formatNumber(sampleSize3) + ' Responden';
 
-    // Add Kecamatan polygons
-    kecamatanData.forEach(kec => {
-        L.polygon(kec.coords, { 
-            color: '#111827', // gray-900
-            weight: 1,
-            fillColor: kec.color, // Warna gelap akan terlihat kontras di peta terang
-            fillOpacity: 0.6 
-        }).bindPopup(`<b>${kec.name}</b><br>Populasi: ${kec.population.toLocaleString('id-ID')}`).addTo(map);
-    });
+            document.getElementById('totalPopRing1').innerText = `(Total Populasi N = ${formatNumber(totalRing1)})`;
+            document.getElementById('sampleSizeRing1_10').innerText = formatNumber(sampleSizeRing1_10);
+            document.getElementById('sampleSizeRing1_5').innerText = formatNumber(sampleSizeRing1_5);
+            document.getElementById('sampleSizeRing1_3').innerText = formatNumber(sampleSizeRing1_3);
 
-    // Add University markers
-    universities.forEach(uni => {
-        L.circleMarker(uni.coords, {
-            radius: 8,
-            fillColor: "#0E7490", // Darker cyan for better visibility
-            color: "#ffffff",
-            weight: 2,
-            opacity: 1,
-            fillOpacity: 0.9
-        }).bindPopup(`<b>${uni.name}</b><br>Mahasiswa: ${uni.students}`).addTo(map);
-    });
-});
-</script>
+            document.getElementById('totalPopRing2').innerText = `(Total Populasi N = ${formatNumber(totalRing2)})`;
+            document.getElementById('sampleSizeRing2_10').innerText = formatNumber(sampleSizeRing2_10);
+            document.getElementById('sampleSizeRing2_5').innerText = formatNumber(sampleSizeRing2_5);
+            document.getElementById('sampleSizeRing2_3').innerText = formatNumber(sampleSizeRing2_3);
 
+            // Fill Data Table
+            const tableBody = document.getElementById('dataTableBody');
+            demographyData.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = 'bg-white border-b hover:bg-gray-50';
+                tr.innerHTML = `
+                    <td class="px-3 py-4 font-medium text-gray-900 whitespace-nowrap">${row.kecamatan}</td>
+                    <td class="px-3 py-4">${row.kelurahan}</td>
+                    <td class="px-3 py-4 text-center">${formatNumber(row.total)}</td>
+                    <td class="px-3 py-4 text-center">${formatNumber(row.usia0_14)}</td>
+                    <td class="px-3 py-4 text-center">${formatNumber(row.usia15_24)}</td>
+                    <td class="px-3 py-4 text-center">${formatNumber(row.usia25_39)}</td>
+                    <td class="px-3 py-4 text-center">${formatNumber(row.usia40_54)}</td>
+                    <td class="px-3 py-4 text-center">${formatNumber(row.usia55_64)}</td>
+                    <td class="px-3 py-4 text-center">${formatNumber(row.usia65_plus)}</td>
+                    <td class="px-3 py-4 text-center">${row.ring}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+
+            const estimatedIncomeData = calculateIncomeDistribution(demographyData);
+            renderIncomeTable(estimatedIncomeData);
+
+            // --- CHART INITIALIZATION ---
+            // Chart 1: Ring Chart
+            new Chart(document.getElementById('ringChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Ring 1', 'Ring 2'],
+                    datasets: [{
+                        label: 'Total Populasi',
+                        data: [totalRing1, totalRing2],
+                        backgroundColor: ['#10B981', '#F59E0B'], // green-500, yellow-500
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: { callbacks: { label: (context) => `${context.label}: ${formatNumber(context.raw)}` } }
+                    }
+                }
+            });
+
+            // Chart 2: Age Distribution Chart
+            new Chart(document.getElementById('ageDistributionChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(totalsByAge),
+                    datasets: [{
+                        label: 'Total Penduduk',
+                        data: Object.values(totalsByAge),
+                        backgroundColor: 'rgba(59, 130, 246, 0.7)', // blue-500 with opacity
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: { y: { beginAtZero: true, ticks: { callback: (value) => formatNumber(value) } } },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${formatNumber(context.raw)}` } }
+                    }
+                }
+            });
+
+            // Chart 3: Productive Ratio Chart
+            new Chart(document.getElementById('productiveRatioChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Usia Produktif (15-64 Thn)', 'Usia Non-Produktif (0-14 & 65+ Thn)'],
+                    datasets: [{
+                        label: 'Populasi',
+                        data: [totalProductive, totalNonProductive],
+                        backgroundColor: ['#2563EB', '#DC2626'], // blue-700, red-600
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: { callbacks: { label: (context) => `${context.label}: ${formatNumber(context.raw)}` } }
+                    }
+                }
+            });
+
+            // Chart 4: Kecamatan Chart (Horizontal Bar)
+            new Chart(document.getElementById('kecamatanChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(totalsByKecamatan),
+                    datasets: [{
+                        label: 'Total Populasi',
+                        data: Object.values(totalsByKecamatan),
+                        backgroundColor: ['#8B5CF6', '#EC4899', '#F97316', '#14B8A6'], // violet, pink, orange, teal
+                        borderColor: '#ffffff',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // This makes the bar chart horizontal
+                    responsive: true,
+                    scales: { x: { beginAtZero: true, ticks: { callback: (value) => formatNumber(value) } } },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${formatNumber(context.raw)}` } }
+                    }
+                }
+            });
+
+            // --- DATA PROCESSING & CHARTING FOR DETAILED AGE ANALYSIS ---
+
+            // 1. Data Processing untuk Distribusi Usia per Ring
+            const ageLabels = ['0-14 Thn', '15-24 Thn', '25-39 Thn', '40-54 Thn', '55-64 Thn', '65+ Thn'];
+            const totalsByAgeRing1 = { '0-14 Thn': 0, '15-24 Thn': 0, '25-39 Thn': 0, '40-54 Thn': 0, '55-64 Thn': 0, '65+ Thn': 0 };
+            const totalsByAgeRing2 = { '0-14 Thn': 0, '15-24 Thn': 0, '25-39 Thn': 0, '40-54 Thn': 0, '55-64 Thn': 0, '65+ Thn': 0 };
+
+            demographyData.forEach(row => {
+                if (row.ring === 1) {
+                    totalsByAgeRing1['0-14 Thn'] += row.usia0_14;
+                    totalsByAgeRing1['15-24 Thn'] += row.usia15_24;
+                    totalsByAgeRing1['25-39 Thn'] += row.usia25_39;
+                    totalsByAgeRing1['40-54 Thn'] += row.usia40_54;
+                    totalsByAgeRing1['55-64 Thn'] += row.usia55_64;
+                    totalsByAgeRing1['65+ Thn'] += row.usia65_plus;
+                } else {
+                    totalsByAgeRing2['0-14 Thn'] += row.usia0_14;
+                    totalsByAgeRing2['15-24 Thn'] += row.usia15_24;
+                    totalsByAgeRing2['25-39 Thn'] += row.usia25_39;
+                    totalsByAgeRing2['40-54 Thn'] += row.usia40_54;
+                    totalsByAgeRing2['55-64 Thn'] += row.usia55_64;
+                    totalsByAgeRing2['65+ Thn'] += row.usia65_plus;
+                }
+            });
+
+            // Charting untuk Distribusi Usia per Ring (Grouped Bar Chart)
+            new Chart(document.getElementById('ageDistributionByRingChart'), {
+                type: 'bar',
+                data: {
+                    labels: ageLabels,
+                    datasets: [
+                        {
+                            label: 'Ring 1',
+                            data: Object.values(totalsByAgeRing1),
+                            backgroundColor: 'rgba(22, 163, 74, 0.7)', // Green
+                            borderColor: 'rgba(22, 163, 74, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Ring 2',
+                            data: Object.values(totalsByAgeRing2),
+                            backgroundColor: 'rgba(245, 158, 11, 0.7)', // Yellow/Orange
+                            borderColor: 'rgba(245, 158, 11, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: { y: { beginAtZero: true, ticks: { callback: (value) => formatNumber(value) } } },
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${formatNumber(context.raw)}` } }
+                    }
+                }
+            });
+
+
+            // 2. Data Processing untuk Distribusi Usia per Kecamatan
+            const totalsByAgeKecamatan = demographyData.reduce((acc, row) => {
+                const { kecamatan } = row;
+                if (!acc[kecamatan]) {
+                    acc[kecamatan] = { '0-14 Thn': 0, '15-24 Thn': 0, '25-39 Thn': 0, '40-54 Thn': 0, '55-64 Thn': 0, '65+ Thn': 0 };
+                }
+                acc[kecamatan]['0-14 Thn'] += row.usia0_14;
+                acc[kecamatan]['15-24 Thn'] += row.usia15_24;
+                acc[kecamatan]['25-39 Thn'] += row.usia25_39;
+                acc[kecamatan]['40-54 Thn'] += row.usia40_54;
+                acc[kecamatan]['55-64 Thn'] += row.usia55_64;
+                acc[kecamatan]['65+ Thn'] += row.usia65_plus;
+                return acc;
+            }, {});
+
+            // Charting untuk Setiap Kecamatan (Dynamically)
+            const kecamatanChartsContainer = document.getElementById('kecamatanAgeChartsContainer');
+            const kecamatanColors = ['rgba(59, 130, 246, 0.7)', 'rgba(139, 92, 246, 0.7)', 'rgba(236, 72, 153, 0.7)', 'rgba(20, 184, 166, 0.7)'];
+            let colorIndex = 0;
+
+            for (const kecamatanName in totalsByAgeKecamatan) {
+                const chartWrapper = document.createElement('div');
+                
+                const title = document.createElement('h4');
+                title.className = 'text-lg font-semibold text-center mb-2 text-gray-700';
+                title.innerText = kecamatanName;
+
+                const canvas = document.createElement('canvas');
+                // Memberi ID unik untuk setiap canvas jika diperlukan untuk debugging
+                canvas.id = `chart-kecamatan-${kecamatanName.replace(/\s+/g, '-').toLowerCase()}`;
+
+                chartWrapper.appendChild(title);
+                chartWrapper.appendChild(canvas);
+                kecamatanChartsContainer.appendChild(chartWrapper);
+
+                new Chart(canvas, {
+                    type: 'bar',
+                    data: {
+                        labels: ageLabels,
+                        datasets: [{
+                            label: `Populasi ${kecamatanName}`,
+                            data: Object.values(totalsByAgeKecamatan[kecamatanName]),
+                            backgroundColor: kecamatanColors[colorIndex % kecamatanColors.length],
+                            borderColor: kecamatanColors[colorIndex % kecamatanColors.length].replace('0.7', '1'),
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: { y: { beginAtZero: true, ticks: { callback: (value) => formatNumber(value) } } },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { callbacks: { label: (context) => formatNumber(context.raw) } }
+                        }
+                    }
+                });
+                colorIndex++;
+            }
+
+            // 1. Data Processing untuk Agregasi Pendapatan per Kecamatan
+            const totalsByIncomeKecamatan = estimatedIncomeData.reduce((acc, row) => {
+                const { kecamatan, incomeLow, incomeMiddle, incomeHigh } = row;
+                if (!acc[kecamatan]) {
+                    acc[kecamatan] = { low: 0, middle: 0, high: 0 };
+                }
+                acc[kecamatan].low += incomeLow;
+                acc[kecamatan].middle += incomeMiddle;
+                acc[kecamatan].high += incomeHigh;
+                return acc;
+            }, {});
+
+            const kecamatanNames = Object.keys(totalsByIncomeKecamatan);
+
+            // 2. Charting untuk Bar Chart Perbandingan Pendapatan (Grouped Bar Chart)
+            new Chart(document.getElementById('incomeDistributionByKecamatanChart'), {
+                type: 'bar',
+                data: {
+                    labels: kecamatanNames,
+                    datasets: [
+                        {
+                            label: 'Low Income',
+                            data: kecamatanNames.map(name => totalsByIncomeKecamatan[name].low),
+                            backgroundColor: 'rgba(251, 191, 36, 0.7)', // amber-400
+                        },
+                        {
+                            label: 'Middle Income',
+                            data: kecamatanNames.map(name => totalsByIncomeKecamatan[name].middle),
+                            backgroundColor: 'rgba(52, 211, 153, 0.7)', // emerald-400
+                        },
+                        {
+                            label: 'High Income',
+                            data: kecamatanNames.map(name => totalsByIncomeKecamatan[name].high),
+                            backgroundColor: 'rgba(96, 165, 250, 0.7)', // blue-400
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: { y: { beginAtZero: true, stacked: false, ticks: { callback: (value) => formatNumber(value) } } },
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${formatNumber(context.raw)}` } }
+                    }
+                }
+            });
+
+            // 3. Charting untuk Donut Chart Profil per Kecamatan (Dynamically)
+            const incomeDonutsContainer = document.getElementById('kecamatanIncomeDonutsContainer');
+            const incomeLabels = ['Low Income', 'Middle Income', 'High Income'];
+            const incomeColors = ['#FBBF24', '#34D399', '#60A5FA']; // amber-400, emerald-400, blue-400
+
+            for (const kecamatanName of kecamatanNames) {
+                const data = totalsByIncomeKecamatan[kecamatanName];
+                const chartData = [data.low, data.middle, data.high];
+                const totalIncomePopulation = chartData.reduce((a, b) => a + b, 0);
+
+                const chartWrapper = document.createElement('div');
+                const title = document.createElement('h4');
+                title.className = 'text-lg font-semibold text-center mb-2 text-gray-700';
+                title.innerText = kecamatanName;
+                
+                const canvas = document.createElement('canvas');
+                chartWrapper.appendChild(title);
+                chartWrapper.appendChild(canvas);
+                incomeDonutsContainer.appendChild(chartWrapper);
+
+                new Chart(canvas, {
+                    type: 'doughnut',
+                    data: {
+                        labels: incomeLabels,
+                        datasets: [{
+                            data: chartData,
+                            backgroundColor: incomeColors,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.raw;
+                                        const percentage = ((value / totalIncomePopulation) * 100).toFixed(1);
+                                        return `${label}: ${formatNumber(value)} (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 1. Agregasi data untuk Analisis Pasar
+            const targetMarketData = estimatedIncomeData.reduce((acc, row) => {
+                const { kecamatan } = row;
+                if (!acc[kecamatan]) {
+                    acc[kecamatan] = {
+                        middleIncome: 0,
+                        highIncome: 0,
+                        age25_39: 0,
+                        age40_54: 0,
+                        age55_64: 0,
+                    };
+                }
+                acc[kecamatan].middleIncome += row.incomeMiddle;
+                acc[kecamatan].highIncome += row.incomeHigh;
+                // Asumsi: Middle & High income berasal dari populasi 25-64 tahun
+                acc[kecamatan].age25_39 += row.usia25_39;
+                acc[kecamatan].age40_54 += row.usia40_54;
+                acc[kecamatan].age55_64 += row.usia55_64;
+                return acc;
+            }, {});
+
+            const marketKecamatanNames = Object.keys(targetMarketData);
+
+            // 2. Render Chart: Ukuran Pasar per Kecamatan (Stacked Bar)
+            new Chart(document.getElementById('marketPotentialByKecamatanChart'), {
+                type: 'bar',
+                data: {
+                    labels: marketKecamatanNames,
+                    datasets: [
+                        {
+                            label: 'Middle Income',
+                            data: marketKecamatanNames.map(name => targetMarketData[name].middleIncome),
+                            backgroundColor: 'rgba(52, 211, 153, 0.8)', // emerald-400
+                            stack: 'market'
+                        },
+                        {
+                            label: 'High Income',
+                            data: marketKecamatanNames.map(name => targetMarketData[name].highIncome),
+                            backgroundColor: 'rgba(96, 165, 250, 0.8)', // blue-400
+                            stack: 'market'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { stacked: true },
+                        y: { stacked: true, beginAtZero: true, ticks: { callback: (value) => formatNumber(value) } }
+                    },
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: {
+                            callbacks: { label: (context) => `${context.dataset.label}: ${formatNumber(context.raw)}` }
+                        }
+                    }
+                }
+            });
+
+            // 3. Render Chart: Profil Usia Pasar Target (Doughnut)
+            const totalAge25_39 = Object.values(targetMarketData).reduce((sum, item) => sum + item.age25_39, 0);
+            const totalAge40_54 = Object.values(targetMarketData).reduce((sum, item) => sum + item.age40_54, 0);
+            const totalAge55_64 = Object.values(targetMarketData).reduce((sum, item) => sum + item.age55_64, 0);
+            const totalTargetMarket = totalAge25_39 + totalAge40_54 + totalAge55_64;
+
+            new Chart(document.getElementById('targetMarketAgeProfileChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['25-39 Thn (Produktif Muda)', '40-54 Thn (Produktif Matang)', '55-64 Thn (Pra-Pensiun)'],
+                    datasets: [{
+                        data: [totalAge25_39, totalAge40_54, totalAge55_64],
+                        backgroundColor: ['#2dd4bf', '#60a5fa', '#a78bfa'], // teal, blue, violet
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw;
+                                    const percentage = ((value / totalTargetMarket) * 100).toFixed(1);
+                                    return `${label}: ${formatNumber(value)} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 4. Render Tabel Ringkasan
+            const summaryTableBody = document.getElementById('marketSummaryTableBody');
+            summaryTableBody.innerHTML = '';
+            marketKecamatanNames.forEach(kecamatan => {
+                const data = targetMarketData[kecamatan];
+                const totalPotential = data.middleIncome + data.highIncome;
+                const tr = document.createElement('tr');
+                tr.className = 'bg-white border-b hover:bg-gray-50';
+                tr.innerHTML = `
+                    <td class="px-4 py-4 font-medium text-gray-900">${kecamatan}</td>
+                    <td class="px-4 py-4 text-center font-bold">${formatNumber(totalPotential)}</td>
+                    <td class="px-4 py-4 text-center">${formatNumber(data.age25_39)}</td>
+                    <td class="px-4 py-4 text-center">${formatNumber(data.age40_54)}</td>
+                `;
+                summaryTableBody.appendChild(tr);
+            });
+
+            // --- CHARTING UNTUK ANALISIS KOMPETITOR ---
+            new Chart(document.getElementById('competitorPriceChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Brawijaya', 'Ciputra', 'Le Grande', 'Graha Family', 'Pakuwon', 'Bukit Darmo'],
+                    datasets: [{
+                        label: 'Benchmark Harga (Guest/100 Bola)',
+                        data: [130000, 130000, 135000, 136000, 150000, 151500],
+                        backgroundColor: [
+                            'rgba(34, 197, 94, 0.7)', // green-500
+                            'rgba(34, 197, 94, 0.7)',
+                            'rgba(59, 130, 246, 0.7)', // blue-500
+                            'rgba(59, 130, 246, 0.7)',
+                            'rgba(239, 68, 68, 0.7)', // red-500
+                            'rgba(239, 68, 68, 0.7)',
+                        ],
+                        borderColor: [
+                            'rgba(22, 163, 74, 1)',
+                            'rgba(22, 163, 74, 1)',
+                            'rgba(37, 99, 235, 1)',
+                            'rgba(37, 99, 235, 1)',
+                            'rgba(220, 38, 38, 1)',
+                            'rgba(220, 38, 38, 1)',
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // Membuat chart menjadi horizontal bar
+                    responsive: true,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value, index, ticks) {
+                                    return 'Rp ' + formatNumber(value);
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` Harga: Rp ${formatNumber(context.raw)}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+        });
+    </script>
 </body>
 </html>
