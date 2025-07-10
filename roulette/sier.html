@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Selamat Datang di Roda Keberuntungan!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #0f0c29;
+            background: -webkit-linear-gradient(to right, #24243e, #302b63, #0f0c29);
+            background: linear-gradient(to right, #24243e, #302b63, #0f0c29);
+            overflow: hidden;
+        }
+        .wheel-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            margin: 2rem auto;
+        }
+        @media (max-width: 480px) {
+            .wheel-container {
+                width: 300px;
+                height: 300px;
+            }
+        }
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            border: 10px solid #fff;
+            box-shadow: 0 0 20px rgba(255,255,255,0.5), 0 0 40px rgba(255,255,255,0.3);
+            transition: transform 6s cubic-bezier(0.25, 0.1, 0.25, 1);
+        }
+        .wheel-segment {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            transform-origin: 100% 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            font-size: 14px;
+            text-align: center;
+        }
+        .wheel-segment-content {
+            transform: rotate(-45deg) translateY(-110%);
+            padding: 0 5px;
+        }
+        @media (max-width: 480px) {
+            .wheel-segment {
+                font-size: 10px;
+            }
+             .wheel-segment-content {
+                transform: rotate(-45deg) translateY(-100%);
+            }
+        }
+        .wheel-pointer {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -100%);
+            width: 0;
+            height: 0;
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 40px solid #ffd700;
+            z-index: 10;
+            filter: drop-shadow(0 -5px 5px rgba(0,0,0,0.3));
+        }
+        .wheel-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background: #fff;
+            border-radius: 50%;
+            z-index: 11;
+            border: 5px solid #ccc;
+        }
+        .spin-button {
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        .spin-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .spin-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.5);
+        }
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 40;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        .ribbon {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 50px;
+            background: #e74c3c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            border-radius: 5px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .ribbon::before, .ribbon::after {
+            content: '';
+            position: absolute;
+            border-style: solid;
+            bottom: -10px;
+        }
+        .ribbon::before {
+            left: 0;
+            border-width: 0 0 10px 10px;
+            border-color: transparent transparent #c0392b transparent;
+        }
+        .ribbon::after {
+            right: 0;
+            border-width: 0 10px 10px 0;
+            border-color: transparent #c0392b transparent transparent;
+        }
+    </style>
+</head>
+<body class="text-white flex items-center justify-center min-h-screen p-4">
+
+    <!-- Main Game Container -->
+    <div id="gameContainer" class="text-center hidden">
+        <h1 class="text-4xl md:text-5xl font-extrabold mb-2 text-yellow-300 tracking-wide" style="text-shadow: 2px 2px 5px rgba(0,0,0,0.5);">Roda Keberuntungan</h1>
+        <p class="mb-4 text-lg">Putar dan menangkan hadiahnya!</p>
+        <p id="spinCount" class="mb-4 text-xl font-bold text-green-400"></p>
+        
+        <div class="wheel-container">
+            <div class="wheel-pointer"></div>
+            <div class="wheel-center"></div>
+            <div id="wheel" class="wheel">
+                <!-- Segments will be generated by JS -->
+            </div>
+        </div>
+
+        <button id="spinButton" class="spin-button mt-6 bg-yellow-400 text-gray-900 font-bold py-4 px-12 rounded-full text-2xl uppercase tracking-wider">
+            Putar!
+        </button>
+    </div>
+
+    <!-- Phone Number Modal -->
+    <div id="phoneModal" class="modal-backdrop">
+        <div class="modal-content text-gray-800">
+            <h2 class="text-2xl font-bold mb-4">Masukkan Nomor WhatsApp Anda</h2>
+            <p class="mb-6 text-gray-600">Nomor Anda akan kami gunakan untuk mencatat hadiah Anda.</p>
+            <input type="tel" id="phoneInput" class="w-full p-3 border border-gray-300 rounded-lg mb-4 text-center text-lg" placeholder="Contoh: 081234567890">
+            <p id="phoneError" class="text-red-500 text-sm mb-4 h-5"></p>
+            <button id="submitPhoneButton" class="w-full bg-green-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-600 transition-colors">
+                Mulai Bermain
+            </button>
+        </div>
+    </div>
+
+    <!-- Result Modal -->
+    <div id="resultModal" class="modal-backdrop hidden">
+        <div class="modal-content text-gray-800 pt-16">
+            <div id="ribbonContainer"></div>
+            <h2 id="resultTitle" class="text-3xl font-extrabold mb-4 text-blue-600"></h2>
+            <p id="resultMessage" class="text-lg text-gray-700 mb-6"></p>
+            <a id="claimButton" href="#" target="_blank" class="hidden w-full inline-block bg-green-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-600 transition-colors">
+                Klaim & Catat Hadiah
+            </a>
+            <button id="closeResultButton" class="bg-blue-500 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-600 transition-colors mt-2">
+                Tutup
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        // --- PRIZE CONFIGURATION ---
+        const prizes = [
+            { name: 'iPhone 15', chance: 1, color: '#ffd700', isMajor: true, textColor: '#333' },
+            { name: 'ZONK', chance: 50, color: '#555555', isMajor: false },
+            { name: 'PUTAR LAGI 10x', chance: 4, color: '#e74c3c', spins: 10 },
+            { name: 'Bola Golf', chance: 10, color: '#2ecc71', isMajor: true },
+            { name: 'PUTAR LAGI 5x', chance: 5, color: '#e67e22', spins: 5 },
+            { name: 'PUTAR LAGI 1x', chance: 20, color: '#3498db', spins: 1 },
+            { name: 'PUTAR LAGI 3x', chance: 10, color: '#9b59b6', spins: 3 },
+        ];
+
+        // --- DOM ELEMENTS ---
+        const wheel = document.getElementById('wheel');
+        const spinButton = document.getElementById('spinButton');
+        const gameContainer = document.getElementById('gameContainer');
+        const phoneModal = document.getElementById('phoneModal');
+        const phoneInput = document.getElementById('phoneInput');
+        const phoneError = document.getElementById('phoneError');
+        const submitPhoneButton = document.getElementById('submitPhoneButton');
+        const resultModal = document.getElementById('resultModal');
+        const resultTitle = document.getElementById('resultTitle');
+        const resultMessage = document.getElementById('resultMessage');
+        const closeResultButton = document.getElementById('closeResultButton');
+        const claimButton = document.getElementById('claimButton');
+        const spinCountDisplay = document.getElementById('spinCount');
+        const ribbonContainer = document.getElementById('ribbonContainer');
+
+        // --- STATE VARIABLES ---
+        let isSpinning = false;
+        let totalSpins = 1;
+        let currentSpins = 0;
+        let userPhoneNumber = '';
+        let isAdmin = false;
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            isAdmin = urlParams.has('admin');
+            const phoneFromUrl = urlParams.get('phone');
+
+            if (isAdmin) {
+                console.log("Admin mode activated.");
+                startGame('ADMIN_USER');
+            } else if (localStorage.getItem('roulettePlayed')) {
+                // If user has played, show a message and hide the game
+                document.body.innerHTML = '<div class="text-white text-center p-8 text-2xl">Terima kasih, Anda sudah pernah bermain.</div>';
+                return;
+            } else if (phoneFromUrl) {
+                phoneInput.value = phoneFromUrl;
+                // Automatically try to submit if phone is from URL
+                handleSubmitPhone();
+            }
+
+            setupWheel();
+            spinButton.addEventListener('click', handleSpin);
+            submitPhoneButton.addEventListener('click', handleSubmitPhone);
+            closeResultButton.addEventListener('click', () => resultModal.classList.add('hidden'));
+        });
+
+        // --- FUNCTIONS ---
+
+        function setupWheel() {
+            // This function creates the visual wheel segments based on prize chances.
+            // It's complex visually but the logic remains the same.
+            let cumulativePercent = 0;
+            prizes.forEach(prize => {
+                const segment = document.createElement('div');
+                segment.className = 'wheel-segment';
+                const content = document.createElement('div');
+                content.className = 'wheel-segment-content';
+                content.textContent = prize.name;
+                
+                const segmentAngle = prize.chance * 3.6; // 100 chances = 360 degrees
+                
+                segment.style.transform = `rotate(${cumulativePercent * 3.6}deg)`;
+                segment.style.setProperty('--segment-angle', `${segmentAngle}deg`);
+                segment.style.setProperty('--bg-color', prize.color);
+                segment.style.color = prize.textColor || 'white';
+                
+                // A bit of CSS magic to create pie slices
+                segment.style.background = `conic-gradient(from 0deg at 50% 50%, ${prize.color} 0deg ${segmentAngle}deg, transparent ${segmentAngle}deg 360deg)`;
+                segment.style.clipPath = `polygon(50% 50%, 100% 0, 100% 100%)`;
+                if(segmentAngle > 90) segment.style.clipPath = `polygon(50% 50%, 100% 0, 100% 100%, 0 100%)`;
+                if(segmentAngle > 180) segment.style.clipPath = `polygon(50% 50%, 100% 0, 100% 100%, 0 100%, 0 0)`;
+                if(segmentAngle > 270) segment.style.clipPath = `polygon(50% 50%, 100% 0, 100% 100%, 0 100%, 0 0, 50% 0)`;
+
+                content.style.transform = `rotate(${segmentAngle / 2}deg) translate(80px) rotate(-90deg)`;
+                if(prize.name.includes(' ')) content.innerHTML = prize.name.replace(' ', '<br>');
+                
+                segment.appendChild(content);
+                wheel.appendChild(segment);
+                cumulativePercent += prize.chance;
+            });
+        }
+
+        function handleSubmitPhone() {
+            const phone = phoneInput.value.trim();
+            phoneError.textContent = '';
+
+            if (!/^08[0-9]{8,11}$/.test(phone)) {
+                phoneError.textContent = 'Format nomor WhatsApp tidak valid. (Contoh: 081234567890)';
+                return;
+            }
+            
+            startGame(phone);
+        }
+
+        function startGame(phone) {
+            userPhoneNumber = phone;
+            phoneModal.classList.add('hidden');
+            gameContainer.classList.remove('hidden');
+            updateSpinDisplay();
+        }
+
+        function handleSpin() {
+            if (isSpinning || (totalSpins - currentSpins <= 0)) return;
+            isSpinning = true;
+            currentSpins++;
+            spinButton.disabled = true;
+            updateSpinDisplay();
+
+            const winningPrize = getWinningPrize();
+            const targetAngle = calculateTargetAngle(winningPrize);
+
+            wheel.style.transform = `rotate(${targetAngle}deg)`;
+
+            wheel.addEventListener('transitionend', () => {
+                onSpinEnd(winningPrize);
+            }, { once: true });
+        }
+
+        function getWinningPrize() {
+            const random = Math.random() * 100;
+            let cumulativeChance = 0;
+            for (const prize of prizes) {
+                cumulativeChance += prize.chance;
+                if (random < cumulativeChance) {
+                    return prize;
+                }
+            }
+            return prizes.find(p => p.name === 'ZONK'); // Fallback
+        }
+
+        function calculateTargetAngle(prize) {
+            let cumulativePercent = 0;
+            let prizeStartPercent = 0;
+            for(const p of prizes) {
+                if(p.name === prize.name) {
+                    prizeStartPercent = cumulativePercent;
+                    break;
+                }
+                cumulativePercent += p.chance;
+            }
+            
+            const prizeAngle = prize.chance * 3.6;
+            const randomAngleInSegment = Math.random() * (prizeAngle - 10) + 5;
+            const targetPercent = prizeStartPercent + (randomAngleInSegment / 3.6);
+            
+            const pointerOffset = 90; // Pointer is at the top (0 deg is right)
+            const targetRotation = 360 - (targetPercent * 3.6) - pointerOffset;
+
+            return targetRotation + (360 * 8); // Add random full rotations
+        }
+
+        function onSpinEnd(prize) {
+            wheel.style.transition = 'none';
+            const currentRotation = parseFloat(wheel.style.transform.replace('rotate(', '').replace('deg)', ''));
+            wheel.style.transform = `rotate(${currentRotation % 360}deg)`;
+            wheel.style.transition = 'transform 6s cubic-bezier(0.25, 0.1, 0.25, 1)';
+
+            if (prize.spins) {
+                totalSpins += prize.spins;
+                showResult(`Selamat!`, `Anda mendapatkan ${prize.spins} putaran tambahan!`, prize);
+                isSpinning = false;
+                // Re-enable spin button only if there are spins left
+                if (totalSpins - currentSpins > 0) {
+                    spinButton.disabled = false;
+                }
+            } else {
+                if (prize.isMajor) {
+                    launchConfetti();
+                    showResult("Selamat!", `Anda memenangkan hadiah ${prize.name}.<br><br>Silakan klik tombol di bawah untuk mencatat hadiah Anda!`, prize);
+                } else { // ZONK
+                    showResult("Mohon Maaf", "Anda belum beruntung kali ini. Terima kasih atas partisipasinya!", prize);
+                }
+                // For ZONK or major prize, user cannot play again
+                if (!isAdmin) {
+                    localStorage.setItem('roulettePlayed', 'true');
+                }
+                spinButton.disabled = true;
+                spinButton.textContent = 'Selesai';
+            }
+            updateSpinDisplay();
+        }
+
+        function showResult(title, message, prize) {
+            resultTitle.textContent = title;
+            resultMessage.innerHTML = message;
+            claimButton.classList.add('hidden'); // Hide by default
+
+            if(prize.isMajor) {
+                ribbonContainer.innerHTML = `<div class="ribbon">PEMENANG!</div>`;
+                resultTitle.className = 'text-3xl font-extrabold mb-4 text-green-500';
+                
+                // --- GOOGLE FORM INTEGRATION ---
+                // 1. Create a Google Form with questions for "Phone Number" and "Prize".
+                // 2. Get a pre-filled link.
+                // 3. Replace the URL below. Replace the entry.XXXXXX with your actual entry IDs.
+                const GFORM_URL = "https://docs.google.com/forms/d/e/YOUR_FORM_ID/viewform?usp=pp_url";
+                const PHONE_ENTRY_ID = "entry.YOUR_PHONE_ENTRY_ID";
+                const PRIZE_ENTRY_ID = "entry.YOUR_PRIZE_ENTRY_ID";
+
+                const claimUrl = `${GFORM_URL}&${PHONE_ENTRY_ID}=${encodeURIComponent(userPhoneNumber)}&${PRIZE_ENTRY_ID}=${encodeURIComponent(prize.name)}`;
+                claimButton.href = claimUrl;
+                claimButton.classList.remove('hidden');
+
+            } else {
+                ribbonContainer.innerHTML = '';
+                resultTitle.className = 'text-3xl font-extrabold mb-4 text-red-500';
+            }
+
+            resultModal.classList.remove('hidden');
+        }
+
+        function updateSpinDisplay() {
+            const remaining = totalSpins - currentSpins;
+            if (totalSpins > 1) {
+                spinCountDisplay.textContent = `Sisa Putaran: ${remaining}`;
+            } else {
+                spinCountDisplay.textContent = '';
+            }
+        }
+
+        function launchConfetti() {
+            const duration = 5 * 1000;
+            const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 100 };
+
+            function randomInRange(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+
+            const interval = setInterval(function() {
+                const timeLeft = animationEnd - Date.now();
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                }
+                const particleCount = 50 * (timeLeft / duration);
+                confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+                confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+            }, 250);
+        }
+
+    </script>
+</body>
+</html>
