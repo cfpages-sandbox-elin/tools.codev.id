@@ -17,6 +17,10 @@
                 transform: rotate(360deg);
             }
         }
+        /* Ensure table columns have a reasonable minimum width */
+        th, td {
+            min-width: 150px;
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans">
@@ -24,7 +28,7 @@
     <div class="container mx-auto p-4 sm:p-6 lg:p-8">
         <header class="mb-8">
             <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">Google Maps Data Extractor</h1>
-            <p class="text-gray-600 mt-2">Enter a query and location to extract business data. Your API key is saved locally in your browser.</p>
+            <p class="text-gray-600 mt-2">Enter a query to extract business data. The tool will fetch all pages of results. Your API key is saved locally.</p>
         </header>
 
         <!-- Input Form -->
@@ -35,7 +39,6 @@
                     <label for="providerSelect" class="block text-sm font-medium text-gray-700 mb-1">Provider</label>
                     <select id="providerSelect" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                         <option value="gmapsextractor">GMapsExtractor.com</option>
-                        <!-- Add other providers here later -->
                         <option value="provider2" disabled>Provider 2 (Coming Soon)</option>
                     </select>
                 </div>
@@ -47,21 +50,24 @@
                 <!-- Search Query -->
                 <div>
                     <label for="queryInput" class="block text-sm font-medium text-gray-700 mb-1">Search Query</label>
-                    <input type="text" id="queryInput" placeholder="e.g., design agency" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    <input type="text" id="queryInput" placeholder="e.g., design agency in new york" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                 </div>
-                <!-- Location -->
+                <!-- Location (Optional) -->
                 <div>
-                    <label for="locationInput" class="block text-sm font-medium text-gray-700 mb-1">Location (ll parameter)</label>
-                    <input type="text" id="locationInput" placeholder="@lat,lng,zoomZ" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    <label for="locationInput" class="block text-sm font-medium text-gray-700 mb-1">Location (Optional)</label>
+                    <input type="text" id="locationInput" placeholder="e.g., @40.7,-74.0,12z" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                 </div>
             </div>
-            <div class="mt-6 flex items-center">
+            <div class="mt-6 flex items-center gap-4">
                 <button type="submit" id="searchBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-md shadow-sm transition-colors duration-200 flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
-                    Search
+                    Extract All Data
                 </button>
-                <!-- Loader -->
-                <div id="loader" class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-8 w-8 ml-4 hidden"></div>
+                <!-- Loader and Progress Status -->
+                <div class="flex items-center gap-3">
+                    <div id="loader" class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-8 w-8 hidden"></div>
+                    <p id="progressStatus" class="text-sm text-gray-600 font-medium"></p>
+                </div>
             </div>
         </form>
 
@@ -82,7 +88,7 @@
             <!-- Results Table -->
             <div id="resultsTableContainer" class="bg-white p-1 rounded-lg shadow-md overflow-x-auto">
                 <table class="w-full text-sm text-left text-gray-600">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-200">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-200 sticky top-0">
                         <tr>
                             <th scope="col" class="px-4 py-3">Name</th>
                             <th scope="col" class="px-4 py-3">Address</th>
@@ -105,7 +111,7 @@
     </div>
 
     <!-- Notification Toast -->
-    <div id="notification" class="fixed bottom-5 right-5 bg-gray-900 text-white py-2 px-5 rounded-lg shadow-xl transition-opacity duration-300 opacity-0">
+    <div id="notification" class="fixed bottom-5 right-5 bg-gray-900 text-white py-2 px-5 rounded-lg shadow-xl transition-opacity duration-300 opacity-0 z-50">
         Notification message
     </div>
 
@@ -118,6 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const locationInput = document.getElementById('locationInput');
     const searchBtn = document.getElementById('searchBtn');
     const loader = document.getElementById('loader');
+    const progressStatus = document.getElementById('progressStatus');
     const resultsContainer = document.getElementById('resultsContainer');
     const resultsActions = document.getElementById('resultsActions');
     const resultsBody = document.getElementById('resultsBody');
@@ -131,48 +138,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Functions ---
 
-    /**
-     * Shows a notification message for a few seconds.
-     * @param {string} message The message to display.
-     * @param {boolean} isError If true, shows a red background.
-     */
     const showNotification = (message, isError = false) => {
         notification.textContent = message;
         notification.classList.remove('opacity-0');
         notification.classList.toggle('bg-red-600', isError);
         notification.classList.toggle('bg-gray-900', !isError);
-
-        setTimeout(() => {
-            notification.classList.add('opacity-0');
-        }, 3000);
+        setTimeout(() => { notification.classList.add('opacity-0'); }, 3000);
     };
 
-    /**
-     * Loads the API key from localStorage on page load.
-     */
     const loadApiKey = () => {
         const savedKey = localStorage.getItem(API_KEY_STORAGE_ID);
-        if (savedKey) {
-            apiKeyInput.value = savedKey;
-        }
+        if (savedKey) apiKeyInput.value = savedKey;
     };
 
-    /**
-     * Saves the API key to localStorage whenever it's changed.
-     */
     const saveApiKey = () => {
         localStorage.setItem(API_KEY_STORAGE_ID, apiKeyInput.value);
     };
 
-    /**
-     * Toggles the UI state between loading and idle.
-     * @param {boolean} isLoading True if the API call is in progress.
-     */
     const setLoadingState = (isLoading) => {
         if (isLoading) {
             searchBtn.disabled = true;
             searchBtn.classList.add('cursor-not-allowed', 'opacity-70');
             loader.classList.remove('hidden');
+            progressStatus.textContent = 'Starting search...';
         } else {
             searchBtn.disabled = false;
             searchBtn.classList.remove('cursor-not-allowed', 'opacity-70');
@@ -180,12 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
-    /**
-     * Renders the fetched data into the results table.
-     * @param {Array<Object>} data The array of business data from the API.
-     */
     const renderTable = (data) => {
-        // Clear previous results
         resultsBody.innerHTML = '';
         noResults.classList.add('hidden');
         resultsActions.classList.add('hidden');
@@ -197,20 +180,18 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        currentResults = data; // Store results for export
+        currentResults = data;
 
+        const fragment = document.createDocumentFragment();
         data.forEach(item => {
             const row = document.createElement('tr');
             row.className = 'bg-white border-b hover:bg-gray-50';
-            
-            // Helper to create a table cell
             const createCell = (content) => {
                 const cell = document.createElement('td');
-                cell.className = 'px-4 py-2';
-                cell.textContent = content ?? 'N/A'; // Use 'N/A' for null/undefined values
+                cell.className = 'px-4 py-2 whitespace-nowrap';
+                cell.textContent = content ?? 'N/A';
                 return cell;
             };
-
             row.appendChild(createCell(item.name));
             row.appendChild(createCell(item.full_address));
             row.appendChild(createCell(item.phone));
@@ -220,54 +201,58 @@ document.addEventListener('DOMContentLoaded', () => {
             row.appendChild(createCell(item.review_count));
             row.appendChild(createCell(item.opening_hours));
             row.appendChild(createCell(item.categories));
-
-            resultsBody.appendChild(row);
+            fragment.appendChild(row);
         });
+        resultsBody.appendChild(fragment);
         
         resultsActions.classList.remove('hidden');
         resultsContainer.classList.remove('hidden');
     };
     
-    /**
-     * Converts the results data to a Tab-Separated Value (TSV) string.
-     * @returns {string} The TSV formatted data.
-     */
     const convertToTSV = () => {
         if (currentResults.length === 0) return '';
-        
-        const headers = [
-            'Name', 'Address', 'Phone', 'Email(s)', 'Website', 
-            'Rating', 'Reviews', 'Opening Hours', 'Categories'
-        ];
-        
-        // Sanitize data to prevent breaking TSV format (remove tabs and newlines)
-        const sanitize = (value) => {
-            if (value === null || typeof value === 'undefined') return '';
-            return String(value).replace(/\t/g, ' ').replace(/\n/g, ' ');
-        };
-
-        const rows = currentResults.map(item => {
-            const rowData = [
-                sanitize(item.name),
-                sanitize(item.full_address),
-                sanitize(item.phone),
-                sanitize(item.emails?.join(', ')),
-                sanitize(item.website),
-                sanitize(item.average_rating),
-                sanitize(item.review_count),
-                sanitize(item.opening_hours),
-                sanitize(item.categories)
-            ];
-            return rowData.join('\t');
-        });
-
+        const headers = ['Name', 'Address', 'Phone', 'Email(s)', 'Website', 'Rating', 'Reviews', 'Opening Hours', 'Categories'];
+        const sanitize = (value) => (value === null || typeof value === 'undefined') ? '' : String(value).replace(/[\t\n\r]/g, ' ');
+        const rows = currentResults.map(item => [
+            sanitize(item.name), sanitize(item.full_address), sanitize(item.phone),
+            sanitize(item.emails?.join(', ')), sanitize(item.website), sanitize(item.average_rating),
+            sanitize(item.review_count), sanitize(item.opening_hours), sanitize(item.categories)
+        ].join('\t'));
         return [headers.join('\t'), ...rows].join('\n');
     };
     
     /**
-     * Fetches data from the GMapsExtractor API.
+     * Fetches a single page of data from the API.
      */
-    const fetchData = async () => {
+    async function fetchPageData(page, query, location, apiKey) {
+        const API_URL = 'https://cloud.gmapsextractor.com/api/v2/search';
+        const payload = { "q": query, "page": page, "hl": "en", "gl": "us", "extra": true };
+        if (location) {
+            payload.ll = location;
+        }
+        
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.message || `API Error: Status ${response.status}`);
+            }
+            return result;
+        } catch (error) {
+            console.error('Fetch Error on page ' + page, error);
+            showNotification(error.message, true);
+            return { error: error.message, data: [] }; // Return an object that won't break the loop
+        }
+    }
+
+    /**
+     * Main function to start the search and handle pagination.
+     */
+    async function startFullSearch() {
         const apiKey = apiKeyInput.value.trim();
         const query = queryInput.value.trim();
         const location = locationInput.value.trim();
@@ -282,61 +267,49 @@ document.addEventListener('DOMContentLoaded', () => {
             queryInput.focus();
             return;
         }
-        if (!location) {
-            showNotification('Location (ll) is required.', true);
-            locationInput.focus();
-            return;
-        }
 
         setLoadingState(true);
         renderTable([]); // Clear previous results
 
-        const API_URL = 'https://cloud.gmapsextractor.com/api/v2/search';
-        
-        const options = {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({
-                "q": query,
-                "page": 1, // You could add pagination controls later
-                "ll": location,
-                "hl": "en",
-                "gl": "us",
-                "extra": true // Important for getting emails
-            })
-        };
+        let allResults = [];
+        let currentPage = 1;
+        let keepFetching = true;
 
-        try {
-            const response = await fetch(API_URL, options);
-            const result = await response.json();
+        while (keepFetching) {
+            progressStatus.textContent = `Fetching page ${currentPage}... Found ${allResults.length} results so far.`;
+            const result = await fetchPageData(currentPage, query, location, apiKey);
 
-            if (!response.ok) {
-                // The API often returns error details in the JSON body
-                throw new Error(result.message || `HTTP error! status: ${response.status}`);
+            if (result && result.data && result.data.length > 0) {
+                allResults.push(...result.data);
+                renderTable(allResults); // Re-render the table with cumulative data
+                
+                // The API returns 20 results per page. If we get less, it's the last page.
+                if (result.data.length < 20) {
+                    keepFetching = false;
+                } else {
+                    currentPage++;
+                }
+            } else {
+                keepFetching = false; // Stop if there's no data, an error occurred, or the data array is empty
             }
-
-            renderTable(result.data);
-
-        } catch (error) {
-            console.error('Fetch Error:', error);
-            showNotification(`Error: ${error.message}`, true);
-            renderTable([]); // Ensure table is empty on error
-        } finally {
-            setLoadingState(false);
+        }
+        
+        setLoadingState(false);
+        if (allResults.length > 0) {
+            progressStatus.textContent = `Search complete. Found ${allResults.length} total results.`;
+        } else {
+            progressStatus.textContent = 'Search complete. No results found.';
         }
     };
-
 
     // --- Event Listeners ---
     searchForm.addEventListener('submit', (event) => {
         event.preventDefault();
-        fetchData();
+        startFullSearch();
     });
 
     apiKeyInput.addEventListener('input', saveApiKey);
+    apiKeyInput.addEventListener('paste', saveApiKey); // Save on paste
     
     copyBtn.addEventListener('click', () => {
         const tsvData = convertToTSV();
@@ -353,19 +326,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const blob = new Blob([tsvData], { type: 'text/tab-separated-values;charset=utf-8;' });
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
-            
-            link.setAttribute('href', url);
             const safeQueryName = queryInput.value.trim().replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            link.setAttribute('href', url);
             link.setAttribute('download', `gmaps_data_${safeQueryName}.tsv`);
             link.style.visibility = 'hidden';
-            
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         }
     });
     
-
     // --- Initializer ---
     loadApiKey();
 });
