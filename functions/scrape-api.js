@@ -38,10 +38,11 @@ const providerConfigs = {
             const payload = {
                 "q": params.query,
                 "page": params.page,
-                "hl": "en",
-                "gl": "us",
+                "hl": params.hl || 'id',
+                "gl": params.gl || 'id',
                 "extra": true
             };
+            // Only add the 'll' key if it's provided and not empty
             if (params.ll) {
                 payload.ll = params.ll;
             }
