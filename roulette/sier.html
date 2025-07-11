@@ -75,16 +75,17 @@
         }
         .wheel-pointer {
             position: absolute;
-            top: 50%;
+            top: -10px; /* Position it just above the wheel, overlapping the border */
             left: 50%;
-            transform: translate(-50%, -100%);
+            transform: translateX(-50%);
             width: 0;
             height: 0;
-            border-left: 20px solid transparent;
-            border-right: 20px solid transparent;
-            border-top: 40px solid #ffd700;
+            /* This creates a downward-pointing triangle */
+            border-left: 25px solid transparent;
+            border-right: 25px solid transparent;
+            border-top: 40px solid #ffd700; /* Gold color */
             z-index: 10;
-            filter: drop-shadow(0 -5px 5px rgba(0,0,0,0.3));
+            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.3));
         }
         .wheel-center {
             position: absolute;
@@ -286,11 +287,12 @@
             const centerY = canvas.height / 2;
             const radius = canvas.width / 2 - 10; // Padding from edge
 
-            let startAngle = -Math.PI / 2; // Start at the top
+            // Start at the top (-90 degrees)
+            let startAngle = -Math.PI / 2;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.strokeStyle = '#fff'; // White lines between segments
-            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 3; // A slightly thicker line for better separation
 
             prizes.forEach(prize => {
                 const segmentAngle = (prize.chance / totalChances) * (2 * Math.PI);
@@ -305,40 +307,47 @@
                 ctx.fill();
                 ctx.stroke();
 
-                // --- Improved Text Drawing Logic ---
+                // --- NEW Advanced Text Drawing Logic ---
                 ctx.save();
                 ctx.fillStyle = prize.textColor || 'white';
-                ctx.font = 'bold 22px Poppins';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
 
-                // Calculate the best angle and position for the text
                 const textAngle = startAngle + segmentAngle / 2;
-                const textRadius = radius * 0.65; // Position text 65% out from the center
+                ctx.translate(centerX, centerY);
+                ctx.rotate(textAngle);
 
-                const textX = centerX + textRadius * Math.cos(textAngle);
-                const textY = centerY + textRadius * Math.sin(textAngle);
-
-                ctx.translate(textX, textY);
+                const text = prize.name.toUpperCase();
                 
-                // Rotate text to match the segment, but keep it upright
-                // The +Math.PI / 2 is to align it perpendicular to the segment radius
-                let rotation = textAngle + Math.PI / 2; 
-                if (rotation > Math.PI / 2 && rotation < (3 * Math.PI) / 2) {
-                    // If text is on the bottom half, flip it 180 degrees to be readable
-                    rotation += Math.PI;
+                // Threshold: If a segment is less than ~17 degrees, draw text vertically
+                const isThinSlice = segmentAngle < 0.3; // 0.3 radians is about 17 degrees
+
+                if (isThinSlice) {
+                    // --- VERTICAL TEXT for thin slices ---
+                    ctx.font = 'bold 20px Poppins';
+                    const chars = text.split('');
+                    const textRadius = radius * 0.75;
+                    const lineHeight = 22;
+                    chars.forEach((char, index) => {
+                        // Rotate each character back to be upright
+                        ctx.fillText(char, 0, -textRadius + (index * lineHeight));
+                    });
+                } else {
+                    // --- HORIZONTAL TEXT for wider slices ---
+                    ctx.font = 'bold 24px Poppins';
+                    const textRadius = radius * 0.65;
+                    const lines = text.split(' ');
+                    const lineHeight = 28;
+                    const initialY = -((lines.length - 1) * lineHeight) / 2; // Center multi-line text
+                    
+                    lines.forEach((line, index) => {
+                        // Rotate the canvas for each line to keep it reading outwards
+                        ctx.rotate(Math.PI); 
+                        ctx.fillText(line, 0, textRadius - (index * lineHeight) - initialY);
+                        ctx.rotate(-Math.PI);
+                    });
                 }
-                ctx.rotate(rotation);
-
-                // Draw the text, splitting it into lines
-                const lines = prize.name.split(' ');
-                lines.forEach((line, index) => {
-                    // Adjust line height for multi-word prizes
-                    const lineHeight = 25;
-                    const yOffset = -(lines.length - 1) * lineHeight / 2;
-                    ctx.fillText(line.toUpperCase(), 0, yOffset + (index * lineHeight));
-                });
-
+                
                 ctx.restore();
                 startAngle = endAngle;
             });
