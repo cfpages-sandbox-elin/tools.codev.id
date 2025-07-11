@@ -125,20 +125,23 @@
         .modal-content {
             background: white;
             padding: 2rem;
+            padding-top: 4rem; /* More padding at top to make space for the ribbon */
             border-radius: 1rem;
             max-width: 500px;
             width: 90%;
             text-align: center;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             position: relative;
+            /* Ensure overflow is not hidden */
+            overflow: visible; 
         }
         .ribbon {
             position: absolute;
-            top: -25px;
+            top: -20px; /* Position it correctly */
             left: 50%;
             transform: translateX(-50%);
             width: 200px;
-            height: 50px;
+            height: 45px;
             background: #e74c3c;
             display: flex;
             align-items: center;
@@ -153,17 +156,18 @@
             content: '';
             position: absolute;
             border-style: solid;
-            bottom: -10px;
+            bottom: -10px; /* Position the tails below the ribbon */
+            z-index: -1; /* Place them behind the main ribbon */
         }
         .ribbon::before {
             left: 0;
-            border-width: 0 0 10px 10px;
-            border-color: transparent transparent #c0392b transparent;
+            border-width: 10px 0 0 15px; /* top, right, bottom, left */
+            border-color: #c0392b transparent transparent transparent;
         }
         .ribbon::after {
             right: 0;
-            border-width: 0 10px 10px 0;
-            border-color: transparent #c0392b transparent transparent;
+            border-width: 10px 15px 0 0; /* top, right, bottom, left */
+            border-color: #c0392b transparent transparent transparent;
         }
     </style>
 </head>
@@ -217,13 +221,13 @@
     <script type="module">
         // --- PRIZE CONFIGURATION ---
         const prizes = [
-            { name: 'iPhone 15', chance: 1, color: '#ffd700', isMajor: true, textColor: '#333' },
-            { name: 'ZONK', chance: 50, color: '#555555', isMajor: false },
-            { name: 'PUTAR LAGI 10x', chance: 4, color: '#e74c3c', spins: 10 },
-            { name: 'Bola Golf', chance: 10, color: '#2ecc71', isMajor: true },
-            { name: 'PUTAR LAGI 5x', chance: 5, color: '#e67e22', spins: 5 },
-            { name: 'PUTAR LAGI 1x', chance: 20, color: '#3498db', spins: 1 },
-            { name: 'PUTAR LAGI 3x', chance: 10, color: '#9b59b6', spins: 3 },
+            { name: 'iPhone 15', chance: 1, color: '#f1c40f', isMajor: true, textColor: '#333' }, // Yellow-gold
+            { name: 'ZONK', chance: 50, color: '#34495e', isMajor: false }, // Dark blue-grey
+            { name: 'PUTAR LAGI 10x', chance: 4, color: '#e74c3c', spins: 10 }, // Red
+            { name: 'Bola Golf', chance: 10, color: '#2ecc71', isMajor: true }, // Green
+            { name: 'PUTAR LAGI 5x', chance: 5, color: '#e67e22', spins: 5 }, // Orange
+            { name: 'PUTAR LAGI 1x', chance: 20, color: '#3498db', spins: 1 }, // Blue
+            { name: 'PUTAR LAGI 3x', chance: 10, color: '#9b59b6', spins: 3 }, // Purple
         ];
 
         // --- DOM ELEMENTS ---
@@ -277,17 +281,17 @@
         // --- FUNCTIONS ---
 
         function drawWheel() {
-            const numPrizes = prizes.length;
             const totalChances = prizes.reduce((acc, p) => acc + p.chance, 0);
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
-            const radius = canvas.width / 2 - 10; // -10 for a little padding
+            const radius = canvas.width / 2 - 10; // Padding from edge
 
-            let startAngle = 0;
-            
-            // Clear the canvas before drawing
+            let startAngle = -Math.PI / 2; // Start at the top
+
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
+            ctx.strokeStyle = '#fff'; // White lines between segments
+            ctx.lineWidth = 2;
+
             prizes.forEach(prize => {
                 const segmentAngle = (prize.chance / totalChances) * (2 * Math.PI);
                 const endAngle = startAngle + segmentAngle;
@@ -297,33 +301,45 @@
                 ctx.moveTo(centerX, centerY);
                 ctx.arc(centerX, centerY, radius, startAngle, endAngle);
                 ctx.closePath();
-                
                 ctx.fillStyle = prize.color;
                 ctx.fill();
-                ctx.stroke(); // Adds a thin line between segments
+                ctx.stroke();
 
-                // Draw the text
+                // --- Improved Text Drawing Logic ---
                 ctx.save();
                 ctx.fillStyle = prize.textColor || 'white';
-                ctx.font = 'bold 24px Poppins';
+                ctx.font = 'bold 22px Poppins';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                
-                // Rotate and position text
-                const textAngle = startAngle + segmentAngle / 2;
-                ctx.translate(centerX, centerY);
-                ctx.rotate(textAngle);
-                
-                // Wrap text
-                const text = prize.name;
-                const textY = radius * 0.6; // Position text 60% out from the center
-                const lines = text.split(' ');
-                lines.forEach((line, index) => {
-                ctx.fillText(line.toUpperCase(), 0, textY + (index * 25)); // Draw each line of text
-                });
-                
-                ctx.restore();
 
+                // Calculate the best angle and position for the text
+                const textAngle = startAngle + segmentAngle / 2;
+                const textRadius = radius * 0.65; // Position text 65% out from the center
+
+                const textX = centerX + textRadius * Math.cos(textAngle);
+                const textY = centerY + textRadius * Math.sin(textAngle);
+
+                ctx.translate(textX, textY);
+                
+                // Rotate text to match the segment, but keep it upright
+                // The +Math.PI / 2 is to align it perpendicular to the segment radius
+                let rotation = textAngle + Math.PI / 2; 
+                if (rotation > Math.PI / 2 && rotation < (3 * Math.PI) / 2) {
+                    // If text is on the bottom half, flip it 180 degrees to be readable
+                    rotation += Math.PI;
+                }
+                ctx.rotate(rotation);
+
+                // Draw the text, splitting it into lines
+                const lines = prize.name.split(' ');
+                lines.forEach((line, index) => {
+                    // Adjust line height for multi-word prizes
+                    const lineHeight = 25;
+                    const yOffset = -(lines.length - 1) * lineHeight / 2;
+                    ctx.fillText(line.toUpperCase(), 0, yOffset + (index * lineHeight));
+                });
+
+                ctx.restore();
                 startAngle = endAngle;
             });
         }
