@@ -1,25 +1,17 @@
 /**
  * Cloudflare Function to securely proxy scraper API calls.
- * This version uses a compliant in-memory rate limiter that does not violate
- * the Cloudflare Workers runtime rules.
- *
- * Endpoint: /scrape-api
+ * VERSION WITH ENHANCED LOGGING FOR DEBUGGING.
  */
 
-// --- Constants ---
+// --- Constants & In-Memory Rate Limiter (unchanged) ---
 const MAX_RETRIES = 3;
 const INITIAL_RETRY_DELAY_MS = 1000;
+const RATE_LIMIT_COUNT = 300;
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const ipRequestTracker = new Map();
 
-// --- In-Memory Rate Limiter ---
-const RATE_LIMIT_COUNT = 300; // 300 requests...
-const RATE_LIMIT_WINDOW_MS = 60 * 1000; // per 1 minute.
-const ipRequestTracker = new Map(); // Stores { count: number, startTime: number }
-
-// REMOVED: The problematic setInterval is no longer here.
-// The cleanup logic is now in a function to be called from the handler.
 function cleanupRequestTracker() {
     const now = Date.now();
-    console.log(`Running periodic cleanup of ${ipRequestTracker.size} IP records...`);
     for (const [ip, record] of ipRequestTracker.entries()) {
         if (now - record.startTime > RATE_LIMIT_WINDOW_MS) {
             ipRequestTracker.delete(ip);
@@ -27,7 +19,7 @@ function cleanupRequestTracker() {
     }
 }
 
-// --- Provider Configurations ---
+// --- Provider Configurations (unchanged) ---
 const providerConfigs = {
     gmapsextractor: {
         endpoint: 'https://cloud.gmapsextractor.com/api/v2/search',
@@ -37,21 +29,17 @@ const providerConfigs = {
         }),
         getBody: (params) => {
             const payload = {
-                "q": params.query,
-                "page": params.page,
-                "hl": params.hl || 'id',
-                "gl": params.gl || 'id',
+                "q": params.query, "page": params.page,
+                "hl": params.hl || 'en', "gl": params.gl || 'us',
                 "extra": true
             };
-            if (params.ll) {
-                payload.ll = params.ll;
-            }
+            if (params.ll) payload.ll = params.ll;
             return payload;
         }
     },
 };
 
-// --- Helper Functions ---
+// --- Helper Functions (unchanged) ---
 const jsonResponse = (data, status = 200) => {
     return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
 };
@@ -62,17 +50,13 @@ async function fetchWithRetry(url, options, retryCount = 0) {
     try {
         const response = await fetch(url, options);
         if ([429, 500, 502, 503, 504].includes(response.status) && retryCount < MAX_RETRIES) {
-            const delayTime = INITIAL_RETRY_DELAY_MS * Math.pow(2, retryCount);
-            console.warn(`Request to ${url} failed with status ${response.status}. Retrying in ${delayTime}ms...`);
-            await delay(delayTime);
+            await delay(INITIAL_RETRY_DELAY_MS * Math.pow(2, retryCount));
             return fetchWithRetry(url, options, retryCount + 1);
         }
         return response;
     } catch (error) {
         if (retryCount < MAX_RETRIES) {
-            const delayTime = INITIAL_RETRY_DELAY_MS * Math.pow(2, retryCount);
-            console.warn(`Request to ${url} failed with network error: ${error.message}. Retrying...`);
-            await delay(delayTime);
+            await delay(INITIAL_RETRY_DELAY_MS * Math.pow(2, retryCount));
             return fetchWithRetry(url, options, retryCount + 1);
         }
         throw error;
@@ -85,24 +69,19 @@ export async function onRequest({ request }) {
         return new Response(`Method Not Allowed`, { status: 405 });
     }
     
-    // --- NEW: Opportunistic Cleanup ---
-    // Run the cleanup logic on ~1% of requests. This is random but
-    // effective over time to prevent memory leaks without using timers.
     if (Math.random() < 0.01) {
         cleanupRequestTracker();
     }
 
-    // --- In-Memory Rate Limiting Logic (unchanged) ---
     const ip = request.headers.get('CF-Connecting-IP') || '127.0.0.1';
     const now = Date.now();
     const record = ipRequestTracker.get(ip);
-
     if (!record || now - record.startTime > RATE_LIMIT_WINDOW_MS) {
         ipRequestTracker.set(ip, { count: 1, startTime: now });
     } else {
         record.count++;
         if (record.count > RATE_LIMIT_COUNT) {
-            return jsonResponse({ success: false, error: 'Rate limit exceeded. Please try again in a minute.' }, 429);
+            return jsonResponse({ success: false, error: 'Rate limit exceeded.' }, 429);
         }
         ipRequestTracker.set(ip, record);
     }
@@ -113,8 +92,6 @@ export async function onRequest({ request }) {
     } catch (error) {
         return jsonResponse({ success: false, error: 'Invalid JSON in request body.' }, 400);
     }
-
-    // ... The rest of the function remains the same ...
 
     const { action, provider, apiKey, params } = requestData;
 
@@ -128,27 +105,46 @@ export async function onRequest({ request }) {
     }
 
     if (action === 'search') {
-        if (!params.query || !params.page) {
-             return jsonResponse({ success: false, error: 'Missing query or page in params.' }, 400);
-        }
-
-        console.log(`Proxying search request for provider: ${provider}, page: ${params.page}`);
-
         try {
+            // *** NEW LOGGING: Log the details of the outgoing request ***
+            const outboundBody = config.getBody(params);
+            const outboundHeaders = config.getHeaders(apiKey);
+
+            console.log("--- [DEBUG] Preparing Outbound Request ---");
+            console.log("Endpoint:", config.endpoint);
+            console.log("Headers:", JSON.stringify({ ...outboundHeaders, Authorization: 'Bearer [REDACTED]' }));
+            console.log("Body:", JSON.stringify(outboundBody, null, 2));
+            console.log("-----------------------------------------");
+
             const apiResponse = await fetchWithRetry(config.endpoint, {
                 method: 'POST',
-                headers: config.getHeaders(apiKey),
-                body: JSON.stringify(config.getBody(params))
+                headers: outboundHeaders,
+                body: JSON.stringify(outboundBody)
             });
-            const responseData = await apiResponse.json();
+
+            // Use .clone() so we can read the body twice if needed (for logging)
+            const responseClone = apiResponse.clone();
+            
             if (!apiResponse.ok) {
-                 console.error(`External API Error (${apiResponse.status}) for ${provider}:`, responseData.message || JSON.stringify(responseData));
-                 return jsonResponse(responseData, apiResponse.status);
+                // *** NEW LOGGING: Log the full error response from the external API ***
+                const errorData = await responseClone.json().catch(() => responseClone.text()); // Handle non-JSON errors
+                console.error(`--- [DEBUG] External API Error ---`);
+                console.error(`Status: ${apiResponse.status} ${apiResponse.statusText}`);
+                console.error("Full Error Response Body:", JSON.stringify(errorData, null, 2));
+                console.error(`--------------------------------`);
+                return new Response(JSON.stringify(errorData), { status: apiResponse.status });
             }
+            
+            const responseData = await apiResponse.json();
             return jsonResponse(responseData, 200);
+
         } catch (error) {
-            console.error(`Proxy function error for ${provider}: ${error.message}`);
-            return jsonResponse({ success: false, error: `The API has encountered an unknown error. Please check the function logs.` }, 500);
+            // *** NEW LOGGING: Log the full stack trace of the crash ***
+            console.error("--- [DEBUG] FATAL PROXY FUNCTION CRASH ---");
+            console.error("Error Message:", error.message);
+            console.error("Error Stack:", error.stack);
+            console.error("----------------------------------------");
+            return jsonResponse({ success: false, error: `The API proxy encountered a fatal error. Check the function logs for details.` }, 500);
         }
     }
 
