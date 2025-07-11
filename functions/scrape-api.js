@@ -1,7 +1,7 @@
 /**
  * Cloudflare Function to securely proxy scraper API calls.
- * This function handles CORS, includes a self-contained in-memory rate limiter,
- * and provides an extensible structure for multiple data providers.
+ * This version uses a compliant in-memory rate limiter that does not violate
+ * the Cloudflare Workers runtime rules.
  *
  * Endpoint: /scrape-api
  */
@@ -13,18 +13,19 @@ const INITIAL_RETRY_DELAY_MS = 1000;
 // --- In-Memory Rate Limiter ---
 const RATE_LIMIT_COUNT = 300; // 300 requests...
 const RATE_LIMIT_WINDOW_MS = 60 * 1000; // per 1 minute.
-const ipRequestTracker = new Map(); // Stores { count: number, startTime: number } for each IP.
+const ipRequestTracker = new Map(); // Stores { count: number, startTime: number }
 
-// Periodically clean up old entries to prevent memory leaks.
-setInterval(() => {
+// REMOVED: The problematic setInterval is no longer here.
+// The cleanup logic is now in a function to be called from the handler.
+function cleanupRequestTracker() {
     const now = Date.now();
+    console.log(`Running periodic cleanup of ${ipRequestTracker.size} IP records...`);
     for (const [ip, record] of ipRequestTracker.entries()) {
         if (now - record.startTime > RATE_LIMIT_WINDOW_MS) {
             ipRequestTracker.delete(ip);
         }
     }
-}, RATE_LIMIT_WINDOW_MS * 2); // Cleanup every 2 minutes.
-
+}
 
 // --- Provider Configurations ---
 const providerConfigs = {
@@ -42,7 +43,6 @@ const providerConfigs = {
                 "gl": params.gl || 'id',
                 "extra": true
             };
-            // Only add the 'll' key if it's provided and not empty
             if (params.ll) {
                 payload.ll = params.ll;
             }
@@ -84,24 +84,28 @@ export async function onRequest({ request }) {
     if (request.method !== 'POST') {
         return new Response(`Method Not Allowed`, { status: 405 });
     }
+    
+    // --- NEW: Opportunistic Cleanup ---
+    // Run the cleanup logic on ~1% of requests. This is random but
+    // effective over time to prevent memory leaks without using timers.
+    if (Math.random() < 0.01) {
+        cleanupRequestTracker();
+    }
 
-    // --- In-Memory Rate Limiting Logic ---
+    // --- In-Memory Rate Limiting Logic (unchanged) ---
     const ip = request.headers.get('CF-Connecting-IP') || '127.0.0.1';
     const now = Date.now();
     const record = ipRequestTracker.get(ip);
 
     if (!record || now - record.startTime > RATE_LIMIT_WINDOW_MS) {
-        // If no record or the record has expired, create a new one.
         ipRequestTracker.set(ip, { count: 1, startTime: now });
     } else {
-        // If the record is still valid, increment the count.
         record.count++;
         if (record.count > RATE_LIMIT_COUNT) {
             return jsonResponse({ success: false, error: 'Rate limit exceeded. Please try again in a minute.' }, 429);
         }
         ipRequestTracker.set(ip, record);
     }
-    // --- End of Rate Limiting Logic ---
 
     let requestData;
     try {
@@ -109,6 +113,8 @@ export async function onRequest({ request }) {
     } catch (error) {
         return jsonResponse({ success: false, error: 'Invalid JSON in request body.' }, 400);
     }
+
+    // ... The rest of the function remains the same ...
 
     const { action, provider, apiKey, params } = requestData;
 
@@ -134,19 +140,14 @@ export async function onRequest({ request }) {
                 headers: config.getHeaders(apiKey),
                 body: JSON.stringify(config.getBody(params))
             });
-
             const responseData = await apiResponse.json();
-
             if (!apiResponse.ok) {
                  console.error(`External API Error (${apiResponse.status}) for ${provider}:`, responseData.message || JSON.stringify(responseData));
                  return jsonResponse(responseData, apiResponse.status);
             }
-            
             return jsonResponse(responseData, 200);
-
         } catch (error) {
             console.error(`Proxy function error for ${provider}: ${error.message}`);
-            // This is a more generic error for when the fetch itself fails after retries
             return jsonResponse({ success: false, error: `The API has encountered an unknown error. Please check the function logs.` }, 500);
         }
     }
