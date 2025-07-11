@@ -16,69 +16,73 @@
     <div class="container mx-auto p-4 sm:p-6 lg:p-8">
         <header class="mb-8">
             <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">Google Maps Data Extractor</h1>
-            <p class="text-gray-600 mt-2">Enter a query to extract business data. The tool will fetch all pages of results via a secure proxy.</p>
+            <p class="text-gray-600 mt-2">Enter a query and select a country to extract all pages of business data.</p>
         </header>
 
         <!-- Input Form -->
         <form id="searchForm" class="bg-white p-6 rounded-lg shadow-md mb-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
-                <!-- Provider Select -->
-                <div>
-                    <label for="providerSelect" class="block text-sm font-medium text-gray-700 mb-1">Provider</label>
-                    <select id="providerSelect" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                        <option value="gmapsextractor">GMapsExtractor.com</option>
-                        <option value="provider2" disabled>Provider 2 (Coming Soon)</option>
-                    </select>
-                </div>
-                <!-- API Key -->
-                <div>
-                    <label for="apiKeyInput" class="block text-sm font-medium text-gray-700 mb-1">API Key</label>
-                    <input type="password" id="apiKeyInput" placeholder="Enter your API Key" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                </div>
-                <!-- Search Query -->
-                <div>
-                    <label for="queryInput" class="block text-sm font-medium text-gray-700 mb-1">Search Query</label>
-                    <input type="text" id="queryInput" placeholder="e.g., design agency in new york" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                </div>
-                <!-- Location (Optional) -->
-                <div>
-                    <label for="locationInput" class="block text-sm font-medium text-gray-700 mb-1">Location (Optional)</label>
-                    <input type="text" id="locationInput" placeholder="e.g., @40.7,-74.0,12z" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                </div>
-                <!-- Language (hl) -->
-                <div>
-                    <label for="hlSelect" class="block text-sm font-medium text-gray-700 mb-1">Language</label>
-                    <select id="hlSelect" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                        <option value="id">🇮🇩 Indonesia</option>
-                        <option value="en">🇬🇧 English</option>
-                        <option value="es">🇪🇸 Spanish</option>
-                        <option value="fr">🇫🇷 French</option>
-                        <option value="de">🇩🇪 German</option>
-                        <option value="it">🇮🇹 Italian</option>
-                        <option value="pt">🇵🇹 Portuguese</option>
-                        <option value="ja">🇯🇵 Japanese</option>
-                        <option value="ko">🇰🇷 Korean</option>
-                        <option value="zh-CN">🇨🇳 Chinese (Simplified)</option>
-                    </select>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Provider & API Key in one column -->
+                <div class="space-y-6">
+                    <div>
+                        <label for="providerSelect" class="block text-sm font-medium text-gray-700 mb-1">Provider</label>
+                        <select id="providerSelect" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="gmapsextractor">GMapsExtractor.com</option>
+                            <option value="provider2" disabled>Provider 2 (Coming Soon)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="apiKeyInput" class="block text-sm font-medium text-gray-700 mb-1">API Key</label>
+                        <input type="password" id="apiKeyInput" placeholder="Enter your API Key" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    </div>
                 </div>
 
-                <!-- Country (gl) -->
-                <div>
-                    <label for="glSelect" class="block text-sm font-medium text-gray-700 mb-1">Country</label>
-                    <select id="glSelect" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                        <option value="id">🇮🇩 ID</option>
-                        <option value="us">🇺🇸 US</option>
-                        <option value="gb">🇬🇧 GB</option>
-                        <option value="ca">🇨🇦 CA</option>
-                        <option value="au">🇦🇺 AU</option>
-                        <option value="de">🇩🇪 DE</option>
-                        <option value="fr">🇫🇷 FR</option>
-                        <option value="it">🇮🇹 IT</option>
-                        <option value="es">🇪🇸 ES</option>
-                        <option value="jp">🇯🇵 JP</option>
-                        <option value="kr">🇰🇷 KR</option>
-                        <option value="cn">🇨🇳 CN</option>
-                    </select>
+                <!-- Query & Language in one column -->
+                <div class="space-y-6">
+                    <div>
+                        <label for="queryInput" class="block text-sm font-medium text-gray-700 mb-1">Search Query</label>
+                        <input type="text" id="queryInput" placeholder="e.g., design agency" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="hlSelect" class="block text-sm font-medium text-gray-700 mb-1">Language</label>
+                        <select id="hlSelect" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="en">🇬🇧 English</option>
+                            <option value="id">🇮🇩 Indonesian</option>
+                            <option value="es">🇪🇸 Spanish</option>
+                            <option value="fr">🇫🇷 French</option>
+                            <option value="de">🇩🇪 German</option>
+                            <option value="it">🇮🇹 Italian</option>
+                            <option value="pt">🇵🇹 Portuguese</option>
+                            <option value="ja">🇯🇵 Japanese</option>
+                            <option value="ko">🇰🇷 Korean</option>
+                            <option value="zh-CN">🇨🇳 Chinese (Simplified)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Country & Location in one column -->
+                <div class="space-y-6">
+                    <div>
+                        <label for="glSelect" class="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                        <select id="glSelect" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="us">🇺🇸 US</option>
+                            <option value="id">🇮🇩 ID</option>
+                            <option value="gb">🇬🇧 GB</option>
+                            <option value="ca">🇨🇦 CA</option>
+                            <option value="au">🇦🇺 AU</option>
+                            <option value="de">🇩🇪 DE</option>
+                            <option value="fr">🇫🇷 FR</option>
+                            <option value="it">🇮🇹 IT</option>
+                            <option value="es">🇪🇸 ES</option>
+                            <option value="jp">🇯🇵 JP</option>
+                            <option value="kr">🇰🇷 KR</option>
+                            <option value="cn">🇨🇳 CN</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="locationInput" class="block text-sm font-medium text-gray-700 mb-1">Location (ll parameter)</label>
+                        <input type="text" id="locationInput" class="w-full p-2 border border-gray-300 rounded-md shadow-sm bg-gray-200" readonly>
+                    </div>
                 </div>
             </div>
             <div class="mt-6 flex items-center gap-4">
@@ -86,15 +90,19 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
                     Extract All Data
                 </button>
-                <div class="flex items-center gap-3">
-                    <div id="loader" class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-8 w-8 hidden"></div>
-                    <p id="progressStatus" class="text-sm text-gray-600 font-medium"></p>
-                </div>
+                <div id="loader" class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-8 w-8 hidden"></div>
             </div>
         </form>
+        
+        <!-- NEW: Persistent Log Area -->
+        <div id="logContainer" class="bg-white p-4 rounded-lg shadow-md">
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">Logs</h3>
+            <textarea id="logArea" class="w-full h-40 p-2 border border-gray-300 rounded-md font-mono text-sm bg-gray-50" readonly></textarea>
+        </div>
+
 
         <!-- Results Section -->
-        <div id="resultsContainer" class="hidden">
+        <div id="resultsContainer" class="hidden mt-8">
             <div id="resultsActions" class="mb-4 flex flex-wrap gap-3">
                 <button id="copyBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md shadow-sm transition-colors duration-200 flex items-center">Copy TSV</button>
                 <button id="downloadBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md shadow-sm transition-colors duration-200 flex items-center">Download as TSV</button>
@@ -103,15 +111,7 @@
                 <table class="w-full text-sm text-left text-gray-600">
                     <thead class="text-xs text-gray-700 uppercase bg-gray-200 sticky top-0">
                         <tr>
-                            <th scope="col" class="px-4 py-3">Name</th>
-                            <th scope="col" class="px-4 py-3">Address</th>
-                            <th scope="col" class="px-4 py-3">Phone</th>
-                            <th scope="col" class="px-4 py-3">Email(s)</th>
-                            <th scope="col" class="px-4 py-3">Website</th>
-                            <th scope="col" class="px-4 py-3">Rating</th>
-                            <th scope="col" class="px-4 py-3">Reviews</th>
-                            <th scope="col" class="px-4 py-3">Opening Hours</th>
-                            <th scope="col" class="px-4 py-3">Categories</th>
+                            <th scope="col" class="px-4 py-3">Name</th><th scope="col" class="px-4 py-3">Address</th><th scope="col" class="px-4 py-3">Phone</th><th scope="col" class="px-4 py-3">Email(s)</th><th scope="col" class="px-4 py-3">Website</th><th scope="col" class="px-4 py-3">Rating</th><th scope="col" class="px-4 py-3">Reviews</th><th scope="col" class="px-4 py-3">Opening Hours</th><th scope="col" class="px-4 py-3">Categories</th>
                         </tr>
                     </thead>
                     <tbody id="resultsBody"></tbody>
@@ -121,12 +121,9 @@
         </div>
     </div>
 
-    <!-- Notification Toast -->
-    <div id="notification" class="fixed bottom-5 right-5 bg-gray-900 text-white py-2 px-5 rounded-lg shadow-xl transition-opacity duration-300 opacity-0 z-50"></div>
-
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // DOM Elements
+    // --- DOM Elements ---
     const searchForm = document.getElementById('searchForm');
     const apiKeyInput = document.getElementById('apiKeyInput');
     const queryInput = document.getElementById('queryInput');
@@ -136,47 +133,57 @@ document.addEventListener('DOMContentLoaded', () => {
     const glSelect = document.getElementById('glSelect');
     const searchBtn = document.getElementById('searchBtn');
     const loader = document.getElementById('loader');
-    const progressStatus = document.getElementById('progressStatus');
+    const logArea = document.getElementById('logArea');
     const resultsContainer = document.getElementById('resultsContainer');
     const resultsActions = document.getElementById('resultsActions');
     const resultsBody = document.getElementById('resultsBody');
     const noResults = document.getElementById('noResults');
     const copyBtn = document.getElementById('copyBtn');
     const downloadBtn = document.getElementById('downloadBtn');
-    const notification = document.getElementById('notification');
+
     let currentResults = [];
     const API_KEY_STORAGE_ID = 'gmapsExtractorApiKey';
+    
+    // --- NEW: Location Data ---
+    const countryLocations = {
+        'us': '@39.8283,-98.5795,4z', 'id': '@-2.5489,118.0149,5z',
+        'gb': '@55.3781,-3.4360,6z',  'ca': '@56.1304,-106.3468,4z',
+        'au': '@-25.2744,133.7751,4z','de': '@51.1657,10.4515,6z',
+        'fr': '@46.2276,2.2137,6z',   'it': '@41.8719,12.5674,6z',
+        'es': '@40.4637,-3.7492,6z',  'jp': '@36.2048,138.2529,5z',
+        'kr': '@35.9078,127.7669,7z', 'cn': '@35.8617,104.1954,4z'
+    };
 
     // --- Core Functions ---
-    const showNotification = (message, isError = false) => {
-        notification.textContent = message;
-        notification.classList.remove('opacity-0');
-        notification.classList.toggle('bg-red-600', isError);
-        notification.classList.toggle('bg-gray-900', !isError);
-        setTimeout(() => { notification.classList.add('opacity-0'); }, 3000);
+    const logMessage = (message, type = 'INFO') => {
+        const timestamp = new Date().toLocaleTimeString();
+        logArea.value += `[${timestamp}] [${type}] ${message}\n`;
+        logArea.scrollTop = logArea.scrollHeight; // Auto-scroll to bottom
     };
 
     const loadApiKey = () => { if(localStorage.getItem(API_KEY_STORAGE_ID)) apiKeyInput.value = localStorage.getItem(API_KEY_STORAGE_ID); };
     const saveApiKey = () => localStorage.setItem(API_KEY_STORAGE_ID, apiKeyInput.value);
+
+    // --- NEW: Function to update location input ---
+    const updateLocationInput = () => {
+        const selectedCountry = glSelect.value;
+        locationInput.value = countryLocations[selectedCountry] || '';
+    };
 
     const setLoadingState = (isLoading) => {
         searchBtn.disabled = isLoading;
         searchBtn.classList.toggle('cursor-not-allowed', isLoading);
         searchBtn.classList.toggle('opacity-70', isLoading);
         loader.classList.toggle('hidden', !isLoading);
-        if(isLoading) progressStatus.textContent = 'Starting search...';
     };
 
     const renderTable = (data) => {
         resultsBody.innerHTML = '';
         const isDataAvailable = data && data.length > 0;
-        
         resultsContainer.classList.toggle('hidden', !isDataAvailable);
         resultsActions.classList.toggle('hidden', !isDataAvailable);
         noResults.classList.toggle('hidden', isDataAvailable);
-
         if (!isDataAvailable) return;
-        
         currentResults = data;
         const fragment = document.createDocumentFragment();
         data.forEach(item => {
@@ -210,89 +217,73 @@ document.addEventListener('DOMContentLoaded', () => {
         return [headers.join('\t'), ...rows].join('\n');
     };
 
-    /**
-     * Fetches a single page of data via our Cloudflare Function proxy.
-     */
     async function fetchPageData(page, query, location, apiKey, provider, hl, gl) {
-        // *** CHANGE: Call our own API proxy instead of the external one ***
         const API_URL = '/scrape-api';
-
         const payload = {
-            action: 'search',
-            provider: provider,
-            apiKey: apiKey,
-            params: {
-                query: query,
-                page: page,
-                ll: location || null,
-                hl: hl,
-                gl: gl
-            }
+            action: 'search', provider: provider, apiKey: apiKey,
+            params: { query: query, page: page, ll: location, hl: hl, gl: gl }
         };
 
         try {
             const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
             });
             const result = await response.json();
             if (!response.ok) {
-                // Our proxy forwards the error message from the real API
-                throw new Error(result.error || result.message || `API Error: Status ${response.status}`);
+                // The error message from the API is now in result.error
+                throw new Error(result.error || `API Error: Status ${response.status}`);
             }
             return result;
         } catch (error) {
-            console.error('Fetch Error on page ' + page, error);
-            showNotification(error.message, true);
-            return { error: error.message, data: [] }; // Return a consistent error structure
+            logMessage(`Error fetching page ${page}: ${error.message}`, 'ERROR');
+            return { error: error.message, data: [] };
         }
     }
 
     async function startFullSearch() {
         const apiKey = apiKeyInput.value.trim();
         const query = queryInput.value.trim();
-        const location = locationInput.value.trim();
+        const location = locationInput.value; // No trim, it's auto-set
         const provider = providerSelect.value;
         const hl = hlSelect.value;
         const gl = glSelect.value;
 
         if (!apiKey || !query) {
-            showNotification('API Key and Search Query are required.', true);
+            logMessage('API Key and Search Query are required.', 'WARN');
             return;
         }
-
+        logMessage(`Starting search for "${query}" in country ${gl.toUpperCase()}.`);
         setLoadingState(true);
         renderTable([]);
 
         let allResults = [];
         let currentPage = 1;
         let keepFetching = true;
+        let hasEncounteredError = false;
 
-        while (keepFetching) {
-            progressStatus.textContent = `Fetching page ${currentPage}... Found ${allResults.length} results.`;
+        while (keepFetching && !hasEncounteredError) {
+            logMessage(`Fetching page ${currentPage}... Found ${allResults.length} results so far.`);
             const result = await fetchPageData(currentPage, query, location, apiKey, provider, hl, gl);
+            
+            if (result && result.error) {
+                hasEncounteredError = true; // Stop the loop on API error
+            }
 
             if (result && result.data && result.data.length > 0) {
                 allResults.push(...result.data);
                 renderTable(allResults);
-                
-                // Stop if the API returns fewer results than a full page (usually 20).
-                if (result.data.length < 20) {
-                    keepFetching = false;
-                } else {
-                    currentPage++;
-                }
+                if (result.data.length < 20) keepFetching = false;
+                else currentPage++;
             } else {
-                keepFetching = false; // Stop on error, no data, or empty array
+                keepFetching = false;
             }
         }
         
         setLoadingState(false);
         if (allResults.length > 0) {
-            progressStatus.textContent = `Search complete. Found ${allResults.length} total results.`;
-        } else {
-            progressStatus.textContent = 'Search complete. No results found.';
+            logMessage(`Search complete. Found ${allResults.length} total results.`, 'SUCCESS');
+        } else if (!hasEncounteredError) {
+            logMessage('Search complete. No results found for your query.', 'INFO');
             noResults.classList.remove('hidden');
             resultsContainer.classList.add('hidden');
         }
@@ -302,8 +293,10 @@ document.addEventListener('DOMContentLoaded', () => {
     searchForm.addEventListener('submit', e => { e.preventDefault(); startFullSearch(); });
     apiKeyInput.addEventListener('input', saveApiKey);
     apiKeyInput.addEventListener('paste', saveApiKey);
+    glSelect.addEventListener('change', updateLocationInput); // NEW listener
+
     copyBtn.addEventListener('click', () => {
-        if(convertToTSV()) navigator.clipboard.writeText(convertToTSV()).then(() => showNotification('Copied!'));
+        if(convertToTSV()) navigator.clipboard.writeText(convertToTSV()).then(() => logMessage('Data copied to clipboard!'));
     });
     downloadBtn.addEventListener('click', () => {
         const tsvData = convertToTSV();
@@ -315,11 +308,13 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            logMessage('Data downloaded as TSV file.');
         }
     });
     
-    // --- Initializer ---
+    // --- Initializers ---
     loadApiKey();
+    updateLocationInput(); // Set initial location on page load
 });
 </script>
 
