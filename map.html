@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Maps Data Extractor</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Simple animation for the loader */
+        .loader {
+            border-top-color: #3498db;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <header class="mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">Google Maps Data Extractor</h1>
+            <p class="text-gray-600 mt-2">Enter a query and location to extract business data. Your API key is saved locally in your browser.</p>
+        </header>
+
+        <!-- Input Form -->
+        <form id="searchForm" class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Provider Select -->
+                <div>
+                    <label for="providerSelect" class="block text-sm font-medium text-gray-700 mb-1">Provider</label>
+                    <select id="providerSelect" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        <option value="gmapsextractor">GMapsExtractor.com</option>
+                        <!-- Add other providers here later -->
+                        <option value="provider2" disabled>Provider 2 (Coming Soon)</option>
+                    </select>
+                </div>
+                <!-- API Key -->
+                <div>
+                    <label for="apiKeyInput" class="block text-sm font-medium text-gray-700 mb-1">API Key</label>
+                    <input type="password" id="apiKeyInput" placeholder="Enter your API Key" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <!-- Search Query -->
+                <div>
+                    <label for="queryInput" class="block text-sm font-medium text-gray-700 mb-1">Search Query</label>
+                    <input type="text" id="queryInput" placeholder="e.g., design agency" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <!-- Location -->
+                <div>
+                    <label for="locationInput" class="block text-sm font-medium text-gray-700 mb-1">Location (ll parameter)</label>
+                    <input type="text" id="locationInput" placeholder="@lat,lng,zoomZ" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+            </div>
+            <div class="mt-6 flex items-center">
+                <button type="submit" id="searchBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-md shadow-sm transition-colors duration-200 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                    Search
+                </button>
+                <!-- Loader -->
+                <div id="loader" class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-8 w-8 ml-4 hidden"></div>
+            </div>
+        </form>
+
+        <!-- Results Section -->
+        <div id="resultsContainer" class="hidden">
+             <!-- Action Buttons -->
+            <div id="resultsActions" class="mb-4 flex flex-wrap gap-3">
+                <button id="copyBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md shadow-sm transition-colors duration-200 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                    Copy TSV to Clipboard
+                </button>
+                <button id="downloadBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md shadow-sm transition-colors duration-200 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                    Download as TSV
+                </button>
+            </div>
+
+            <!-- Results Table -->
+            <div id="resultsTableContainer" class="bg-white p-1 rounded-lg shadow-md overflow-x-auto">
+                <table class="w-full text-sm text-left text-gray-600">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-200">
+                        <tr>
+                            <th scope="col" class="px-4 py-3">Name</th>
+                            <th scope="col" class="px-4 py-3">Address</th>
+                            <th scope="col" class="px-4 py-3">Phone</th>
+                            <th scope="col" class="px-4 py-3">Email(s)</th>
+                            <th scope="col" class="px-4 py-3">Website</th>
+                            <th scope="col" class="px-4 py-3">Rating</th>
+                            <th scope="col" class="px-4 py-3">Reviews</th>
+                            <th scope="col" class="px-4 py-3">Opening Hours</th>
+                            <th scope="col" class="px-4 py-3">Categories</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody">
+                        <!-- Data will be injected here by JS -->
+                    </tbody>
+                </table>
+                 <p id="noResults" class="text-center p-8 text-gray-500 hidden">No results found for your query.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="notification" class="fixed bottom-5 right-5 bg-gray-900 text-white py-2 px-5 rounded-lg shadow-xl transition-opacity duration-300 opacity-0">
+        Notification message
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- DOM Elements ---
+    const searchForm = document.getElementById('searchForm');
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const queryInput = document.getElementById('queryInput');
+    const locationInput = document.getElementById('locationInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const loader = document.getElementById('loader');
+    const resultsContainer = document.getElementById('resultsContainer');
+    const resultsActions = document.getElementById('resultsActions');
+    const resultsBody = document.getElementById('resultsBody');
+    const noResults = document.getElementById('noResults');
+    const copyBtn = document.getElementById('copyBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const notification = document.getElementById('notification');
+
+    let currentResults = [];
+    const API_KEY_STORAGE_ID = 'gmapsExtractorApiKey';
+
+    // --- Functions ---
+
+    /**
+     * Shows a notification message for a few seconds.
+     * @param {string} message The message to display.
+     * @param {boolean} isError If true, shows a red background.
+     */
+    const showNotification = (message, isError = false) => {
+        notification.textContent = message;
+        notification.classList.remove('opacity-0');
+        notification.classList.toggle('bg-red-600', isError);
+        notification.classList.toggle('bg-gray-900', !isError);
+
+        setTimeout(() => {
+            notification.classList.add('opacity-0');
+        }, 3000);
+    };
+
+    /**
+     * Loads the API key from localStorage on page load.
+     */
+    const loadApiKey = () => {
+        const savedKey = localStorage.getItem(API_KEY_STORAGE_ID);
+        if (savedKey) {
+            apiKeyInput.value = savedKey;
+        }
+    };
+
+    /**
+     * Saves the API key to localStorage whenever it's changed.
+     */
+    const saveApiKey = () => {
+        localStorage.setItem(API_KEY_STORAGE_ID, apiKeyInput.value);
+    };
+
+    /**
+     * Toggles the UI state between loading and idle.
+     * @param {boolean} isLoading True if the API call is in progress.
+     */
+    const setLoadingState = (isLoading) => {
+        if (isLoading) {
+            searchBtn.disabled = true;
+            searchBtn.classList.add('cursor-not-allowed', 'opacity-70');
+            loader.classList.remove('hidden');
+        } else {
+            searchBtn.disabled = false;
+            searchBtn.classList.remove('cursor-not-allowed', 'opacity-70');
+            loader.classList.add('hidden');
+        }
+    };
+    
+    /**
+     * Renders the fetched data into the results table.
+     * @param {Array<Object>} data The array of business data from the API.
+     */
+    const renderTable = (data) => {
+        // Clear previous results
+        resultsBody.innerHTML = '';
+        noResults.classList.add('hidden');
+        resultsActions.classList.add('hidden');
+        resultsContainer.classList.add('hidden');
+
+        if (!data || data.length === 0) {
+            noResults.classList.remove('hidden');
+            resultsContainer.classList.remove('hidden');
+            return;
+        }
+        
+        currentResults = data; // Store results for export
+
+        data.forEach(item => {
+            const row = document.createElement('tr');
+            row.className = 'bg-white border-b hover:bg-gray-50';
+            
+            // Helper to create a table cell
+            const createCell = (content) => {
+                const cell = document.createElement('td');
+                cell.className = 'px-4 py-2';
+                cell.textContent = content ?? 'N/A'; // Use 'N/A' for null/undefined values
+                return cell;
+            };
+
+            row.appendChild(createCell(item.name));
+            row.appendChild(createCell(item.full_address));
+            row.appendChild(createCell(item.phone));
+            row.appendChild(createCell(item.emails?.join(', ')));
+            row.appendChild(createCell(item.website));
+            row.appendChild(createCell(item.average_rating));
+            row.appendChild(createCell(item.review_count));
+            row.appendChild(createCell(item.opening_hours));
+            row.appendChild(createCell(item.categories));
+
+            resultsBody.appendChild(row);
+        });
+        
+        resultsActions.classList.remove('hidden');
+        resultsContainer.classList.remove('hidden');
+    };
+    
+    /**
+     * Converts the results data to a Tab-Separated Value (TSV) string.
+     * @returns {string} The TSV formatted data.
+     */
+    const convertToTSV = () => {
+        if (currentResults.length === 0) return '';
+        
+        const headers = [
+            'Name', 'Address', 'Phone', 'Email(s)', 'Website', 
+            'Rating', 'Reviews', 'Opening Hours', 'Categories'
+        ];
+        
+        // Sanitize data to prevent breaking TSV format (remove tabs and newlines)
+        const sanitize = (value) => {
+            if (value === null || typeof value === 'undefined') return '';
+            return String(value).replace(/\t/g, ' ').replace(/\n/g, ' ');
+        };
+
+        const rows = currentResults.map(item => {
+            const rowData = [
+                sanitize(item.name),
+                sanitize(item.full_address),
+                sanitize(item.phone),
+                sanitize(item.emails?.join(', ')),
+                sanitize(item.website),
+                sanitize(item.average_rating),
+                sanitize(item.review_count),
+                sanitize(item.opening_hours),
+                sanitize(item.categories)
+            ];
+            return rowData.join('\t');
+        });
+
+        return [headers.join('\t'), ...rows].join('\n');
+    };
+    
+    /**
+     * Fetches data from the GMapsExtractor API.
+     */
+    const fetchData = async () => {
+        const apiKey = apiKeyInput.value.trim();
+        const query = queryInput.value.trim();
+        const location = locationInput.value.trim();
+
+        if (!apiKey) {
+            showNotification('API Key is required.', true);
+            apiKeyInput.focus();
+            return;
+        }
+        if (!query) {
+            showNotification('Search Query is required.', true);
+            queryInput.focus();
+            return;
+        }
+        if (!location) {
+            showNotification('Location (ll) is required.', true);
+            locationInput.focus();
+            return;
+        }
+
+        setLoadingState(true);
+        renderTable([]); // Clear previous results
+
+        const API_URL = 'https://cloud.gmapsextractor.com/api/v2/search';
+        
+        const options = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+                "q": query,
+                "page": 1, // You could add pagination controls later
+                "ll": location,
+                "hl": "en",
+                "gl": "us",
+                "extra": true // Important for getting emails
+            })
+        };
+
+        try {
+            const response = await fetch(API_URL, options);
+            const result = await response.json();
+
+            if (!response.ok) {
+                // The API often returns error details in the JSON body
+                throw new Error(result.message || `HTTP error! status: ${response.status}`);
+            }
+
+            renderTable(result.data);
+
+        } catch (error) {
+            console.error('Fetch Error:', error);
+            showNotification(`Error: ${error.message}`, true);
+            renderTable([]); // Ensure table is empty on error
+        } finally {
+            setLoadingState(false);
+        }
+    };
+
+
+    // --- Event Listeners ---
+    searchForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        fetchData();
+    });
+
+    apiKeyInput.addEventListener('input', saveApiKey);
+    
+    copyBtn.addEventListener('click', () => {
+        const tsvData = convertToTSV();
+        if (tsvData) {
+            navigator.clipboard.writeText(tsvData)
+                .then(() => showNotification('Copied to clipboard!'))
+                .catch(err => showNotification('Failed to copy.', true));
+        }
+    });
+
+    downloadBtn.addEventListener('click', () => {
+        const tsvData = convertToTSV();
+        if (tsvData) {
+            const blob = new Blob([tsvData], { type: 'text/tab-separated-values;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            const safeQueryName = queryInput.value.trim().replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            link.setAttribute('download', `gmaps_data_${safeQueryName}.tsv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    });
+    
+
+    // --- Initializer ---
+    loadApiKey();
+});
+</script>
+
+</body>
+</html>
