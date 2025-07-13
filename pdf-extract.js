@@ -21,8 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
         extractFilesList.innerHTML = '';
         extractResults.innerHTML = '';
         
-        extractFilesList.style.gridTemplateColumns = 'repeat(auto-fit, minmax(320px, 1fr))';
-
         const inputFiles = Array.from(e.target.files);
         const finalPdfFiles = []; 
 
