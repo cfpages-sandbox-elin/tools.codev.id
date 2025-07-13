@@ -1,6 +1,6 @@
 /**
  * Cloudflare Function to securely proxy scraper API calls.
- * VERSION WITH ENHANCED LOGGING FOR DEBUGGING.
+ * Now supports GMapsExtractor and DataForSEO (with async polling).
  */
 
 // --- Constants & In-Memory Rate Limiter (unchanged) ---
@@ -19,33 +19,44 @@ function cleanupRequestTracker() {
     }
 }
 
-// --- Provider Configurations (unchanged) ---
+// --- Provider Configurations ---
 const providerConfigs = {
     gmapsextractor: {
         endpoint: 'https://cloud.gmapsextractor.com/api/v2/search',
-        getHeaders: (apiKey) => ({
+        getHeaders: (auth) => ({
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`
+            'Authorization': `Bearer ${auth.apiKey}`
         }),
-        getBody: (params) => {
-            const payload = {
-                "q": params.query, "page": params.page,
-                "hl": params.hl || 'en', "gl": params.gl || 'us',
-                "extra": true
-            };
-            if (params.ll) payload.ll = params.ll;
-            return payload;
-        }
+        getBody: (params) => ({
+            q: params.query, page: params.page,
+            hl: params.hl || 'en', gl: params.gl || 'us',
+            ll: params.location, extra: true
+        })
     },
+    dataforseo: {
+        taskPostEndpoint: 'https://api.dataforseo.com/v3/serp/google/maps/task_post',
+        taskGetEndpoint: 'https://api.dataforseo.com/v3/serp/google/maps/task_get/advanced/',
+        getHeaders: (auth) => {
+            const credentials = `${auth.login}:${auth.password}`;
+            // btoa is available in Cloudflare Workers for Base64 encoding
+            const encoded = btoa(credentials);
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Basic ${encoded}`
+            };
+        },
+        getBody: (params) => ([{ // DataForSEO expects an array of tasks
+            keyword: params.query,
+            location_coordinate: params.location.replace('@', ''), // Remove the '@' sign
+            language_code: params.hl,
+            depth: 100 // Get a good number of results
+        }])
+    }
 };
 
-// --- Helper Functions (unchanged) ---
-const jsonResponse = (data, status = 200) => {
-    return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
-};
-
+// --- Helper Functions ---
+const jsonResponse = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } });
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
 async function fetchWithRetry(url, options, retryCount = 0) {
     try {
         const response = await fetch(url, options);
@@ -65,88 +76,78 @@ async function fetchWithRetry(url, options, retryCount = 0) {
 
 // --- Main Request Handler ---
 export async function onRequest({ request }) {
-    if (request.method !== 'POST') {
-        return new Response(`Method Not Allowed`, { status: 405 });
-    }
+    if (request.method !== 'POST') return new Response(`Method Not Allowed`, { status: 405 });
+    if (Math.random() < 0.01) cleanupRequestTracker();
     
-    if (Math.random() < 0.01) {
-        cleanupRequestTracker();
-    }
-
+    // Rate Limiting (unchanged)
     const ip = request.headers.get('CF-Connecting-IP') || '127.0.0.1';
     const now = Date.now();
     const record = ipRequestTracker.get(ip);
-    if (!record || now - record.startTime > RATE_LIMIT_WINDOW_MS) {
-        ipRequestTracker.set(ip, { count: 1, startTime: now });
-    } else {
-        record.count++;
-        if (record.count > RATE_LIMIT_COUNT) {
-            return jsonResponse({ success: false, error: 'Rate limit exceeded.' }, 429);
-        }
-        ipRequestTracker.set(ip, record);
-    }
+    if (!record || now - record.startTime > RATE_LIMIT_WINDOW_MS) ipRequestTracker.set(ip, { count: 1, startTime: now });
+    else { record.count++; if (record.count > RATE_LIMIT_COUNT) return jsonResponse({ error: 'Rate limit exceeded.' }, 429); ipRequestTracker.set(ip, record); }
 
     let requestData;
-    try {
-        requestData = await request.json();
-    } catch (error) {
-        return jsonResponse({ success: false, error: 'Invalid JSON in request body.' }, 400);
-    }
+    try { requestData = await request.json(); } catch (e) { return jsonResponse({ error: 'Invalid JSON.' }, 400); }
 
-    const { action, provider, apiKey, params } = requestData;
-
-    if (!action || !provider || !apiKey || !params) {
-        return jsonResponse({ success: false, error: 'Missing required fields: action, provider, apiKey, or params.' }, 400);
-    }
+    const { action, provider, params, ...auth } = requestData;
+    if (!action || !provider || !params) return jsonResponse({ error: 'Missing required fields.' }, 400);
 
     const config = providerConfigs[provider];
-    if (!config) {
-        return jsonResponse({ success: false, error: `Unsupported provider: ${provider}` }, 400);
-    }
+    if (!config) return jsonResponse({ error: `Unsupported provider: ${provider}` }, 400);
 
-    if (action === 'search') {
-        try {
-            // *** NEW LOGGING: Log the details of the outgoing request ***
-            const outboundBody = config.getBody(params);
-            const outboundHeaders = config.getHeaders(apiKey);
-
-            console.log("--- [DEBUG] Preparing Outbound Request ---");
-            console.log("Endpoint:", config.endpoint);
-            console.log("Headers:", JSON.stringify({ ...outboundHeaders, Authorization: 'Bearer [REDACTED]' }));
-            console.log("Body:", JSON.stringify(outboundBody, null, 2));
-            console.log("-----------------------------------------");
-
+    try {
+        if (provider === 'gmapsextractor') {
             const apiResponse = await fetchWithRetry(config.endpoint, {
                 method: 'POST',
-                headers: outboundHeaders,
-                body: JSON.stringify(outboundBody)
+                headers: config.getHeaders(auth),
+                body: JSON.stringify(config.getBody(params))
             });
-
-            // Use .clone() so we can read the body twice if needed (for logging)
-            const responseClone = apiResponse.clone();
-            
-            if (!apiResponse.ok) {
-                // *** NEW LOGGING: Log the full error response from the external API ***
-                const errorData = await responseClone.json().catch(() => responseClone.text()); // Handle non-JSON errors
-                console.error(`--- [DEBUG] External API Error ---`);
-                console.error(`Status: ${apiResponse.status} ${apiResponse.statusText}`);
-                console.error("Full Error Response Body:", JSON.stringify(errorData, null, 2));
-                console.error(`--------------------------------`);
-                return new Response(JSON.stringify(errorData), { status: apiResponse.status });
+            const data = await apiResponse.json();
+            return jsonResponse(data, apiResponse.status);
+        } 
+        else if (provider === 'dataforseo') {
+            // Step 1: Post the task
+            const postResponse = await fetchWithRetry(config.taskPostEndpoint, {
+                method: 'POST',
+                headers: config.getHeaders(auth),
+                body: JSON.stringify(config.getBody(params))
+            });
+            const postData = await postResponse.json();
+            if (postResponse.status !== 200 || postData.status_code !== 20000) {
+                return jsonResponse({ error: `Failed to create task: ${postData.status_message}` }, 400);
             }
-            
-            const responseData = await apiResponse.json();
-            return jsonResponse(responseData, 200);
+            const taskId = postData.tasks[0]?.id;
+            if (!taskId) return jsonResponse({ error: 'API did not return a task ID.' }, 500);
 
-        } catch (error) {
-            // *** NEW LOGGING: Log the full stack trace of the crash ***
-            console.error("--- [DEBUG] FATAL PROXY FUNCTION CRASH ---");
-            console.error("Error Message:", error.message);
-            console.error("Error Stack:", error.stack);
-            console.error("----------------------------------------");
-            return jsonResponse({ success: false, error: `The API proxy encountered a fatal error. Check the function logs for details.` }, 500);
+            // Step 2: Poll for the results
+            const POLLING_INTERVAL_MS = 5000; // 5 seconds
+            const MAX_POLLS = 12; // 12 * 5s = 60s timeout
+
+            for (let i = 0; i < MAX_POLLS; i++) {
+                await delay(POLLING_INTERVAL_MS);
+                const getResponse = await fetchWithRetry(`${config.taskGetEndpoint}${taskId}`, {
+                    method: 'GET',
+                    headers: config.getHeaders(auth)
+                });
+                const getData = await getResponse.json();
+                
+                // Check if task is complete
+                if (getResponse.status === 200 && getData.tasks[0]?.status_code === 20000) {
+                    return jsonResponse(getData, 200); // Success! Return the final data.
+                }
+                // Check if task failed permanently
+                if (getData.tasks[0]?.status_code !== 20100) { // 20100 = "Task is in queue"
+                     return jsonResponse({ error: `Task failed with status: ${getData.tasks[0]?.status_message}` }, 500);
+                }
+                // Otherwise, continue polling...
+            }
+            return jsonResponse({ error: 'Task timed out after 60 seconds.' }, 408);
         }
-    }
 
-    return jsonResponse({ success: false, error: `Unknown action: ${action}` }, 400);
+    } catch (error) {
+        console.error(`[FATAL] Proxy error for ${provider}: ${error.stack}`);
+        return jsonResponse({ error: 'The API proxy encountered a fatal error.' }, 500);
+    }
+    
+    return jsonResponse({ error: `Unknown action/provider combination.` }, 400);
 }
