@@ -58,9 +58,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 fileElement.className = 'p-3 border rounded-lg bg-slate-50 flex flex-col space-y-2';
                 fileElement.innerHTML = `
                     <p class="font-medium text-sm text-slate-800 truncate" title="${file.name}">${file.name}</p>
-                    <div class="flex items-center justify-between">
+                    <div class="flex items-center">
                         <label for="pages-${index}" class="text-xs text-slate-600 mr-2">Pages:</label>
-                        <input type="text" id="pages-${index}" data-file-index="${index}" class="w-32 pl-2 pr-2 py-1 text-sm border-gray-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 rounded-md" placeholder="e.g., 1, 3-5">
+                        <input type="text" id="pages-${index}" data-file-index="${index}" class="flex-grow pl-2 pr-2 py-1 text-sm border-gray-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 rounded-md" placeholder="e.g., 1, 3-5">
                     </div>
                 `;
                 extractFilesList.appendChild(fileElement);
