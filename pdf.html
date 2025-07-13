@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Tools</title>
+    <title>Advanced PDF Tools</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- PDF.js from Mozilla -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <!-- pdf-lib -->
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <!-- JSZip (for creating ZIP files) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js`;
         .spinner { border: 4px solid rgba(0,0,0,.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: #09f; animation: spin 1s ease infinite; }
@@ -38,7 +40,7 @@
 <body class="bg-slate-100 font-sans">
     <div class="w-full max-w-5xl mx-auto p-4 sm:p-8 my-10 bg-white rounded-xl shadow-lg">
         <div class="text-center mb-6">
-            <h1 class="text-3xl font-bold text-slate-800">PDF Tools v0.1</h1>
+            <h1 class="text-3xl font-bold text-slate-800">PDF Tools v0.2</h1>
             <p class="text-slate-500 mt-2">Choose a tool below to get started.</p>
         </div>
 
@@ -113,15 +115,15 @@
                 <label class="block text-sm font-medium text-slate-700 mb-2">1. Upload PDF(s)</label>
                 <input id="extract-file-upload" type="file" multiple class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100" accept=".pdf">
             </div>
-            <div id="extract-files-list" class="space-y-4 mb-6">
-                <!-- Selected files will be listed here -->
+            <div id="extract-files-list" class="space-y-3 mb-6">
+                <!-- Selected files will be listed here with the new compact UI -->
             </div>
             <div class="flex items-center justify-center mb-6">
                  <button id="extract-button" type="button" disabled class="px-8 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:bg-slate-400 disabled:cursor-not-allowed">Extract Pages</button>
             </div>
              <div id="extract-status" class="text-center mb-4 min-h-[2rem]"></div>
-            <div id="extract-results" class="space-y-3">
-                <!-- Download links will appear here -->
+            <div id="extract-results" class="text-center">
+                <!-- The "Download All" button will appear here -->
             </div>
         </div>
     </div>
