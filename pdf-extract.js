@@ -15,16 +15,61 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let selectedFiles = [];
 
-    extractFileInput.addEventListener('change', (e) => {
-        selectedFiles = Array.from(e.target.files);
+    extractFileInput.addEventListener('change', async (e) => {
+        showExtractStatus('loading', 'Reading files...');
+        extractButton.disabled = true;
         extractFilesList.innerHTML = '';
         extractResults.innerHTML = '';
-        extractStatus.innerHTML = '';
+
+        const inputFiles = Array.from(e.target.files);
+        const pdfFiles = [];
         
+        // This function will process all uploaded files, including unzipping.
+        const processFiles = async () => {
+            for (const file of inputFiles) {
+                if (file.name.toLowerCase().endsWith('.pdf')) {
+                    pdfFiles.push(file);
+                } else if (file.name.toLowerCase().endsWith('.zip')) {
+                    try {
+                        const jszip = new JSZip();
+                        const zip = await jszip.loadAsync(file);
+                        const zipPdfPromises = [];
+
+                        zip.forEach((relativePath, zipEntry) => {
+                            // Check if the file is a PDF and not in a __MACOSX folder or a directory
+                            if (zipEntry.name.toLowerCase().endsWith('.pdf') && !zipEntry.dir && !zipEntry.name.startsWith('__MACOSX')) {
+                                // Create a promise to extract the PDF blob
+                                const promise = zipEntry.async('blob').then(blob => {
+                                    // Re-create a File object to ensure it has a .name property
+                                    // and can be handled like a regularly uploaded file.
+                                    return new File([blob], zipEntry.name, { type: 'application/pdf' });
+                                });
+                                zipPdfPromises.push(promise);
+                            }
+                        });
+                        
+                        // Wait for all PDFs in this zip to be extracted
+                        const extractedPdfs = await Promise.all(zipPdfPromises);
+                        pdfFiles.push(...extractedPdfs);
+
+                    } catch (err) {
+                        console.error("Error unzipping file:", file.name, err);
+                        showExtractStatus('error', `Could not read the zip file: ${file.name}`);
+                        return; // Stop processing on zip error
+                    }
+                }
+            }
+        };
+
+        await processFiles();
+
+        // Sort files alphabetically for consistent order
+        pdfFiles.sort((a, b) => a.name.localeCompare(b.name));
+        selectedFiles = pdfFiles;
+
         if (selectedFiles.length > 0) {
             selectedFiles.forEach((file, index) => {
                 const fileElement = document.createElement('div');
-                // New compact layout using flexbox
                 fileElement.className = 'p-3 border rounded-lg bg-slate-50 flex items-center justify-between space-x-4';
                 fileElement.innerHTML = `
                     <p class="font-medium text-slate-800 truncate flex-1" title="${file.name}">${file.name}</p>
@@ -36,8 +81,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 extractFilesList.appendChild(fileElement);
             });
             extractButton.disabled = false;
+            showExtractStatus('success', `${selectedFiles.length} PDF(s) loaded and ready.`);
         } else {
             extractButton.disabled = true;
+            showExtractStatus('info', 'No PDF files were found.');
         }
     });
 
