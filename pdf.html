@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced PDF Splitter - Fixed Version</title>
+    <title>Advanced PDF Tools</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- PDF.js from Mozilla -->
@@ -15,758 +15,141 @@
         .spinner { border: 4px solid rgba(0,0,0,.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: #09f; animation: spin 1s ease infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         
-        /* Initial cut line (unconfirmed) */
-        .cut-line-initial { 
-            position: absolute; left: 0; right: 0; height: 5px; 
-            background-color: rgba(239, 68, 68, 0.5); 
-            cursor: ns-resize; 
-            border-top: 1px dashed white; 
-            border-bottom: 1px dashed white; 
-            display: flex; align-items: center; justify-content: center; 
-            z-index: 10; 
-        }
+        /* Styles for Split Tool */
+        .cut-line-initial { position: absolute; left: 0; right: 0; height: 5px; background-color: rgba(239, 68, 68, 0.5); cursor: ns-resize; border-top: 1px dashed white; border-bottom: 1px dashed white; display: flex; align-items: center; justify-content: center; z-index: 10; }
         .cut-line-initial:hover { background-color: rgba(220, 38, 38, 0.8); }
-        
-        /* Confirmed cut line */
-        .cut-line-confirmed { 
-            position: absolute; left: 0; right: 0; height: 5px; 
-            background-color: rgba(34, 197, 94, 0.8); 
-            cursor: pointer; 
-            border-top: 2px solid white; 
-            border-bottom: 2px solid white; 
-            display: flex; align-items: center; justify-content: center; 
-            z-index: 10; 
-        }
+        .cut-line-confirmed { position: absolute; left: 0; right: 0; height: 5px; background-color: rgba(34, 197, 94, 0.8); cursor: pointer; border-top: 2px solid white; border-bottom: 2px solid white; display: flex; align-items: center; justify-content: center; z-index: 10; }
         .cut-line-confirmed:hover { background-color: rgba(22, 163, 74, 1); }
-        
-        .cut-line-handle { 
-            padding: 0 12px;
-            height: 20px; 
-            background-color: inherit;
-            border-radius: 10px; 
-            color: white; 
-            font-size: 10px; 
-            text-align: center; 
-            line-height: 20px; 
-            font-family: sans-serif; 
-            pointer-events: none;
-            white-space: nowrap;
-        }
-        
-        .page-section {
-            position: relative;
-            border: 2px solid #e2e8f0;
-            margin-bottom: 4px;
-            background: white;
-        }
-        
-        .page-padding {
-            position: absolute;
-            left: 0;
-            right: 0;
-            background-color: rgba(59, 130, 246, 0.2);
-            border: 1px dashed rgba(59, 130, 246, 0.5);
-            z-index: 5;
-        }
-        
-        .page-number {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            z-index: 15;
-        }
-        
-        .split-view-mode .page-section {
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
+        .cut-line-handle { padding: 0 12px; height: 20px; background-color: inherit; border-radius: 10px; color: white; font-size: 10px; text-align: center; line-height: 20px; font-family: sans-serif; pointer-events: none; white-space: nowrap; }
+        .page-section { position: relative; border: 2px solid #e2e8f0; margin-bottom: 4px; background: white; }
+        .page-padding { position: absolute; left: 0; right: 0; background-color: rgba(59, 130, 246, 0.2); border: 1px dashed rgba(59, 130, 246, 0.5); z-index: 5; }
+        .page-number { position: absolute; top: 10px; right: 10px; background: rgba(0, 0, 0, 0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; z-index: 15; }
+        .split-view-mode .page-section { box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .allowed-range-overlay { position: absolute; left: 0; right: 0; background-color: rgba(16, 185, 129, 0.1); border: 2px dashed rgba(16, 185, 129, 0.5); pointer-events: none; z-index: 7; }
+        .allowed-range-label { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: rgba(16, 185, 129, 0.9); color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap; }
+        .cut-line-initial, .cut-line-confirmed { transition: top 0.3s ease-out; }
+        .dragging .cut-line-initial { transition: none !important; }
 
-        .allowed-range-overlay {
-            position: absolute;
-            left: 0;
-            right: 0;
-            background-color: rgba(16, 185, 129, 0.1);
-            border: 2px dashed rgba(16, 185, 129, 0.5);
-            pointer-events: none;
-            z-index: 7;
-        }
-
-        .allowed-range-label {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(16, 185, 129, 0.9);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            white-space: nowrap;
-        }
-
-        .cut-line-initial, .cut-line-confirmed {
-            transition: top 0.3s ease-out;
-        }
-
-        /* Disable transition during drag */
-        .dragging .cut-line-initial {
-            transition: none !important;
-        }
+        /* Styles for Tabs */
+        .tab-button { cursor: pointer; padding: 10px 20px; border-bottom: 3px solid transparent; }
+        .tab-button.active { border-color: #4f46e5; color: #4f46e5; font-weight: 600; }
     </style>
 </head>
 <body class="bg-slate-100 font-sans">
     <div class="w-full max-w-5xl mx-auto p-4 sm:p-8 my-10 bg-white rounded-xl shadow-lg">
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Splitter v5.2</h1>
-            <p class="text-slate-500 mt-2">Upload, preview, and adjust split lines before creating your multi-page PDF.</p>
+        <div class="text-center mb-6">
+            <h1 class="text-3xl font-bold text-slate-800">Advanced PDF Tools v0.1</h1>
+            <p class="text-slate-500 mt-2">Choose a tool below to get started.</p>
         </div>
 
-        <div id="settings-section" class="grid grid-cols-1 md:grid-cols-3 gap-6 border-b pb-6 mb-6 items-start">
-            <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">1. Upload PDF</label>
-                <input id="file-upload" type="file" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" accept=".pdf">
-                <p id="file-name" class="text-xs text-slate-500 mt-2 truncate"></p>
+        <!-- Tab Navigation -->
+        <div class="border-b border-gray-200 mb-6">
+            <nav class="flex -mb-px justify-center" aria-label="Tabs">
+                <button id="tab-split" class="tab-button active" role="tab">✂️ Split</button>
+                <button id="tab-extract" class="tab-button" role="tab">📑 Extract</button>
+            </nav>
+        </div>
+
+        <!-- Tab Content -->
+        <div id="tab-content-split">
+            <!-- SPLIT TOOL UI -->
+            <div class="text-center mb-4">
+                <h2 class="text-2xl font-semibold text-slate-700">PDF Splitter</h2>
+                <p class="text-slate-500 mt-1">Split a single long PDF page into multiple standard-sized pages.</p>
             </div>
-            <div>
-                <label for="paper-size" class="block text-sm font-medium text-slate-700 mb-2">2. Target Paper Size</label>
-                <select id="paper-size" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                    <option value="A4">A4 (210 x 297 mm)</option>
-                    <option value="A5">A5 (148 x 210 mm)</option>
-                    <option value="Letter">Letter (8.5 x 11 in)</option>
-                    <option value="Legal">Legal (8.5 x 14 in)</option>
-                    <option value="F4">F4 (210 x 330 mm)</option>
-                </select>
+            <div id="settings-section" class="grid grid-cols-1 md:grid-cols-3 gap-6 border-b pb-6 mb-6 items-start">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">1. Upload PDF</label>
+                    <input id="file-upload" type="file" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" accept=".pdf">
+                    <p id="file-name" class="text-xs text-slate-500 mt-2 truncate"></p>
+                </div>
+                <div>
+                    <label for="paper-size" class="block text-sm font-medium text-slate-700 mb-2">2. Target Paper Size</label>
+                    <select id="paper-size" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <option value="A4">A4 (210 x 297 mm)</option>
+                        <option value="A5">A5 (148 x 210 mm)</option>
+                        <option value="Letter">Letter (8.5 x 11 in)</option>
+                        <option value="Legal">Legal (8.5 x 14 in)</option>
+                        <option value="F4">F4 (210 x 330 mm)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="padding-select" class="block text-sm font-medium text-slate-700 mb-2">3. Top/Bottom Padding</label>
+                    <select id="padding-select" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        <option value="18">Narrow (18 pts / 0.25")</option>
+                        <option value="36" selected>Normal (36 pts / 0.5")</option>
+                        <option value="72">Wide (72 pts / 1.0")</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                    <input type="number" id="custom-padding-input" value="36" class="hidden mt-2 w-full pl-3 pr-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                </div>
             </div>
-            <div>
-                <label for="padding-select" class="block text-sm font-medium text-slate-700 mb-2">3. Top/Bottom Padding</label>
-                <select id="padding-select" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                    <option value="18">Narrow (18 pts / 0.25")</option>
-                    <option value="36" selected>Normal (36 pts / 0.5")</option>
-                    <option value="72">Wide (72 pts / 1.0")</option>
-                    <option value="custom">Custom</option>
-                </select>
-                <input type="number" id="custom-padding-input" value="36" class="hidden mt-2 w-full pl-3 pr-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+            <div id="action-bar" class="flex items-center justify-center space-x-4 mb-6">
+                <button id="preview-button" type="button" disabled class="px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-slate-400 disabled:cursor-not-allowed">Generate Preview</button>
+                <button id="split-view-toggle" type="button" class="hidden px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700">Toggle Split View</button>
+                <button id="generate-button" type="button" class="hidden px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">Create Final PDF</button>
+                <a id="download-link" class="hidden px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700">Download Split PDF</a>
+            </div>
+            <div id="status" class="text-center mb-4 min-h-[2rem]"></div>
+            <div id="preview-section" class="hidden">
+                <h3 class="text-lg font-semibold text-slate-700 mb-2 text-center">4. Adjust and Confirm Split Lines</h3>
+                <div class="text-sm text-slate-500 text-center mb-2">
+                    <p>• Drag red lines to adjust split positions. Click to confirm (turns green).</p>
+                    <p>• Click green lines to unconfirm. Toggle Split View to see page separation.</p>
+                </div>
+                <div id="preview-container" class="relative w-full max-h-[80vh] overflow-y-auto border-2 border-slate-300 bg-slate-200">
+                    <div id="pages-container"></div>
+                </div>
             </div>
         </div>
 
-        <div id="action-bar" class="flex items-center justify-center space-x-4 mb-6">
-             <button id="preview-button" type="button" disabled class="px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-slate-400 disabled:cursor-not-allowed">Generate Preview</button>
-             <button id="split-view-toggle" type="button" class="hidden px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">Toggle Split View</button>
-             <button id="generate-button" type="button" class="hidden px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">Create Final PDF</button>
-             <a id="download-link" class="hidden px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700">Download Split PDF</a>
-        </div>
-        <div id="status" class="text-center mb-4 min-h-[2rem]"></div>
-
-        <div id="preview-section" class="hidden">
-            <h3 class="text-lg font-semibold text-slate-700 mb-2 text-center">4. Adjust and Confirm Split Lines</h3>
-            <div class="text-sm text-slate-500 text-center mb-2">
-                <p>• Drag red lines to adjust split positions</p>
-                <p>• Click red lines to confirm (turns green)</p>
-                <p>• Click green lines to unconfirm</p>
-                <p>• Toggle Split View to see page separation</p>
+        <div id="tab-content-extract" class="hidden">
+            <!-- EXTRACT TOOL UI -->
+            <div class="text-center mb-4">
+                 <h2 class="text-2xl font-semibold text-slate-700">Page Extractor</h2>
+                 <p class="text-slate-500 mt-1">Select pages or page ranges from one or more PDFs to create new documents.</p>
             </div>
-            <div class="flex items-center justify-center gap-4 text-xs mb-4">
-                <span class="flex items-center gap-1"><div class="w-4 h-4 bg-red-400"></div> Initial Cut Line</span>
-                <span class="flex items-center gap-1"><div class="w-4 h-4 bg-green-500"></div> Confirmed Cut Line</span>
-                <span class="flex items-center gap-1"><div class="w-4 h-4 bg-blue-300"></div> Padding Zone</span>
+            <div class="border-b pb-6 mb-6">
+                <label class="block text-sm font-medium text-slate-700 mb-2">1. Upload PDF(s)</label>
+                <input id="extract-file-upload" type="file" multiple class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100" accept=".pdf">
             </div>
-            <div id="preview-container" class="relative w-full max-h-[80vh] overflow-y-auto border-2 border-slate-300 bg-slate-200">
-                <div id="pages-container"></div>
+            <div id="extract-files-list" class="space-y-4 mb-6">
+                <!-- Selected files will be listed here -->
+            </div>
+            <div class="flex items-center justify-center mb-6">
+                 <button id="extract-button" type="button" disabled class="px-8 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:bg-slate-400 disabled:cursor-not-allowed">Extract Pages</button>
+            </div>
+             <div id="extract-status" class="text-center mb-4 min-h-[2rem]"></div>
+            <div id="extract-results" class="space-y-3">
+                <!-- Download links will appear here -->
             </div>
         </div>
     </div>
 
 <script>
-    const { PDFDocument, rgb } = PDFLib;
-    let uploadedFile = null;
-    let originalPdfArrayBuffer = null;
-    let originalPageSize = { width: 0, height: 0, scale: 1 };
-    let cutLines = []; // Array of {position: number, confirmed: boolean}
-    let maxSliceHeightPixels = 0;
-    let paddingPixels = 0;
-    let activeDrag = null;
-    let splitViewMode = false;
-    let pdfCanvas = null;
-    let pdfCanvasCtx = null;
-    
-    const fileInput = document.getElementById('file-upload');
-    const fileNameDisplay = document.getElementById('file-name');
-    const paperSizeSelect = document.getElementById('paper-size');
-    const paddingSelect = document.getElementById('padding-select');
-    const customPaddingInput = document.getElementById('custom-padding-input');
-    const previewButton = document.getElementById('preview-button');
-    const splitViewToggle = document.getElementById('split-view-toggle');
-    const generateButton = document.getElementById('generate-button');
-    const statusDiv = document.getElementById('status');
-    const previewSection = document.getElementById('preview-section');
-    const previewContainer = document.getElementById('preview-container');
-    const pagesContainer = document.getElementById('pages-container');
-    const downloadLink = document.getElementById('download-link');
+// Simple Tab-switching logic
+document.addEventListener('DOMContentLoaded', () => {
+    const tabSplit = document.getElementById('tab-split');
+    const tabExtract = document.getElementById('tab-extract');
+    const contentSplit = document.getElementById('tab-content-split');
+    const contentExtract = document.getElementById('tab-content-extract');
 
-    const paperDimensions = { 
-        A4: { width: 595.28, height: 841.89 }, 
-        A5: { width: 419.53, height: 595.28 }, 
-        Letter: { width: 612, height: 792 }, 
-        Legal: { width: 612, height: 1008 }, 
-        F4: { width: 595.28, height: 935.43 } 
-    };
-
-    fileInput.addEventListener('change', handleFileSelect);
-    previewButton.addEventListener('click', renderPreview);
-    splitViewToggle.addEventListener('click', toggleSplitView);
-    generateButton.addEventListener('click', createFinalPdf);
-    paddingSelect.addEventListener('change', () => {
-        customPaddingInput.classList.toggle('hidden', paddingSelect.value !== 'custom');
-        if (pdfCanvas) {
-            recalculateUnconfirmedLines();
-            renderPages();
-        }
-    });
-    paperSizeSelect.addEventListener('change', () => {
-        if (pdfCanvas) {
-            recalculateUnconfirmedLines();
-            renderPages();
-        }
+    tabSplit.addEventListener('click', () => {
+        tabSplit.classList.add('active');
+        tabExtract.classList.remove('active');
+        contentSplit.classList.remove('hidden');
+        contentExtract.classList.add('hidden');
     });
 
-    function getPaddingValue() {
-        return paddingSelect.value === 'custom' ? (parseFloat(customPaddingInput.value) || 0) : parseFloat(paddingSelect.value);
-    }
-
-    function handleFileSelect(e) {
-        uploadedFile = e.target.files[0];
-        if (uploadedFile) {
-            fileNameDisplay.textContent = uploadedFile.name;
-            previewButton.disabled = false;
-            previewSection.classList.add('hidden');
-            splitViewToggle.classList.add('hidden');
-            generateButton.classList.add('hidden');
-            downloadLink.classList.add('hidden');
-            statusDiv.innerHTML = '';
-            cutLines = [];
-        }
-    }
-
-    async function renderPreview() {
-        if (!uploadedFile) return;
-        showStatus('loading', 'Loading and rendering PDF preview...');
-        previewButton.disabled = true;
-        
-        try {
-            originalPdfArrayBuffer = await uploadedFile.arrayBuffer();
-            const pdfjsDoc = await pdfjsLib.getDocument({ data: originalPdfArrayBuffer.slice(0) }).promise;
-            
-            if (pdfjsDoc.numPages !== 1) {
-                showStatus('error', 'Error: This tool only supports single-page PDFs.'); 
-                return;
-            }
-
-            const page = await pdfjsDoc.getPage(1);
-            const desiredWidth = 1000;
-            const viewport = page.getViewport({ scale: 1 });
-            const scale = desiredWidth / viewport.width;
-            const scaledViewport = page.getViewport({ scale });
-
-            originalPageSize = { width: viewport.width, height: viewport.height, scale: scale };
-            
-            // Create canvas for PDF rendering
-            pdfCanvas = document.createElement('canvas');
-            pdfCanvas.width = scaledViewport.width;
-            pdfCanvas.height = scaledViewport.height;
-            pdfCanvasCtx = pdfCanvas.getContext('2d');
-            
-            const renderContext = { 
-                canvasContext: pdfCanvasCtx, 
-                viewport: scaledViewport 
-            };
-            await page.render(renderContext).promise;
-
-            calculateInitialCutLines();
-            renderPages();
-            
-            previewSection.classList.remove('hidden');
-            splitViewToggle.classList.remove('hidden');
-            generateButton.classList.remove('hidden');
-            downloadLink.classList.add('hidden');
-            showStatus('success', `Preview generated. ${cutLines.length + 1} pages will be created.`);
-        } catch (err) {
-            showStatus('error', `Error rendering preview: ${err.message}`);
-        } finally {
-            previewButton.disabled = false;
-        }
-    }
-
-    function calculateInitialCutLines() {
-        const selectedPaper = paperSizeSelect.value;
-        const targetDims = paperDimensions[selectedPaper];
-        const targetRatio = targetDims.height / targetDims.width;
-        
-        const paddingPoints = getPaddingValue();
-        paddingPixels = paddingPoints * originalPageSize.scale;
-        
-        // Calculate the actual content height available on each page
-        const targetHeightPoints = originalPageSize.width * targetRatio;
-        const targetContentHeightPoints = targetHeightPoints - (2 * paddingPoints);
-
-        if (targetContentHeightPoints <= 0) {
-            showStatus('error', 'Padding is too large for the selected paper size.');
-            cutLines = [];
-            maxSliceHeightPixels = 0;
-            return;
-        }
-
-        maxSliceHeightPixels = targetContentHeightPoints * originalPageSize.scale;
-        
-        // First page has no top padding, so it can fit more content
-        const firstPageContentHeight = (targetHeightPoints - paddingPoints) * originalPageSize.scale;
-        
-        // Initialize cut lines
-        cutLines = [];
-        let currentY = firstPageContentHeight;
-        
-        // Add cuts
-        while (currentY < pdfCanvas.height - 10) {
-            cutLines.push({
-                position: Math.round(currentY),
-                confirmed: false
-            });
-            currentY += maxSliceHeightPixels;
-        }
-    }
-
-    function recalculateUnconfirmedLines() {
-        const selectedPaper = paperSizeSelect.value;
-        const targetDims = paperDimensions[selectedPaper];
-        const targetRatio = targetDims.height / targetDims.width;
-        
-        const paddingPoints = getPaddingValue();
-        paddingPixels = paddingPoints * originalPageSize.scale;
-        
-        const targetHeightPoints = originalPageSize.width * targetRatio;
-        const targetContentHeightPoints = targetHeightPoints - (2 * paddingPoints);
-        maxSliceHeightPixels = targetContentHeightPoints * originalPageSize.scale;
-        
-        const firstPageContentHeight = (targetHeightPoints - paddingPoints) * originalPageSize.scale;
-        
-        // Only recalculate unconfirmed lines
-        let lastConfirmedPosition = 0;
-        let newCutLines = [];
-        
-        for (let i = 0; i < cutLines.length; i++) {
-            // In recalculateUnconfirmedLines(), when recalculating unconfirmed line positions:
-            if (!cutLines[i].confirmed) {
-                const constraints = getLineConstraints(i);
-                let targetPosition = constraints.prevPosition + (constraints.maxContentHeight * 0.9); // 90% of max
-                
-                // Ensure it doesn't exceed constraints
-                targetPosition = Math.min(targetPosition, constraints.maxPosition);
-                targetPosition = Math.max(targetPosition, constraints.minPosition);
-                
-                if (targetPosition < pdfCanvas.height - 10) {
-                    newCutLines.push({
-                        position: Math.round(targetPosition),
-                        confirmed: false
-                    });
-                }
-            }
-        }
-        
-        // Add any additional needed lines
-        let currentY = lastConfirmedPosition + maxSliceHeightPixels;
-        while (currentY < pdfCanvas.height - 10) {
-            newCutLines.push({
-                position: Math.round(currentY),
-                confirmed: false
-            });
-            currentY += maxSliceHeightPixels;
-        }
-        
-        cutLines = newCutLines;
-
-        repositionUnconfirmedLines(0);
-    }
-
-    function renderPages() {
-        pagesContainer.innerHTML = '';
-        previewContainer.className = splitViewMode ? 
-            'relative w-full max-h-[80vh] overflow-y-auto border-2 border-slate-300 bg-slate-200 p-4 split-view-mode' :
-            'relative w-full max-h-[80vh] overflow-y-auto border-2 border-slate-300 bg-slate-200';
-        
-        const allPositions = [0, ...cutLines.map(c => c.position), pdfCanvas.height];
-        
-        for (let i = 0; i < allPositions.length - 1; i++) {
-            const pageSection = document.createElement('div');
-            pageSection.className = 'page-section';
-            pageSection.style.position = 'relative';
-            
-            const pageHeight = allPositions[i + 1] - allPositions[i];
-            pageSection.style.height = `${pageHeight}px`;
-            
-            // Create canvas for this page section
-            const sectionCanvas = document.createElement('canvas');
-            sectionCanvas.width = pdfCanvas.width;
-            sectionCanvas.height = pageHeight;
-            sectionCanvas.style.width = '100%';
-            sectionCanvas.style.height = '100%';
-            
-            const sectionCtx = sectionCanvas.getContext('2d');
-            sectionCtx.drawImage(
-                pdfCanvas, 
-                0, allPositions[i], pdfCanvas.width, pageHeight,
-                0, 0, pdfCanvas.width, pageHeight
-            );
-            
-            pageSection.appendChild(sectionCanvas);
-            
-            // Add page number
-            const pageNumber = document.createElement('div');
-            pageNumber.className = 'page-number';
-            pageNumber.textContent = `Page ${i + 1}`;
-            pageSection.appendChild(pageNumber);
-            
-            // Add padding visualization
-            if (i > 0) {
-                const topPadding = document.createElement('div');
-                topPadding.className = 'page-padding';
-                topPadding.style.top = '0';
-                topPadding.style.height = `${paddingPixels}px`;
-                pageSection.appendChild(topPadding);
-            }
-            
-            const bottomPadding = document.createElement('div');
-            bottomPadding.className = 'page-padding';
-            bottomPadding.style.bottom = '0';
-            bottomPadding.style.height = `${paddingPixels}px`;
-            pageSection.appendChild(bottomPadding);
-            
-            pagesContainer.appendChild(pageSection);
-
-            // Add allowed range overlay for unconfirmed lines
-            if (i < allPositions.length - 2 && !cutLines[i].confirmed) {
-                const constraints = getLineConstraints(i);
-                const overlayTop = constraints.prevPosition - allPositions[i];
-                const overlayHeight = constraints.maxContentHeight;
-                
-                const rangeOverlay = document.createElement('div');
-                rangeOverlay.className = 'allowed-range-overlay';
-                rangeOverlay.style.top = `${overlayTop}px`;
-                rangeOverlay.style.height = `${overlayHeight}px`;
-                
-                const rangeLabel = document.createElement('div');
-                rangeLabel.className = 'allowed-range-label';
-                rangeLabel.textContent = `Max page ${i + 1} content`;
-                rangeOverlay.appendChild(rangeLabel);
-                
-                pageSection.appendChild(rangeOverlay);
-            }
-            
-            // Add cut line if not the last page
-            if (i < allPositions.length - 2) {
-                const cutLine = cutLines[i];
-                const line = document.createElement('div');
-                line.className = cutLine.confirmed ? 'cut-line-confirmed' : 'cut-line-initial';
-                line.style.position = 'absolute';
-                line.style.top = `${pageHeight - 2}px`;
-                line.dataset.index = i;
-                
-                const handle = document.createElement('div');
-                handle.className = 'cut-line-handle';
-                handle.textContent = cutLine.confirmed ? 
-                    `✓ Page ${i + 2} (Click to unlock)` : 
-                    `Page ${i + 2} (Drag to adjust, click to confirm)`;
-                line.appendChild(handle);
-                
-                if (!cutLine.confirmed) {
-                    line.addEventListener('mousedown', startDrag);
-                }
-                line.addEventListener('click', toggleConfirmation);
-                
-                pageSection.appendChild(line);
-            }
-        }
-    }
-
-    function toggleSplitView() {
-        splitViewMode = !splitViewMode;
-        renderPages();
-        splitViewToggle.textContent = splitViewMode ? 'Hide Split View' : 'Show Split View';
-    }
-
-    function toggleConfirmation(e) {
-        if (e.target.classList.contains('cut-line-initial') || e.target.classList.contains('cut-line-confirmed')) {
-            e.stopPropagation();
-            const index = parseInt(e.currentTarget.dataset.index);
-            cutLines[index].confirmed = !cutLines[index].confirmed;
-            
-            // If confirming a line, reposition all subsequent unconfirmed lines
-            if (cutLines[index].confirmed) {
-                repositionUnconfirmedLines(index + 1);
-            }
-            
-            renderPages();
-            updateStatus();
-        }
-    }
-
-    function repositionUnconfirmedLines(startIndex) {
-        for (let i = startIndex; i < cutLines.length; i++) {
-            if (!cutLines[i].confirmed) {
-                const constraints = getLineConstraints(i);
-                
-                // Position at a reasonable spot (e.g., 85% of max allowed height)
-                let targetPosition = constraints.prevPosition + (constraints.maxContentHeight * 0.85);
-                
-                // Ensure it doesn't exceed constraints
-                targetPosition = Math.min(targetPosition, constraints.maxPosition);
-                targetPosition = Math.max(targetPosition, constraints.minPosition);
-                
-                // Check against next confirmed line if exists
-                let nextConfirmedIndex = -1;
-                for (let j = i + 1; j < cutLines.length; j++) {
-                    if (cutLines[j].confirmed) {
-                        nextConfirmedIndex = j;
-                        break;
-                    }
-                }
-                
-                if (nextConfirmedIndex !== -1) {
-                    const maxBeforeNext = cutLines[nextConfirmedIndex].position - paddingPixels - 50;
-                    targetPosition = Math.min(targetPosition, maxBeforeNext);
-                }
-                
-                // Don't go beyond document
-                targetPosition = Math.min(targetPosition, pdfCanvas.height - paddingPixels);
-                
-                cutLines[i].position = Math.round(targetPosition);
-            }
-        }
-    }
-
-    function startDrag(e) {
-        previewContainer.classList.add('dragging');
-        const line = e.target.closest('.cut-line-initial');
-        line.style.opacity = '0.7';
-        line.style.backgroundColor = 'rgba(239, 68, 68, 1)';
-        if (!line) return;
-        
-        e.preventDefault();
-        e.stopPropagation();
-        
-        const index = parseInt(line.dataset.index);
-        if (cutLines[index].confirmed) return;
-        
-        const rect = previewContainer.getBoundingClientRect();
-        activeDrag = {
-            index: index,
-            startY: e.clientY,
-            startPosition: cutLines[index].position,
-            containerTop: rect.top,
-            scrollTop: previewContainer.scrollTop
-        };
-        
-        document.addEventListener('mousemove', drag);
-        document.addEventListener('mouseup', endDrag);
-    }
-
-    function drag(e) {
-        if (!activeDrag) return;
-        
-        const deltaY = e.clientY - activeDrag.startY;
-        let newPosition = activeDrag.startPosition + deltaY;
-        
-        // Get proper constraints
-        const constraints = getLineConstraints(activeDrag.index);
-        
-        // Also check against next line if it exists and is confirmed
-        let maxPosition = constraints.maxPosition;
-        if (activeDrag.index < cutLines.length - 1 && cutLines[activeDrag.index + 1].confirmed) {
-            maxPosition = Math.min(maxPosition, cutLines[activeDrag.index + 1].position - 50);
-        }
-        
-        // Don't allow dragging beyond document height
-        maxPosition = Math.min(maxPosition, pdfCanvas.height - paddingPixels);
-        
-        // Apply constraints
-        newPosition = Math.max(constraints.minPosition, Math.min(maxPosition, newPosition));
-        
-        // Update position
-        cutLines[activeDrag.index].position = Math.round(newPosition);
-        renderPages();
-    }
-
-    function endDrag() {
-        previewContainer.classList.remove('dragging');
-        const lines = document.querySelectorAll('.cut-line-initial');
-        lines.forEach(l => {
-            l.style.opacity = '';
-            l.style.backgroundColor = '';
-        });
-        activeDrag = null;
-        document.removeEventListener('mousemove', drag);
-        document.removeEventListener('mouseup', endDrag);
-        updateStatus();
-    }
-
-    function updateStatus() {
-        const confirmedCount = cutLines.filter(c => c.confirmed).length;
-        const totalCount = cutLines.length;
-        if (confirmedCount < totalCount) {
-            showStatus('info', `${confirmedCount} of ${totalCount} cut lines confirmed. ${cutLines.length + 1} pages will be created.`);
-        } else {
-            showStatus('success', `All ${totalCount} cut lines confirmed. ${cutLines.length + 1} pages will be created.`);
-        }
-    }
-    
-    async function createFinalPdf() {
-        if (!originalPdfArrayBuffer) return;
-        showStatus('loading', 'Generating final PDF...');
-        generateButton.disabled = true;
-
-        try {
-            const outputPdfDoc = await PDFDocument.create();
-            const [embeddedPage] = await outputPdfDoc.embedPdf(originalPdfArrayBuffer.slice(0));
-            
-            const selectedPaper = paperSizeSelect.value;
-            const targetSize = paperDimensions[selectedPaper];
-            const paddingPoints = getPaddingValue();
-            
-            // Use actual cut positions from user adjustments
-            const cutPointsY = [0, ...cutLines.map(c => c.position / originalPageSize.scale), originalPageSize.height];
-            
-            // Calculate the scale factor to fit width
-            const scaleFactor = targetSize.width / originalPageSize.width;
-
-            for (let i = 0; i < cutPointsY.length - 1; i++) {
-                const sliceStartY = cutPointsY[i];
-                const sliceEndY = cutPointsY[i + 1];
-                
-                // Create new page
-                const newPage = outputPdfDoc.addPage([targetSize.width, targetSize.height]);
-                
-                // Calculate where to position the embedded page
-                let contentTopY;
-                if (i === 0) {
-                    // First page: content starts at top
-                    contentTopY = targetSize.height;
-                } else {
-                    // Other pages: content starts after top padding
-                    contentTopY = targetSize.height - paddingPoints;
-                }
-                
-                // Position the embedded page so the correct slice is visible
-                const embeddedPageY = contentTopY - (originalPageSize.height - sliceStartY) * scaleFactor;
-                
-                // Draw the page
-                newPage.drawPage(embeddedPage, {
-                    x: 0,
-                    y: embeddedPageY,
-                    width: targetSize.width,
-                    height: originalPageSize.height * scaleFactor,
-                });
-                
-                // Create white rectangles to mask unwanted content
-                const white = rgb(1, 1, 1);
-                
-                // Mask content above the slice
-                if (contentTopY < targetSize.height) {
-                    newPage.drawRectangle({
-                        x: 0,
-                        y: contentTopY,
-                        width: targetSize.width,
-                        height: targetSize.height - contentTopY,
-                        color: white,
-                    });
-                }
-                
-                // Calculate where the slice ends on the page
-                const sliceHeight = (sliceEndY - sliceStartY) * scaleFactor;
-                const contentBottomY = contentTopY - sliceHeight;
-                
-                // Mask content below the slice, preserving bottom padding
-                if (contentBottomY > paddingPoints) {
-                    newPage.drawRectangle({
-                        x: 0,
-                        y: paddingPoints,
-                        width: targetSize.width,
-                        height: contentBottomY - paddingPoints,
-                        color: white,
-                    });
-                }
-                
-                // Always ensure bottom padding is clean
-                newPage.drawRectangle({
-                    x: 0,
-                    y: 0,
-                    width: targetSize.width,
-                    height: paddingPoints,
-                    color: white,
-                });
-            }
-
-            const pdfBytes = await outputPdfDoc.save();
-            const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-            const url = URL.createObjectURL(blob);
-            
-            const originalFileName = uploadedFile.name.replace(/\.pdf$/i, '');
-            downloadLink.href = url;
-            downloadLink.download = `${originalFileName}-split-final.pdf`;
-            downloadLink.classList.remove('hidden');
-            
-            showStatus('success', `PDF successfully created! ${cutPointsY.length - 1} pages generated.`);
-
-        } catch (err) {
-            showStatus('error', `Failed to create PDF: ${err.message}`);
-            console.error(err);
-        } finally {
-            generateButton.disabled = false;
-        }
-    }
-
-    function showStatus(type, message) {
-        let color = type === 'error' ? 'text-red-600' : 
-                    (type === 'success' ? 'text-green-600' : 
-                    (type === 'info' ? 'text-blue-600' : 'text-slate-600'));
-        const icon = type === 'loading' ? '<div class="spinner mx-auto"></div>' : '';
-        statusDiv.innerHTML = `<div class="flex items-center justify-center space-x-2 ${color}">${icon}<p>${message}</p></div>`;
-    }
-
-    function getLineConstraints(lineIndex) {
-        const selectedPaper = paperSizeSelect.value;
-        const targetDims = paperDimensions[selectedPaper];
-        const targetRatio = targetDims.height / targetDims.width;
-        const paddingPoints = getPaddingValue();
-        
-        // Convert to pixels
-        const pageHeightPixels = (originalPageSize.width * targetRatio) * originalPageSize.scale;
-        const paddingPixels = paddingPoints * originalPageSize.scale;
-        
-        // Get previous position
-        const prevPosition = lineIndex > 0 ? cutLines[lineIndex - 1].position : 0;
-        
-        // Calculate max content for this page
-        let maxContentHeight;
-        if (lineIndex === 0 || (lineIndex > 0 && !cutLines[lineIndex - 1].confirmed)) {
-            // First page or previous line not confirmed: only bottom padding
-            maxContentHeight = pageHeightPixels - paddingPixels;
-        } else {
-            // Subsequent pages: top and bottom padding
-            maxContentHeight = pageHeightPixels - (2 * paddingPixels);
-        }
-        
-        // Minimum content to show something meaningful (e.g., 100 pixels)
-        const minContentHeight = Math.min(100, maxContentHeight * 0.2);
-        
-        return {
-            minPosition: prevPosition + minContentHeight,
-            maxPosition: prevPosition + maxContentHeight,
-            prevPosition: prevPosition,
-            maxContentHeight: maxContentHeight
-        };
-    }
+    tabExtract.addEventListener('click', () => {
+        tabExtract.classList.add('active');
+        tabSplit.classList.remove('active');
+        contentExtract.classList.remove('hidden');
+        contentSplit.classList.add('hidden');
+    });
+});
 </script>
+<script src="pdf-split.js" defer></script>
+<script src="pdf-extract.js" defer></script>
 </body>
 </html>
