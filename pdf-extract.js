@@ -15,70 +15,54 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let selectedFiles = [];
 
-        extractFileInput.addEventListener('change', async (e) => {
+    extractFileInput.addEventListener('change', async (e) => {
         showExtractStatus('loading', 'Reading and unzipping files...');
         extractButton.disabled = true;
         extractFilesList.innerHTML = '';
         extractResults.innerHTML = '';
+        
+        extractFilesList.style.gridTemplateColumns = 'repeat(auto-fit, minmax(320px, 1fr))';
 
         const inputFiles = Array.from(e.target.files);
-        const finalPdfFiles = []; // This will hold ONLY the PDF file objects.
+        const finalPdfFiles = []; 
 
-        // Loop through all user-selected files (can be PDFs or ZIPs)
         for (const file of inputFiles) {
             if (file.name.toLowerCase().endsWith('.pdf')) {
-                // If it's a PDF, just add it to our list
                 finalPdfFiles.push(file);
             } else if (file.name.toLowerCase().endsWith('.zip')) {
-                // If it's a ZIP, extract the PDFs from it
                 try {
                     const jszip = new JSZip();
                     const zip = await jszip.loadAsync(file);
                     const pdfPromises = [];
-
                     zip.forEach((relativePath, zipEntry) => {
-                        // Find files that are PDFs, not directories, and not system files
                         if (zipEntry.name.toLowerCase().endsWith('.pdf') && !zipEntry.dir && !zipEntry.name.startsWith('__MACOSX')) {
-                            // Create a promise to get the file data as a Blob
-                            const promise = zipEntry.async('blob').then(blob => {
-                                // Re-create a proper File object so it can be handled uniformly
-                                return new File([blob], zipEntry.name, { type: 'application/pdf' });
-                            });
+                            const promise = zipEntry.async('blob').then(blob => new File([blob], zipEntry.name, { type: 'application/pdf' }));
                             pdfPromises.push(promise);
                         }
                     });
-                    
-                    // Wait for all PDFs in this zip to be extracted
                     const extractedPdfs = await Promise.all(pdfPromises);
-                    // Add the extracted PDFs to our final list
                     finalPdfFiles.push(...extractedPdfs);
-
                 } catch (err) {
                     console.error("Error unzipping file:", file.name, err);
                     showExtractStatus('error', `Could not read the zip file: ${file.name}`);
-                    extractButton.disabled = false; // Re-enable button on error
-                    return; // Stop processing
+                    extractButton.disabled = false;
+                    return;
                 }
             }
         }
 
-        // Now, finalPdfFiles contains a clean list of only PDFs.
-        // We can update the UI and the global 'selectedFiles' variable.
-
-        // Sort files alphabetically for a consistent order
         finalPdfFiles.sort((a, b) => a.name.localeCompare(b.name));
         selectedFiles = finalPdfFiles;
 
         if (selectedFiles.length > 0) {
-            // Render the UI using ONLY the final list of PDF files
             selectedFiles.forEach((file, index) => {
                 const fileElement = document.createElement('div');
-                fileElement.className = 'p-3 border rounded-lg bg-slate-50 flex items-center justify-between space-x-4';
+                fileElement.className = 'p-3 border rounded-lg bg-slate-50 flex flex-col space-y-2';
                 fileElement.innerHTML = `
-                    <p class="font-medium text-slate-800 truncate flex-1" title="${file.name}">${file.name}</p>
-                    <div class="flex-shrink-0">
-                        <label for="pages-${index}" class="text-xs text-slate-600 block mb-1 text-right">Pages (e.g., 1, 3-5):</label>
-                        <input type="text" id="pages-${index}" data-file-index="${index}" class="w-48 pl-3 pr-3 py-1.5 text-base border-gray-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm rounded-md" placeholder="1, 3-5">
+                    <p class="font-medium text-sm text-slate-800 truncate" title="${file.name}">${file.name}</p>
+                    <div class="flex items-center justify-between">
+                        <label for="pages-${index}" class="text-xs text-slate-600 mr-2">Pages:</label>
+                        <input type="text" id="pages-${index}" data-file-index="${index}" class="w-32 pl-2 pr-2 py-1 text-sm border-gray-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 rounded-md" placeholder="e.g., 1, 3-5">
                     </div>
                 `;
                 extractFilesList.appendChild(fileElement);
