@@ -24,7 +24,7 @@
         .cut-line-confirmed:hover { background-color: rgba(22, 163, 74, 1); }
         .cut-line-handle { padding: 0 12px; height: 20px; background-color: inherit; border-radius: 10px; color: white; font-size: 10px; text-align: center; line-height: 20px; font-family: sans-serif; pointer-events: none; white-space: nowrap; }
         .page-section { position: relative; border: 2px solid #e2e8f0; margin-bottom: 4px; background: white; }
-        .page-padding { position: absolute; left: 0; right: 0; background-color: rgba(59, 130, 246, 0.2); border: 1px dashed rgba(59, 130, 246, 0.5); z-index: 5; }
+        .page-margin { position: absolute; left: 0; right: 0; background-color: rgba(59, 130, 246, 0.2); border: 1px dashed rgba(59, 130, 246, 0.5); z-index: 5; }
         .page-number { position: absolute; top: 10px; right: 10px; background: rgba(0, 0, 0, 0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; z-index: 15; }
         .split-view-mode .page-section { box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .allowed-range-overlay { position: absolute; left: 0; right: 0; background-color: rgba(16, 185, 129, 0.1); border: 2px dashed rgba(16, 185, 129, 0.5); pointer-events: none; z-index: 7; }
@@ -76,18 +76,19 @@
                     </select>
                 </div>
                 <div>
-                    <label for="padding-select" class="block text-sm font-medium text-slate-700 mb-2">3. Top/Bottom Padding</label>
-                    <select id="padding-select" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                    <label for="margin-select" class="block text-sm font-medium text-slate-700 mb-2">3. Top/Bottom Margin</label>
+                    <select id="margin-select" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
                         <option value="18">Narrow (18 pts / 0.25")</option>
                         <option value="36" selected>Normal (36 pts / 0.5")</option>
                         <option value="72">Wide (72 pts / 1.0")</option>
                         <option value="custom">Custom</option>
                     </select>
-                    <input type="number" id="custom-padding-input" value="36" class="hidden mt-2 w-full pl-3 pr-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                    <input type="number" id="custom-margin-input" value="36" class="hidden mt-2 w-full pl-3 pr-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
                 </div>
             </div>
             <div id="action-bar" class="flex items-center justify-center space-x-4 mb-6">
                 <button id="preview-button" type="button" disabled class="px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-slate-400 disabled:cursor-not-allowed">Generate Preview</button>
+                <button id="add-cut-line-button" type="button" class="hidden px-6 py-3 border border-gray-300 text-base font-medium rounded-md shadow-sm text-slate-700 bg-white hover:bg-slate-50">Add Split Line</button>
                 <button id="split-view-toggle" type="button" class="hidden px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700">Toggle Split View</button>
                 <button id="generate-button" type="button" class="hidden px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700">Create Final PDF</button>
                 <a id="download-link" class="hidden px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700">Download Split PDF</a>

@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let originalPageSize = { width: 0, height: 0, scale: 1 };
     let cutLines = []; // Array of {position: number, confirmed: boolean}
     let maxSliceHeightPixels = 0;
-    let paddingPixels = 0;
+    let marginPixels = 0;
     let activeDrag = null;
     let splitViewMode = false;
     let pdfCanvas = null;
@@ -21,8 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const fileInput = document.getElementById('file-upload');
     const fileNameDisplay = document.getElementById('file-name');
     const paperSizeSelect = document.getElementById('paper-size');
-    const paddingSelect = document.getElementById('padding-select');
-    const customPaddingInput = document.getElementById('custom-padding-input');
+    const marginSelect = document.getElementById('margin-select');
+    const customMarginInput = document.getElementById('custom-margin-input');
     const previewButton = document.getElementById('preview-button');
     const splitViewToggle = document.getElementById('split-view-toggle');
     const generateButton = document.getElementById('generate-button');
@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const previewContainer = document.getElementById('preview-container');
     const pagesContainer = document.getElementById('pages-container');
     const downloadLink = document.getElementById('download-link');
+    const addCutLineButton = document.getElementById('add-cut-line-button');
 
     const paperDimensions = { 
         A4: { width: 595.28, height: 841.89 }, 
@@ -44,11 +45,11 @@ document.addEventListener('DOMContentLoaded', () => {
     previewButton.addEventListener('click', renderPreview);
     splitViewToggle.addEventListener('click', toggleSplitView);
     generateButton.addEventListener('click', createFinalPdf);
-    paddingSelect.addEventListener('change', () => {
-        customPaddingInput.classList.toggle('hidden', paddingSelect.value !== 'custom');
+    marginSelect.addEventListener('change', () => {
+        customMarginInput.classList.toggle('hidden', marginSelect.value !== 'custom');
         if (pdfCanvas) {
             recalculateUnconfirmedLines();
-            renderPages();
+            renderPages(); // The visual margin guides will update
         }
     });
     paperSizeSelect.addEventListener('change', () => {
@@ -57,9 +58,10 @@ document.addEventListener('DOMContentLoaded', () => {
             renderPages();
         }
     });
+    addCutLineButton.addEventListener('click', addCutLine);
 
-    function getPaddingValue() {
-        return paddingSelect.value === 'custom' ? (parseFloat(customPaddingInput.value) || 0) : parseFloat(paddingSelect.value);
+    function getMarginValue() {
+        return marginSelect.value === 'custom' ? (parseFloat(customMarginInput.value) || 0) : parseFloat(marginSelect.value);
     }
 
     function handleFileSelect(e) {
@@ -71,6 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
             splitViewToggle.classList.add('hidden');
             generateButton.classList.add('hidden');
             downloadLink.classList.add('hidden');
+            addCutLineButton.classList.add('hidden');
             statusDiv.innerHTML = '';
             cutLines = [];
         }
@@ -111,6 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
             previewSection.classList.remove('hidden');
             splitViewToggle.classList.remove('hidden');
             generateButton.classList.remove('hidden');
+            addCutLineButton.classList.remove('hidden');
             downloadLink.classList.add('hidden');
             showStatus('success', `Preview generated. ${cutLines.length + 1} pages will be created.`);
         } catch (err) {
@@ -121,27 +125,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function calculateInitialCutLines() {
-        const targetRatio = paperDimensions[paperSizeSelect.value].height / paperDimensions[paperSizeSelect.value].width;
-        const paddingPoints = getPaddingValue();
-        paddingPixels = paddingPoints * originalPageSize.scale;
-        
-        const targetHeightPoints = originalPageSize.width * targetRatio;
-        const targetContentHeightPoints = targetHeightPoints - (2 * paddingPoints);
+        // The margin value is now only used for the visual guide and final PDF creation.
+        // It does NOT affect the calculation of the cut lines themselves.
+        const marginPoints = getMarginValue();
+        marginPixels = marginPoints * originalPageSize.scale; // We still use 'marginPixels' for the visual guide class name.
 
-        if (targetContentHeightPoints <= 0) {
-            showStatus('error', 'Padding is too large for the selected paper size.');
+        // Calculate the slice height based purely on the target paper's aspect ratio.
+        // This ensures the content slice maintains the shape of the target page.
+        const targetRatio = paperDimensions[paperSizeSelect.value].height / paperDimensions[paperSizeSelect.value].width;
+        
+        // This is the maximum height of a slice in pixels on our preview canvas.
+        maxSliceHeightPixels = (originalPageSize.width * targetRatio) * originalPageSize.scale;
+
+        if (maxSliceHeightPixels <= 0) {
+            showStatus('error', 'Invalid paper dimensions.');
             cutLines = [];
-            maxSliceHeightPixels = 0;
             return;
         }
-
-        maxSliceHeightPixels = targetContentHeightPoints * originalPageSize.scale;
-        const firstPageContentHeight = (targetHeightPoints - paddingPoints) * originalPageSize.scale;
         
         cutLines = [];
-        let currentY = firstPageContentHeight;
+        let currentY = maxSliceHeightPixels;
         
-        while (currentY < pdfCanvas.height - 10) {
+        // Add cut lines down the page.
+        while (currentY < pdfCanvas.height - 10) { // -10 to avoid a tiny sliver at the end
             cutLines.push({ position: Math.round(currentY), confirmed: false });
             currentY += maxSliceHeightPixels;
         }
@@ -152,6 +158,36 @@ document.addEventListener('DOMContentLoaded', () => {
         // For now, we'll keep the simplified logic from the original code which just recalculates everything.
         // A more advanced version might only reposition lines *after* the last confirmed one.
         calculateInitialCutLines(); // Re-run initial calculation
+    }
+
+    function addCutLine() {
+        if (!pdfCanvas) return;
+
+        // Find the position of the last cut line. If none exist, start from 0.
+        const lastPosition = cutLines.length > 0 ? cutLines[cutLines.length - 1].position : 0;
+        
+        // Calculate a sensible default position for the new line:
+        // Halfway between the last line and the bottom of the page.
+        // Or a fixed distance if that's too far. Let's use 1/3 of the default page height.
+        let newPosition = lastPosition + (maxSliceHeightPixels / 3);
+
+        // Ensure the new line is not placed off the canvas
+        if (newPosition >= pdfCanvas.height - 10) {
+            newPosition = lastPosition + (pdfCanvas.height - lastPosition) / 2;
+        }
+        if (newPosition >= pdfCanvas.height - 10) {
+            showStatus('info', 'Cannot add new line so close to the end.');
+            return;
+        }
+
+        cutLines.push({ position: Math.round(newPosition), confirmed: false });
+        
+        // IMPORTANT: Sort the lines by position in case the new line was added out of order
+        // after the user dragged other lines around.
+        cutLines.sort((a, b) => a.position - b.position);
+
+        renderPages();
+        updateStatus();
     }
 
     function renderPages() {
@@ -178,18 +214,18 @@ document.addEventListener('DOMContentLoaded', () => {
             pageSection.appendChild(pageNumber);
             
             if (i > 0) {
-                const topPadding = document.createElement('div');
-                topPadding.className = 'page-padding';
-                topPadding.style.top = '0';
-                topPadding.style.height = `${paddingPixels}px`;
-                pageSection.appendChild(topPadding);
+                const topMargin = document.createElement('div');
+                topMargin.className = 'page-margin';
+                topMargin.style.top = '0';
+                topMargin.style.height = `${marginPixels}px`;
+                pageSection.appendChild(topMargin);
             }
             
-            const bottomPadding = document.createElement('div');
-            bottomPadding.className = 'page-padding';
-            bottomPadding.style.bottom = '0';
-            bottomPadding.style.height = `${paddingPixels}px`;
-            pageSection.appendChild(bottomPadding);
+            const bottomMargin = document.createElement('div');
+            bottomMargin.className = 'page-margin';
+            bottomMargin.style.bottom = '0';
+            bottomMargin.style.height = `${marginPixels}px`;
+            pageSection.appendChild(bottomMargin);
             
             if (i < allPositions.length - 2) {
                 const cutLine = cutLines[i];
@@ -286,7 +322,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const [embeddedPage] = await outputPdfDoc.embedPdf(originalPdfArrayBuffer.slice(0));
             
             const targetSize = paperDimensions[paperSizeSelect.value];
-            const paddingPoints = getPaddingValue();
+            const marginPoints = getMarginValue();
             const cutPointsY = [0, ...cutLines.map(c => c.position / originalPageSize.scale), originalPageSize.height];
             const scaleFactor = targetSize.width / originalPageSize.width;
 
@@ -295,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const sliceEndY = cutPointsY[i + 1];
                 const newPage = outputPdfDoc.addPage([targetSize.width, targetSize.height]);
                 
-                let contentTopY = (i === 0) ? targetSize.height : targetSize.height - paddingPoints;
+                let contentTopY = (i === 0) ? targetSize.height : targetSize.height - marginPoints;
                 const embeddedPageY = contentTopY - (originalPageSize.height - sliceStartY) * scaleFactor;
                 
                 newPage.drawPage(embeddedPage, {
@@ -309,10 +345,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 const sliceHeight = (sliceEndY - sliceStartY) * scaleFactor;
                 const contentBottomY = contentTopY - sliceHeight;
-                if (contentBottomY > paddingPoints) {
-                    newPage.drawRectangle({ x: 0, y: paddingPoints, width: targetSize.width, height: contentBottomY - paddingPoints, color: white });
+                if (contentBottomY > marginPoints) {
+                    newPage.drawRectangle({ x: 0, y: marginPoints, width: targetSize.width, height: contentBottomY - marginPoints, color: white });
                 }
-                newPage.drawRectangle({ x: 0, y: 0, width: targetSize.width, height: paddingPoints, color: white });
+                newPage.drawRectangle({ x: 0, y: 0, width: targetSize.width, height: marginPoints, color: white });
             }
 
             const pdfBytes = await outputPdfDoc.save();
@@ -340,12 +376,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function getLineConstraints(lineIndex) {
         const targetRatio = paperDimensions[paperSizeSelect.value].height / paperDimensions[paperSizeSelect.value].width;
-        const paddingPoints = getPaddingValue();
+        const marginPoints = getMarginValue();
         const pageHeightPixels = (originalPageSize.width * targetRatio) * originalPageSize.scale;
-        const paddingPixels = paddingPoints * originalPageSize.scale;
+        const marginPixels = marginPoints * originalPageSize.scale;
         const prevPosition = lineIndex > 0 ? cutLines[lineIndex - 1].position : 0;
         
-        let maxContentHeight = pageHeightPixels - (lineIndex === 0 ? paddingPixels : 2 * paddingPixels);
+        let maxContentHeight = pageHeightPixels - (lineIndex === 0 ? marginPixels : 2 * marginPixels);
         const minContentHeight = 100;
         
         return {
