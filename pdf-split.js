@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function renderPreview() {
         if (!uploadedFile) return;
         
-        showStatus('progress', 'Preparing preview...');
+        showStatus('progress', 'Loading PDF...');
         
         try {
             originalPdfArrayBuffer = await uploadedFile.arrayBuffer();
@@ -96,6 +96,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 showStatus('error', 'Error: This tool only supports single-page PDFs.'); 
                 return;
             }
+
+            showStatus('progress', 'Rendering preview...');
 
             const page = await pdfjsDoc.getPage(1);
             const desiredWidth = 1000;
@@ -108,26 +110,17 @@ document.addEventListener('DOMContentLoaded', () => {
             pdfCanvas = document.createElement('canvas');
             pdfCanvas.width = scaledViewport.width;
             pdfCanvas.height = scaledViewport.height;
-            pdfCanvasCtx = pdfCanvas.getContext('2d');
+            // Add willReadFrequently to address the performance warning
+            pdfCanvasCtx = pdfCanvas.getContext('2d', { willReadFrequently: true });
             
             const renderContext = {
                 canvasContext: pdfCanvasCtx,
                 viewport: scaledViewport
             };
-            const renderTask = page.render(renderContext);
             
-            renderTask.onProgress = (progressData) => {
-                const percent = Math.round((progressData.current / progressData.total) * 100);
-                const progressBar = document.getElementById('progress-bar');
-                const progressText = document.getElementById('progress-text');
-
-                if (progressBar) {
-                    progressBar.style.width = `${percent}%`;
-                }
-                if (progressText) {
-                    progressText.textContent = `Rendering preview... ${percent}%`;
-                }
-            };
+            // Since PDF.js progress tracking isn't reliable for single page renders,
+            // we'll show a simple loading state
+            const renderTask = page.render(renderContext);
 
             await renderTask.promise;
 
@@ -144,6 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (err) {
             showStatus('error', `Error rendering preview: ${err.message}`);
+            console.error('Preview error:', err);  // Add console logging for debugging
         }
     }
 
@@ -265,8 +259,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!cutLine.confirmed) line.addEventListener('mousedown', startDrag);
                 line.addEventListener('click', toggleConfirmation);
                 pageSection.appendChild(line);
-            }
-            pageSection.appendChild(line);
+            }            
+            pagesContainer.appendChild(pageSection);
         }
     }
 
@@ -394,19 +388,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showStatus(type, message) {
         if (type === 'progress') {
-            // This block creates the HTML for the progress bar
+            // Simplified progress indicator since PDF.js doesn't provide reliable progress for single pages
             statusDiv.innerHTML = `
-                <div>
-                    <p id="progress-text" class="text-sm text-center text-slate-600 mb-1">${message}</p>
-                    <div class="w-full bg-slate-200 rounded-full h-2.5">
-                        <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300 ease-in-out" style="width: 0%"></div>
-                    </div>
+                <div class="flex items-center justify-center space-x-2 text-slate-600">
+                    <div class="spinner"></div>
+                    <p>${message}</p>
                 </div>`;
+        } else if (type === 'loading') {
+            statusDiv.innerHTML = `<div class="flex items-center justify-center space-x-2 text-slate-600"><div class="spinner"></div><p>${message}</p></div>`;
         } else {
-            // This is the original logic for simple success/error/info messages
             let color = type === 'error' ? 'text-red-600' : (type === 'success' ? 'text-green-600' : 'text-slate-600');
-            const icon = type === 'loading' ? '<div class="spinner mx-auto"></div>' : '';
-            statusDiv.innerHTML = `<div class="flex items-center justify-center space-x-2 ${color}">${icon}<p>${message}</p></div>`;
+            statusDiv.innerHTML = `<div class="flex items-center justify-center space-x-2 ${color}"><p>${message}</p></div>`;
         }
     }
 
