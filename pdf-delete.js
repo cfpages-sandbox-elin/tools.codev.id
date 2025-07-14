@@ -1,3 +1,4 @@
+// --- File: pdf-delete.js ---
 document.addEventListener('DOMContentLoaded', () => {
     const { PDFDocument } = PDFLib;
 
