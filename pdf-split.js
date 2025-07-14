@@ -302,11 +302,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const index = parseInt(e.currentTarget.dataset.index);
             cutLines[index].confirmed = !cutLines[index].confirmed;
             
+            // Always render pages to update the UI
+            renderPages();
+            
             // If we just confirmed a line, check if we need to auto-add more lines
             if (cutLines[index].confirmed) {
                 checkAndAutoAddLines();
-            } else {
-                renderPages();
             }
             
             updateStatus();
