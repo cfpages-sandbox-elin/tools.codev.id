@@ -160,6 +160,58 @@ const projectConfig = {
             };
         },
 
+        // FUNGSI BARU UNTUK KALKULASI PER UNIT BISNIS
+        calculatePnlForUnit(unit, revenueMultiplier = 1, opexMultiplier = 1) {
+            const unitConfig = projectConfig[unit];
+            const monthlyRevenueData = this.getMonthlyRevenue()[unit];
+            
+            const annualRevenue = monthlyRevenueData.total * 12 * revenueMultiplier;
+            const annualAncillaryRevenue = monthlyRevenueData.fnb * 12 * revenueMultiplier;
+            const cogs = annualAncillaryRevenue * projectConfig.assumptions.cogs_rate_fnb;
+            const grossProfit = annualRevenue - cogs;
+            
+            const annualOpex = Object.values(unitConfig.opexMonthly).reduce((a, b) => a + b, 0) * 12 * opexMultiplier;
+            const ebitda = grossProfit - annualOpex;
+            
+            const depr_building = unitConfig.capex.building / projectConfig.assumptions.depreciation_years.building;
+            const depr_construction = unitConfig.capex.construction / projectConfig.assumptions.depreciation_years.construction;
+            const depr_equipment = unitConfig.capex.equipment / projectConfig.assumptions.depreciation_years.equipment;
+            const depreciation = depr_building + depr_construction + depr_equipment;
+            
+            const ebt = ebitda - depreciation;
+            const tax = ebt > 0 ? ebt * projectConfig.assumptions.tax_rate_profit : 0;
+            const netProfit = ebt - tax;
+            const cashFlowFromOps = netProfit + depreciation;
+            
+            return { annualRevenue, cogs, grossProfit, annualOpex, ebitda, depreciation, ebt, tax, netProfit, cashFlowFromOps };
+        },
+
+        // FUNGSI BARU UNTUK KELAYAKAN PER UNIT BISNIS
+        getFeasibilityForUnit(unit) {
+            const unitCapex = Object.values(projectConfig[unit].capex).reduce((a, b) => a + b, 0);
+            const contingency = unitCapex * projectConfig.assumptions.contingency_rate;
+            const totalInvestment = unitCapex + contingency;
+
+            const realisticPnl = this.calculatePnlForUnit(unit);
+            const cashFlow = realisticPnl.cashFlowFromOps;
+
+            if (cashFlow <= 0) return { totalInvestment, paybackPeriod: Infinity, npv: -totalInvestment, irr: -Infinity };
+
+            const paybackPeriod = totalInvestment / cashFlow;
+            const cashFlows = Array(20).fill(cashFlow);
+            const npv = cashFlows.reduce((acc, cf, i) => acc + cf / Math.pow(1 + projectConfig.assumptions.discount_rate_wacc, i + 1), 0) - totalInvestment;
+
+            let irr = 0.0;
+            for (let i = 0; i < 1.0; i += 0.001) {
+                let tempNpv = cashFlows.reduce((acc, cf, j) => acc + cf / Math.pow(1 + i, j + 1), 0) - totalInvestment;
+                if (tempNpv < 0) {
+                    irr = i > 0 ? (i - 0.001) : 0;
+                    break;
+                }
+            }
+            return { totalInvestment, paybackPeriod, npv, irr };
+        },
+
         // Menghitung P&L tahunan berdasarkan skenario
         calculatePnl(revenueMultiplier = 1, opexMultiplier = 1) {
             const monthlyRevenue = this.getMonthlyRevenue();

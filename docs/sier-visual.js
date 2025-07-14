@@ -679,6 +679,147 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ====================================================================
+    // REVITALISASI ANALISIS FINANSIAL: DRIVING RANGE (STANDALONE)
+    // ====================================================================
+    tryToRender(function renderDrivingRangeFinance() {
+        const container = document.getElementById('driving-range-financial-analysis');
+        if (!container) return false;
+
+        const pnl = projectConfig.calculations.calculatePnlForUnit('drivingRange');
+        const feasibility = projectConfig.calculations.getFeasibilityForUnit('drivingRange');
+        const investment = feasibility.totalInvestment;
+        
+        const toBillion = (num) => (num / 1000000000).toFixed(2) + ' M';
+
+        container.innerHTML = `
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-teal-600 pl-4">Analisis Finansial & Proyeksi BEP (Driving Range - Standalone)</h2>
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <div class="p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 mb-6">
+                    <strong>Disclaimer:</strong> Analisis ini adalah model estimasi untuk proyek Driving Range jika dibangun secara mandiri, berdasarkan asumsi yang ada di model pusat.
+                </div>
+
+                <!-- Investasi & Biaya Operasional -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    <div>
+                        <h3 class="text-xl font-semibold mb-4 text-gray-700">1. Estimasi Biaya Investasi (CapEx)</h3>
+                        <p class="text-center text-4xl font-bold font-mono text-gray-800 mt-2">Rp ${formatNumber(investment)}</p>
+                        <p class="text-center text-sm text-gray-500">(Termasuk dana darurat ${projectConfig.assumptions.contingency_rate * 100}%)</p>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold mb-4 text-gray-700">2. Estimasi Biaya Operasional (OpEx)</h3>
+                        <p class="text-center text-4xl font-bold font-mono text-gray-800 mt-2">~Rp ${formatNumber(pnl.annualOpex / 12)}</p>
+                        <p class="text-center text-sm text-gray-500">per Bulan</p>
+                    </div>
+                </div>
+
+                <!-- Pendapatan & Laba -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-8 border-t">
+                    <div>
+                        <h3 class="text-xl font-semibold mb-4 text-gray-700">3. Estimasi Pendapatan Tahunan</h3>
+                        <p class="text-center text-4xl font-bold font-mono text-green-600 mt-2">Rp ${formatNumber(pnl.annualRevenue)}</p>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold mb-4 text-gray-700">4. Estimasi Laba Bersih Tahunan</h3>
+                        <p class="text-center text-4xl font-bold font-mono text-green-700 mt-2">Rp ${formatNumber(pnl.netProfit)}</p>
+                    </div>
+                </div>
+
+                <!-- Perhitungan BEP -->
+                <div class="mt-8 pt-8 border-t">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">5. Perhitungan Kelayakan Investasi</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                        <div class="p-4 bg-blue-50 rounded-lg">
+                            <h4 class="font-semibold text-sm text-blue-800">Payback Period</h4>
+                            <p class="text-3xl font-bold font-mono text-blue-600 mt-2">${feasibility.paybackPeriod.toFixed(2)}</p>
+                            <p class="text-xs text-gray-500">Tahun</p>
+                        </div>
+                        <div class="p-4 bg-green-50 rounded-lg">
+                            <h4 class="font-semibold text-sm text-green-800">Net Present Value (NPV)</h4>
+                            <p class="text-3xl font-bold font-mono text-green-600 mt-2">Rp ${toBillion(feasibility.npv)}</p>
+                        </div>
+                        <div class="p-4 bg-purple-50 rounded-lg">
+                            <h4 class="font-semibold text-sm text-purple-800">Internal Rate of Return (IRR)</h4>
+                            <p class="text-3xl font-bold font-mono text-purple-600 mt-2">${(feasibility.irr * 100).toFixed(2)}%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        return true;
+    });
+
+
+    // ====================================================================
+    // REVITALISASI ANALISIS FINANSIAL: PADEL (STANDALONE)
+    // ====================================================================
+    tryToRender(function renderPadelFinance() {
+        const container = document.getElementById('padel-financial-analysis');
+        if (!container) return false;
+
+        const pnl = projectConfig.calculations.calculatePnlForUnit('padel');
+        const feasibility = projectConfig.calculations.getFeasibilityForUnit('padel');
+        const investment = feasibility.totalInvestment;
+        
+        const toBillion = (num) => (num / 1000000000).toFixed(2) + ' M';
+
+        container.innerHTML = `
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-purple-600 pl-4">Analisis Finansial & Proyeksi BEP (Padel - Standalone)</h2>
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <div class="p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 mb-6">
+                    <strong>Disclaimer:</strong> Analisis ini adalah model estimasi untuk proyek Padel jika dibangun secara mandiri, berdasarkan asumsi yang ada di model pusat.
+                </div>
+                
+                <!-- Investasi & Biaya Operasional -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    <div>
+                        <h3 class="text-xl font-semibold mb-4 text-gray-700">1. Estimasi Biaya Investasi (CapEx)</h3>
+                        <p class="text-center text-4xl font-bold font-mono text-gray-800 mt-2">Rp ${formatNumber(investment)}</p>
+                        <p class="text-center text-sm text-gray-500">(Termasuk dana darurat ${projectConfig.assumptions.contingency_rate * 100}%)</p>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold mb-4 text-gray-700">2. Estimasi Biaya Operasional (OpEx)</h3>
+                        <p class="text-center text-4xl font-bold font-mono text-gray-800 mt-2">~Rp ${formatNumber(pnl.annualOpex / 12)}</p>
+                        <p class="text-center text-sm text-gray-500">per Bulan</p>
+                    </div>
+                </div>
+
+                <!-- Pendapatan & Laba -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-8 border-t">
+                    <div>
+                        <h3 class="text-xl font-semibold mb-4 text-gray-700">3. Estimasi Pendapatan Tahunan</h3>
+                        <p class="text-center text-4xl font-bold font-mono text-green-600 mt-2">Rp ${formatNumber(pnl.annualRevenue)}</p>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold mb-4 text-gray-700">4. Estimasi Laba Bersih Tahunan</h3>
+                        <p class="text-center text-4xl font-bold font-mono text-green-700 mt-2">Rp ${formatNumber(pnl.netProfit)}</p>
+                    </div>
+                </div>
+
+                <!-- Perhitungan BEP -->
+                <div class="mt-8 pt-8 border-t">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">5. Perhitungan Kelayakan Investasi</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                        <div class="p-4 bg-blue-50 rounded-lg">
+                            <h4 class="font-semibold text-sm text-blue-800">Payback Period</h4>
+                            <p class="text-3xl font-bold font-mono text-blue-600 mt-2">${feasibility.paybackPeriod.toFixed(2)}</p>
+                            <p class="text-xs text-gray-500">Tahun</p>
+                        </div>
+                        <div class="p-4 bg-green-50 rounded-lg">
+                            <h4 class="font-semibold text-sm text-green-800">Net Present Value (NPV)</h4>
+                            <p class="text-3xl font-bold font-mono text-green-600 mt-2">Rp ${toBillion(feasibility.npv)}</p>
+                        </div>
+                        <div class="p-4 bg-purple-50 rounded-lg">
+                            <h4 class="font-semibold text-sm text-purple-800">Internal Rate of Return (IRR)</h4>
+                            <p class="text-3xl font-bold font-mono text-purple-600 mt-2">${(feasibility.irr * 100).toFixed(2)}%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        return true;
+    });
+
+    // ====================================================================
     // BAGIAN XII: ANALISIS KEUANGAN & KELAYAKAN INVESTASI (VERSI BOTTOM UP)
     // ====================================================================
     tryToRender(function renderFinancialAnalysis() {
@@ -790,6 +931,102 @@ document.addEventListener('DOMContentLoaded', () => {
             </table>
             <p class="mt-4 text-sm text-gray-600"><strong>Kesimpulan Sensitivitas:</strong> Proyek ini menunjukkan ketahanan yang baik. Bahkan dalam skenario pesimis, proyek masih mampu menghasilkan laba dan mencapai payback period dalam jangka waktu yang dapat diterima. Ini mengurangi risiko investasi secara keseluruhan.</p>
         `;
+
+        return true;
+    });
+
+    // ====================================================================
+    // REFAKTOR ANALISIS BISNIS PADEL DENGAN DATA TERPUSAT
+    // ====================================================================
+    tryToRender(function refactorPadelBusinessAnalysis() {
+        const bepContainer = document.querySelector('#business-strategy-analysis');
+        if (!bepContainer) return false;
+
+        // Ambil elemen yang akan di-update
+        const bepResultContainer = bepContainer.querySelector('.bg-blue-50');
+        if (!bepResultContainer) return false;
+
+        // Lakukan kalkulasi BEP hanya untuk Padel menggunakan data dari projectConfig
+        const p = projectConfig.padel;
+        const a = projectConfig.assumptions;
+
+        // Total Biaya Tetap Bulanan HANYA untuk Padel
+        const fixedCostMonthlyPadel = p.opexMonthly.salaries + p.opexMonthly.rent + p.opexMonthly.marketing + p.opexMonthly.fnb_other_costs;
+        
+        // Margin kontribusi rata-rata per jam
+        // Kita bisa ambil pendekatan sederhana: Total Revenue Padel / Total Jam Booking Padel
+        const monthlyRevenuePadel = projectConfig.calculations.getMonthlyRevenue().padel.total;
+        
+        const hours_weekday_offpeak = p.courts.count * p.courts.hours_distribution.offpeak_per_day * p.courts.occupancy.weekday_offpeak;
+        const hours_weekday_peak = p.courts.count * p.courts.hours_distribution.peak_per_day * p.courts.occupancy.weekday_peak;
+        const hours_weekend = p.courts.count * a.operational_hours_per_day * p.courts.occupancy.weekend;
+        const totalHoursBookedMonthly = (hours_weekday_offpeak + hours_weekday_peak) * a.workdays_in_month + hours_weekend * a.weekend_days_in_month;
+        
+        const averageRevenuePerHour = monthlyRevenuePadel / totalHoursBookedMonthly;
+        // Asumsi biaya variabel per jam (listrik, air)
+        const variableCostPerHour = (p.opexMonthly.utilities + p.opexMonthly.maintenance) / totalHoursBookedMonthly;
+        const contributionMarginPerHour = averageRevenuePerHour - variableCostPerHour;
+
+        // Titik Impas dalam Jam
+        const bepHoursMonthly = fixedCostMonthlyPadel / contributionMarginPerHour;
+        const bepHoursDaily = bepHoursMonthly / (a.workdays_in_month + a.weekend_days_in_month);
+        const bepHoursPerCourtDaily = bepHoursDaily / p.courts.count;
+
+        // Update DOM
+        bepResultContainer.innerHTML = `
+            <p class="text-sm text-gray-600">Jam Sewa Minimum per Bulan (BEP)</p>
+            <p class="text-3xl font-bold text-blue-700">${Math.ceil(bepHoursMonthly)} Jam</p>
+            <p class="text-sm text-gray-600 mt-3">Target per Hari (untuk ${p.courts.count} Lapangan)</p>
+            <p class="text-2xl font-bold text-blue-700">~${bepHoursDaily.toFixed(1)} Jam Sewa</p>
+            <p class="text-sm text-gray-600 mt-1">(Rata-rata ~${bepHoursPerCourtDaily.toFixed(1)} jam per lapangan per hari)</p>
+        `;
+
+        return true;
+    });
+
+    // ====================================================================
+    // REFAKTOR ANALISIS RISIKO DENGAN DAMPAK KUANTITATIF
+    // ====================================================================
+    tryToRender(function refactorRiskAnalysis() {
+        const riskTable = document.querySelector('#risk-analysis table');
+        if (!riskTable) return false;
+
+        const tbody = riskTable.querySelector('tbody');
+
+        // Kalkulasi dampak finansial dari skenario pesimis
+        const realisticPnl = projectConfig.calculations.calculatePnl();
+        const pesimisticPnl = projectConfig.calculations.calculatePnl(0.85, 1.10); // Sesuai skenario sensitivitas
+        const profitDrop = realisticPnl.netProfit - pesimisticPnl.netProfit;
+        
+        // Buat baris baru untuk dampak kuantitatif
+        const newRow = document.createElement('tr');
+        newRow.className = 'bg-white border-b hover:bg-gray-50';
+        newRow.innerHTML = `
+            <td class="px-4 py-4 font-semibold align-top">Pasar & Finansial</td>
+            <td class="px-4 py-4">
+                <strong>Permintaan Lebih Rendah & Biaya Lebih Tinggi</strong><br>
+                Kombinasi okupansi turun 15% dan biaya operasional naik 10% (Skenario Pesimis).
+            </td>
+            <td class="px-4 py-4 text-center align-middle"><span class="bg-yellow-100 text-yellow-800">Medium</span></td>
+            <td class="px-4 py-4 text-center align-middle"><span class="bg-red-100 text-red-800">Tinggi</span></td>
+            <td class="px-4 py-4">
+                <ul class="list-disc pl-4 space-y-1">
+                    <li>Dampak Kuantitatif: Penurunan Laba Bersih Tahunan sebesar <strong>~Rp ${formatNumber(profitDrop)}</strong>.</li>
+                    <li>Mitigasi: Strategi marketing agresif, program loyalitas & membership, efisiensi operasional.</li>
+                </ul>
+            </td>
+        `;
+
+        // Hapus baris risiko lama yang relevan dan sisipkan yang baru
+        // Ini contoh sederhana, Anda bisa membuatnya lebih canggih
+        const rows = tbody.querySelectorAll('tr');
+        if (rows.length > 0) {
+            // Hapus baris "Permintaan Lebih Rendah dari Proyeksi"
+            if (rows[0].innerText.includes('Permintaan Lebih Rendah')) {
+                rows[0].remove();
+            }
+        }
+        tbody.prepend(newRow); // Sisipkan baris baru yang lebih detail di paling atas
 
         return true;
     });
