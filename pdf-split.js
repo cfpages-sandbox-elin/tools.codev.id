@@ -69,7 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // --- Start of changes ---
             // Disable all buttons and clean up the UI
-            previewButton.disabled = true; // We will hide this button later
             previewSection.classList.add('hidden');
             splitViewToggle.classList.add('hidden');
             generateButton.classList.add('hidden');
@@ -87,7 +86,6 @@ document.addEventListener('DOMContentLoaded', () => {
     async function renderPreview() {
         if (!uploadedFile) return;
         showStatus('loading', 'Loading and rendering PDF preview...');
-        previewButton.disabled = true;
         
         try {
             originalPdfArrayBuffer = await uploadedFile.arrayBuffer();
@@ -125,7 +123,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
             showStatus('error', `Error rendering preview: ${err.message}`);
         } finally {
-            previewButton.disabled = false;
         }
     }
 
