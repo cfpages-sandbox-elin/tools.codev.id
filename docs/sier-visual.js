@@ -820,6 +820,104 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ====================================================================
+    // VISUALISASI ASUMSI MODEL KEUANGAN
+    // ====================================================================
+    tryToRender(function renderFinancialAssumptions() {
+        const container = document.getElementById('assumptions-container');
+        if (!container) return false;
+
+        const { assumptions, drivingRange, padel } = projectConfig;
+
+        // Helper untuk membuat tabel dari objek
+        const createTable = (data, title) => {
+            let rowsHtml = Object.entries(data).map(([key, value]) => {
+                // Format key agar lebih mudah dibaca
+                const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                // Format value jika berupa objek
+                let formattedValue;
+                if (typeof value === 'object' && value !== null) {
+                    formattedValue = Object.entries(value).map(([subKey, subValue]) => 
+                        `<li><span class="font-medium">${subKey.replace(/_/g, ' ')}:</span> ${subValue}</li>`
+                    ).join('');
+                    formattedValue = `<ul class="list-none pl-0">${formattedValue}</ul>`;
+                } else {
+                    formattedValue = typeof value === 'number' && value < 1 ? `${(value * 100).toFixed(0)}%` : formatNumber(value);
+                }
+                
+                return `
+                    <tr class="border-b">
+                        <td class="py-3 px-4 font-semibold text-gray-700 w-1/3">${formattedKey}</td>
+                        <td class="py-3 px-4 text-gray-600">${formattedValue}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            return `
+                <div class="mb-8">
+                    <h3 class="text-xl font-bold text-gray-800 mb-3 pb-2 border-b-2 border-gray-200">${title}</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <tbody>${rowsHtml}</tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+        };
+        
+        // Helper untuk data operasional
+        const createOperationalTable = (data, title) => {
+             let rowsHtml = Object.entries(data).map(([key, value]) => {
+                const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                
+                let formattedValue;
+                if (key === 'occupancy' || key === 'price_per_hour') {
+                     formattedValue = Object.entries(value).map(([subKey, subValue]) => 
+                        `<li><span class="font-medium">${subKey.replace(/_/g, ' ').replace('weekday', 'Hr Kerja').replace('weekend', 'Akhir Pekan')}:</span> ${typeof subValue === 'number' && subValue < 2 ? (subValue * 100).toFixed(0) + '%' : formatNumber(subValue)}</li>`
+                    ).join('');
+                     formattedValue = `<ul class="list-none pl-0">${formattedValue}</ul>`;
+                } else {
+                     formattedValue = formatNumber(value);
+                }
+
+                return `
+                     <tr class="border-b">
+                        <td class="py-3 px-4 font-semibold text-gray-700 w-1/3">${formattedKey}</td>
+                        <td class="py-3 px-4 text-gray-600">${formattedValue}</td>
+                    </tr>
+                `;
+             }).join('');
+
+             return `
+                <div class="mb-6">
+                    <h4 class="text-lg font-semibold text-gray-700 mb-2">${title}</h4>
+                    <table class="w-full text-sm"><tbody>${rowsHtml}</tbody></table>
+                </div>
+             `;
+        };
+
+        container.innerHTML = `
+            <div>
+                ${createTable(assumptions, 'A. Asumsi Umum & Finansial')}
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-6 border-t">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3 pb-2 border-b-2 border-gray-200">B. Model Bisnis Driving Range</h3>
+                    ${createOperationalTable(drivingRange.bays, 'Unit Operasional')}
+                    ${createTable(drivingRange.opexMonthly, 'Biaya Operasional Bulanan')}
+                </div>
+                 <div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3 pb-2 border-b-2 border-gray-200">C. Model Bisnis Padel</h3>
+                    ${createOperationalTable(padel.courts, 'Unit Operasional')}
+                    ${createTable(padel.opexMonthly, 'Biaya Operasional Bulanan')}
+                </div>
+            </div>
+        `;
+
+        return true;
+    });
+
+    // ====================================================================
     // BAGIAN XII: ANALISIS KEUANGAN & KELAYAKAN INVESTASI (VERSI BOTTOM UP)
     // ====================================================================
     tryToRender(function renderFinancialAnalysis() {
