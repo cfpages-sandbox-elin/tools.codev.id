@@ -679,41 +679,46 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ====================================================================
-    // BAGIAN XII: ANALISIS KEUANGAN & KELAYAKAN INVESTASI (BARU)
+    // BAGIAN XII: ANALISIS KEUANGAN & KELAYAKAN INVESTASI (VERSI BOTTOM UP)
     // ====================================================================
     tryToRender(function renderFinancialAnalysis() {
         const mainFinancialContainer = document.getElementById('financial-analysis-summary');
         if (!mainFinancialContainer) return false;
 
+        // Ambil semua elemen DOM
         const capexContainer = document.getElementById('capex-summary');
         const pnlContainer = document.getElementById('pnl-summary');
         const feasibilityContainer = document.getElementById('investment-feasibility');
         const sensitivityContainer = document.getElementById('sensitivity-analysis');
+        if (!capexContainer || !pnlContainer || !feasibilityContainer || !sensitivityContainer) return false;
 
-        if (!capexContainer || !pnlContainer || !feasibilityContainer || !sensitivityContainer) {
-            console.error("Satu atau lebih sub-container analisis keuangan tidak ditemukan.");
-            return false;
-        }
-        
-        // --- AMBIL DATA DARI PUSAT KONFIGURASI ---
+        // --- PANGGIL SEMUA HASIL PERHITUNGAN DARI PUSAT KONFIGURASI ---
         const investment = projectConfig.calculations.getTotalInvestment();
         const realisticPnl = projectConfig.calculations.calculatePnl();
         const feasibility = projectConfig.calculations.getFeasibilityMetrics();
-
-        // Helper untuk format Miliar/Juta
+        
+        // Helper
         const toBillion = (num) => (num / 1000000000).toFixed(2) + ' M';
-
+        
         // 1. Render CapEx
         capexContainer.innerHTML = `
             <h3 class="text-xl font-semibold mb-4 text-gray-700">1. Proyeksi Biaya Investasi (CapEx)</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                 <div class="bg-gray-50 p-4 rounded-lg border">
+                <div class="bg-gray-50 p-4 rounded-lg border">
                     <h4 class="font-semibold text-gray-800 text-center">Driving Range</h4>
-                    <p class="text-center text-3xl font-bold font-mono text-gray-700 mt-2">Rp ${formatNumber(investment.dr)}</p>
+                    <p class="text-center text-3xl font-bold font-mono text-gray-700 mt-2">Rp ${formatNumber(investment.dr.total)}</p>
+                    <ul class="text-xs mt-2 text-gray-600 space-y-1">
+                        <li><span class="font-medium">Konstruksi & Lahan:</span> Rp ${formatNumber(investment.dr.construction + investment.dr.land)}</li>
+                        <li><span class="font-medium">Bangunan & Alat:</span> Rp ${formatNumber(investment.dr.building + investment.dr.equipment)}</li>
+                    </ul>
                 </div>
-                 <div class="bg-gray-50 p-4 rounded-lg border">
+                <div class="bg-gray-50 p-4 rounded-lg border">
                     <h4 class="font-semibold text-gray-800 text-center">Padel</h4>
-                    <p class="text-center text-3xl font-bold font-mono text-gray-700 mt-2">Rp ${formatNumber(investment.padel)}</p>
+                    <p class="text-center text-3xl font-bold font-mono text-gray-700 mt-2">Rp ${formatNumber(investment.padel.total)}</p>
+                    <ul class="text-xs mt-2 text-gray-600 space-y-1">
+                        <li><span class="font-medium">Konstruksi & Lahan:</span> Rp ${formatNumber(investment.padel.construction + investment.padel.land)}</li>
+                        <li><span class="font-medium">Bangunan & Alat:</span> Rp ${formatNumber(investment.padel.building + investment.padel.equipment)}</li>
+                    </ul>
                 </div>
             </div>
             <div class="mt-4 pt-4 border-t text-right">
@@ -735,7 +740,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <tr class="font-semibold bg-gray-50"><td class="py-2 px-2">Laba Sblm Bunga, Pajak, Depresiasi (EBITDA)</td><td class="py-2 px-2 text-right font-mono">${formatNumber(realisticPnl.ebitda)}</td></tr>
                     <tr><td class="py-2">Beban Depresiasi</td><td class="py-2 text-right font-mono">(${formatNumber(realisticPnl.depreciation)})</td></tr>
                     <tr class="font-semibold"><td class="py-2">Laba Sebelum Pajak (EBT)</td><td class="py-2 text-right font-mono">${formatNumber(realisticPnl.ebt)}</td></tr>
-                    <tr><td class="py-2">Pajak Penghasilan (${projectConfig.assumptions.tax_rate * 100}%)</td><td class="py-2 text-right font-mono">(${formatNumber(realisticPnl.tax)})</td></tr>
+                    <tr><td class="py-2">Pajak Penghasilan (${projectConfig.assumptions.tax_rate_profit * 100}%)</td><td class="py-2 text-right font-mono">(${formatNumber(realisticPnl.tax)})</td></tr>
                     <tr class="font-bold text-lg bg-teal-50"><td class="py-3 px-2">Estimasi Laba Bersih</td><td class="py-3 px-2 text-right font-mono text-teal-700">${formatNumber(realisticPnl.netProfit)}</td></tr>
                 </tbody>
             </table>
@@ -744,12 +749,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // 3. Render Feasibility
         feasibilityContainer.innerHTML = `
             <h3 class="text-xl font-semibold mb-4 text-gray-700">3. Analisis Kelayakan Investasi</h3>
-             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                 <div class="p-4 bg-blue-50 rounded-lg"><h4 class="font-semibold text-sm text-blue-800">Payback Period</h4><p class="text-3xl font-bold font-mono text-blue-600 mt-1">${feasibility.paybackPeriod.toFixed(2)}</p><p class="text-xs text-gray-500">Tahun</p></div>
-                <div class="p-4 bg-green-50 rounded-lg"><h4 class="font-semibold text-sm text-green-800">Net Present Value (NPV)</h4><p class="text-3xl font-bold font-mono text-green-600 mt-1">Rp ${toBillion(feasibility.npv)}</p><p class="text-xs text-gray-500">dengan discount rate ${projectConfig.assumptions.discount_rate * 100}%</p></div>
+                <div class="p-4 bg-green-50 rounded-lg"><h4 class="font-semibold text-sm text-green-800">Net Present Value (NPV)</h4><p class="text-3xl font-bold font-mono text-green-600 mt-1">Rp ${toBillion(feasibility.npv)}</p><p class="text-xs text-gray-500">dengan discount rate ${projectConfig.assumptions.discount_rate_wacc * 100}%</p></div>
                 <div class="p-4 bg-purple-50 rounded-lg"><h4 class="font-semibold text-sm text-purple-800">Internal Rate of Return (IRR)</h4><p class="text-3xl font-bold font-mono text-purple-600 mt-1">${(feasibility.irr * 100).toFixed(2)}%</p><p class="text-xs text-gray-500">lebih tinggi dari biaya modal</p></div>
-             </div>
-             <p class="mt-4 text-sm text-gray-600"><strong>Kesimpulan Kelayakan:</strong> Dengan metrik NPV yang positif dan IRR yang secara signifikan lebih tinggi dari tingkat diskonto (biaya modal), proyek ini menunjukkan kelayakan finansial yang kuat dan berpotensi memberikan pengembalian investasi yang menarik.</p>
+            </div>
+            <p class="mt-4 text-sm text-gray-600"><strong>Kesimpulan Kelayakan:</strong> Dengan metrik NPV yang positif dan IRR yang secara signifikan lebih tinggi dari tingkat diskonto (biaya modal), proyek ini menunjukkan kelayakan finansial yang kuat dan berpotensi memberikan pengembalian investasi yang menarik.</p>
         `;
 
         // 4. Render Sensitivity Analysis
@@ -765,9 +770,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <thead class="text-xs text-gray-700 uppercase bg-gray-100">
                     <tr>
                         <th class="px-4 py-3 text-left">Metrik</th>
-                        <th class="px-4 py-3 text-center">Pesimis<br><span class="font-normal capitalize">(Okupansi -15%, Biaya +10%)</span></th>
+                        <th class="px-4 py-3 text-center">Pesimis<br><span class="font-normal capitalize">(Okupansi Turun, Biaya Naik)</span></th>
                         <th class="px-4 py-3 text-center">Realisitis<br><span class="font-normal capitalize">(Sesuai Proyeksi)</span></th>
-                        <th class="px-4 py-3 text-center">Optimis<br><span class="font-normal capitalize">(Okupansi +15%)</span></th>
+                        <th class="px-4 py-3 text-center">Optimis<br><span class="font-normal capitalize">(Okupansi Naik)</span></th>
                     </tr>
                 </thead>
                 <tbody class="text-center">
@@ -783,7 +788,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </tr>
                 </tbody>
             </table>
-            <p class="mt-4 text-sm text-gray-600"><strong>Kesimpulan Sensitivitas:</strong> Proyek ini menunjukkan ketahanan yang baik. Bahkan dalam skenario pesimis, proyek masih mampu menghasilkan laba dan mencapai payback period dalam jangka waktu yang dapat diterima, meskipun lebih lama. Ini mengurangi risiko investasi secara keseluruhan.</p>
+            <p class="mt-4 text-sm text-gray-600"><strong>Kesimpulan Sensitivitas:</strong> Proyek ini menunjukkan ketahanan yang baik. Bahkan dalam skenario pesimis, proyek masih mampu menghasilkan laba dan mencapai payback period dalam jangka waktu yang dapat diterima. Ini mengurangi risiko investasi secara keseluruhan.</p>
         `;
 
         return true;
