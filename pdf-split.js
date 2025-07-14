@@ -245,6 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 line.addEventListener('click', toggleConfirmation);
                 pageSection.appendChild(line);
             }
+            pageSection.appendChild(line);
         }
     }
 
