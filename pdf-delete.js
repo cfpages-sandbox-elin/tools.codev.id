@@ -37,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Reset UI
         deletePreviewContainer.innerHTML = '';
         deleteResults.innerHTML = '';
+        document.getElementById('delete-download-link')?.remove();
         deleteActionBar.classList.add('hidden');
         pagesToDelete.clear();
         totalPages = 0;
@@ -124,6 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         showDeleteStatus('loading', 'Creating new PDF...');
         deleteButton.disabled = true;
+        document.getElementById('delete-download-link')?.remove();
         deleteResults.innerHTML = '';
 
         try {
@@ -148,11 +150,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const downloadName = `${originalFileName}-deleted.pdf`;
 
             const link = document.createElement('a');
+            link.id = 'delete-download-link';
             link.href = url;
             link.download = downloadName;
-            link.className = 'inline-block px-8 py-3 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 transition-colors';
-            link.textContent = `Download ${downloadName}`;
-            deleteResults.appendChild(link);
+            link.className = 'inline-block px-8 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700';
+            link.textContent = 'Download New PDF';
+            
+            // Append the new link to the action bar
+            deleteActionBar.appendChild(link);
             
             showDeleteStatus('success', `New PDF created with ${indicesToKeep.length} pages.`);
 
