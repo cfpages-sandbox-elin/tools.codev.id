@@ -209,7 +209,23 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // --- A. Income Analysis ---
         const incomeTableBody = document.getElementById('incomeTableBody');
-        if(incomeTableBody) { /* ... render table logic ... */ } // Logika tabel pendapatan bisa dimasukkan jika diperlukan
+        if (incomeTableBody) {
+            incomeTableBody.innerHTML = ''; // Kosongkan dulu
+            estimatedIncomeData.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = 'bg-white border-b hover:bg-gray-50';
+                tr.innerHTML = `
+                    <td class="px-4 py-3 font-medium">${row.kecamatan}</td>
+                    <td class="px-4 py-3">${row.kelurahan}</td>
+                    <td class="px-2 py-3 text-center">${row.ring}</td>
+                    <td class="px-4 py-3 text-center bg-red-50">${formatNumber(row.incomeDependent)}</td>
+                    <td class="px-4 py-3 text-center bg-yellow-50">${formatNumber(row.incomeLow)}</td>
+                    <td class="px-4 py-3 text-center bg-green-50">${formatNumber(row.incomeMiddle)}</td>
+                    <td class="px-4 py-3 text-center bg-blue-50">${formatNumber(row.incomeHigh)}</td>
+                `;
+                incomeTableBody.appendChild(tr);
+            });
+        }
 
         const totalsByIncomeKecamatan = estimatedIncomeData.reduce((acc, row) => {
             const { kecamatan, incomeLow, incomeMiddle, incomeHigh } = row;
@@ -224,7 +240,43 @@ document.addEventListener('DOMContentLoaded', () => {
         if (document.getElementById('incomeDistributionByKecamatanChart')) new Chart(document.getElementById('incomeDistributionByKecamatanChart'), { type: 'bar', data: { labels: kecamatanNames, datasets: [{ label: 'Low Income', data: kecamatanNames.map(k => totalsByIncomeKecamatan[k].low), backgroundColor: 'rgba(251, 191, 36, 0.7)' }, { label: 'Middle Income', data: kecamatanNames.map(k => totalsByIncomeKecamatan[k].middle), backgroundColor: 'rgba(52, 211, 153, 0.7)' }, { label: 'High Income', data: kecamatanNames.map(k => totalsByIncomeKecamatan[k].high), backgroundColor: 'rgba(96, 165, 250, 0.7)' }] }, options: { responsive: true, scales: { y: { ticks: { callback: (v) => formatNumber(v) } } }, plugins: { tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${formatNumber(c.raw)}` } } } } });
         
         const incomeDonutsContainer = document.getElementById('kecamatanIncomeDonutsContainer');
-        if(incomeDonutsContainer) { /* ... render donuts logic ... */ } // Logika donat pendapatan bisa dimasukkan jika diperlukan
+        if (incomeDonutsContainer) {
+            incomeDonutsContainer.innerHTML = ''; // Kosongkan dulu
+            const incomeColors = ['rgba(251, 191, 36, 0.8)', 'rgba(52, 211, 153, 0.8)', 'rgba(96, 165, 250, 0.8)'];
+
+            kecamatanNames.forEach(kecamatan => {
+                const data = totalsByIncomeKecamatan[kecamatan];
+                const total = data.low + data.middle + data.high;
+                if (total === 0) return; // Lewati jika tidak ada data
+
+                const chartWrapper = document.createElement('div');
+                chartWrapper.className = 'text-center';
+                chartWrapper.innerHTML = `
+                    <h4 class="text-md font-semibold text-gray-700 mb-2">${kecamatan}</h4>
+                    <canvas></canvas>
+                `;
+                incomeDonutsContainer.appendChild(chartWrapper);
+                
+                new Chart(chartWrapper.querySelector('canvas'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Low Income', 'Middle Income', 'High Income'],
+                        datasets: [{
+                            data: [data.low, data.middle, data.high],
+                            backgroundColor: incomeColors,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } },
+                            tooltip: { callbacks: { label: (c) => `${c.label}: ${((c.raw / total) * 100).toFixed(1)}%` } }
+                        }
+                    }
+                });
+            });
+        }
 
         // --- B. Market Potential Analysis ---
         const targetMarketData = estimatedIncomeData.reduce((acc, row) => {
