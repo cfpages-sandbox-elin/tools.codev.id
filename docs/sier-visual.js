@@ -54,6 +54,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 tableBody.appendChild(tr);
             });
         }
+
+        const ringChartCanvas = document.getElementById('ringChart');
+        if (ringChartCanvas) {
+            new Chart(ringChartCanvas, { type: 'doughnut', data: { labels: ['Ring 1', 'Ring 2'], datasets: [{ data: [totalRing1, totalRing2], backgroundColor: ['#10B981', '#F59E0B'] }] }, options: { responsive: true, plugins: { tooltip: { callbacks: { label: (c) => `${c.label}: ${formatNumber(c.raw)}` } } } } });
+        }
+
+        const ageDistributionChartCanvas = document.getElementById('ageDistributionChart');
+        if (ageDistributionChartCanvas) {
+            new Chart(ageDistributionChartCanvas, { type: 'bar', data: { labels: Object.keys(totalsByAge), datasets: [{ label: 'Total Penduduk', data: Object.values(totalsByAge), backgroundColor: 'rgba(59, 130, 246, 0.7)' }] }, options: { responsive: true, scales: { y: { ticks: { callback: (v) => formatNumber(v) } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${formatNumber(c.raw)}` } } } } });
+        }
         return true;
     });
 
