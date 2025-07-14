@@ -85,7 +85,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function renderPreview() {
         if (!uploadedFile) return;
-        showStatus('loading', 'Loading and rendering PDF preview...');
+        
+        // 1. Show the initial progress bar UI
+        showStatus('progress', 'Preparing preview...');
         
         try {
             originalPdfArrayBuffer = await uploadedFile.arrayBuffer();
@@ -109,8 +111,30 @@ document.addEventListener('DOMContentLoaded', () => {
             pdfCanvas.height = scaledViewport.height;
             pdfCanvasCtx = pdfCanvas.getContext('2d');
             
-            await page.render({ canvasContext: pdfCanvasCtx, viewport: scaledViewport }).promise;
+            // 2. Set up the render task with a progress callback
+            const renderContext = {
+                canvasContext: pdfCanvasCtx,
+                viewport: scaledViewport
+            };
+            const renderTask = page.render(renderContext);
+            
+            renderTask.onProgress = (progressData) => {
+                const percent = Math.round((progressData.current / progressData.total) * 100);
+                const progressBar = document.getElementById('progress-bar');
+                const progressText = document.getElementById('progress-text');
 
+                if (progressBar) {
+                    progressBar.style.width = `${percent}%`;
+                }
+                if (progressText) {
+                    progressText.textContent = `Rendering preview... ${percent}%`;
+                }
+            };
+
+            // 3. Wait for the rendering to complete
+            await renderTask.promise;
+
+            // 4. Continue with the rest of the logic after rendering is done
             calculateInitialCutLines();
             renderPages();
             
@@ -119,10 +143,12 @@ document.addEventListener('DOMContentLoaded', () => {
             generateButton.classList.remove('hidden');
             addCutLineButton.classList.remove('hidden');
             downloadLink.classList.add('hidden');
+            
+            // 5. Finally, show the success message, which replaces the progress bar
             showStatus('success', `Preview generated. ${cutLines.length + 1} pages will be created.`);
+
         } catch (err) {
             showStatus('error', `Error rendering preview: ${err.message}`);
-        } finally {
         }
     }
 
@@ -372,9 +398,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showStatus(type, message) {
-        let color = type === 'error' ? 'text-red-600' : (type === 'success' ? 'text-green-600' : 'text-slate-600');
-        const icon = type === 'loading' ? '<div class="spinner mx-auto"></div>' : '';
-        statusDiv.innerHTML = `<div class="flex items-center justify-center space-x-2 ${color}">${icon}<p>${message}</p></div>`;
+        if (type === 'progress') {
+            // This block creates the HTML for the progress bar
+            statusDiv.innerHTML = `
+                <div>
+                    <p id="progress-text" class="text-sm text-center text-slate-600 mb-1">${message}</p>
+                    <div class="w-full bg-slate-200 rounded-full h-2.5">
+                        <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-300 ease-in-out" style="width: 0%"></div>
+                    </div>
+                </div>`;
+        } else {
+            // This is the original logic for simple success/error/info messages
+            let color = type === 'error' ? 'text-red-600' : (type === 'success' ? 'text-green-600' : 'text-slate-600');
+            const icon = type === 'loading' ? '<div class="spinner mx-auto"></div>' : '';
+            statusDiv.innerHTML = `<div class="flex items-center justify-center space-x-2 ${color}">${icon}<p>${message}</p></div>`;
+        }
     }
 
     function getLineConstraints(lineIndex) {
