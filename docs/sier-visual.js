@@ -407,137 +407,134 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- MARKET POTENTIAL ANALYSIS ---
     (function renderMarketPotentialAnalysis() {
-        // Asumsi: Fungsi calculateIncomeDistribution sudah ada dan dapat diakses
-        // atau kita definisikan ulang di sini untuk cakupan lokal.
-        // Untuk amannya, kita definisikan ulang fungsi kalkulasi di sini.
-        function calculateIncomeDistribution(data) {
-             return data.map(row => {
-                const productivePopulation = row.usia25_39 + row.usia40_54;
-                const preRetirementPopulation = row.usia55_64;
-                
-                let highIncome, middleIncome;
+        // Fungsi ini menghitung estimasi pendapatan dan mengagregasi data pasar.
+        // Pastikan data `demographyData` sudah tersedia.
 
-                if (row.ring === 1) {
-                    highIncome = Math.round(productivePopulation * 0.35) + Math.round(preRetirementPopulation * 0.20);
-                    middleIncome = Math.round(productivePopulation * 0.65) + Math.round(preRetirementPopulation * 0.80);
-                } else { // Ring 2
-                    highIncome = Math.round(productivePopulation * 0.15) + Math.round(preRetirementPopulation * 0.05);
-                    middleIncome = Math.round(productivePopulation * 0.85) + Math.round(preRetirementPopulation * 0.95);
-                }
-                return { ...row, incomeMiddle: middleIncome, incomeHigh: highIncome };
-            });
-        }
-        
-        const estimatedIncomeData = calculateIncomeDistribution(demographyData);
+        // 1. Kalkulasi Data Pasar Potensial
+        const estimatedIncomeData = demographyData.map(row => {
+            // Model estimasi pendapatan disederhanakan di sini,
+            // fokus pada populasi produktif inti untuk target pasar.
+            const productivePopulation = row.usia25_39 + row.usia40_54;
+            const preRetirementPopulation = row.usia55_64;
 
-        // 1. Agregasi data untuk Analisis Pasar
+            let highIncome, middleIncome;
+
+            // Asumsi berdasarkan Ring (proksi sosio-ekonomi)
+            if (row.ring === 1) { // Kawasan lebih mapan
+                highIncome = Math.round(productivePopulation * 0.35) + Math.round(preRetirementPopulation * 0.20);
+                middleIncome = Math.round(productivePopulation * 0.65) + Math.round(preRetirementPopulation * 0.80);
+            } else { // Kawasan berkembang/industri
+                highIncome = Math.round(productivePopulation * 0.15) + Math.round(preRetirementPopulation * 0.05);
+                middleIncome = Math.round(productivePopulation * 0.85) + Math.round(preRetirementPopulation * 0.95);
+            }
+            return { ...row, incomeMiddle: middleIncome, incomeHigh: highIncome };
+        });
+
         const targetMarketData = estimatedIncomeData.reduce((acc, row) => {
-            const { kecamatan } = row;
+            const { kecamatan, incomeMiddle, incomeHigh, usia25_39, usia40_54 } = row;
             if (!acc[kecamatan]) {
                 acc[kecamatan] = {
                     middleIncome: 0,
                     highIncome: 0,
                     age25_39: 0,
-                    age40_54: 0,
-                    age55_64: 0,
+                    age40_54: 0
                 };
             }
-            acc[kecamatan].middleIncome += row.incomeMiddle;
-            acc[kecamatan].highIncome += row.incomeHigh;
-            // Populasi yang menjadi basis perhitungan Middle & High Income
-            acc[kecamatan].age25_39 += row.usia25_39;
-            acc[kecamatan].age40_54 += row.usia40_54;
-            acc[kecamatan].age55_64 += row.usia55_64;
+            acc[kecamatan].middleIncome += incomeMiddle;
+            acc[kecamatan].highIncome += highIncome;
+            acc[kecamatan].age25_39 += usia25_39;
+            acc[kecamatan].age40_54 += usia40_54;
             return acc;
         }, {});
 
         const marketKecamatanNames = Object.keys(targetMarketData);
 
-        // 2. Render Chart: Ukuran Pasar per Kecamatan (Stacked Bar)
-        new Chart(document.getElementById('marketPotentialByKecamatanChart'), {
-            type: 'bar',
-            data: {
-                labels: marketKecamatanNames,
-                datasets: [
-                    {
+        // 2. Render Chart: Ukuran Pasar Potensial per Kecamatan (Stacked Bar)
+        const marketPotentialCtx = document.getElementById('marketPotentialByKecamatanChart');
+        if (marketPotentialCtx) {
+            new Chart(marketPotentialCtx, {
+                type: 'bar',
+                data: {
+                    labels: marketKecamatanNames,
+                    datasets: [{
                         label: 'Middle Income',
                         data: marketKecamatanNames.map(name => targetMarketData[name].middleIncome),
                         backgroundColor: 'rgba(52, 211, 153, 0.8)', // emerald-400
                         stack: 'market'
-                    },
-                    {
+                    }, {
                         label: 'High Income',
                         data: marketKecamatanNames.map(name => targetMarketData[name].highIncome),
                         backgroundColor: 'rgba(96, 165, 250, 0.8)', // blue-400
                         stack: 'market'
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    x: { stacked: true },
-                    y: { stacked: true, beginAtZero: true, ticks: { callback: (value) => formatNumber(value) } }
+                    }]
                 },
-                plugins: {
-                    legend: { position: 'top' },
-                    tooltip: {
-                        callbacks: { label: (context) => `${context.dataset.label}: ${formatNumber(context.raw)}` }
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { stacked: true },
+                        y: { stacked: true, beginAtZero: true, ticks: { callback: (value) => formatNumber(value) } }
+                    },
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: { callbacks: { label: (context) => `${context.dataset.label}: ${formatNumber(context.raw)}` } }
                     }
                 }
-            }
-        });
+            });
+        }
 
         // 3. Render Chart: Profil Usia Pasar Target (Doughnut)
         const totalAge25_39 = Object.values(targetMarketData).reduce((sum, item) => sum + item.age25_39, 0);
         const totalAge40_54 = Object.values(targetMarketData).reduce((sum, item) => sum + item.age40_54, 0);
-        const totalAge55_64 = Object.values(targetMarketData).reduce((sum, item) => sum + item.age55_64, 0);
-        const totalTargetMarket = totalAge25_39 + totalAge40_54 + totalAge55_64;
+        const totalTargetMarket = totalAge25_39 + totalAge40_54;
 
-        new Chart(document.getElementById('targetMarketAgeProfileChart'), {
-            type: 'doughnut',
-            data: {
-                labels: ['25-39 Thn (Produktif Muda)', '40-54 Thn (Produktif Matang)', '55-64 Thn (Pra-Pensiun)'],
-                datasets: [{
-                    data: [totalAge25_39, totalAge40_54, totalAge55_64],
-                    backgroundColor: ['#2dd4bf', '#60a5fa', '#a78bfa'], // teal, blue, violet
-                    hoverOffset: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { position: 'top' },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const label = context.label || '';
-                                const value = context.raw;
-                                const percentage = ((value / totalTargetMarket) * 100).toFixed(1);
-                                return `${label}: ${formatNumber(value)} (${percentage}%)`;
+        const targetMarketAgeCtx = document.getElementById('targetMarketAgeProfileChart');
+        if (targetMarketAgeCtx) {
+            new Chart(targetMarketAgeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['25-39 Thn (Produktif Muda)', '40-54 Thn (Produktif Matang)'],
+                    datasets: [{
+                        data: [totalAge25_39, totalAge40_54],
+                        backgroundColor: ['#2dd4bf', '#60a5fa'], // teal, blue
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    const percentage = ((value / totalTargetMarket) * 100).toFixed(1);
+                                    return `${context.label}: ${formatNumber(value)} (${percentage}%)`;
+                                }
                             }
                         }
                     }
                 }
-            }
-        });
-        
+            });
+        }
+
         // 4. Render Tabel Ringkasan Pasar
         const summaryTableBody = document.getElementById('marketSummaryTableBody');
-        summaryTableBody.innerHTML = '';
-        marketKecamatanNames.forEach(kecamatan => {
-            const data = targetMarketData[kecamatan];
-            const totalPotential = data.middleIncome + data.highIncome;
-            const tr = document.createElement('tr');
-            tr.className = 'bg-white border-b hover:bg-gray-50';
-            tr.innerHTML = `
-                <td class="px-4 py-4 font-medium text-gray-900">${kecamatan}</td>
-                <td class="px-4 py-4 text-center font-bold">${formatNumber(totalPotential)}</td>
-                <td class="px-4 py-4 text-center">${formatNumber(data.age25_39)}</td>
-                <td class="px-4 py-4 text-center">${formatNumber(data.age40_54)}</td>
-            `;
-            summaryTableBody.appendChild(tr);
-        });
+        if (summaryTableBody) {
+            summaryTableBody.innerHTML = '';
+            marketKecamatanNames.forEach(kecamatan => {
+                const data = targetMarketData[kecamatan];
+                const totalPotential = data.middleIncome + data.highIncome;
+                const tr = document.createElement('tr');
+                tr.className = 'bg-white border-b hover:bg-gray-50';
+                tr.innerHTML = `
+                    <td class="px-4 py-4 font-medium text-gray-900">${kecamatan}</td>
+                    <td class="px-4 py-4 text-center font-bold">${formatNumber(totalPotential)}</td>
+                    <td class="px-4 py-4 text-center">${formatNumber(data.age25_39)}</td>
+                    <td class="px-4 py-4 text-center">${formatNumber(data.age40_54)}</td>
+                `;
+                summaryTableBody.appendChild(tr);
+            });
+        }
     })();
 
     // --- SURVEY ANALYSIS (N=86 Raw Data) ---
