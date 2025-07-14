@@ -86,7 +86,6 @@ document.addEventListener('DOMContentLoaded', () => {
     async function renderPreview() {
         if (!uploadedFile) return;
         
-        // 1. Show the initial progress bar UI
         showStatus('progress', 'Preparing preview...');
         
         try {
@@ -111,7 +110,6 @@ document.addEventListener('DOMContentLoaded', () => {
             pdfCanvas.height = scaledViewport.height;
             pdfCanvasCtx = pdfCanvas.getContext('2d');
             
-            // 2. Set up the render task with a progress callback
             const renderContext = {
                 canvasContext: pdfCanvasCtx,
                 viewport: scaledViewport
@@ -131,10 +129,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             };
 
-            // 3. Wait for the rendering to complete
             await renderTask.promise;
 
-            // 4. Continue with the rest of the logic after rendering is done
             calculateInitialCutLines();
             renderPages();
             
@@ -144,7 +140,6 @@ document.addEventListener('DOMContentLoaded', () => {
             addCutLineButton.classList.remove('hidden');
             downloadLink.classList.add('hidden');
             
-            // 5. Finally, show the success message, which replaces the progress bar
             showStatus('success', `Preview generated. ${cutLines.length + 1} pages will be created.`);
 
         } catch (err) {
