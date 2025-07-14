@@ -821,6 +821,139 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('sampleSizeRing2_3').innerText = formatNumber(slovin(totalRing2, marginOfError3));
     })();
 
+    // --- SURVEY DEEP DIVE ANALYSIS ---
+    (function renderSurveyDeepDive() {
+        const headers = ["Nama", "Perusahaan", "Posisi", "Domisili", "Kelompok Usia", "Status Pekerjaan", "Pengalaman Olahraga", "Minat Driving Range", "Frekuensi Driving Range", "Waktu Ideal Driving Range", "Biaya Wajar Driving Range", "Fitur Penting Driving Range", "Familiar PADEL", "Minat PADEL", "Frekuensi PADEL", "Waktu Ideal PADEL", "Biaya Sewa PADEL", "Fitur Penting PADEL", "Pilihan Fasilitas", "Pemanfaatan Fasilitas", "Pendorong Rutin", "Saran Lain"];
+        
+        // Pastikan surveyRawData tersedia dari scope global
+        if (typeof surveyRawData === 'undefined') return;
+
+        const parsedSurveyData = surveyRawData.trim().split('\n').map(row => {
+            const values = row.split('\t');
+            let obj = {};
+            headers.forEach((header, i) => { obj[header] = (values[i] || '').trim(); });
+            return obj;
+        });
+
+        // 1. Analisis Pilihan Fasilitas vs Usia (Stacked Bar Chart)
+        const ageGroups = ['Di bawah 25 tahun', '25 - 35 tahun', '36 - 45 tahun', '46 - 55 tahun'];
+        const facilityChoices = ['Driving Range Golf', 'Lapangan PADEL', 'Keduanya sama menariknya bagi saya'];
+        
+        let choiceVsAgeData = {};
+        facilityChoices.forEach(choice => {
+            choiceVsAgeData[choice] = {};
+            ageGroups.forEach(age => choiceVsAgeData[choice][age] = 0);
+        });
+
+        parsedSurveyData.forEach(row => {
+            const choice = row['Pilihan Fasilitas'];
+            const age = row['Kelompok Usia'];
+            if (facilityChoices.includes(choice) && ageGroups.includes(age)) {
+                choiceVsAgeData[choice][age]++;
+            }
+        });
+        
+        const choiceVsAgeDatasets = ageGroups.map((age, index) => ({
+            label: age,
+            data: facilityChoices.map(choice => choiceVsAgeData[choice][age]),
+            backgroundColor: ['#4ade80', '#818cf8', '#fb923c', '#60a5fa'][index]
+        }));
+
+        const choiceVsAgeCtx = document.getElementById('choiceVsAgeChart');
+        if (choiceVsAgeCtx) {
+            new Chart(choiceVsAgeCtx, {
+                type: 'bar',
+                data: { labels: facilityChoices, datasets: choiceVsAgeDatasets },
+                options: {
+                    responsive: true,
+                    scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } },
+                    plugins: { legend: { position: 'top' }, tooltip: { mode: 'index' } }
+                }
+            });
+        }
+        
+        // 2. Analisis Korelasi Minat (Bubble Chart)
+        const interestMap = { 'Sangat Tertarik': 5, 'Tertarik': 4, 'Cukup Tertarik': 3, 'Kurang Tertarik': 2, 'Tidak Tertarik Sama Sekali': 1 };
+        
+        let interestCorrelation = {};
+        parsedSurveyData.forEach(row => {
+            const golfInterest = interestMap[row['Minat Driving Range']] || 0;
+            const padelInterest = interestMap[row['Minat PADEL']] || 0;
+            if(golfInterest > 0 && padelInterest > 0) {
+                const key = `${golfInterest},${padelInterest}`;
+                interestCorrelation[key] = (interestCorrelation[key] || 0) + 1;
+            }
+        });
+
+        const bubbleData = Object.keys(interestCorrelation).map(key => {
+            const [golf, padel] = key.split(',');
+            const count = interestCorrelation[key];
+            return { x: parseInt(golf), y: parseInt(padel), r: count * 3 }; // Multiply by 3 to make bubbles visible
+        });
+
+        const interestCorrelationCtx = document.getElementById('interestCorrelationChart');
+        if(interestCorrelationCtx) {
+            new Chart(interestCorrelationCtx, {
+                type: 'bubble',
+                data: { datasets: [{ label: 'Jumlah Responden', data: bubbleData, backgroundColor: 'rgba(96, 165, 250, 0.7)' }] },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { title: { display: true, text: 'Minat Driving Range (1=Rendah, 5=Tinggi)' }, min: 0, max: 6, ticks: { stepSize: 1 } },
+                        y: { title: { display: true, text: 'Minat Padel (1=Rendah, 5=Tinggi)' }, min: 0, max: 6, ticks: { stepSize: 1 } }
+                    },
+                    plugins: { tooltip: { callbacks: { label: (ctx) => `${ctx.raw.r / 3} responden` } } }
+                }
+            });
+        }
+
+        // 3. Analisis Tematik Kualitatif
+        const themes = {
+            'Saran Fasilitas Tambahan (Non-Olahraga)': { keywords: ['f&b', 'kafe', 'restoran', 'ice bath', 'gym', 'musola', 'parkir', 'ps', 'lounge'], items: [] },
+            'Permintaan Fasilitas Olahraga Lain': { keywords: ['tennis', 'futsal'], items: [] },
+            'Saran Kualitas & Operasional': { keywords: ['kualitas', 'bersih', 'booking', 'jam', '24 jam', 'silau', 'dead spot', 'ventilasi', 'sirkulasi', 'karyawan', 'pelayanan'], items: [] },
+            'Saran Harga & Promosi': { keywords: ['harga', 'terjangkau', 'paket', 'promo', 'membership', 'diskon'], items: [] },
+            'Pujian & Dorongan': { keywords: ['semoga', 'segera', 'bagus', 'keren'], items: [] }
+        };
+
+        parsedSurveyData.forEach(row => {
+            let feedback = row['Saran Lain'].toLowerCase();
+            if (feedback && feedback.length > 3 && !['tidak ada', 'cukup'].includes(feedback)) {
+                let categorized = false;
+                for (const themeName in themes) {
+                    for (const keyword of themes[themeName].keywords) {
+                        if (feedback.includes(keyword)) {
+                            themes[themeName].items.push(row['Saran Lain']);
+                            categorized = true;
+                            break; 
+                        }
+                    }
+                    if (categorized) break;
+                }
+            }
+        });
+        
+        const feedbackContainer = document.getElementById('themedFeedbackContainer');
+        if (feedbackContainer) {
+            feedbackContainer.innerHTML = '';
+            for (const themeName in themes) {
+                if(themes[themeName].items.length > 0) {
+                    let listItems = '';
+                    themes[themeName].items.forEach(item => {
+                        listItems += `<li class="text-gray-600 pb-2 border-b border-gray-100">${item}</li>`;
+                    });
+
+                    feedbackContainer.innerHTML += `
+                        <div class="pt-4 border-t">
+                            <h4 class="font-semibold text-lg text-teal-700">${themeName} (${themes[themeName].items.length} masukan)</h4>
+                            <ul class="list-disc pl-5 mt-2 space-y-2 text-sm">${listItems}</ul>
+                        </div>
+                    `;
+                }
+            }
+        }
+    })();
+
 
 
 });
