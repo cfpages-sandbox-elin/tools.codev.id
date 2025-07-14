@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let splitViewMode = false;
     let pdfCanvas = null;
     let pdfCanvasCtx = null;
+    let isDragging = false;
     
     const fileInput = document.getElementById('file-upload');
     const fileNameDisplay = document.getElementById('file-name');
@@ -142,16 +143,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function calculateInitialCutLines() {
-        // The margin value is now only used for the visual guide and final PDF creation.
-        // It does NOT affect the calculation of the cut lines themselves.
-        const marginPoints = getMarginValue();
-        marginPixels = marginPoints * originalPageSize.scale; // We still use 'marginPixels' for the visual guide class name.
-
-        // Calculate the slice height based purely on the target paper's aspect ratio.
-        // This ensures the content slice maintains the shape of the target page.
-        const targetRatio = paperDimensions[paperSizeSelect.value].height / paperDimensions[paperSizeSelect.value].width;
+        // Don't recalculate if we're dragging
+        if (isDragging) return;
         
-        // This is the maximum height of a slice in pixels on our preview canvas.
+        const marginPoints = getMarginValue();
+        marginPixels = marginPoints * originalPageSize.scale;
+
+        const targetRatio = paperDimensions[paperSizeSelect.value].height / paperDimensions[paperSizeSelect.value].width;
         maxSliceHeightPixels = (originalPageSize.width * targetRatio) * originalPageSize.scale;
 
         if (maxSliceHeightPixels <= 0) {
@@ -160,13 +158,15 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        cutLines = [];
-        let currentY = maxSliceHeightPixels;
-        
-        // Add cut lines down the page.
-        while (currentY < pdfCanvas.height - 10) { // -10 to avoid a tiny sliver at the end
-            cutLines.push({ position: Math.round(currentY), confirmed: false });
-            currentY += maxSliceHeightPixels;
+        // Only recalculate positions if there are no lines yet
+        if (cutLines.length === 0) {
+            cutLines = [];
+            let currentY = maxSliceHeightPixels;
+            
+            while (currentY < pdfCanvas.height - 10) {
+                cutLines.push({ position: Math.round(currentY), confirmed: false });
+                currentY += maxSliceHeightPixels;
+            }
         }
     }
 
@@ -328,6 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.stopPropagation();
         
         const index = parseInt(line.dataset.index);
+        isDragging = true; // Set flag
         activeDrag = {
             index,
             startY: e.clientY,
@@ -348,14 +349,7 @@ document.addEventListener('DOMContentLoaded', () => {
         newPosition = Math.max(constraints.minPosition, Math.min(constraints.maxPosition, newPosition));
         
         cutLines[activeDrag.index].position = Math.round(newPosition);
-        
-        // Instead of renderPages(), just update the line position visually
-        const line = document.querySelector(`[data-index="${activeDrag.index}"]`);
-        if (line) {
-            const pageSection = line.parentElement;
-            const pageHeight = pageSection.offsetHeight;
-            line.style.top = `${pageHeight - 2.5}px`;
-        }
+        renderPages(); // Keep the original renderPages call
     }
 
     function repositionFollowingLines(startIndex) {
@@ -381,6 +375,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function endDrag() {
         previewContainer.classList.remove('dragging');
+        isDragging = false; // Clear flag
         
         if (activeDrag) {
             // Reposition any following unconfirmed lines
