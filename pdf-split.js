@@ -23,7 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const paperSizeSelect = document.getElementById('paper-size');
     const marginSelect = document.getElementById('margin-select');
     const customMarginInput = document.getElementById('custom-margin-input');
-    const previewButton = document.getElementById('preview-button');
     const splitViewToggle = document.getElementById('split-view-toggle');
     const generateButton = document.getElementById('generate-button');
     const statusDiv = document.getElementById('status');
@@ -42,7 +41,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     fileInput.addEventListener('change', handleFileSelect);
-    previewButton.addEventListener('click', renderPreview);
     splitViewToggle.addEventListener('click', toggleSplitView);
     generateButton.addEventListener('click', createFinalPdf);
     marginSelect.addEventListener('change', () => {
@@ -64,11 +62,14 @@ document.addEventListener('DOMContentLoaded', () => {
         return marginSelect.value === 'custom' ? (parseFloat(customMarginInput.value) || 0) : parseFloat(marginSelect.value);
     }
 
-    function handleFileSelect(e) {
+    async function handleFileSelect(e) {
         uploadedFile = e.target.files[0];
         if (uploadedFile) {
             fileNameDisplay.textContent = uploadedFile.name;
-            previewButton.disabled = false;
+            
+            // --- Start of changes ---
+            // Disable all buttons and clean up the UI
+            previewButton.disabled = true; // We will hide this button later
             previewSection.classList.add('hidden');
             splitViewToggle.classList.add('hidden');
             generateButton.classList.add('hidden');
@@ -76,6 +77,10 @@ document.addEventListener('DOMContentLoaded', () => {
             addCutLineButton.classList.add('hidden');
             statusDiv.innerHTML = '';
             cutLines = [];
+            
+            // Automatically start the preview generation
+            await renderPreview();
+            // --- End of changes ---
         }
     }
 
