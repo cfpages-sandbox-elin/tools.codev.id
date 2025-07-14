@@ -7,15 +7,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (num === null || num === undefined) return '0';
         return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
     }
+    const toBillion = (num) => (num / 1000000000).toFixed(2) + ' M';
     const slovin = (N, e) => Math.ceil(N / (1 + N * e * e));
     function tryToRender(fn) {
-        try {
-            if (fn()) { // Jika fungsi mengembalikan nilai truthy, anggap berhasil
-                // console.log(fn.name + " berhasil dirender.");
-            }
-        } catch (error) {
-            console.error("Error saat merender bagian:", error.name, error.message);
-        }
+        try { fn(); } catch (error) { console.error("Error saat merender bagian:", error.name, error.message, error.stack); }
     }
 
     // ====================================================================
@@ -683,69 +678,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // ====================================================================
     tryToRender(function renderDrivingRangeFinance() {
         const container = document.getElementById('driving-range-financial-analysis');
-        if (!container) return false;
-
+        if (!container) return;
         const pnl = projectConfig.calculations.calculatePnlForUnit('drivingRange');
         const feasibility = projectConfig.calculations.getFeasibilityForUnit('drivingRange');
-        const investment = feasibility.totalInvestment;
-        
-        const toBillion = (num) => (num / 1000000000).toFixed(2) + ' M';
-
+        container.innerHTML = `<!-- Konten di-generate oleh JS -->`; // Reset
         container.innerHTML = `
             <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-teal-600 pl-4">Analisis Finansial & Proyeksi BEP (Driving Range - Standalone)</h2>
             <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-                <div class="p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 mb-6">
-                    <strong>Disclaimer:</strong> Analisis ini adalah model estimasi untuk proyek Driving Range jika dibangun secara mandiri, berdasarkan asumsi yang ada di model pusat.
-                </div>
-
-                <!-- Investasi & Biaya Operasional -->
+                <div class="p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 mb-6"><strong>Disclaimer:</strong> Analisis untuk proyek Driving Range jika dibangun secara mandiri.</div>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                    <div>
-                        <h3 class="text-xl font-semibold mb-4 text-gray-700">1. Estimasi Biaya Investasi (CapEx)</h3>
-                        <p class="text-center text-4xl font-bold font-mono text-gray-800 mt-2">Rp ${formatNumber(investment)}</p>
-                        <p class="text-center text-sm text-gray-500">(Termasuk dana darurat ${projectConfig.assumptions.contingency_rate * 100}%)</p>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-semibold mb-4 text-gray-700">2. Estimasi Biaya Operasional (OpEx)</h3>
-                        <p class="text-center text-4xl font-bold font-mono text-gray-800 mt-2">~Rp ${formatNumber(pnl.annualOpex / 12)}</p>
-                        <p class="text-center text-sm text-gray-500">per Bulan</p>
-                    </div>
+                    <div><h3 class="text-xl font-semibold text-gray-700">1. Estimasi Biaya Investasi (CapEx)</h3><p class="text-center text-4xl font-bold font-mono text-gray-800 mt-2">Rp ${formatNumber(feasibility.totalInvestment)}</p><p class="text-center text-sm text-gray-500">(Termasuk dana darurat)</p></div>
+                    <div><h3 class="text-xl font-semibold text-gray-700">2. Estimasi Laba Bersih Tahunan</h3><p class="text-center text-4xl font-bold font-mono text-green-700 mt-2">Rp ${formatNumber(pnl.netProfit)}</p></div>
                 </div>
-
-                <!-- Pendapatan & Laba -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-8 border-t">
-                    <div>
-                        <h3 class="text-xl font-semibold mb-4 text-gray-700">3. Estimasi Pendapatan Tahunan</h3>
-                        <p class="text-center text-4xl font-bold font-mono text-green-600 mt-2">Rp ${formatNumber(pnl.annualRevenue)}</p>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-semibold mb-4 text-gray-700">4. Estimasi Laba Bersih Tahunan</h3>
-                        <p class="text-center text-4xl font-bold font-mono text-green-700 mt-2">Rp ${formatNumber(pnl.netProfit)}</p>
-                    </div>
-                </div>
-
-                <!-- Perhitungan BEP -->
-                <div class="mt-8 pt-8 border-t">
-                    <h3 class="text-xl font-semibold mb-4 text-gray-700">5. Perhitungan Kelayakan Investasi</h3>
+                <div class="mt-8 pt-8 border-t"><h3 class="text-xl font-semibold mb-4 text-gray-700">3. Perhitungan Kelayakan Investasi</h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-                        <div class="p-4 bg-blue-50 rounded-lg">
-                            <h4 class="font-semibold text-sm text-blue-800">Payback Period</h4>
-                            <p class="text-3xl font-bold font-mono text-blue-600 mt-2">${feasibility.paybackPeriod.toFixed(2)}</p>
-                            <p class="text-xs text-gray-500">Tahun</p>
-                        </div>
-                        <div class="p-4 bg-green-50 rounded-lg">
-                            <h4 class="font-semibold text-sm text-green-800">Net Present Value (NPV)</h4>
-                            <p class="text-3xl font-bold font-mono text-green-600 mt-2">Rp ${toBillion(feasibility.npv)}</p>
-                        </div>
-                        <div class="p-4 bg-purple-50 rounded-lg">
-                            <h4 class="font-semibold text-sm text-purple-800">Internal Rate of Return (IRR)</h4>
-                            <p class="text-3xl font-bold font-mono text-purple-600 mt-2">${(feasibility.irr * 100).toFixed(2)}%</p>
-                        </div>
+                        <div class="p-4 bg-blue-50 rounded-lg"><h4 class="font-semibold text-sm text-blue-800">Payback Period</h4><p class="text-3xl font-bold font-mono text-blue-600 mt-2">${feasibility.paybackPeriod.toFixed(2)}</p><p class="text-xs text-gray-500">Tahun</p></div>
+                        <div class="p-4 bg-green-50 rounded-lg"><h4 class="font-semibold text-sm text-green-800">Net Present Value (NPV)</h4><p class="text-3xl font-bold font-mono text-green-600 mt-2">Rp ${toBillion(feasibility.npv)}</p></div>
+                        <div class="p-4 bg-purple-50 rounded-lg"><h4 class="font-semibold text-sm text-purple-800">Internal Rate of Return (IRR)</h4><p class="text-3xl font-bold font-mono text-purple-600 mt-2">${(feasibility.irr * 100).toFixed(2)}%</p></div>
                     </div>
                 </div>
-            </div>
-        `;
-        return true;
+            </div>`;
     });
 
 
@@ -754,167 +706,144 @@ document.addEventListener('DOMContentLoaded', () => {
     // ====================================================================
     tryToRender(function renderPadelFinance() {
         const container = document.getElementById('padel-financial-analysis');
-        if (!container) return false;
-
+        if (!container) return;
         const pnl = projectConfig.calculations.calculatePnlForUnit('padel');
         const feasibility = projectConfig.calculations.getFeasibilityForUnit('padel');
-        const investment = feasibility.totalInvestment;
-        
-        const toBillion = (num) => (num / 1000000000).toFixed(2) + ' M';
-
+        container.innerHTML = `<!-- Konten di-generate oleh JS -->`; // Reset
         container.innerHTML = `
             <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-purple-600 pl-4">Analisis Finansial & Proyeksi BEP (Padel - Standalone)</h2>
             <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-                <div class="p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 mb-6">
-                    <strong>Disclaimer:</strong> Analisis ini adalah model estimasi untuk proyek Padel jika dibangun secara mandiri, berdasarkan asumsi yang ada di model pusat.
+                <div class="p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 mb-6"><strong>Disclaimer:</strong> Analisis untuk proyek Padel jika dibangun secara mandiri.</div>
+                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    <div><h3 class="text-xl font-semibold text-gray-700">1. Estimasi Biaya Investasi (CapEx)</h3><p class="text-center text-4xl font-bold font-mono text-gray-800 mt-2">Rp ${formatNumber(feasibility.totalInvestment)}</p><p class="text-center text-sm text-gray-500">(Termasuk dana darurat)</p></div>
+                    <div><h3 class="text-xl font-semibold text-gray-700">2. Estimasi Laba Bersih Tahunan</h3><p class="text-center text-4xl font-bold font-mono text-green-700 mt-2">Rp ${formatNumber(pnl.netProfit)}</p></div>
                 </div>
-                
-                <!-- Investasi & Biaya Operasional -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                    <div>
-                        <h3 class="text-xl font-semibold mb-4 text-gray-700">1. Estimasi Biaya Investasi (CapEx)</h3>
-                        <p class="text-center text-4xl font-bold font-mono text-gray-800 mt-2">Rp ${formatNumber(investment)}</p>
-                        <p class="text-center text-sm text-gray-500">(Termasuk dana darurat ${projectConfig.assumptions.contingency_rate * 100}%)</p>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-semibold mb-4 text-gray-700">2. Estimasi Biaya Operasional (OpEx)</h3>
-                        <p class="text-center text-4xl font-bold font-mono text-gray-800 mt-2">~Rp ${formatNumber(pnl.annualOpex / 12)}</p>
-                        <p class="text-center text-sm text-gray-500">per Bulan</p>
-                    </div>
-                </div>
-
-                <!-- Pendapatan & Laba -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-8 border-t">
-                    <div>
-                        <h3 class="text-xl font-semibold mb-4 text-gray-700">3. Estimasi Pendapatan Tahunan</h3>
-                        <p class="text-center text-4xl font-bold font-mono text-green-600 mt-2">Rp ${formatNumber(pnl.annualRevenue)}</p>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-semibold mb-4 text-gray-700">4. Estimasi Laba Bersih Tahunan</h3>
-                        <p class="text-center text-4xl font-bold font-mono text-green-700 mt-2">Rp ${formatNumber(pnl.netProfit)}</p>
-                    </div>
-                </div>
-
-                <!-- Perhitungan BEP -->
-                <div class="mt-8 pt-8 border-t">
-                    <h3 class="text-xl font-semibold mb-4 text-gray-700">5. Perhitungan Kelayakan Investasi</h3>
+                <div class="mt-8 pt-8 border-t"><h3 class="text-xl font-semibold mb-4 text-gray-700">3. Perhitungan Kelayakan Investasi</h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-                        <div class="p-4 bg-blue-50 rounded-lg">
-                            <h4 class="font-semibold text-sm text-blue-800">Payback Period</h4>
-                            <p class="text-3xl font-bold font-mono text-blue-600 mt-2">${feasibility.paybackPeriod.toFixed(2)}</p>
-                            <p class="text-xs text-gray-500">Tahun</p>
-                        </div>
-                        <div class="p-4 bg-green-50 rounded-lg">
-                            <h4 class="font-semibold text-sm text-green-800">Net Present Value (NPV)</h4>
-                            <p class="text-3xl font-bold font-mono text-green-600 mt-2">Rp ${toBillion(feasibility.npv)}</p>
-                        </div>
-                        <div class="p-4 bg-purple-50 rounded-lg">
-                            <h4 class="font-semibold text-sm text-purple-800">Internal Rate of Return (IRR)</h4>
-                            <p class="text-3xl font-bold font-mono text-purple-600 mt-2">${(feasibility.irr * 100).toFixed(2)}%</p>
-                        </div>
+                        <div class="p-4 bg-blue-50 rounded-lg"><h4 class="font-semibold text-sm text-blue-800">Payback Period</h4><p class="text-3xl font-bold font-mono text-blue-600 mt-2">${feasibility.paybackPeriod.toFixed(2)}</p><p class="text-xs text-gray-500">Tahun</p></div>
+                        <div class="p-4 bg-green-50 rounded-lg"><h4 class="font-semibold text-sm text-green-800">Net Present Value (NPV)</h4><p class="text-3xl font-bold font-mono text-green-600 mt-2">Rp ${toBillion(feasibility.npv)}</p></div>
+                        <div class="p-4 bg-purple-50 rounded-lg"><h4 class="font-semibold text-sm text-purple-800">Internal Rate of Return (IRR)</h4><p class="text-3xl font-bold font-mono text-purple-600 mt-2">${(feasibility.irr * 100).toFixed(2)}%</p></div>
                     </div>
                 </div>
-            </div>
-        `;
-        return true;
+            </div>`;
+    });
+
+    tryToRender(function renderFinancialAnalysisCombined() {
+        const container = document.getElementById('financial-analysis-summary');
+        if (!container) return;
+        // Panggil fungsi gabungan
+        const pnl = projectConfig.calculations.calculatePnlForCombined();
+        const feasibility = projectConfig.calculations.getFeasibilityForCombined();
+        const investment = feasibility.totalInvestment;
+        // Skenario sensitivitas
+        const pesimisticPnl = projectConfig.calculations.calculatePnlForCombined(0.85, 1.10);
+        const optimisticPnl = projectConfig.calculations.calculatePnlForCombined(1.15, 1.00);
+        const pesimisticPayback = pesimisticPnl.cashFlowFromOps > 0 ? (investment / pesimisticPnl.cashFlowFromOps).toFixed(2) : "N/A";
+        const optimisticPayback = (investment / optimisticPnl.cashFlowFromOps).toFixed(2);
+        
+        container.innerHTML = `
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-rose-600 pl-4">Analisis Keuangan & Kelayakan Investasi (Proyek Gabungan)</h2>
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <div class="p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 mb-6 text-sm"><strong>Proyeksi Gabungan:</strong> Menampilkan sinergi finansial jika kedua fasilitas dibangun bersamaan.</div>
+                <div id="capex-summary" class="mb-8 pb-6 border-b">
+                     <h3 class="text-xl font-semibold mb-4 text-gray-700">1. Total Biaya Investasi (CapEx) Gabungan</h3>
+                     <p class="text-center text-5xl font-bold font-mono text-rose-600 mt-2">Rp ${formatNumber(investment)}</p>
+                     <p class="text-center text-sm text-gray-500">(Total CapEx Driving Range + Padel, termasuk dana darurat)</p>
+                </div>
+                <div id="pnl-summary" class="mb-8 pb-6 border-b">
+                     <h3 class="text-xl font-semibold mb-4 text-gray-700">2. Proyeksi Laba Rugi (P&L) Gabungan - Tahun Pertama</h3>
+                     <table class="w-full text-sm">
+                        <tbody class="divide-y">
+                            <tr><td class="py-2">Total Pendapatan</td><td class="py-2 text-right font-mono">${formatNumber(pnl.annualRevenue)}</td></tr>
+                            <tr class="font-semibold bg-gray-50"><td class="py-2 px-2">EBITDA</td><td class="py-2 px-2 text-right font-mono">${formatNumber(pnl.ebitda)}</td></tr>
+                            <tr class="font-bold text-lg bg-teal-50"><td class="py-3 px-2">Estimasi Laba Bersih</td><td class="py-3 px-2 text-right font-mono text-teal-700">${formatNumber(pnl.netProfit)}</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="investment-feasibility" class="mb-8 pb-6 border-b">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">3. Analisis Kelayakan Investasi Gabungan</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                        <div class="p-4 bg-blue-50 rounded-lg"><h4 class="font-semibold text-sm text-blue-800">Payback Period</h4><p class="text-3xl font-bold font-mono text-blue-600 mt-1">${feasibility.paybackPeriod.toFixed(2)}</p><p class="text-xs text-gray-500">Tahun</p></div>
+                        <div class="p-4 bg-green-50 rounded-lg"><h4 class="font-semibold text-sm text-green-800">Net Present Value (NPV)</h4><p class="text-3xl font-bold font-mono text-green-600 mt-1">Rp ${toBillion(feasibility.npv)}</p></div>
+                        <div class="p-4 bg-purple-50 rounded-lg"><h4 class="font-semibold text-sm text-purple-800">Internal Rate of Return (IRR)</h4><p class="text-3xl font-bold font-mono text-purple-600 mt-1">${(feasibility.irr * 100).toFixed(2)}%</p></div>
+                    </div>
+                </div>
+                <div id="sensitivity-analysis">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">4. Analisis Sensitivitas Proyek Gabungan</h3>
+                    <table class="w-full text-sm"><thead class="text-xs text-gray-700 uppercase bg-gray-100"><tr><th class="px-4 py-3 text-left">Metrik</th><th class="px-4 py-3 text-center">Pesimis</th><th class="px-4 py-3 text-center">Realisitis</th><th class="px-4 py-3 text-center">Optimis</th></tr></thead>
+                    <tbody class="text-center"><tr class="border-b"><td class="px-4 py-3 text-left font-semibold">Laba Bersih Tahunan</td><td class="px-4 py-3 font-mono text-red-600">${formatNumber(pesimisticPnl.netProfit)}</td><td class="px-4 py-3 font-mono font-bold">${formatNumber(pnl.netProfit)}</td><td class="px-4 py-3 font-mono text-green-600">${formatNumber(optimisticPnl.netProfit)}</td></tr>
+                    <tr class="border-b"><td class="px-4 py-3 text-left font-semibold">Payback Period (Tahun)</td><td class="px-4 py-3 font-mono text-red-600">${pesimisticPayback}</td><td class="px-4 py-3 font-mono font-bold">${feasibility.paybackPeriod.toFixed(2)}</td><td class="px-4 py-3 font-mono text-green-600">${optimisticPayback}</td></tr></tbody></table>
+                </div>
+            </div>`;
     });
 
     // ====================================================================
-    // VISUALISASI ASUMSI MODEL KEUANGAN
+    // 1. VISUALISASI ASUMSI MODEL KEUANGAN
     // ====================================================================
     tryToRender(function renderFinancialAssumptions() {
         const container = document.getElementById('assumptions-container');
-        if (!container) return false;
+        if (!container) return;
 
-        const { assumptions, drivingRange, padel } = projectConfig;
+        const { assumptions: globalAssumptions, drivingRange, padel } = projectConfig;
 
-        // Helper untuk membuat tabel dari objek
-        const createTable = (data, title) => {
+        const createTable = (data, title, isOpex = false) => {
             let rowsHtml = Object.entries(data).map(([key, value]) => {
-                // Format key agar lebih mudah dibaca
-                const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                // Format value jika berupa objek
+                const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()).replace('Fnb', 'F&B');
                 let formattedValue;
                 if (typeof value === 'object' && value !== null) {
-                    formattedValue = Object.entries(value).map(([subKey, subValue]) => 
-                        `<li><span class="font-medium">${subKey.replace(/_/g, ' ')}:</span> ${subValue}</li>`
+                    formattedValue = Object.entries(value).map(([subKey, subValue]) =>
+                        `<li><span class="font-medium">${subKey.replace(/_/g, ' ')}:</span> ${formatNumber(subValue)}</li>`
                     ).join('');
                     formattedValue = `<ul class="list-none pl-0">${formattedValue}</ul>`;
                 } else {
-                    formattedValue = typeof value === 'number' && value < 1 ? `${(value * 100).toFixed(0)}%` : formatNumber(value);
+                    formattedValue = (key.includes('rate') && value < 1) ? `${(value * 100).toFixed(0)}%` : formatNumber(value);
                 }
-                
-                return `
-                    <tr class="border-b">
-                        <td class="py-3 px-4 font-semibold text-gray-700 w-1/3">${formattedKey}</td>
-                        <td class="py-3 px-4 text-gray-600">${formattedValue}</td>
-                    </tr>
-                `;
+                const unit = isOpex ? ' <span class="text-gray-400">/ bulan</span>' : '';
+                return `<tr class="border-b"><td class="py-3 px-4 font-semibold text-gray-700 w-2/5">${formattedKey}</td><td class="py-3 px-4 text-gray-600">${formattedValue}${unit}</td></tr>`;
             }).join('');
-
-            return `
-                <div class="mb-8">
-                    <h3 class="text-xl font-bold text-gray-800 mb-3 pb-2 border-b-2 border-gray-200">${title}</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <tbody>${rowsHtml}</tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
+            return `<h4 class="text-lg font-semibold text-gray-700 mb-2">${title}</h4><table class="w-full text-sm"><tbody>${rowsHtml}</tbody></table>`;
         };
-        
-        // Helper untuk data operasional
-        const createOperationalTable = (data, title) => {
-             let rowsHtml = Object.entries(data).map(([key, value]) => {
+
+        const createUnitsTable = (data, title) => {
+            let rowsHtml = Object.entries(data).map(([key, value]) => {
                 const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                
                 let formattedValue;
-                if (key === 'occupancy' || key === 'price_per_hour') {
-                     formattedValue = Object.entries(value).map(([subKey, subValue]) => 
-                        `<li><span class="font-medium">${subKey.replace(/_/g, ' ').replace('weekday', 'Hr Kerja').replace('weekend', 'Akhir Pekan')}:</span> ${typeof subValue === 'number' && subValue < 2 ? (subValue * 100).toFixed(0) + '%' : formatNumber(subValue)}</li>`
-                    ).join('');
-                     formattedValue = `<ul class="list-none pl-0">${formattedValue}</ul>`;
+                if (typeof value === 'object' && value !== null) {
+                    formattedValue = Object.entries(value).map(([subKey, subValue]) => {
+                         const subKeyFormatted = subKey.replace(/_/g, ' ').replace('weekday', 'Hr Kerja').replace('weekend', 'Akhir Pekan');
+                         const subValueFormatted = typeof subValue === 'number' && subValue < 2 && subValue > 0 ? (subValue * 100).toFixed(0) + '%' : formatNumber(subValue);
+                         return `<li><span class="font-medium">${subKeyFormatted}:</span> ${subValueFormatted}</li>`;
+                    }).join('');
+                    formattedValue = `<ul class="list-none pl-0">${formattedValue}</ul>`;
                 } else {
-                     formattedValue = formatNumber(value);
+                    formattedValue = formatNumber(value);
                 }
-
-                return `
-                     <tr class="border-b">
-                        <td class="py-3 px-4 font-semibold text-gray-700 w-1/3">${formattedKey}</td>
-                        <td class="py-3 px-4 text-gray-600">${formattedValue}</td>
-                    </tr>
-                `;
-             }).join('');
-
-             return `
-                <div class="mb-6">
-                    <h4 class="text-lg font-semibold text-gray-700 mb-2">${title}</h4>
-                    <table class="w-full text-sm"><tbody>${rowsHtml}</tbody></table>
-                </div>
-             `;
+                return `<tr class="border-b"><td class="py-3 px-4 font-semibold text-gray-700 w-2/5">${formattedKey}</td><td class="py-3 px-4 text-gray-600">${formattedValue}</td></tr>`;
+            }).join('');
+            return `<h4 class="text-lg font-semibold text-gray-700 mb-2">${title}</h4><table class="w-full text-sm"><tbody>${rowsHtml}</tbody></table>`;
         };
 
         container.innerHTML = `
-            <div>
-                ${createTable(assumptions, 'A. Asumsi Umum & Finansial')}
-            </div>
-            
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-6 border-t">
+            <div><h3 class="text-xl font-bold text-gray-800 mb-3 pb-2 border-b-2 border-gray-200">A. Asumsi Global</h3>${createTable(globalAssumptions, '')}</div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-12 pt-6 border-t">
                 <div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-3 pb-2 border-b-2 border-gray-200">B. Model Bisnis Driving Range</h3>
-                    ${createOperationalTable(drivingRange.bays, 'Unit Operasional')}
-                    ${createTable(drivingRange.opexMonthly, 'Biaya Operasional Bulanan')}
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">B. Model Bisnis Driving Range</h3>
+                    <div class="space-y-6">
+                        ${createTable(drivingRange.assumptions, 'Asumsi Spesifik')}
+                        ${createUnitsTable(drivingRange.units, 'Unit Operasional')}
+                        ${createTable(drivingRange.opexMonthly, 'Biaya Operasional', true)}
+                    </div>
                 </div>
-                 <div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-3 pb-2 border-b-2 border-gray-200">C. Model Bisnis Padel</h3>
-                    ${createOperationalTable(padel.courts, 'Unit Operasional')}
-                    ${createTable(padel.opexMonthly, 'Biaya Operasional Bulanan')}
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">C. Model Bisnis Padel</h3>
+                    <div class="space-y-6">
+                        ${createTable(padel.assumptions, 'Asumsi Spesifik')}
+                        ${createUnitsTable(padel.units, 'Unit Operasional')}
+                        ${createTable(padel.opexMonthly, 'Biaya Operasional', true)}
+                    </div>
                 </div>
             </div>
         `;
-
-        return true;
     });
 
     // ====================================================================
