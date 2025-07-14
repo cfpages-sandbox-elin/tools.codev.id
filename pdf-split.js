@@ -177,6 +177,32 @@ document.addEventListener('DOMContentLoaded', () => {
         calculateInitialCutLines(); // Re-run initial calculation
     }
 
+    function checkAndAutoAddLines() {
+        if (cutLines.length === 0) return;
+        
+        // Check if the last line is confirmed
+        const lastLine = cutLines[cutLines.length - 1];
+        if (!lastLine.confirmed) return;
+        
+        // Calculate remaining space after the last line
+        const remainingHeight = pdfCanvas.height - lastLine.position;
+        
+        // If remaining height is more than a page size (plus some buffer), add a new line
+        if (remainingHeight > maxSliceHeightPixels + 10) {
+            // Add new lines until we've covered the remaining space
+            let currentY = lastLine.position + maxSliceHeightPixels;
+            
+            while (currentY < pdfCanvas.height - 10) {
+                cutLines.push({ position: Math.round(currentY), confirmed: false });
+                currentY += maxSliceHeightPixels;
+            }
+            
+            // Re-render to show the new lines
+            renderPages();
+            updateStatus();
+        }
+    }
+
     function addCutLine() {
         if (!pdfCanvas) return;
 
@@ -275,7 +301,14 @@ document.addEventListener('DOMContentLoaded', () => {
             e.stopPropagation();
             const index = parseInt(e.currentTarget.dataset.index);
             cutLines[index].confirmed = !cutLines[index].confirmed;
-            renderPages();
+            
+            // If we just confirmed a line, check if we need to auto-add more lines
+            if (cutLines[index].confirmed) {
+                checkAndAutoAddLines();
+            } else {
+                renderPages();
+            }
+            
             updateStatus();
         }
     }
