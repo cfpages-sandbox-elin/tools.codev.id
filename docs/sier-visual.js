@@ -473,4 +473,141 @@ document.addEventListener('DOMContentLoaded', () => {
         if(document.getElementById('sampleSizeRing2_3')) document.getElementById('sampleSizeRing2_3').innerText = formatNumber(slovin(totalRing2, 0.03));
     });
 
+    // ====================================================================
+    // BAGIAN X: ANALISIS DAMPAK EKONOMI & SOSIAL (BARU)
+    // ====================================================================
+    tryToRender(() => {
+        const economicImpactTableBody = document.getElementById('economicImpactTableBody');
+        const multiplierDiagramContainer = document.getElementById('multiplierEffectDiagram');
+
+        if (!economicImpactTableBody || !multiplierDiagramContainer) return;
+
+        // Asumsi data dari analisis finansial (gabungan Driving Range & Padel)
+        const totalCapex = 4600000000 + 4000000000; // DR + Padel
+        const totalOpexBulanan = 140000000 + 155000000; // DR + Padel
+        const gajiBulanan = 55000000 + 70000000;
+        const utilitasBulanan = 25000000 + 35000000;
+        const perawatanBulanan = 12000000 + 10000000;
+        const pemasaranBulanan = 15000000 + 15000000;
+        
+        // Estimasi Pendapatan
+        const pendapatanTahunan = (375000000 + 243750000) * 12;
+
+        // Data untuk tabel
+        const impactData = [
+            // DIRECT IMPACT
+            { 
+                category: 'Penciptaan Lapangan Kerja', 
+                description: 'Pekerjaan langsung yang tercipta untuk mengoperasikan fasilitas (manajer, admin, pelatih, staf kebersihan, dll).', 
+                contribution: `~25-30 FTE (Full-Time Equivalent)<br><span class='text-xs text-gray-500'>Estimasi Gaji & Upah: <strong>Rp ${formatNumber(gajiBulanan * 12)} / tahun</strong></span>` 
+            },
+            { 
+                category: 'Investasi Lokal (Konstruksi)', 
+                description: 'Belanja modal yang dialokasikan kepada kontraktor, pemasok material, dan tenaga kerja lokal selama fase pembangunan.', 
+                contribution: `~60-70% dari Total CapEx<br><span class='text-xs text-gray-500'>Estimasi Nilai Kontrak Lokal: <strong>~Rp ${formatNumber(totalCapex * 0.65)}</strong> (sekali bayar)</span>` 
+            },
+            { 
+                category: 'Pendapatan Pajak Daerah', 
+                description: 'Kontribusi langsung ke kas daerah melalui PBB, Pajak Restoran (10%), dan Pajak Hiburan (variatif).', 
+                contribution: `Estimasi <strong>Rp ${formatNumber(pendapatanTahunan * 0.05)} - ${formatNumber(pendapatanTahunan * 0.08)} / tahun</strong><br><span class='text-xs text-gray-500'>Tergantung tarif pajak final yang berlaku</span>`
+            },
+            // INDIRECT IMPACT
+            { isHeader: true, title: 'II. Dampak Ekonomi Tidak Langsung (Indirect Impact)' },
+            { 
+                category: 'Aktivasi Rantai Pasok Lokal', 
+                description: 'Permintaan rutin untuk barang dan jasa dari bisnis lokal (pemasok F&B, jasa laundry, ATK, dll).', 
+                contribution: `Estimasi Belanja Operasional Non-Gaji: <strong>Rp ${formatNumber((totalOpexBulanan - gajiBulanan) * 12)} / tahun</strong>` 
+            },
+            { 
+                category: 'Peningkatan Nilai Properti', 
+                description: 'Kehadiran fasilitas olahraga dan gaya hidup modern berpotensi meningkatkan daya tarik dan nilai properti di kawasan sekitar.', 
+                contribution: `Analisis Kualitatif: Positif<br><span class='text-xs text-gray-500'>Dapat meningkatkan NJOP dalam 5-10 tahun</span>` 
+            },
+            { 
+                category: 'Potensi Pariwisata Olahraga', 
+                description: 'Menarik pengunjung dari luar kota melalui penyelenggaraan turnamen (Padel/Golf) tingkat regional atau nasional.', 
+                contribution: `Potensi belanja turis di sektor akomodasi, kuliner, dan transportasi lokal.` 
+            },
+            // SOCIAL IMPACT
+            { isHeader: true, title: 'III. Dampak Sosial (Social Impact)' },
+            { 
+                category: 'Kesehatan & Kesejahteraan', 
+                description: 'Menyediakan ruang publik yang aman dan sehat untuk aktivitas fisik dan interaksi sosial.', 
+                contribution: `~150.000+ jam olahraga difasilitasi per tahun<br><span class='text-xs text-gray-500'>Mendorong gaya hidup aktif bagi masyarakat</span>`
+            },
+            { 
+                category: 'Pembangunan Komunitas', 
+                description: 'Menjadi "Third Place" yang memfasilitasi terbentuknya komunitas baru dan memperkuat ikatan sosial.', 
+                contribution: `Target menjadi "home-base" bagi 10+ komunitas olahraga dan sosial.`
+            },
+            { 
+                category: 'Peningkatan Citra Kawasan', 
+                description: 'Mengubah citra SIER dari kawasan industri murni menjadi destinasi gaya hidup yang dinamis.', 
+                contribution: `Meningkatkan *place branding* dan daya tarik kawasan bagi talenta dan investor baru.`
+            }
+        ];
+        
+        // Render tabel
+        economicImpactTableBody.innerHTML = ''; // Kosongkan placeholder
+        impactData.forEach(item => {
+            const tr = document.createElement('tr');
+            if (item.isHeader) {
+                tr.className = 'bg-gray-100';
+                tr.innerHTML = `<td colspan="3" class="px-4 py-3 font-bold text-gray-700">${item.title}</td>`;
+            } else {
+                tr.className = 'bg-white border-b hover:bg-gray-50';
+                tr.innerHTML = `
+                    <td class="px-4 py-4 font-semibold text-gray-800 align-top">${item.category}</td>
+                    <td class="px-4 py-4 align-top">${item.description}</td>
+                    <td class="px-4 py-4 align-top">${item.contribution}</td>
+                `;
+            }
+            economicImpactTableBody.appendChild(tr);
+        });
+
+        // Render diagram multiplier effect
+        multiplierDiagramContainer.innerHTML = `
+            <div class="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-8">
+                <!-- Sumber -->
+                <div class="p-4 bg-blue-600 text-white rounded-lg shadow-lg">
+                    <h4 class="font-bold text-lg">PROYEK SIER<br>SPORTS HUB</h4>
+                    <p class="text-sm">Belanja Operasional Tahunan<br><strong>Rp ${formatNumber(totalOpexBulanan * 12)}</strong></p>
+                </div>
+                
+                <!-- Panah -->
+                <div class="text-3xl text-gray-400 font-light transform md:-translate-y-4">→</div>
+
+                <!-- Penerima Langsung -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="p-3 bg-green-100 text-green-800 rounded-md text-center">
+                        <span class="font-bold">Gaji Karyawan</span>
+                        <span class="block text-xs">Rp ${formatNumber(gajiBulanan*12)}</span>
+                    </div>
+                    <div class="p-3 bg-yellow-100 text-yellow-800 rounded-md text-center">
+                        <span class="font-bold">Pemasok F&B</span>
+                        <span class="block text-xs">Estimasi</span>
+                    </div>
+                     <div class="p-3 bg-purple-100 text-purple-800 rounded-md text-center">
+                        <span class="font-bold">Utilitas (PLN, PDAM)</span>
+                        <span class="block text-xs">Rp ${formatNumber(utilitasBulanan*12)}</span>
+                    </div>
+                    <div class="p-3 bg-pink-100 text-pink-800 rounded-md text-center">
+                        <span class="font-bold">Jasa Lain</span>
+                        <span class="block text-xs">(Laundry, Keamanan)</span>
+                    </div>
+                </div>
+
+                <!-- Panah -->
+                <div class="text-3xl text-gray-400 font-light transform md:-translate-y-4">→</div>
+                
+                <!-- Dampak Lanjutan -->
+                <div class="p-4 bg-gray-700 text-white rounded-lg shadow-lg">
+                    <h4 class="font-bold text-lg">EKONOMI LOKAL</h4>
+                    <p class="text-sm">Karyawan berbelanja,<br>Pemasok menggaji staf,<br>menciptakan efek berantai.</p>
+                </div>
+            </div>
+        `;
+
+    });
+
 });
