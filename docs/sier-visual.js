@@ -691,4 +691,182 @@ document.addEventListener('DOMContentLoaded', () => {
 
     });
 
+    // ====================================================================
+    // BAGIAN XII: ANALISIS KEUANGAN & KELAYAKAN INVESTASI (BARU)
+    // ====================================================================
+    tryToRender(() => {
+        // --- Container Elements ---
+        const capexContainer = document.getElementById('capex-summary');
+        const pnlContainer = document.getElementById('pnl-summary');
+        const feasibilityContainer = document.getElementById('investment-feasibility');
+        const sensitivityContainer = document.getElementById('sensitivity-analysis');
+
+        if (!capexContainer || !pnlContainer || !feasibilityContainer || !sensitivityContainer) return;
+
+        // --- Financial Model Assumptions ---
+        const financials = {
+            capex: {
+                dr_land: 2000000000,
+                dr_construction: 1500000000,
+                dr_building: 700000000,
+                dr_equipment: 400000000,
+                padel_land: 1500000000,
+                padel_construction: 1400000000,
+                padel_building: 800000000,
+                padel_equipment: 300000000,
+            },
+            revenue_monthly: {
+                dr_bays: 300000000,
+                dr_ancillary: 75000000,
+                padel_courts: 195000000,
+                padel_ancillary: 48750000,
+            },
+            opex_monthly: {
+                dr_salary: 55000000,
+                dr_rent: 33000000,
+                dr_utilities: 25000000,
+                dr_marketing: 15000000,
+                dr_maintenance: 12000000,
+                padel_salary: 70000000,
+                padel_rent: 25000000,
+                padel_utilities: 35000000,
+                padel_marketing: 15000000,
+                padel_maintenance: 10000000,
+            },
+            assumptions: {
+                cogs_rate: 0.30, // 30% dari F&B/ancillary revenue
+                tax_rate: 0.22,
+                depreciation_years_building: 20,
+                depreciation_years_equipment: 5,
+                discount_rate: 0.12, // 12%
+                contingency_rate: 0.10, // 10%
+            }
+        };
+
+        // --- Helper Function ---
+        const toBillion = (num) => (num / 1000000000).toFixed(2) + ' M';
+        const toMillion = (num) => (num / 1000000).toFixed(2) + ' Jt';
+
+        // --- Calculations ---
+        // 1. CapEx
+        const totalCapexDR = financials.capex.dr_land + financials.capex.dr_construction + financials.capex.dr_building + financials.capex.dr_equipment;
+        const totalCapexPadel = financials.capex.padel_land + financials.capex.padel_construction + financials.capex.padel_building + financials.capex.padel_equipment;
+        const subTotalCapex = totalCapexDR + totalCapexPadel;
+        const contingency = subTotalCapex * financials.assumptions.contingency_rate;
+        const totalInvestment = subTotalCapex + contingency;
+
+        // 2. P&L (Annual)
+        const calculatePnl = (revenueMultiplier = 1, opexMultiplier = 1) => {
+            const annualRevenue = Object.values(financials.revenue_monthly).reduce((a, b) => a + b, 0) * 12 * revenueMultiplier;
+            const annualAncillaryRevenue = (financials.revenue_monthly.dr_ancillary + financials.revenue_monthly.padel_ancillary) * 12 * revenueMultiplier;
+            const cogs = annualAncillaryRevenue * financials.assumptions.cogs_rate;
+            const grossProfit = annualRevenue - cogs;
+            const annualOpex = Object.values(financials.opex_monthly).reduce((a, b) => a + b, 0) * 12 * opexMultiplier;
+            const ebitda = grossProfit - annualOpex;
+            const depreciationBuilding = (financials.capex.dr_building + financials.capex.padel_building) / financials.assumptions.depreciation_years_building;
+            const depreciationEquipment = (financials.capex.dr_equipment + financials.capex.padel_equipment) / financials.assumptions.depreciation_years_equipment;
+            const totalDepreciation = depreciationBuilding + depreciationEquipment;
+            const ebt = ebitda - totalDepreciation;
+            const tax = ebt > 0 ? ebt * financials.assumptions.tax_rate : 0;
+            const netProfit = ebt - tax;
+            const cashFlowFromOps = netProfit + totalDepreciation;
+            return { annualRevenue, grossProfit, annualOpex, ebitda, netProfit, cashFlowFromOps };
+        };
+        const realisticPnl = calculatePnl();
+
+        // 3. Feasibility
+        const paybackPeriod = totalInvestment / realisticPnl.cashFlowFromOps;
+        const cashFlows = Array(10).fill(realisticPnl.cashFlowFromOps);
+        const npv = cashFlows.reduce((acc, cf, i) => acc + cf / Math.pow(1 + financials.assumptions.discount_rate, i + 1), 0) - totalInvestment;
+        
+        // Simple IRR approximation (not perfect, but good for display)
+        let irr = 0;
+        for (let i = 0; i < 100; i += 0.001) {
+            let tempNpv = cashFlows.reduce((acc, cf, j) => acc + cf / Math.pow(1 + i, j + 1), 0) - totalInvestment;
+            if (tempNpv < 0) { irr = (i - 0.001); break; }
+        }
+
+        // --- HTML Rendering ---
+        // 1. Render CapEx
+        capexContainer.innerHTML = `
+            <h3 class="text-xl font-semibold mb-4 text-gray-700">1. Proyeksi Biaya Investasi (CapEx)</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <table class="w-full text-sm">
+                    <thead><tr><th class="text-left font-semibold pb-2" colspan="2">Driving Range</th></tr></thead>
+                    <tbody class="divide-y"><tr class="hover:bg-gray-50"><td class="py-2 px-2">Lahan & Konstruksi</td><td class="py-2 px-2 text-right font-mono">${formatNumber(financials.capex.dr_land + financials.capex.dr_construction)}</td></tr><tr class="hover:bg-gray-50"><td class="py-2 px-2">Bangunan & Peralatan</td><td class="py-2 px-2 text-right font-mono">${formatNumber(financials.capex.dr_building + financials.capex.dr_equipment)}</td></tr></tbody>
+                </table>
+                <table class="w-full text-sm">
+                    <thead><tr><th class="text-left font-semibold pb-2" colspan="2">Padel</th></tr></thead>
+                    <tbody class="divide-y"><tr class="hover:bg-gray-50"><td class="py-2 px-2">Lahan & Konstruksi</td><td class="py-2 px-2 text-right font-mono">${formatNumber(financials.capex.padel_land + financials.capex.padel_construction)}</td></tr><tr class="hover:bg-gray-50"><td class="py-2 px-2">Bangunan & Peralatan</td><td class="py-2 px-2 text-right font-mono">${formatNumber(financials.capex.padel_building + financials.capex.padel_equipment)}</td></tr></tbody>
+                </table>
+            </div>
+            <div class="mt-4 pt-4 border-t text-right">
+                <p class="text-sm">Subtotal Investasi: <span class="font-mono">${formatNumber(subTotalCapex)}</span></p>
+                <p class="text-sm">Dana Darurat (10%): <span class="font-mono">${formatNumber(contingency)}</span></p>
+                <p class="text-lg font-bold mt-1">Total Estimasi Kebutuhan Investasi: <span class="font-mono text-teal-600">Rp ${formatNumber(totalInvestment)}</span> (~${toBillion(totalInvestment)})</p>
+            </div>
+        `;
+        
+        // 2. Render P&L
+        pnlContainer.innerHTML = `
+            <h3 class="text-xl font-semibold mb-4 text-gray-700">2. Proyeksi Laba Rugi (P&L) - Tahun Pertama</h3>
+            <table class="w-full text-sm">
+                <tbody class="divide-y">
+                    <tr><td class="py-2">Total Pendapatan</td><td class="py-2 text-right font-mono">${formatNumber(realisticPnl.annualRevenue)}</td></tr>
+                    <tr><td class="py-2">Harga Pokok Penjualan (COGS)</td><td class="py-2 text-right font-mono">(${formatNumber(cogs)})</td></tr>
+                    <tr class="font-semibold"><td class="py-2">Laba Kotor</td><td class="py-2 text-right font-mono">${formatNumber(realisticPnl.grossProfit)}</td></tr>
+                    <tr><td class="py-2">Beban Operasional (OpEx)</td><td class="py-2 text-right font-mono">(${formatNumber(realisticPnl.annualOpex)})</td></tr>
+                    <tr class="font-semibold bg-gray-50"><td class="py-2 px-2">Laba Sebelum Bunga, Pajak, Depresiasi (EBITDA)</td><td class="py-2 px-2 text-right font-mono">${formatNumber(realisticPnl.ebitda)}</td></tr>
+                    <tr><td class="py-2">Beban Depresiasi</td><td class="py-2 text-right font-mono">(${formatNumber(totalDepreciation)})</td></tr>
+                    <tr class="font-semibold"><td class="py-2">Laba Sebelum Pajak (EBT)</td><td class="py-2 text-right font-mono">${formatNumber(ebt)}</td></tr>
+                    <tr><td class="py-2">Pajak Penghasilan (22%)</td><td class="py-2 text-right font-mono">(${formatNumber(tax)})</td></tr>
+                    <tr class="font-bold text-lg bg-teal-50"><td class="py-3 px-2">Estimasi Laba Bersih</td><td class="py-3 px-2 text-right font-mono text-teal-700">${formatNumber(realisticPnl.netProfit)}</td></tr>
+                </tbody>
+            </table>
+        `;
+        
+        // 3. Render Feasibility
+        feasibilityContainer.innerHTML = `
+            <h3 class="text-xl font-semibold mb-4 text-gray-700">3. Analisis Kelayakan Investasi</h3>
+             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                <div class="p-4 bg-blue-50 rounded-lg"><h4 class="font-semibold text-sm text-blue-800">Payback Period</h4><p class="text-3xl font-bold font-mono text-blue-600 mt-1">${paybackPeriod.toFixed(2)}</p><p class="text-xs text-gray-500">Tahun</p></div>
+                <div class="p-4 bg-green-50 rounded-lg"><h4 class="font-semibold text-sm text-green-800">Net Present Value (NPV)</h4><p class="text-3xl font-bold font-mono text-green-600 mt-1">Rp ${toBillion(npv)}</p><p class="text-xs text-gray-500">dengan discount rate 12%</p></div>
+                <div class="p-4 bg-purple-50 rounded-lg"><h4 class="font-semibold text-sm text-purple-800">Internal Rate of Return (IRR)</h4><p class="text-3xl font-bold font-mono text-purple-600 mt-1">${(irr * 100).toFixed(2)}%</p><p class="text-xs text-gray-500">lebih tinggi dari biaya modal</p></div>
+             </div>
+             <p class="mt-4 text-sm text-gray-600"><strong>Kesimpulan Kelayakan:</strong> Dengan metrik NPV yang positif dan IRR yang secara signifikan lebih tinggi dari tingkat diskonto (biaya modal), proyek ini menunjukkan kelayakan finansial yang kuat dan berpotensi memberikan pengembalian investasi yang menarik.</p>
+        `;
+
+        // 4. Render Sensitivity Analysis
+        const pesimisticPnl = calculatePnl(0.85, 1.10); // revenue -15%, opex +10%
+        const optimisticPnl = calculatePnl(1.15, 1.00); // revenue +15%, opex tetap
+        sensitivityContainer.innerHTML = `
+            <h3 class="text-xl font-semibold mb-4 text-gray-700">4. Analisis Sensitivitas</h3>
+            <p class="text-sm text-gray-600 mb-4">Analisis ini menguji ketahanan proyek terhadap perubahan kondisi pasar. Kita memodelkan tiga skenario untuk melihat dampaknya terhadap profitabilitas.</p>
+            <table class="w-full text-sm">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-100">
+                    <tr>
+                        <th class="px-4 py-3 text-left">Metrik</th>
+                        <th class="px-4 py-3 text-center">Pesimis<br><span class="font-normal capitalize">(Okupansi -15%, Biaya +10%)</span></th>
+                        <th class="px-4 py-3 text-center">Realisitis<br><span class="font-normal capitalize">(Sesuai Proyeksi)</span></th>
+                        <th class="px-4 py-3 text-center">Optimis<br><span class="font-normal capitalize">(Okupansi +15%)</span></th>
+                    </tr>
+                </thead>
+                <tbody class="text-center">
+                    <tr class="border-b"><td class="px-4 py-3 text-left font-semibold">Laba Bersih Tahunan</td>
+                        <td class="px-4 py-3 font-mono text-red-600">${formatNumber(pesimisticPnl.netProfit)}</td>
+                        <td class="px-4 py-3 font-mono font-bold">${formatNumber(realisticPnl.netProfit)}</td>
+                        <td class="px-4 py-3 font-mono text-green-600">${formatNumber(optimisticPnl.netProfit)}</td>
+                    </tr>
+                    <tr class="border-b"><td class="px-4 py-3 text-left font-semibold">Payback Period (Tahun)</td>
+                        <td class="px-4 py-3 font-mono text-red-600">${(totalInvestment / pesimisticPnl.cashFlowFromOps).toFixed(2)}</td>
+                        <td class="px-4 py-3 font-mono font-bold">${paybackPeriod.toFixed(2)}</td>
+                        <td class="px-4 py-3 font-mono text-green-600">${(totalInvestment / optimisticPnl.cashFlowFromOps).toFixed(2)}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p class="mt-4 text-sm text-gray-600"><strong>Kesimpulan Sensitivitas:</strong> Proyek ini menunjukkan ketahanan yang baik. Bahkan dalam skenario pesimis, proyek masih mampu menghasilkan laba dan mencapai payback period dalam jangka waktu yang dapat diterima, meskipun lebih lama. Ini mengurangi risiko investasi secara keseluruhan.</p>
+        `;
+
+    });
+
 });
