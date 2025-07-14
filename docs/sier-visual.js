@@ -16,55 +16,133 @@ document.addEventListener('DOMContentLoaded', () => {
     // ====================================================================
     // BAGIAN 1: DATA DEMOGRAFI & ANALISIS DASAR
     // ====================================================================
-    tryToRender(function renderDemography() {
-        if (!document.getElementById('totalPenduduk')) return false;
-        // Data Processing
+    // File: sier-visual.js
+
+    // ====================================================================
+    // 1. DATA DEMOGRAFI & ANALISIS DASAR (VERSI FINAL LENGKAP)
+    // ====================================================================
+    tryToRender(function renderDemographyAndCharts() {
+        // Pastikan section yang relevan ada di halaman
+        const summaryContainer = document.getElementById('summary');
+        const chartsContainer = document.getElementById('charts');
+        if (!summaryContainer || !chartsContainer) {
+            // console.log("Section demografi dasar tidak ditemukan, melewati render.");
+            return;
+        }
+        
+        // --- Data Processing ---
         const totalPopulation = demographyData.reduce((sum, item) => sum + item.total, 0);
         const totalRing1 = demographyData.filter(d => d.ring === 1).reduce((sum, item) => sum + item.total, 0);
         const totalRing2 = demographyData.filter(d => d.ring === 2).reduce((sum, item) => sum + item.total, 0);
+        
         const totalsByAge = {
-            '0-14 Thn': demographyData.reduce((sum, item) => sum + item.usia0_14, 0),
-            '15-24 Thn': demographyData.reduce((sum, item) => sum + item.usia15_24, 0),
-            '25-39 Thn': demographyData.reduce((sum, item) => sum + item.usia25_39, 0),
-            '40-54 Thn': demographyData.reduce((sum, item) => sum + item.usia40_54, 0),
-            '55-64 Thn': demographyData.reduce((sum, item) => sum + item.usia55_64, 0),
-            '65+ Thn': demographyData.reduce((sum, item) => sum + item.usia65_plus, 0),
+            '0-14 Thn': demographyData.reduce((s, i) => s + i.usia0_14, 0),
+            '15-24 Thn': demographyData.reduce((s, i) => s + i.usia15_24, 0),
+            '25-39 Thn': demographyData.reduce((s, i) => s + i.usia25_39, 0),
+            '40-54 Thn': demographyData.reduce((s, i) => s + i.usia40_54, 0),
+            '55-64 Thn': demographyData.reduce((s, i) => s + i.usia55_64, 0),
+            '65+ Thn': demographyData.reduce((s, i) => s + i.usia65_plus, 0)
         };
+        
         const totalProductive = totalsByAge['15-24 Thn'] + totalsByAge['25-39 Thn'] + totalsByAge['40-54 Thn'] + totalsByAge['55-64 Thn'];
         const totalNonProductive = totalsByAge['0-14 Thn'] + totalsByAge['65+ Thn'];
         const dependencyRatio = totalProductive > 0 ? ((totalNonProductive / totalProductive) * 100).toFixed(2) : 0;
-        const totalsByKecamatan = demographyData.reduce((acc, curr) => {
-            acc[curr.kecamatan] = (acc[curr.kecamatan] || 0) + curr.total;
-            return acc;
-        }, {});
 
-        // DOM Manipulation
+        const totalsByKecamatan = demographyData.reduce((acc, curr) => ({
+            ...acc,
+            [curr.kecamatan]: (acc[curr.kecamatan] || 0) + curr.total
+        }), {});
+
+        // --- DOM Manipulation (Cards & Table) ---
         document.getElementById('totalPenduduk').innerText = formatNumber(totalPopulation);
         document.getElementById('totalRing1').innerText = formatNumber(totalRing1);
         document.getElementById('totalRing2').innerText = formatNumber(totalRing2);
         document.getElementById('dependencyRatio').innerText = dependencyRatio;
 
         const tableBody = document.getElementById('dataTableBody');
-        if(tableBody) {
-            tableBody.innerHTML = '';
-            demographyData.forEach(row => {
-                const tr = document.createElement('tr');
-                tr.className = 'bg-white border-b hover:bg-gray-50';
-                tr.innerHTML = `<td class="px-3 py-4 font-medium text-gray-900">${row.kecamatan}</td><td class="px-3 py-4">${row.kelurahan}</td><td class="px-3 py-4 text-center">${formatNumber(row.total)}</td><td class="px-3 py-4 text-center">${formatNumber(row.usia0_14)}</td><td class="px-3 py-4 text-center">${formatNumber(row.usia15_24)}</td><td class="px-3 py-4 text-center">${formatNumber(row.usia25_39)}</td><td class="px-3 py-4 text-center">${formatNumber(row.usia40_54)}</td><td class="px-3 py-4 text-center">${formatNumber(row.usia55_64)}</td><td class="px-3 py-4 text-center">${formatNumber(row.usia65_plus)}</td><td class="px-3 py-4 text-center">${row.ring}</td>`;
-                tableBody.appendChild(tr);
+        if (tableBody) {
+            tableBody.innerHTML = demographyData.map(row => `
+                <tr class="bg-white border-b hover:bg-gray-50">
+                    <td class="px-3 py-4 font-medium text-gray-900">${row.kecamatan}</td>
+                    <td class="px-3 py-4">${row.kelurahan}</td>
+                    <td class="px-3 py-4 text-center">${formatNumber(row.total)}</td>
+                    <td class="px-3 py-4 text-center">${formatNumber(row.usia0_14)}</td>
+                    <td class="px-3 py-4 text-center">${formatNumber(row.usia15_24)}</td>
+                    <td class="px-3 py-4 text-center">${formatNumber(row.usia25_39)}</td>
+                    <td class="px-3 py-4 text-center">${formatNumber(row.usia40_54)}</td>
+                    <td class="px-3 py-4 text-center">${formatNumber(row.usia55_64)}</td>
+                    <td class="px-3 py-4 text-center">${formatNumber(row.usia65_plus)}</td>
+                    <td class="px-3 py-4 text-center">${row.ring}</td>
+                </tr>`).join('');
+        }
+
+        // --- Chart Rendering (LENGKAP) ---
+        const chartOptions = (extraOptions = {}) => ({
+            responsive: true,
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: (c) => `${c.label || ''}: ${formatNumber(c.raw)}`
+                    }
+                }
+            },
+            ...extraOptions
+        });
+
+        // Chart 1: Komposisi Penduduk Berdasarkan Ring
+        if (document.getElementById('ringChart')) {
+            new Chart(document.getElementById('ringChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Ring 1', 'Ring 2'],
+                    datasets: [{ data: [totalRing1, totalRing2], backgroundColor: ['#10B981', '#F59E0B'] }]
+                },
+                options: chartOptions()
             });
         }
 
-        const ringChartCanvas = document.getElementById('ringChart');
-        if (ringChartCanvas) {
-            new Chart(ringChartCanvas, { type: 'doughnut', data: { labels: ['Ring 1', 'Ring 2'], datasets: [{ data: [totalRing1, totalRing2], backgroundColor: ['#10B981', '#F59E0B'] }] }, options: { responsive: true, plugins: { tooltip: { callbacks: { label: (c) => `${c.label}: ${formatNumber(c.raw)}` } } } } });
+        // Chart 2: Distribusi Penduduk Berdasarkan Kelompok Usia
+        if (document.getElementById('ageDistributionChart')) {
+            new Chart(document.getElementById('ageDistributionChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(totalsByAge),
+                    datasets: [{ label: 'Total Penduduk', data: Object.values(totalsByAge), backgroundColor: 'rgba(59, 130, 246, 0.7)' }]
+                },
+                options: chartOptions({
+                    plugins: { legend: { display: false } },
+                    scales: { y: { ticks: { callback: (v) => formatNumber(v) } } }
+                })
+            });
         }
 
-        const ageDistributionChartCanvas = document.getElementById('ageDistributionChart');
-        if (ageDistributionChartCanvas) {
-            new Chart(ageDistributionChartCanvas, { type: 'bar', data: { labels: Object.keys(totalsByAge), datasets: [{ label: 'Total Penduduk', data: Object.values(totalsByAge), backgroundColor: 'rgba(59, 130, 246, 0.7)' }] }, options: { responsive: true, scales: { y: { ticks: { callback: (v) => formatNumber(v) } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${formatNumber(c.raw)}` } } } } });
+        // Chart 3: Rasio Usia Produktif vs. Non-Produktif
+        if (document.getElementById('productiveRatioChart')) {
+            new Chart(document.getElementById('productiveRatioChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Usia Produktif (15-64 Thn)', 'Usia Non-Produktif (0-14 & 65+ Thn)'],
+                    datasets: [{ data: [totalProductive, totalNonProductive], backgroundColor: ['#2563EB', '#DC2626'] }]
+                },
+                options: chartOptions()
+            });
         }
-        return true;
+
+        // Chart 4: Total Populasi per Kecamatan
+        if (document.getElementById('kecamatanChart')) {
+            new Chart(document.getElementById('kecamatanChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(totalsByKecamatan),
+                    datasets: [{ label: 'Total Populasi', data: Object.values(totalsByKecamatan), backgroundColor: ['#8B5CF6', '#EC4899', '#F97316', '#14B8A6'] }]
+                },
+                options: chartOptions({
+                    indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: { x: { ticks: { callback: (v) => formatNumber(v) } } }
+                })
+            });
+        }
     });
 
 
