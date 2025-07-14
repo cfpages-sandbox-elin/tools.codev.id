@@ -264,6 +264,49 @@
             </div>
         </section>
 
+        <!-- Section: Visualisasi Hasil Survei Driving Range vs Padel -->
+        <section id="survey-results" class="mt-12">
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-indigo-600 pl-4">Visualisasi Hasil Survei: Minat Driving Range vs Padel</h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Chart: Preferensi Fasilitas Utama (Pie) -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Preferensi Fasilitas (Jika Hanya Bisa Pilih SATU)</h3>
+                    <canvas id="preferensiFasilitasChart"></canvas>
+                    <p class="mt-4 text-sm text-gray-600">
+                        <strong>Penjelasan:</strong> Diagram ini menunjukkan pilihan utama responden jika mereka hanya bisa memilih satu fasilitas antara Driving Range Golf atau Lapangan Padel.
+                    </p>
+                </div>
+
+                <!-- Chart: Tingkat Minat Padel (Bar) -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Tingkat Minat terhadap Lapangan Padel</h3>
+                    <canvas id="minatPadelChart"></canvas>
+                    <p class="mt-4 text-sm text-gray-600">
+                        <strong>Penjelasan:</strong> Grafik batang ini menggambarkan seberapa besar minat responden terhadap pembangunan lapangan Padel baru di area SIER.
+                    </p>
+                </div>
+
+                <!-- Chart: Frekuensi Penggunaan Padel (Bar) -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Estimasi Frekuensi Bermain Padel</h3>
+                    <canvas id="frekuensiPadelChart"></canvas>
+                    <p class="mt-4 text-sm text-gray-600">
+                        <strong>Penjelasan:</strong> Distribusi frekuensi yang diharapkan oleh responden untuk bermain Padel jika fasilitas tersedia.
+                    </p>
+                </div>
+
+                <!-- Chart: Waktu Ideal Padel (Bar Stacked) -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Waktu Ideal untuk Bermain Padel</h3>
+                    <canvas id="waktuIdealPadelChart"></canvas>
+                    <p class="mt-4 text-sm text-gray-600">
+                        <strong>Penjelasan:</strong> Pilihan waktu yang paling ideal bagi responden untuk menggunakan fasilitas Padel. Responden dapat memilih lebih dari satu waktu.
+                    </p>
+                </div>
+            </div>
+        </section>
+
         <section id="market-potential-analysis" class="mt-12">
             <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-indigo-600 pl-4">Analisis Potensi Pasar: Driving Range & Padel</h2>
             
@@ -1502,6 +1545,25 @@
             });
         }
 
+        const surveyData = {
+            preferensiFasilitas: {
+                labels: ['Driving Range Golf', 'Lapangan Padel', 'Keduanya Sama Menarik'],
+                data: [8, 26, 4] // Jumlah responden
+            },
+            minatPadel: {
+                labels: ['Sangat Tertarik', 'Tertarik', 'Cukup Tertarik', 'Kurang Tertarik', 'Tidak Tertarik'],
+                data: [33, 13, 5, 2, 1]
+            },
+            frekuensiPadel: {
+                labels: ['Lebih dari sekali seminggu', 'Seminggu sekali', '2-3 kali sebulan', 'Sebulan sekali', 'Hanya untuk acara tertentu'],
+                data: [17, 15, 9, 6, 7]
+            },
+            waktuIdeal: {
+                labels: ['Hari kerja, pagi', 'Hari kerja, siang', 'Hari kerja, sore', 'Akhir pekan'],
+                data: [10, 2, 28, 35] // Data agregat untuk contoh
+            }
+        };
+
         // --- DOM MANIPULATION & RENDER ---
         document.addEventListener('DOMContentLoaded', () => {
             // Fill Summary Cards
@@ -2050,6 +2112,80 @@
                             }
                         }
                     }
+                }
+            });
+
+            // Chart 1: Preferensi Fasilitas (Pie)
+            new Chart(document.getElementById('preferensiFasilitasChart'), {
+                type: 'pie',
+                data: {
+                    labels: surveyData.preferensiFasilitas.labels,
+                    datasets: [{
+                        data: surveyData.preferensiFasilitas.data,
+                        backgroundColor: ['#F59E0B', '#8B5CF6', '#10B981'],
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${ctx.raw} responden` } }
+                    }
+                }
+            });
+
+            // Chart 2: Tingkat Minat Padel (Bar)
+            new Chart(document.getElementById('minatPadelChart'), {
+                type: 'bar',
+                data: {
+                    labels: surveyData.minatPadel.labels,
+                    datasets: [{
+                        label: 'Jumlah Responden',
+                        data: surveyData.minatPadel.data,
+                        backgroundColor: '#8B5CF6'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: { y: { beginAtZero: true } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // Chart 3: Frekuensi Penggunaan Padel (Bar)
+            new Chart(document.getElementById('frekuensiPadelChart'), {
+                type: 'bar',
+                data: {
+                    labels: surveyData.frekuensiPadel.labels,
+                    datasets: [{
+                        label: 'Jumlah Responden',
+                        data: surveyData.frekuensiPadel.data,
+                        backgroundColor: '#10B981'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: { y: { beginAtZero: true } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // Chart 4: Waktu Ideal Padel (Bar Stacked)
+            new Chart(document.getElementById('waktuIdealPadelChart'), {
+                type: 'bar',
+                data: {
+                    labels: surveyData.waktuIdeal.labels,
+                    datasets: [{
+                        label: 'Jumlah Pilihan',
+                        data: surveyData.waktuIdeal.data,
+                        backgroundColor: '#3B82F6'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: { y: { beginAtZero: true } },
+                    plugins: { legend: { display: false } }
                 }
             });
 
