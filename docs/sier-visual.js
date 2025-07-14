@@ -695,15 +695,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // BAGIAN XII: ANALISIS KEUANGAN & KELAYAKAN INVESTASI (BARU)
     // ====================================================================
     tryToRender(() => {
-        // --- Container Elements ---
+        // --- Cek SEMUA container utama SEKALI di awal ---
+        const mainFinancialContainer = document.getElementById('financial-analysis-summary');
+        if (!mainFinancialContainer) return; // Jika section utama tidak ada, hentikan
+
+        // Ambil semua sub-container di dalamnya
         const capexContainer = document.getElementById('capex-summary');
         const pnlContainer = document.getElementById('pnl-summary');
         const feasibilityContainer = document.getElementById('investment-feasibility');
         const sensitivityContainer = document.getElementById('sensitivity-analysis');
 
-        if (!capexContainer || !pnlContainer || !feasibilityContainer || !sensitivityContainer) return;
+        // Lakukan pengecekan lagi untuk keamanan, meskipun seharusnya semua ada jika container utama ada.
+        if (!capexContainer || !pnlContainer || !feasibilityContainer || !sensitivityContainer) {
+            console.error("Salah satu sub-container analisis keuangan tidak ditemukan.");
+            return;
+        }
 
-        // --- Financial Model Assumptions ---
+        // --- Financial Model Assumptions (SAMA SEPERTI SEBELUMNYA) ---
         const financials = {
             capex: {
                 dr_land: 2000000000,
@@ -743,19 +751,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
-        // --- Helper Function ---
+        // --- Helper Function (SAMA SEPERTI SEBELUMNYA) ---
         const toBillion = (num) => (num / 1000000000).toFixed(2) + ' M';
-        const toMillion = (num) => (num / 1000000).toFixed(2) + ' Jt';
-
-        // --- Calculations ---
-        // 1. CapEx
+        
+        // --- Calculations (SAMA SEPERTI SEBELUMNYA) ---
         const totalCapexDR = financials.capex.dr_land + financials.capex.dr_construction + financials.capex.dr_building + financials.capex.dr_equipment;
         const totalCapexPadel = financials.capex.padel_land + financials.capex.padel_construction + financials.capex.padel_building + financials.capex.padel_equipment;
         const subTotalCapex = totalCapexDR + totalCapexPadel;
         const contingency = subTotalCapex * financials.assumptions.contingency_rate;
         const totalInvestment = subTotalCapex + contingency;
 
-        // 2. P&L (Annual)
         const calculatePnl = (revenueMultiplier = 1, opexMultiplier = 1) => {
             const annualRevenue = Object.values(financials.revenue_monthly).reduce((a, b) => a + b, 0) * 12 * revenueMultiplier;
             const annualAncillaryRevenue = (financials.revenue_monthly.dr_ancillary + financials.revenue_monthly.padel_ancillary) * 12 * revenueMultiplier;
@@ -770,23 +775,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const tax = ebt > 0 ? ebt * financials.assumptions.tax_rate : 0;
             const netProfit = ebt - tax;
             const cashFlowFromOps = netProfit + totalDepreciation;
-            return { annualRevenue, grossProfit, annualOpex, ebitda, netProfit, cashFlowFromOps };
+            return { annualRevenue, grossProfit, cogs, annualOpex, ebitda, ebt, tax, netProfit, cashFlowFromOps, totalDepreciation };
         };
         const realisticPnl = calculatePnl();
 
-        // 3. Feasibility
         const paybackPeriod = totalInvestment / realisticPnl.cashFlowFromOps;
         const cashFlows = Array(10).fill(realisticPnl.cashFlowFromOps);
         const npv = cashFlows.reduce((acc, cf, i) => acc + cf / Math.pow(1 + financials.assumptions.discount_rate, i + 1), 0) - totalInvestment;
         
-        // Simple IRR approximation (not perfect, but good for display)
         let irr = 0;
         for (let i = 0; i < 100; i += 0.001) {
             let tempNpv = cashFlows.reduce((acc, cf, j) => acc + cf / Math.pow(1 + i, j + 1), 0) - totalInvestment;
             if (tempNpv < 0) { irr = (i - 0.001); break; }
         }
 
-        // --- HTML Rendering ---
+        // --- HTML Rendering (SAMA SEPERTI SEBELUMNYA, TAPI DIJADIKAN SATU BLOK) ---
         // 1. Render CapEx
         capexContainer.innerHTML = `
             <h3 class="text-xl font-semibold mb-4 text-gray-700">1. Proyeksi Biaya Investasi (CapEx)</h3>
@@ -813,13 +816,13 @@ document.addEventListener('DOMContentLoaded', () => {
             <table class="w-full text-sm">
                 <tbody class="divide-y">
                     <tr><td class="py-2">Total Pendapatan</td><td class="py-2 text-right font-mono">${formatNumber(realisticPnl.annualRevenue)}</td></tr>
-                    <tr><td class="py-2">Harga Pokok Penjualan (COGS)</td><td class="py-2 text-right font-mono">(${formatNumber(cogs)})</td></tr>
+                    <tr><td class="py-2">Harga Pokok Penjualan (COGS)</td><td class="py-2 text-right font-mono">(${formatNumber(realisticPnl.cogs)})</td></tr>
                     <tr class="font-semibold"><td class="py-2">Laba Kotor</td><td class="py-2 text-right font-mono">${formatNumber(realisticPnl.grossProfit)}</td></tr>
                     <tr><td class="py-2">Beban Operasional (OpEx)</td><td class="py-2 text-right font-mono">(${formatNumber(realisticPnl.annualOpex)})</td></tr>
-                    <tr class="font-semibold bg-gray-50"><td class="py-2 px-2">Laba Sebelum Bunga, Pajak, Depresiasi (EBITDA)</td><td class="py-2 px-2 text-right font-mono">${formatNumber(realisticPnl.ebitda)}</td></tr>
-                    <tr><td class="py-2">Beban Depresiasi</td><td class="py-2 text-right font-mono">(${formatNumber(totalDepreciation)})</td></tr>
-                    <tr class="font-semibold"><td class="py-2">Laba Sebelum Pajak (EBT)</td><td class="py-2 text-right font-mono">${formatNumber(ebt)}</td></tr>
-                    <tr><td class="py-2">Pajak Penghasilan (22%)</td><td class="py-2 text-right font-mono">(${formatNumber(tax)})</td></tr>
+                    <tr class="font-semibold bg-gray-50"><td class="py-2 px-2">Laba Sblm Bunga, Pajak, Depresiasi (EBITDA)</td><td class="py-2 px-2 text-right font-mono">${formatNumber(realisticPnl.ebitda)}</td></tr>
+                    <tr><td class="py-2">Beban Depresiasi</td><td class="py-2 text-right font-mono">(${formatNumber(realisticPnl.totalDepreciation)})</td></tr>
+                    <tr class="font-semibold"><td class="py-2">Laba Sebelum Pajak (EBT)</td><td class="py-2 text-right font-mono">${formatNumber(realisticPnl.ebt)}</td></tr>
+                    <tr><td class="py-2">Pajak Penghasilan (22%)</td><td class="py-2 text-right font-mono">(${formatNumber(realisticPnl.tax)})</td></tr>
                     <tr class="font-bold text-lg bg-teal-50"><td class="py-3 px-2">Estimasi Laba Bersih</td><td class="py-3 px-2 text-right font-mono text-teal-700">${formatNumber(realisticPnl.netProfit)}</td></tr>
                 </tbody>
             </table>
