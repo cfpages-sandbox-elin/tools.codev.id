@@ -610,4 +610,85 @@ document.addEventListener('DOMContentLoaded', () => {
 
     });
 
+    // ====================================================================
+    // BAGIAN XI: ANALISIS TEKNIS & OPERASIONAL (BARU)
+    // ====================================================================
+    tryToRender(() => {
+        const container = document.getElementById('technicalAnalysisContainer');
+        if (!container) return;
+
+        const technicalData = [
+            {
+                title: '1. Tata Letak (Layout) & Zonasi',
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>`,
+                summary: 'Tujuan utama adalah menciptakan alur pengunjung yang lancar, memisahkan area bising dan tenang, serta memastikan efisiensi operasional bagi staf.',
+                points: [
+                    { aspect: 'Zonasi Pengalaman', recommendation: 'Area F&B dan lounge harus dirancang sebagai "oase tenang" yang terpisah secara visual dan akustik dari area lapangan. Terapkan kebijakan <strong>100% bebas rokok</strong> di seluruh zona, termasuk outdoor, sebagai nilai jual utama.' },
+                    { aspect: 'Alur & Aksesibilitas', recommendation: 'Desain sirkulasi satu arah untuk masuk dan keluar jika memungkinkan. Pastikan akses mudah ke toilet dari semua area. Rencanakan jalur servis terpisah untuk staf dan pengiriman F&B.' },
+                    { aspect: 'Parkir', recommendation: 'Alokasikan area parkir yang memadai dengan pencahayaan yang baik dan keamanan. Pertimbangkan parkir valet sebagai layanan premium saat event besar.' }
+                ]
+            },
+            {
+                title: '2. Spesifikasi Lapangan',
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 18.528c-3.268-1.54-5-4.442-5-7.792 0-3.236 1.732-6.258 5-7.792v15.584z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12.5 3.037a10.025 10.025 0 017.5 7.49C20 14.538 18.232 17.56 15 19.1" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4a1 1 0 100-2 1 1 0 000 2z" /></svg>`,
+                summary: 'Kualitas lapangan adalah inti dari produk. Standar yang digunakan harus memenuhi ekspektasi pemain serius untuk membangun reputasi dan justifikasi harga premium.',
+                points: [
+                    { aspect: 'Driving Range', recommendation: 'Gunakan matras dual-surface. Alokasikan <strong>3-5 bay sebagai "Premium Bay"</strong> yang dilengkapi teknologi ball-tracking (seperti Toptracer) dengan biaya tambahan. Jaring pengaman harus memiliki ketinggian minimal 30 meter.' },
+                    { aspect: 'Padel', recommendation: 'Gunakan lapangan berstandar WPT (misal: rumput Mondo Supercourt, kaca tempered 12mm). Pasang sistem pencahayaan LED indirect (tidak langsung menyorot pemain) dengan tingkat LUX > 300 untuk permainan malam yang optimal dan bebas silau.' },
+                    { aspect: 'Maintenance', recommendation: 'Buat jadwal inspeksi harian (bola, matras, jaring) dan mingguan (rumput, kaca). Ini adalah investasi, bukan biaya.' }
+                ]
+            },
+            {
+                title: '3. Sistem & Teknologi',
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" /></svg>`,
+                summary: 'Teknologi adalah kunci untuk efisiensi operasional dan pengalaman pelanggan yang modern. Ini adalah area di mana banyak kompetitor masih lemah.',
+                points: [
+                    { aspect: 'Booking & Membership', recommendation: 'Investasi pada <strong>sistem booking online yang handal dan terintegrasi</strong> dengan pembayaran. Sistem ini harus mampu mengelola jadwal, membership, dan promo secara otomatis.' },
+                    { aspect: 'Point of Sale (POS)', recommendation: 'Gunakan sistem POS berbasis cloud untuk F&B dan Pro Shop. Ini memungkinkan pemantauan penjualan dan inventaris secara real-time dari mana saja.' },
+                    { aspect: 'Konektivitas', recommendation: 'Sediakan Wi-Fi gratis berkecepatan tinggi di seluruh area, termasuk area lapangan. Ini adalah ekspektasi dasar bagi target pasar profesional muda.' }
+                ]
+            },
+            {
+                title: '4. Rencana Operasional & SDM',
+                icon: `<svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>`,
+                summary: 'Staf adalah wajah dari brand. Kualitas layanan akan menjadi pembeda utama dari kompetitor. Investasi pada SDM adalah investasi pada loyalitas pelanggan.',
+                points: [
+                    { aspect: 'Struktur & Peran', recommendation: 'Rekrut seorang <strong>General Manager</strong> dengan latar belakang perhotelan atau manajemen klub. Staf lapangan bukan hanya "penjaga", tetapi <strong>"Experience Host"</strong> yang proaktif.' },
+                    { aspect: 'SOP & Pelatihan', recommendation: 'Buat buku panduan SOP yang detail untuk semua skenario (kebersihan, keluhan, darurat). Adakan <strong>pelatihan hospitality wajib</strong> bagi seluruh staf, dari manajer hingga petugas kebersihan.' },
+                    { aspect: 'Pengukuran Kinerja', recommendation: 'Jadikan <strong>rating kepuasan pelanggan (dari ulasan online & survei internal) dan skor kebersihan fasilitas</strong> sebagai KPI utama bagi tim operasional.' }
+                ]
+            }
+        ];
+
+        container.innerHTML = ''; // Kosongkan kontainer
+        technicalData.forEach(section => {
+            const sectionDiv = document.createElement('div');
+            sectionDiv.className = 'p-5 border rounded-lg shadow-sm';
+            
+            let pointsHtml = section.points.map(point => `
+                <div class="mt-4">
+                    <h5 class="font-semibold text-gray-700">${point.aspect}</h5>
+                    <p class="text-sm text-gray-600 pl-4 border-l-2 border-gray-200 ml-1 mt-1">${point.recommendation}</p>
+                </div>
+            `).join('');
+
+            sectionDiv.innerHTML = `
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 bg-gray-700 rounded-md p-2">
+                        ${section.icon}
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-xl font-bold text-gray-800">${section.title}</h3>
+                        <p class="text-sm text-gray-500">${section.summary}</p>
+                    </div>
+                </div>
+                <div class="mt-4 pt-4 border-t">
+                    ${pointsHtml}
+                </div>
+            `;
+            container.appendChild(sectionDiv);
+        });
+
+    });
+
 });
