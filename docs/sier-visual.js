@@ -194,8 +194,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // BAGIAN 4: ANALISIS SURVEI (RAW DATA & DEEP DIVE)
     // ====================================================================
     tryToRender(() => {
+        // Hentikan jika data mentah survei tidak tersedia
+        if (typeof surveyRawData === 'undefined' || !surveyRawData) {
+            console.warn("Data survei mentah (surveyRawData) tidak ditemukan. Melewatkan rendering bagian analisis survei.");
+            return;
+        }
+
         const headers = ["Nama", "Perusahaan", "Posisi", "Domisili", "Kelompok Usia", "Status Pekerjaan", "Pengalaman Olahraga", "Minat Driving Range", "Frekuensi Driving Range", "Waktu Ideal Driving Range", "Biaya Wajar Driving Range", "Fitur Penting Driving Range", "Familiar PADEL", "Minat PADEL", "Frekuensi PADEL", "Waktu Ideal PADEL", "Biaya Sewa PADEL", "Fitur Penting PADEL", "Pilihan Fasilitas", "Pemanfaatan Fasilitas", "Pendorong Rutin", "Saran Lain"];
-        if (typeof surveyRawData === 'undefined') return;
         const parsedSurveyData = surveyRawData.trim().split('\n').map(row => {
             const values = row.split('\t');
             let obj = {};
@@ -203,13 +208,18 @@ document.addEventListener('DOMContentLoaded', () => {
             return obj;
         });
 
-        // --- A. Survey Analysis (Basic) ---
         const surveyChartsContainer = document.getElementById('surveyChartsContainer');
+        const feedbackList = document.getElementById('qualitativeFeedback');
+
+        // --- A. Survey Analysis (Basic) ---
         if (surveyChartsContainer) {
+            surveyChartsContainer.innerHTML = ''; // Kosongkan kontainer sebelum mengisi
+
+            // Fungsi untuk mengagregasi data dari kolom survei
             const aggregateData = (data, key, isMultiSelect = false, separator = ', ') => {
                 return data.reduce((acc, row) => {
                     const answer = row[key];
-                    if (answer && !['-', 'na', 'tidak', 'ga tau'].includes(answer.toLowerCase())) {
+                    if (answer && !['-', 'na', 'tidak', 'ga tau', '', 'tidak tahu', 'tidka tertarik'].includes(answer.toLowerCase())) {
                         if (isMultiSelect) {
                             answer.split(separator).forEach(item => {
                                 const trimmed = item.trim();
@@ -222,12 +232,90 @@ document.addEventListener('DOMContentLoaded', () => {
                     return acc;
                 }, {});
             };
-            const createChart = (title, type, data, palette) => { /* ... (implementasi createChart seperti sebelumnya) ... */ };
-            // Panggilan createChart bisa ditambahkan di sini jika section survey-analysis memang ada
+            
+            // Helper untuk membuat chart dan menambahkannya ke DOM
+            const createChart = (title, type, aggregatedData, options = {}) => {
+                const chartWrapper = document.createElement('div');
+                chartWrapper.className = 'bg-white p-6 rounded-lg shadow-md';
+                chartWrapper.innerHTML = `
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">${title}</h3>
+                    <canvas></canvas>
+                `;
+                surveyChartsContainer.appendChild(chartWrapper);
+                const canvas = chartWrapper.querySelector('canvas');
+                
+                const chartOptions = {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: type === 'doughnut' },
+                        tooltip: { callbacks: { label: (c) => `${c.label}: ${formatNumber(c.raw)}` } }
+                    },
+                    ...options
+                };
+                
+                new Chart(canvas, {
+                    type,
+                    data: {
+                        labels: Object.keys(aggregatedData),
+                        datasets: [{
+                            data: Object.values(aggregatedData),
+                            backgroundColor: [
+                                'rgba(59, 130, 246, 0.7)', 'rgba(16, 185, 129, 0.7)', 
+                                'rgba(245, 158, 11, 0.7)', 'rgba(236, 72, 153, 0.7)',
+                                'rgba(139, 92, 246, 0.7)', 'rgba(20, 184, 166, 0.7)'
+                            ],
+                            borderColor: 'rgba(255, 255, 255, 0.5)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: chartOptions
+                });
+            };
+
+            // 1. Chart: Preferensi Fasilitas Utama
+            const facilityData = aggregateData(parsedSurveyData, 'Pilihan Fasilitas');
+            createChart('Preferensi Fasilitas Utama', 'doughnut', facilityData);
+
+            // 2. Chart: Minat terhadap PADEL
+            const padelInterestData = aggregateData(parsedSurveyData, 'Minat PADEL');
+            createChart('Tingkat Minat Terhadap Lapangan PADEL', 'bar', padelInterestData, { plugins: { legend: { display: false } } });
+
+            // 3. Chart: Demografi Usia Responden
+            const ageData = aggregateData(parsedSurveyData, 'Kelompok Usia');
+            createChart('Demografi Usia Responden', 'bar', ageData, { plugins: { legend: { display: false } } });
+
+            // 4. Chart: Fitur Padel Paling Penting (Multi-select)
+            const padelFeaturesData = aggregateData(parsedSurveyData, 'Fitur Penting PADEL', true);
+            createChart('Fitur Padel Paling Penting Menurut Responden', 'bar', padelFeaturesData, { 
+                indexAxis: 'y', 
+                plugins: { legend: { display: false } },
+                scales: { y: { ticks: { font: { size: 10 } } } }
+            });
         }
         
-        const feedbackList = document.getElementById('qualitativeFeedback');
-        if(feedbackList) { /* ... render feedback list ... */ }
+        // Mengisi daftar masukan kualitatif
+        if(feedbackList) {
+            feedbackList.innerHTML = ''; // Kosongkan dulu
+            const uniqueFeedbacks = new Set();
+            parsedSurveyData.forEach(row => {
+                const feedback = row['Saran Lain'];
+                if (feedback && feedback.trim() !== '' && feedback.trim().toLowerCase() !== '-' && feedback.trim().toLowerCase() !== 'tidak ada' && feedback.trim().toLowerCase() !== 'cukup') {
+                    uniqueFeedbacks.add(feedback.trim());
+                }
+            });
+            
+            if (uniqueFeedbacks.size === 0) {
+                 const li = document.createElement('li');
+                 li.textContent = 'Tidak ada masukan kualitatif tambahan dari responden.';
+                 feedbackList.appendChild(li);
+            } else {
+                uniqueFeedbacks.forEach(feedbackText => {
+                    const li = document.createElement('li');
+                    li.textContent = feedbackText;
+                    feedbackList.appendChild(li);
+                });
+            }
+        }
 
         // --- B. Survey Deep Dive ---
         const choiceVsAgeCtx = document.getElementById('choiceVsAgeChart');
@@ -261,7 +349,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         const themedFeedbackContainer = document.getElementById('themedFeedbackContainer');
-        if(themedFeedbackContainer) { /* ... render themed feedback logic ... */ }
+        if(themedFeedbackContainer) { 
+            // Implementasi untuk themed feedback bisa ditambahkan di sini jika diperlukan
+            // Untuk sekarang kita biarkan kosong agar tidak menimbulkan error.
+            themedFeedbackContainer.innerHTML = `<p class="text-center text-gray-500 italic">Analisis tematik sedang dalam pengembangan.</p>`;
+        }
     });
 
 
