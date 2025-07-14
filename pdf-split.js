@@ -302,6 +302,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const index = parseInt(e.currentTarget.dataset.index);
             cutLines[index].confirmed = !cutLines[index].confirmed;
             
+            // If we just confirmed a line, reposition following unconfirmed lines
+            if (cutLines[index].confirmed) {
+                repositionFollowingLines(index);
+            }
+            
             // Always render pages to update the UI
             renderPages();
             
@@ -343,12 +348,49 @@ document.addEventListener('DOMContentLoaded', () => {
         newPosition = Math.max(constraints.minPosition, Math.min(constraints.maxPosition, newPosition));
         
         cutLines[activeDrag.index].position = Math.round(newPosition);
-        renderPages();
+        
+        // Instead of renderPages(), just update the line position visually
+        const line = document.querySelector(`[data-index="${activeDrag.index}"]`);
+        if (line) {
+            const pageSection = line.parentElement;
+            const pageHeight = pageSection.offsetHeight;
+            line.style.top = `${pageHeight - 2.5}px`;
+        }
+    }
+
+    function repositionFollowingLines(startIndex) {
+        // Only reposition unconfirmed lines that come after the given index
+        let lastPosition = cutLines[startIndex].position;
+        
+        for (let i = startIndex + 1; i < cutLines.length; i++) {
+            if (!cutLines[i].confirmed) {
+                // Position this line one page height after the previous line
+                const newPosition = lastPosition + maxSliceHeightPixels;
+                
+                // Only update if the new position would be valid
+                if (newPosition < pdfCanvas.height - 10) {
+                    cutLines[i].position = Math.round(newPosition);
+                    lastPosition = newPosition;
+                }
+            } else {
+                // If we hit a confirmed line, use its position as the new reference
+                lastPosition = cutLines[i].position;
+            }
+        }
     }
 
     function endDrag() {
         previewContainer.classList.remove('dragging');
-        activeDrag = null;
+        
+        if (activeDrag) {
+            // Reposition any following unconfirmed lines
+            repositionFollowingLines(activeDrag.index);
+            activeDrag = null;
+            
+            // Now render everything with the updated positions
+            renderPages();
+        }
+        
         document.removeEventListener('mousemove', drag);
         document.removeEventListener('mouseup', endDrag);
         updateStatus();
