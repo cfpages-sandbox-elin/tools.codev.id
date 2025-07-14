@@ -349,10 +349,100 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         const themedFeedbackContainer = document.getElementById('themedFeedbackContainer');
-        if(themedFeedbackContainer) { 
-            // Implementasi untuk themed feedback bisa ditambahkan di sini jika diperlukan
-            // Untuk sekarang kita biarkan kosong agar tidak menimbulkan error.
-            themedFeedbackContainer.innerHTML = `<p class="text-center text-gray-500 italic">Analisis tematik sedang dalam pengembangan.</p>`;
+        if(themedFeedbackContainer) {
+            themedFeedbackContainer.innerHTML = ''; // Kosongkan kontainer
+
+            // 1. Definisikan tema dan kata kunci terkait
+            const themes = {
+                'Fasilitas & Pengalaman Premium': {
+                    keywords: ['kualitas', 'fasilitas', 'nyaman', 'kafe', 'bar', 'ice bath', 'bagus', 'executive', 'musola', 'standar', 'graha family', 'pakuwon', 'ciputra', 'bersih', 'sirkulasi', 'ventilasi'],
+                    comments: [],
+                    summary: 'Banyak responden menekankan pentingnya pengalaman premium di luar lapangan itu sendiri. Ini termasuk kualitas F&B, kebersihan fasilitas (terutama toilet & shower), dan suasana yang nyaman. Mereka tidak hanya mencari tempat berolahraga, tetapi juga tempat bersosialisasi.'
+                },
+                'Saran Fasilitas Alternatif & Renovasi': {
+                    keywords: ['tennis', 'futsal', 'gym', 'indoor', 'renovasi'],
+                    comments: [],
+                    summary: 'Ada permintaan yang jelas untuk fasilitas lain, terutama lapangan Tenis Indoor. Ini menunjukkan adanya pasar yang merasa Padel sudah jenuh dan menginginkan alternatif olahraga raket yang terlindung dari cuaca.'
+                },
+                'Harga, Promosi & Keanggotaan': {
+                    keywords: ['harga', 'murah', 'terjangkau', 'promo', 'membership', 'paket', 'korporat'],
+                    comments: [],
+                    summary: 'Aspek harga tetap menjadi pertimbangan penting. Responden menyarankan adanya paket-paket menarik, program membership, dan promosi untuk membuat fasilitas lebih mudah diakses dan mendorong kunjungan rutin.'
+                },
+                'Spesifikasi Teknis Lapangan': {
+                    keywords: ['silau', 'pasir', 'rata', 'dead spot', 'panas', 'penerangan', 'matras'],
+                    comments: [],
+                    summary: 'Pemain yang lebih serius memberikan masukan teknis yang spesifik. Isu seperti pantulan bola yang tidak rata (dead spots), silau, dan kualitas pasir/rumput adalah faktor krusial yang menentukan kepuasan mereka.'
+                },
+                'Dukungan & Antusiasme Pembangunan': {
+                    keywords: ['segera', 'semoga', 'momentum', 'dibangun', 'ditunggu', 'jarang'],
+                    comments: [],
+                    summary: 'Sebagian besar masukan menunjukkan antusiasme dan dukungan tinggi agar proyek ini segera direalisasikan. Ada persepsi bahwa ada celah pasar yang bisa diisi, terutama untuk Padel di Surabaya Timur.'
+                },
+                'Operasional & Aksesibilitas': {
+                    keywords: ['jam', 'operasional', '24 jam', 'booking', 'lokasi', 'parkir', 'akses'],
+                    comments: [],
+                    summary: 'Kemudahan adalah kunci. Jam operasional yang fleksibel (termasuk potensi 24 jam), sistem booking online yang andal, dan lokasi yang mudah diakses menjadi faktor penting bagi responden.'
+                }
+            };
+
+            const otherComments = [];
+
+            // 2. Kelompokkan komentar ke dalam tema
+            parsedSurveyData.forEach(row => {
+                const comment = row['Saran Lain'];
+                if (comment && comment.trim() !== '' && !['-','ok','cukup','tidak ada'].includes(comment.trim().toLowerCase())) {
+                    let assigned = false;
+                    const lowerCaseComment = comment.toLowerCase();
+                    for (const themeName in themes) {
+                        for (const keyword of themes[themeName].keywords) {
+                            if (lowerCaseComment.includes(keyword)) {
+                                themes[themeName].comments.push(comment);
+                                assigned = true;
+                                break; // Pindah ke komentar berikutnya setelah tema ditemukan
+                            }
+                        }
+                        if (assigned) break;
+                    }
+                    if (!assigned) {
+                        otherComments.push(comment);
+                    }
+                }
+            });
+            
+            // Tambahkan komentar lain-lain jika ada
+            if (otherComments.length > 0) {
+                 themes['Lain-lain & Spesifik'] = {
+                    comments: otherComments,
+                    summary: 'Beberapa masukan unik atau spesifik dari responden.'
+                 }
+            }
+            
+            // 3. Render hasil tematik ke HTML
+            const themeColors = ['blue', 'purple', 'green', 'orange', 'teal', 'rose', 'gray'];
+            let colorIndex = 0;
+
+            for (const themeName in themes) {
+                const themeData = themes[themeName];
+                if (themeData.comments.length > 0) {
+                    const color = themeColors[colorIndex % themeColors.length];
+                    colorIndex++;
+
+                    const themeDiv = document.createElement('div');
+                    themeDiv.className = `p-5 border-l-4 bg-${color}-50 border-${color}-400 rounded-r-lg mb-6`;
+                    
+                    let commentsHtml = themeData.comments.map(c => 
+                        `<li class="mt-2 p-3 bg-white border border-gray-200 rounded-md text-gray-700 italic">“${c}”</li>`
+                    ).join('');
+
+                    themeDiv.innerHTML = `
+                        <h4 class="text-lg font-bold text-${color}-800">${themeName}</h4>
+                        <p class="mt-1 text-sm text-gray-600">${themeData.summary || ''}</p>
+                        <ul class="mt-3 space-y-1">${commentsHtml}</ul>
+                    `;
+                    themedFeedbackContainer.appendChild(themeDiv);
+                }
+            }
         }
     });
 
