@@ -10,7 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let uploadedFile = null;
     let originalPdfArrayBuffer = null;
     let originalPageSize = { width: 0, height: 0, scale: 1 };
-    let cutLines = []; // Array of {position: number, confirmed: boolean}
+    let cutLines = [];
+    let pageStates = [];
     let maxSliceHeightPixels = 0;
     let marginPixels = 0;
     let activeDrag = null;
@@ -48,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
         customMarginInput.classList.toggle('hidden', marginSelect.value !== 'custom');
         if (pdfCanvas) {
             recalculateUnconfirmedLines();
-            renderPages(); // The visual margin guides will update
+            renderPages(); 
         }
     });
     paperSizeSelect.addEventListener('change', () => {
@@ -67,9 +68,6 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadedFile = e.target.files[0];
         if (uploadedFile) {
             fileNameDisplay.textContent = uploadedFile.name;
-            
-            // --- Start of changes ---
-            // Disable all buttons and clean up the UI
             previewSection.classList.add('hidden');
             splitViewToggle.classList.add('hidden');
             generateButton.classList.add('hidden');
@@ -77,95 +75,69 @@ document.addEventListener('DOMContentLoaded', () => {
             addCutLineButton.classList.add('hidden');
             statusDiv.innerHTML = '';
             cutLines = [];
-            
-            // Automatically start the preview generation
+            pageStates = []; // NEW: Reset page states
             await renderPreview();
-            // --- End of changes ---
         }
     }
 
     async function renderPreview() {
         if (!uploadedFile) return;
-        
         showStatus('progress', 'Loading PDF...');
         
         try {
             originalPdfArrayBuffer = await uploadedFile.arrayBuffer();
             const pdfjsDoc = await pdfjsLib.getDocument({ data: originalPdfArrayBuffer.slice(0) }).promise;
-            
             if (pdfjsDoc.numPages !== 1) {
                 showStatus('error', 'Error: This tool only supports single-page PDFs.'); 
                 return;
             }
-
             showStatus('progress', 'Rendering preview...');
-
             const page = await pdfjsDoc.getPage(1);
             const desiredWidth = 1000;
             const viewport = page.getViewport({ scale: 1 });
             const scale = desiredWidth / viewport.width;
             const scaledViewport = page.getViewport({ scale });
-
             originalPageSize = { width: viewport.width, height: viewport.height, scale: scale };
-            
             pdfCanvas = document.createElement('canvas');
             pdfCanvas.width = scaledViewport.width;
             pdfCanvas.height = scaledViewport.height;
-            // Add willReadFrequently to address the performance warning
             pdfCanvasCtx = pdfCanvas.getContext('2d', { willReadFrequently: true });
-            
-            const renderContext = {
-                canvasContext: pdfCanvasCtx,
-                viewport: scaledViewport
-            };
-            
-            // Since PDF.js progress tracking isn't reliable for single page renders,
-            // we'll show a simple loading state
-            const renderTask = page.render(renderContext);
-
-            await renderTask.promise;
-
+            const renderContext = { canvasContext: pdfCanvasCtx, viewport: scaledViewport };
+            await page.render(renderContext).promise;
             calculateInitialCutLines();
             renderPages();
-            
             previewSection.classList.remove('hidden');
             splitViewToggle.classList.remove('hidden');
             generateButton.classList.remove('hidden');
             addCutLineButton.classList.remove('hidden');
             downloadLink.classList.add('hidden');
-            
             showStatus('success', `Preview generated. ${cutLines.length + 1} pages will be created.`);
-
         } catch (err) {
             showStatus('error', `Error rendering preview: ${err.message}`);
-            console.error('Preview error:', err);  // Add console logging for debugging
+            console.error('Preview error:', err);
         }
     }
 
     function calculateInitialCutLines() {
         const marginPoints = getMarginValue();
         marginPixels = marginPoints * originalPageSize.scale;
-
         const targetRatio = paperDimensions[paperSizeSelect.value].height / paperDimensions[paperSizeSelect.value].width;
         maxSliceHeightPixels = (originalPageSize.width * targetRatio) * originalPageSize.scale;
-
         if (maxSliceHeightPixels <= 0) {
             showStatus('error', 'Invalid paper dimensions.');
             cutLines = [];
             return;
         }
-        
-        // Only add initial lines if there are none
         if (cutLines.length === 0) {
             cutLines = [];
             let currentY = maxSliceHeightPixels;
-            
             while (currentY < pdfCanvas.height - 10) {
                 cutLines.push({ position: Math.round(currentY), confirmed: false });
                 currentY += maxSliceHeightPixels;
             }
         }
-        // Don't recalculate positions of existing lines!
+        // NEW: Initialize page states
+        pageStates = Array(cutLines.length + 1).fill().map(() => ({ omitted: false }));
     }
 
     function recalculateUnconfirmedLines() {
@@ -202,16 +174,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function addCutLine() {
         if (!pdfCanvas) return;
-
-        // Find the position of the last cut line. If none exist, start from 0.
         const lastPosition = cutLines.length > 0 ? cutLines[cutLines.length - 1].position : 0;
-        
-        // Calculate a sensible default position for the new line:
-        // Halfway between the last line and the bottom of the page.
-        // Or a fixed distance if that's too far. Let's use 1/3 of the default page height.
         let newPosition = lastPosition + (maxSliceHeightPixels / 3);
-
-        // Ensure the new line is not placed off the canvas
         if (newPosition >= pdfCanvas.height - 10) {
             newPosition = lastPosition + (pdfCanvas.height - lastPosition) / 2;
         }
@@ -219,15 +183,21 @@ document.addEventListener('DOMContentLoaded', () => {
             showStatus('info', 'Cannot add new line so close to the end.');
             return;
         }
-
         cutLines.push({ position: Math.round(newPosition), confirmed: false });
-        
-        // IMPORTANT: Sort the lines by position in case the new line was added out of order
-        // after the user dragged other lines around.
         cutLines.sort((a, b) => a.position - b.position);
+        
+        pageStates.push({ omitted: false });
 
         renderPages();
         updateStatus();
+    }
+
+    function toggleOmitPage(pageIndex) {
+        if (pageStates[pageIndex]) {
+            pageStates[pageIndex].omitted = !pageStates[pageIndex].omitted;
+            renderPages();
+            updateStatus();
+        }
     }
 
     function renderPages() {
@@ -239,6 +209,10 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let i = 0; i < allPositions.length - 1; i++) {
             const pageSection = document.createElement('div');
             pageSection.className = 'page-section';
+            // NEW: Add omitted class if needed
+            if (pageStates[i]?.omitted) {
+                pageSection.classList.add('page-omitted');
+            }
             const pageHeight = allPositions[i + 1] - allPositions[i];
             pageSection.style.height = `${pageHeight}px`;
             
@@ -252,6 +226,13 @@ document.addEventListener('DOMContentLoaded', () => {
             pageNumber.className = 'page-number';
             pageNumber.textContent = `Page ${i + 1}`;
             pageSection.appendChild(pageNumber);
+
+            const omitButton = document.createElement('button');
+            omitButton.className = 'page-omit-button';
+            omitButton.title = pageStates[i]?.omitted ? 'Click to include this page' : 'Click to omit this page';
+            omitButton.textContent = '❌';
+            omitButton.onclick = () => toggleOmitPage(i);
+            pageSection.appendChild(omitButton);
             
             if (i > 0) {
                 const topMargin = document.createElement('div');
@@ -273,12 +254,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 line.className = cutLine.confirmed ? 'cut-line-confirmed' : 'cut-line-initial';
                 line.style.top = `${pageHeight - 2.5}px`;
                 line.dataset.index = i;
-                
                 const handle = document.createElement('div');
                 handle.className = 'cut-line-handle';
                 handle.textContent = cutLine.confirmed ? `✓ Page ${i + 2}` : `Drag to adjust`;
                 line.appendChild(handle);
-                
                 if (!cutLine.confirmed) line.addEventListener('mousedown', startDrag);
                 line.addEventListener('click', toggleConfirmation);
                 pageSection.appendChild(line);
@@ -366,13 +345,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateStatus() {
-        const confirmedCount = cutLines.filter(c => c.confirmed).length;
-        const totalCount = cutLines.length;
-        if (confirmedCount < totalCount) {
-            showStatus('info', `${confirmedCount} of ${totalCount} cut lines confirmed. ${totalCount + 1} pages will be created.`);
-        } else {
-            showStatus('success', `All ${totalCount} cut lines confirmed. Ready to create final PDF.`);
-        }
+        const totalPages = cutLines.length + 1;
+        const omittedCount = pageStates.filter(s => s.omitted).length;
+        const finalPageCount = totalPages - omittedCount;
+        showStatus('info', `${totalPages} pages will be created. ${omittedCount} omitted. Final PDF will have ${finalPageCount} pages.`);
     }
 
     async function createFinalPdf() {
@@ -389,7 +365,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const cutPointsY = [0, ...cutLines.map(c => c.position / originalPageSize.scale), originalPageSize.height];
             const scaleFactor = targetSize.width / originalPageSize.width;
 
+            let pagesGenerated = 0;
             for (let i = 0; i < cutPointsY.length - 1; i++) {
+
+                if (pageStates[i]?.omitted) {
+                    continue;
+                }
+                
+                pagesGenerated++;
                 const sliceStartY = cutPointsY[i];
                 const sliceEndY = cutPointsY[i + 1];
                 const newPage = outputPdfDoc.addPage([targetSize.width, targetSize.height]);
@@ -397,21 +380,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 let contentTopY = (i === 0) ? targetSize.height : targetSize.height - marginPoints;
                 const embeddedPageY = contentTopY - (originalPageSize.height - sliceStartY) * scaleFactor;
                 
-                newPage.drawPage(embeddedPage, {
-                    x: 0, y: embeddedPageY,
-                    width: targetSize.width, height: originalPageSize.height * scaleFactor,
-                });
+                newPage.drawPage(embeddedPage, { x: 0, y: embeddedPageY, width: targetSize.width, height: originalPageSize.height * scaleFactor });
                 
                 const white = rgb(1, 1, 1);
-                if (contentTopY < targetSize.height) {
-                    newPage.drawRectangle({ x: 0, y: contentTopY, width: targetSize.width, height: targetSize.height - contentTopY, color: white });
-                }
+                if (contentTopY < targetSize.height) { newPage.drawRectangle({ x: 0, y: contentTopY, width: targetSize.width, height: targetSize.height - contentTopY, color: white }); }
                 const sliceHeight = (sliceEndY - sliceStartY) * scaleFactor;
                 const contentBottomY = contentTopY - sliceHeight;
-                if (contentBottomY > marginPoints) {
-                    newPage.drawRectangle({ x: 0, y: marginPoints, width: targetSize.width, height: contentBottomY - marginPoints, color: white });
-                }
+                if (contentBottomY > marginPoints) { newPage.drawRectangle({ x: 0, y: marginPoints, width: targetSize.width, height: contentBottomY - marginPoints, color: white }); }
                 newPage.drawRectangle({ x: 0, y: 0, width: targetSize.width, height: marginPoints, color: white });
+            }
+
+            if (pagesGenerated === 0) {
+                 showStatus('error', `No pages were generated. Did you omit all pages?`);
+                 generateButton.disabled = false;
+                 return;
             }
 
             const pdfBytes = await outputPdfDoc.save();
@@ -422,7 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
             downloadLink.download = `${uploadedFile.name.replace(/\.pdf$/i, '')}-split.pdf`;
             downloadLink.classList.remove('hidden');
             
-            showStatus('success', `PDF successfully created! ${cutPointsY.length - 1} pages generated.`);
+            showStatus('success', `PDF successfully created! ${pagesGenerated} pages generated.`);
 
         } catch (err) {
             showStatus('error', `Failed to create PDF: ${err.message}`);

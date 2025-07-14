@@ -1,3 +1,5 @@
+--- START OF FILE pdf.html ---
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -31,16 +33,28 @@
         .allowed-range-label { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: rgba(16, 185, 129, 0.9); color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap; }
         .cut-line-initial, .cut-line-confirmed { transition: top 0.3s ease-out; }
         .dragging .cut-line-initial { transition: none !important; }
+        /* NEW: Styles for page omission in Split tool */
+        .page-omitted::after { content: 'OMITTED'; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(239, 68, 68, 0.7); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: bold; z-index: 16; pointer-events: none; }
+        .page-omit-button { position: absolute; top: 10px; left: 10px; background: rgba(220, 38, 38, 0.8); color: white; border: 1px solid white; width: 28px; height: 28px; border-radius: 50%; font-size: 16px; cursor: pointer; z-index: 17; display: flex; align-items: center; justify-content: center; line-height: 1; }
+        .page-omit-button:hover { background: rgba(185, 28, 28, 1); }
+
 
         /* Styles for Tabs */
         .tab-button { cursor: pointer; padding: 10px 20px; border-bottom: 3px solid transparent; }
         .tab-button.active { border-color: #4f46e5; color: #4f46e5; font-weight: 600; }
+
+        /* NEW: Styles for Delete tool */
+        .page-preview-card { position: relative; border: 3px solid transparent; border-radius: 8px; padding: 8px; cursor: pointer; transition: all 0.2s ease-in-out; background-color: #f8fafc; }
+        .page-preview-card:hover { border-color: #a5b4fc; }
+        .page-preview-card.selected { border-color: #ef4444; background-color: #fee2e2; }
+        .page-preview-card.selected::after { content: '✓ To Delete'; position: absolute; bottom: 8px; right: 8px; background: #ef4444; color: white; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 500; }
+        .page-preview-card canvas { width: 100%; height: auto; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body class="bg-slate-100 font-sans">
     <div class="w-full max-w-5xl mx-auto p-4 sm:p-8 my-10 bg-white rounded-xl shadow-lg">
         <div class="text-center mb-6">
-            <h1 class="text-3xl font-bold text-slate-800">PDF Tools v1.2</h1>
+            <h1 class="text-3xl font-bold text-slate-800">PDF Tools v1.3</h1>
             <p class="text-slate-500 mt-2">Choose a tool below to get started.</p>
         </div>
 
@@ -49,6 +63,7 @@
             <nav class="flex -mb-px justify-center" aria-label="Tabs">
                 <button id="tab-split" class="tab-button active" role="tab">✂️ Split</button>
                 <button id="tab-extract" class="tab-button" role="tab">📑 Extract</button>
+                <button id="tab-delete" class="tab-button" role="tab">🗑️ Delete</button>
             </nav>
         </div>
 
@@ -94,10 +109,10 @@
             </div>
             <div id="status" class="text-center mb-4 min-h-[2rem]"></div>
             <div id="preview-section" class="hidden">
-                <h3 class="text-lg font-semibold text-slate-700 mb-2 text-center">4. Adjust and Confirm Split Lines</h3>
+                <h3 class="text-lg font-semibold text-slate-700 mb-2 text-center">4. Adjust, Confirm, and Omit Pages</h3>
                 <div class="text-sm text-slate-500 text-center mb-2">
-                    <p>• Drag red lines to adjust split positions. Click to confirm (turns green).</p>
-                    <p>• Click green lines to unconfirm. Toggle Split View to see page separation.</p>
+                    <p>• Drag red lines to adjust. Click to confirm (turns green). Click green to unconfirm.</p>
+                    <p>• Click the ❌ button on a page to omit it from the final PDF. Click again to include it.</p>
                 </div>
                 <div id="preview-container" class="relative w-full max-h-[80vh] overflow-y-auto border-2 border-slate-300 bg-slate-200">
                     <div id="pages-container"></div>
@@ -113,46 +128,62 @@
             </div>
             <div class="border-b pb-6 mb-6">
                 <label class="block text-sm font-medium text-slate-700 mb-2">1. Upload PDF(s) or ZIP</label>
-                <!-- CHANGE #1: Add .zip to the accept attribute -->
                 <input id="extract-file-upload" type="file" multiple class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100" accept=".pdf,.zip">
             </div>
-            <!-- CHANGE #2: Change classes here from 'space-y-3' to 'grid' -->
-            <div id="extract-files-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                <!-- Selected files will be listed here with the new grid UI -->
-            </div>
+            <div id="extract-files-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6"></div>
             <div class="flex items-center justify-center mb-6">
                 <button id="extract-button" type="button" disabled class="px-8 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:bg-slate-400 disabled:cursor-not-allowed">Extract Pages</button>
             </div>
             <div id="extract-status" class="text-center mb-4 min-h-[2rem]"></div>
-            <div id="extract-results" class="text-center">
-                <!-- The "Download All" button will appear here -->
+            <div id="extract-results" class="text-center"></div>
+        </div>
+        
+        <div id="tab-content-delete" class="hidden">
+            <!-- DELETE TOOL UI -->
+            <div class="text-center mb-4">
+                <h2 class="text-2xl font-semibold text-slate-700">Page Deleter</h2>
+                <p class="text-slate-500 mt-1">Upload a PDF, select the pages you want to remove, and download the new file.</p>
             </div>
+            <div class="border-b pb-6 mb-6">
+                <label class="block text-sm font-medium text-slate-700 mb-2">1. Upload PDF</label>
+                <input id="delete-file-upload" type="file" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100" accept=".pdf">
+            </div>
+             <div id="delete-action-bar" class="text-center mb-6 hidden">
+                <button id="delete-button" type="button" disabled class="px-8 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:bg-slate-400 disabled:cursor-not-allowed">
+                    Delete Selected Pages
+                </button>
+            </div>
+            <div id="delete-status" class="text-center mb-4 min-h-[2rem]"></div>
+            <div id="delete-preview-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <!-- Page previews will be rendered here -->
+            </div>
+            <div id="delete-results" class="text-center mt-6"></div>
         </div>
 
 <script>
 // Simple Tab-switching logic
 document.addEventListener('DOMContentLoaded', () => {
-    const tabSplit = document.getElementById('tab-split');
-    const tabExtract = document.getElementById('tab-extract');
-    const contentSplit = document.getElementById('tab-content-split');
-    const contentExtract = document.getElementById('tab-content-extract');
+    const tabs = {
+        split: { button: document.getElementById('tab-split'), content: document.getElementById('tab-content-split') },
+        extract: { button: document.getElementById('tab-extract'), content: document.getElementById('tab-content-extract') },
+        delete: { button: document.getElementById('tab-delete'), content: document.getElementById('tab-content-delete') }
+    };
 
-    tabSplit.addEventListener('click', () => {
-        tabSplit.classList.add('active');
-        tabExtract.classList.remove('active');
-        contentSplit.classList.remove('hidden');
-        contentExtract.classList.add('hidden');
-    });
+    function switchTab(activeTabKey) {
+        Object.keys(tabs).forEach(key => {
+            const is_active = key === activeTabKey;
+            tabs[key].button.classList.toggle('active', is_active);
+            tabs[key].content.classList.toggle('hidden', !is_active);
+        });
+    }
 
-    tabExtract.addEventListener('click', () => {
-        tabExtract.classList.add('active');
-        tabSplit.classList.remove('active');
-        contentExtract.classList.remove('hidden');
-        contentSplit.classList.add('hidden');
-    });
+    tabs.split.button.addEventListener('click', () => switchTab('split'));
+    tabs.extract.button.addEventListener('click', () => switchTab('extract'));
+    tabs.delete.button.addEventListener('click', () => switchTab('delete'));
 });
 </script>
 <script src="pdf-split.js" defer></script>
 <script src="pdf-extract.js" defer></script>
+<script src="pdf-delete.js" defer></script>
 </body>
 </html>
