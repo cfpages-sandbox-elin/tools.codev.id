@@ -988,17 +988,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div>
                     <h3 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">B. Model Bisnis Driving Range</h3>
                     <div class="space-y-6">
-                        ${createTable(drivingRange.assumptions, 'drivingRange.assumptions', 'Asumsi Spesifik')}
-                        ${createTable(drivingRange.units, 'drivingRange.units', 'Unit Operasional')}
-                        ${createTable(drivingRange.opexMonthly, 'drivingRange.opexMonthly', 'Biaya Operasional', true)}
+                        ${createTable(drivingRange.operational_assumptions, 'drivingRange.operational_assumptions', 'Asumsi Operasional')}
+                        ${createTable(drivingRange.revenue, 'drivingRange.revenue', 'Unit Pendapatan')}
+                        ${createTable(drivingRange.opexMonthly, 'drivingRange.opexMonthly', 'Biaya Operasional Bulanan', true)}
                     </div>
                 </div>
                 <div>
                     <h3 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">C. Model Bisnis Padel</h3>
                     <div class="space-y-6">
-                        ${createTable(padel.assumptions, 'padel.assumptions', 'Asumsi Spesifik')}
-                        ${createTable(padel.units, 'padel.units', 'Unit Operasional')}
-                        ${createTable(padel.opexMonthly, 'padel.opexMonthly', 'Biaya Operasional', true)}
+                        ${createTable(padel.operational_assumptions, 'padel.operational_assumptions', 'Asumsi Operasional')}
+                        ${createTable(padel.revenue, 'padel.revenue', 'Unit Pendapatan')}
+                        ${createTable(padel.opexMonthly, 'padel.opexMonthly', 'Biaya Operasional Bulanan', true)}
                     </div>
                 </div>
             </div>
@@ -1019,26 +1019,28 @@ document.addEventListener('DOMContentLoaded', () => {
         const summary = projectConfig.calculations.getFinancialSummary();
         const { drivingRange: dr, padel, combined } = summary;
 
+        const toBillion = (num) => (num / 1000000000).toFixed(2) + ' M';
+
         // Fungsi helper untuk generate tabel P&L
         const createPnlTable = (pnlData) => `
             <table class="w-full text-sm">
                 <tbody class="divide-y">
-                    <tr><td class="py-2">Total Pendapatan</td><td class="py-2 text-right font-mono">${formatNumber(pnlData.annualRevenue)}</td></tr>
+                    <tr><td class="py-2">Total Pendapatan Tahunan</td><td class="py-2 text-right font-mono">${formatNumber(pnlData.annualRevenue)}</td></tr>
                     <tr><td class="py-2">Harga Pokok Penjualan (HPP/COGS)</td><td class="py-2 text-right font-mono">(${formatNumber(pnlData.annualCogs)})</td></tr>
                     <tr class="font-semibold"><td class="py-2">Laba Kotor</td><td class="py-2 text-right font-mono">${formatNumber(pnlData.grossProfit)}</td></tr>
-                    <tr><td class="py-2">Beban Operasional (OpEx)</td><td class="py-2 text-right font-mono">(${formatNumber(pnlData.annualOpex)})</td></tr>
+                    <tr><td class="py-2">Beban Operasional (OpEx) Tahunan</td><td class="py-2 text-right font-mono">(${formatNumber(pnlData.annualOpex)})</td></tr>
                     <tr class="font-semibold bg-gray-50"><td class="py-2 px-2">EBITDA</td><td class="py-2 px-2 text-right font-mono">${formatNumber(pnlData.ebitda)}</td></tr>
-                    <tr><td class="py-2">Beban Depresiasi</td><td class="py-2 text-right font-mono">(${formatNumber(pnlData.annualDepreciation)})</td></tr>
+                    <tr><td class="py-2">Beban Depresiasi Tahunan</td><td class="py-2 text-right font-mono">(${formatNumber(pnlData.annualDepreciation)})</td></tr>
                     <tr class="font-semibold"><td class="py-2">Laba Sebelum Pajak (EBT)</td><td class="py-2 text-right font-mono">${formatNumber(pnlData.ebt)}</td></tr>
                     <tr><td class="py-2">Pajak Penghasilan</td><td class="py-2 text-right font-mono">(${formatNumber(pnlData.tax)})</td></tr>
-                    <tr class="font-bold text-lg bg-teal-50"><td class="py-3 px-2">Estimasi Laba Bersih</td><td class="py-3 px-2 text-right font-mono text-teal-700">${formatNumber(pnlData.netProfit)}</td></tr>
+                    <tr class="font-bold text-lg bg-teal-50"><td class="py-3 px-2">Estimasi Laba Bersih Tahunan</td><td class="py-3 px-2 text-right font-mono text-teal-700">${formatNumber(pnlData.netProfit)}</td></tr>
                 </tbody>
             </table>
         `;
 
         // 2. Render bagian Driving Range
         drContainer.innerHTML = `
-            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-teal-600 pl-4">Analisis Finansial (Driving Range - Standalone)</h2>
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-teal-600 pl-4">Analisis Finansial (Driving Range)</h2>
             <div class="bg-white p-6 rounded-lg shadow-md mb-8">
                 <h3 class="text-xl font-semibold text-gray-700 mb-2">1. Rincian Biaya Investasi (CapEx)</h3>
                 <p class="text-center text-4xl font-bold font-mono text-gray-800">Rp ${formatNumber(dr.capex.total)}</p>
@@ -1049,7 +1051,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 3. Render bagian Padel
         padelContainer.innerHTML = `
-            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-purple-600 pl-4">Analisis Finansial (Padel - Standalone)</h2>
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-purple-600 pl-4">Analisis Finansial (Padel)</h2>
             <div class="bg-white p-6 rounded-lg shadow-md mb-8">
                 <h3 class="text-xl font-semibold text-gray-700 mb-2">1. Rincian Biaya Investasi (CapEx)</h3>
                 <p class="text-center text-4xl font-bold font-mono text-gray-800">Rp ${formatNumber(padel.capex.total)}</p>
@@ -1080,9 +1082,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="mb-8 pb-6 border-b">
                     <h3 class="text-xl font-semibold mb-4 text-gray-700">3. Analisis Kelayakan Investasi Gabungan</h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-                        <div class="p-4 bg-blue-50 rounded-lg"><h4 class="font-semibold text-sm text-blue-800">Payback Period</h4><p class="text-3xl font-bold font-mono text-blue-600 mt-1">${combined.feasibility.paybackPeriod.toFixed(2)}</p><p class="text-xs text-gray-500">Tahun</p></div>
-                        <div class="p-4 bg-green-50 rounded-lg"><h4 class="font-semibold text-sm text-green-800">Net Present Value (NPV)</h4><p class="text-3xl font-bold font-mono text-green-600 mt-1">Rp ${toBillion(combined.feasibility.npv)}</p></div>
-                        <div class="p-4 bg-purple-50 rounded-lg"><h4 class="font-semibold text-sm text-purple-800">Internal Rate of Return (IRR)</h4><p class="text-3xl font-bold font-mono text-purple-600 mt-1">${(combined.feasibility.irr * 100).toFixed(2)}%</p></div>
+                        <div class="p-4 bg-blue-50 rounded-lg"><h4 class="font-semibold text-sm text-blue-800">Payback Period</h4><p class="text-3xl font-bold font-mono text-blue-600 mt-1">${(combined.feasibility.paybackPeriod || 0).toFixed(2)}</p><p class="text-xs text-gray-500">Tahun</p></div>
+                        <div class="p-4 bg-green-50 rounded-lg"><h4 class="font-semibold text-sm text-green-800">Net Present Value (NPV)</h4><p class="text-3xl font-bold font-mono text-green-600 mt-1">Rp ${toBillion(combined.feasibility.npv || 0)}</p></div>
+                        <div class="p-4 bg-purple-50 rounded-lg"><h4 class="font-semibold text-sm text-purple-800">Internal Rate of Return (IRR)</h4><p class="text-3xl font-bold font-mono text-purple-600 mt-1">${((combined.feasibility.irr || 0) * 100).toFixed(2)}%</p></div>
                     </div>
                 </div>
 
@@ -1106,9 +1108,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             </tr>
                             <tr class="border-b">
                                 <td class="px-4 py-3 text-left font-semibold">Payback Period (Tahun)</td>
-                                <td class="px-4 py-3 font-mono text-red-600">${pesimistic.feasibility.paybackPeriod.toFixed(2)}</td>
-                                <td class="px-4 py-3 font-mono font-bold">${combined.feasibility.paybackPeriod.toFixed(2)}</td>
-                                <td class="px-4 py-3 font-mono text-green-600">${optimistic.feasibility.paybackPeriod.toFixed(2)}</td>
+                                <td class="px-4 py-3 font-mono text-red-600">${(pesimistic.feasibility.paybackPeriod || 0).toFixed(2)}</td>
+                                <td class="px-4 py-3 font-mono font-bold">${(combined.feasibility.paybackPeriod || 0).toFixed(2)}</td>
+                                <td class="px-4 py-3 font-mono text-green-600">${(optimistic.feasibility.paybackPeriod || 0).toFixed(2)}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -1219,14 +1221,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const renderFunctions = [
             renderDemographyAndCharts,
             // renderDetailedDemography, // Jika Anda memisahkannya
-            renderIncomeAndMarketAnalysis, // Gabungkan income, market, competitor
+            renderIncomeAndMarketAnalysis,
             renderSurveyAnalysis,
             // renderDeepDiveSurvey,
             renderSampleSurveyCalculation,
             renderEconomicImpact,
             renderTechnicalAnalysis,
             renderFinancialAssumptions,
-            renderFinancialAnalysis, // Fungsi yang merender P&L, kelayakan, dll.
+            renderFinancialAnalysis,
             refactorPadelBusinessAnalysis,
             refactorRiskAnalysis
         ];

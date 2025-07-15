@@ -172,19 +172,25 @@ const projectConfig = {
         _getUnitCalculations(unitName) {
             const unit = projectConfig[unitName];
             const global = projectConfig.assumptions;
+            const o = unit.operational_assumptions; 
 
             // PENDAPATAN BULANAN
             let monthlyRevenueMain = 0;
             let monthlyRevenueAncillary = 0;
+            let fnbRevenueMonthly = 0;
+
             if (unitName === 'drivingRange') {
-                const { main_revenue: m, ancillary_revenue: a, operational_assumptions: o } = unit.revenue;
+                const { main_revenue: m, ancillary_revenue: a } = unit.revenue;
                 const sessions_wd = m.bays * m.occupancy_rate_per_day.weekday;
                 const sessions_we = m.bays * m.occupancy_rate_per_day.weekend;
                 monthlyRevenueMain = (sessions_wd * o.workdays_in_month + sessions_we * o.weekend_days_in_month) * m.price_per_100_balls;
                 const total_visitors = (sessions_wd * o.workdays_in_month) + (sessions_we * o.weekend_days_in_month);
-                monthlyRevenueAncillary = (total_visitors * a.fnb_avg_spend) + a.pro_shop_sales;
+                
+                fnbRevenueMonthly = total_visitors * a.fnb_avg_spend;
+                monthlyRevenueAncillary = fnbRevenueMonthly + a.pro_shop_sales;
+
             } else if (unitName === 'padel') {
-                const { main_revenue: m, ancillary_revenue: a, operational_assumptions: o } = unit.revenue;
+                const { main_revenue: m, ancillary_revenue: a } = unit.revenue;
                 const hours_wd_off = m.courts * m.hours_distribution_per_day.offpeak * m.occupancy_rate.weekday_offpeak;
                 const hours_wd_peak = m.courts * m.hours_distribution_per_day.peak * m.occupancy_rate.weekday_peak;
                 const hours_we = m.courts * o.operational_hours_per_day * m.occupancy_rate.weekend;
@@ -192,7 +198,9 @@ const projectConfig = {
                 const revenue_we = hours_we * m.price_per_hour.weekend;
                 monthlyRevenueMain = (revenue_wd * o.workdays_in_month) + (revenue_we * o.weekend_days_in_month);
                 const total_hours = (hours_wd_off + hours_wd_peak) * o.workdays_in_month + hours_we * o.weekend_days_in_month;
-                monthlyRevenueAncillary = (total_hours * a.fnb_avg_spend) + a.pro_shop_sales;
+
+                fnbRevenueMonthly = total_hours * a.fnb_avg_spend;
+                monthlyRevenueAncillary = fnbRevenueMonthly + a.pro_shop_sales;
             }
             const monthlyRevenueTotal = monthlyRevenueMain + monthlyRevenueAncillary;
 
@@ -207,8 +215,7 @@ const projectConfig = {
 
             // BIAYA OPERASIONAL BULANAN (OPEX)
             const opexMonthlyTotal = this._calculateTotal(unit.opexMonthly);
-            const cogsMonthly = (monthlyRevenueAncillary / ((unit.operational_assumptions.cogs_rate_fnb>0)?(1+unit.operational_assumptions.cogs_rate_fnb):1)) * unit.operational_assumptions.cogs_rate_fnb;
-
+            const cogsMonthly = fnbRevenueMonthly * o.cogs_rate_fnb;
 
             // P&L TAHUNAN
             const annualRevenue = monthlyRevenueTotal * 12;
@@ -217,11 +224,12 @@ const projectConfig = {
             const grossProfit = annualRevenue - annualCogs;
             const ebitda = grossProfit - annualOpex;
             
-            // DEPRESIASI
-            const deprBuilding = (unit.capex.building_main + unit.capex.interior_finishing) / global.depreciation_years.building;
+            // DEPRESIASI (PERBAIKAN 2: Pisahkan depresiasi interior)
+            const deprBuilding = unit.capex.building_main / global.depreciation_years.building;
+            const deprInterior = unit.capex.interior_finishing / global.depreciation_years.interior;
             const deprCivil = unit.capex.civil_construction / global.depreciation_years.civil_construction;
             const deprEquipment = capexEquipment / global.depreciation_years.equipment;
-            const annualDepreciation = deprBuilding + deprCivil + deprEquipment;
+            const annualDepreciation = deprBuilding + deprInterior + deprCivil + deprEquipment;
 
             const ebt = ebitda - annualDepreciation;
             const tax = ebt > 0 ? ebt * global.tax_rate_profit : 0;
