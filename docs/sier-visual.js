@@ -1,4 +1,4 @@
-// File: sier-visual.js (v1.1)
+// File: sier-visual.js (v1.2)
 
 document.addEventListener('DOMContentLoaded', () => {
     const helpers = {
@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderDemographyAndCharts() {
         const summaryContainer = document.getElementById('summary');
         const chartsContainer = document.getElementById('charts');
-        if (!summaryContainer || !chartsContainer) return;
+        if (!summaryContainer || !chartsContainer || typeof demographyData === 'undefined') return;
 
         const totalPopulation = demographyData.reduce((sum, item) => sum + item.total, 0);
         const totalRing1 = demographyData.filter(d => d.ring === 1).reduce((sum, item) => sum + item.total, 0);
@@ -101,11 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalProductive = totalsByAge['15-24 Thn'] + totalsByAge['25-39 Thn'] + totalsByAge['40-54 Thn'] + totalsByAge['55-64 Thn'];
         const totalNonProductive = totalsByAge['0-14 Thn'] + totalsByAge['65+ Thn'];
         const dependencyRatio = totalProductive > 0 ? ((totalNonProductive / totalProductive) * 100).toFixed(2) : 0;
-
-        const totalsByKecamatan = demographyData.reduce((acc, curr) => ({
-            ...acc,
-            [curr.kecamatan]: (acc[curr.kecamatan] || 0) + curr.total
-        }), {});
+        const totalsByKecamatan = demographyData.reduce((acc, curr) => ({ ...acc, [curr.kecamatan]: (acc[curr.kecamatan] || 0) + curr.total }), {});
 
         document.getElementById('totalPenduduk').innerText = helpers.formatNumber(totalPopulation);
         document.getElementById('totalRing1').innerText = helpers.formatNumber(totalRing1);
@@ -129,13 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </tr>`).join('');
         }
 
-        const chartOptions = (extraOptions = {}) => ({
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { tooltip: { callbacks: { label: (c) => `${c.label || ''}: ${helpers.formatNumber(c.raw)}` } } },
-            ...extraOptions
-        });
-
+        const chartOptions = (extraOptions = {}) => ({ responsive: true, maintainAspectRatio: false, plugins: { tooltip: { callbacks: { label: (c) => `${c.label || ''}: ${helpers.formatNumber(c.raw)}` } } }, ...extraOptions });
         if (document.getElementById('ringChart')) new Chart(document.getElementById('ringChart'), { type: 'doughnut', data: { labels: ['Ring 1', 'Ring 2'], datasets: [{ data: [totalRing1, totalRing2], backgroundColor: ['#10B981', '#F59E0B'] }] }, options: chartOptions() });
         if (document.getElementById('ageDistributionChart')) new Chart(document.getElementById('ageDistributionChart'), { type: 'bar', data: { labels: Object.keys(totalsByAge), datasets: [{ label: 'Total Penduduk', data: Object.values(totalsByAge), backgroundColor: 'rgba(59, 130, 246, 0.7)' }] }, options: chartOptions({ plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: (v) => helpers.formatNumber(v) } } } }) });
         if (document.getElementById('productiveRatioChart')) new Chart(document.getElementById('productiveRatioChart'), { type: 'doughnut', data: { labels: ['Usia Produktif (15-64 Thn)', 'Usia Non-Produktif (0-14 & 65+ Thn)'], datasets: [{ data: [totalProductive, totalNonProductive], backgroundColor: ['#2563EB', '#DC2626'] }] }, options: chartOptions() });
@@ -532,107 +522,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function renderFinancialAssumptions() {
-        const container = document.getElementById('assumptions-container');
-        if (!container) return;
-
-        const { assumptions: globalAssumptions, drivingRange, padel, keyTranslations } = projectConfig;
-
-        const createEditableRow = (key, value, path, isOpex = false) => {
-            const translatedKey = keyTranslations[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-            
-            let displayValue;
-            let inputValue = value;
-
-            if ((key.includes('rate') || key.includes('okupansi')) && value < 2 && value > 0) {
-                displayValue = `${(value * 100).toFixed(1)}%`;
-                inputValue = value;
-            } else {
-                displayValue = helpers.formatNumber(value);
-                inputValue = value;
-            }
-
-            const unit = isOpex ? ' <span class="text-gray-400">/ bulan</span>' : '';
-
-            return `
-                <tr class="border-b group">
-                    <td class="py-3 px-4 font-semibold text-gray-700 w-2/5">${translatedKey}</td>
-                    <td class="py-3 px-4 text-gray-800 relative">
-                        <span class="value-display">${displayValue}${unit}</span>
-                        <input type="number" step="any" value="${inputValue}" data-path="${path}" class="value-input absolute top-2 left-2 w-3/4 p-1 border rounded shadow-sm hidden">
-                        <a href="#" class="edit-icon text-gray-400 hover:text-blue-600 absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity" data-path="${path}">✎</a>
-                    </td>
-                </tr>
-            `;
-        };
-        
-        const createTableFromObject = (data, basePath, title, isOpex = false) => {
-            let rowsHtml = Object.entries(data).map(([key, value]) => {
-                const currentPath = `${basePath}.${key}`;
-                if (typeof value === 'object' && value !== null && !('count' in value && 'salary' in value) && !('electricity_kwh_price' in value)) {
-                     let subRows = Object.entries(value).map(([subKey, subValue]) => {
-                        const subPath = `${currentPath}.${subKey}`;
-                        // Cek jika subValue adalah objek (misal: occupancy_rate_per_day)
-                        if(typeof subValue === 'object' && subValue !== null) {
-                             let nestedSubRows = Object.entries(subValue).map(([nestedKey, nestedValue]) => {
-                                const nestedPath = `${subPath}.${nestedKey}`;
-                                const translatedNestedKey = keyTranslations[nestedKey] || nestedKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                                return `<li class="flex justify-between items-center ml-4">
-                                            <span>${translatedNestedKey}:</span>
-                                            <span class="relative group">
-                                                <span class="value-display">${helpers.formatNumber(nestedValue)}</span>
-                                                <input type="number" step="any" value="${nestedValue}" data-path="${nestedPath}" class="value-input absolute top-0 right-14 w-24 p-1 border rounded shadow-sm hidden">
-                                                <a href="#" class="edit-icon text-gray-400 hover:text-blue-600 ml-2 opacity-0 group-hover:opacity-100" data-path="${nestedPath}">✎</a>
-                                            </span>
-                                        </li>`;
-                             }).join('');
-                             const translatedSubKey = keyTranslations[subKey] || subKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                             return `<div><span class="font-medium">${translatedSubKey}:</span><ul class="space-y-1">${nestedSubRows}</ul></div>`;
-                        } else {
-                            const translatedSubKey = keyTranslations[subKey] || subKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                            return `<li class="flex justify-between items-center">
-                                        <span class="font-medium">${translatedSubKey}:</span>
-                                        <span class="relative group">
-                                            <span class="value-display">${helpers.formatNumber(subValue)}</span>
-                                            <input type="number" step="any" value="${subValue}" data-path="${subPath}" class="value-input absolute top-0 right-14 w-24 p-1 border rounded shadow-sm hidden">
-                                            <a href="#" class="edit-icon text-gray-400 hover:text-blue-600 ml-2 opacity-0 group-hover:opacity-100" data-path="${subPath}">✎</a>
-                                        </span>
-                                    </li>`;
-                        }
-
-                    }).join('<div class="my-2"></div>');
-                    const translatedKey = keyTranslations[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                    return `<tr class="border-b"><td class="py-3 px-4 font-semibold text-gray-700 w-2/5 align-top">${translatedKey}</td><td class="py-3 px-4 text-gray-600"><div class="space-y-2">${subRows}</div></td></tr>`;
-                } else {
-                    return createEditableRow(key, value, currentPath, isOpex);
-                }
-            }).join('');
-            return `<h4 class="text-lg font-semibold text-gray-700 mb-2">${title}</h4><table class="w-full text-sm"><tbody>${rowsHtml}</tbody></table>`;
-        };
-
-        container.innerHTML = `
-            <div><h3 class="text-xl font-bold text-gray-800 mb-3 pb-2 border-b-2 border-gray-200">A. Asumsi Global</h3>${createTableFromObject(globalAssumptions, 'assumptions', '')}</div>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-12 pt-6 border-t">
-                <div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">B. Model Bisnis Driving Range</h3>
-                    <div class="space-y-6">
-                        ${createTableFromObject(drivingRange.operational_assumptions, 'drivingRange.operational_assumptions', 'Asumsi Operasional')}
-                        ${createTableFromObject(drivingRange.revenue, 'drivingRange.revenue', 'Unit Pendapatan')}
-                        ${createTableFromObject(drivingRange.opexMonthly, 'drivingRange.opexMonthly', 'Biaya Operasional Bulanan', true)}
-                    </div>
-                </div>
-                <div>
-                    <h3 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">C. Model Bisnis Padel</h3>
-                    <div class="space-y-6">
-                        ${createTableFromObject(padel.operational_assumptions, 'padel.operational_assumptions', 'Asumsi Operasional')}
-                        ${createTableFromObject(padel.revenue, 'padel.revenue', 'Unit Pendapatan')}
-                        ${createTableFromObject(padel.opexMonthly, 'padel.opexMonthly', 'Biaya Operasional Bulanan', true)}
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
     function refactorPadelBusinessAnalysis() {
         const bepContainer = document.querySelector('#business-strategy-analysis');
         if (!bepContainer) return false;
@@ -683,8 +572,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!riskTable) return false;
 
         const tbody = riskTable.querySelector('tbody');
-
-        // PERBAIKAN: Gunakan getFinancialSummary untuk mendapatkan PNL, bukan calculatePnl
         const realisticSummary = projectConfig.calculations.getFinancialSummary();
         const pessimisticSummary = projectConfig.calculations.getFinancialSummary(0.85, 1.10);
         
@@ -696,16 +583,13 @@ document.addEventListener('DOMContentLoaded', () => {
         newRow.className = 'bg-white border-b hover:bg-gray-50';
         newRow.innerHTML = `
             <td class="px-4 py-4 font-semibold align-top">Pasar & Finansial</td>
-            <td class="px-4 py-4">
-                <strong>Permintaan Lebih Rendah & Biaya Lebih Tinggi</strong><br>
-                Kombinasi okupansi turun 15% dan biaya operasional naik 10% (Skenario Pesimis).
-            </td>
+            <td class="px-4 py-4"><strong>Permintaan Lebih Rendah & Biaya Lebih Tinggi</strong><br>Kombinasi okupansi turun 15% dan biaya operasional naik 10%.</td>
             <td class="px-4 py-4 text-center align-middle"><span class="bg-yellow-100 text-yellow-800">Medium</span></td>
             <td class="px-4 py-4 text-center align-middle"><span class="bg-red-100 text-red-800">Tinggi</span></td>
             <td class="px-4 py-4">
                 <ul class="list-disc pl-4 space-y-1">
-                    <li>Dampak Kuantitatif: Penurunan Laba Bersih Tahunan sebesar <strong>~Rp ${formatNumber(profitDrop)}</strong>.</li>
-                    <li>Mitigasi: Strategi marketing agresif, program loyalitas & membership, efisiensi operasional.</li>
+                    <li>Dampak Kuantitatif: Penurunan Laba Bersih Tahunan sebesar <strong>~Rp ${helpers.formatNumber(profitDrop)}</strong>.</li>
+                    <li>Mitigasi: Marketing agresif, program loyalitas & membership, efisiensi operasional.</li>
                 </ul>
             </td>
         `;
@@ -718,13 +602,77 @@ document.addEventListener('DOMContentLoaded', () => {
                 rowFoundAndReplaced = true;
             }
         });
-
-        // Jika tidak ada baris yang cocok, tambahkan saja di awal
-        if (!rowFoundAndReplaced) {
-            tbody.prepend(newRow);
-        }
-
+        if (!rowFoundAndReplaced) tbody.prepend(newRow);
         return true;
+    }
+
+    function renderFinancialAssumptions() {
+        const container = document.getElementById('assumptions-container');
+        if (!container) return;
+
+        const { assumptions: globalAssumptions, drivingRange, padel, keyTranslations } = projectConfig;
+
+        const createTableFromObject = (data, basePath, title) => {
+            let rowsHtml = Object.entries(data).map(([key, value]) => {
+                const currentPath = `${basePath}.${key}`;
+                const translatedKey = keyTranslations[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+                // Jika value bukan objek, atau merupakan objek 'final' (seperti {count, salary}), render sebagai baris tunggal.
+                if (typeof value !== 'object' || value === null || ('count' in value && 'salary' in value)) {
+                    let displayValue;
+                    // Tentukan nilai input. Pastikan bukan objek.
+                    let inputValue = (typeof value === 'object' && value !== null) ? '' : value; 
+                    let unit = '';
+
+                    if (typeof value === 'object' && value !== null) {
+                        displayValue = Object.entries(value).map(([subKey, subVal]) => {
+                            const translatedSubKey = keyTranslations[subKey] || subKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                            return `<span class="font-medium">${translatedSubKey}:</span> ${helpers.formatNumber(subVal)}`;
+                        }).join(', ');
+                        unit = isOpex ? ' / bulan' : '';
+                    } else {
+                         if ((key.includes('rate') || key.includes('okupansi')) && value < 2 && value > 0) {
+                            displayValue = `${(value * 100).toFixed(1)}%`;
+                        } else {
+                            displayValue = helpers.formatNumber(value);
+                        }
+                        const isOpex = basePath.includes('opexMonthly');
+                        unit = isOpex ? ' <span class="text-gray-400">/ bulan</span>' : '';
+                    }
+
+                    // Hanya tampilkan ikon edit jika nilai bukan objek
+                    const editControls = (typeof value !== 'object') ? `
+                        <input type="number" step="any" value="${inputValue}" data-path="${currentPath}" class="value-input absolute top-2 left-2 w-3/4 p-1 border rounded shadow-sm hidden">
+                        <a href="#" class="edit-icon text-gray-400 hover:text-blue-600 absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity" data-path="${currentPath}">✎</a>
+                    ` : '';
+
+                    return `<tr class="border-b group"><td class="py-3 px-4 font-semibold text-gray-700 w-2/5">${translatedKey}</td><td class="py-3 px-4 text-gray-800 relative"><span class="value-display">${displayValue}${unit}</span>${editControls}</td></tr>`;
+
+                } else { // Jika value adalah objek yang perlu dibongkar
+                    let subRows = Object.entries(value).map(([subKey, subValue]) => {
+                        const subPath = `${currentPath}.${subKey}`;
+                        return createTableFromObject({ [subKey]: subValue }, currentPath, '').replace(/<h4.*h4>|<table.*?>|<\/tbody>|<\/table>/g, ''); // Trik untuk rekursi
+                    }).join('');
+                     return `<tr class="border-b"><td class="py-3 px-4 font-semibold text-gray-700 w-2/5 align-top">${translatedKey}</td><td class="py-3 px-4 text-gray-600"><table class="w-full">${subRows}</table></td></tr>`;
+                }
+            }).join('');
+            
+            const titleHtml = title ? `<h4 class="text-lg font-semibold text-gray-700 mb-2">${title}</h4>` : '';
+            return `${titleHtml}<table class="w-full text-sm"><tbody>${rowsHtml}</tbody></table>`;
+        };
+
+        container.innerHTML = `
+            <div><h3 class="text-xl font-bold text-gray-800 mb-3 pb-2 border-b-2 border-gray-200">A. Asumsi Global</h3>${createTableFromObject(globalAssumptions, 'assumptions', '')}</div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-12 pt-6 border-t">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">B. Model Bisnis Driving Range</h3>
+                    <div class="space-y-6">${createTableFromObject(projectConfig.drivingRange, 'drivingRange', '')}</div>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">C. Model Bisnis Padel</h3>
+                    <div class="space-y-6">${createTableFromObject(projectConfig.padel, 'padel', '')}</div>
+                </div>
+            </div>`;
     }
 
     function updateAllVisuals() {
