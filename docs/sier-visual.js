@@ -924,62 +924,81 @@ document.addEventListener('DOMContentLoaded', () => {
         const container = document.getElementById('assumptions-container');
         if (!container) return;
 
-        const { assumptions: globalAssumptions, drivingRange, padel } = projectConfig;
+        const { assumptions: globalAssumptions, drivingRange, padel, keyTranslations } = projectConfig;
 
-        const createTable = (data, title, isOpex = false) => {
-            let rowsHtml = Object.entries(data).map(([key, value]) => {
-                const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()).replace('Fnb', 'F&B');
-                let formattedValue;
-                if (typeof value === 'object' && value !== null) {
-                    formattedValue = Object.entries(value).map(([subKey, subValue]) =>
-                        `<li><span class="font-medium">${subKey.replace(/_/g, ' ')}:</span> ${formatNumber(subValue)}</li>`
-                    ).join('');
-                    formattedValue = `<ul class="list-none pl-0">${formattedValue}</ul>`;
-                } else {
-                    formattedValue = (key.includes('rate') && value < 1) ? `${(value * 100).toFixed(0)}%` : formatNumber(value);
-                }
-                const unit = isOpex ? ' <span class="text-gray-400">/ bulan</span>' : '';
-                return `<tr class="border-b"><td class="py-3 px-4 font-semibold text-gray-700 w-2/5">${formattedKey}</td><td class="py-3 px-4 text-gray-600">${formattedValue}${unit}</td></tr>`;
-            }).join('');
-            return `<h4 class="text-lg font-semibold text-gray-700 mb-2">${title}</h4><table class="w-full text-sm"><tbody>${rowsHtml}</tbody></table>`;
+        // Helper untuk membuat baris tabel yang dapat diedit
+        const createEditableRow = (key, value, path, isOpex = false) => {
+            const translatedKey = keyTranslations[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            
+            let displayValue;
+            let inputValue = value;
+
+            if ((key.includes('rate') || key.includes('okupansi')) && value < 2 && value > 0) {
+                displayValue = `${(value * 100).toFixed(0)}%`;
+                inputValue = value; // Input tetap dalam format desimal (e.g., 0.22)
+            } else {
+                displayValue = formatNumber(value);
+                inputValue = value;
+            }
+
+            const unit = isOpex ? ' <span class="text-gray-400">/ bulan</span>' : '';
+
+            return `
+                <tr class="border-b group">
+                    <td class="py-3 px-4 font-semibold text-gray-700 w-2/5">${translatedKey}</td>
+                    <td class="py-3 px-4 text-gray-800 relative">
+                        <span class="value-display">${displayValue}${unit}</span>
+                        <input type="number" step="any" value="${inputValue}" data-path="${path}" class="value-input absolute top-2 left-2 w-3/4 p-1 border rounded shadow-sm hidden">
+                        <a href="#" class="edit-icon text-gray-400 hover:text-blue-600 absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity" data-path="${path}">✎</a>
+                    </td>
+                </tr>
+            `;
         };
-
-        const createUnitsTable = (data, title) => {
+        
+        // Helper untuk membuat tabel dari objek data
+        const createTable = (data, basePath, title, isOpex = false) => {
             let rowsHtml = Object.entries(data).map(([key, value]) => {
-                const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                let formattedValue;
+                const currentPath = `${basePath}.${key}`;
                 if (typeof value === 'object' && value !== null) {
-                    formattedValue = Object.entries(value).map(([subKey, subValue]) => {
-                         const subKeyFormatted = subKey.replace(/_/g, ' ').replace('weekday', 'Hr Kerja').replace('weekend', 'Akhir Pekan');
-                         const subValueFormatted = typeof subValue === 'number' && subValue < 2 && subValue > 0 ? (subValue * 100).toFixed(0) + '%' : formatNumber(subValue);
-                         return `<li><span class="font-medium">${subKeyFormatted}:</span> ${subValueFormatted}</li>`;
+                    // Untuk objek bersarang seperti price_per_hour
+                    let subRows = Object.entries(value).map(([subKey, subValue]) => {
+                        const subPath = `${currentPath}.${subKey}`;
+                        const translatedSubKey = keyTranslations[subKey] || subKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                        return `<li class="flex justify-between">
+                                    <span class="font-medium">${translatedSubKey}:</span>
+                                    <span class="relative group">
+                                        <span class="value-display">${formatNumber(subValue)}</span>
+                                        <input type="number" step="any" value="${subValue}" data-path="${subPath}" class="value-input absolute top-0 right-14 w-24 p-1 border rounded shadow-sm hidden">
+                                        <a href="#" class="edit-icon text-gray-400 hover:text-blue-600 ml-2 opacity-0 group-hover:opacity-100" data-path="${subPath}">✎</a>
+                                    </span>
+                                </li>`;
                     }).join('');
-                    formattedValue = `<ul class="list-none pl-0">${formattedValue}</ul>`;
+                    const translatedKey = keyTranslations[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    return `<tr class="border-b"><td class="py-3 px-4 font-semibold text-gray-700 w-2/5">${translatedKey}</td><td class="py-3 px-4 text-gray-600"><ul class="space-y-1">${subRows}</ul></td></tr>`;
                 } else {
-                    formattedValue = formatNumber(value);
+                    return createEditableRow(key, value, currentPath, isOpex);
                 }
-                return `<tr class="border-b"><td class="py-3 px-4 font-semibold text-gray-700 w-2/5">${formattedKey}</td><td class="py-3 px-4 text-gray-600">${formattedValue}</td></tr>`;
             }).join('');
             return `<h4 class="text-lg font-semibold text-gray-700 mb-2">${title}</h4><table class="w-full text-sm"><tbody>${rowsHtml}</tbody></table>`;
         };
 
         container.innerHTML = `
-            <div><h3 class="text-xl font-bold text-gray-800 mb-3 pb-2 border-b-2 border-gray-200">A. Asumsi Global</h3>${createTable(globalAssumptions, '')}</div>
+            <div><h3 class="text-xl font-bold text-gray-800 mb-3 pb-2 border-b-2 border-gray-200">A. Asumsi Global</h3>${createTable(globalAssumptions, 'assumptions', '')}</div>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-12 pt-6 border-t">
                 <div>
                     <h3 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">B. Model Bisnis Driving Range</h3>
                     <div class="space-y-6">
-                        ${createTable(drivingRange.assumptions, 'Asumsi Spesifik')}
-                        ${createUnitsTable(drivingRange.units, 'Unit Operasional')}
-                        ${createTable(drivingRange.opexMonthly, 'Biaya Operasional', true)}
+                        ${createTable(drivingRange.assumptions, 'drivingRange.assumptions', 'Asumsi Spesifik')}
+                        ${createTable(drivingRange.units, 'drivingRange.units', 'Unit Operasional')}
+                        ${createTable(drivingRange.opexMonthly, 'drivingRange.opexMonthly', 'Biaya Operasional', true)}
                     </div>
                 </div>
                 <div>
                     <h3 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">C. Model Bisnis Padel</h3>
                     <div class="space-y-6">
-                        ${createTable(padel.assumptions, 'Asumsi Spesifik')}
-                        ${createUnitsTable(padel.units, 'Unit Operasional')}
-                        ${createTable(padel.opexMonthly, 'Biaya Operasional', true)}
+                        ${createTable(padel.assumptions, 'padel.assumptions', 'Asumsi Spesifik')}
+                        ${createTable(padel.units, 'padel.units', 'Unit Operasional')}
+                        ${createTable(padel.opexMonthly, 'padel.opexMonthly', 'Biaya Operasional', true)}
                     </div>
                 </div>
             </div>
@@ -1197,5 +1216,101 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return true;
     });
+
+    function updateAllVisuals() {
+        console.log("Updating all visuals...");
+        // Daftar ini harus berisi nama semua fungsi render Anda
+        const renderFunctions = [
+            renderDemographyAndCharts,
+            // renderDetailedDemography, // Jika Anda memisahkannya
+            renderIncomeAndMarketAnalysis, // Gabungkan income, market, competitor
+            renderSurveyAnalysis,
+            // renderDeepDiveSurvey,
+            renderSampleSurveyCalculation,
+            renderEconomicImpact,
+            renderTechnicalAnalysis,
+            renderFinancialAssumptions, // Fungsi yang baru saja kita modifikasi
+            renderFinancialAnalysis, // Fungsi yang merender P&L, kelayakan, dll.
+            refactorPadelBusinessAnalysis,
+            refactorRiskAnalysis
+        ];
+        
+        // Ganti semua pemanggilan tryToRender() individu dengan loop ini
+        renderFunctions.forEach(fn => {
+             // Pastikan nama fungsinya benar dan ada di scope ini
+            if (typeof fn === 'function') {
+                tryToRender(fn);
+            }
+        });
+    }
+
+    // --- (BARU) LOGIKA UNTUK EDITING REAL-TIME ---
+    const assumptionsContainer = document.getElementById('assumptions-container');
+    if (assumptionsContainer) {
+    
+        // Fungsi untuk mengambil nilai dari objek bersarang menggunakan string path
+        const getValueByPath = (obj, path) => path.split('.').reduce((o, k) => (o && o[k] !== 'undefined') ? o[k] : undefined, obj);
+
+        // Fungsi untuk mengatur nilai pada objek bersarang menggunakan string path
+        const setValueByPath = (obj, path, value) => {
+            const keys = path.split('.');
+            const lastKey = keys.pop();
+            const target = keys.reduce((o, k) => o[k] = o[k] || {}, obj);
+            target[lastKey] = value;
+        };
+
+        // Event listener untuk ikon edit
+        assumptionsContainer.addEventListener('click', function(e) {
+            if (e.target.classList.contains('edit-icon')) {
+                e.preventDefault();
+                const targetPath = e.target.dataset.path;
+                const valueSpan = e.target.previousElementSibling.previousElementSibling;
+                const inputField = e.target.previousElementSibling;
+
+                // Sembunyikan tampilan, tampilkan input
+                valueSpan.classList.add('hidden');
+                e.target.classList.add('hidden');
+                inputField.classList.remove('hidden');
+                inputField.focus();
+                inputField.select();
+            }
+        });
+
+        // Event listener untuk input (saat selesai edit)
+        assumptionsContainer.addEventListener('change', function(e) {
+             if (e.target.classList.contains('value-input')) {
+                const inputField = e.target;
+                const newValue = parseFloat(inputField.value);
+                const targetPath = inputField.dataset.path;
+
+                if (!isNaN(newValue)) {
+                    // 1. Update nilai di objek projectConfig
+                    setValueByPath(projectConfig, targetPath, newValue);
+                    
+                    // 2. Panggil fungsi render ulang utama
+                    updateAllVisuals();
+                } else {
+                    // Jika input tidak valid, kembalikan seperti semula tanpa mengubah
+                    const valueSpan = inputField.previousElementSibling;
+                    const editIcon = inputField.nextElementSibling;
+                    inputField.classList.add('hidden');
+                    valueSpan.classList.remove('hidden');
+                    editIcon.classList.remove('hidden');
+                }
+             }
+        });
+        
+        // Juga tangani saat menekan tombol Enter
+        assumptionsContainer.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.target.classList.contains('value-input')) {
+                e.preventDefault();
+                e.target.blur(); // Memicu event 'change' yang sudah kita buat
+            }
+        });
+    }
+    
+    // --- (BARU) PANGGIL FUNGSI MASTER SAAT HALAMAN PERTAMA KALI DIMUAT ---
+    updateAllVisuals();
+
 
 });

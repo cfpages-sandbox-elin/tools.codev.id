@@ -3,6 +3,44 @@
 
 const projectConfig = {
     // ====================================================================
+    // KAMUS TERJEMAHAN (BARU)
+    // ====================================================================
+    keyTranslations: {
+        // Asumsi Global
+        'tax_rate_profit': 'Tarif Pajak Penghasilan',
+        'discount_rate_wacc': 'Tingkat Diskonto (WACC)',
+        'contingency_rate': 'Dana Darurat (Kontingensi)',
+        // Asumsi Umum Unit Bisnis
+        'workdays_in_month': 'Hari Kerja per Bulan',
+        'weekend_days_in_month': 'Hari Libur per Bulan',
+        'operational_hours_per_day': 'Jam Operasional per Hari',
+        'cogs_rate_fnb': 'HPP (COGS) F&B',
+        // Asumsi Driving Range
+        'bays': 'Jumlah Bay',
+        'price_per_100_balls': 'Harga per 100 Bola',
+        'occupancy_per_day': 'Okupansi per Bay per Hari',
+        'weekday': 'Hari Kerja',
+        'weekend': 'Akhir Pekan',
+        'ancillary_revenue_per_visitor': 'Pendapatan Tambahan per Pengunjung',
+        // Asumsi Padel
+        'courts': 'Jumlah Lapangan',
+        'price_per_hour': 'Harga Sewa per Jam',
+        'weekday_offpeak': 'Hari Kerja (Jam Sepi)',
+        'weekday_peak': 'Hari Kerja (Jam Sibuk)',
+        'occupancy_rate': 'Tingkat Okupansi',
+        'hours_distribution_per_day': 'Distribusi Jam per Hari',
+        'offpeak': 'Jam Sepi',
+        'peak': 'Jam Sibuk',
+        'ancillary_revenue_per_hour_booked': 'Pendapatan Tambahan per Jam Booking',
+        // Opex
+        'salaries': 'Gaji & Upah',
+        'rent_allocation': 'Alokasi Sewa Lahan',
+        'utilities': 'Utilitas (Listrik, Air, dll)',
+        'marketing': 'Pemasaran & Promosi',
+        'maintenance': 'Perawatan & Perbaikan',
+        'fnb_other_costs': 'Biaya Lain-lain F&B',
+    },
+    // ====================================================================
     // A. ASUMSI UMUM & GLOBAL
     // ====================================================================
     assumptions: {
