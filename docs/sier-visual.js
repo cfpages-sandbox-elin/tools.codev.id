@@ -1,4 +1,4 @@
-// File: sier-visual.js (v1.5)
+// File: sier-visual.js (v1.6)
 document.addEventListener('DOMContentLoaded', () => {
     const helpers = {
         formatNumber(num) {
@@ -18,6 +18,49 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {
                 console.error(`Error saat merender bagian '${fn.name}':`, error);
             }
+        },
+        createChart(canvasId, chartConfig) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) {
+                console.warn(`Canvas dengan ID '${canvasId}' tidak ditemukan.`);
+                return null;
+            }
+
+            const ctx = canvas.getContext('2d');
+            
+            // Hancurkan chart lama jika ada, untuk mencegah duplikasi & error
+            if (canvas.chartInstance) {
+                canvas.chartInstance.destroy();
+            }
+
+            // Opsi default yang akan diterapkan ke SEMUA chart
+            const defaultOptions = {
+                responsive: true,
+                maintainAspectRatio: false, // Kunci untuk mengatasi masalah ukuran
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            // Gunakan helper formatNumber untuk tooltip
+                            label: (c) => `${c.label || ''}: ${this.formatNumber(c.raw)}`
+                        }
+                    }
+                }
+            };
+            
+            // Gabungkan opsi default dengan opsi spesifik dari chartConfig
+            // Opsi spesifik akan menimpa opsi default jika ada konflik
+            const finalOptions = { ...defaultOptions, ...chartConfig.options };
+
+            // Buat instance chart baru
+            const chartInstance = new Chart(ctx, {
+                type: chartConfig.type,
+                data: chartConfig.data,
+                options: finalOptions
+            });
+
+            // Simpan instance chart di elemen canvas untuk dihancurkan nanti
+            canvas.chartInstance = chartInstance;
+            return chartInstance;
         }
     };
 
@@ -124,11 +167,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 </tr>`).join('');
         }
 
-        const chartOptions = (extraOptions = {}) => ({ responsive: true, maintainAspectRatio: false, plugins: { tooltip: { callbacks: { label: (c) => `${c.label || ''}: ${helpers.formatNumber(c.raw)}` } } }, ...extraOptions });
-        if (document.getElementById('ringChart')) new Chart(document.getElementById('ringChart'), { type: 'doughnut', data: { labels: ['Ring 1', 'Ring 2'], datasets: [{ data: [totalRing1, totalRing2], backgroundColor: ['#10B981', '#F59E0B'] }] }, options: chartOptions() });
-        if (document.getElementById('ageDistributionChart')) new Chart(document.getElementById('ageDistributionChart'), { type: 'bar', data: { labels: Object.keys(totalsByAge), datasets: [{ label: 'Total Penduduk', data: Object.values(totalsByAge), backgroundColor: 'rgba(59, 130, 246, 0.7)' }] }, options: chartOptions({ plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: (v) => helpers.formatNumber(v) } } } }) });
-        if (document.getElementById('productiveRatioChart')) new Chart(document.getElementById('productiveRatioChart'), { type: 'doughnut', data: { labels: ['Usia Produktif (15-64 Thn)', 'Usia Non-Produktif (0-14 & 65+ Thn)'], datasets: [{ data: [totalProductive, totalNonProductive], backgroundColor: ['#2563EB', '#DC2626'] }] }, options: chartOptions() });
-        if (document.getElementById('kecamatanChart')) new Chart(document.getElementById('kecamatanChart'), { type: 'bar', data: { labels: Object.keys(totalsByKecamatan), datasets: [{ label: 'Total Populasi', data: Object.values(totalsByKecamatan), backgroundColor: ['#8B5CF6', '#EC4899', '#F97316', '#14B8A6'] }] }, options: chartOptions({ indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { ticks: { callback: (v) => helpers.formatNumber(v) } } } }) });
+        const chartOptions = (extraOptions = {}) => ({ responsive: true, maintainAspectRatio: true, plugins: { tooltip: { callbacks: { label: (c) => `${c.label || ''}: ${helpers.formatNumber(c.raw)}` } } }, ...extraOptions });
+        helpers.createChart('ringChart', { type: 'doughnut', data: { labels: ['Ring 1', 'Ring 2'], datasets: [{ data: [totalRing1, totalRing2], backgroundColor: ['#10B981', '#F59E0B'] }] } });
+        helpers.createChart('ageDistributionChart', { type: 'bar', data: { labels: Object.keys(totalsByAge), datasets: [{ label: 'Total Penduduk', data: Object.values(totalsByAge), backgroundColor: 'rgba(59, 130, 246, 0.7)' }] }, options: { plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: (v) => helpers.formatNumber(v) } } } } });
+        helpers.createChart('productiveRatioChart', { type: 'doughnut', data: { labels: ['Usia Produktif', 'Usia Non-Produktif'], datasets: [{ data: [totalProductive, totalNonProductive], backgroundColor: ['#2563EB', '#DC2626'] }] } });
+        helpers.createChart('kecamatanChart', { type: 'bar', data: { labels: Object.keys(totalsByKecamatan), datasets: [{ label: 'Total Populasi', data: Object.values(totalsByKecamatan), backgroundColor: ['#8B5CF6', '#EC4899', '#F97316', '#14B8A6'] }] }, options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { ticks: { callback: (v) => helpers.formatNumber(v) } } } } }); 
     }
 
     function renderDetailedDemography() {
@@ -141,7 +184,7 @@ document.addEventListener('DOMContentLoaded', () => {
             target['0-14 Thn'] += row.usia0_14; target['15-24 Thn'] += row.usia15_24; target['25-39 Thn'] += row.usia25_39;
             target['40-54 Thn'] += row.usia40_54; target['55-64 Thn'] += row.usia55_64; target['65+ Thn'] += row.usia65_plus;
         });
-        if (document.getElementById('ageDistributionByRingChart')) new Chart(document.getElementById('ageDistributionByRingChart'), { type: 'bar', data: { labels: ageLabels, datasets: [{ label: 'Ring 1', data: Object.values(totalsByAgeRing1), backgroundColor: 'rgba(22, 163, 74, 0.7)' }, { label: 'Ring 2', data: Object.values(totalsByAgeRing2), backgroundColor: 'rgba(245, 158, 11, 0.7)' }] }, options: { responsive: true, scales: { y: { ticks: { callback: (v) => helpers.formatNumber(v) } } }, plugins: { tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${helpers.formatNumber(c.raw)}` } } } } });
+        helpers.createChart('ageDistributionByRingChart', { type: 'bar', data: { labels: ageLabels, datasets: [{ label: 'Ring 1', data: Object.values(totalsByAgeRing1), backgroundColor: 'rgba(22, 163, 74, 0.7)' }, { label: 'Ring 2', data: Object.values(totalsByAgeRing2), backgroundColor: 'rgba(245, 158, 11, 0.7)' }] }, options: { scales: { y: { ticks: { callback: (v) => helpers.formatNumber(v) } } } } });
 
         const kecamatanChartsContainer = document.getElementById('kecamatanAgeChartsContainer');
         if (kecamatanChartsContainer) {
@@ -156,15 +199,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const kecamatanColors = ['rgba(59, 130, 246, 0.7)', 'rgba(139, 92, 246, 0.7)', 'rgba(236, 72, 153, 0.7)', 'rgba(20, 184, 166, 0.7)'];
             let colorIndex = 0;
             for (const kecamatanName in totalsByAgeKecamatan) {
+                const chartId = `kecamatan-age-chart-${kecamatanName.replace(/\s/g, '-')}`;
                 const chartWrapper = document.createElement('div');
-                chartWrapper.innerHTML = `<h4 class="text-lg font-semibold text-center mb-2 text-gray-700">${kecamatanName}</h4><canvas></canvas>`;
+                chartWrapper.className = 'relative h-80'; // Memberi batasan tinggi
+                chartWrapper.innerHTML = `<h4 class="text-lg font-semibold text-center mb-2 text-gray-700">${kecamatanName}</h4><canvas id="${chartId}"></canvas>`;
                 kecamatanChartsContainer.appendChild(chartWrapper);
-                new Chart(chartWrapper.querySelector('canvas'), { type: 'bar', data: { labels: ageLabels, datasets: [{ label: `Populasi ${kecamatanName}`, data: Object.values(totalsByAgeKecamatan[kecamatanName]), backgroundColor: kecamatanColors[colorIndex++ % kecamatanColors.length] }] }, options: { responsive: true, scales: { y: { ticks: { callback: (v) => helpers.formatNumber(v) } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => helpers.formatNumber(c.raw) } } } } });
+                helpers.createChart(chartId, { type: 'bar', data: { labels: ageLabels, datasets: [{ label: `Populasi ${kecamatanName}`, data: Object.values(totalsByAgeKecamatan[kecamatanName]), backgroundColor: kecamatanColors[colorIndex++ % kecamatanColors.length] }] }, options: { scales: { y: { ticks: { callback: (v) => helpers.formatNumber(v) } } }, plugins: { legend: { display: false } } } });
             }
         }
     }
 
     function renderIncomeAndMarketAnalysis() {
+        const section = document.getElementById('income-estimation');
+        if (!section || typeof demographyData === 'undefined') return;
+
         const estimatedIncomeData = demographyData.map(row => {
             const dependent = row.usia0_14 + row.usia65_plus;
             const lowIncome = row.usia15_24;
@@ -180,6 +228,26 @@ document.addEventListener('DOMContentLoaded', () => {
             return { ...row, incomeDependent: dependent, incomeLow: lowIncome, incomeMiddle: middleIncome, incomeHigh: highIncome };
         });
         
+        const totalsByIncomeKecamatan = estimatedIncomeData.reduce((acc, row) => {
+            const { kecamatan, incomeLow, incomeMiddle, incomeHigh } = row;
+            if (!acc[kecamatan]) acc[kecamatan] = { low: 0, middle: 0, high: 0 };
+            acc[kecamatan].low += incomeLow; acc[kecamatan].middle += incomeMiddle; acc[kecamatan].high += incomeHigh;
+            return acc;
+        }, {});
+        const kecamatanNames = Object.keys(totalsByIncomeKecamatan);
+
+        const targetMarketData = estimatedIncomeData.reduce((acc, row) => {
+            if (!acc[row.kecamatan]) acc[row.kecamatan] = { middleIncome: 0, highIncome: 0, age25_39: 0, age40_54: 0, age55_64: 0 };
+            acc[row.kecamatan].middleIncome += row.incomeMiddle; acc[row.kecamatan].highIncome += row.incomeHigh;
+            acc[row.kecamatan].age25_39 += row.usia25_39; acc[row.kecamatan].age40_54 += row.usia40_54; acc[row.kecamatan].age55_64 += row.usia55_64;
+            return acc;
+        }, {});
+
+        const totalAge25_39 = Object.values(targetMarketData).reduce((sum, item) => sum + item.age25_39, 0);
+        const totalAge40_54 = Object.values(targetMarketData).reduce((sum, item) => sum + item.age40_54, 0);
+        const totalAge55_64 = Object.values(targetMarketData).reduce((sum, item) => sum + item.age55_64, 0);
+        const totalTargetMarket = totalAge25_39 + totalAge40_54 + totalAge55_64;
+
         const incomeTableBody = document.getElementById('incomeTableBody');
         if (incomeTableBody) {
             incomeTableBody.innerHTML = estimatedIncomeData.map(row => `
@@ -191,15 +259,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 </tr>`).join('');
         }
 
-        const totalsByIncomeKecamatan = estimatedIncomeData.reduce((acc, row) => {
-            const { kecamatan, incomeLow, incomeMiddle, incomeHigh } = row;
-            if (!acc[kecamatan]) acc[kecamatan] = { low: 0, middle: 0, high: 0 };
-            acc[kecamatan].low += incomeLow; acc[kecamatan].middle += incomeMiddle; acc[kecamatan].high += incomeHigh;
-            return acc;
-        }, {});
-        const kecamatanNames = Object.keys(totalsByIncomeKecamatan);
-
-        if (document.getElementById('incomeDistributionByKecamatanChart')) new Chart(document.getElementById('incomeDistributionByKecamatanChart'), { type: 'bar', data: { labels: kecamatanNames, datasets: [{ label: 'Low Income', data: kecamatanNames.map(k => totalsByIncomeKecamatan[k].low), backgroundColor: 'rgba(251, 191, 36, 0.7)' }, { label: 'Middle Income', data: kecamatanNames.map(k => totalsByIncomeKecamatan[k].middle), backgroundColor: 'rgba(52, 211, 153, 0.7)' }, { label: 'High Income', data: kecamatanNames.map(k => totalsByIncomeKecamatan[k].high), backgroundColor: 'rgba(96, 165, 250, 0.7)' }] }, options: { responsive: true, scales: { y: { ticks: { callback: (v) => helpers.formatNumber(v) } } }, plugins: { tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${helpers.formatNumber(c.raw)}` } } } } });
+        const marketSummaryTableBody = document.getElementById('marketSummaryTableBody');
+        if(marketSummaryTableBody) {
+             marketSummaryTableBody.innerHTML = kecamatanNames.map(kecamatan => {
+                 const data = targetMarketData[kecamatan];
+                 return `<tr class="bg-white border-b hover:bg-gray-50"><td class="px-4 py-4 font-medium">${kecamatan}</td><td class="px-4 py-4 text-center font-bold">${helpers.formatNumber(data.middleIncome + data.highIncome)}</td><td class="px-4 py-4 text-center">${helpers.formatNumber(data.age25_39)}</td><td class="px-4 py-4 text-center">${helpers.formatNumber(data.age40_54)}</td></tr>`;
+             }).join('');
+        }
         
         const incomeDonutsContainer = document.getElementById('kecamatanIncomeDonutsContainer');
         if (incomeDonutsContainer) {
@@ -209,39 +275,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = totalsByIncomeKecamatan[kecamatan];
                 const total = data.low + data.middle + data.high;
                 if (total === 0) return;
+                
+                const chartId = `income-donut-${kecamatan.replace(/\s/g, '-')}`;
                 const chartWrapper = document.createElement('div');
-                chartWrapper.className = 'text-center';
-                chartWrapper.innerHTML = `<h4 class="text-md font-semibold text-gray-700 mb-2">${kecamatan}</h4><canvas></canvas>`;
+                chartWrapper.className = 'text-center relative h-72';
+                chartWrapper.innerHTML = `<h4 class="text-md font-semibold text-gray-700 mb-2">${kecamatan}</h4><canvas id="${chartId}"></canvas>`;
                 incomeDonutsContainer.appendChild(chartWrapper);
-                new Chart(chartWrapper.querySelector('canvas'), { type: 'doughnut', data: { labels: ['Low Income', 'Middle Income', 'High Income'], datasets: [{ data: [data.low, data.middle, data.high], backgroundColor: incomeColors, hoverOffset: 4 }] }, options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } }, tooltip: { callbacks: { label: (c) => `${c.label}: ${((c.raw / total) * 100).toFixed(1)}%` } } } } });
+
+                helpers.createChart(chartId, { type: 'doughnut', data: { labels: ['Low Income', 'Middle Income', 'High Income'], datasets: [{ data: [data.low, data.middle, data.high], backgroundColor: incomeColors, hoverOffset: 4 }] }, options: { plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } } });
             });
         }
-
-        const targetMarketData = estimatedIncomeData.reduce((acc, row) => {
-            if (!acc[row.kecamatan]) acc[row.kecamatan] = { middleIncome: 0, highIncome: 0, age25_39: 0, age40_54: 0, age55_64: 0 };
-            acc[row.kecamatan].middleIncome += row.incomeMiddle; acc[row.kecamatan].highIncome += row.incomeHigh;
-            acc[row.kecamatan].age25_39 += row.usia25_39; acc[row.kecamatan].age40_54 += row.usia40_54; acc[row.kecamatan].age55_64 += row.usia55_64;
-            return acc;
-        }, {});
         
-        if (document.getElementById('marketPotentialByKecamatanChart')) new Chart(document.getElementById('marketPotentialByKecamatanChart'), { type: 'bar', data: { labels: kecamatanNames, datasets: [{ label: 'Middle Income', data: kecamatanNames.map(k => targetMarketData[k].middleIncome), backgroundColor: 'rgba(52, 211, 153, 0.8)', stack: 'market' }, { label: 'High Income', data: kecamatanNames.map(k => targetMarketData[k].highIncome), backgroundColor: 'rgba(96, 165, 250, 0.8)', stack: 'market' }] }, options: { responsive: true, scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: (v) => helpers.formatNumber(v) } } }, plugins: { tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${helpers.formatNumber(c.raw)}` } } } } });
-        
-        const totalAge25_39 = Object.values(targetMarketData).reduce((sum, item) => sum + item.age25_39, 0);
-        const totalAge40_54 = Object.values(targetMarketData).reduce((sum, item) => sum + item.age40_54, 0);
-        const totalAge55_64 = Object.values(targetMarketData).reduce((sum, item) => sum + item.age55_64, 0);
-        const totalTargetMarket = totalAge25_39 + totalAge40_54 + totalAge55_64;
-        if (document.getElementById('targetMarketAgeProfileChart')) new Chart(document.getElementById('targetMarketAgeProfileChart'), { type: 'doughnut', data: { labels: ['25-39 Thn', '40-54 Thn', '55-64 Thn'], datasets: [{ data: [totalAge25_39, totalAge40_54, totalAge55_64], backgroundColor: ['#2dd4bf', '#60a5fa', '#a78bfa'] }] }, options: { responsive: true, plugins: { tooltip: { callbacks: { label: (c) => `${c.label}: ${helpers.formatNumber(c.raw)} (${((c.raw / totalTargetMarket) * 100).toFixed(1)}%)` } } } } });
-
-        const marketSummaryTableBody = document.getElementById('marketSummaryTableBody');
-        if(marketSummaryTableBody) {
-             marketSummaryTableBody.innerHTML = kecamatanNames.map(kecamatan => {
-                 const data = targetMarketData[kecamatan];
-                 return `<tr class="bg-white border-b hover:bg-gray-50"><td class="px-4 py-4 font-medium">${kecamatan}</td><td class="px-4 py-4 text-center font-bold">${helpers.formatNumber(data.middleIncome + data.highIncome)}</td><td class="px-4 py-4 text-center">${helpers.formatNumber(data.age25_39)}</td><td class="px-4 py-4 text-center">${helpers.formatNumber(data.age40_54)}</td></tr>`;
-             }).join('');
-        }
-        
-        if (document.getElementById('competitorPriceChart')) new Chart(document.getElementById('competitorPriceChart'), { type: 'bar', data: { labels: ['Brawijaya', 'Ciputra', 'Le Grande', 'Graha Family', 'Pakuwon', 'Bukit Darmo'], datasets: [{ label: 'Harga (Guest/100 Bola)', data: [130000, 130000, 135000, 136000, 150000, 151500], backgroundColor: ['#22c55e', '#22c55e', '#3b82f6', '#3b82f6', '#ef4444', '#ef4444'] }] }, options: { indexAxis: 'y', responsive: true, scales: { x: { ticks: { callback: (v) => 'Rp ' + helpers.formatNumber(v) } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `Rp ${helpers.formatNumber(c.raw)}` } } } } });
-        if (document.getElementById('padelPriceChart')) new Chart(document.getElementById('padelPriceChart'), { type: 'bar', data: { labels: ['UNO', 'Puncak', 'Margomulyo', 'Playground', 'Homeground', 'Jungle', 'Graha'], datasets: [{ label: 'Harga (Peak / Jam)', data: [350000, 350000, 350000, 380000, 389000, 400000, 450000], backgroundColor: 'rgba(168, 85, 247, 0.7)' }] }, options: { indexAxis: 'y', responsive: true, scales: { x: { ticks: { callback: (v) => 'Rp ' + helpers.formatNumber(v) } } }, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `Rp ${helpers.formatNumber(c.raw)}` } } } } });
+        helpers.createChart('incomeDistributionByKecamatanChart', { type: 'bar', data: { labels: kecamatanNames, datasets: [{ label: 'Low Income', data: kecamatanNames.map(k => totalsByIncomeKecamatan[k].low), backgroundColor: 'rgba(251, 191, 36, 0.7)' }, { label: 'Middle Income', data: kecamatanNames.map(k => totalsByIncomeKecamatan[k].middle), backgroundColor: 'rgba(52, 211, 153, 0.7)' }, { label: 'High Income', data: kecamatanNames.map(k => totalsByIncomeKecamatan[k].high), backgroundColor: 'rgba(96, 165, 250, 0.7)' }] }, options: { scales: { y: { ticks: { callback: (v) => helpers.formatNumber(v) } } } } });
+        helpers.createChart('marketPotentialByKecamatanChart', { type: 'bar', data: { labels: kecamatanNames, datasets: [{ label: 'Middle Income', data: kecamatanNames.map(k => targetMarketData[k].middleIncome), backgroundColor: 'rgba(52, 211, 153, 0.8)', stack: 'market' }, { label: 'High Income', data: kecamatanNames.map(k => targetMarketData[k].highIncome), backgroundColor: 'rgba(96, 165, 250, 0.8)', stack: 'market' }] }, options: { scales: { x: { stacked: true }, y: { stacked: true, ticks: { callback: (v) => helpers.formatNumber(v) } } } } });        
+        helpers.createChart('targetMarketAgeProfileChart', { type: 'doughnut', data: { labels: ['25-39 Thn', '40-54 Thn', '55-64 Thn'], datasets: [{ data: [totalAge25_39, totalAge40_54, totalAge55_64], backgroundColor: ['#2dd4bf', '#60a5fa', '#a78bfa'] }] } });
+        helpers.createChart('competitorPriceChart', { type: 'bar', data: { labels: ['Brawijaya', 'Ciputra', 'Le Grande', 'Graha Family', 'Pakuwon', 'Bukit Darmo'], datasets: [{ label: 'Harga (Guest/100 Bola)', data: [130000, 130000, 135000, 136000, 150000, 151500], backgroundColor: ['#22c55e', '#22c55e', '#3b82f6', '#3b82f6', '#ef4444', '#ef4444'] }] }, options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { ticks: { callback: (v) => 'Rp ' + helpers.formatNumber(v) } } } } });
+        helpers.createChart('padelPriceChart', { type: 'bar', data: { labels: ['UNO', 'Puncak', 'Margomulyo', 'Playground', 'Homeground', 'Jungle', 'Graha'], datasets: [{ label: 'Harga (Peak / Jam)', data: [350000, 350000, 350000, 380000, 389000, 400000, 450000], backgroundColor: 'rgba(168, 85, 247, 0.7)' }] }, options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { ticks: { callback: (v) => 'Rp ' + helpers.formatNumber(v) } } } } });
     }
 
     function renderSurveyAnalysis() {
@@ -262,33 +311,62 @@ document.addEventListener('DOMContentLoaded', () => {
             headers.forEach((header, i) => { obj[header] = (values[i] || '').trim(); });
             return obj;
         });
+        const aggregateData = (data, key, isMultiSelect = false, separator = ', ') => data.reduce((acc, row) => {
+            const answer = row[key];
+            if (answer && !['-', 'na', 'tidak', 'ga tau', '', 'tidak tahu', 'tidka tertarik'].includes(answer.toLowerCase())) {
+                if (isMultiSelect) answer.split(separator).forEach(item => { const trimmed = item.trim(); if (trimmed) acc[trimmed] = (acc[trimmed] || 0) + 1; });
+                else acc[answer] = (acc[answer] || 0) + 1;
+            }
+            return acc;
+        }, {});
+        const backgroundColors = ['rgba(59, 130, 246, 0.7)', 'rgba(16, 185, 129, 0.7)', 'rgba(245, 158, 11, 0.7)', 'rgba(236, 72, 153, 0.7)', 'rgba(139, 92, 246, 0.7)', 'rgba(20, 184, 166, 0.7)'];
 
         const surveyChartsContainer = document.getElementById('surveyChartsContainer');
         if (surveyChartsContainer) {
             surveyChartsContainer.innerHTML = '';
-            const aggregateData = (data, key, isMultiSelect = false, separator = ', ') => data.reduce((acc, row) => {
-                const answer = row[key];
-                if (answer && !['-', 'na', 'tidak', 'ga tau', '', 'tidak tahu', 'tidka tertarik'].includes(answer.toLowerCase())) {
-                    if (isMultiSelect) answer.split(separator).forEach(item => { const trimmed = item.trim(); if (trimmed) acc[trimmed] = (acc[trimmed] || 0) + 1; });
-                    else acc[answer] = (acc[answer] || 0) + 1;
-                }
-                return acc;
-            }, {});
-            
-            const createChart = (title, type, aggregatedData, options = {}) => {
-                const chartWrapper = document.createElement('div');
-                chartWrapper.className = 'bg-white p-6 rounded-lg shadow-md';
-                chartWrapper.innerHTML = `<h3 class="text-xl font-semibold mb-4 text-gray-700">${title}</h3><canvas></canvas>`;
-                surveyChartsContainer.appendChild(chartWrapper);
-                const chartOptions = { responsive: true, plugins: { legend: { display: type === 'doughnut' }, tooltip: { callbacks: { label: (c) => `${c.label}: ${helpers.formatNumber(c.raw)}` } } }, ...options };
-                new Chart(chartWrapper.querySelector('canvas'), { type, data: { labels: Object.keys(aggregatedData), datasets: [{ data: Object.values(aggregatedData), backgroundColor: ['rgba(59, 130, 246, 0.7)', 'rgba(16, 185, 129, 0.7)', 'rgba(245, 158, 11, 0.7)', 'rgba(236, 72, 153, 0.7)', 'rgba(139, 92, 246, 0.7)', 'rgba(20, 184, 166, 0.7)'], borderColor: 'rgba(255, 255, 255, 0.5)', borderWidth: 1 }] }, options: chartOptions });
-            };
+            const chartConfigs = [
+                { id: 'survey-facility-chart', title: 'Preferensi Fasilitas Utama', type: 'doughnut', data: aggregateData(parsedSurveyData, 'Pilihan Fasilitas') },
+                { id: 'survey-padel-interest-chart', title: 'Tingkat Minat Terhadap Lapangan PADEL', type: 'bar', data: aggregateData(parsedSurveyData, 'Minat PADEL'), options: { plugins: { legend: { display: false } } } },
+                { id: 'survey-age-chart', title: 'Demografi Usia Responden', type: 'bar', data: aggregateData(parsedSurveyData, 'Kelompok Usia'), options: { plugins: { legend: { display: false } } } },
+                { id: 'survey-padel-features-chart', title: 'Fitur Padel Paling Penting', type: 'bar', data: aggregateData(parsedSurveyData, 'Fitur Penting PADEL', true), options: { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { y: { ticks: { font: { size: 10 } } } } } }
+            ];
 
-            createChart('Preferensi Fasilitas Utama', 'doughnut', aggregateData(parsedSurveyData, 'Pilihan Fasilitas'));
-            createChart('Tingkat Minat Terhadap Lapangan PADEL', 'bar', aggregateData(parsedSurveyData, 'Minat PADEL'), { plugins: { legend: { display: false } } });
-            createChart('Demografi Usia Responden', 'bar', aggregateData(parsedSurveyData, 'Kelompok Usia'), { plugins: { legend: { display: false } } });
-            createChart('Fitur Padel Paling Penting', 'bar', aggregateData(parsedSurveyData, 'Fitur Penting PADEL', true), { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { y: { ticks: { font: { size: 10 } } } } });
+            chartConfigs.forEach(config => {
+                const chartWrapper = document.createElement('div');
+                chartWrapper.className = 'bg-white p-6 rounded-lg shadow-md relative h-96';
+                chartWrapper.innerHTML = `<h3 class="text-xl font-semibold mb-4 text-gray-700">${config.title}</h3><canvas id="${config.id}"></canvas>`;
+                surveyChartsContainer.appendChild(chartWrapper);
+                helpers.createChart(config.id, {
+                    type: config.type,
+                    data: { labels: Object.keys(config.data), datasets: [{ data: Object.values(config.data), backgroundColor: backgroundColors }] },
+                    options: config.options
+                });
+            });
         }
+
+        const ageGroups = ['Di bawah 25 tahun', '25 - 35 tahun', '36 - 45 tahun', '46 - 55 tahun', 'Diatas 55 tahun'];
+        const facilityChoices = ['Driving Range Golf', 'Lapangan PADEL', 'Keduanya sama menariknya bagi saya'];
+        let choiceVsAgeData = facilityChoices.reduce((acc, choice) => ({ ...acc, [choice]: ageGroups.reduce((a, age) => ({ ...a, [age]: 0 }), {}) }), {});
+        parsedSurveyData.forEach(row => {
+            if (facilityChoices.includes(row['Pilihan Fasilitas']) && ageGroups.includes(row['Kelompok Usia'])) {
+                choiceVsAgeData[row['Pilihan Fasilitas']][row['Kelompok Usia']]++;
+            }
+        });
+        helpers.createChart('choiceVsAgeChart', { type: 'bar', data: { labels: facilityChoices, datasets: ageGroups.map((age, i) => ({ label: age, data: facilityChoices.map(c => choiceVsAgeData[c][age]), backgroundColor: ['#4ade80', '#818cf8', '#fb923c', '#60a5fa', '#f87171'][i] })) }, options: { scales: { x: { stacked: true }, y: { stacked: true } }, plugins: { tooltip: { mode: 'index' } } } });
+
+        // Chart: Korelasi Minat Padel vs Golf
+        const interestMap = { 'Sangat Tertarik': 5, 'Tertarik': 4, 'Cukup Tertarik': 3, 'Kurang Tertarik': 2, 'Tidak Tertarik Sama Sekali': 1 };
+        const correlation = parsedSurveyData.reduce((acc, row) => {
+            const golf = interestMap[row['Minat Driving Range']] || 0;
+            const padel = interestMap[row['Minat PADEL']] || 0;
+            if(golf > 0 && padel > 0) {
+                const key = `${golf},${padel}`;
+                acc[key] = (acc[key] || 0) + 1;
+            }
+            return acc;
+        }, {});
+        const bubbleData = Object.keys(correlation).map(key => ({ x: parseInt(key.split(',')[0]), y: parseInt(key.split(',')[1]), r: correlation[key] * 4 }));
+        helpers.createChart('interestCorrelationChart', { type: 'bubble', data: { datasets: [{ label: 'Jumlah Responden', data: bubbleData, backgroundColor: 'rgba(96, 165, 250, 0.7)' }] }, options: { plugins: { tooltip: { callbacks: { label: (c) => `${c.raw.r / 4} responden` } } }, scales: { x: { title: { display: true, text: 'Minat Driving Range (1=Rendah, 5=Tinggi)' }, min: 0, max: 6, ticks: { stepSize: 1 } }, y: { title: { display: true, text: 'Minat Padel (1=Rendah, 5=Tinggi)' }, min: 0, max: 6, ticks: { stepSize: 1 } } } } });
 
         const feedbackList = document.getElementById('qualitativeFeedback');
         if (feedbackList) {
@@ -296,37 +374,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const uniqueFeedbacks = [...new Set(parsedSurveyData.map(row => row['Saran Lain']).filter(fb => fb && fb.trim() && !['-','ok','cukup','tidak ada'].includes(fb.trim().toLowerCase())).map(fb => fb.trim()))];
             if (uniqueFeedbacks.length === 0) feedbackList.innerHTML = '<li>Tidak ada masukan kualitatif tambahan dari responden.</li>';
             else feedbackList.innerHTML = uniqueFeedbacks.map(fb => `<li>${fb}</li>`).join('');
-        }
-
-        const choiceVsAgeCtx = document.getElementById('choiceVsAgeChart');
-        if (choiceVsAgeCtx) {
-            const ageGroups = ['Di bawah 25 tahun', '25 - 35 tahun', '36 - 45 tahun', '46 - 55 tahun', 'Diatas 55 tahun'];
-            const facilityChoices = ['Driving Range Golf', 'Lapangan PADEL', 'Keduanya sama menariknya bagi saya'];
-            let choiceVsAgeData = facilityChoices.reduce((acc, choice) => ({ ...acc, [choice]: ageGroups.reduce((a, age) => ({ ...a, [age]: 0 }), {}) }), {});
-            parsedSurveyData.forEach(row => {
-                if (facilityChoices.includes(row['Pilihan Fasilitas']) && ageGroups.includes(row['Kelompok Usia'])) {
-                    choiceVsAgeData[row['Pilihan Fasilitas']][row['Kelompok Usia']]++;
-                }
-            });
-            const datasets = ageGroups.map((age, i) => ({ label: age, data: facilityChoices.map(c => choiceVsAgeData[c][age]), backgroundColor: ['#4ade80', '#818cf8', '#fb923c', '#60a5fa', '#f87171'][i] }));
-            new Chart(choiceVsAgeCtx, { type: 'bar', data: { labels: facilityChoices, datasets }, options: { responsive: true, scales: { x: { stacked: true }, y: { stacked: true } }, plugins: { tooltip: { mode: 'index' } } } });
-        }
-
-        // Chart: Korelasi Minat Padel vs Golf
-        const interestCorrelationCtx = document.getElementById('interestCorrelationChart');
-        if(interestCorrelationCtx) {
-            const interestMap = { 'Sangat Tertarik': 5, 'Tertarik': 4, 'Cukup Tertarik': 3, 'Kurang Tertarik': 2, 'Tidak Tertarik Sama Sekali': 1 };
-            const correlation = parsedSurveyData.reduce((acc, row) => {
-                const golf = interestMap[row['Minat Driving Range']] || 0;
-                const padel = interestMap[row['Minat PADEL']] || 0;
-                if(golf > 0 && padel > 0) {
-                    const key = `${golf},${padel}`;
-                    acc[key] = (acc[key] || 0) + 1;
-                }
-                return acc;
-            }, {});
-            const bubbleData = Object.keys(correlation).map(key => ({ x: parseInt(key.split(',')[0]), y: parseInt(key.split(',')[1]), r: correlation[key] * 4 }));
-            new Chart(interestCorrelationCtx, { type: 'bubble', data: { datasets: [{ label: 'Jumlah Responden', data: bubbleData, backgroundColor: 'rgba(96, 165, 250, 0.7)' }] }, options: { scales: { x: { title: { display: true, text: 'Minat Driving Range (1=Rendah, 5=Tinggi)' }, min: 0, max: 6, ticks: { stepSize: 1 } }, y: { title: { display: true, text: 'Minat Padel (1=Rendah, 5=Tinggi)' }, min: 0, max: 6, ticks: { stepSize: 1 } } }, plugins: { tooltip: { callbacks: { label: (c) => `${c.raw.r / 4} responden dengan kombinasi minat ini` } } } } });
         }
         
         // Analisis Tematik
@@ -754,7 +801,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Updating all visuals...");
         // Daftar ini harus berisi nama semua fungsi render Anda
         const renderFunctions = [
-            // 1. Data Statis & Demografi
             renderDemographyAndCharts,
             renderDetailedDemography,
             renderIncomeAndMarketAnalysis,
