@@ -167,7 +167,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </tr>`).join('');
         }
 
-        const chartOptions = (extraOptions = {}) => ({ responsive: true, maintainAspectRatio: true, plugins: { tooltip: { callbacks: { label: (c) => `${c.label || ''}: ${helpers.formatNumber(c.raw)}` } } }, ...extraOptions });
         helpers.createChart('ringChart', { type: 'doughnut', data: { labels: ['Ring 1', 'Ring 2'], datasets: [{ data: [totalRing1, totalRing2], backgroundColor: ['#10B981', '#F59E0B'] }] } });
         helpers.createChart('ageDistributionChart', { type: 'bar', data: { labels: Object.keys(totalsByAge), datasets: [{ label: 'Total Penduduk', data: Object.values(totalsByAge), backgroundColor: 'rgba(59, 130, 246, 0.7)' }] }, options: { plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: (v) => helpers.formatNumber(v) } } } } });
         helpers.createChart('productiveRatioChart', { type: 'doughnut', data: { labels: ['Usia Produktif', 'Usia Non-Produktif'], datasets: [{ data: [totalProductive, totalNonProductive], backgroundColor: ['#2563EB', '#DC2626'] }] } });
