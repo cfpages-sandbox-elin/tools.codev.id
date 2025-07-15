@@ -1,5 +1,4 @@
-// File: sier-visual.js (v1.2)
-
+// File: sier-visual.js (v1.3)
 document.addEventListener('DOMContentLoaded', () => {
     const helpers = {
         formatNumber(num) {
@@ -616,11 +615,12 @@ document.addEventListener('DOMContentLoaded', () => {
             let rowsHtml = Object.entries(data).map(([key, value]) => {
                 const currentPath = `${basePath}.${key}`;
                 const translatedKey = keyTranslations[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                
+                const isOpex = basePath.includes('opexMonthly');
 
                 // Jika value bukan objek, atau merupakan objek 'final' (seperti {count, salary}), render sebagai baris tunggal.
-                if (typeof value !== 'object' || value === null || ('count' in value && 'salary' in value)) {
+                if (typeof value !== 'object' || value === null || ('count' in value && 'salary' in value) || ('electricity_kwh_price' in value && 'electricity_kwh_usage' in value)) {
                     let displayValue;
-                    // Tentukan nilai input. Pastikan bukan objek.
                     let inputValue = (typeof value === 'object' && value !== null) ? '' : value; 
                     let unit = '';
 
@@ -629,14 +629,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             const translatedSubKey = keyTranslations[subKey] || subKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                             return `<span class="font-medium">${translatedSubKey}:</span> ${helpers.formatNumber(subVal)}`;
                         }).join(', ');
-                        unit = isOpex ? ' / bulan' : '';
                     } else {
-                         if ((key.includes('rate') || key.includes('okupansi')) && value < 2 && value > 0) {
+                        if ((key.includes('rate') || key.includes('okupansi')) && value < 2 && value > 0) {
                             displayValue = `${(value * 100).toFixed(1)}%`;
                         } else {
                             displayValue = helpers.formatNumber(value);
                         }
-                        const isOpex = basePath.includes('opexMonthly');
                         unit = isOpex ? ' <span class="text-gray-400">/ bulan</span>' : '';
                     }
 
@@ -651,9 +649,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else { // Jika value adalah objek yang perlu dibongkar
                     let subRows = Object.entries(value).map(([subKey, subValue]) => {
                         const subPath = `${currentPath}.${subKey}`;
-                        return createTableFromObject({ [subKey]: subValue }, currentPath, '').replace(/<h4.*h4>|<table.*?>|<\/tbody>|<\/table>/g, ''); // Trik untuk rekursi
+                        return createTableFromObject({ [subKey]: subValue }, currentPath, '').replace(/<h4.*h4>|<table.*?>|<\/tbody>|<\/table>/g, '');
                     }).join('');
-                     return `<tr class="border-b"><td class="py-3 px-4 font-semibold text-gray-700 w-2/5 align-top">${translatedKey}</td><td class="py-3 px-4 text-gray-600"><table class="w-full">${subRows}</table></td></tr>`;
+                    return `<tr class="border-b"><td class="py-3 px-4 font-semibold text-gray-700 w-2/5 align-top">${translatedKey}</td><td class="py-3 px-4 text-gray-600"><table class="w-full">${subRows}</table></td></tr>`;
                 }
             }).join('');
             
