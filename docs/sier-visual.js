@@ -1,4 +1,4 @@
-// File: sier-visual.js (v1.0)
+// File: sier-visual.js (v1.1)
 
 document.addEventListener('DOMContentLoaded', () => {
     const helpers = {
@@ -731,20 +731,25 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Updating all visuals...");
         // Daftar ini harus berisi nama semua fungsi render Anda
         const renderFunctions = [
-            renderFinancialAnalysis,
+            // 1. Data Statis & Demografi
             renderDemographyAndCharts,
             renderDetailedDemography,
             renderIncomeAndMarketAnalysis,
             renderSurveyAnalysis,
             renderSampleSurveyCalculation,
-            renderEconomicAndTechnicalAnalysis
-            renderFinancialAssumptions,
             refactorPadelBusinessAnalysis,
-            refactorRiskAnalysis
+            refactorRiskAnalysis,
+            renderEconomicAndTechnicalAnalysis,
+            renderFinancialAssumptions,
+            renderFinancialAnalysis,
         ];
         
         renderFunctions.forEach(fn => {
-            helpers.tryToRender(fn);
+            if (typeof fn === 'function') {
+                helpers.tryToRender(fn);
+            } else {
+                console.warn("Attempted to call a non-function from renderFunctions array.");
+            }
         });
     }
 
