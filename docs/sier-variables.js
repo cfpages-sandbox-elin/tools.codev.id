@@ -153,18 +153,31 @@ const projectConfig = {
         _calculateTotal(dataObject) {
             if (typeof dataObject !== 'object' || dataObject === null) return 0;
             return Object.values(dataObject).reduce((sum, value) => {
+                if (typeof value === 'number') {
+                    return sum + value;
+                }
                 if (typeof value === 'object' && value !== null) {
-                    // Untuk objek seperti {count: 2, salary: 100} -> 2 * 100 = 200
+                    // Kasus khusus untuk objek gaji: { count: x, salary: y }
                     if ('count' in value && 'salary' in value) {
                         return sum + (value.count * value.salary);
                     }
-                    // Untuk objek seperti utilities
-                     if ('electricity_kwh_price' in value && 'electricity_kwh_usage' in value) {
-                        return sum + (value.electricity_kwh_price * value.electricity_kwh_usage) + (value.water_etc || 0);
+                    // Kasus khusus untuk objek utilitas: { price: x, usage: y, other: z }
+                    if ('electricity_kwh_price' in value && 'electricity_kwh_usage' in value) {
+                        let utilitySum = value.electricity_kwh_price * value.electricity_kwh_usage;
+                        // Tambahkan komponen lain jika ada (misal: water_etc)
+                        for (const key in value) {
+                            if (key !== 'electricity_kwh_price' && key !== 'electricity_kwh_usage' && typeof value[key] === 'number') {
+                                utilitySum += value[key];
+                            }
+        
+                        }
+                        return sum + utilitySum;
                     }
+                    // PANGGILAN REKURSIF: Jika objek biasa, hitung total di dalamnya.
                     return sum + this._calculateTotal(value);
                 }
-                return sum + (typeof value === 'number' ? value : 0);
+                // Jika bukan angka atau objek, abaikan.
+                return sum;
             }, 0);
         },
 
