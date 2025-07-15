@@ -1,4 +1,4 @@
-// File: sier-visual.js (v1.6)
+// File: sier-visual.js (v1.7)
 document.addEventListener('DOMContentLoaded', () => {
     const helpers = {
         formatNumber(num) {
@@ -36,19 +36,27 @@ document.addEventListener('DOMContentLoaded', () => {
             // Opsi default yang akan diterapkan ke SEMUA chart
             const defaultOptions = {
                 responsive: true,
-                maintainAspectRatio: false, // Kunci untuk mengatasi masalah ukuran
+                maintainAspectRatio: true, 
                 plugins: {
                     tooltip: {
                         callbacks: {
                             // Gunakan helper formatNumber untuk tooltip
-                            label: (c) => `${c.label || ''}: ${this.formatNumber(c.raw)}`
+                            label: (c) => {
+                                const value = c.raw;
+                                // Coba hitung total untuk persentase (hanya untuk chart donat/pie)
+                                let total = 0;
+                                if (c.chart.config.type === 'doughnut' || c.chart.config.type === 'pie') {
+                                total = c.chart.data.datasets[0].data.reduce((a, b) => a + (typeof b === 'number' ? b : 0), 0);
+                                }
+                                const percentage = total > 0 ? ` (${(value / total * 100).toFixed(1)}%)` : '';
+                                return `${c.label || ''}: ${this.formatNumber(value)}${percentage}`;
+                            }
                         }
                     }
                 }
             };
             
             // Gabungkan opsi default dengan opsi spesifik dari chartConfig
-            // Opsi spesifik akan menimpa opsi default jika ada konflik
             const finalOptions = { ...defaultOptions, ...chartConfig.options };
 
             // Buat instance chart baru
