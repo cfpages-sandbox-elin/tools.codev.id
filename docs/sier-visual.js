@@ -1,4 +1,4 @@
-// File: sier-visual.js (v1.4)
+// File: sier-visual.js (v1.5)
 document.addEventListener('DOMContentLoaded', () => {
     const helpers = {
         formatNumber(num) {
@@ -245,58 +245,58 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderSurveyAnalysis() {
-    if (typeof surveyRawData === 'undefined' || !surveyRawData) {
-        // Sembunyikan seluruh section jika tidak ada data
-        const surveySections = ['survey-analysis', 'survey-deep-dive', 'customer-personas'];
-        surveySections.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.style.display = 'none';
+        if (typeof surveyRawData === 'undefined' || !surveyRawData) {
+            // Sembunyikan seluruh section jika tidak ada data
+            const surveySections = ['survey-analysis', 'survey-deep-dive', 'customer-personas'];
+            surveySections.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+            return;
+        }
+
+        const headers = ["Nama", "Perusahaan", "Posisi", "Domisili", "Kelompok Usia", "Status Pekerjaan", "Pengalaman Olahraga", "Minat Driving Range", "Frekuensi Driving Range", "Waktu Ideal Driving Range", "Biaya Wajar Driving Range", "Fitur Penting Driving Range", "Familiar PADEL", "Minat PADEL", "Frekuensi PADEL", "Waktu Ideal PADEL", "Biaya Sewa PADEL", "Fitur Penting PADEL", "Pilihan Fasilitas", "Pemanfaatan Fasilitas", "Pendorong Rutin", "Saran Lain"];
+        const parsedSurveyData = surveyRawData.trim().split('\n').map(row => {
+            const values = row.split('\t');
+            let obj = {};
+            headers.forEach((header, i) => { obj[header] = (values[i] || '').trim(); });
+            return obj;
         });
-        return;
-    }
 
-    const headers = ["Nama", "Perusahaan", "Posisi", "Domisili", "Kelompok Usia", "Status Pekerjaan", "Pengalaman Olahraga", "Minat Driving Range", "Frekuensi Driving Range", "Waktu Ideal Driving Range", "Biaya Wajar Driving Range", "Fitur Penting Driving Range", "Familiar PADEL", "Minat PADEL", "Frekuensi PADEL", "Waktu Ideal PADEL", "Biaya Sewa PADEL", "Fitur Penting PADEL", "Pilihan Fasilitas", "Pemanfaatan Fasilitas", "Pendorong Rutin", "Saran Lain"];
-    const parsedSurveyData = surveyRawData.trim().split('\n').map(row => {
-        const values = row.split('\t');
-        let obj = {};
-        headers.forEach((header, i) => { obj[header] = (values[i] || '').trim(); });
-        return obj;
-    });
+        const surveyChartsContainer = document.getElementById('surveyChartsContainer');
+        if (surveyChartsContainer) {
+            surveyChartsContainer.innerHTML = '';
+            const aggregateData = (data, key, isMultiSelect = false, separator = ', ') => data.reduce((acc, row) => {
+                const answer = row[key];
+                if (answer && !['-', 'na', 'tidak', 'ga tau', '', 'tidak tahu', 'tidka tertarik'].includes(answer.toLowerCase())) {
+                    if (isMultiSelect) answer.split(separator).forEach(item => { const trimmed = item.trim(); if (trimmed) acc[trimmed] = (acc[trimmed] || 0) + 1; });
+                    else acc[answer] = (acc[answer] || 0) + 1;
+                }
+                return acc;
+            }, {});
+            
+            const createChart = (title, type, aggregatedData, options = {}) => {
+                const chartWrapper = document.createElement('div');
+                chartWrapper.className = 'bg-white p-6 rounded-lg shadow-md';
+                chartWrapper.innerHTML = `<h3 class="text-xl font-semibold mb-4 text-gray-700">${title}</h3><canvas></canvas>`;
+                surveyChartsContainer.appendChild(chartWrapper);
+                const chartOptions = { responsive: true, plugins: { legend: { display: type === 'doughnut' }, tooltip: { callbacks: { label: (c) => `${c.label}: ${helpers.formatNumber(c.raw)}` } } }, ...options };
+                new Chart(chartWrapper.querySelector('canvas'), { type, data: { labels: Object.keys(aggregatedData), datasets: [{ data: Object.values(aggregatedData), backgroundColor: ['rgba(59, 130, 246, 0.7)', 'rgba(16, 185, 129, 0.7)', 'rgba(245, 158, 11, 0.7)', 'rgba(236, 72, 153, 0.7)', 'rgba(139, 92, 246, 0.7)', 'rgba(20, 184, 166, 0.7)'], borderColor: 'rgba(255, 255, 255, 0.5)', borderWidth: 1 }] }, options: chartOptions });
+            };
 
-    const surveyChartsContainer = document.getElementById('surveyChartsContainer');
-    if (surveyChartsContainer) {
-        surveyChartsContainer.innerHTML = '';
-        const aggregateData = (data, key, isMultiSelect = false, separator = ', ') => data.reduce((acc, row) => {
-            const answer = row[key];
-            if (answer && !['-', 'na', 'tidak', 'ga tau', '', 'tidak tahu', 'tidka tertarik'].includes(answer.toLowerCase())) {
-                if (isMultiSelect) answer.split(separator).forEach(item => { const trimmed = item.trim(); if (trimmed) acc[trimmed] = (acc[trimmed] || 0) + 1; });
-                else acc[answer] = (acc[answer] || 0) + 1;
-            }
-            return acc;
-        }, {});
-        
-        const createChart = (title, type, aggregatedData, options = {}) => {
-            const chartWrapper = document.createElement('div');
-            chartWrapper.className = 'bg-white p-6 rounded-lg shadow-md';
-            chartWrapper.innerHTML = `<h3 class="text-xl font-semibold mb-4 text-gray-700">${title}</h3><canvas></canvas>`;
-            surveyChartsContainer.appendChild(chartWrapper);
-            const chartOptions = { responsive: true, plugins: { legend: { display: type === 'doughnut' }, tooltip: { callbacks: { label: (c) => `${c.label}: ${helpers.formatNumber(c.raw)}` } } }, ...options };
-            new Chart(chartWrapper.querySelector('canvas'), { type, data: { labels: Object.keys(aggregatedData), datasets: [{ data: Object.values(aggregatedData), backgroundColor: ['rgba(59, 130, 246, 0.7)', 'rgba(16, 185, 129, 0.7)', 'rgba(245, 158, 11, 0.7)', 'rgba(236, 72, 153, 0.7)', 'rgba(139, 92, 246, 0.7)', 'rgba(20, 184, 166, 0.7)'], borderColor: 'rgba(255, 255, 255, 0.5)', borderWidth: 1 }] }, options: chartOptions });
-        };
+            createChart('Preferensi Fasilitas Utama', 'doughnut', aggregateData(parsedSurveyData, 'Pilihan Fasilitas'));
+            createChart('Tingkat Minat Terhadap Lapangan PADEL', 'bar', aggregateData(parsedSurveyData, 'Minat PADEL'), { plugins: { legend: { display: false } } });
+            createChart('Demografi Usia Responden', 'bar', aggregateData(parsedSurveyData, 'Kelompok Usia'), { plugins: { legend: { display: false } } });
+            createChart('Fitur Padel Paling Penting', 'bar', aggregateData(parsedSurveyData, 'Fitur Penting PADEL', true), { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { y: { ticks: { font: { size: 10 } } } } });
+        }
 
-        createChart('Preferensi Fasilitas Utama', 'doughnut', aggregateData(parsedSurveyData, 'Pilihan Fasilitas'));
-        createChart('Tingkat Minat Terhadap Lapangan PADEL', 'bar', aggregateData(parsedSurveyData, 'Minat PADEL'), { plugins: { legend: { display: false } } });
-        createChart('Demografi Usia Responden', 'bar', aggregateData(parsedSurveyData, 'Kelompok Usia'), { plugins: { legend: { display: false } } });
-        createChart('Fitur Padel Paling Penting', 'bar', aggregateData(parsedSurveyData, 'Fitur Penting PADEL', true), { indexAxis: 'y', plugins: { legend: { display: false } }, scales: { y: { ticks: { font: { size: 10 } } } } });
-    }
-
-    const feedbackList = document.getElementById('qualitativeFeedback');
-    if (feedbackList) {
-        feedbackList.innerHTML = '';
-        const uniqueFeedbacks = [...new Set(parsedSurveyData.map(row => row['Saran Lain']).filter(fb => fb && fb.trim() && !['-','ok','cukup','tidak ada'].includes(fb.trim().toLowerCase())).map(fb => fb.trim()))];
-        if (uniqueFeedbacks.length === 0) feedbackList.innerHTML = '<li>Tidak ada masukan kualitatif tambahan dari responden.</li>';
-        else feedbackList.innerHTML = uniqueFeedbacks.map(fb => `<li>${fb}</li>`).join('');
-    }
+        const feedbackList = document.getElementById('qualitativeFeedback');
+        if (feedbackList) {
+            feedbackList.innerHTML = '';
+            const uniqueFeedbacks = [...new Set(parsedSurveyData.map(row => row['Saran Lain']).filter(fb => fb && fb.trim() && !['-','ok','cukup','tidak ada'].includes(fb.trim().toLowerCase())).map(fb => fb.trim()))];
+            if (uniqueFeedbacks.length === 0) feedbackList.innerHTML = '<li>Tidak ada masukan kualitatif tambahan dari responden.</li>';
+            else feedbackList.innerHTML = uniqueFeedbacks.map(fb => `<li>${fb}</li>`).join('');
+        }
 
         const choiceVsAgeCtx = document.getElementById('choiceVsAgeChart');
         if (choiceVsAgeCtx) {
