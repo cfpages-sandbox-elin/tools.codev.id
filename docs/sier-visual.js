@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- HELPER FUNCTIONS ---
     function formatNumber(num) {
-        if (num === null || num === undefined) return '0';
+        if (num === null || num === undefined || isNaN(num)) return '0';
         return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
     }
     const toBillion = (num) => (num / 1000000000).toFixed(2) + ' M';
@@ -1122,67 +1122,68 @@ document.addEventListener('DOMContentLoaded', () => {
     // ====================================================================
     // REFAKTOR ANALISIS BISNIS PADEL DENGAN DATA TERPUSAT
     // ====================================================================
-    tryToRender(function refactorPadelBusinessAnalysis() {
+    function refactorPadelBusinessAnalysis() {
         const bepContainer = document.querySelector('#business-strategy-analysis');
         if (!bepContainer) return false;
 
-        // Ambil elemen yang akan di-update
         const bepResultContainer = bepContainer.querySelector('.bg-blue-50');
         if (!bepResultContainer) return false;
 
-        // Lakukan kalkulasi BEP hanya untuk Padel menggunakan data dari projectConfig
-        const p = projectConfig.padel;
-        const a = projectConfig.assumptions;
+        // PERBAIKAN: Gunakan getFinancialSummary untuk mendapatkan data, bukan getMonthlyRevenue
+        const summary = projectConfig.calculations.getFinancialSummary();
+        const padelData = summary.padel;
+        const p_config = projectConfig.padel;
+        const o_assumptions = p_config.operational_assumptions;
 
-        // Total Biaya Tetap Bulanan HANYA untuk Padel
-        const fixedCostMonthlyPadel = p.opexMonthly.salaries + p.opexMonthly.rent + p.opexMonthly.marketing + p.opexMonthly.fnb_other_costs;
+        // Total Biaya Tetap Bulanan HANYA untuk Padel (total opex - cogs)
+        const fixedCostMonthlyPadel = padelData.opex.total;
         
-        // Margin kontribusi rata-rata per jam
-        // Kita bisa ambil pendekatan sederhana: Total Revenue Padel / Total Jam Booking Padel
-        const monthlyRevenuePadel = projectConfig.calculations.getMonthlyRevenue().padel.total;
+        // Pendapatan rata-rata per jam
+        const totalRevenueMonthly = padelData.revenue.total;
+
+        // Hitung total jam terjual per bulan
+        const m = p_config.revenue.main_revenue;
+        const hours_wd_off = m.courts * m.hours_distribution_per_day.offpeak * m.occupancy_rate.weekday_offpeak;
+        const hours_wd_peak = m.courts * m.hours_distribution_per_day.peak * m.occupancy_rate.weekday_peak;
+        const hours_we = m.courts * o_assumptions.operational_hours_per_day * m.occupancy_rate.weekend;
+        const totalHoursBookedMonthly = (hours_wd_off + hours_wd_peak) * o_assumptions.workdays_in_month + hours_we * o_assumptions.weekend_days_in_month;
         
-        const hours_weekday_offpeak = p.courts.count * p.courts.hours_distribution.offpeak_per_day * p.courts.occupancy.weekday_offpeak;
-        const hours_weekday_peak = p.courts.count * p.courts.hours_distribution.peak_per_day * p.courts.occupancy.weekday_peak;
-        const hours_weekend = p.courts.count * a.operational_hours_per_day * p.courts.occupancy.weekend;
-        const totalHoursBookedMonthly = (hours_weekday_offpeak + hours_weekday_peak) * a.workdays_in_month + hours_weekend * a.weekend_days_in_month;
-        
-        const averageRevenuePerHour = monthlyRevenuePadel / totalHoursBookedMonthly;
-        // Asumsi biaya variabel per jam (listrik, air)
-        const variableCostPerHour = (p.opexMonthly.utilities + p.opexMonthly.maintenance) / totalHoursBookedMonthly;
-        const contributionMarginPerHour = averageRevenuePerHour - variableCostPerHour;
+        // Margin kontribusi (Pendapatan Total - COGS) / Total Jam
+        const contributionMarginPerHour = (totalRevenueMonthly - padelData.opex.cogs) / totalHoursBookedMonthly;
 
         // Titik Impas dalam Jam
         const bepHoursMonthly = fixedCostMonthlyPadel / contributionMarginPerHour;
-        const bepHoursDaily = bepHoursMonthly / (a.workdays_in_month + a.weekend_days_in_month);
-        const bepHoursPerCourtDaily = bepHoursDaily / p.courts.count;
+        const bepHoursDaily = bepHoursMonthly / (o_assumptions.workdays_in_month + o_assumptions.weekend_days_in_month);
+        const bepHoursPerCourtDaily = bepHoursDaily / m.courts;
 
-        // Update DOM
         bepResultContainer.innerHTML = `
             <p class="text-sm text-gray-600">Jam Sewa Minimum per Bulan (BEP)</p>
             <p class="text-3xl font-bold text-blue-700">${Math.ceil(bepHoursMonthly)} Jam</p>
-            <p class="text-sm text-gray-600 mt-3">Target per Hari (untuk ${p.courts.count} Lapangan)</p>
+            <p class="text-sm text-gray-600 mt-3">Target per Hari (untuk ${m.courts} Lapangan)</p>
             <p class="text-2xl font-bold text-blue-700">~${bepHoursDaily.toFixed(1)} Jam Sewa</p>
             <p class="text-sm text-gray-600 mt-1">(Rata-rata ~${bepHoursPerCourtDaily.toFixed(1)} jam per lapangan per hari)</p>
         `;
 
         return true;
-    });
+    }
 
     // ====================================================================
     // REFAKTOR ANALISIS RISIKO DENGAN DAMPAK KUANTITATIF
     // ====================================================================
-    tryToRender(function refactorRiskAnalysis() {
+    function refactorRiskAnalysis() {
         const riskTable = document.querySelector('#risk-analysis table');
         if (!riskTable) return false;
 
         const tbody = riskTable.querySelector('tbody');
 
-        // Kalkulasi dampak finansial dari skenario pesimis
-        const realisticPnl = projectConfig.calculations.calculatePnl();
-        const pesimisticPnl = projectConfig.calculations.calculatePnl(0.85, 1.10); // Sesuai skenario sensitivitas
-        const profitDrop = realisticPnl.netProfit - pesimisticPnl.netProfit;
+        // PERBAIKAN: Gunakan getFinancialSummary untuk mendapatkan PNL, bukan calculatePnl
+        const realisticSummary = projectConfig.calculations.getFinancialSummary();
+        const pessimisticSummary = projectConfig.calculations.getFinancialSummary(0.85, 1.10);
         
-        // Buat baris baru untuk dampak kuantitatif
+        const realisticPnl = realisticSummary.combined.pnl;
+        const pessimisticPnl = pessimisticSummary.combined.pnl;
+        const profitDrop = realisticPnl.netProfit - pessimisticPnl.netProfit;
+        
         const newRow = document.createElement('tr');
         newRow.className = 'bg-white border-b hover:bg-gray-50';
         newRow.innerHTML = `
@@ -1201,29 +1202,31 @@ document.addEventListener('DOMContentLoaded', () => {
             </td>
         `;
 
-        // Hapus baris risiko lama yang relevan dan sisipkan yang baru
-        // Ini contoh sederhana, Anda bisa membuatnya lebih canggih
         const rows = tbody.querySelectorAll('tr');
-        if (rows.length > 0) {
-            // Hapus baris "Permintaan Lebih Rendah dari Proyeksi"
-            if (rows[0].innerText.includes('Permintaan Lebih Rendah')) {
-                rows[0].remove();
+        let rowFoundAndReplaced = false;
+        rows.forEach(row => {
+            if (row.innerText.includes('Permintaan Lebih Rendah')) {
+                tbody.replaceChild(newRow, row);
+                rowFoundAndReplaced = true;
             }
+        });
+
+        // Jika tidak ada baris yang cocok, tambahkan saja di awal
+        if (!rowFoundAndReplaced) {
+            tbody.prepend(newRow);
         }
-        tbody.prepend(newRow); // Sisipkan baris baru yang lebih detail di paling atas
 
         return true;
-    });
+    }
 
     function updateAllVisuals() {
         console.log("Updating all visuals...");
         // Daftar ini harus berisi nama semua fungsi render Anda
         const renderFunctions = [
             renderDemographyAndCharts,
-            // renderDetailedDemography, // Jika Anda memisahkannya
+            renderDetailedDemography,
             renderIncomeAndMarketAnalysis,
             renderSurveyAnalysis,
-            // renderDeepDiveSurvey,
             renderSampleSurveyCalculation,
             renderEconomicImpact,
             renderTechnicalAnalysis,
@@ -1235,7 +1238,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Ganti semua pemanggilan tryToRender() individu dengan loop ini
         renderFunctions.forEach(fn => {
-             // Pastikan nama fungsinya benar dan ada di scope ini
             if (typeof fn === 'function') {
                 tryToRender(fn);
             }
