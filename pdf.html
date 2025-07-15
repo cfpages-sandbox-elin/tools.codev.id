@@ -31,37 +31,41 @@
         .allowed-range-label { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: rgba(16, 185, 129, 0.9); color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap; }
         .cut-line-initial, .cut-line-confirmed { transition: top 0.3s ease-out; }
         .dragging .cut-line-initial { transition: none !important; }
-        /* NEW: Styles for page omission in Split tool */
         .page-omitted::after { content: 'OMITTED'; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(239, 68, 68, 0.7); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: bold; z-index: 16; pointer-events: none; }
         .page-omit-button { position: absolute; top: 10px; left: 10px; background: rgba(220, 38, 38, 0.8); color: white; border: 1px solid white; width: 28px; height: 28px; border-radius: 50%; font-size: 16px; cursor: pointer; z-index: 17; display: flex; align-items: center; justify-content: center; line-height: 1; }
         .page-omit-button:hover { background: rgba(185, 28, 28, 1); }
-
 
         /* Styles for Tabs */
         .tab-button { cursor: pointer; padding: 10px 20px; border-bottom: 3px solid transparent; }
         .tab-button.active { border-color: #4f46e5; color: #4f46e5; font-weight: 600; }
 
-        /* NEW: Styles for Delete tool */
+        /* Styles for Delete tool */
         .page-preview-card { position: relative; border: 3px solid transparent; border-radius: 8px; padding: 8px; cursor: pointer; transition: all 0.2s ease-in-out; background-color: #f8fafc; }
         .page-preview-card:hover { border-color: #a5b4fc; }
         .page-preview-card.selected { border-color: #ef4444; background-color: #fee2e2; }
         .page-preview-card.selected::after { content: '✓ To Delete'; position: absolute; bottom: 8px; right: 8px; background: #ef4444; color: white; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 500; }
         .page-preview-card canvas { width: 100%; height: auto; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+        /* Styles for Edit tool */
+        .page-wrapper { position: relative; margin: 0 auto 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+        .edit-overlay-canvas { position: absolute; top: 0; left: 0; cursor: crosshair; }
+        .edit-toolbar button.active-tool { background-color: #4f46e5; color: white; }
     </style>
 </head>
 <body class="bg-slate-100 font-sans">
     <div class="w-full max-w-5xl mx-auto p-4 sm:p-8 my-10 bg-white rounded-xl shadow-lg">
         <div class="text-center mb-6">
-            <h1 class="text-3xl font-bold text-slate-800">PDF Tools v1.3</h1>
+            <h1 class="text-3xl font-bold text-slate-800">PDF Tools v1.4</h1>
             <p class="text-slate-500 mt-2">Choose a tool below to get started.</p>
         </div>
 
         <!-- Tab Navigation -->
         <div class="border-b border-gray-200 mb-6">
             <nav class="flex -mb-px justify-center" aria-label="Tabs">
-                <button id="tab-split" class="tab-button active" role="tab">✂️ Split</button>
-                <button id="tab-extract" class="tab-button" role="tab">📑 Extract</button>
-                <button id="tab-delete" class="tab-button" role="tab">🗑️ Delete</button>
+                <button id="tab-split" class="tab-button active" role="tab" data-tab-key="split">✂️ Split</button>
+                <button id="tab-extract" class="tab-button" role="tab" data-tab-key="extract">📑 Extract</button>
+                <button id="tab-delete" class="tab-button" role="tab" data-tab-key="delete">🗑️ Delete</button>
+                <button id="tab-edit" class="tab-button" role="tab" data-tab-key="edit">✏️ Edit</button>
             </nav>
         </div>
 
@@ -159,30 +163,100 @@
             <div id="delete-results" class="text-center mt-6"></div>
         </div>
 
+        <div id="tab-content-edit" class="hidden">
+            <!-- EDIT TOOL UI -->
+            <div class="text-center mb-4">
+                <h2 class="text-2xl font-semibold text-slate-700">PDF Editor</h2>
+                <p class="text-slate-500 mt-1">Draw, highlight, erase, and add text to your PDF pages.</p>
+            </div>
+            <div class="border-b pb-6 mb-6">
+                <label class="block text-sm font-medium text-slate-700 mb-2">1. Upload PDF</label>
+                <input id="edit-file-upload" type="file" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" accept=".pdf">
+            </div>
+            
+            <div id="edit-toolbar" class="hidden sticky top-0 bg-white/80 backdrop-blur-sm z-20 p-4 rounded-lg shadow-md mb-6 items-center justify-center gap-4 flex-wrap">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm font-medium text-slate-600">Tool:</span>
+                    <button id="edit-tool-brush" title="Brush" class="p-2 border rounded-md hover:bg-slate-100 active-tool">🖌️</button>
+                    <button id="edit-tool-text" title="Text" class="p-2 border rounded-md hover:bg-slate-100">T</button>                    
+                    <button id="edit-tool-eyedropper" title="Eyedropper" class="p-2 border rounded-md hover:bg-slate-100">💧</button>
+                    <button id="edit-tool-eraser" title="Eraser" class="p-2 border rounded-md hover:bg-slate-100">🧼</button>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <label for="edit-font-select" class="text-sm font-medium text-slate-600">Font:</label>
+                    <select id="edit-font-select" class="h-10 border-gray-300 rounded-md text-sm">
+                        <option value="Helvetica">Helvetica</option>
+                        <option value="Times-Roman">Times New Roman</option>
+                        <option value="Courier">Courier</option>
+                        <option value="Roboto">Roboto</option>
+                        <option value="Open Sans">Open Sans</option>
+                        <option value="Lato">Lato</option>
+                        <option value="Montserrat">Montserrat</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <label for="edit-color-picker" class="text-sm font-medium text-slate-600">Color:</label>
+                    <input type="color" id="edit-color-picker" value="#ef4444" class="w-10 h-10 border-none rounded-md cursor-pointer">
+                </div>
+                <div class="flex items-center gap-2">
+                    <label for="edit-size-slider" class="text-sm font-medium text-slate-600">Size:</label>
+                    <input type="range" id="edit-size-slider" min="1" max="50" value="5" class="w-32">
+                    <span id="edit-size-label" class="text-sm w-8 text-center">5</span>
+                </div>
+                <button id="edit-save-button" class="px-6 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700">Save & Download</button>
+            </div>
+
+            <div id="edit-status" class="text-center mb-4 min-h-[2rem]"></div>
+            
+            <div id="edit-preview-container" class="w-full max-h-[80vh] overflow-y-auto border-2 border-slate-200 bg-slate-100 p-4">
+                 <!-- PDF pages will be rendered here as canvases -->
+                 <div class="text-center text-slate-500">Upload a PDF to begin editing.</div>
+            </div>
+        </div>
+
 <script>
-// Simple Tab-switching logic
+// Simple Tab-switching logic with localStorage
 document.addEventListener('DOMContentLoaded', () => {
-    const tabs = {
-        split: { button: document.getElementById('tab-split'), content: document.getElementById('tab-content-split') },
-        extract: { button: document.getElementById('tab-extract'), content: document.getElementById('tab-content-extract') },
-        delete: { button: document.getElementById('tab-delete'), content: document.getElementById('tab-content-delete') }
-    };
+    const tabs = {};
+    document.querySelectorAll('.tab-button').forEach(button => {
+        const key = button.dataset.tabKey;
+        tabs[key] = {
+            button: button,
+            content: document.getElementById(`tab-content-${key}`)
+        };
+    });
 
     function switchTab(activeTabKey) {
         Object.keys(tabs).forEach(key => {
-            const is_active = key === activeTabKey;
-            tabs[key].button.classList.toggle('active', is_active);
-            tabs[key].content.classList.toggle('hidden', !is_active);
+            const isActive = key === activeTabKey;
+            tabs[key].button.classList.toggle('active', isActive);
+            if (tabs[key].content) {
+                tabs[key].content.classList.toggle('hidden', !isActive);
+            }
         });
+        // Save the active tab to localStorage
+        localStorage.setItem('pdfToolsLastTab', activeTabKey);
     }
 
-    tabs.split.button.addEventListener('click', () => switchTab('split'));
-    tabs.extract.button.addEventListener('click', () => switchTab('extract'));
-    tabs.delete.button.addEventListener('click', () => switchTab('delete'));
+    Object.keys(tabs).forEach(key => {
+        tabs[key].button.addEventListener('click', () => switchTab(key));
+    });
+
+    // On page load, restore the last active tab
+    const lastTab = localStorage.getItem('pdfToolsLastTab');
+    if (lastTab && tabs[lastTab]) {
+        switchTab(lastTab);
+    } else {
+        switchTab('split'); // Default to 'split' tab
+    }
 });
 </script>
+
 <script src="pdf-split.js" defer></script>
 <script src="pdf-extract.js" defer></script>
 <script src="pdf-delete.js" defer></script>
+<script src="pdf-edit.js" defer></script>
 </body>
 </html>
