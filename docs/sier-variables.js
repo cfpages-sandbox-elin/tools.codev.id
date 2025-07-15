@@ -3,244 +3,292 @@
 
 const projectConfig = {
     // ====================================================================
-    // KAMUS TERJEMAHAN (BARU)
+    // A. KAMUS TERJEMAHAN (Diperbarui)
     // ====================================================================
     keyTranslations: {
-        // Asumsi Global
-        'tax_rate_profit': 'Tarif Pajak Penghasilan',
-        'discount_rate_wacc': 'Tingkat Diskonto (WACC)',
-        'contingency_rate': 'Dana Darurat (Kontingensi)',
-        // Asumsi Umum Unit Bisnis
-        'workdays_in_month': 'Hari Kerja per Bulan',
-        'weekend_days_in_month': 'Hari Libur per Bulan',
-        'operational_hours_per_day': 'Jam Operasional per Hari',
+        'tax_rate_profit': 'Tarif Pajak Penghasilan', 'discount_rate_wacc': 'Tingkat Diskonto (WACC)', 'contingency_rate': 'Dana Darurat (Kontingensi)',
+        'workdays_in_month': 'Hari Kerja / Bulan', 'weekend_days_in_month': 'Hari Libur / Bulan', 'operational_hours_per_day': 'Jam Operasional / Hari',
         'cogs_rate_fnb': 'HPP (COGS) F&B',
-        // Asumsi Driving Range
-        'bays': 'Jumlah Bay',
-        'price_per_100_balls': 'Harga per 100 Bola',
-        'occupancy_per_day': 'Okupansi per Bay per Hari',
-        'weekday': 'Hari Kerja',
-        'weekend': 'Akhir Pekan',
-        'ancillary_revenue_per_visitor': 'Pendapatan Tambahan per Pengunjung',
-        // Asumsi Padel
-        'courts': 'Jumlah Lapangan',
-        'price_per_hour': 'Harga Sewa per Jam',
-        'weekday_offpeak': 'Hari Kerja (Jam Sepi)',
-        'weekday_peak': 'Hari Kerja (Jam Sibuk)',
-        'occupancy_rate': 'Tingkat Okupansi',
-        'hours_distribution_per_day': 'Distribusi Jam per Hari',
-        'offpeak': 'Jam Sepi',
-        'peak': 'Jam Sibuk',
-        'ancillary_revenue_per_hour_booked': 'Pendapatan Tambahan per Jam Booking',
+        // CapEx
+        'land_acquisition': 'Perolehan Lahan', 'civil_construction': 'Konstruksi Sipil & Prasarana', 'building_main': 'Bangunan Utama (Lounge, F&B, Office)',
+        'equipment_sport': 'Peralatan Olahraga (Per Unit)', 'interior_finishing': 'Interior & Finishing', 'pre_operational': 'Biaya Pra-Operasional',
         // Opex
-        'salaries': 'Gaji & Upah',
-        'rent_allocation': 'Alokasi Sewa Lahan',
-        'utilities': 'Utilitas (Listrik, Air, dll)',
-        'marketing': 'Pemasaran & Promosi',
-        'maintenance': 'Perawatan & Perbaikan',
-        'fnb_other_costs': 'Biaya Lain-lain F&B',
+        'salaries_wages': 'Gaji & Upah', 'manager': 'Manajer', 'supervisor': 'Supervisor', 'admin_cashier': 'Admin & Kasir', 'coach_trainer': 'Pelatih / Instruktur', 'cleaning_security': 'Kebersihan & Keamanan',
+        'utilities': 'Utilitas', 'electricity_kwh_price': 'Harga Listrik / kWh', 'electricity_kwh_usage': 'Penggunaan Listrik / Bulan (kWh)', 'water_etc': 'Air & Lainnya',
+        'marketing_promotion': 'Pemasaran & Promosi', 'maintenance_repair': 'Perawatan & Perbaikan', 'rent_land': 'Sewa Lahan', 'other_operational': 'Biaya Operasional Lainnya',
+        // Revenue
+        'main_revenue': 'Pendapatan Utama (Sewa)', 'bays': 'Jumlah Bay', 'price_per_100_balls': 'Harga / 100 Bola', 'occupancy_rate_per_day': 'Okupansi per Bay / Hari',
+        'courts': 'Jumlah Lapangan', 'price_per_hour': 'Harga Sewa / Jam', 'occupancy_rate': 'Tingkat Okupansi',
+        'ancillary_revenue': 'Pendapatan Tambahan', 'fnb_avg_spend': 'Belanja F&B Rata-rata', 'pro_shop_sales': 'Penjualan Pro Shop (Estimasi)',
+        // Common
+        'weekday': 'Hari Kerja', 'weekend': 'Akhir Pekan', 'weekday_offpeak': 'Hr Kerja (Sepi)', 'weekday_peak': 'Hr Kerja (Sibuk)', 'offpeak': 'Jam Sepi', 'peak': 'Jam Sibuk',
+        'count': 'Jumlah', 'salary': 'Gaji', 'personnel': 'Personel',
     },
+
     // ====================================================================
-    // A. ASUMSI UMUM & GLOBAL
+    // B. ASUMSI GLOBAL
     // ====================================================================
     assumptions: {
-        // Asumsi Makro
-        tax_rate_profit: 0.22,    // 22% tarif PPh Badan
-        discount_rate_wacc: 0.12, // 12% WACC untuk NPV & IRR
-        contingency_rate: 0.10,   // 10% dana darurat
-    },
-
-    // ====================================================================
-    // B. MODEL BISNIS DRIVING RANGE
-    // ====================================================================
-    drivingRange: {
-        // Asumsi Spesifik Driving Range
-        assumptions: {
-            workdays_in_month: 22,
-            weekend_days_in_month: 8,
-            cogs_rate_fnb: 0.40, // Asumsi COGS F&B di DR lebih tinggi (40%)
-            ancillary_revenue_per_visitor: 35000,
-        },
-        // Unit Operasional
-        units: {
-            bays: 30,
-            price_per_100_balls: 120000,
-            occupancy_per_day: { // Rata-rata sesi per bay per hari
-                weekday: 2.0,
-                weekend: 5.0,
-            }
-        },
-        // Investasi (CapEx)
-        capex: {
-            land: 2000000000,
-            construction: 1500000000,
-            building: 700000000,
-            equipment: 400000000,
-        },
-        // Biaya Operasional Bulanan (OpEx)
-        opexMonthly: {
-            salaries: 55000000,
-            rent_allocation: 33000000,
-            utilities: 25000000,
-            marketing: 15000000,
-            maintenance: 12000000,
-            fnb_other_costs: 10000000,
-        },
-         // Depresiasi
+        tax_rate_profit: 0.22,
+        discount_rate_wacc: 0.12,
+        contingency_rate: 0.10,
         depreciation_years: {
             building: 20,
-            construction: 15,
+            civil_construction: 15,
             equipment: 5,
-        },
+            interior: 7,
+        }
     },
 
     // ====================================================================
-    // C. MODEL BISNIS PADEL
+    // C. MODEL BISNIS: DRIVING RANGE
+    // ====================================================================
+    drivingRange: {
+        // ASUMSI OPERASIONAL
+        operational_assumptions: {
+            workdays_in_month: 22,
+            weekend_days_in_month: 8,
+            cogs_rate_fnb: 0.40,
+        },
+        // PENDAPATAN (REVENUE)
+        revenue: {
+            main_revenue: {
+                bays: 30,
+                price_per_100_balls: 120000,
+                occupancy_rate_per_day: { weekday: 2.0, weekend: 5.0 },
+            },
+            ancillary_revenue: {
+                fnb_avg_spend: 35000,
+                pro_shop_sales: 15000000, // Estimasi penjualan bulanan
+            }
+        },
+        // BIAYA INVESTASI (CAPEX)
+        capex: {
+            land_acquisition: 2000000000,
+            civil_construction: 1500000000,
+            building_main: 700000000,
+            equipment_sport: 20000000, // per bay
+            interior_finishing: 200000000,
+            pre_operational: 100000000,
+        },
+        // BIAYA OPERASIONAL BULANAN (OPEX)
+        opexMonthly: {
+            salaries_wages: {
+                manager:        { count: 1, salary: 12000000 },
+                supervisor:     { count: 2, salary: 7000000 },
+                admin_cashier:  { count: 3, salary: 5000000 },
+                coach_trainer:  { count: 2, salary: 6000000 },
+                cleaning_security: { count: 4, salary: 4000000 },
+            },
+            utilities: {
+                electricity_kwh_price: 1700,
+                electricity_kwh_usage: 12000,
+                water_etc: 5000000,
+            },
+            marketing_promotion: 15000000,
+            maintenance_repair: 12000000,
+            rent_land: 33000000,
+            other_operational: 10000000,
+        }
+    },
+
+    // ====================================================================
+    // D. MODEL BISNIS: PADEL
     // ====================================================================
     padel: {
-        // Asumsi Spesifik Padel
-        assumptions: {
+        // ASUMSI OPERASIONAL
+        operational_assumptions: {
             workdays_in_month: 22,
             weekend_days_in_month: 8,
             operational_hours_per_day: 18,
-            cogs_rate_fnb: 0.30, // Asumsi COGS F&B di Padel lebih rendah (30%) karena menu lebih simpel
-            ancillary_revenue_per_hour_booked: 50000,
+            cogs_rate_fnb: 0.30,
         },
-        // Unit Operasional
-        units: {
-            courts: 4,
-            price_per_hour: {
-                weekday_offpeak: 250000,
-                weekday_peak: 350000,
-                weekend: 400000,
+        // PENDAPATAN (REVENUE)
+        revenue: {
+            main_revenue: {
+                courts: 4,
+                price_per_hour: { weekday_offpeak: 250000, weekday_peak: 350000, weekend: 400000 },
+                occupancy_rate: { weekday_offpeak: 0.30, weekday_peak: 0.85, weekend: 0.90 },
+                hours_distribution_per_day: { offpeak: 10, peak: 8 },
             },
-            occupancy_rate: {
-                weekday_offpeak: 0.30,
-                weekday_peak: 0.85,
-                weekend: 0.90,
-            },
-            hours_distribution_per_day: {
-                offpeak: 10,
-                peak: 8,
+            ancillary_revenue: {
+                fnb_avg_spend: 50000, // Dihitung per jam booking
+                pro_shop_sales: 20000000,
             }
         },
-        // Investasi (CapEx)
+        // BIAYA INVESTASI (CAPEX)
         capex: {
-            land: 1500000000,
-            construction: 1400000000,
-            building: 800000000,
-            equipment: 300000000,
+            land_acquisition: 1500000000,
+            civil_construction: 1000000000,
+            building_main: 800000000,
+            equipment_sport: 350000000, // per lapangan
+            interior_finishing: 300000000,
+            pre_operational: 100000000,
         },
-        // Biaya Operasional Bulanan (OpEx)
+        // BIAYA OPERASIONAL BULANAN (OPEX)
         opexMonthly: {
-            salaries: 70000000,
-            rent_allocation: 25000000,
-            utilities: 35000000,
-            marketing: 15000000,
-            maintenance: 10000000,
-            fnb_other_costs: 8000000,
-        },
-         // Depresiasi
-        depreciation_years: {
-            building: 20,
-            construction: 15,
-            equipment: 5,
-        },
+            salaries_wages: {
+                manager:        { count: 1, salary: 10000000 },
+                supervisor:     { count: 2, salary: 6500000 },
+                admin_cashier:  { count: 4, salary: 5000000 },
+                cleaning_security: { count: 4, salary: 4000000 },
+            },
+            utilities: {
+                electricity_kwh_price: 1700,
+                electricity_kwh_usage: 18000,
+                water_etc: 5000000,
+            },
+            marketing_promotion: 15000000,
+            maintenance_repair: 10000000,
+            rent_land: 25000000,
+            other_operational: 8000000,
+        }
     },
 
     // ====================================================================
-    // D. FUNGSI PERHITUNGAN (MODEL BISNIS)
+    // E. MESIN KALKULASI (DISESUAIKAN DENGAN STRUKTUR BARU)
     // ====================================================================
     calculations: {
-        getMonthlyRevenueForUnit(unit) {
-            const unitConfig = projectConfig[unit];
-            if (unit === 'drivingRange') {
-                const { assumptions: a, units: u } = unitConfig;
-                const sessions_weekday = u.bays * u.occupancy_per_day.weekday;
-                const sessions_weekend = u.bays * u.occupancy_per_day.weekend;
-                const revenue_bays = (sessions_weekday * a.workdays_in_month + sessions_weekend * a.weekend_days_in_month) * u.price_per_100_balls;
-                const total_visitors = (sessions_weekday * a.workdays_in_month) + (sessions_weekend * a.weekend_days_in_month);
-                const revenue_fnb = total_visitors * a.ancillary_revenue_per_visitor;
-                return { main: revenue_bays, ancillary: revenue_fnb, total: revenue_bays + revenue_fnb };
-            }
-            if (unit === 'padel') {
-                const { assumptions: a, units: u } = unitConfig;
-                const hours_wd_offpeak = u.courts * u.hours_distribution_per_day.offpeak * u.occupancy_rate.weekday_offpeak;
-                const hours_wd_peak = u.courts * u.hours_distribution_per_day.peak * u.occupancy_rate.weekday_peak;
-                const hours_we = u.courts * a.operational_hours_per_day * u.occupancy_rate.weekend;
-                const revenue_courts_wd = (hours_wd_offpeak * u.price_per_hour.weekday_offpeak) + (hours_wd_peak * u.price_per_hour.weekday_peak);
-                const revenue_courts_we = hours_we * u.price_per_hour.weekend;
-                const revenue_courts = (revenue_courts_wd * a.workdays_in_month) + (revenue_courts_we * a.weekend_days_in_month);
-                const total_hours_booked = (hours_wd_offpeak + hours_wd_peak) * a.workdays_in_month + hours_we * a.weekend_days_in_month;
-                const revenue_fnb = total_hours_booked * a.ancillary_revenue_per_hour_booked;
-                return { main: revenue_courts, ancillary: revenue_fnb, total: revenue_courts + revenue_fnb };
-            }
-            return { main: 0, ancillary: 0, total: 0 };
+        // --- KALKULATOR TOTAL ---
+        _calculateTotal(dataObject) {
+            if (typeof dataObject !== 'object' || dataObject === null) return 0;
+            return Object.values(dataObject).reduce((sum, value) => {
+                if (typeof value === 'object' && value !== null) {
+                    // Untuk objek seperti {count: 2, salary: 100} -> 2 * 100 = 200
+                    if ('count' in value && 'salary' in value) {
+                        return sum + (value.count * value.salary);
+                    }
+                    // Untuk objek seperti utilities
+                     if ('electricity_kwh_price' in value && 'electricity_kwh_usage' in value) {
+                        return sum + (value.electricity_kwh_price * value.electricity_kwh_usage) + (value.water_etc || 0);
+                    }
+                    return sum + this._calculateTotal(value);
+                }
+                return sum + (typeof value === 'number' ? value : 0);
+            }, 0);
         },
 
-        calculatePnlForUnit(unit, revenueMultiplier = 1, opexMultiplier = 1) {
-            const unitConfig = projectConfig[unit];
-            const monthlyRevenue = this.getMonthlyRevenueForUnit(unit);
-            const annualRevenue = monthlyRevenue.total * 12 * revenueMultiplier;
-            const annualAncillaryRevenue = monthlyRevenue.ancillary * 12 * revenueMultiplier;
-            const cogs = annualAncillaryRevenue * unitConfig.assumptions.cogs_rate_fnb;
-            const grossProfit = annualRevenue - cogs;
-            const annualOpex = Object.values(unitConfig.opexMonthly).reduce((a, b) => a + b, 0) * 12 * opexMultiplier;
+        // --- KALKULATOR PER UNIT BISNIS ---
+        _getUnitCalculations(unitName) {
+            const unit = projectConfig[unitName];
+            const global = projectConfig.assumptions;
+
+            // PENDAPATAN BULANAN
+            let monthlyRevenueMain = 0;
+            let monthlyRevenueAncillary = 0;
+            if (unitName === 'drivingRange') {
+                const { main_revenue: m, ancillary_revenue: a, operational_assumptions: o } = unit.revenue;
+                const sessions_wd = m.bays * m.occupancy_rate_per_day.weekday;
+                const sessions_we = m.bays * m.occupancy_rate_per_day.weekend;
+                monthlyRevenueMain = (sessions_wd * o.workdays_in_month + sessions_we * o.weekend_days_in_month) * m.price_per_100_balls;
+                const total_visitors = (sessions_wd * o.workdays_in_month) + (sessions_we * o.weekend_days_in_month);
+                monthlyRevenueAncillary = (total_visitors * a.fnb_avg_spend) + a.pro_shop_sales;
+            } else if (unitName === 'padel') {
+                const { main_revenue: m, ancillary_revenue: a, operational_assumptions: o } = unit.revenue;
+                const hours_wd_off = m.courts * m.hours_distribution_per_day.offpeak * m.occupancy_rate.weekday_offpeak;
+                const hours_wd_peak = m.courts * m.hours_distribution_per_day.peak * m.occupancy_rate.weekday_peak;
+                const hours_we = m.courts * o.operational_hours_per_day * m.occupancy_rate.weekend;
+                const revenue_wd = (hours_wd_off * m.price_per_hour.weekday_offpeak) + (hours_wd_peak * m.price_per_hour.weekday_peak);
+                const revenue_we = hours_we * m.price_per_hour.weekend;
+                monthlyRevenueMain = (revenue_wd * o.workdays_in_month) + (revenue_we * o.weekend_days_in_month);
+                const total_hours = (hours_wd_off + hours_wd_peak) * o.workdays_in_month + hours_we * o.weekend_days_in_month;
+                monthlyRevenueAncillary = (total_hours * a.fnb_avg_spend) + a.pro_shop_sales;
+            }
+            const monthlyRevenueTotal = monthlyRevenueMain + monthlyRevenueAncillary;
+
+            // BIAYA INVESTASI (CAPEX)
+            const capexBase = this._calculateTotal(unit.capex);
+            const capexEquipment = (unitName === 'drivingRange') 
+                ? unit.capex.equipment_sport * unit.revenue.main_revenue.bays
+                : unit.capex.equipment_sport * unit.revenue.main_revenue.courts;
+            const capexSubTotal = capexBase - unit.capex.equipment_sport + capexEquipment;
+            const capexContingency = capexSubTotal * global.contingency_rate;
+            const capexTotal = capexSubTotal + capexContingency;
+
+            // BIAYA OPERASIONAL BULANAN (OPEX)
+            const opexMonthlyTotal = this._calculateTotal(unit.opexMonthly);
+            const cogsMonthly = (monthlyRevenueAncillary / ((unit.operational_assumptions.cogs_rate_fnb>0)?(1+unit.operational_assumptions.cogs_rate_fnb):1)) * unit.operational_assumptions.cogs_rate_fnb;
+
+
+            // P&L TAHUNAN
+            const annualRevenue = monthlyRevenueTotal * 12;
+            const annualCogs = cogsMonthly * 12;
+            const annualOpex = opexMonthlyTotal * 12;
+            const grossProfit = annualRevenue - annualCogs;
             const ebitda = grossProfit - annualOpex;
-            const depr = (unitConfig.capex.building / unitConfig.depreciation_years.building) + (unitConfig.capex.construction / unitConfig.depreciation_years.construction) + (unitConfig.capex.equipment / unitConfig.depreciation_years.equipment);
-            const ebt = ebitda - depr;
-            const tax = ebt > 0 ? ebt * projectConfig.assumptions.tax_rate_profit : 0;
+            
+            // DEPRESIASI
+            const deprBuilding = (unit.capex.building_main + unit.capex.interior_finishing) / global.depreciation_years.building;
+            const deprCivil = unit.capex.civil_construction / global.depreciation_years.civil_construction;
+            const deprEquipment = capexEquipment / global.depreciation_years.equipment;
+            const annualDepreciation = deprBuilding + deprCivil + deprEquipment;
+
+            const ebt = ebitda - annualDepreciation;
+            const tax = ebt > 0 ? ebt * global.tax_rate_profit : 0;
             const netProfit = ebt - tax;
-            const cashFlowFromOps = netProfit + depr;
-            return { annualRevenue, cogs, grossProfit, annualOpex, ebitda, depreciation: depr, ebt, tax, netProfit, cashFlowFromOps };
+            const cashFlowFromOps = netProfit + annualDepreciation;
+
+            return {
+                capex: { subTotal: capexSubTotal, contingency: capexContingency, total: capexTotal },
+                revenue: { main: monthlyRevenueMain, ancillary: monthlyRevenueAncillary, total: monthlyRevenueTotal },
+                opex: { total: opexMonthlyTotal, cogs: cogsMonthly },
+                pnl: { annualRevenue, annualCogs, annualOpex, grossProfit, ebitda, annualDepreciation, ebt, tax, netProfit, cashFlowFromOps },
+            };
         },
 
-        // Kalkulator gabungan sekarang hanya memanggil kalkulator per unit
-        calculatePnlForCombined(revenueMultiplier = 1, opexMultiplier = 1) {
-            const pnlDR = this.calculatePnlForUnit('drivingRange', revenueMultiplier, opexMultiplier);
-            const pnlPadel = this.calculatePnlForUnit('padel', revenueMultiplier, opexMultiplier);
-            const combined = {};
-            for (const key in pnlDR) {
-                combined[key] = pnlDR[key] + pnlPadel[key];
+        // --- FUNGSI PUBLIK UNTUK DIPANGGIL DARI VISUAL.JS ---
+        getFinancialSummary(revenueMultiplier = 1, opexMultiplier = 1) {
+            const dr = this._getUnitCalculations('drivingRange');
+            const padel = this._getUnitCalculations('padel');
+
+            // Modifikasi dengan multiplier
+            ['pnl', 'revenue', 'opex'].forEach(cat => {
+                Object.keys(dr[cat]).forEach(key => {
+                    if (cat === 'revenue') dr[cat][key] *= revenueMultiplier;
+                    if (cat === 'opex') dr[cat][key] *= opexMultiplier;
+                });
+                 Object.keys(padel[cat]).forEach(key => {
+                    if (cat === 'revenue') padel[cat][key] *= revenueMultiplier;
+                    if (cat === 'opex') padel[cat][key] *= opexMultiplier;
+                });
+            });
+            // Hitung ulang PNL setelah multiplier
+            // Ini adalah simplifikasi, idealnya multiplier diterapkan di awal. Tapi untuk sensitivitas cepat, ini cukup.
+            dr.pnl.annualRevenue = dr.revenue.total * 12;
+            padel.pnl.annualRevenue = padel.revenue.total * 12;
+
+            // Gabungkan hasil
+            const combined = {
+                capex: { total: dr.capex.total + padel.capex.total },
+                pnl: {},
+            };
+            for (const key in dr.pnl) {
+                combined.pnl[key] = dr.pnl[key] + padel.pnl[key];
             }
-            return combined;
-        },
 
-        getFeasibilityForUnit(unit) {
-            const unitCapex = Object.values(projectConfig[unit].capex).reduce((a, b) => a + b, 0);
-            const contingency = unitCapex * projectConfig.assumptions.contingency_rate;
-            const totalInvestment = unitCapex + contingency;
-            const pnl = this.calculatePnlForUnit(unit);
-            const cashFlow = pnl.cashFlowFromOps;
-            if (cashFlow <= 0) return { totalInvestment, paybackPeriod: Infinity, npv: -Infinity, irr: -Infinity };
-            const paybackPeriod = totalInvestment / cashFlow;
+            // Hitung Kelayakan Investasi Gabungan
+            const totalInvestment = combined.capex.total;
+            const cashFlow = combined.pnl.cashFlowFromOps;
+            const paybackPeriod = cashFlow > 0 ? totalInvestment / cashFlow : Infinity;
+            
             const cashFlows = Array(20).fill(cashFlow);
-            const npv = cashFlows.reduce((acc, cf, i) => acc + cf / Math.pow(1 + projectConfig.assumptions.discount_rate_wacc, i + 1), 0) - totalInvestment;
+            const wacc = projectConfig.assumptions.discount_rate_wacc;
+            const npv = cashFlows.reduce((acc, cf, i) => acc + cf / Math.pow(1 + wacc, i + 1), 0) - totalInvestment;
+
             let irr = 0.0;
             for (let i = 0; i < 1.0; i += 0.001) {
                 let tempNpv = cashFlows.reduce((acc, cf, j) => acc + cf / Math.pow(1 + i, j + 1), 0) - totalInvestment;
                 if (tempNpv < 0) { irr = i > 0 ? i - 0.001 : 0; break; }
             }
-            return { totalInvestment, paybackPeriod, npv, irr };
-        },
-        
-        getFeasibilityForCombined() {
-             const investmentDR = this.getFeasibilityForUnit('drivingRange').totalInvestment;
-             const investmentPadel = this.getFeasibilityForUnit('padel').totalInvestment;
-             const totalInvestment = investmentDR + investmentPadel;
-             const pnl = this.calculatePnlForCombined();
-             const cashFlow = pnl.cashFlowFromOps;
-             // Sisa perhitungan sama dengan getFeasibilityForUnit
-             if (cashFlow <= 0) return { totalInvestment, paybackPeriod: Infinity, npv: -Infinity, irr: -Infinity };
-             const paybackPeriod = totalInvestment / cashFlow;
-             const cashFlows = Array(20).fill(cashFlow);
-             const npv = cashFlows.reduce((acc, cf, i) => acc + cf / Math.pow(1 + projectConfig.assumptions.discount_rate_wacc, i + 1), 0) - totalInvestment;
-             let irr = 0.0;
-             for (let i = 0; i < 1.0; i += 0.001) {
-                 let tempNpv = cashFlows.reduce((acc, cf, j) => acc + cf / Math.pow(1 + i, j + 1), 0) - totalInvestment;
-                 if (tempNpv < 0) { irr = i > 0 ? i - 0.001 : 0; break; }
-             }
-             return { totalInvestment, paybackPeriod, npv, irr };
+            
+            return {
+                drivingRange: dr,
+                padel: padel,
+                combined: {
+                    ...combined,
+                    feasibility: { paybackPeriod, npv, irr }
+                }
+            };
         }
     }
 };
