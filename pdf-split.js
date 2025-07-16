@@ -1,5 +1,7 @@
-// pdf-split.js file v1.0
+// pdf-split.js file v1.1 (add line by click)
 const { PDFDocument: PDFLibPDFDocument, rgb } = PDFLib;
+
+// Wrap all logic in an event listener to ensure the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     // Check if the necessary elements for the split tool exist before running the script
     if (!document.getElementById('file-upload')) {
@@ -18,7 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let pdfCanvas = null;
     let pdfCanvasCtx = null;
     let isDragging = false;
-    
+    let isAddingLineMode = false; // NEW: State for the click-to-add feature
+
     const fileInput = document.getElementById('file-upload');
     const fileNameDisplay = document.getElementById('file-name');
     const paperSizeSelect = document.getElementById('paper-size');
@@ -33,13 +36,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const downloadLink = document.getElementById('download-link');
     const addCutLineButton = document.getElementById('add-cut-line-button');
 
-    const paperDimensions = { 
-        A4: { width: 595.28, height: 841.89 }, 
-        A5: { width: 419.53, height: 595.28 }, 
-        Letter: { width: 612, height: 792 }, 
-        Legal: { width: 612, height: 1008 }, 
+    const paperDimensions = {
+        A4: { width: 595.28, height: 841.89 },
+        A5: { width: 419.53, height: 595.28 },
+        Letter: { width: 612, height: 792 },
+        Legal: { width: 612, height: 1008 },
         F4: { width: 595.28, height: 935.43 },
-        FreeForm: { width: 0, height: 0 }
+        FreeForm: { width: 0, height: 0 } // Placeholder, will be handled as a special case
     };
 
     fileInput.addEventListener('change', handleFileSelect);
@@ -54,14 +57,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     paperSizeSelect.addEventListener('change', () => {
+        toggleAddLineMode(true); // Force exit "add line mode"
         updateControlsForPaperSize();
-        if (pdfCanvas) { // Recalculate lines for new paper size
+        if (pdfCanvas) {
             calculateInitialCutLines();
             renderPages();
             updateStatus();
         }
     });
-    addCutLineButton.addEventListener('click', addCutLine);
+    // NEW: The "Add Cut Line" button now toggles the interactive mode
+    addCutLineButton.addEventListener('click', () => toggleAddLineMode());
 
     function getMarginValue() {
         return marginSelect.value === 'custom' ? (parseFloat(customMarginInput.value) || 0) : parseFloat(marginSelect.value);
@@ -70,6 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleFileSelect(e) {
         uploadedFile = e.target.files[0];
         if (uploadedFile) {
+            toggleAddLineMode(true); // Force exit "add line mode"
             fileNameDisplay.textContent = uploadedFile.name;
             previewSection.classList.add('hidden');
             splitViewToggle.classList.add('hidden');
@@ -92,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
             originalPdfArrayBuffer = await uploadedFile.arrayBuffer();
             const pdfjsDoc = await pdfjsLib.getDocument({ data: originalPdfArrayBuffer.slice(0) }).promise;
             if (pdfjsDoc.numPages !== 1) {
-                showStatus('error', 'Error: This tool only supports single-page PDFs.'); 
+                showStatus('error', 'Error: This tool only supports single-page PDFs.');
                 return;
             }
             showStatus('progress', 'Rendering preview...');
@@ -113,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
             previewSection.classList.remove('hidden');
             splitViewToggle.classList.remove('hidden');
             generateButton.classList.remove('hidden');
-            addCutLineButton.classList.remove('hidden'); 
+            addCutLineButton.classList.remove('hidden');
             downloadLink.classList.add('hidden');
             updateStatus();
         } catch (err) {
@@ -125,8 +131,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function calculateInitialCutLines() {
         if (paperSizeSelect.value === 'FreeForm') {
             cutLines = [];
-            pageStates = [{ omitted: false }]; // Start with one page (the whole document)
-            maxSliceHeightPixels = 0; // Not applicable
+            pageStates = [{ omitted: false }];
+            maxSliceHeightPixels = 0;
             return;
         }
 
@@ -139,77 +145,65 @@ document.addEventListener('DOMContentLoaded', () => {
             cutLines = [];
             return;
         }
-        if (cutLines.length === 0) {
-            cutLines = [];
-            let currentY = maxSliceHeightPixels;
-            while (currentY < pdfCanvas.height - 10) {
-                cutLines.push({ position: Math.round(currentY), confirmed: false });
-                currentY += maxSliceHeightPixels;
-            }
+        cutLines = [];
+        let currentY = maxSliceHeightPixels;
+        while (currentY < pdfCanvas.height - 10) {
+            cutLines.push({ position: Math.round(currentY), confirmed: false });
+            currentY += maxSliceHeightPixels;
         }
         pageStates = Array(cutLines.length + 1).fill().map(() => ({ omitted: false }));
     }
 
     function updateControlsForPaperSize() {
         const isFreeForm = paperSizeSelect.value === 'FreeForm';
-        // Hide the entire margin selection div for free form mode, as margins are not applicable.
         document.querySelector('label[for="margin-select"]').parentElement.classList.toggle('hidden', isFreeForm);
     }
+    
+    // --- NEW: Functions for interactive line placement ---
 
-    function checkAndAutoAddLines() {
-        if (cutLines.length === 0) return;
-        
-        // Check if the last line is confirmed
-        const lastLine = cutLines[cutLines.length - 1];
-        if (!lastLine.confirmed) return;
-        
-        // Calculate remaining space after the last line
-        const remainingHeight = pdfCanvas.height - lastLine.position;
-        
-        // If remaining height is more than a page size (plus some buffer), add a new line
-        if (remainingHeight > maxSliceHeightPixels + 10) {
-            // Add new lines until we've covered the remaining space
-            let currentY = lastLine.position + maxSliceHeightPixels;
-            
-            while (currentY < pdfCanvas.height - 10) {
-                cutLines.push({ position: Math.round(currentY), confirmed: false });
-                currentY += maxSliceHeightPixels;
-            }
-            
-            // Re-render to show the new lines
-            renderPages();
-            updateStatus();
+    function toggleAddLineMode(forceExit = false) {
+        isAddingLineMode = forceExit ? false : !isAddingLineMode;
+
+        if (isAddingLineMode) {
+            addCutLineButton.innerHTML = 'Cancel Adding Line';
+            addCutLineButton.classList.add('bg-red-600', 'text-white');
+            pagesContainer.classList.add('adding-line-mode');
+            pagesContainer.addEventListener('click', handlePlaceLineClick);
+            showStatus('info', 'Click anywhere on the preview to add a new split line.');
+        } else {
+            addCutLineButton.innerHTML = '<span class="font-bold text-lg">―</span>  Add Split Line';
+            addCutLineButton.classList.remove('bg-red-600', 'text-white');
+            pagesContainer.classList.remove('adding-line-mode');
+            pagesContainer.removeEventListener('click', handlePlaceLineClick);
+            updateStatus(); // Restore the original status message
         }
     }
 
-    function addCutLine() {
-        if (!pdfCanvas) return;
-        
-        const lastPosition = cutLines.length > 0 ? cutLines[cutLines.length - 1].position : 0;
+    function handlePlaceLineClick(e) {
+        // We calculate the Y position relative to the top of the pagesContainer itself
+        const rect = pagesContainer.getBoundingClientRect();
+        const yPosition = e.clientY - rect.top;
 
-        // Determine a sensible default height for the new slice
-        const a4Ratio = paperDimensions.A4.height / paperDimensions.A4.width;
-        const defaultStep = (originalPageSize.width * a4Ratio) * originalPageSize.scale;
-        const stepToAdd = (paperSizeSelect.value === 'FreeForm' || maxSliceHeightPixels <= 0) 
-            ? defaultStep 
-            : maxSliceHeightPixels;
-
-        let newPosition = lastPosition + (stepToAdd / 3); // Add the new line 1/3 of a page down
-        if (newPosition >= pdfCanvas.height - 10) {
-            newPosition = lastPosition + (pdfCanvas.height - lastPosition) / 2;
-        }
-        if (newPosition >= pdfCanvas.height - 10) {
-            showStatus('info', 'Cannot add new line so close to the end.');
+        // Prevent adding lines too close to each other or the edges
+        if (yPosition < 10 || yPosition > pdfCanvas.height - 10 || cutLines.some(line => Math.abs(line.position - yPosition) < 5)) {
+            showStatus('error', 'Cannot place a line here. Too close to an edge or another line.');
+            setTimeout(updateStatus, 2000); // Revert status after 2s
             return;
         }
-        cutLines.push({ position: Math.round(newPosition), confirmed: false });
-        cutLines.sort((a, b) => a.position - b.position);
-        
-        pageStates.push({ omitted: false });
 
+        placeNewLineAt(yPosition);
+        toggleAddLineMode(true); // Automatically exit "add mode" after placing a line
+    }
+    
+    function placeNewLineAt(yPosition) {
+        cutLines.push({ position: Math.round(yPosition), confirmed: false });
+        cutLines.sort((a, b) => a.position - b.position);
+        pageStates.push({ omitted: false }); // A new line means a new page state
         renderPages();
         updateStatus();
     }
+    
+    // --- End of new functions ---
 
     function toggleOmitPage(pageIndex) {
         if (pageStates[pageIndex]) {
@@ -292,41 +286,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function toggleConfirmation(e) {
+        // Prevent this from firing when in "add line mode"
+        if (isAddingLineMode) return;
+        
         if (e.target.classList.contains('cut-line-initial') || e.target.classList.contains('cut-line-confirmed')) {
             e.stopPropagation();
             const index = parseInt(e.currentTarget.dataset.index);
             cutLines[index].confirmed = !cutLines[index].confirmed;
             
-            // If we just confirmed a line, reposition ONLY the next unconfirmed line
-            if (cutLines[index].confirmed && index < cutLines.length - 1) {
-                // Determine a sensible default height for the new slice
-                const a4Ratio = paperDimensions.A4.height / paperDimensions.A4.width;
-                const defaultStep = (originalPageSize.width * a4Ratio) * originalPageSize.scale;
-                const stepToUse = (paperSizeSelect.value === 'FreeForm' || maxSliceHeightPixels <= 0) ? defaultStep : maxSliceHeightPixels;
-
+            if (cutLines[index].confirmed && index < cutLines.length - 1 && paperSizeSelect.value !== 'FreeForm') {
                 const nextLine = cutLines[index + 1];
                 if (!nextLine.confirmed) {
-                    // Position the next line one page height after this confirmed line
-                    const newPosition = cutLines[index].position + stepToUse;
+                    const newPosition = cutLines[index].position + maxSliceHeightPixels;
                     if (newPosition < pdfCanvas.height - 10) {
                         nextLine.position = Math.round(newPosition);
                     }
                 }
             }
             
-            // Always render pages to update the UI
             renderPages();
-            
-            // If we just confirmed a line, check if we need to auto-add more lines
-            if (cutLines[index].confirmed) {
-                checkAndAutoAddLines();
-            }
-            
             updateStatus();
         }
     }
 
     function startDrag(e) {
+        if (isAddingLineMode) return;
         previewContainer.classList.add('dragging');
         const line = e.target.closest('.cut-line-initial');
         if (!line) return;
@@ -335,7 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.stopPropagation();
         
         const index = parseInt(line.dataset.index);
-        isDragging = true; // Set flag
+        isDragging = true;
         activeDrag = {
             index,
             startY: e.clientY,
@@ -369,6 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateStatus() {
+        if (isAddingLineMode) return; // Don't overwrite the "click to place" message
         const totalPages = cutLines.length + 1;
         const omittedCount = pageStates.filter(s => s.omitted).length;
         const finalPageCount = totalPages - omittedCount;
@@ -387,39 +372,31 @@ document.addEventListener('DOMContentLoaded', () => {
             const targetSize = paperDimensions[paperSizeSelect.value];
             const marginPoints = getMarginValue();
             const cutPointsY = [0, ...cutLines.map(c => c.position / originalPageSize.scale), originalPageSize.height];
-            const scaleFactor = targetSize.width / originalPageSize.width;
+            const scaleFactor = (targetSize.width > 0) ? targetSize.width / originalPageSize.width : 1;
 
             let pagesGenerated = 0;
 
             if (paperSizeSelect.value === 'FreeForm') {
-                // --- Free Form PDF Generation Logic ---
                 for (let i = 0; i < cutPointsY.length - 1; i++) {
                     if (pageStates[i]?.omitted) continue;
                     pagesGenerated++;
                     const sliceStartY = cutPointsY[i];
                     const sliceEndY = cutPointsY[i + 1];
                     const sliceHeightPoints = sliceEndY - sliceStartY;
-
-                    // Page size is determined by the slice itself
                     const newPage = outputPdfDoc.addPage([originalPageSize.width, sliceHeightPoints]);
-                    
-                    // Position the embedded page so that the correct slice is visible
                     const embeddedPageY = -(originalPageSize.height - sliceEndY);
                     newPage.drawPage(embeddedPage, { x: 0, y: embeddedPageY, width: originalPageSize.width, height: originalPageSize.height });
                 }
             } else {
-                // --- Standard Paper Size PDF Generation Logic ---
                 for (let i = 0; i < cutPointsY.length - 1; i++) {
                     if (pageStates[i]?.omitted) continue;
                     pagesGenerated++;
                     const sliceStartY = cutPointsY[i];
                     const sliceEndY = cutPointsY[i + 1];
                     const newPage = outputPdfDoc.addPage([targetSize.width, targetSize.height]);
-                
                     let contentTopY = (i === 0) ? targetSize.height : targetSize.height - marginPoints;
                     const embeddedPageY = contentTopY - (originalPageSize.height - sliceStartY) * scaleFactor;
                     newPage.drawPage(embeddedPage, { x: 0, y: embeddedPageY, width: targetSize.width, height: originalPageSize.height * scaleFactor });
-                
                     const white = rgb(1, 1, 1);
                     if (contentTopY < targetSize.height) { newPage.drawRectangle({ x: 0, y: contentTopY, width: targetSize.width, height: targetSize.height - contentTopY, color: white }); }
                     const sliceHeight = (sliceEndY - sliceStartY) * scaleFactor;
@@ -453,14 +430,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function showStatus(type, message) {
-        if (type === 'progress') {
-            // Simplified progress indicator since PDF.js doesn't provide reliable progress for single pages
-            statusDiv.innerHTML = `
-                <div class="flex items-center justify-center space-x-2 text-slate-600">
-                    <div class="spinner"></div>
-                    <p>${message}</p>
-                </div>`;
-        } else if (type === 'loading') {
+        if (type === 'progress' || type === 'loading') {
             statusDiv.innerHTML = `<div class="flex items-center justify-center space-x-2 text-slate-600"><div class="spinner"></div><p>${message}</p></div>`;
         } else {
             let color = type === 'error' ? 'text-red-600' : (type === 'success' ? 'text-green-600' : 'text-slate-600');
@@ -476,13 +446,11 @@ document.addEventListener('DOMContentLoaded', () => {
         let minPos = prevPosition + minSliceHeight;
         let maxPos = nextPosition - minSliceHeight;
 
-        // For standard paper sizes, also constrain the max height of the slice
         if (paperSizeSelect.value !== 'FreeForm') {
             const targetRatio = paperDimensions[paperSizeSelect.value].height / paperDimensions[paperSizeSelect.value].width;
             const pageHeightPixels = (originalPageSize.width * targetRatio) * originalPageSize.scale;
             const marginPoints = getMarginValue();
             const marginPixelsValue = marginPoints * originalPageSize.scale;
-            // A page slice can't be larger than the target page's content area.
             const maxContentHeight = pageHeightPixels - (lineIndex === 0 ? marginPixelsValue : 2 * marginPixelsValue);
             maxPos = Math.min(maxPos, prevPosition + maxContentHeight);
         }
