@@ -1,5 +1,5 @@
-// article-bulk.js (v8.19 Fix import showelement)
-import { getState, getBulkPlan, updateBulkPlanItem, addBulkArticle, saveBulkArticlesState, getBulkArticle, getAllBulkArticles, setBulkPlan } from './article-state.js';
+// article-bulk.js (v8.19 clean bulkkeywords)
+import { getState, getBulkPlan, updateBulkPlanItem, addBulkArticle, saveBulkArticlesState, getBulkArticle, getAllBulkArticles, setBulkPlan, updateState } from './article-state.js';
 import { logToConsole, callAI, sanitizeFilename, slugify, getArticleOutlinesV2, constructImagePrompt, delay, showElement } from './article-helpers.js';
 import { getElement, updatePlanItemStatusUI, updateProgressBar, hideProgressBar, renderPlanningTable } from './article-ui.js';
 import { languageOptions } from './article-config.js';
@@ -14,10 +14,22 @@ export function prepareKeywords() {
     if (!ui.bulkKeywords) return [];
     const rawKeywords = ui.bulkKeywords.value.split('\n');
     const cleanedKeywords = rawKeywords
-        .map(kw => kw.trim().replace(/^[^a-zA-Z0-9\u00C0-\u017F]+|[^a-zA-Z0-9\u00C0-\u017F]+$/g, '')) // Allow more characters initially
+        .map(kw => kw
+            .replace(/\(\d+\)/g, '') // Remove numbers in parentheses, e.g., (24)
+            .replace(/\s+/g, ' ')    // Collapse consecutive whitespace characters into a single space
+            .trim()                  // Remove leading/trailing whitespace
+        )
         .filter(kw => kw.length > 0);
     const uniqueKeywords = [...new Set(cleanedKeywords)];
-    logToConsole(`Prepared ${uniqueKeywords.length} unique keywords for planning.`, 'info');
+    logToConsole(`Prepared ${uniqueKeywords.length} unique keywords for planning after cleaning.`, 'info');
+    // Also update the textarea with the cleaned keywords for user visibility
+    if (ui.bulkKeywords) {
+        const newTextareaValue = uniqueKeywords.join('\n');
+        ui.bulkKeywords.value = newTextareaValue;
+        // Since we are updating the value, we should also update the state
+        // This will prevent the uncleaned text from reappearing on reload
+        updateState({ bulkKeywordsContent: newTextareaValue });
+    }
     return uniqueKeywords;
 }
 
@@ -82,7 +94,6 @@ export async function handleStartBulkGeneration() {
             updatePlanItemStatusUI(i, currentItemState.status, currentItemState.error);
             continue;
         }
-
 
         if(ui.bulkCurrentNum) ui.bulkCurrentNum.textContent = i + 1;
         if(ui.bulkCurrentKeyword) ui.bulkCurrentKeyword.textContent = item.keyword;
@@ -367,4 +378,4 @@ export async function handleDownloadZip() {
     } catch (error) { logToConsole(`Error generating ZIP: ${error.message}`, 'error'); alert("Failed to generate ZIP file."); }
 }
 
-console.log("article-bulk.js loaded (v8.18 Humanize content)");
+console.log("article-bulk.js loaded (v8.20 Clean keywords)");
