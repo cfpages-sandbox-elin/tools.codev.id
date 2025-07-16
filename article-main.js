@@ -206,6 +206,8 @@ function setupStep1Listeners() {
     fetchSitemapBtn?.addEventListener('click', async () => { const url = sitemapUrlInput?.value.trim(); if (!url) { alert('Please enter a Sitemap URL.'); return; } showLoading(sitemapLoadingIndicator, true); disableElement(fetchSitemapBtn, true); try { const parsedUrls = await fetchAndParseSitemap(url); updateState({ sitemapUrls: parsedUrls, sitemapFetchedUrl: url }); displaySitemapUrlsUI(parsedUrls); } catch (error) { logToConsole(`Sitemap fetch failed: ${error.message}`, 'error'); alert(`Failed to fetch or parse sitemap: ${error.message}`); updateState({ sitemapUrls: [], sitemapFetchedUrl: '' }); displaySitemapUrlsUI([]); } finally { showLoading(sitemapLoadingIndicator, false); disableElement(fetchSitemapBtn, false); } });
     
     bulkKeywordsTextarea?.addEventListener('blur', (e) => {
+        // We now auto-clean keywords before use, but we can still save the raw user input on blur
+        // The `prepareKeywords` function will overwrite this state with the cleaned version when an action is taken.
         updateState({ bulkKeywordsContent: e.target.value });
     });
     

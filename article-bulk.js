@@ -1,8 +1,9 @@
-// article-bulk.js (v8.19 clean bulkkeywords)
+// article-bulk.js (v8.21 prompts refactor)
 import { getState, getBulkPlan, updateBulkPlanItem, addBulkArticle, saveBulkArticlesState, getBulkArticle, getAllBulkArticles, setBulkPlan, updateState } from './article-state.js';
 import { logToConsole, callAI, sanitizeFilename, slugify, getArticleOutlinesV2, constructImagePrompt, delay, showElement } from './article-helpers.js';
 import { getElement, updatePlanItemStatusUI, updateProgressBar, hideProgressBar, renderPlanningTable } from './article-ui.js';
 import { languageOptions } from './article-config.js';
+import { getPlanPrompt, getBulkStructurePrompt, getBulkSectionTextPrompt } from './article-prompts.js';
 
 let bulkImagesToUpload = [];
 let isBulkRunning = false;
@@ -44,7 +45,7 @@ export async function handleGeneratePlan() {
     ui.planningTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-gray-500 py-4">Generating plan... <span class="loader inline-block"></span></td></tr>`;
     showElement(ui.step1_5Section, true);
 
-    const planPrompt = buildPlanPrompt(keywords); // Use local helper
+    const planPrompt = getPlanPrompt(keywords); // REFACTORED
     const planPayload = { providerKey: state.textProvider, model: state.textModel, prompt: planPrompt };
     const result = await callAI('generate', planPayload, ui.loadingIndicator, ui.button);
 
@@ -103,7 +104,7 @@ export async function handleStartBulkGeneration() {
         try {
             // Generate Structure string first
             logToConsole(`Generating structure for: ${item.keyword}`, 'info');
-            const structurePrompt = buildBulkStructurePrompt(item);
+            const structurePrompt = getBulkStructurePrompt(item); // REFACTORED
             const structurePayload = buildBulkPayload(structurePrompt);
             const structureResult = await callAI('generate', structurePayload, null, null);
             if (!structureResult?.success || !structureResult.text) throw new Error(`Structure failed: ${structureResult?.error || 'No text'}`);
@@ -125,9 +126,8 @@ export async function handleStartBulkGeneration() {
                 logToConsole(`Generating section ${j+1}/${outlineSections.length} ("${section.heading}") for: ${item.keyword}`, 'info');
 
                 // --- Text Generation ---
-                // *** Use new payload builder V2 ***
-                const textPrompt = buildBulkTextPayloadV2(item, section, previousSectionContent);
-                const textPayload = buildBulkPayload(textPrompt); // buildBulkPayload just wraps provider/model
+                const textPrompt = getBulkSectionTextPrompt(item, section, previousSectionContent); // REFACTORED
+                const textPayload = buildBulkPayload(textPrompt);
                 const textResult = await callAI('generate', textPayload, null, null);
                 if (!textResult?.success || !textResult.text) throw new Error(`Text failed section ${j+1} ("${section.heading}"): ${textResult?.error || 'No text'}`);
 
@@ -192,10 +192,8 @@ export async function handleStartBulkGeneration() {
 }
 
 // --- Build Payload Functions (Bulk Mode Specific Helpers) ---
-function buildPlanPrompt(keywords) {
-    const state = getState();
-    return `For each keyword provided below, generate a unique and SEO-friendly article Title, a URL-safe Slug (lowercase, hyphen-separated, no stop words, descriptive), and the primary User Intent (e.g., Informational, Commercial Investigation, Transactional, Navigational). Ensure Title, Slug, and Intent are unique across all keywords. If multiple keywords result in the same concept, only include one entry. Format the output strictly as a JSON array of objects, where each object has "keyword", "title", "slug", and "intent" keys.\n\nLanguage for Title/Intent: ${state.language}\nTarget Audience: ${state.audience}\nArticle Purpose(s): ${state.purpose.join(', ')}\n\nKeywords:\n${keywords.join('\n')}\n\nOutput only the JSON array.`;
-}
+// Note: These prompt-building functions are now removed and imported from article-prompts.js
+//       Helper functions that remain are for parsing or packaging data.
 
 function parsePlanResponse(responseText, originalKeywords) {
     let plan = []; try { plan = JSON.parse(responseText); if (!Array.isArray(plan)) throw new Error("Not array."); plan = plan.filter(item => item && item.keyword && item.title && item.slug && item.intent); plan.forEach(item => { item.slug = slugify(item.slug || item.title || item.keyword); }); } catch (e) { logToConsole(`JSON parse failed: ${e.message}. Fallback parsing.`, 'warn'); originalKeywords.forEach(kw => { let title = `Title for ${kw}`, slug = slugify(kw), intent = 'Informational'; plan.push({ keyword: kw, title: title.replace(/^"|"$/g, ''), slug: slug, intent: intent.replace(/^"|"$/g, '') }); }); } return plan;
@@ -207,90 +205,6 @@ function removeDuplicatePlanItems(plan) {
 }
 
 function buildBulkPayload(prompt) { const state = getState(); return { providerKey: state.textProvider, model: state.textModel, prompt: prompt }; }
-
-function buildBulkStructurePrompt(planItem) {
-    const state = getState();
-    return `Generate a detailed article structure/outline for an article titled "${planItem.title}" (intent: ${planItem.intent}) about the keyword "${planItem.keyword}".\n- Language: ${state.language}${state.dialect ? ` (${state.dialect} dialect)` : ''}\n- Target Audience: ${state.audience}\n- Tone: ${state.tone}\n${state.gender ? `- Author Gender: ${state.gender}` : ''}\n${state.age ? `- Author Age: ${state.age}` : ''}\n- Purpose(s): ${state.purpose.join(', ')}\n${state.purposeUrl && state.purpose.includes('Promote URL') ? ` - Promo URL: ${state.purposeUrl}` : ''}\n${state.purposeCta && state.purpose.some(p => p.startsWith('Promote') || p === 'Generate Leads') ? ` - CTA: ${state.purposeCta}` : ''}\n${state.readerName ? `- Reader Name: ${state.readerName}` : ''}\n${state.customSpecs ? `- Other Details: ${state.customSpecs}` : ''}\nInstructions: Output ONLY the structure using clear headings/bullets. No intro/conclusion.`;
-}
-
-// *** NEW: V2 Payload builder for Bulk Text ***
-function buildBulkTextPayloadV2(planItem, section, previousContext) {
-    const state = getState(); // Get global settings like linking preferences
-    const allPlanItems = getBulkPlan(); // Get full plan for internal linking context
-
-    // Internal Linking Context
-    const otherSlugs = allPlanItems
-        .filter(p => p.slug && p.slug !== planItem.slug) // Exclude self
-        .map(p => `/${p.slug}`) // Format as relative paths
-        .slice(0, 8); // Limit suggestions
-
-    // External Linking Context (from sitemap)
-    const sitemapUrls = state.sitemapUrls || [];
-    const externalUrls = sitemapUrls.slice(0, 5); // Limit suggestions
-
-    // Build Linking Instructions
-    let linkingInstructions = '\n\nLinking Instructions (Optional):\n';
-    const linkTypePref = state.linkTypeInternal ? 'Internal (use relative paths like /slug)' : 'External (use full URLs)';
-    linkingInstructions += `- Link Type Preference: ${linkTypePref}.\n`;
-    if (otherSlugs.length > 0 && state.linkTypeInternal) {
-        linkingInstructions += `- Consider linking naturally to related internal topics: ${otherSlugs.join(', ')}\n`;
-    }
-    if (externalUrls.length > 0 && !state.linkTypeInternal) {
-        linkingInstructions += `- Consider linking naturally to relevant external URLs:\n${externalUrls.join('\n')}\n`;
-    }
-    linkingInstructions += '- Aim for 1-3 relevant links total within this section, only if contextually appropriate.\n';
-
-    // Build Points Guidance
-    let pointsGuidance = '';
-    if (section.points && section.points.length > 0) {
-        pointsGuidance = `\nKey points/subtopics to cover in this section:\n- ${section.points.join('\n- ')}\n`;
-    }
-
-    // Humanize Content
-    const humanizeInstructions = `\n- Humanization Style: Write in a direct and clear style. Prefer shorter sentences and break content into smaller, more digestible paragraphs. Avoid complex sentence structures and obvious AI conversational patterns or procedural rhetoric. Do not use phrases like "In conclusion", "In the world of", "It's important to note", or "delve into". If an author persona (gender/age) is provided, subtly weave in a brief, relevant personal anecdote or observation to build connection with the reader.`;
-
-    // Construct the Main Prompt
-    const prompt = `Generate the Markdown article content ONLY for the section titled or about: "${section.heading}".
-    \nThis section belongs to an article about the keyword "${planItem.keyword}" with the title "${planItem.title}" (User Intent: ${planItem.intent}).
-    \n${pointsGuidance}
-    \nContinue naturally from the previous context.
-    \nPrevious Context (end of last section):
-    \n---
-    \n${previousContext ? previousContext.slice(-500) : '(Start of article)'}
-    \n---\n
-    \nOverall Article Specifications:
-    \n- Language: ${state.language}${state.dialect ? ` (${state.dialect} dialect)` : ''}
-    \n- Audience: ${state.audience}
-    \n- Tone: ${state.tone}
-    \n${state.gender ? `- Author Gender: ${state.gender}
-    \n` : ''}${state.age ? `- Author Age: ${state.age}
-    \n` : ''}- Purpose(s): ${state.purpose.join(', ')}
-    \n${state.purposeUrl && state.purpose.includes('Promote URL') ? ` - Promo URL: ${state.purposeUrl}
-    \n` : ''}${state.purposeCta && state.purpose.some(p => p.startsWith('Promote') || p === 'Generate Leads') ? ` - CTA: ${state.purposeCta}
-    \n` : ''}${state.readerName ? `- Reader Name: ${state.readerName}
-    \n` : ''}${state.customSpecs ? `- Other Details: ${state.customSpecs}
-    \n` : ''}${linkingInstructions}
-    \n${state.humanizeContent ? humanizeInstructions : ''}
-    \nInstructions:
-    \n- Write ONLY the Markdown content for the current section: "${section.heading}".
-    \n- Use the provided key points as essential guidance for the content.
-    \n- Do NOT repeat the main section heading ("${section.heading}") unless it fits naturally as a Markdown heading (e.g., ## Sub Heading).
-    \n- Ensure smooth transition from previous context.
-    \n- Use standard Markdown formatting ONLY.
-    \n- Do NOT add introductory or concluding remarks about the writing process or the section itself. Focus solely on generating the body content for this specific section.`;
-
-    return prompt;
-}
-
-function buildBulkTextPrompt(planItem, currentOutline, previousContext) {
-    const state = getState(); const plan = getBulkPlan();
-    const otherSlugs = plan.filter(p => p.slug && p.slug !== planItem.slug).map(p => p.slug).slice(0, 10);
-    const sitemapUrls = state.sitemapUrls || []; const externalUrls = sitemapUrls.slice(0, 5);
-    let linkingInstructions = '\n\nLinking Instructions:\n'; const linkType = state.linkTypeInternal ? 'Internal (relative paths like /slug)' : 'External (absolute URLs)'; linkingInstructions += `- Link Type Preference: ${linkType}.\n`;
-    if (otherSlugs.length > 0) { linkingInstructions += `- Consider linking naturally to internal topics (use relative path like /${planItem.slug} without .md): ${otherSlugs.join(', ')}\n`; }
-    if (externalUrls.length > 0) { linkingInstructions += `- Also consider external URLs: ${externalUrls.join('\n')}\n`; } linkingInstructions += '- Aim for 1-3 relevant links total in this section.\n';
-    return `Generate the Markdown article content ONLY for the section/outline: "${currentOutline}"\nThis is part of an article titled "${planItem.title}" about keyword "${planItem.keyword}".\nPrevious Context (end of last section):\n---\n${previousContext ? previousContext.slice(-500) : '(Start)'}\n---\nOverall Specs:\n- Language: ${state.language}${state.dialect ? ` (${state.dialect})` : ''} - Audience: ${state.audience} - Tone: ${state.tone} ${state.gender ? `- Gender: ${state.gender}` : ''} ${state.age ? `- Age: ${state.age}` : ''} - Purpose(s): ${state.purpose.join(', ')} ${state.purposeUrl && state.purpose.includes('Promote URL') ? ` - Promo URL: ${state.purposeUrl}` : ''} ${state.purposeCta && state.purpose.some(p => p.startsWith('Promote') || p === 'Generate Leads') ? ` - CTA: ${state.purposeCta}` : ''} ${state.readerName ? `- Reader: ${state.readerName}` : ''} ${state.customSpecs ? `- Details: ${state.customSpecs}` : ''}\n${linkingInstructions}\nInstructions:\n- Write ONLY Markdown content for "${currentOutline}". Do NOT repeat heading. Ensure smooth transition. Use standard Markdown. No intro/concluding remarks.`;
-}
 
 function buildBulkImagePayload(planItem, sectionContent, sectionHeading, sectionIndex) {
     const state = getState();
@@ -378,4 +292,4 @@ export async function handleDownloadZip() {
     } catch (error) { logToConsole(`Error generating ZIP: ${error.message}`, 'error'); alert("Failed to generate ZIP file."); }
 }
 
-console.log("article-bulk.js loaded (v8.20 Clean keywords)");
+console.log("article-bulk.js loaded (v8.21 refactor prompts)");

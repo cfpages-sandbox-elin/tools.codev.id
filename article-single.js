@@ -4,6 +4,8 @@ import { logToConsole, callAI, getArticleOutlinesV2, constructImagePrompt, sanit
 // *** Import updateCounts ***
 import { getElement, updateProgressBar, hideProgressBar, updateStructureCountDisplay, updateCounts } from './article-ui.js';
 import { languageOptions } from './article-config.js';
+import { getSingleTitlePrompt, getSingleStructurePrompt, getSingleSectionTextPrompt } from './article-prompts.js';
+
 
 let singleModeImagesToUpload = [];
 
@@ -35,7 +37,7 @@ export async function handleGenerateStructure() {
     if (!articleTitle) {
         // ... (title generation logic as before) ...
         logToConsole('Article title is blank, generating one...', 'info');
-        const titlePrompt = buildTitlePrompt();
+        const titlePrompt = getSingleTitlePrompt();
         const titlePayload = { providerKey: state.textProvider, model: state.textModel, prompt: titlePrompt };
         showLoading(ui.loadingIndicator, true); disableElement(ui.button, true);
         const titleResult = await callAI('generate', titlePayload, null, null);
@@ -70,7 +72,7 @@ export async function handleGenerateStructure() {
 
     // --- 2. Generate Structure ---
     logToConsole('Generating article structure...', 'info');
-    const structurePrompt = buildStructurePrompt(articleTitle);
+    const structurePrompt = getSingleStructurePrompt(articleTitle);
     const structurePayload = { providerKey: state.textProvider, model: state.textModel, prompt: structurePrompt };
     showLoading(ui.loadingIndicator, true); disableElement(ui.button, true);
     const structureResult = await callAI('generate', structurePayload, null, null);
@@ -153,7 +155,8 @@ export async function handleGenerateArticle() {
             if(ui.currentSectionNumSpan) ui.currentSectionNumSpan.textContent = i + 1;
             logToConsole(`Processing Section ${i+1}/${outlineSections.length}: "${section.heading}"`, 'info');
 
-            const textPayload = buildSingleTextPayloadV2(section, previousSectionContent, articleTitle);
+            const textPrompt = getSingleSectionTextPrompt(section, previousSectionContent, articleTitle);
+            const textPayload = { providerKey: state.textProvider, model: state.textModel, prompt: textPrompt };
             const textResult = await callAI('generate', textPayload, null, null);
             if (!textResult?.success || !textResult.text) { throw new Error(`Text generation failed for section ${i + 1} ("${section.heading}"): ${textResult?.error || 'No text returned'}`); }
 
@@ -236,63 +239,7 @@ export async function handleGenerateArticle() {
 
 
 // --- Build Payload Functions (Single Mode Specific Helpers) ---
-function buildTitlePrompt() {
-    const state = getState();
-    return `Generate a compelling and SEO-friendly article title for the keyword "${state.keyword}". Consider the target audience: ${state.audience}. The desired tone is: ${state.tone}. The article's main purpose is: ${state.purpose.join(', ')}. ${state.language !== 'English' ? `Generate the title in ${state.language}.` : ''} Output ONLY the title text, without any quotation marks or introductory phrases.`;
-}
-
-function buildStructurePrompt(articleTitle) {
-    const state = getState();
-    return `Generate a detailed article structure/outline for an article titled "${articleTitle}" about the keyword "${state.keyword}".\n- Language: ${state.language}${state.dialect ? ` (${state.dialect} dialect)` : ''}\n- Target Audience: ${state.audience}\n- Tone: ${state.tone}\n${state.gender ? `- Author Gender Persona: ${state.gender}` : ''}\n${state.age ? `- Author Age Persona: ${state.age}` : ''}\n- Article Purpose(s): ${state.purpose.join(', ')}\n${state.purposeUrl && state.purpose.includes('Promote URL') ? `  - Promotional URL: ${state.purposeUrl}` : ''}\n${state.purposeCta && state.purpose.some(p => p.startsWith('Promote') || p === 'Generate Leads') ? `  - Desired Call to Action: ${state.purposeCta}` : ''}\n${state.readerName ? `- Address Reader As: ${state.readerName}` : ''}\n${state.customSpecs ? `- Other Details: ${state.customSpecs}` : ''}\n\nInstructions:\n- Create a logical structure covering the topic comprehensively.\n- Output only the structure using clear headings or bullet points.\n- Do not include intro/concluding remarks about the structure itself.`;
-}
-
-function buildSingleTextPayloadV2(section, previousContext, articleTitle) {
-    const state = getState();
-    let linkingInstructions = '';
-    if (state.sitemapUrls && state.sitemapUrls.length > 0) {
-         const urlList = state.sitemapUrls.slice(0, 5).join('\n'); // Limit shown URLs
-         linkingInstructions = `\n- Consider linking naturally to relevant URLs from this list if appropriate:\n${urlList}\n- Link Type Preference: ${state.linkTypeInternal ? 'Internal (relative paths like /slug)' : 'External (full URLs)'}. Aim for 1-2 relevant links per section if possible.`;
-    }
-    // Construct prompt using heading and points
-    let pointsGuidance = '';
-    if (section.points && section.points.length > 0) {
-        pointsGuidance = `\nKey points/subtopics to cover in this section:\n- ${section.points.join('\n- ')}\n`;
-    }
-    const humanizeInstructions = `\n- Humanization Style: Write in a direct and clear style. Prefer shorter sentences and break content into smaller, more digestible paragraphs. Avoid complex sentence structures and obvious AI conversational patterns or procedural rhetoric. Do not use phrases like "In conclusion", "In the world of", "It's important to note", or "delve into". If an author persona (gender/age) is provided, subtly weave in a brief, relevant personal anecdote or observation to build connection with the reader.`;
-    const prompt = `Generate the article content ONLY for the section titled or about: "${section.heading}".
-    \nThis section is part of a larger article titled "${articleTitle}".
-    \n${pointsGuidance}
-    \nContinue naturally from the previous context if provided.
-    \nPrevious Context (end of last section):
-    \n---
-    \n${previousContext ? previousContext.slice(-500) : '(Start of article)'}
-    \n---
-    \n\nOverall Article Specifications:
-    \n- Keyword: "${state.keyword}"
-    \n- Language: ${state.language}${state.dialect ? ` (${state.dialect} dialect)` : ''}
-    \n- Target Audience: ${state.audience}
-    \n- Tone: ${state.tone}
-    \n${state.gender ? `- Author Gender: ${state.gender}
-    \n` : ''}${state.age ? `- Author Age: ${state.age}
-    \n` : ''}- Purpose(s): ${state.purpose.join(', ')}
-    \n${state.purposeUrl && state.purpose.includes('Promote URL') ? ` - Promo URL: ${state.purposeUrl}
-    \n` : ''}${state.purposeCta && state.purpose.some(p => p.startsWith('Promote') || p === 'Generate Leads') ? ` - CTA: ${state.purposeCta}
-    \n` : ''}${state.readerName ? `- Reader Name: ${state.readerName}
-    \n` : ''}- Output Format: ${state.format}
-    \n${state.customSpecs ? `- Other Details: ${state.customSpecs}
-    \n` : ''}${linkingInstructions}
-    \n${state.humanizeContent ? humanizeInstructions : ''}
-    \n\nInstructions:
-    \n- Write ONLY the content for the current section: "${section.heading}".
-    \n- Use the provided key points as guidance for the content.
-    \n- Do NOT repeat the main section heading ("${section.heading}") unless it fits naturally (e.g., as an <h2>).
-    \n- Ensure smooth transition from previous context.
-    \n- Adhere strictly to ${state.format} format (${state.format === 'html' ? 'use only <p>, <h2>-<h6>, <ul>, <ol>, <li>, <b>, <i>, <a> tags' : 'use standard Markdown'}).
-    \n- Do NOT add introductory or concluding remarks about the writing process or the section itself. Focus solely on generating the body content for this specific section.`;
-
-    return { providerKey: state.textProvider, model: state.textModel, prompt: prompt };
-}
-
+// Note: buildSingleImagePayload remains as it's more of a data-gathering function for the generic constructImagePrompt helper.
 function buildSingleImagePayload(sectionContent, sectionHeading, articleTitle, sectionIndex) {
     const state = getState();
     const baseFilename = sanitizeFilename(`${slugify(articleTitle)}-${slugify(sectionTitle)}`);

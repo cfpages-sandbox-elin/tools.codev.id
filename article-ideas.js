@@ -1,7 +1,8 @@
-// article-ideas.js v8.19 progress bar update
-import { getState } from './article-state.js';
+// article-ideas.js v8.21 refactor prompts
+import { getState, updateState } from './article-state.js';
 import { logToConsole, callAI, delay, disableElement, showLoading, showElement } from './article-helpers.js';
 import { getElement, updateProgressBar } from './article-ui.js';
+import { getIdeaPrompt } from './article-prompts.js';
 
 const W_H_QUESTIONS = {
     "Who": "keywords that explore 'Who is related to/affected by/involved with [SEED_KEYWORD]?' or 'Who is the target audience for [SEED_KEYWORD]?'",
@@ -11,30 +12,6 @@ const W_H_QUESTIONS = {
     "Why": "keywords that explore 'Why is [SEED_KEYWORD] important/used/beneficial?' or 'What are the reasons/motivations/problems solved by [SEED_KEYWORD]?'",
     "How": "keywords that explore 'How does [SEED_KEYWORD] work?' or 'How to use/do/achieve/fix/learn [SEED_KEYWORD]?' or 'What are methods/techniques related to [SEED_KEYWORD]?'"
 };
-
-function buildIdeaPrompt(seedKeyword, questionType, questionDetail, state) {
-    const language = state.language === 'custom' ? state.customLanguage : state.language;
-    const audience = state.audience;
-
-    return `You are an expert keyword researcher helping to generate article ideas.
-Given the primary seed keyword: "[SEED_KEYWORD]"
-And focusing on the "[QUESTION_TYPE]" aspect, specifically: ${questionDetail}
-
-Generate a diverse list of 5 to 10 related long-tail keywords or article ideas.
-These keywords should be relevant for an audience interested in "${audience}" and the content will be in ${language}.
-Ensure the keywords are practical for creating distinct article topics.
-
-Output ONLY a comma-separated list of the generated keywords. Do not include numbering, bullet points, or any introductory/concluding text.
-
-Example for a seed keyword "Sustainable Gardening" and "What" aspect:
-What is organic pest control, What are companion planting techniques, What is soil testing for gardens, What are drought-tolerant plants, What tools are needed for sustainable gardening
-
-Seed Keyword: "${seedKeyword}"
-Language: ${language}
-Target Audience: ${audience}
-Aspect: ${questionType}
-`;
-}
 
 function parseIdeaResponse(responseText) {
     if (!responseText || typeof responseText !== 'string') return [];
@@ -46,7 +23,11 @@ function parseIdeaResponse(responseText) {
 
 function cleanAndUniqueKeywords(keywords) {
     const cleaned = keywords
-        .map(kw => kw.trim().replace(/^[^a-zA-Z0-9\u00C0-\u017F\s]+|[^a-zA-Z0-9\u00C0-\u017F\s]+$/g, '')) // Allow spaces and more chars within
+        .map(kw => kw
+            .replace(/\(\d+\)/g, '') // Remove numbers in parentheses
+            .replace(/\s+/g, ' ')   // Collapse whitespace
+            .trim()
+        )
         .filter(kw => kw.length > 0);
     return [...new Set(cleaned)];
 }
@@ -99,7 +80,8 @@ export async function handleGenerateIdeas() {
             ui.progressText.textContent = `Generating ideas for "${questionType}"... (${i + 1}/${totalSteps})`;
             logToConsole(`Generating ideas for aspect: ${questionType}`, "info");
             
-            const prompt = buildIdeaPrompt(seedKeyword, questionType, questionDetail.replace(/\[SEED_KEYWORD\]/g, seedKeyword), state);
+            // REFACTORED
+            const prompt = getIdeaPrompt(seedKeyword, questionType, questionDetail.replace(/\[SEED_KEYWORD\]/g, seedKeyword));
             const payload = {
                 providerKey: state.textProvider,
                 model: state.textModel,
@@ -128,7 +110,10 @@ export async function handleGenerateIdeas() {
         const combinedKeywords = [...existingKeywords, ...uniqueGeneratedKeywords];
         const finalUniqueKeywords = cleanAndUniqueKeywords(combinedKeywords);
 
-        ui.bulkKeywordsTextarea.value = finalUniqueKeywords.join('\n');
+        const newTextareaValue = finalUniqueKeywords.join('\n');
+        ui.bulkKeywordsTextarea.value = newTextareaValue;
+        updateState({ bulkKeywordsContent: newTextareaValue }); // Save cleaned list to state
+
         logToConsole(`Idea generation complete. Total unique keywords: ${finalUniqueKeywords.length}. Populated bulk keywords textarea.`, "success");
         alert(`Generated ${uniqueGeneratedKeywords.length} new unique ideas. The keyword list has been updated.`);
 
@@ -145,4 +130,4 @@ export async function handleGenerateIdeas() {
     }
 }
 
-console.log("article-ideas.js loaded");
+console.log("article-ideas.js (v8.21 refactor prompts)");

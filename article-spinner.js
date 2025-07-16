@@ -1,9 +1,10 @@
-// article-spinner.js (v8.18 Refined Sentence Splitting and Robust Pause/Stop)
+// article-spinner.js (v8.21 refactor prompts)
 
 import { getState, updateState } from './article-state.js';
 import { logToConsole, callAI, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
 import { getElement } from './article-ui.js'; // Keep this import for getElement
 import { languageOptions } from './article-config.js'; // Import language options if needed for context
+import { getSpintaxPrompt } from './article-prompts.js';
 
 let selectedTextInfo = null; // Store { text: '...', range: Range }
 
@@ -100,31 +101,9 @@ export async function handleSpinSelectedText() {
 
     const textToSpin = selectedTextInfo.text;
     const state = getState(); // Get current language/tone settings
-
-    // Get language/tone again for spinning context
-    const language = state.language === 'custom' ? state.customLanguage : languageOptions[state.language]?.name || state.language;
-    const dialect = state.dialect; // Assuming dialect is stored in state correctly
-    const tone = state.tone === 'custom' ? state.customTone : state.tone;
-
-    // Enhanced prompt with example and instruction to exclude punctuation
-    const prompt = `Take the following text and generate 3-6 variations that mean the same thing, suitable for spintax. Exclude the final punctuation mark from the generated spintax.
-
-    Example:
-    Text to Spin: Budi makan soto di rumah makan.
-    Spintax Output: {Budi makan soto di rumah makan|Di rumah makan Budi makan soto|Di rumah makan soto dimakan Budi|Budi di rumah makan makan soto|Soto dimakan Budi di rumah makan|Soto di rumah makan dimakan Budi}
-
-    Instructions:
-    - Generate 3-6 variations.
-    - Maintain the original meaning.
-    - Maintain the specified Language (${language}${dialect ? `, ${dialect} dialect` : ''}) and Tone (${tone}).
-    - Output Format: Return ONLY the spintax string in the format {original|variation1|variation2|...}.
-    - DO NOT include the final punctuation mark from the original text in the spintax output.
-
-    Text to Spin:
-    ---
-    ${textToSpin}
-    ---`;
-
+    
+    // REFACTORED
+    const prompt = getSpintaxPrompt(textToSpin, false);
 
      const payload = {
         providerKey: state.textProvider, // Use main text provider
@@ -280,31 +259,8 @@ export async function handleSpinArticle(generatedTextarea, spunDisplay) {
              continue;
         }
 
-        const state = getState(); // Get current language/tone settings
-
-        // Get language/tone for spinning context
-        const language = state.language === 'custom' ? state.customLanguage : languageOptions[state.language]?.name || state.language;
-        const dialect = state.dialect;
-        const tone = state.tone === 'custom' ? state.customTone : state.tone;
-
-        // Enhanced prompt with example and instruction to exclude punctuation
-        const prompt = `Take the following text (which is a single sentence without its final punctuation) and generate 3-6 variations (or as much as possible) that mean the same thing, suitable for spintax. Focus on rephrasing or reordering sentence components (subject, predicate, object, information) as shown in the example.
-
-        Example:
-        Text to Spin (without punctuation): Budi makan soto di rumah makan
-        Spintax Output (without punctuation): {Budi makan soto di rumah makan|Di rumah makan Budi makan soto|Di rumah makan soto dimakan Budi|Budi di rumah makan makan soto|Soto dimakan Budi di rumah makan|Soto di rumah makan dimakan Budi}
-
-        Instructions:
-        - Generate 3-6 variations.
-        - Maintain the original meaning.
-        - Maintain the specified Language (${language}${dialect ? `, ${dialect} dialect` : ''}) and Tone (${tone}).
-        - Output Format: Return ONLY the spintax string in the format {original|variation1|variation2|...}.
-        - The output should NOT include the final punctuation mark that was removed from the original text.
-
-        Text to Spin (without punctuation):
-        ---
-        ${sentenceWithoutPunctuation}
-        ---`;
+        const state = getState();
+        const prompt = getSpintaxPrompt(sentenceWithoutPunctuation, true); // REFACTORED
 
         const payload = {
             providerKey: state.textProvider,
@@ -405,4 +361,4 @@ export function stopSpinningProcess() {
     }
 }
 
-console.log("article-spinner.js loaded"); // v8.18 Refined Sentence Splitting and Robust Pause/Stop
+console.log("article-spinner.js v8.21 loaded"); // v8.21 refactor prompts
