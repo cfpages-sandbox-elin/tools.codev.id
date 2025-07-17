@@ -1,4 +1,4 @@
-// article-main.js (v8.18 Humanize content)
+// article-main.js (v8.21 munculin text area)
 
 import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
 import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
@@ -10,7 +10,7 @@ import {
 } from './article-ui.js';
 import { languageOptions, imageProviders, defaultSettings } from './article-config.js'; // Import defaultSettings
 import { handleGenerateStructure, handleGenerateArticle } from './article-single.js';
-import { handleGeneratePlan, handleStartBulkGeneration, handleDownloadZip } from './article-bulk.js';
+import { prepareKeywords, handleGeneratePlan, handleStartBulkGeneration, handleDownloadZip } from './article-bulk.js';
 import { handleGenerateIdeas } from './article-ideas.js'; 
 import { handleSpinSelectedText, handleSelection, highlightSpintax, handleSpinArticle, pauseSpinning, stopSpinningProcess } from './article-spinner.js';
 
@@ -205,10 +205,10 @@ function setupStep1Listeners() {
     if (imageStorageRadios) { imageStorageRadios.forEach(radio => { radio.addEventListener('change', (e) => { if (e.target.checked) { const storageType = e.target.value; updateState({ imageStorage: storageType }); toggleGithubOptions(); } }); }); } else { logToConsole("Could not attach listeners to imageStorageRadios (not found).", "warn"); }
     fetchSitemapBtn?.addEventListener('click', async () => { const url = sitemapUrlInput?.value.trim(); if (!url) { alert('Please enter a Sitemap URL.'); return; } showLoading(sitemapLoadingIndicator, true); disableElement(fetchSitemapBtn, true); try { const parsedUrls = await fetchAndParseSitemap(url); updateState({ sitemapUrls: parsedUrls, sitemapFetchedUrl: url }); displaySitemapUrlsUI(parsedUrls); } catch (error) { logToConsole(`Sitemap fetch failed: ${error.message}`, 'error'); alert(`Failed to fetch or parse sitemap: ${error.message}`); updateState({ sitemapUrls: [], sitemapFetchedUrl: '' }); displaySitemapUrlsUI([]); } finally { showLoading(sitemapLoadingIndicator, false); disableElement(fetchSitemapBtn, false); } });
     
-    bulkKeywordsTextarea?.addEventListener('blur', (e) => {
-        // We now auto-clean keywords before use, but we can still save the raw user input on blur
-        // The `prepareKeywords` function will overwrite this state with the cleaned version when an action is taken.
-        updateState({ bulkKeywordsContent: e.target.value });
+    bulkKeywordsTextarea?.addEventListener('blur', () => {
+        logToConsole("Bulk keywords textarea lost focus. Cleaning and updating content...", "info");
+        // This function will read, clean, de-dupe, and update the textarea value and the state.
+        prepareKeywords(); 
     });
     
     const inputsToSave = [ 

@@ -1,4 +1,4 @@
-// article-bulk.js (v8.21 prompts refactor)
+// article-bulk.js (v8.21 prompts refactor + munculin text area)
 import { getState, getBulkPlan, updateBulkPlanItem, addBulkArticle, saveBulkArticlesState, getBulkArticle, getAllBulkArticles, setBulkPlan, updateState } from './article-state.js';
 import { logToConsole, callAI, sanitizeFilename, slugify, getArticleOutlinesV2, constructImagePrompt, delay, showElement } from './article-helpers.js';
 import { getElement, updatePlanItemStatusUI, updateProgressBar, hideProgressBar, renderPlanningTable } from './article-ui.js';
@@ -39,7 +39,7 @@ export async function handleGeneratePlan() {
     const keywords = prepareKeywords();
     if (keywords.length === 0) { alert("Please enter keywords."); return; }
     const state = getState();
-    const ui = { loadingIndicator: getElement('planLoadingIndicator'), button: getElement('generatePlanBtn'), step1_5Section: getElement('step1_5'), planningTableBody: getElement('planningTableBody') };
+    const ui = { loadingIndicator: getElement('planLoadingIndicator'), button: getElement('generatePlanBtn'), step1_5Section: getElement('step1_5Section'), planningTableBody: getElement('planningTableBody') };
 
     logToConsole(`Generating plan for ${keywords.length} keywords...`, 'info');
     ui.planningTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-gray-500 py-4">Generating plan... <span class="loader inline-block"></span></td></tr>`;
