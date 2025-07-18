@@ -1,4 +1,4 @@
-// article-bulk.js (v8.21 prompts refactor + munculin text area)
+// article-bulk.js (v8.22 batch generate planning table)
 import { getState, getBulkPlan, updateBulkPlanItem, addBulkArticle, saveBulkArticlesState, getBulkArticle, getAllBulkArticles, setBulkPlan, updateState } from './article-state.js';
 import { logToConsole, callAI, sanitizeFilename, slugify, getArticleOutlinesV2, constructImagePrompt, delay, showElement } from './article-helpers.js';
 import { getElement, updatePlanItemStatusUI, updateProgressBar, hideProgressBar, renderPlanningTable } from './article-ui.js';
@@ -8,6 +8,7 @@ import { getPlanPrompt, getBulkStructurePrompt, getBulkSectionTextPrompt } from 
 let bulkImagesToUpload = [];
 let isBulkRunning = false;
 let currentBulkPlan = []; // Keep a local copy during generation
+const PLAN_GENERATION_BATCH_SIZE = 20;
 
 // --- Parse and Prepare Keywords ---
 export function prepareKeywords() {
@@ -37,28 +38,68 @@ export function prepareKeywords() {
 // --- Generate Planning Table ---
 export async function handleGeneratePlan() {
     const keywords = prepareKeywords();
-    if (keywords.length === 0) { alert("Please enter keywords."); return; }
+    if (keywords.length === 0) {
+        alert("Please enter keywords.");
+        return;
+    }
     const state = getState();
-    const ui = { loadingIndicator: getElement('planLoadingIndicator'), button: getElement('generatePlanBtn'), step1_5Section: getElement('step1_5Section'), planningTableBody: getElement('planningTableBody') };
+    const ui = {
+        loadingIndicator: getElement('planLoadingIndicator'),
+        button: getElement('generatePlanBtn'),
+        step1_5Section: getElement('step1_5Section'), // Using corrected element key
+        planningTableBody: getElement('planningTableBody')
+    };
 
-    logToConsole(`Generating plan for ${keywords.length} keywords...`, 'info');
-    ui.planningTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-gray-500 py-4">Generating plan... <span class="loader inline-block"></span></td></tr>`;
+    logToConsole(`Starting batched plan generation for ${keywords.length} keywords...`, 'info');
     showElement(ui.step1_5Section, true);
+    disableElement(ui.button, true); // Disable button during the entire process
 
-    const planPrompt = getPlanPrompt(keywords); // REFACTORED
-    const planPayload = { providerKey: state.textProvider, model: state.textModel, prompt: planPrompt };
-    const result = await callAI('generate', planPayload, ui.loadingIndicator, ui.button);
+    let allPlanItems = []; // Array to accumulate results from all batches
 
-    if (result?.success && result.text) {
-        const parsedPlan = parsePlanResponse(result.text, keywords); // Use local helper
-        const uniquePlan = removeDuplicatePlanItems(parsedPlan); // Use local helper
-        setBulkPlan(uniquePlan.map(item => ({ ...item, status: 'Pending', filename: `${item.slug}.md` }))); // Add status & default filename
+    // --- BATCHING LOGIC START ---
+    for (let i = 0; i < keywords.length; i += PLAN_GENERATION_BATCH_SIZE) {
+        const batch = keywords.slice(i, i + PLAN_GENERATION_BATCH_SIZE);
+        const currentProgress = Math.min(i + PLAN_GENERATION_BATCH_SIZE, keywords.length);
+
+        logToConsole(`Processing batch ${Math.floor(i / PLAN_GENERATION_BATCH_SIZE) + 1}: keywords ${i + 1} to ${currentProgress}`, 'info');
+
+        // Update UI to show progress
+        ui.planningTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-gray-500 py-4">Generating plan for keywords ${i + 1} - ${currentProgress} of ${keywords.length}... <span class="loader inline-block"></span></td></tr>`;
+
+        try {
+            const planPrompt = getPlanPrompt(batch);
+            const planPayload = { providerKey: state.textProvider, model: state.textModel, prompt: planPrompt };
+            // Note: We don't pass the main button/loader here, as we're managing the UI manually.
+            const result = await callAI('generate', planPayload, null, null);
+
+            if (result?.success && result.text) {
+                const parsedBatch = parsePlanResponse(result.text, batch);
+                allPlanItems.push(...parsedBatch); // Add batch results to the main array
+                logToConsole(`Successfully received ${parsedBatch.length} plan items for this batch.`, 'success');
+            } else {
+                logToConsole(`Failed to generate plan for batch starting with "${batch[0]}". Error: ${result?.error || 'Unknown error'}`, 'error');
+            }
+        } catch (error) {
+            logToConsole(`An exception occurred while processing batch starting with "${batch[0]}": ${error.message}`, 'error');
+        }
+
+        // Add a small delay between API calls to be a good citizen and avoid rate limits
+        await delay(250);
+    }
+    // --- BATCHING LOGIC END ---
+
+    disableElement(ui.button, false); // Re-enable button now that all batches are done
+
+    if (allPlanItems.length > 0) {
+        logToConsole(`Total plan items generated before deduplication: ${allPlanItems.length}`, 'info');
+        const uniquePlan = removeDuplicatePlanItems(allPlanItems);
+        setBulkPlan(uniquePlan.map(item => ({ ...item, status: 'Pending', filename: `${item.slug}.md` })));
         renderPlanningTable(getBulkPlan());
-        logToConsole(`Plan generated with ${uniquePlan.length} unique items.`, 'success');
+        logToConsole(`Plan generation complete. ${uniquePlan.length} unique items created.`, 'success');
     } else {
-        logToConsole('Failed to generate plan.', 'error');
-        alert(`Failed to generate plan. Error: ${result?.error || 'Unknown error'}`);
-        ui.planningTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-red-500 py-4">Failed to generate plan.</td></tr>`;
+        logToConsole('Failed to generate any plan items after all batches.', 'error');
+        alert('Failed to generate a plan. Please check the console log for errors.');
+        ui.planningTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-red-500 py-4">Failed to generate plan items.</td></tr>`;
     }
 }
 
