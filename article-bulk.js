@@ -61,8 +61,8 @@ export async function handleGeneratePlan() {
     logToConsole(`Using batch size of ${batchSize}`, 'info');
 
     for (let i = 0; i < keywords.length; i += batchSize) {
-        const batch = keywords.slice(i, i + PLAN_GENERATION_BATCH_SIZE);
-        const currentProgress = Math.min(i + PLAN_GENERATION_BATCH_SIZE, keywords.length);
+        const batch = keywords.slice(i, i + batchSize);
+        const currentProgress = Math.min(i + batchSize, keywords.length);
 
         logToConsole(`Processing batch ${Math.floor(i / PLAN_GENERATION_BATCH_SIZE) + 1}: keywords ${i + 1} to ${currentProgress}`, 'info');
 
