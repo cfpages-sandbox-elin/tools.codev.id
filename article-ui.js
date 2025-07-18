@@ -1,4 +1,4 @@
-// article-ui.js (v8.19 Add idea generation progress bar)
+// article-ui.js (v8.23 hide download button initially)
 import { textProviders, imageProviders, languageOptions, defaultSettings } from './article-config.js';
 import { getState, getCustomModelState, updateState, getBulkPlan } from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2 } from './article-helpers.js';
@@ -663,11 +663,56 @@ export function updateUIFromState(state) {
 
 export function renderPlanningTable(plan) {
     const tableBody = getElement('planningTableBody');
+    const downloadBtn = getElement('downloadBulkZipBtn');
     if (!tableBody) { logToConsole("Planning table body not found.", "error"); return; }
     tableBody.innerHTML = '';
-    if (!plan || plan.length === 0) { tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500 py-4">No plan generated or loaded.</td></tr>'; return; }
-    plan.forEach((item, index) => { const row = tableBody.insertRow(); row.dataset.index = index; let cell; cell = row.insertCell(); cell.textContent = item.keyword || 'N/A'; cell.classList.add('px-3', 'py-2', 'whitespace-nowrap', 'text-xs'); cell = row.insertCell(); const titleInput = document.createElement('input'); titleInput.type = 'text'; titleInput.value = item.title || ''; titleInput.dataset.field = 'title'; titleInput.classList.add('compact-input', 'p-1', 'text-xs', 'w-full'); cell.appendChild(titleInput); cell.classList.add('px-3', 'py-2'); cell = row.insertCell(); const slugInput = document.createElement('input'); slugInput.type = 'text'; slugInput.value = item.slug || ''; slugInput.dataset.field = 'slug'; slugInput.classList.add('compact-input', 'p-1', 'text-xs', 'w-full'); cell.appendChild(slugInput); cell.classList.add('px-3', 'py-2'); cell = row.insertCell(); const intentInput = document.createElement('input'); intentInput.type = 'text'; intentInput.value = item.intent || ''; intentInput.dataset.field = 'intent'; intentInput.classList.add('compact-input', 'p-1', 'text-xs', 'w-full'); cell.appendChild(intentInput); cell.classList.add('px-3', 'py-2'); cell = row.insertCell(); cell.classList.add('px-3', 'py-2', 'whitespace-nowrap', 'text-xs'); updatePlanItemStatusUI(row, item.status || 'Pending', item.error); });
-     logToConsole(`Rendered planning table with ${plan.length} items.`, 'info');
+    if(downloadBtn) showElement(downloadBtn, false);
+    if (!plan || plan.length === 0) { tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500 py-4">No plan generated or loaded.</td></tr>'; return; }
+    plan.forEach((item, index) => {
+        const row = tableBody.insertRow();
+        row.dataset.index = index;
+        let cell;
+
+        cell = row.insertCell();
+        cell.textContent = index + 1;
+        cell.classList.add('px-3', 'py-2', 'text-xs', 'text-gray-500');
+
+        cell = row.insertCell();
+        cell.textContent = item.keyword || 'N/A';
+        cell.classList.add('px-3', 'py-2', 'whitespace-nowrap', 'text-xs');
+
+        cell = row.insertCell();
+        const titleInput = document.createElement('input');
+        titleInput.type = 'text';
+        titleInput.value = item.title || '';
+        titleInput.dataset.field = 'title';
+        titleInput.classList.add('compact-input', 'p-1', 'text-xs', 'w-full');
+        cell.appendChild(titleInput);
+        cell.classList.add('px-3', 'py-2');
+
+        cell = row.insertCell();
+        const slugInput = document.createElement('input');
+        slugInput.type = 'text';
+        slugInput.value = item.slug || '';
+        slugInput.dataset.field = 'slug';
+        slugInput.classList.add('compact-input', 'p-1', 'text-xs', 'w-full');
+        cell.appendChild(slugInput);
+        cell.classList.add('px-3', 'py-2');
+
+        cell = row.insertCell();
+        const intentInput = document.createElement('input');
+        intentInput.type = 'text';
+        intentInput.value = item.intent || '';
+        intentInput.dataset.field = 'intent';
+        intentInput.classList.add('compact-input', 'p-1', 'text-xs', 'w-full');
+        cell.appendChild(intentInput);
+        cell.classList.add('px-3', 'py-2');
+        
+        cell = row.insertCell();
+        cell.classList.add('px-3', 'py-2', 'whitespace-nowrap', 'text-xs');
+        updatePlanItemStatusUI(row, item.status || 'Pending', item.error);
+    });
+    logToConsole(`Rendered planning table with ${plan.length} items.`, 'info');
 }
 
 export function updatePlanItemStatusUI(rowElementOrIndex, status, errorMsg = null) {
@@ -676,8 +721,8 @@ export function updatePlanItemStatusUI(rowElementOrIndex, status, errorMsg = nul
     if (!tableBody) return;
     if (typeof rowElementOrIndex === 'number') { row = tableBody.querySelector(`tr[data-index="${rowElementOrIndex}"]`); }
     else { row = rowElementOrIndex; } 
-    if (!row || row.cells.length < 5) { return; }
-    const statusCell = row.cells[4]; if (!statusCell) return;
+    if (!row || row.cells.length < 6) { return; }
+    const statusCell = row.cells[5]; if (!statusCell) return;
     statusCell.className = 'px-3 py-2 whitespace-nowrap text-xs'; statusCell.title = ''; 
     const statusText = status || 'Pending';
     switch (statusText.toLowerCase().split('(')[0].trim()) { case 'pending': statusCell.textContent = 'Pending'; statusCell.classList.add('status-pending'); break; case 'generating': statusCell.textContent = 'Generating...'; statusCell.classList.add('status-generating'); break; case 'uploading': statusCell.textContent = 'Uploading...'; statusCell.classList.add('status-uploading'); break; case 'completed': statusCell.textContent = 'Completed'; statusCell.classList.add('status-completed'); if (statusText.includes('Image Upload Failed')) { statusCell.textContent = 'Completed (Img Fail)'; statusCell.classList.remove('status-completed'); statusCell.classList.add('status-warn', 'text-yellow-600'); statusCell.title = errorMsg || 'One or more image uploads failed.'; } break; case 'failed': statusCell.classList.add('status-failed'); if (errorMsg) { const shortError = errorMsg.length > 30 ? errorMsg.substring(0, 30) + '...' : errorMsg; statusCell.textContent = `Failed: ${shortError}`; statusCell.title = errorMsg; } else { statusCell.textContent = 'Failed'; } break; default: statusCell.textContent = statusText; statusCell.classList.add('status-pending'); break; }

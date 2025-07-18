@@ -1,4 +1,4 @@
-// article-bulk.js (v8.22 batch generate planning table + disableelement)
+// article-bulk.js (v8.23 hide download button initially)
 import { getState, getBulkPlan, updateBulkPlanItem, addBulkArticle, saveBulkArticlesState, getBulkArticle, getAllBulkArticles, setBulkPlan, updateState } from './article-state.js';
 import { logToConsole, callAI, sanitizeFilename, slugify, getArticleOutlinesV2, constructImagePrompt, delay, showElement, disableElement } from './article-helpers.js';
 import { getElement, updatePlanItemStatusUI, updateProgressBar, hideProgressBar, renderPlanningTable } from './article-ui.js';
@@ -57,7 +57,7 @@ export async function handleGeneratePlan() {
     let allPlanItems = []; // Array to accumulate results from all batches
 
     // --- BATCHING LOGIC START ---
-    const batchSize = parseInt(ui.batchSizeInput?.value, 10) || 30;
+    const batchSize = parseInt(ui.batchSizeInput?.value, 10) || 10;
     logToConsole(`Using batch size of ${batchSize}`, 'info');
 
     for (let i = 0; i < keywords.length; i += batchSize) {
@@ -67,7 +67,7 @@ export async function handleGeneratePlan() {
         logToConsole(`Processing batch ${Math.floor(i / PLAN_GENERATION_BATCH_SIZE) + 1}: keywords ${i + 1} to ${currentProgress}`, 'info');
 
         // Update UI to show progress
-        ui.planningTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-gray-500 py-4">Generating plan for keywords ${i + 1} - ${currentProgress} of ${keywords.length}... <span class="loader inline-block"></span></td></tr>`;
+        ui.planningTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-gray-500 py-4">Generating plan for keywords ${i + 1} - ${currentProgress} of ${keywords.length}... <span class="loader inline-block"></span></td></tr>`;
 
         try {
             const planPrompt = getPlanPrompt(batch);
@@ -102,7 +102,7 @@ export async function handleGeneratePlan() {
     } else {
         logToConsole('Failed to generate any plan items after all batches.', 'error');
         alert('Failed to generate a plan. Please check the console log for errors.');
-        ui.planningTableBody.innerHTML = `<tr><td colspan="5" class="text-center text-red-500 py-4">Failed to generate plan items.</td></tr>`;
+        ui.planningTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-red-500 py-4">Failed to generate plan items.</td></tr>`;
     }
 }
 
@@ -116,6 +116,7 @@ export async function handleStartBulkGeneration() {
     logToConsole("Starting bulk article generation...", "info");
     const ui = { 
         button: getElement('startBulkGenerationBtn'),
+        downloadBulkZipBtn: getElement('downloadBulkZipBtn'),
         bulkGenProgress: getElement('bulkGenerationProgress'),
         bulkCurrentNum: getElement('bulkCurrentNum'),
         bulkTotalNum: getElement('bulkTotalNum'),
@@ -124,7 +125,9 @@ export async function handleStartBulkGeneration() {
         uploadProgressBar: getElement('bulkUploadProgressBar'),
         uploadProgressText: getElement('bulkUploadProgressText')
     };
-    disableElement(ui.button, true); showElement(ui.bulkGenProgress, true);
+    disableElement(ui.button, true); 
+    showElement(ui.bulkGenProgress, true);
+    showElement(ui.downloadBulkZipBtn, false);
     if(ui.bulkTotalNum) ui.bulkTotalNum.textContent = currentBulkPlan.length;
     hideProgressBar(ui.uploadProgressBar, ui.uploadProgressContainer, ui.uploadProgressText);
     bulkImagesToUpload = []; // Reset image queue
@@ -232,6 +235,13 @@ export async function handleStartBulkGeneration() {
     // Finalize
     isBulkRunning = false; disableElement(ui.button, false); showElement(ui.bulkGenProgress, false);
     logToConsole("Bulk generation process finished.", "info");
+
+    const completedArticles = getBulkPlan().filter(item => item.status?.startsWith('Completed'));
+    if (completedArticles.length > 0) {
+        showElement(ui.downloadBulkZipBtn, true);
+        logToConsole(`Found ${completedArticles.length} completed articles. Showing download button.`, 'info');
+    }
+
     alert("Bulk generation process complete. Check statuses and download ZIP if needed.");
 }
 
