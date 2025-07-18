@@ -665,9 +665,21 @@ export function renderPlanningTable(plan) {
     const tableBody = getElement('planningTableBody');
     const downloadBtn = getElement('downloadBulkZipBtn');
     if (!tableBody) { logToConsole("Planning table body not found.", "error"); return; }
-    tableBody.innerHTML = '';
+
     if(downloadBtn) showElement(downloadBtn, false);
-    if (!plan || plan.length === 0) { tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500 py-4">No plan generated or loaded.</td></tr>'; return; }
+
+    tableBody.innerHTML = '';
+    if (!plan || plan.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500 py-4">No plan generated or loaded.</td></tr>';
+        return;
+    }
+
+    // Check for completed articles to decide if the download button should be shown
+    const hasCompletedArticles = plan.some(item => item.status?.startsWith('Completed'));
+    if (hasCompletedArticles && downloadBtn) {
+        showElement(downloadBtn, true);
+    }
+    
     plan.forEach((item, index) => {
         const row = tableBody.insertRow();
         row.dataset.index = index;
@@ -675,7 +687,7 @@ export function renderPlanningTable(plan) {
 
         cell = row.insertCell();
         cell.textContent = index + 1;
-        cell.classList.add('px-3', 'py-2', 'text-xs', 'text-gray-500');
+        cell.classList.add('px-3', 'py-2', 'text-xs', 'text-center', 'text-gray-500');
 
         cell = row.insertCell();
         cell.textContent = item.keyword || 'N/A';
