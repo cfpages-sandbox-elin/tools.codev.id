@@ -310,7 +310,11 @@
                 </div> 
             </div> 
         </div> 
-        <div class="mt-4 text-right"> 
+        <div class="mt-4 flex justify-end items-center gap-x-4"> 
+            <div id="batchSizeContainer" class="hidden items-center gap-x-2">
+                <label for="batchSizeInput" class="compact-label !mb-0">Batch Size 📦:</label>
+                <input type="number" id="batchSizeInput" class="compact-input !w-20" value="30" min="5" max="100">
+            </div>
             <button id="generateSingleBtn" class="compact-button"> Generate Structure 🏗️ <span id="structureLoadingIndicator" class="hidden"><span class="loader"></span></span> </button> 
             <button id="generatePlanBtn" class="compact-button hidden"> Generate Plan 🗺️ <span id="planLoadingIndicator" class="hidden"><span class="loader"></span></span> </button> 
         </div> 

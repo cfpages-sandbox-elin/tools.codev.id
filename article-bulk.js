@@ -8,7 +8,6 @@ import { getPlanPrompt, getBulkStructurePrompt, getBulkSectionTextPrompt } from 
 let bulkImagesToUpload = [];
 let isBulkRunning = false;
 let currentBulkPlan = []; // Keep a local copy during generation
-const PLAN_GENERATION_BATCH_SIZE = 20;
 
 // --- Parse and Prepare Keywords ---
 export function prepareKeywords() {
@@ -46,8 +45,9 @@ export async function handleGeneratePlan() {
     const ui = {
         loadingIndicator: getElement('planLoadingIndicator'),
         button: getElement('generatePlanBtn'),
-        step1_5Section: getElement('step1_5Section'), // Using corrected element key
-        planningTableBody: getElement('planningTableBody')
+        step1_5Section: getElement('step1_5Section'),
+        planningTableBody: getElement('planningTableBody'),
+        batchSizeInput: getElement('batchSizeInput')
     };
 
     logToConsole(`Starting batched plan generation for ${keywords.length} keywords...`, 'info');
@@ -57,7 +57,10 @@ export async function handleGeneratePlan() {
     let allPlanItems = []; // Array to accumulate results from all batches
 
     // --- BATCHING LOGIC START ---
-    for (let i = 0; i < keywords.length; i += PLAN_GENERATION_BATCH_SIZE) {
+    const batchSize = parseInt(ui.batchSizeInput?.value, 10) || 30;
+    logToConsole(`Using batch size of ${batchSize}`, 'info');
+
+    for (let i = 0; i < keywords.length; i += batchSize) {
         const batch = keywords.slice(i, i + PLAN_GENERATION_BATCH_SIZE);
         const currentProgress = Math.min(i + PLAN_GENERATION_BATCH_SIZE, keywords.length);
 

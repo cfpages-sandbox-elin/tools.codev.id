@@ -59,6 +59,8 @@ const elementIdMap = {
     githubCustomPathInput: 'githubCustomPath',
     generateSingleBtn: 'generateSingleBtn',
     generatePlanBtn: 'generatePlanBtn',
+    batchSizeContainer: 'batchSizeContainer',
+    batchSizeInput: 'batchSizeInput',
     structureLoadingIndicator: 'structureLoadingIndicator',
     planLoadingIndicator: 'planLoadingIndicator',
     resetDataBtn: 'resetDataBtn',
@@ -439,6 +441,7 @@ export function updateUIBasedOnMode(isBulkMode) {
     const formatSelect = getElement('formatSelect');
     const bulkKeywordsContainer = getElement('bulkKeywordsContainer');
     const generatePlanBtn = getElement('generatePlanBtn');
+    const batchSizeContainer = getElement('batchSizeContainer');
     const step1_5Section = getElement('step1_5Section');
     
     // Single mode elements
@@ -448,6 +451,7 @@ export function updateUIBasedOnMode(isBulkMode) {
     // Bulk mode elements
     showElement(bulkKeywordsContainer, isBulkMode);
     showElement(generatePlanBtn, isBulkMode);
+    showElement(batchSizeContainer, isBulkMode);
 
     if (isBulkMode) {
         // Switching TO Bulk Mode: Hide single-mode workflow sections
