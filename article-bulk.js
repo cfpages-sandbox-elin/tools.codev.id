@@ -1,6 +1,6 @@
-// article-bulk.js (v8.22 batch generate planning table)
+// article-bulk.js (v8.22 batch generate planning table + disableelement)
 import { getState, getBulkPlan, updateBulkPlanItem, addBulkArticle, saveBulkArticlesState, getBulkArticle, getAllBulkArticles, setBulkPlan, updateState } from './article-state.js';
-import { logToConsole, callAI, sanitizeFilename, slugify, getArticleOutlinesV2, constructImagePrompt, delay, showElement } from './article-helpers.js';
+import { logToConsole, callAI, sanitizeFilename, slugify, getArticleOutlinesV2, constructImagePrompt, delay, showElement, disableElement } from './article-helpers.js';
 import { getElement, updatePlanItemStatusUI, updateProgressBar, hideProgressBar, renderPlanningTable } from './article-ui.js';
 import { languageOptions } from './article-config.js';
 import { getPlanPrompt, getBulkStructurePrompt, getBulkSectionTextPrompt } from './article-prompts.js';
