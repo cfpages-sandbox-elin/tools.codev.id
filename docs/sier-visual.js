@@ -792,7 +792,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         container.innerHTML = `
             <div><h3 class="text-xl font-bold text-gray-800 mb-3 pb-2 border-b-2 border-gray-200">A. Asumsi Global</h3>${createTableFromObject(globalAssumptions, 'assumptions', '')}</div>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-12 pt-6 border-t">
+            <div class="grid grid-cols-1 lg:grid-cols-1 gap-x-8 gap-y-12 pt-6 border-t">
                 <div>
                     <h3 class="text-xl font-bold text-gray-800 mb-4 pb-2 border-b-2 border-gray-200">B. Model Bisnis Driving Range</h3>
                     <div class="space-y-6">${createTableFromObject(projectConfig.drivingRange, 'drivingRange', '')}</div>
