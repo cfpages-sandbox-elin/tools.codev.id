@@ -64,7 +64,7 @@ export async function handleGeneratePlan() {
         const batch = keywords.slice(i, i + batchSize);
         const currentProgress = Math.min(i + batchSize, keywords.length);
 
-        logToConsole(`Processing batch ${Math.floor(i / PLAN_GENERATION_BATCH_SIZE) + 1}: keywords ${i + 1} to ${currentProgress}`, 'info');
+        logToConsole(`Processing batch ${Math.floor(i / batchSize) + 1}: keywords ${i + 1} to ${currentProgress}`, 'info');
 
         // Update UI to show progress
         ui.planningTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-gray-500 py-4">Generating plan for keywords ${i + 1} - ${currentProgress} of ${keywords.length}... <span class="loader inline-block"></span></td></tr>`;
