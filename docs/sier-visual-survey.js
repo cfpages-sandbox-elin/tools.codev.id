@@ -2,8 +2,7 @@
 // Merender semua elemen visual non-chart terkait Survei Pasar.
 
 const sierVisualSurvey = {
-    _renderVisuals() {
-        const summary = sierMath.getSurveyAnalysis();
+    _renderVisuals(summary) { // Terima 'summary' sebagai argumen
         const surveySections = ['survey-analysis', 'survey-deep-dive', 'customer-personas'];
 
         if (!summary || !summary.hasData) {
@@ -26,60 +25,50 @@ const sierVisualSurvey = {
         }
     },
 
-    /**
-     * FUNGSI BARU: Melakukan analisis tematik dan merendernya.
-     * @param {Array} parsedData - Data survei yang sudah diparsing dari sierMath.
-     */
     _renderThemedFeedback(parsedData) {
         const container = document.getElementById('themedFeedbackContainer');
         if (!container) return;
 
-        // 1. Definisikan tema dan kata kunci (lowercase)
         const themes = {
-            'Kualitas Fasilitas & Lapangan': { keywords: ['kualitas', 'standar internasional', 'matras', 'bola', 'bersih', 'dead spot', 'silau', 'ventilasi', 'karpet', 'pasir', 'sirkulasi'], feedbacks: [] },
+            'Kualitas Fasilitas & Lapangan': { keywords: ['kualitas', 'standar internasional', 'matras', 'bola', 'bersih', 'dead spot', 'silau', 'ventilasi', 'karpet', 'pasir', 'sirkulasi', 'rata'], feedbacks: [] },
             'Harga, Paket & Promosi': { keywords: ['harga', 'paket', 'promo', 'membership', 'terjangkau'], feedbacks: [] },
-            'Fasilitas Pendukung (F&B, dll)': { keywords: ['f&b', 'kafe', 'restoran', 'lounge', 'shower', 'ganti', 'tunggu', 'amenities', 'musola', 'parkir'], feedbacks: [] },
+            'Fasilitas Pendukung (F&B, dll)': { keywords: ['f&b', 'kafe', 'restoran', 'lounge', 'shower', 'ganti', 'tunggu', 'amenities', 'musola', 'parkir', 'toilet'], feedbacks: [] },
             'Operasional & Layanan': { keywords: ['booking online', 'operasional', '24 jam', 'pelatih', 'coaching', 'penyewaan raket', 'staf'], feedbacks: [] },
-            'Saran Fasilitas Lain': { keywords: ['tennis', 'futsal', 'gym', 'ice bath'], feedbacks: [] },
+            'Saran Fasilitas Lain': { keywords: ['tennis', 'futsal', 'gym', 'ice bath', 'ps'], feedbacks: [] },
             'Kebijakan Bebas Rokok': { keywords: ['rokok'], feedbacks: [] }
         };
 
         const otherFeedback = [];
 
-        // 2. Kelompokkan setiap masukan ke dalam tema
         parsedData.forEach(row => {
             const feedback = (row['Saran Lain'] || '').trim();
-            if (!feedback || ['-', 'ok', 'cukup', 'tidak ada', '.'].includes(feedback.toLowerCase())) return;
+            if (!feedback || ['-','ok','cukup','tidak ada', '.'].includes(feedback.toLowerCase())) return;
 
             const feedbackLc = feedback.toLowerCase();
             let matched = false;
             for (const themeName in themes) {
-                for (const keyword of themes[themeName].keywords) {
-                    if (feedbackLc.includes(keyword)) {
-                        themes[themeName].feedbacks.push(feedback);
-                        matched = true;
-                        break; 
-                    }
+                if (themes[themeName].keywords.some(keyword => feedbackLc.includes(keyword))) {
+                    themes[themeName].feedbacks.push(feedback);
+                    matched = true;
+                    break;
                 }
-                if (matched) break;
             }
-
             if (!matched) {
                 otherFeedback.push(feedback);
             }
         });
         
-        // Gabungkan 'Lainnya' jika ada
         if(otherFeedback.length > 0) {
             themes['Lain-lain & Umum'] = { keywords:[], feedbacks: otherFeedback };
         }
 
-        // 3. Render hasil pengelompokan ke HTML
-        container.innerHTML = ''; // Kosongkan kontainer
+        container.innerHTML = '';
+        let renderedThemesCount = 0;
         for (const themeName in themes) {
             const themeData = themes[themeName];
             if (themeData.feedbacks.length > 0) {
-                const uniqueFeedbacks = [...new Set(themeData.feedbacks)]; // Tampilkan hanya feedback unik
+                renderedThemesCount++;
+                const uniqueFeedbacks = [...new Set(themeData.feedbacks)];
                 const themeHtml = `
                     <div>
                         <h5 class="font-bold text-gray-800">${themeName} <span class="text-sm font-normal text-gray-500">(${uniqueFeedbacks.length} saran)</span></h5>
@@ -91,6 +80,7 @@ const sierVisualSurvey = {
                 container.innerHTML += themeHtml;
             }
         }
+        console.log(`[sier-visual-survey] Analisis Tematik: ${renderedThemesCount} tema berhasil dirender.`);
     },
 
     _renderSampleCalculations() {
@@ -118,11 +108,11 @@ const sierVisualSurvey = {
     },
 
     render() {
-        this._renderVisuals();
+        const summary = sierMath.getSurveyAnalysis();
+
+        this._renderVisuals(summary);
         this._renderSampleCalculations();
         
-        // Panggil fungsi analisis tematik yang baru
-        const summary = sierMath.getSurveyAnalysis();
         if(summary && summary.hasData) {
             this._renderThemedFeedback(summary.parsedData);
         }
