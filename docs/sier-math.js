@@ -46,9 +46,14 @@ const sierMath = {
         const totalRing2 = demographyData.filter(d => d.ring === 2).reduce((sum, i) => sum + i.total, 0);
         
         const totalsByAge = { '0-14 Thn': 0, '15-24 Thn': 0, '25-39 Thn': 0, '40-54 Thn': 0, '55-64 Thn': 0, '65+ Thn': 0 };
+
         demographyData.forEach(i => {
-            totalsByAge['0-14 Thn'] += i.usia0_14; totalsByAge['15-24 Thn'] += i.usia15_24; totalsByAge['25-39 Thn'] += i.usia25_39;
-            totalsByAge['40-54 Thn'] += i.usia40_54; totalsByAge['55-64 Thn'] += i.usia55_64; totalsByAge['65+ Thn'] += i.usia65_plus;
+            totalsByAge['0-14 Thn'] += i['usia0-14']; 
+            totalsByAge['15-24 Thn'] += i['usia15-24']; 
+            totalsByAge['25-39 Thn'] += i['usia25-39'];
+            totalsByAge['40-54 Thn'] += i['usia40-54']; 
+            totalsByAge['55-64 Thn'] += i['usia55-64']; 
+            totalsByAge['65+ Thn'] += i.usia65_plus; // Ini sudah benar, tidak perlu diubah
         });
         
         const totalProductive = totalsByAge['15-24 Thn'] + totalsByAge['25-39 Thn'] + totalsByAge['40-54 Thn'] + totalsByAge['55-64 Thn'];
@@ -86,9 +91,10 @@ const sierMath = {
     getIncomeAndMarketSummary() {
         if (typeof demographyData === 'undefined') return null;
         const estimatedIncomeData = demographyData.map(row => {
-            const dependent = row.usia0_14 + row.usia65_plus;
-            const lowIncome = row.usia15_24;
-            const productiveCore = row.usia25_39 + row.usia40_54 + row.usia55_64;
+            // FIX DI SINI JUGA: Gunakan bracket notation untuk konsistensi
+            const dependent = row['usia0-14'] + row.usia65_plus;
+            const lowIncome = row['usia15-24'];
+            const productiveCore = row['usia25-39'] + row['usia40-54'] + row['usia55-64'];
             let highIncome = (row.ring === 1) ? Math.round(productiveCore * 0.30) : Math.round(productiveCore * 0.15);
             let middleIncome = productiveCore - highIncome;
             return { ...row, incomeDependent: dependent, incomeLow: lowIncome, incomeMiddle: middleIncome, incomeHigh: highIncome };
@@ -107,7 +113,10 @@ const sierMath = {
         });
 
         const totalTargetByAge = demographyData.reduce((acc, row) => {
-            acc.age25_39 += row.usia25_39; acc.age40_54 += row.usia40_54; acc.age55_64 += row.usia55_64;
+            // FIX DI SINI JUGA: Gunakan bracket notation
+            acc.age25_39 += row['usia25-39']; 
+            acc.age40_54 += row['usia40-54']; 
+            acc.age55_64 += row['usia55-64'];
             return acc;
         }, { age25_39: 0, age40_54: 0, age55_64: 0 });
 
@@ -302,7 +311,7 @@ const sierMath = {
 
         return {
             capex: { total: capexTotal },
-            pnl: { annualRevenue, annualCogs, annualOpex, grossProfit, ebitda, annualDepreciation, ebt, tax, netProfit, cashFlowFromOps },
+            pnl: { annualRevenue, annualCogs, annualOpex, grossProfit, ebitda, annualDepresiasi, ebt, tax, netProfit, cashFlowFromOps },
         };
     },
     getFinancialSummary(revenueMultiplier = 1, opexMultiplier = 1) {
