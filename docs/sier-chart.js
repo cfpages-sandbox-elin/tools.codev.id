@@ -21,7 +21,7 @@ const sierChart = {
         const ctx = canvas.getContext('2d');
         const defaultOptions = {
             responsive: true,
-            maintainAspectRatio: false, // Penting agar chart bisa mengisi kontainernya
+            maintainAspectRatio: true,
             plugins: {
                 tooltip: {
                     callbacks: {
