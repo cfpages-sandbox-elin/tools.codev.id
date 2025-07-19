@@ -36,8 +36,6 @@ const sierVisualMarket = {
 
     render() {
         this._renderVisuals();
-        sierChart.renderAllIncomeAndMarketCharts();
-        sierChart.renderAllCompetitorCharts();
     }
 };
 

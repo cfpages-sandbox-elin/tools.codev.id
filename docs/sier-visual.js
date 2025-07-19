@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sierHelpers.tryToRender(sierVisualMarket.render.bind(sierVisualMarket));
         sierHelpers.tryToRender(sierVisualSurvey.render.bind(sierVisualSurvey));
         sierHelpers.tryToRender(sierVisualFinance.render.bind(sierVisualFinance));
+        sierHelpers.tryToRender(sierChart.renderAllCharts.bind(sierChart));
     }
 
     /**

@@ -26,7 +26,6 @@ const sierVisualDemography = {
 
     render() {
         this._renderVisuals();
-        sierChart.renderAllDemographyCharts(); // Panggil chart yang relevan
     }
 };
 

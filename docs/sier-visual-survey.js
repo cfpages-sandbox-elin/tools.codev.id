@@ -53,7 +53,6 @@ const sierVisualSurvey = {
     render() {
         this._renderVisuals();
         this._renderSampleCalculations();
-        sierChart.renderAllSurveyCharts();
     }
 };
 
