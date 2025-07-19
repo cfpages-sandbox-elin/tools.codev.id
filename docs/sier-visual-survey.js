@@ -26,6 +26,73 @@ const sierVisualSurvey = {
         }
     },
 
+    /**
+     * FUNGSI BARU: Melakukan analisis tematik dan merendernya.
+     * @param {Array} parsedData - Data survei yang sudah diparsing dari sierMath.
+     */
+    _renderThemedFeedback(parsedData) {
+        const container = document.getElementById('themedFeedbackContainer');
+        if (!container) return;
+
+        // 1. Definisikan tema dan kata kunci (lowercase)
+        const themes = {
+            'Kualitas Fasilitas & Lapangan': { keywords: ['kualitas', 'standar internasional', 'matras', 'bola', 'bersih', 'dead spot', 'silau', 'ventilasi', 'karpet', 'pasir', 'sirkulasi'], feedbacks: [] },
+            'Harga, Paket & Promosi': { keywords: ['harga', 'paket', 'promo', 'membership', 'terjangkau'], feedbacks: [] },
+            'Fasilitas Pendukung (F&B, dll)': { keywords: ['f&b', 'kafe', 'restoran', 'lounge', 'shower', 'ganti', 'tunggu', 'amenities', 'musola', 'parkir'], feedbacks: [] },
+            'Operasional & Layanan': { keywords: ['booking online', 'operasional', '24 jam', 'pelatih', 'coaching', 'penyewaan raket', 'staf'], feedbacks: [] },
+            'Saran Fasilitas Lain': { keywords: ['tennis', 'futsal', 'gym', 'ice bath'], feedbacks: [] },
+            'Kebijakan Bebas Rokok': { keywords: ['rokok'], feedbacks: [] }
+        };
+
+        const otherFeedback = [];
+
+        // 2. Kelompokkan setiap masukan ke dalam tema
+        parsedData.forEach(row => {
+            const feedback = (row['Saran Lain'] || '').trim();
+            if (!feedback || ['-', 'ok', 'cukup', 'tidak ada', '.'].includes(feedback.toLowerCase())) return;
+
+            const feedbackLc = feedback.toLowerCase();
+            let matched = false;
+            for (const themeName in themes) {
+                for (const keyword of themes[themeName].keywords) {
+                    if (feedbackLc.includes(keyword)) {
+                        themes[themeName].feedbacks.push(feedback);
+                        matched = true;
+                        break; 
+                    }
+                }
+                if (matched) break;
+            }
+
+            if (!matched) {
+                otherFeedback.push(feedback);
+            }
+        });
+        
+        // Gabungkan 'Lainnya' jika ada
+        if(otherFeedback.length > 0) {
+            themes['Lain-lain & Umum'] = { keywords:[], feedbacks: otherFeedback };
+        }
+
+        // 3. Render hasil pengelompokan ke HTML
+        container.innerHTML = ''; // Kosongkan kontainer
+        for (const themeName in themes) {
+            const themeData = themes[themeName];
+            if (themeData.feedbacks.length > 0) {
+                const uniqueFeedbacks = [...new Set(themeData.feedbacks)]; // Tampilkan hanya feedback unik
+                const themeHtml = `
+                    <div>
+                        <h5 class="font-bold text-gray-800">${themeName} <span class="text-sm font-normal text-gray-500">(${uniqueFeedbacks.length} saran)</span></h5>
+                        <ul class="list-disc pl-6 mt-2 text-sm text-gray-600 space-y-2">
+                            ${uniqueFeedbacks.map(fb => `<li>${fb}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+                container.innerHTML += themeHtml;
+            }
+        }
+    },
+
     _renderSampleCalculations() {
         const summary = sierMath.getDemographySummary();
         if (!summary || !summary.totalPopulation) return;
@@ -53,6 +120,12 @@ const sierVisualSurvey = {
     render() {
         this._renderVisuals();
         this._renderSampleCalculations();
+        
+        // Panggil fungsi analisis tematik yang baru
+        const summary = sierMath.getSurveyAnalysis();
+        if(summary && summary.hasData) {
+            this._renderThemedFeedback(summary.parsedData);
+        }
     }
 };
 
