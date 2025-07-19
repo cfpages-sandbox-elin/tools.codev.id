@@ -46,14 +46,13 @@ const sierMath = {
         const totalRing2 = demographyData.filter(d => d.ring === 2).reduce((sum, i) => sum + i.total, 0);
         
         const totalsByAge = { '0-14 Thn': 0, '15-24 Thn': 0, '25-39 Thn': 0, '40-54 Thn': 0, '55-64 Thn': 0, '65+ Thn': 0 };
-
         demographyData.forEach(i => {
             totalsByAge['0-14 Thn'] += i['usia0-14']; 
             totalsByAge['15-24 Thn'] += i['usia15-24']; 
             totalsByAge['25-39 Thn'] += i['usia25-39'];
             totalsByAge['40-54 Thn'] += i['usia40-54']; 
             totalsByAge['55-64 Thn'] += i['usia55-64']; 
-            totalsByAge['65+ Thn'] += i.usia65_plus; // Ini sudah benar, tidak perlu diubah
+            totalsByAge['65+ Thn'] += i.usia65_plus;
         });
         
         const totalProductive = totalsByAge['15-24 Thn'] + totalsByAge['25-39 Thn'] + totalsByAge['40-54 Thn'] + totalsByAge['55-64 Thn'];
@@ -81,9 +80,12 @@ const sierMath = {
             if (!byKecamatan[row.kecamatan]) byKecamatan[row.kecamatan] = emptyAgeObject();
             
             ageLabels.forEach(label => {
-                const key = `usia${label.toLowerCase().replace(' thn', '').replace('+', '_plus').replace(/\s/g, '')}`;
-                target[label] += row[key] || 0;
-                byKecamatan[row.kecamatan][label] += row[key] || 0;
+                const key = `usia${label.toLowerCase().replace(' thn', '').replace('+', '_plus').replace(/\s/g, '').replace('-','_')}`;
+                const dataKey = (label === '65+ Thn') ? 'usia65_plus' : `usia${label.split(' ')[0]}`;
+                const dataValue = row[dataKey.replace('_','-')] || 0;
+                
+                target[label] += dataValue;
+                byKecamatan[row.kecamatan][label] += dataValue;
             });
         });
         return { ageLabels, byRing1, byRing2, byKecamatan };
@@ -91,7 +93,6 @@ const sierMath = {
     getIncomeAndMarketSummary() {
         if (typeof demographyData === 'undefined') return null;
         const estimatedIncomeData = demographyData.map(row => {
-            // FIX DI SINI JUGA: Gunakan bracket notation untuk konsistensi
             const dependent = row['usia0-14'] + row.usia65_plus;
             const lowIncome = row['usia15-24'];
             const productiveCore = row['usia25-39'] + row['usia40-54'] + row['usia55-64'];
@@ -113,10 +114,7 @@ const sierMath = {
         });
 
         const totalTargetByAge = demographyData.reduce((acc, row) => {
-            // FIX DI SINI JUGA: Gunakan bracket notation
-            acc.age25_39 += row['usia25-39']; 
-            acc.age40_54 += row['usia40-54']; 
-            acc.age55_64 += row['usia55-64'];
+            acc.age25_39 += row['usia25-39']; acc.age40_54 += row['usia40-54']; acc.age55_64 += row['usia55-64'];
             return acc;
         }, { age25_39: 0, age40_54: 0, age55_64: 0 });
 
@@ -311,7 +309,7 @@ const sierMath = {
 
         return {
             capex: { total: capexTotal },
-            pnl: { annualRevenue, annualCogs, annualOpex, grossProfit, ebitda, annualDepresiasi, ebt, tax, netProfit, cashFlowFromOps },
+            pnl: { annualRevenue, annualCogs, annualOpex, grossProfit, ebitda, annualDepreciation, ebt, tax, netProfit, cashFlowFromOps },
         };
     },
     getFinancialSummary(revenueMultiplier = 1, opexMultiplier = 1) {
