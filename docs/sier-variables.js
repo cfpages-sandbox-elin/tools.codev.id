@@ -63,14 +63,43 @@ const projectConfig = {
             }
         },
         // BIAYA INVESTASI (CAPEX)
-        capex: {
-            land_acquisition: 2000000000,
-            civil_construction: 1500000000,
-            building_main: 700000000,
-            equipment_sport: 20000000, // per bay
-            interior_finishing: 200000000,
-            pre_operational: 100000000,
-        },
+        capex_assumptions: {
+            reclamation: {
+                area_m2: 4000,
+                lake_depth_m: 4.0,
+                cost_per_m3: 350000,
+                sheet_pile_perimeter_m: 250,
+                cost_per_m_sheet_pile: 2500000
+            },
+            piling: {
+                points_count: 160,
+                length_per_point_m: 16,
+                cost_per_m_mini_pile: 275000,
+                lump_sum_pile_cap: 450000000
+            },
+            building: {
+                dr_bays_area_m2: 3204,
+                dr_bays_cost_per_m2: 2500000,
+                cafe_area_m2: 267,
+                cafe_cost_per_m2: 5000000
+            },
+            equipment: {
+                ball_tracker_bays_count: 12,
+                ball_tracker_cost_per_bay: 120000000,
+                ball_dispenser_system_lump_sum: 300000000,
+                bay_equipment_sets_count: 12,
+                bay_equipment_cost_per_set: 25000000,
+                floating_balls_count: 8000,
+                floating_balls_cost_per_ball: 20000,
+                ball_management_system_lump_sum: 200000000,
+                safety_net_area_m2: 2500,
+                safety_net_cost_per_m2: 150000
+            },
+            other_costs: {
+                mep_rate_of_building_cost: 0.25,
+                permit_design_rate_of_physical_cost: 0.08
+            }
+        }
         // BIAYA OPERASIONAL BULANAN (OPEX)
         opexMonthly: {
             salaries_wages: {

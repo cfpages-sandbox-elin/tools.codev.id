@@ -3,7 +3,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const helpers = {
         formatNumber(num) {
             if (num === null || num === undefined || isNaN(num)) return '0';
-            return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+            return num.toString().replace(/\b(\d+)(\.\d+)?\b/g, (match, p1, p2) => {
+                return p1.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.') + (p2 || '');
+            });
         },
         toBillion(num) {
             if (isNaN(num)) return '0 M';
@@ -12,9 +14,9 @@ document.addEventListener('DOMContentLoaded', () => {
         slovin(N, e) {
             return Math.ceil(N / (1 + N * e * e));
         },
-        tryToRender(fn) {
+        tryToRender(fn, context) {
             try {
-                fn();
+                fn.call(context);
             } catch (error) {
                 console.error(`Error saat merender bagian '${fn.name}':`, error);
             }
@@ -71,6 +73,116 @@ document.addEventListener('DOMContentLoaded', () => {
             return chartInstance;
         }
     };
+
+    function renderDrivingRangeCapexAnalysis() {
+        const container = document.getElementById('driving-range-capex-analysis');
+        if (!container) return;
+
+        // Pastikan kalkulatornya ada sebelum memanggil
+        if (!projectConfig.calculations._calculateDrCapex) {
+            console.error("_calculateDrCapex function is missing from projectConfig.calculations.");
+            return;
+        }
+
+        const results = projectConfig.calculations._calculateDrCapex();
+        const { scenario_a, scenario_b } = results;
+        
+        const createRow = (label, calculation, value, path = '') => {
+            let displayCalc = calculation;
+            let editControl = '';
+            if (path) {
+                const rawValue = projectConfig.calculations.getValueByPath(projectConfig, path);
+                const isRate = path.includes('_rate');
+                const displayValue = isRate ? `${(rawValue * 100).toFixed(1)}%` : helpers.formatNumber(rawValue);
+                
+                displayCalc = calculation.replace('...', `<span class="value-display font-semibold text-gray-700">${displayValue}</span>`);
+                editControl = `
+                    <input type="number" step="any" value="${rawValue}" data-path="${path}" class="value-input hidden w-32 p-1 border rounded shadow-sm">
+                    <a href="#" class="edit-icon text-gray-400 hover:text-blue-600 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">✎</a>
+                `;
+            }
+            return `<tr class="group"><td class="p-3">${label}</td><td class="p-3 text-gray-500 text-xs">${displayCalc}${editControl}</td><td class="p-3 text-right font-mono">${helpers.formatNumber(Math.round(value))}</td></tr>`;
+        };
+
+        const scenarioTableHtml = (title, data) => `
+            <div class="mb-10">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">${title}</h3>
+                <p class="text-gray-600 mb-6">${data.description}</p>
+                <div class="overflow-x-auto border rounded-lg">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-100"><tr><th class="p-3 text-left w-2/5">Komponen Biaya</th><th class="p-3 text-left w-2/5">Asumsi Perhitungan</th><th class="p-3 text-right w-1/5">Estimasi Biaya (Rp)</th></tr></thead>
+                        <tbody class="divide-y">
+                            ${data.htmlRows.join('')}
+                            <tr class="bg-gray-200 font-bold"><td class="p-3" colspan="2">Subtotal Biaya</td><td class="p-3 text-right font-mono">${helpers.formatNumber(Math.round(data.subtotal))}</td></tr>
+                            <tr class="bg-yellow-200 font-bold"><td class="p-3" colspan="2">Kontingensi (Dana Darurat) 10%</td><td class="p-3 text-right font-mono">${helpers.formatNumber(Math.round(data.contingency))}</td></tr>
+                            <tr class="bg-amber-400 text-white font-bold text-lg"><td class="p-3" colspan="2">Total Estimasi Biaya</td><td class="p-3 text-right font-mono">${helpers.formatNumber(Math.round(data.total))}</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>`;
+
+        container.innerHTML = `
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-amber-500 pl-4">Analisis Estimasi Biaya Investasi (CapEx): Driving Range di Atas Danau</h2>
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <div class="mb-8 pb-6 border-b">
+                    <h3 class="text-xl font-semibold mb-3 text-gray-800">Metodologi dan Asumsi Kunci</h3>
+                    <p class="text-gray-600 mb-4">Analisis ini bertujuan untuk memberikan estimasi biaya investasi awal (CapEx) untuk pembangunan fasilitas Driving Range di atas danau SIER berdasarkan dua skenario teknis. Estimasi ini menggunakan data luas dari gambar layout yang disediakan dan benchmark harga pasar konstruksi di Surabaya. <strong>Semua angka adalah estimasi untuk perencanaan dan memerlukan studi rekayasa detail untuk akurasi final.</strong></p>
+                </div>
+                ${scenarioTableHtml('Skenario A: Konstruksi dengan Reklamasi Sebagian Danau', scenario_a)}
+                ${scenarioTableHtml('Skenario B: Konstruksi Apung dengan Pondasi Pancang', scenario_b)}
+                <div class="mt-12 pt-6 border-t">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Ringkasan Perbandingan & Analisis Kualitatif</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="p-6 bg-gray-100 rounded-lg text-center">
+                            <h4 class="text-lg font-semibold">Skenario A: Reklamasi</h4>
+                            <p class="text-4xl font-bold text-red-600 my-2">~ Rp ${helpers.formatNumber(Math.round(scenario_a.total/1000000))} Juta</p>
+                        </div>
+                        <div class="p-6 bg-gray-100 rounded-lg text-center border-4 border-green-500">
+                            <h4 class="text-lg font-semibold">Skenario B: Pondasi Pancang</h4>
+                             <p class="text-4xl font-bold text-green-600 my-2">~ Rp ${helpers.formatNumber(Math.round(scenario_b.total/1000000))} Juta</p>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    function renderEquipmentCapexDetail() {
+        const container = document.getElementById('equipment-capex-detail');
+        if (!container) return;
+        
+        if (!projectConfig.calculations._calculateDrCapex) return;
+
+        const results = projectConfig.calculations._calculateDrCapex();
+        const { equipment_detail } = results;
+
+        const createRow = (category, component, assumption, value, path = '') => {
+             let displayAssumption = assumption;
+            let editControl = '';
+            if (path) {
+                const rawValue = projectConfig.calculations.getValueByPath(projectConfig, path);
+                const displayValue = helpers.formatNumber(rawValue);
+                displayAssumption = assumption.replace('...', `<span class="value-display font-semibold text-gray-700">${displayValue}</span>`);
+                editControl = `
+                    <input type="number" step="any" value="${rawValue}" data-path="${path}" class="value-input hidden w-32 p-1 border rounded shadow-sm">
+                    <a href="#" class="edit-icon text-gray-400 hover:text-blue-600 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">✎</a>
+                `;
+            }
+            return `<tr class="group"><td class="p-3 align-top">${category}</td><td class="p-3 align-top">${component}</td><td class="p-3 align-top text-gray-500 text-xs">${displayAssumption}${editControl}</td><td class="p-3 text-right align-top font-mono">${helpers.formatNumber(Math.round(value))}</td></tr>`;
+        };
+        
+        container.innerHTML = `
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-indigo-600 pl-4">Rincian Detail Biaya Investasi Peralatan, Fasilitas & Teknologi (Driving Range)</h2>
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                 <p class="text-gray-600 mb-6">Analisis ini memberikan rincian dari komponen "Peralatan & Fasilitas". Pemecahan biaya ini bertujuan untuk memberikan transparansi dan justifikasi atas setiap item investasi yang diperlukan untuk menciptakan sebuah driving range modern dan berdaya saing tinggi.</p>
+                <div class="overflow-x-auto border rounded-lg">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-100"><tr><th class="p-3 text-left w-1/4">Kategori</th><th class="p-3 text-left w-1/3">Komponen</th><th class="p-3 text-left w-1/4">Asumsi</th><th class="p-3 text-right w-1/6">Biaya (Rp)</th></tr></thead>
+                        <tbody class="divide-y">${equipment_detail.htmlRows.map(row => createRow(row.category, row.component, row.calculation, row.value, row.path)).join('')}</tbody>
+                        <tfoot><tr class="bg-indigo-200 font-bold text-indigo-900"><td class="p-3" colspan="3">Total Biaya Peralatan, Fasilitas & Teknologi</td><td class="p-3 text-right font-mono text-lg">${helpers.formatNumber(Math.round(equipment_detail.total))}</td></tr></tfoot>
+                    </table>
+                </div>
+            </div>`;
+    }
 
     function renderFinancialAnalysis() {
         const drContainer = document.getElementById('driving-range-financial-analysis');
@@ -808,6 +920,8 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("Updating all visuals...");
         // Daftar ini harus berisi nama semua fungsi render Anda
         const renderFunctions = [
+            renderDrivingRangeCapexAnalysis,
+            renderEquipmentCapexDetail,
             renderDemographyAndCharts,
             renderDetailedDemography,
             renderIncomeAndMarketAnalysis,
@@ -830,70 +944,62 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function setupEventListeners() {
-        const assumptionsContainer = document.getElementById('assumptions-container');
-        if (!assumptionsContainer) return;
-        
-        const getValueByPath = (obj, path) => path.split('.').reduce((o, k) => (o && o[k] !== 'undefined') ? o[k] : undefined, obj);
-        const setValueByPath = (obj, path, value) => {
-            const keys = path.split('.');
-            const lastKey = keys.pop();
-            const target = keys.reduce((o, k) => o[k] = o[k] || {}, obj);
-            target[lastKey] = value;
+        const mainContainer = document.body; // Dengar event dari seluruh body
+
+        const handleInputFinish = (inputField) => {
+            const path = inputField.dataset.path;
+            const value = parseFloat(inputField.value);
+            
+            if (path && !isNaN(value)) {
+                // Gunakan fungsi setValueByPath yang ada di object kalkulasi
+                projectConfig.calculations.setValueByPath(projectConfig, path, value);
+                updateAllVisuals(); // Pemicu utama untuk render ulang semua
+            } else {
+                 // Jika input tidak valid, panggil updateAllVisuals untuk mereset ke nilai lama
+                 updateAllVisuals();
+            }
         };
 
-        assumptionsContainer.addEventListener('click', (e) => {
+        mainContainer.addEventListener('click', (e) => {
             if (e.target.classList.contains('edit-icon')) {
                 e.preventDefault();
-                const container = e.target.parentElement;
-                container.querySelector('.value-display').classList.add('hidden');
+                const container = e.target.closest('.group');
+                if (!container) return;
+
+                container.querySelector('.value-display')?.classList.add('hidden');
                 e.target.classList.add('hidden');
                 const inputField = container.querySelector('.value-input');
-                inputField.classList.remove('hidden');
-                inputField.focus();
-                inputField.select();
+                if(inputField) {
+                    inputField.classList.remove('hidden');
+                    inputField.focus();
+                    inputField.select();
+                }
             }
         });
 
-        const handleInputFinish = (inputField) => {
-            const newValue = parseFloat(inputField.value);
-            const targetPath = inputField.dataset.path;
-            
-            if (!isNaN(newValue)) {
-                setValueByPath(projectConfig, targetPath, newValue);
-                updateAllVisuals(); // Pemicu utama
-            } else {
-                 // Jika input tidak valid, kembalikan seperti semula
-                const container = inputField.parentElement;
-                inputField.classList.add('hidden');
-                container.querySelector('.value-display').classList.remove('hidden');
-                container.querySelector('.edit-icon').classList.remove('hidden');
-            }
-        };
-
-        assumptionsContainer.addEventListener('change', (e) => {
+        mainContainer.addEventListener('change', (e) => {
             if (e.target.classList.contains('value-input')) {
                 handleInputFinish(e.target);
             }
         });
         
-        assumptionsContainer.addEventListener('blur', (e) => {
+        mainContainer.addEventListener('blur', (e) => {
              if (e.target.classList.contains('value-input')) {
                 handleInputFinish(e.target);
             }
-        }, true); // Gunakan capture phase untuk menangani blur
+        }, true); // Gunakan capture phase
 
-        assumptionsContainer.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && e.target.classList.contains('value-input')) {
-                e.preventDefault();
-                handleInputFinish(e.target);
-            } else if (e.key === 'Escape' && e.target.classList.contains('value-input')) {
-                e.preventDefault();
-                // Batalkan edit
-                const container = e.target.parentElement;
-                e.target.value = getValueByPath(projectConfig, e.target.dataset.path); // reset value
-                e.target.classList.add('hidden');
-                container.querySelector('.value-display').classList.remove('hidden');
-                container.querySelector('.edit-icon').classList.remove('hidden');
+        mainContainer.addEventListener('keydown', (e) => {
+            if (e.target.classList.contains('value-input')) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.target.blur(); // Panggil blur untuk memicu handleInputFinish
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    // Batalkan edit & reset
+                    e.target.value = projectConfig.calculations.getValueByPath(projectConfig, e.target.dataset.path);
+                    e.target.blur();
+                }
             }
         });
     }
