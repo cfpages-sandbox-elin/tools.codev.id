@@ -331,6 +331,72 @@
             </div>
         </section>
 
+        <!-- Section Estimasi Sampel Survei -->
+        <section id="survey-sample" class="mt-12">
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-purple-600 pl-4">Estimasi Sampel Survei Pasar</h2>
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <p class="text-gray-600 mb-4">
+                    Estimasi jumlah responden yang dibutuhkan menggunakan <strong>Rumus Slovin: n = N / (1 + N * e²)</strong>, berdasarkan tingkat kesalahan (margin of error) yang bisa diterima.
+                </p>
+
+                <!-- Bagian untuk Populasi Total -->
+                <div class="mt-6">
+                    <h3 class="font-semibold text-lg text-gray-800 mb-3">1. Berdasarkan Populasi Total</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Card 10% -->
+                        <div class="border border-orange-200 p-4 rounded-lg text-center bg-orange-50">
+                            <h4 class="font-semibold text-gray-700">Margin of Error 10%</h4>
+                            <p class="text-xs text-gray-500 mb-2">(Tingkat kepercayaan 90%)</p>
+                            <p id="sampleSize10" class="text-3xl font-bold text-orange-600">0</p>
+                        </div>
+                        <!-- Card 5% -->
+                        <div class="border border-purple-200 p-4 rounded-lg text-center bg-purple-50">
+                            <h4 class="font-semibold text-gray-700">Margin of Error 5%</h4>
+                            <p class="text-xs text-gray-500 mb-2">(Tingkat kepercayaan 95%)</p>
+                            <p id="sampleSize5" class="text-3xl font-bold text-purple-700">0</p>
+                        </div>
+                        <!-- Card 3% -->
+                        <div class="border border-blue-200 p-4 rounded-lg text-center bg-blue-50">
+                            <h4 class="font-semibold text-gray-700">Margin of Error 3%</h4>
+                            <p class="text-xs text-gray-500 mb-2">(Tingkat kepercayaan 97%)</p>
+                            <p id="sampleSize3" class="text-3xl font-bold text-blue-700">0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bagian untuk Rincian per Ring -->
+                <div class="mt-8 pt-6 border-t border-gray-200">
+                    <h3 class="font-semibold text-lg text-gray-800 mb-3">2. Berdasarkan Klasifikasi Ring (untuk Survei Terpisah)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Card untuk Ring 1 -->
+                        <div class="border border-green-200 p-4 rounded-lg bg-green-50">
+                            <h4 class="font-bold text-green-800 text-center">Sampel untuk RING 1</h4>
+                            <p id="totalPopRing1" class="text-xs text-gray-500 text-center mb-3">(Total Populasi N = 0)</p>
+                            <div class="flex justify-around items-center">
+                                <div class="text-center"><p class="text-sm font-semibold text-gray-600">Error 10%</p><p id="sampleSizeRing1_10" class="text-2xl font-bold text-green-700">0</p></div>
+                                <div class="text-center"><p class="text-sm font-semibold text-gray-600">Error 5%</p><p id="sampleSizeRing1_5" class="text-2xl font-bold text-green-700">0</p></div>
+                                <div class="text-center"><p class="text-sm font-semibold text-gray-600">Error 3%</p><p id="sampleSizeRing1_3" class="text-2xl font-bold text-green-700">0</p></div>
+                            </div>
+                        </div>
+                        <!-- Card untuk Ring 2 -->
+                        <div class="border border-yellow-200 p-4 rounded-lg bg-yellow-50">
+                            <h4 class="font-bold text-yellow-800 text-center">Sampel untuk RING 2</h4>
+                            <p id="totalPopRing2" class="text-xs text-gray-500 text-center mb-3">(Total Populasi N = 0)</p>
+                            <div class="flex justify-around items-center">
+                                <div class="text-center"><p class="text-sm font-semibold text-gray-600">Error 10%</p><p id="sampleSizeRing2_10" class="text-2xl font-bold text-yellow-700">0</p></div>
+                                <div class="text-center"><p class="text-sm font-semibold text-gray-600">Error 5%</p><p id="sampleSizeRing2_5" class="text-2xl font-bold text-yellow-700">0</p></div>
+                                <div class="text-center"><p class="text-sm font-semibold text-gray-600">Error 3%</p><p id="sampleSizeRing2_3" class="text-2xl font-bold text-yellow-700">0</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="mt-6 text-sm text-gray-500 italic">
+                    <strong>Catatan:</strong> Memilih margin of error yang lebih kecil (misal: 3%) akan memberikan hasil yang lebih presisi, namun membutuhkan jumlah responden yang lebih banyak. Pilihlah sesuai dengan kebutuhan dan budget riset Anda.
+                </p>
+            </div>
+        </section>
+
         <!-- Mulai: Section Analisis Hasil Survei -->
         <section id="survey-analysis" class="mt-12">
             <header class="text-center mb-10">
@@ -1399,6 +1465,312 @@
         </section>
         <!-- Selesai: Section Analisis Keuangan Proyek Gabungan -->
 
+        <section id="business-strategy-analysis" class="mt-12">
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-rose-600 pl-4">Analisis Bisnis & Strategi: Lapangan Padel</h2>
+            
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-gray-700">1. Analisis Lanskap Kompetitor</h3>
+                <p class="text-gray-600 mb-4">Memahami kompetitor bukan hanya tentang mengetahui lokasi mereka, tetapi juga bagaimana mereka menarik dan melayani pelanggan. Analisis mendalam perlu mencakup:</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <!-- Kehadiran Online -->
+                    <div class="bg-gray-50 p-4 rounded-lg border">
+                        <h4 class="font-semibold text-gray-800">a. Kehadiran & Kemudahan Online</h4>
+                        <ul class="list-disc pl-5 mt-2 text-sm text-gray-600 space-y-1">
+                            <li><strong>Media Sosial (Instagram):</strong> Seberapa aktif mereka? Apakah mereka memposting konten menarik (turnamen, promo, tips bermain)? Ini adalah etalase utama mereka.</li>
+                            <li><strong>Platform Booking:</strong> Apakah pelanggan bisa memesan dan membayar secara online (misal via website, aplikasi seperti Ayo Indonesia, atau bahkan WhatsApp)? Proses yang rumit adalah penghalang besar.</li>
+                            <li><strong>Google Maps & Reviews:</strong> Apa kata pelanggan? Rating yang tinggi dan ulasan positif adalah bukti sosial yang kuat.</li>
+                        </ul>
+                    </div>
+                    <!-- Operasional -->
+                    <div class="bg-gray-50 p-4 rounded-lg border">
+                        <h4 class="font-semibold text-gray-800">b. Jam Operasional & Harga</h4>
+                         <ul class="list-disc pl-5 mt-2 text-sm text-gray-600 space-y-1">
+                            <li><strong>Jam Buka-Tutup:</strong> Umumnya kompetitor beroperasi dari pagi (06:00) hingga malam (24:00). Ini adalah standar industri saat ini.</li>
+                            <li><strong>Struktur Harga:</strong> Apakah harga flat sepanjang hari, atau mereka menggunakan *dynamic pricing* (lebih murah di jam sepi, lebih mahal di jam sibuk/weekend)?</li>
+                             <li><strong>Penawaran Tambahan:</strong> Apakah mereka menyediakan pelatih, penyewaan alat, atau fasilitas F&B yang menarik?</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-semibold mb-4 pt-6 border-t mt-8 text-gray-700">2. Model Break-Even Point (BEP) - Studi Kasus 4 Lapangan</h3>
+                <p class="text-gray-600 mb-2">Untuk memahami kelayakan finansial, kita bisa membuat model BEP berdasarkan asumsi. Ini membantu menetapkan target operasional minimum.</p>
+                <div class="p-3 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 text-sm mb-4">
+                    <strong>PENTING:</strong> Angka di bawah ini adalah <strong>asumsi ilustratif</strong> untuk tujuan pemodelan dan dapat disesuaikan dengan rencana bisnis aktual.
+                </div>
+
+                <!-- Tabel Asumsi BEP -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+                    <div>
+                        <h4 class="font-semibold text-lg text-gray-800 mb-2">Asumsi Biaya & Pendapatan</h4>
+                        <table class="w-full text-sm">
+                           <tbody class="align-top">
+                               <tr class="border-b"><td class="py-2 font-medium">Harga Sewa Rata-rata (P)</td><td class="py-2 text-right">Rp 200.000 / jam</td></tr>
+                               <tr class="border-b"><td class="py-2 font-medium">Biaya Variabel (VC)</td><td class="py-2 text-right">Rp 15.000 / jam <span class="block text-xs text-gray-500">(Listrik, air, maintenance)</span></td></tr>
+                               <tr class="border-b"><td class="py-2 font-medium">Margin Kontribusi</td><td class="py-2 text-right font-bold">Rp 185.000 / jam</td></tr>
+                               <tr class="border-b"><td class="py-2 font-medium">Biaya Tetap Bulanan (FC)</td><td class="py-2 text-right font-bold">Rp 75.000.000 <span class="block text-xs text-gray-500">(Gaji, sewa lahan, marketing, dll)</span></td></tr>
+                           </tbody>
+                        </table>
+                    </div>
+                     <div>
+                        <h4 class="font-semibold text-lg text-gray-800 mb-2">Hasil Kalkulasi BEP</h4>
+                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 text-center">
+                            <p class="text-sm text-gray-600">Jam Sewa Minimum per Bulan</p>
+                            <p class="text-3xl font-bold text-blue-700">406 Jam</p>
+                            <p class="text-sm text-gray-600 mt-3">Target per Hari (untuk 4 Lapangan)</p>
+                            <p class="text-2xl font-bold text-blue-700">~13.5 Jam Sewa</p>
+                            <p class="text-sm text-gray-600 mt-1">(Rata-rata ~3.4 jam per lapangan per hari)</p>
+                        </div>
+                    </div>
+                </div>
+                 <p class="mt-4 text-sm text-gray-600">
+                    <strong>Interpretasi:</strong> Target untuk mencapai titik impas adalah menjual total 13-14 jam sewa setiap hari, yang tersebar di 4 lapangan. Ini adalah target yang sangat realistis, terutama jika jam sibuk (16:00 - 23:00) dapat dimaksimalkan.
+                </p>
+
+
+                <h3 class="text-xl font-semibold mb-4 pt-6 border-t mt-8 text-gray-700">3. Strategi Akselerasi BEP dan Peningkatan Profitabilitas</h3>
+                <p class="text-gray-600 mb-4">Mencapai BEP adalah target minimum. Untuk mempercepatnya dan memaksimalkan profit, diperlukan strategi proaktif. Berikut adalah beberapa opsi:</p>
+
+                <div class="space-y-4">
+                    <!-- Strategi 1 -->
+                    <div class="p-4 border rounded-lg hover:shadow-lg transition-shadow">
+                        <h4 class="font-semibold text-gray-800">a. Operasional 24 Jam: High-Risk, High-Reward</h4>
+                        <p class="text-sm text-gray-600 mt-1"><strong>Konsep:</strong> Menjadi satu-satunya lapangan padel 24 jam di area tersebut untuk menangkap pasar pekerja shift di kawasan industri SIER dan kaum "nokturnal".</p>
+                        <ul class="text-sm mt-2 grid grid-cols-1 md:grid-cols-2 gap-x-4">
+                            <li class="flex items-start"><span class="text-green-500 mr-2">✓</span> <strong>Keunggulan:</strong> Diferensiasi pasar yang kuat, utilisasi aset maksimal, potensi pendapatan tambahan di jam subuh.</li>
+                            <li class="flex items-start"><span class="text-red-500 mr-2">✗</span> <strong>Kelemahan:</strong> Biaya operasional lebih tinggi (gaji shift malam, keamanan), permintaan mungkin sangat rendah antara jam 02:00-05:00.</li>
+                        </ul>
+                         <p class="text-xs text-blue-600 mt-2 p-2 bg-blue-50 rounded"><strong>Rekomendasi:</strong> Uji coba dengan memperpanjang jam operasional hingga pukul 02:00 terlebih dahulu. Analisis data permintaan sebelum berkomitmen penuh ke 24 jam.</p>
+                    </div>
+
+                    <!-- Strategi 2 -->
+                    <div class="p-4 border rounded-lg hover:shadow-lg transition-shadow">
+                        <h4 class="font-semibold text-gray-800">b. Dynamic Pricing & Membership (Strategi Cerdas)</h4>
+                        <p class="text-sm text-gray-600 mt-1"><strong>Konsep:</strong> Mengoptimalkan pendapatan dari setiap jam yang tersedia dan membangun loyalitas pelanggan.</p>
+                        <ul class="text-sm mt-2 space-y-1">
+                           <li><strong>Dynamic Pricing:</strong> Terapkan harga lebih murah untuk jam sepi (misal: 09:00-15:00 di hari kerja) untuk menarik mahasiswa atau pekerja fleksibel. Terapkan harga premium di jam sibuk.</li>
+                           <li><strong>Membership & Paket:</strong> Tawarkan paket bulanan/tahunan dengan benefit (prioritas booking, diskon F&B). Ini menciptakan arus kas yang stabil dan mengikat pelanggan.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Strategi 3 -->
+                    <div class="p-4 border rounded-lg hover:shadow-lg transition-shadow">
+                        <h4 class="font-semibold text-gray-800">c. Fokus pada Komunitas & Kemitraan Korporat</h4>
+                        <p class="text-sm text-gray-600 mt-1"><strong>Konsep:</strong> Mengubah lapangan dari sekadar tempat sewa menjadi sebuah "hub" sosial dan B2B.</p>
+                        <ul class="text-sm mt-2 space-y-1">
+                           <li><strong>Aktivasi Komunitas:</strong> Adakan turnamen rutin, liga internal, dan sesi coaching. Ini akan mengisi jadwal secara konsisten dan menciptakan word-of-mouth.</li>
+                           <li><strong>Kemitraan Korporat:</strong> Tawarkan paket khusus untuk perusahaan di SIER dan sekitarnya untuk acara *team building* atau jadwal rutin karyawan. Ini cara efektif untuk mengisi slot di hari kerja.</li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Mulai: Section Analisis Estimasi Biaya Investasi Driving Range -->
+        <section id="driving-range-capex-analysis" class="mt-12">
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-amber-500 pl-4">Analisis Estimasi Biaya Investasi (CapEx): Driving Range di Atas Danau</h2>
+            
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                
+                <!-- Metodologi dan Asumsi -->
+                <div class="mb-8 pb-6 border-b">
+                    <h3 class="text-xl font-semibold mb-3 text-gray-800">Metodologi dan Asumsi Kunci</h3>
+                    <p class="text-gray-600 mb-4">Analisis ini bertujuan untuk memberikan estimasi biaya investasi awal (CapEx) untuk pembangunan fasilitas Driving Range di atas danau SIER berdasarkan dua skenario teknis. Estimasi ini menggunakan data luas dari gambar layout yang disediakan dan benchmark harga pasar konstruksi di Surabaya. <strong>Semua angka adalah estimasi untuk perencanaan dan memerlukan studi rekayasa detail untuk akurasi final.</strong></p>
+                    <div class="p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 text-sm space-y-2">
+                        <p><strong>Asumsi Umum:</strong></p>
+                        <ul class="list-disc pl-5">
+                            <li><strong>Kedalaman Danau:</strong> Karena tidak ada data spesifik, diasumsikan kedalaman rata-rata danau adalah <strong>4,0 meter</strong>. Ini adalah asumsi krusial untuk perhitungan volume reklamasi dan panjang tiang pancang.</li>
+                            <li><strong>Area Pembangunan di Atas Air:</strong> Berdasarkan layout zonasi, area yang akan dibangun di atas danau mencakup Driving Range Bays (12 unit) dan Kafe. Total area struktur yang akan direklamasi/dipancang adalah sekitar <strong>4,000 m²</strong> (3,204 m² untuk DR + 267 m² untuk Kafe + ~500 m² untuk sirkulasi & struktur pendukung).</li>
+                            <li><strong>Bola Golf Apung:</strong> Proyek menggunakan bola golf apung, sehingga sebagian besar danau tetap menjadi perairan sebagai area target.</li>
+                            <li><strong>Fasilitas Darat:</strong> Area parkir (757.5 m²) diasumsikan dibangun di atas tanah yang sudah ada dan biayanya terpisah.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Skenario A: Reklamasi Sebagian Danau -->
+                <div class="mb-10">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Skenario A: Konstruksi dengan Reklamasi Sebagian Danau</h3>
+                    <p class="text-gray-600 mb-6">Skenario ini melibatkan pengurukan sebagian danau untuk menciptakan daratan baru sebagai landasan konstruksi. Ini bersifat permanen dan memiliki dampak lingkungan yang signifikan.</p>
+                    
+                    <div class="overflow-x-auto border rounded-lg">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="p-3 text-left w-2/5">Komponen Biaya</th>
+                                    <th class="p-3 text-left w-2/5">Asumsi Perhitungan</th>
+                                    <th class="p-3 text-right w-1/5">Estimasi Biaya (Rp)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y">
+                                <tr class="bg-gray-50 font-semibold"><td colspan="3" class="p-2 px-3">1. Pekerjaan Persiapan & Reklamasi</td></tr>
+                                <tr>
+                                    <td class="p-3">Pekerjaan Pengurukan (Cut & Fill)</td>
+                                    <td class="p-3">4,000 m² × 4,0 m kedalaman = 16,000 m³ @ Rp 350.000/m³</td>
+                                    <td class="p-3 text-right font-mono">5.600.000.000</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3">Dinding Penahan Tanah (Sheet Pile)</td>
+                                    <td class="p-3">Estimasi perimeter 250 m @ Rp 2.500.000/m</td>
+                                    <td class="p-3 text-right font-mono">625.000.000</td>
+                                </tr>
+                                <tr class="bg-gray-50 font-semibold"><td colspan="3" class="p-2 px-3">2. Pekerjaan Konstruksi Bangunan</td></tr>
+                                 <tr>
+                                    <td class="p-3">Struktur Driving Range Bays (12 unit)</td>
+                                    <td class="p-3">3,204 m² @ Rp 2.500.000/m² (Struktur Baja & Atap)</td>
+                                    <td class="p-3 text-right font-mono">8.010.000.000</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3">Struktur Bangunan Kafe & Servis</td>
+                                    <td class="p-3">267 m² @ Rp 5.000.000/m² (Struktur Beton & Finishing)</td>
+                                    <td class="p-3 text-right font-mono">1.335.000.000</td>
+                                </tr>
+                                 <tr class="bg-gray-50 font-semibold"><td colspan="3" class="p-2 px-3">3. Pekerjaan Peralatan & Fasilitas</td></tr>
+                                 <tr>
+                                    <td class="p-3">Peralatan Driving Range</td>
+                                    <td class="p-3">Matras, sekat, dispenser & bola apung, perahu kolektor</td>
+                                    <td class="p-3 text-right font-mono">1.500.000.000</td>
+                                 </tr>
+                                 <tr>
+                                    <td class="p-3">Jaring Pengaman (Safety Net)</td>
+                                    <td class="p-3">Estimasi 2,500 m² @ Rp 150.000/m²</td>
+                                    <td class="p-3 text-right font-mono">375.000.000</td>
+                                 </tr>
+                                <tr class="bg-gray-50 font-semibold"><td colspan="3" class="p-2 px-3">4. Pekerjaan MEP, Arsitektural, dan Lain-lain</td></tr>
+                                <tr>
+                                    <td class="p-3">Mekanikal, Elektrikal, Plumbing (MEP)</td>
+                                    <td class="p-3">25% dari biaya konstruksi bangunan</td>
+                                    <td class="p-3 text-right font-mono">2.336.250.000</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3">Biaya Perizinan, Desain & Pengawasan</td>
+                                    <td class="p-3">8% dari total biaya fisik</td>
+                                    <td class="p-3 text-right font-mono">1.582.500.000</td>
+                                </tr>
+                                <tr class="bg-gray-200 font-bold">
+                                    <td class="p-3" colspan="2">Subtotal Biaya</td>
+                                    <td class="p-3 text-right font-mono">21.363.750.000</td>
+                                </tr>
+                                <tr class="bg-yellow-200 font-bold">
+                                    <td class="p-3" colspan="2">Kontingensi (Dana Darurat) 10%</td>
+                                    <td class="p-3 text-right font-mono">2.136.375.000</td>
+                                </tr>
+                                <tr class="bg-amber-400 text-white font-bold text-lg">
+                                    <td class="p-3" colspan="2">Total Estimasi Biaya Skenario A</td>
+                                    <td class="p-3 text-right font-mono">23.500.125.000</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Skenario B: Pondasi Pancang -->
+                <div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Skenario B: Konstruksi Apung dengan Pondasi Pancang</h3>
+                    <p class="text-gray-600 mb-6">Skenario ini tidak menguruk danau, melainkan membangun struktur di atasnya dengan menggunakan pondasi tiang pancang (piling). Skenario ini lebih ramah lingkungan namun memiliki tantangan teknis tersendiri.</p>
+
+                    <div class="overflow-x-auto border rounded-lg">
+                         <table class="w-full text-sm">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="p-3 text-left w-2/5">Komponen Biaya</th>
+                                    <th class="p-3 text-left w-2/5">Asumsi Perhitungan</th>
+                                    <th class="p-3 text-right w-1/5">Estimasi Biaya (Rp)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y">
+                                <tr class="bg-gray-50 font-semibold"><td colspan="3" class="p-2 px-3">1. Pekerjaan Pondasi & Struktur Bawah</td></tr>
+                                <tr>
+                                    <td class="p-3">Pekerjaan Tiang Pancang (Mini Pile)</td>
+                                    <td class="p-3">160 titik × 16 m/titik = 2,560 m @ Rp 275.000/m</td>
+                                    <td class="p-3 text-right font-mono">704.000.000</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3">Pekerjaan Pile Cap & Tie Beam</td>
+                                    <td class="p-3">Struktur beton penghubung antar tiang pancang</td>
+                                    <td class="p-3 text-right font-mono">450.000.000</td>
+                                </tr>
+                                <tr class="bg-gray-50 font-semibold"><td colspan="3" class="p-2 px-3">2. Pekerjaan Konstruksi Bangunan (Sama dengan Skenario A)</td></tr>
+                                 <tr>
+                                    <td class="p-3">Struktur Driving Range Bays (12 unit)</td>
+                                    <td class="p-3">3,204 m² @ Rp 2.500.000/m²</td>
+                                    <td class="p-3 text-right font-mono">8.010.000.000</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3">Struktur Bangunan Kafe & Servis</td>
+                                    <td class="p-3">267 m² @ Rp 5.000.000/m²</td>
+                                    <td class="p-3 text-right font-mono">1.335.000.000</td>
+                                </tr>
+                                 <tr class="bg-gray-50 font-semibold"><td colspan="3" class="p-2 px-3">3. Pekerjaan Peralatan & Fasilitas (Sama dengan Skenario A)</td></tr>
+                                 <tr>
+                                    <td class="p-3">Peralatan Driving Range</td>
+                                    <td class="p-3">Matras, sekat, dispenser & bola apung, perahu kolektor</td>
+                                    <td class="p-3 text-right font-mono">1.500.000.000</td>
+                                 </tr>
+                                 <tr>
+                                    <td class="p-3">Jaring Pengaman (Safety Net)</td>
+                                    <td class="p-3">Estimasi 2,500 m² @ Rp 150.000/m²</td>
+                                    <td class="p-3 text-right font-mono">375.000.000</td>
+                                 </tr>
+                                <tr class="bg-gray-50 font-semibold"><td colspan="3" class="p-2 px-3">4. Pekerjaan MEP, Arsitektural, dan Lain-lain</td></tr>
+                                <tr>
+                                    <td class="p-3">Mekanikal, Elektrikal, Plumbing (MEP)</td>
+                                    <td class="p-3">25% dari biaya konstruksi bangunan</td>
+                                    <td class="p-3 text-right font-mono">2.336.250.000</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3">Biaya Perizinan, Desain & Pengawasan</td>
+                                    <td class="p-3">8% dari total biaya fisik</td>
+                                    <td class="p-3 text-right font-mono">1.176.820.000</td>
+                                </tr>
+                                <tr class="bg-gray-200 font-bold">
+                                    <td class="p-3" colspan="2">Subtotal Biaya</td>
+                                    <td class="p-3 text-right font-mono">15.887.070.000</td>
+                                </tr>
+                                <tr class="bg-yellow-200 font-bold">
+                                    <td class="p-3" colspan="2">Kontingensi (Dana Darurat) 10%</td>
+                                    <td class="p-3 text-right font-mono">1.588.707.000</td>
+                                </tr>
+                                <tr class="bg-amber-400 text-white font-bold text-lg">
+                                    <td class="p-3" colspan="2">Total Estimasi Biaya Skenario B</td>
+                                    <td class="p-3 text-right font-mono">17.475.777.000</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Ringkasan Perbandingan -->
+                <div class="mt-12 pt-6 border-t">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Ringkasan Perbandingan & Analisis Kualitatif</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="p-6 bg-gray-100 rounded-lg text-center">
+                            <h4 class="text-lg font-semibold">Skenario A: Reklamasi</h4>
+                            <p class="text-4xl font-bold text-red-600 my-2">~ Rp 23,5 Miliar</p>
+                            <ul class="text-sm text-left list-disc pl-5 space-y-1">
+                                <li><strong>Pro:</strong> Menciptakan lahan darat yang stabil dan konvensional.</li>
+                                <li><strong>Kontra:</strong> Biaya awal sangat tinggi, dampak lingkungan masif, dan memicu kewajiban kompensasi RTH yang kompleks dan mahal.</li>
+                            </ul>
+                        </div>
+                        <div class="p-6 bg-gray-100 rounded-lg text-center border-4 border-green-500">
+                            <h4 class="text-lg font-semibold">Skenario B: Pondasi Pancang</h4>
+                             <p class="text-4xl font-bold text-green-600 my-2">~ Rp 17,5 Miliar</p>
+                            <ul class="text-sm text-left list-disc pl-5 space-y-1">
+                                <li><strong>Pro:</strong> Biaya investasi awal jauh lebih rendah, dampak terhadap ekosistem danau lebih kecil, dan berpotensi menghindari/mengurangi kewajiban kompensasi RTH.</li>
+                                <li><strong>Kontra:</strong> Memerlukan desain rekayasa yang lebih kompleks, perawatan struktur di atas air bisa lebih mahal dalam jangka panjang.</li>
+                            </ul>
+                        </div>
+                    </div>
+                     <div class="mt-6 p-4 bg-teal-50 border-l-4 border-teal-500 text-teal-800">
+                        <h4 class="font-bold">Rekomendasi Awal</h4>
+                        <p>Secara finansial, <strong>Skenario B (Pondasi Pancang)</strong> jelas lebih unggul karena efisiensi biaya investasi awal yang signifikan (hemat ~Rp 6 Miliar). Dari perspektif legal dan lingkungan, skenario ini juga jauh lebih aman karena meminimalkan dampak permanen terhadap danau sebagai RTH, sehingga mengurangi risiko dan kompleksitas proses perizinan terkait kompensasi. Skenario B direkomendasikan untuk studi kelayakan teknis lebih lanjut.</p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+        <!-- Selesai: Section Analisis Estimasi Biaya Investasi Driving Range -->
+
         <!-- Mulai: Section Analisis Risiko & Strategi Mitigasi (Disempurnakan) -->
         <section id="risk-analysis" class="mt-12">
             <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-red-600 pl-4">Analisis Risiko & Strategi Mitigasi</h2>
@@ -1661,174 +2033,6 @@
             </div>
         </section>
         <!-- Selesai: Section Analisis PESTEL -->
-
-        <section id="business-strategy-analysis" class="mt-12">
-            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-rose-600 pl-4">Analisis Bisnis & Strategi: Lapangan Padel</h2>
-            
-            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-                <h3 class="text-xl font-semibold mb-4 text-gray-700">1. Analisis Lanskap Kompetitor</h3>
-                <p class="text-gray-600 mb-4">Memahami kompetitor bukan hanya tentang mengetahui lokasi mereka, tetapi juga bagaimana mereka menarik dan melayani pelanggan. Analisis mendalam perlu mencakup:</p>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <!-- Kehadiran Online -->
-                    <div class="bg-gray-50 p-4 rounded-lg border">
-                        <h4 class="font-semibold text-gray-800">a. Kehadiran & Kemudahan Online</h4>
-                        <ul class="list-disc pl-5 mt-2 text-sm text-gray-600 space-y-1">
-                            <li><strong>Media Sosial (Instagram):</strong> Seberapa aktif mereka? Apakah mereka memposting konten menarik (turnamen, promo, tips bermain)? Ini adalah etalase utama mereka.</li>
-                            <li><strong>Platform Booking:</strong> Apakah pelanggan bisa memesan dan membayar secara online (misal via website, aplikasi seperti Ayo Indonesia, atau bahkan WhatsApp)? Proses yang rumit adalah penghalang besar.</li>
-                            <li><strong>Google Maps & Reviews:</strong> Apa kata pelanggan? Rating yang tinggi dan ulasan positif adalah bukti sosial yang kuat.</li>
-                        </ul>
-                    </div>
-                    <!-- Operasional -->
-                    <div class="bg-gray-50 p-4 rounded-lg border">
-                        <h4 class="font-semibold text-gray-800">b. Jam Operasional & Harga</h4>
-                         <ul class="list-disc pl-5 mt-2 text-sm text-gray-600 space-y-1">
-                            <li><strong>Jam Buka-Tutup:</strong> Umumnya kompetitor beroperasi dari pagi (06:00) hingga malam (24:00). Ini adalah standar industri saat ini.</li>
-                            <li><strong>Struktur Harga:</strong> Apakah harga flat sepanjang hari, atau mereka menggunakan *dynamic pricing* (lebih murah di jam sepi, lebih mahal di jam sibuk/weekend)?</li>
-                             <li><strong>Penawaran Tambahan:</strong> Apakah mereka menyediakan pelatih, penyewaan alat, atau fasilitas F&B yang menarik?</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <h3 class="text-xl font-semibold mb-4 pt-6 border-t mt-8 text-gray-700">2. Model Break-Even Point (BEP) - Studi Kasus 4 Lapangan</h3>
-                <p class="text-gray-600 mb-2">Untuk memahami kelayakan finansial, kita bisa membuat model BEP berdasarkan asumsi. Ini membantu menetapkan target operasional minimum.</p>
-                <div class="p-3 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 text-sm mb-4">
-                    <strong>PENTING:</strong> Angka di bawah ini adalah <strong>asumsi ilustratif</strong> untuk tujuan pemodelan dan dapat disesuaikan dengan rencana bisnis aktual.
-                </div>
-
-                <!-- Tabel Asumsi BEP -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8">
-                    <div>
-                        <h4 class="font-semibold text-lg text-gray-800 mb-2">Asumsi Biaya & Pendapatan</h4>
-                        <table class="w-full text-sm">
-                           <tbody class="align-top">
-                               <tr class="border-b"><td class="py-2 font-medium">Harga Sewa Rata-rata (P)</td><td class="py-2 text-right">Rp 200.000 / jam</td></tr>
-                               <tr class="border-b"><td class="py-2 font-medium">Biaya Variabel (VC)</td><td class="py-2 text-right">Rp 15.000 / jam <span class="block text-xs text-gray-500">(Listrik, air, maintenance)</span></td></tr>
-                               <tr class="border-b"><td class="py-2 font-medium">Margin Kontribusi</td><td class="py-2 text-right font-bold">Rp 185.000 / jam</td></tr>
-                               <tr class="border-b"><td class="py-2 font-medium">Biaya Tetap Bulanan (FC)</td><td class="py-2 text-right font-bold">Rp 75.000.000 <span class="block text-xs text-gray-500">(Gaji, sewa lahan, marketing, dll)</span></td></tr>
-                           </tbody>
-                        </table>
-                    </div>
-                     <div>
-                        <h4 class="font-semibold text-lg text-gray-800 mb-2">Hasil Kalkulasi BEP</h4>
-                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 text-center">
-                            <p class="text-sm text-gray-600">Jam Sewa Minimum per Bulan</p>
-                            <p class="text-3xl font-bold text-blue-700">406 Jam</p>
-                            <p class="text-sm text-gray-600 mt-3">Target per Hari (untuk 4 Lapangan)</p>
-                            <p class="text-2xl font-bold text-blue-700">~13.5 Jam Sewa</p>
-                            <p class="text-sm text-gray-600 mt-1">(Rata-rata ~3.4 jam per lapangan per hari)</p>
-                        </div>
-                    </div>
-                </div>
-                 <p class="mt-4 text-sm text-gray-600">
-                    <strong>Interpretasi:</strong> Target untuk mencapai titik impas adalah menjual total 13-14 jam sewa setiap hari, yang tersebar di 4 lapangan. Ini adalah target yang sangat realistis, terutama jika jam sibuk (16:00 - 23:00) dapat dimaksimalkan.
-                </p>
-
-
-                <h3 class="text-xl font-semibold mb-4 pt-6 border-t mt-8 text-gray-700">3. Strategi Akselerasi BEP dan Peningkatan Profitabilitas</h3>
-                <p class="text-gray-600 mb-4">Mencapai BEP adalah target minimum. Untuk mempercepatnya dan memaksimalkan profit, diperlukan strategi proaktif. Berikut adalah beberapa opsi:</p>
-
-                <div class="space-y-4">
-                    <!-- Strategi 1 -->
-                    <div class="p-4 border rounded-lg hover:shadow-lg transition-shadow">
-                        <h4 class="font-semibold text-gray-800">a. Operasional 24 Jam: High-Risk, High-Reward</h4>
-                        <p class="text-sm text-gray-600 mt-1"><strong>Konsep:</strong> Menjadi satu-satunya lapangan padel 24 jam di area tersebut untuk menangkap pasar pekerja shift di kawasan industri SIER dan kaum "nokturnal".</p>
-                        <ul class="text-sm mt-2 grid grid-cols-1 md:grid-cols-2 gap-x-4">
-                            <li class="flex items-start"><span class="text-green-500 mr-2">✓</span> <strong>Keunggulan:</strong> Diferensiasi pasar yang kuat, utilisasi aset maksimal, potensi pendapatan tambahan di jam subuh.</li>
-                            <li class="flex items-start"><span class="text-red-500 mr-2">✗</span> <strong>Kelemahan:</strong> Biaya operasional lebih tinggi (gaji shift malam, keamanan), permintaan mungkin sangat rendah antara jam 02:00-05:00.</li>
-                        </ul>
-                         <p class="text-xs text-blue-600 mt-2 p-2 bg-blue-50 rounded"><strong>Rekomendasi:</strong> Uji coba dengan memperpanjang jam operasional hingga pukul 02:00 terlebih dahulu. Analisis data permintaan sebelum berkomitmen penuh ke 24 jam.</p>
-                    </div>
-
-                    <!-- Strategi 2 -->
-                    <div class="p-4 border rounded-lg hover:shadow-lg transition-shadow">
-                        <h4 class="font-semibold text-gray-800">b. Dynamic Pricing & Membership (Strategi Cerdas)</h4>
-                        <p class="text-sm text-gray-600 mt-1"><strong>Konsep:</strong> Mengoptimalkan pendapatan dari setiap jam yang tersedia dan membangun loyalitas pelanggan.</p>
-                        <ul class="text-sm mt-2 space-y-1">
-                           <li><strong>Dynamic Pricing:</strong> Terapkan harga lebih murah untuk jam sepi (misal: 09:00-15:00 di hari kerja) untuk menarik mahasiswa atau pekerja fleksibel. Terapkan harga premium di jam sibuk.</li>
-                           <li><strong>Membership & Paket:</strong> Tawarkan paket bulanan/tahunan dengan benefit (prioritas booking, diskon F&B). Ini menciptakan arus kas yang stabil dan mengikat pelanggan.</li>
-                        </ul>
-                    </div>
-
-                    <!-- Strategi 3 -->
-                    <div class="p-4 border rounded-lg hover:shadow-lg transition-shadow">
-                        <h4 class="font-semibold text-gray-800">c. Fokus pada Komunitas & Kemitraan Korporat</h4>
-                        <p class="text-sm text-gray-600 mt-1"><strong>Konsep:</strong> Mengubah lapangan dari sekadar tempat sewa menjadi sebuah "hub" sosial dan B2B.</p>
-                        <ul class="text-sm mt-2 space-y-1">
-                           <li><strong>Aktivasi Komunitas:</strong> Adakan turnamen rutin, liga internal, dan sesi coaching. Ini akan mengisi jadwal secara konsisten dan menciptakan word-of-mouth.</li>
-                           <li><strong>Kemitraan Korporat:</strong> Tawarkan paket khusus untuk perusahaan di SIER dan sekitarnya untuk acara *team building* atau jadwal rutin karyawan. Ini cara efektif untuk mengisi slot di hari kerja.</li>
-                        </ul>
-                    </div>
-                </div>
-
-            </div>
-        </section>
-
-        <!-- Section Estimasi Sampel Survei -->
-        <section id="survey-sample" class="mt-12">
-            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-purple-600 pl-4">Estimasi Sampel Survei Pasar</h2>
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <p class="text-gray-600 mb-4">
-                    Estimasi jumlah responden yang dibutuhkan menggunakan <strong>Rumus Slovin: n = N / (1 + N * e²)</strong>, berdasarkan tingkat kesalahan (margin of error) yang bisa diterima.
-                </p>
-
-                <!-- Bagian untuk Populasi Total -->
-                <div class="mt-6">
-                    <h3 class="font-semibold text-lg text-gray-800 mb-3">1. Berdasarkan Populasi Total</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <!-- Card 10% -->
-                        <div class="border border-orange-200 p-4 rounded-lg text-center bg-orange-50">
-                            <h4 class="font-semibold text-gray-700">Margin of Error 10%</h4>
-                            <p class="text-xs text-gray-500 mb-2">(Tingkat kepercayaan 90%)</p>
-                            <p id="sampleSize10" class="text-3xl font-bold text-orange-600">0</p>
-                        </div>
-                        <!-- Card 5% -->
-                        <div class="border border-purple-200 p-4 rounded-lg text-center bg-purple-50">
-                            <h4 class="font-semibold text-gray-700">Margin of Error 5%</h4>
-                            <p class="text-xs text-gray-500 mb-2">(Tingkat kepercayaan 95%)</p>
-                            <p id="sampleSize5" class="text-3xl font-bold text-purple-700">0</p>
-                        </div>
-                        <!-- Card 3% -->
-                        <div class="border border-blue-200 p-4 rounded-lg text-center bg-blue-50">
-                            <h4 class="font-semibold text-gray-700">Margin of Error 3%</h4>
-                            <p class="text-xs text-gray-500 mb-2">(Tingkat kepercayaan 97%)</p>
-                            <p id="sampleSize3" class="text-3xl font-bold text-blue-700">0</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Bagian untuk Rincian per Ring -->
-                <div class="mt-8 pt-6 border-t border-gray-200">
-                    <h3 class="font-semibold text-lg text-gray-800 mb-3">2. Berdasarkan Klasifikasi Ring (untuk Survei Terpisah)</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Card untuk Ring 1 -->
-                        <div class="border border-green-200 p-4 rounded-lg bg-green-50">
-                            <h4 class="font-bold text-green-800 text-center">Sampel untuk RING 1</h4>
-                            <p id="totalPopRing1" class="text-xs text-gray-500 text-center mb-3">(Total Populasi N = 0)</p>
-                            <div class="flex justify-around items-center">
-                                <div class="text-center"><p class="text-sm font-semibold text-gray-600">Error 10%</p><p id="sampleSizeRing1_10" class="text-2xl font-bold text-green-700">0</p></div>
-                                <div class="text-center"><p class="text-sm font-semibold text-gray-600">Error 5%</p><p id="sampleSizeRing1_5" class="text-2xl font-bold text-green-700">0</p></div>
-                                <div class="text-center"><p class="text-sm font-semibold text-gray-600">Error 3%</p><p id="sampleSizeRing1_3" class="text-2xl font-bold text-green-700">0</p></div>
-                            </div>
-                        </div>
-                        <!-- Card untuk Ring 2 -->
-                        <div class="border border-yellow-200 p-4 rounded-lg bg-yellow-50">
-                            <h4 class="font-bold text-yellow-800 text-center">Sampel untuk RING 2</h4>
-                            <p id="totalPopRing2" class="text-xs text-gray-500 text-center mb-3">(Total Populasi N = 0)</p>
-                            <div class="flex justify-around items-center">
-                                <div class="text-center"><p class="text-sm font-semibold text-gray-600">Error 10%</p><p id="sampleSizeRing2_10" class="text-2xl font-bold text-yellow-700">0</p></div>
-                                <div class="text-center"><p class="text-sm font-semibold text-gray-600">Error 5%</p><p id="sampleSizeRing2_5" class="text-2xl font-bold text-yellow-700">0</p></div>
-                                <div class="text-center"><p class="text-sm font-semibold text-gray-600">Error 3%</p><p id="sampleSizeRing2_3" class="text-2xl font-bold text-yellow-700">0</p></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <p class="mt-6 text-sm text-gray-500 italic">
-                    <strong>Catatan:</strong> Memilih margin of error yang lebih kecil (misal: 3%) akan memberikan hasil yang lebih presisi, namun membutuhkan jumlah responden yang lebih banyak. Pilihlah sesuai dengan kebutuhan dan budget riset Anda.
-                </p>
-            </div>
-        </section>
 
         <!-- Mulai: Section Analisis Aspek Legal -->
         <section id="legal-analysis" class="mt-12">
