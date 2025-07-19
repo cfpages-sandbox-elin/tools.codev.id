@@ -9,10 +9,10 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function updateAllVisuals() {
         console.log("Memperbarui semua modul visual...");
-        sierHelpers.tryToRender(sierVisualDemography.render);
-        sierHelpers.tryToRender(sierVisualMarket.render);
-        sierHelpers.tryToRender(sierVisualSurvey.render);
-        sierHelpers.tryToRender(sierVisualFinance.render);
+        sierHelpers.tryToRender(sierVisualDemography.render.bind(sierVisualDemography));
+        sierHelpers.tryToRender(sierVisualMarket.render.bind(sierVisualMarket));
+        sierHelpers.tryToRender(sierVisualSurvey.render.bind(sierVisualSurvey));
+        sierHelpers.tryToRender(sierVisualFinance.render.bind(sierVisualFinance));
     }
 
     /**
