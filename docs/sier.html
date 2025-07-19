@@ -2081,5 +2081,52 @@
     <script src="sier-visual-survey.js"></script>
     <script src="sier-visual-finance.js"></script>
     <script src="sier-visual.js"></script>
+
+    <script>
+        function checkRenderStatus() {
+            console.group("===== STATUS RENDER HALAMAN =====");
+
+            const logCheck = (description, checkPassed) => {
+                const status = checkPassed ? '✅ Berhasil' : '❌ GAGAL';
+                const color = checkPassed ? 'color: green;' : 'color: red; font-weight: bold;';
+                console.log(`%c${status}%c - ${description}`, color, 'color: black;');
+            };
+
+            // 1. Pengecekan Ringkasan Demografi
+            const totalPendudukEl = document.getElementById('totalPenduduk');
+            logCheck('Update Kartu Ringkasan (Total Penduduk)', totalPendudukEl && totalPendudukEl.innerText !== '0');
+
+            // 2. Pengecekan Chart
+            const ringChartCanvas = document.getElementById('ringChart');
+            logCheck('Render Chart Komposisi Ring', ringChartCanvas && ringChartCanvas.chartInstance);
+
+            const ageDistChartCanvas = document.getElementById('ageDistributionChart');
+            logCheck('Render Chart Distribusi Usia', ageDistChartCanvas && ageDistChartCanvas.chartInstance);
+
+            // 3. Pengecekan Tabel
+            const dataTableBody = document.getElementById('dataTableBody');
+            logCheck('Render Tabel Data Populasi Mentah', dataTableBody && dataTableBody.children.length > 0);
+            
+            const incomeTableBody = document.getElementById('incomeTableBody');
+            logCheck('Render Tabel Estimasi Pendapatan', incomeTableBody && incomeTableBody.children.length > 0);
+
+            // 4. Pengecekan Analisis Survei
+            const surveyContainer = document.getElementById('surveyChartsContainer');
+            logCheck('Render Chart Analisis Survei', surveyContainer && surveyContainer.children.length > 0);
+            
+            // 5. PENGECEKAN KUNCI: ANALISIS TEMATIK
+            const themedFeedbackContainer = document.getElementById('themedFeedbackContainer');
+            logCheck('Render Analisis Tematik Masukan Kualitatif', themedFeedbackContainer && themedFeedbackContainer.children.length > 0);
+
+            // 6. Pengecekan Analisis Keuangan
+            const capexContainer = document.getElementById('driving-range-capex-analysis');
+            logCheck('Render Analisis Biaya Investasi (CapEx)', capexContainer && capexContainer.children.length > 1);
+
+            console.groupEnd();
+        }
+
+        // Jalankan pengecekan setelah jeda singkat untuk memastikan semua skrip selesai dieksekusi
+        setTimeout(checkRenderStatus, 500);
+    </script>
 </body>
 </html>
