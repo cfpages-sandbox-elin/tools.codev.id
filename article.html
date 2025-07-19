@@ -57,7 +57,7 @@
 <body class="p-4 max-w-5xl mx-auto">
 
     <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-bold text-indigo-700">AI Article Generator & Spinner 🖼️ (v8.23)</h1>
+        <h1 class="text-2xl font-bold text-indigo-700">AI Article Generator & Spinner 🖼️ (v8.24)</h1>
         <div class="space-x-2">
              <button id="forceReloadBtn" class="reload-button" title="Attempt to bypass cache and reload all resources">Force Reload 🔄</button>
              <button id="resetDataBtn" class="reset-button">Reset All Data ⚠️</button>
@@ -74,23 +74,19 @@
                 </span> 
             </div> 
         </div> 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4"> 
-            <div class="input-group grid grid-cols-3 items-center gap-x-2 mt-1"> 
-                <label for="ai_provider" class="compact-label">Text Provider:</label> 
-                <select id="ai_provider" class="compact-select col-span-2"> </select> 
-            </div> 
-            <div class="input-group grid grid-cols-3 items-center gap-x-2 mt-1"> 
-                <label for="ai_model" class="compact-label">Text Model:</label> 
-                <div class="col-span-2"> 
-                    <select id="ai_model" class="compact-select w-full"> </select> 
-                    <input type="text" id="customAiModel" class="custom-input-visible hidden w-full" placeholder="Enter custom model name"> 
-                    <label class="text-xs flex items-center mt-1"> 
-                        <input type="checkbox" id="useCustomAiModel" class="h-3 w-3 mr-1"> Use Custom 
-                    </label> 
-                </div> 
-            </div> 
-        </div> 
-        <p class="text-xs text-gray-500 mt-1">API Keys handled securely by backend.</p> 
+        
+        <!-- Container for dynamic provider rows -->
+        <div id="aiProviderContainer" class="space-y-3">
+            <!-- Rows will be dynamically inserted here by JavaScript -->
+        </div>
+
+        <div class="mt-3 text-right">
+            <button id="addProviderBtn" class="compact-button text-xs !py-1 !px-2 bg-green-600 hover:bg-green-700">
+                + Add Provider
+            </button>
+        </div>
+
+        <p class="text-xs text-gray-500 mt-2">For bulk tasks, work will be distributed among all selected providers. For single tasks, the first provider will be used.</p> 
     </section>
     
     <section id="step1" class="compact-section"> 

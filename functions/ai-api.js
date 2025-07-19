@@ -211,17 +211,16 @@ export async function onRequest({ request, env }) {
              // It returns details about the commit and the content blob.
              // We need to *construct* the likely public URL based on the repo structure and path.
              // Assuming the repo name maps to the custom domain.
-             // const downloadUrl = responseData.content?.download_url; // This might be null or temporary
-             const constructedUrl = `https://${repo}/${path}`; // Construct URL using repo name as domain
+             const downloadUrl = responseData.content?.download_url;
 
-             if (!constructedUrl) { // Basic check
-                 console.warn('Could not construct public image URL:', responseData);
+             if (!downloadUrl) {
+                 console.warn('GitHub API did not return a download_url:', responseData);
                  throw new Error('Could not determine public image URL after GitHub upload.');
              }
 
-             console.log(`GitHub Upload Successful. Constructed URL: ${constructedUrl}`);
-             // Return the *constructed* URL, not the download_url from GitHub API response
-             return jsonResponse({ success: true, imageUrl: constructedUrl });
+             console.log(`GitHub Upload Successful. URL: ${downloadUrl}`);
+             // The API response `download_url` is the raw content URL needed for <img> tags.
+             return jsonResponse({ success: true, download_url: downloadUrl });
 
          } catch (error) {
              console.error(`GitHub Upload Action Error: ${error.message}`);

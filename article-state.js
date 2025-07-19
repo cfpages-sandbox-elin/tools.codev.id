@@ -1,40 +1,20 @@
-// article-state.js (v8.18 Humanize content)
+// article-state.js (v8.24 multi ai provider)
 import {
-    defaultSettings as importedDefaultSettings, // Rename to avoid conflict
+    defaultSettings as importedDefaultSettings,
     APP_STATE_STORAGE_KEY, BULK_PLAN_STORAGE_KEY,
     BULK_ARTICLES_STORAGE_KEY, CUSTOM_MODELS_STORAGE_KEY, SITEMAP_STORAGE_KEY
 } from './article-config.js';
 import { logToConsole } from './article-helpers.js';
 
 // --- In-Memory State ---
-const appDefaultSettings = {
-    ...importedDefaultSettings,
-    humanizeContent: importedDefaultSettings.humanizeContent ?? true,
-    formatSingleMode: importedDefaultSettings.format, // Default single mode format is the overall default format
-    articleStructure: '',
-    generatedArticleContent: '',
-    bulkKeywordsContent: '', // For storing bulk keywords textarea content
-    sitemapFetchedUrl: '', // To store the URL from which sitemap was last fetched
-};
-// --- In-Memory State ---
-let appState = { ...appDefaultSettings }; // Initialize with our extended defaults
+let appState = { ...importedDefaultSettings };
 let customModels = { text: {}, image: {} };
 let bulkPlan = [];
 let bulkArticles = {};
 
 // --- State Getters ---
 export function getState() {
-    // Ensure new keys are always part of the returned state copy
-    return {
-        ...appState, // Spread current appState
-        // Ensure all expected keys from appDefaultSettings are present, even if appState was loaded from an older version
-        humanizeContent: appState.humanizeContent ?? true, 
-        formatSingleMode: appState.formatSingleMode || appDefaultSettings.formatSingleMode,
-        articleStructure: appState.articleStructure || '',
-        generatedArticleContent: appState.generatedArticleContent || '',
-        bulkKeywordsContent: appState.bulkKeywordsContent || '',
-        sitemapFetchedUrl: appState.sitemapFetchedUrl || ''
-    };
+    return { ...appState };
 }
 export function getCustomModels() {
     return { ...customModels };
@@ -50,8 +30,6 @@ export function getAllBulkArticles() {
 }
 
 // --- State Savers/Loaders ---
-
-// General App Settings
 export function loadState() {
     try {
         const savedState = localStorage.getItem(APP_STATE_STORAGE_KEY);
@@ -59,30 +37,24 @@ export function loadState() {
             const parsed = JSON.parse(savedState);
             // Merge, ensuring new defaults are present if not in saved state
             appState = {
-                ...appDefaultSettings, // Start with all our current defaults
-                ...parsed             // Then overwrite with whatever was saved
+                ...importedDefaultSettings,
+                ...parsed
             };
-            // Explicitly ensure crucial new defaults if they were missing from an old save
-            appState.formatSingleMode = appState.formatSingleMode || appDefaultSettings.formatSingleMode;
-            appState.articleStructure = appState.articleStructure || '';
-            appState.generatedArticleContent = appState.generatedArticleContent || '';
-            appState.bulkKeywordsContent = appState.bulkKeywordsContent || '';
-            appState.sitemapFetchedUrl = appState.sitemapFetchedUrl || '';
-            appState.humanizeContent = appState.humanizeContent ?? appDefaultSettings.humanizeContent;
-
-            logToConsole('App state loaded from local storage.', 'info');
+            // Ensure textProviders is a non-empty array for backwards compatibility
+            if (!Array.isArray(appState.textProviders) || appState.textProviders.length === 0) {
+                appState.textProviders = importedDefaultSettings.textProviders;
+            }
         } else {
-            appState = { ...appDefaultSettings }; // No saved state, use full defaults
-            logToConsole('No saved app state found, using defaults.', 'info');
+            appState = { ...importedDefaultSettings };
         }
         loadCustomModelsState();
         loadBulkPlanState();
         loadBulkArticlesState();
     } catch (error) {
         logToConsole(`Error loading app state: ${error.message}`, 'error');
-        appState = { ...appDefaultSettings }; // Reset on error
+        appState = { ...importedDefaultSettings };
     }
-    return getState(); // Return a consistent copy
+    return getState();
 }
 
 export function saveState() {
@@ -210,6 +182,44 @@ export function resetAllData() {
         window.location.reload();
     } else {
         logToConsole('Reset cancelled by user.', 'info');
+    }
+}
+
+export function addProviderToState() {
+    const currentState = getState();
+    const newProviderList = [...currentState.textProviders];
+    // Add the first available provider as the default for the new row
+    const firstProviderKey = Object.keys(aiTextProviders)[0];
+    const firstModel = aiTextProviders[firstProviderKey]?.models[0] || '';
+    newProviderList.push({ provider: firstProviderKey, model: firstModel, useCustom: false, customModel: '' });
+    updateState({ textProviders: newProviderList });
+}
+
+export function removeProviderFromState(index) {
+    const currentState = getState();
+    const newProviderList = currentState.textProviders.filter((_, i) => i !== index);
+    // Ensure at least one provider remains
+    if (newProviderList.length === 0) {
+        logToConsole("Cannot remove the last provider.", "warn");
+        return;
+    }
+    updateState({ textProviders: newProviderList });
+}
+
+export function updateProviderInState(index, key, value) {
+    const currentState = getState();
+    const newProviderList = [...currentState.textProviders];
+    if (newProviderList[index]) {
+        newProviderList[index][key] = value;
+
+        // If the provider itself changes, reset the model to the default for that new provider
+        if (key === 'provider') {
+            const newProviderModels = aiTextProviders[value]?.models || [];
+            newProviderList[index].model = findCheapestModel(newProviderModels);
+            newProviderList[index].useCustom = false; // Reset custom state
+        }
+        
+        updateState({ textProviders: newProviderList });
     }
 }
 

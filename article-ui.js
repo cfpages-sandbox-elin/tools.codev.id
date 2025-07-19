@@ -1,6 +1,6 @@
-// article-ui.js (v8.23 hide download button initially)
-import { textProviders, imageProviders, languageOptions, defaultSettings } from './article-config.js';
-import { getState, getCustomModelState, updateState, getBulkPlan } from './article-state.js';
+// article-ui.js (v8.24 multiple providers)
+import { aiTextProviders, aiImageProviders, languageOptions, defaultSettings } from './article-config.js';
+import { getState, updateState, getBulkPlan, addProviderToState, removeProviderFromState, updateProviderInState, updateCustomModelState, getCustomModelState } from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2 } from './article-helpers.js';
 
 // --- DOM Element References (Centralized) ---
@@ -15,6 +15,8 @@ const elementIdMap = {
     customAiModelInput: 'customAiModel',
     apiStatusDiv: 'apiStatus',
     apiStatusIndicator: 'apiStatusIndicator',
+    aiProviderContainer: 'aiProviderContainer',
+    addProviderBtn: 'addProviderBtn',
     step1Section: 'step1',
     keywordInput: 'keyword',
     bulkModeCheckbox: 'bulkModeCheckbox',
@@ -218,20 +220,117 @@ function populateSelect(selectElement, options, selectedValue = null, addEmptyOp
     return optionsAdded;
 }
 
-export function populateAiProviders(state) {
-    logToConsole("Populating AI providers...", "info");
-    const textProviderSelect = getElement('aiProviderSelect');
-    const imageProviderSelect = getElement('imageProviderSelect');
-    if (textProviderSelect) { populateSelect(textProviderSelect, Object.keys(textProviders), state.textProvider); }
-    else { logToConsole("Text Provider select element ('aiProviderSelect') not found for population.", "error"); }
-    if (imageProviderSelect) { populateSelect(imageProviderSelect, Object.keys(imageProviders), state.imageProvider); }
-    else { logToConsole("Image Provider select element ('imageProviderSelect') not found for population.", "error"); }
+export function renderAiProviderRows() {
+    const container = getElement('aiProviderContainer');
+    if (!container) return;
+
+    const state = getState();
+    container.innerHTML = ''; // Clear existing rows
+
+    state.textProviders.forEach((providerState, index) => {
+        const row = createAiProviderRow(providerState, index);
+        container.appendChild(row);
+    });
+}
+
+function createAiProviderRow(providerState, index) {
+    const row = document.createElement('div');
+    row.className = 'grid grid-cols-1 md:grid-cols-3 gap-x-4 p-2 border rounded-md bg-gray-50';
+    row.dataset.index = index;
+
+    // --- Provider Selection ---
+    const providerDiv = document.createElement('div');
+    providerDiv.innerHTML = `<label class="compact-label">Provider #${index + 1}:</label>`;
+    const providerSelect = document.createElement('select');
+    providerSelect.className = 'compact-select';
+    populateSelect(providerSelect, Object.keys(aiTextProviders), providerState.provider);
+    providerSelect.addEventListener('change', (e) => {
+        updateProviderInState(index, 'provider', e.target.value);
+        renderAiProviderRows(); // Re-render to update model list
+        checkApiStatus();
+    });
+    providerDiv.appendChild(providerSelect);
+
+    // --- Model Selection ---
+    const modelDiv = document.createElement('div');
+    modelDiv.innerHTML = `<label class="compact-label">Model:</label>`;
+    const modelSelect = document.createElement('select');
+    modelSelect.className = 'compact-select';
+    const availableModels = aiTextProviders[providerState.provider]?.models || [];
+    populateSelect(modelSelect, availableModels, providerState.model);
+    modelSelect.addEventListener('change', (e) => {
+        if (!providerState.useCustom) {
+            updateProviderInState(index, 'model', e.target.value);
+            checkApiStatus();
+        }
+    });
+    const customModelInput = document.createElement('input');
+    customModelInput.type = 'text';
+    customModelInput.className = 'custom-input-visible hidden w-full';
+    customModelInput.placeholder = 'Enter custom model name';
+    customModelInput.value = getCustomModelState('text', providerState.provider) || providerState.customModel;
+    customModelInput.addEventListener('blur', (e) => {
+        if(providerState.useCustom) {
+            updateCustomModelState('text', providerState.provider, e.target.value);
+            updateProviderInState(index, 'customModel', e.target.value);
+            checkApiStatus();
+        }
+    });
+    const useCustomLabel = document.createElement('label');
+    useCustomLabel.className = 'text-xs flex items-center mt-1';
+    const useCustomCheckbox = document.createElement('input');
+    useCustomCheckbox.type = 'checkbox';
+    useCustomCheckbox.className = 'h-3 w-3 mr-1';
+    useCustomCheckbox.checked = providerState.useCustom;
+    useCustomCheckbox.addEventListener('change', (e) => {
+        const isChecked = e.target.checked;
+        updateProviderInState(index, 'useCustom', isChecked);
+        renderAiProviderRows(); // Re-render to toggle visibility
+        checkApiStatus();
+    });
+    useCustomLabel.appendChild(useCustomCheckbox);
+    useCustomLabel.append(' Use Custom');
+    modelDiv.appendChild(modelSelect);
+    modelDiv.appendChild(customModelInput);
+    modelDiv.appendChild(useCustomLabel);
+
+    // Toggle visibility based on 'useCustom'
+    disableElement(modelSelect, providerState.useCustom);
+    showElement(customModelInput, providerState.useCustom);
+
+    // --- Actions (Remove button) ---
+    const actionDiv = document.createElement('div');
+    actionDiv.className = 'flex items-end justify-end';
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'reset-button text-xs !py-1 !px-2';
+    removeBtn.textContent = '- Remove';
+    if (getState().textProviders.length <= 1) {
+        disableElement(removeBtn, true); // Don't allow removing the last one
+    }
+    removeBtn.addEventListener('click', () => {
+        removeProviderFromState(index);
+        renderAiProviderRows();
+        checkApiStatus();
+    });
+    actionDiv.appendChild(removeBtn);
+
+    row.appendChild(providerDiv);
+    row.appendChild(modelDiv);
+    row.appendChild(actionDiv);
+
+    return row;
 }
 
 export async function checkApiStatus() {
     const state = getState();
-    const providerKey = state.textProvider;
-    const model = state.useCustomTextModel ? state.customTextModel : state.textModel;
+    // For simplicity, we'll check the status of the *first* provider in the list.
+    const firstProviderState = state.textProviders[0];
+    if (!firstProviderState) {
+        logToConsole("No providers selected for API status check.", "warn");
+        return;
+    }
+    const providerKey = firstProviderState.provider;
+    const model = firstProviderState.useCustom ? firstProviderState.customModel : firstProviderState.model;
     const statusDiv = getElement('apiStatusDiv');
     const statusIndicator = getElement('apiStatusIndicator');
     if (!statusDiv) { return; }
@@ -257,54 +356,6 @@ export async function checkApiStatus() {
     } finally {
         showElement(getElement('apiStatusIndicator'), false); 
     }
-}
-
-export function populateTextModels(setDefault = false) {
-    const state = getState();
-    const providerKey = state.textProvider;
-    const aiModelSelect = getElement('aiModelSelect');
-    const useCustomCheckbox = getElement('useCustomAiModelCheckbox');
-    const customInput = getElement('customAiModelInput');
-
-    if (!aiModelSelect || !useCustomCheckbox || !customInput) { logToConsole("Missing elements for populateTextModels.", "error"); return; }
-
-    if (!providerKey || !textProviders[providerKey]) {
-        aiModelSelect.innerHTML = '<option value="">-- Select Provider --</option>';
-        disableElement(aiModelSelect, true);
-        if (useCustomCheckbox) useCustomCheckbox.checked = false;
-        if (customInput) customInput.value = '';
-        toggleCustomModelUI('text');
-        return;
-    }
-
-    const providerConfig = textProviders[providerKey];
-    const models = providerConfig?.models || [];
-    const standardModelFromState = state.textModel;
-    populateSelect(aiModelSelect, models);
-    let modelToSelectInDropdown = '';
-
-    if (state.useCustomTextModel) {
-        if (models.includes(standardModelFromState)) modelToSelectInDropdown = standardModelFromState;
-        else if (models.length > 0) modelToSelectInDropdown = models[0];
-    } else { 
-        if (setDefault) { 
-            modelToSelectInDropdown = findCheapestModel(models);
-        } else if (standardModelFromState && models.includes(standardModelFromState)) { 
-            modelToSelectInDropdown = standardModelFromState;
-        } else if (models.length > 0) { 
-            modelToSelectInDropdown = models[0];
-        }
-    }
-    
-    if (modelToSelectInDropdown) {
-        aiModelSelect.value = modelToSelectInDropdown;
-    } else if (!state.useCustomTextModel && aiModelSelect.options.length > 0) {
-         aiModelSelect.selectedIndex = 0;
-    }
-
-    if (useCustomCheckbox) useCustomCheckbox.checked = state.useCustomTextModel || false;
-    if (customInput) customInput.value = getCustomModelState('text', providerKey); 
-    toggleCustomModelUI('text'); 
 }
 
 export function populateImageModels(setDefault = false) {
@@ -535,7 +586,7 @@ export function updateUIFromState(state) {
              logToConsole("DOM elements still not cached. Cannot update UI.", "error"); return;
         }
     }
-    populateAiProviders(state);
+    renderAiProviderRows();
 
     const keywordInput = getElement('keywordInput'); if (keywordInput) keywordInput.value = state.keyword || '';
     const bulkModeCheckbox = getElement('bulkModeCheckbox'); if (bulkModeCheckbox) bulkModeCheckbox.checked = state.bulkMode || defaultSettings.bulkMode;
@@ -579,9 +630,6 @@ export function updateUIFromState(state) {
     if (imageStorageRadios) { imageStorageRadios.forEach(radio => { if (radio.value === storageValue) { radio.checked = true; radioFound = true; } }); if (!radioFound && imageStorageRadios.length > 0) { imageStorageRadios[0].checked = true; } }
     const githubRepoUrlInputElement = getElement('githubRepoUrlInput'); if(githubRepoUrlInputElement) githubRepoUrlInputElement.value = state.githubRepoUrl || defaultSettings.githubRepoUrl;
     const githubCustomPathInputElement = getElement('githubCustomPathInput'); if(githubCustomPathInputElement) githubCustomPathInputElement.value = state.githubCustomPath || defaultSettings.githubCustomPath;
-
-    populateTextModels();
-    populateImageModels();
 
     const currentTextModel = getElement('aiModelSelect')?.value;
     const currentImageModel = getElement('imageModelSelect')?.value;

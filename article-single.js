@@ -1,7 +1,6 @@
-// article-single.js (v8.18 Humanize content)
+// article-single.js (v8.24 multi ai provider)
 import { getState, updateState } from './article-state.js';
 import { logToConsole, callAI, getArticleOutlinesV2, constructImagePrompt, sanitizeFilename, slugify, showLoading, disableElement, delay, showElement } from './article-helpers.js';
-// *** Import updateCounts ***
 import { getElement, updateProgressBar, hideProgressBar, updateStructureCountDisplay, updateCounts } from './article-ui.js';
 import { languageOptions } from './article-config.js';
 import { getSingleTitlePrompt, getSingleStructurePrompt, getSingleSectionTextPrompt } from './article-prompts.js';
@@ -35,7 +34,6 @@ export async function handleGenerateStructure() {
     // --- Generate Title Logic (remains the same) ---
     let articleTitle = ui.articleTitleInput.value.trim();
     if (!articleTitle) {
-        // ... (title generation logic as before) ...
         logToConsole('Article title is blank, generating one...', 'info');
         const titlePrompt = getSingleTitlePrompt();
         const titlePayload = { providerKey: state.textProvider, model: state.textModel, prompt: titlePrompt };
@@ -329,7 +327,6 @@ async function uploadSingleImagesToGithub() {
         const result = await callAI('upload_image', payload, null, null); // Backend handles GitHub API call
 
         if (result?.success && result.download_url) {
-            // Use the download_url provided by the backend (likely the raw content URL)
             const finalImageUrl = result.download_url;
             logToConsole(`Uploaded ${img.filename}. URL: ${finalImageUrl}`, 'success');
             replacePlaceholderInTextarea(ui.generatedArticleTextarea, img.placeholderId, img.filename, finalImageUrl, state.format);
