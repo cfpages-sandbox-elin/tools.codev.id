@@ -9,10 +9,13 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function updateAllVisuals() {
         console.log("Memperbarui semua modul visual...");
+        
         sierHelpers.tryToRender(sierVisualDemography.render.bind(sierVisualDemography));
         sierHelpers.tryToRender(sierVisualMarket.render.bind(sierVisualMarket));
         sierHelpers.tryToRender(sierVisualSurvey.render.bind(sierVisualSurvey));
         sierHelpers.tryToRender(sierVisualFinance.render.bind(sierVisualFinance));
+        sierHelpers.tryToRender(sierVisualTechnical.render.bind(sierVisualTechnical));
+        
         sierHelpers.tryToRender(sierChart.renderAllCharts.bind(sierChart));
     }
 
