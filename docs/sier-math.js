@@ -433,11 +433,11 @@ const sierMath = {
         const unit = projectConfig[unitName];
         if (!unit) return {};
 
-        // BARU: Rinci biaya tetap
         const fixedCostBreakdown = {};
         for (const key in unit.opexMonthly) {
             const translatedKey = sierTranslate.translate(key);
-            fixedCostBreakdown[translatedKey] = this._calculateTotal(unit.opexMonthly[key]);
+            const value = unit.opexMonthly[key];
+            fixedCostBreakdown[translatedKey] = (typeof value === 'number') ? value : this._calculateTotal(value);
         }
         const totalFixedCostMonthly = Object.values(fixedCostBreakdown).reduce((sum, val) => sum + val, 0);
         
@@ -475,10 +475,16 @@ const sierMath = {
         } else if (unitName === 'padel') {
             bepPerAssetDaily = bepInUnitsDaily / unit.revenue.main_revenue.courts;
         }
+
+        // --- BARU: Perhitungan Payback Period ---
+        const unitFinancials = this._getUnitCalculations(unitName);
+        const totalCapex = unitFinancials.capex.total;
+        const annualCashFlow = unitFinancials.pnl.cashFlowFromOps;
+        const paybackPeriodInYears = annualCashFlow > 0 ? (totalCapex / annualCashFlow) : Infinity;
         
         return {
             totalFixedCostMonthly,
-            fixedCostBreakdown, // <<< BARU: Kirim rincian biaya tetap
+            fixedCostBreakdown,
             pricePerUnit,
             variableCostPerUnit,
             variableCostBreakdown,
@@ -486,7 +492,9 @@ const sierMath = {
             bepInUnitsMonthly,
             bepInUnitsDaily,
             bepPerAssetDaily,
-            unitLabel
+            unitLabel,
+            totalCapex, // Kirim data CapEx
+            paybackPeriodInYears // Kirim data Payback Period
         };
     }
 };
