@@ -10,11 +10,11 @@ const projectConfig = {};
 projectConfig.site_parameters = {
     driving_range: {
         // DIUBAH: Panjang bangunan tempat bay berada (dari PDF detail).
-        building_length_m: 72,
+        building_length_m: 98,
         // Ini adalah jarak pukul efektif ke arah danau.
         field_length_m: 235,
         // Asumsi lebar per bay, bisa diubah.
-        bay_width_m: 2.5,
+        bay_width_m: 3.5,
         // Asumsi jumlah lantai/tingkat driving range.
         levels: 2,
     },
