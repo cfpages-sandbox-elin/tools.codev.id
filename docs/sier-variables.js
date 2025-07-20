@@ -254,7 +254,6 @@ projectConfig.padel = {
     operational_assumptions: { workdays_in_month: 22, weekend_days_in_month: 8, operational_hours_per_day: 18, cogs_rate_fnb: 0.30 },
     revenue: {
         main_revenue: {
-            // DIUBAH: Jumlah lapangan sekarang dihitung secara dinamis.
             courts: Math.floor(projectConfig.site_parameters.padel.total_available_area_m2 / projectConfig.site_parameters.padel.area_per_court_m2),
             price_per_hour: { weekday_offpeak: 250000, weekday_peak: 350000, weekend: 400000 },
             occupancy_rate: { weekday_offpeak: 0.30, weekday_peak: 0.85, weekend: 0.90 },
@@ -262,6 +261,24 @@ projectConfig.padel = {
         },
         ancillary_revenue: { fnb_avg_spend: 50000, pro_shop_sales: 20000000 }
     },
-    capex: { land_acquisition: 1500000000, civil_construction: 1000000000, building_main: 800000000, equipment_sport: 350000000, interior_finishing: 300000000, pre_operational: 100000000 },
+    // DIUBAH: Struktur CapEx Padel dipecah berdasarkan kategori aset untuk perhitungan depresiasi yang akurat.
+    capex: {
+        civil_construction: {
+            land_preparation: 1500000000,
+            foundation_works: 1000000000
+        },
+        building: {
+            main_structure: 800000000
+        },
+        equipment: {
+            sport_courts: 350000000
+        },
+        interior: {
+            finishing_lounge_etc: 300000000
+        },
+        other: {
+            pre_operational: 100000000
+        }
+    },
     opexMonthly: { salaries_wages: { manager: { count: 1, salary: 10000000 }, supervisor: { count: 2, salary: 6500000 }, admin_cashier: { count: 4, salary: 5000000 }, cleaning_security: { count: 4, salary: 4000000 } }, utilities: { electricity_kwh_price: 1700, electricity_kwh_usage: 18000, water_etc: 5000000 }, marketing_promotion: 15000000, maintenance_repair: 10000000, rent_land: 25000000, other_operational: 8000000 }
 };

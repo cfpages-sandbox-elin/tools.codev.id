@@ -3,9 +3,6 @@
 // File ini adalah "otak" dari aplikasi, tidak ada interaksi DOM di sini.
 
 const sierMath = {
-    // ====================================================================
-    // HELPER UTILITIES
-    // ====================================================================
     getValueByPath(obj, path) {
         return path.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj);
     },
@@ -178,15 +175,64 @@ const sierMath = {
         };
     },
 
-    // ====================================================================
-    // CAPEX CALCULATIONS
-    // ====================================================================
+    /**
+     * BARU: Menghitung rincian CapEx untuk sebuah unit bisnis (DR atau Padel).
+     * @param {string} unitName - 'drivingRange' atau 'padel'
+     * @returns {object} - Objek berisi total dan rincian CapEx per kategori aset.
+     */
+    _getDetailedCapex(unitName) {
+        const p = projectConfig[unitName];
+        let breakdown = { civil_construction: 0, building: 0, equipment: 0, interior: 0, other: 0 };
+
+        if (unitName === 'drivingRange') {
+            // Menggunakan skenario B (piling) sebagai basis.
+            const drCapex = this._calculateDrCapex().scenario_b;
+            const ca = p.capex_assumptions;
+            
+            // Alokasikan biaya ke kategori yang sesuai
+            breakdown.civil_construction = drCapex.htmlRows.find(r => r.label.includes('Tiang Pancang')).value;
+            breakdown.building = drCapex.htmlRows.find(r => r.label.includes('Pekerjaan Bangunan')).value;
+            breakdown.equipment = drCapex.htmlRows.find(r => r.label.includes('Peralatan & Jaring')).value;
+            // MEP dan Izin dialokasikan ke 'other' untuk simplisitas
+            breakdown.other = drCapex.total - breakdown.civil_construction - breakdown.building - breakdown.equipment;
+
+        } else if (unitName === 'padel') {
+            // Padel sudah terstruktur dengan baik di variables.js
+            breakdown.civil_construction = this._calculateTotal(p.capex.civil_construction);
+            breakdown.building = this._calculateTotal(p.capex.building);
+            breakdown.equipment = this._calculateTotal(p.capex.equipment);
+            breakdown.interior = this._calculateTotal(p.capex.interior);
+            breakdown.other = this._calculateTotal(p.capex.other);
+        }
+
+        const total = Object.values(breakdown).reduce((sum, val) => sum + val, 0);
+        return { total, breakdown };
+    },
+
+    /**
+     * BARU: Menghitung total depresiasi tahunan berdasarkan rincian CapEx.
+     * @param {object} capexBreakdown - Rincian CapEx dari _getDetailedCapex.
+     * @returns {number} - Total depresiasi tahunan.
+     */
+    _calculateAnnualDepreciation(capexBreakdown) {
+        const depRates = projectConfig.assumptions.depreciation_years;
+        let totalDepreciation = 0;
+
+        for (const category in capexBreakdown) {
+            if (depRates[category] && depRates[category] > 0) {
+                totalDepreciation += capexBreakdown[category] / depRates[category];
+            }
+        }
+        // Biaya lain-lain (other) seperti izin diasumsikan diamortisasi selama 5 tahun.
+        totalDepreciation += (capexBreakdown.other || 0) / 5;
+        return totalDepreciation;
+    },
+
     _calculateDrCapex() {
         const a = projectConfig.drivingRange.capex_assumptions;
         const global = projectConfig.assumptions;
         const createRow = (category, component, calc, val, path) => ({ category, component, calculation: calc, value: val, path });
 
-        // --- Perhitungan Jaring Pengaman & Peralatan (TIDAK BERUBAH) ---
         const net = a.safety_net;
         const poles_far = Math.ceil(net.field_width_m / net.poles.spacing_m);
         const poles_sides = Math.ceil(net.field_length_m / net.poles.spacing_m) * 2;
@@ -225,13 +271,11 @@ const sierMath = {
         const bld = a.building;
         const totalBuildingCost = (bld.dr_bays_area_m2 * bld.dr_bays_cost_per_m2) + (bld.cafe_area_m2 * bld.cafe_cost_per_m2);
         
-        // --- DIUBAH TOTAL: Logika Perhitungan Biaya Skenario A & B ---
         const calculateScenarioCosts = (foundationCosts) => {
             const mep = a.mep_systems;
             const hvac_cost = bld.cafe_area_m2 * mep.hvac_system.cost_per_m2_hvac;
             const plumbing_cost = mep.plumbing_system.lump_sum_cost;
-
-            // Hitung biaya fisik dasar sebelum elektrikal (karena elektrikal bergantung padanya)
+            
             const physical_cost_base = foundationCosts + totalBuildingCost + totalEquipmentCost + totalSafetyNetCost;
             
             const electrical_cost = physical_cost_base * mep.electrical_system.rate_of_physical_cost;
@@ -260,7 +304,6 @@ const sierMath = {
         const scenario_b_foundation_cost = (pil.points_count * pil.length_per_point_m * pil.cost_per_m_mini_pile) + pil.lump_sum_pile_cap;
         const scenario_b_results = calculateScenarioCosts(scenario_b_foundation_cost);
 
-        // --- DIUBAH: Return object sekarang menggunakan hasil perhitungan baru ---
         return {
             equipment_detail: { htmlRows: equipment_detail_rows, total: totalEquipmentCost + totalSafetyNetCost },
             scenario_a: {
@@ -292,10 +335,7 @@ const sierMath = {
         };
     },
 
-    // ====================================================================
-    // FINANCIAL ANALYSIS CALCULATIONS
-    // ====================================================================
-    _getUnitCalculations(unitName) {
+    _getUnitCalculations(unitName, revenueMultiplier = 1, opexMultiplier = 1) {
         const unit = projectConfig[unitName];
         const global = projectConfig.assumptions;
         const o = unit.operational_assumptions; 
@@ -322,19 +362,22 @@ const sierMath = {
         }
         
         const monthlyRevenueTotal = monthlyRevenueMain + fnbRevenueMonthly + unit.revenue.ancillary_revenue.pro_shop_sales;
-        const opexMonthlyTotal = this._calculateTotal(unit.opexMonthly);
-        const cogsMonthly = fnbRevenueMonthly * o.cogs_rate_fnb;
-
-        const capexTotal = (unitName === 'drivingRange') ? this._calculateDrCapex().scenario_b.total : this._calculateTotal(unit.capex);
         
-        const annualRevenue = monthlyRevenueTotal * 12;
+        // Terapkan multiplier
+        const adjustedMonthlyRevenue = monthlyRevenueTotal * revenueMultiplier;
+        const adjustedOpexMonthly = this._calculateTotal(unit.opexMonthly) * opexMultiplier;
+        
+        const annualRevenue = adjustedMonthlyRevenue * 12;
+        const cogsMonthly = (fnbRevenueMonthly * o.cogs_rate_fnb) * revenueMultiplier; // COGS ikut revenue
         const annualCogs = cogsMonthly * 12;
-        const annualOpex = opexMonthlyTotal * 12;
+        const annualOpex = adjustedOpexMonthly * 12;
+        
         const grossProfit = annualRevenue - annualCogs;
         const ebitda = grossProfit - annualOpex;
         
-        // Simplifikasi Depresiasi untuk contoh
-        const annualDepreciation = capexTotal / 15;
+        // Kalkulasi CapEx dan Depresiasi yang AKURAT
+        const capex = this._getDetailedCapex(unitName);
+        const annualDepreciation = this._calculateAnnualDepreciation(capex.breakdown);
 
         const ebt = ebitda - annualDepreciation;
         const tax = ebt > 0 ? ebt * global.tax_rate_profit : 0;
@@ -342,14 +385,14 @@ const sierMath = {
         const cashFlowFromOps = netProfit + annualDepreciation;
 
         return {
-            capex: { total: capexTotal },
+            capex: capex,
             pnl: { annualRevenue, annualCogs, annualOpex, grossProfit, ebitda, annualDepreciation, ebt, tax, netProfit, cashFlowFromOps },
         };
     },
+
     getFinancialSummary(revenueMultiplier = 1, opexMultiplier = 1) {
-        // Logika ini perlu disesuaikan untuk menerapkan multiplier dengan benar
-        const dr = this._getUnitCalculations('drivingRange');
-        const padel = this._getUnitCalculations('padel');
+        const dr = this._getUnitCalculations('drivingRange', revenueMultiplier, opexMultiplier);
+        const padel = this._getUnitCalculations('padel', revenueMultiplier, opexMultiplier);
 
         const combined = { capex: { total: dr.capex.total + padel.capex.total }, pnl: {} };
         for (const key in dr.pnl) {
