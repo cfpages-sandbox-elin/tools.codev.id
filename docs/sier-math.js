@@ -433,40 +433,31 @@ const sierMath = {
         const unit = projectConfig[unitName];
         if (!unit) return {};
 
-        const totalFixedCostMonthly = this._calculateTotal(unit.opexMonthly);
+        // BARU: Rinci biaya tetap
+        const fixedCostBreakdown = {};
+        for (const key in unit.opexMonthly) {
+            const translatedKey = sierTranslate.translate(key);
+            fixedCostBreakdown[translatedKey] = this._calculateTotal(unit.opexMonthly[key]);
+        }
+        const totalFixedCostMonthly = Object.values(fixedCostBreakdown).reduce((sum, val) => sum + val, 0);
         
         let pricePerUnit = 0;
         let variableCostPerUnit = 0;
         let unitLabel = '';
         let variableCostBreakdown = {};
-
-        // Ambil harga listrik global
         const kwhPrice = projectConfig.drivingRange.opexMonthly.utilities.electricity_kwh_price;
 
         if (unitName === 'drivingRange') {
             const vc = unit.operational_assumptions.variable_costs_per_session;
             const electricityCost = vc.electricity_dispenser_kwh * kwhPrice;
-            
-            variableCostBreakdown = {
-                'Listrik (Dispenser)': electricityCost,
-                'Keausan Bola': vc.ball_wear_cost_per_100_hits,
-                'Pembersih Bay': vc.cleaning_supplies
-            };
-            
+            variableCostBreakdown = { 'Listrik (Dispenser)': electricityCost, 'Keausan Bola': vc.ball_wear_cost_per_100_hits, 'Pembersih Bay': vc.cleaning_supplies };
             variableCostPerUnit = Object.values(variableCostBreakdown).reduce((sum, val) => sum + val, 0);
             pricePerUnit = unit.revenue.main_revenue.price_per_100_balls;
             unitLabel = 'Sesi';
-
         } else if (unitName === 'padel') {
             const vc = unit.operational_assumptions.variable_costs_per_hour;
             const electricityCost = vc.court_lights_kw * kwhPrice;
-
-            variableCostBreakdown = {
-                'Listrik (Lampu Lapangan)': electricityCost,
-                'Penggantian Bola': vc.ball_replacement_cost_per_hour,
-                'Pembersih Lapangan': vc.cleaning_supplies
-            };
-
+            variableCostBreakdown = { 'Listrik (Lampu Lapangan)': electricityCost, 'Penggantian Bola': vc.ball_replacement_cost_per_hour, 'Pembersih Lapangan': vc.cleaning_supplies };
             variableCostPerUnit = Object.values(variableCostBreakdown).reduce((sum, val) => sum + val, 0);
             const prices = unit.revenue.main_revenue.price_per_hour;
             pricePerUnit = (prices.weekday_offpeak + prices.weekday_peak + prices.weekend) / 3;
@@ -474,13 +465,10 @@ const sierMath = {
         }
 
         const contributionMargin = pricePerUnit - variableCostPerUnit;
-        if (contributionMargin <= 0) {
-            return { bepInUnitsMonthly: Infinity }; // Tidak akan pernah BEP
-        }
+        if (contributionMargin <= 0) return { bepInUnitsMonthly: Infinity };
 
         const bepInUnitsMonthly = totalFixedCostMonthly / contributionMargin;
-        const bepInUnitsDaily = bepInUnitsMonthly / 30; // Asumsi 30 hari/bulan
-
+        const bepInUnitsDaily = bepInUnitsMonthly / 30;
         let bepPerAssetDaily = 0;
         if (unitName === 'drivingRange') {
             bepPerAssetDaily = bepInUnitsDaily / unit.revenue.main_revenue.bays;
@@ -490,9 +478,10 @@ const sierMath = {
         
         return {
             totalFixedCostMonthly,
+            fixedCostBreakdown, // <<< BARU: Kirim rincian biaya tetap
             pricePerUnit,
             variableCostPerUnit,
-            variableCostBreakdown, // <<< Kirim rinciannya ke bagian visual
+            variableCostBreakdown,
             contributionMargin,
             bepInUnitsMonthly,
             bepInUnitsDaily,
