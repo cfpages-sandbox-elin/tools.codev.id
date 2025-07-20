@@ -61,6 +61,33 @@ projectConfig.digital_capex = {
     }
 };
 
+projectConfig.maintenance_plan = {
+    driving_range: {
+        title: "Pemeliharaan Driving Range",
+        items: [
+            { name: "Penggantian Bola Golf Apung", notes: "Asumsi seluruh stok bola diganti setiap 12 bulan karena aus.", lifespan_months: 12, cost_basis: { quantity_ref: "drivingRange.capex_assumptions.equipment.floating_balls_count", unit_cost_ref: "drivingRange.capex_assumptions.equipment.floating_balls_cost_per_ball" } },
+            { name: "Penggantian Matras Bay (Normal)", notes: "Matras standar diganti setiap 24 bulan.", lifespan_months: 24, cost_basis: { quantity_calc: "normal_bays", unit_cost: 2500000 } },
+            { name: "Perawatan Sistem Ball Tracker", notes: "Biaya servis tahunan, diasumsikan 5% dari biaya awal.", lifespan_months: 12, cost_basis: { percentage_of_capex: 0.05, capex_ref: "ball_tracker_cost" } },
+            { name: "Perbaikan & Perawatan Jaring", notes: "Perbaikan rutin dan penggantian parsial, asumsi 10% dari biaya material jaring per tahun.", lifespan_months: 12, cost_basis: { percentage_of_capex: 0.10, capex_ref: "netting_material_cost" } }
+        ]
+    },
+    padel: {
+        title: "Pemeliharaan Lapangan Padel",
+        items: [
+            { name: "Perawatan & Penambahan Pasir Silika", notes: "Dilakukan setiap 6 bulan untuk menjaga kualitas pantulan.", lifespan_months: 6, cost_basis: { quantity_ref: "padel.revenue.main_revenue.courts", unit_cost: 5000000 } },
+            { name: "Pembersihan Dinding Kaca Profesional", notes: "Layanan pembersihan bulanan untuk menjaga visibilitas.", lifespan_months: 1, cost_basis: { quantity_ref: "padel.revenue.main_revenue.courts", unit_cost: 500000 } }
+        ]
+    },
+    general: {
+        title: "Pemeliharaan Umum & Fasilitas",
+        items: [
+            { name: "Servis AC & HVAC", notes: "Servis rutin setiap 3 bulan untuk seluruh unit.", lifespan_months: 3, cost_basis: { quantity: 1, unit_cost: 5000000 } },
+            { name: "Perawatan Lanskap & Taman", notes: "Biaya bulanan untuk jasa pertamanan.", lifespan_months: 1, cost_basis: { quantity: 1, unit_cost: 3000000 } },
+            { name: "Pengecatan & Perbaikan Minor Gedung", notes: "Dana yang dialokasikan setiap tahun untuk perbaikan kecil.", lifespan_months: 12, cost_basis: { quantity: 1, unit_cost: 20000000 } }
+        ]
+    }
+};
+
 projectConfig.assumptions = {
     tax_rate_profit: 0.22,
     discount_rate_wacc: 0.12,
