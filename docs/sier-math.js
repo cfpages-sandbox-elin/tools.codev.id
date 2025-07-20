@@ -422,7 +422,7 @@ const sierMath = {
             drivingRange: dr, padel: padel,
             combined: { ...combined, feasibility: { paybackPeriod, npv, irr } }
         };
-    }
+    },
 
     /**
      * DIUBAH TOTAL: Menghitung Break-Even Point dengan pendekatan Bottom-Up untuk biaya variabel.
