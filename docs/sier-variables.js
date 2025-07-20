@@ -227,8 +227,24 @@ projectConfig.drivingRange = {
                 foundation_cost_per_pole: 25000000,
             }
         },
+        mep_systems: {
+            hvac_system: {
+                // Biaya dihitung per m² dari area yang membutuhkan AC (Kafe).
+                cost_per_m2_hvac: 750000,
+            },
+            electrical_system: {
+                // Biaya elektrikal (kabel, panel, lampu) sangat bergantung pada skala
+                // proyek. Estimasi sebagai persentase dari total biaya fisik adalah
+                // pendekatan yang umum digunakan.
+                rate_of_physical_cost: 0.15,
+            },
+            plumbing_system: {
+                // Untuk toilet, dapur kafe, dan drainase. Diestimasi sebagai lump sum.
+                lump_sum_cost: 150000000,
+            }
+        },
+        // DIUBAH: other_costs sekarang hanya berisi izin & desain.
         other_costs: {
-            mep_rate_of_building_cost: 0.25,
             permit_design_rate_of_physical_cost: 0.08
         }
     }

@@ -183,30 +183,25 @@ const sierMath = {
     // ====================================================================
     _calculateDrCapex() {
         const a = projectConfig.drivingRange.capex_assumptions;
-        const siteParams = projectConfig.site_parameters;
-        const drRevenue = projectConfig.drivingRange.revenue.main_revenue;
         const global = projectConfig.assumptions;
         const createRow = (category, component, calc, val, path) => ({ category, component, calculation: calc, value: val, path });
 
-        // --- Perhitungan Jaring Pengaman (Logika Baru) ---
+        // --- Perhitungan Jaring Pengaman & Peralatan (TIDAK BERUBAH) ---
         const net = a.safety_net;
         const poles_far = Math.ceil(net.field_width_m / net.poles.spacing_m);
-        const poles_sides = Math.ceil(net.field_length_m / net.poles.spacing_m) * 2; // Kiri dan Kanan
+        const poles_sides = Math.ceil(net.field_length_m / net.poles.spacing_m) * 2;
         const total_poles = poles_far + poles_sides;
         const pole_foundation_cost = total_poles * net.poles.foundation_cost_per_pole;
-
         const area_far = net.field_width_m * net.poles.height_distribution.far_side_m;
-        const area_sides = net.field_length_m * net.poles.height_distribution.left_right_side_m * 2; // Kiri dan Kanan
+        const area_sides = net.field_length_m * net.poles.height_distribution.left_right_side_m * 2;
         const total_net_area = area_far + area_sides;
         const netting_material_cost = total_net_area * net.netting.cost_per_m2;
         const totalSafetyNetCost = pole_foundation_cost + netting_material_cost;
 
-        // --- Perhitungan Peralatan (Logika Baru: Premium vs Normal) ---
         const eq = a.equipment;
-        const total_bays = drRevenue.bays;
+        const total_bays = projectConfig.drivingRange.revenue.main_revenue.bays;
         const premium_bays_count = Math.round(total_bays * eq.premium_bays.percentage_of_total);
         const normal_bays_count = total_bays - premium_bays_count;
-
         const eqCosts = {
             ball_tracker: premium_bays_count * eq.premium_bays.cost_per_bay_ball_tracker,
             dispenser: premium_bays_count * eq.premium_bays.cost_per_bay_dispenser,
@@ -230,47 +225,69 @@ const sierMath = {
         const bld = a.building;
         const totalBuildingCost = (bld.dr_bays_area_m2 * bld.dr_bays_cost_per_m2) + (bld.cafe_area_m2 * bld.cafe_cost_per_m2);
         
+        // --- DIUBAH TOTAL: Logika Perhitungan Biaya Skenario A & B ---
+        const calculateScenarioCosts = (foundationCosts) => {
+            const mep = a.mep_systems;
+            const hvac_cost = bld.cafe_area_m2 * mep.hvac_system.cost_per_m2_hvac;
+            const plumbing_cost = mep.plumbing_system.lump_sum_cost;
+
+            // Hitung biaya fisik dasar sebelum elektrikal (karena elektrikal bergantung padanya)
+            const physical_cost_base = foundationCosts + totalBuildingCost + totalEquipmentCost + totalSafetyNetCost;
+            
+            const electrical_cost = physical_cost_base * mep.electrical_system.rate_of_physical_cost;
+            const total_mep_cost = hvac_cost + plumbing_cost + electrical_cost;
+
+            const total_physical_cost = physical_cost_base + total_mep_cost;
+            const permit_cost = total_physical_cost * a.other_costs.permit_design_rate_of_physical_cost;
+            
+            const subtotal = total_physical_cost + permit_cost;
+            const contingency = subtotal * global.contingency_rate;
+
+            return {
+                mep_costs: { hvac_cost, plumbing_cost, electrical_cost },
+                permit_cost,
+                subtotal,
+                contingency,
+                total: subtotal + contingency
+            };
+        };
+
         const rec = a.reclamation;
-        const scenario_a_costs = { reclamation_work: rec.area_m2 * rec.lake_depth_m * rec.cost_per_m3, sheet_pile_work: rec.sheet_pile_perimeter_m * rec.cost_per_m_sheet_pile, };
-        const physical_cost_a = scenario_a_costs.reclamation_work + scenario_a_costs.sheet_pile_work + totalBuildingCost + totalEquipmentCost + totalSafetyNetCost;
-        const mep_cost_a = totalBuildingCost * a.other_costs.mep_rate_of_building_cost;
-        const permit_cost_a = physical_cost_a * a.other_costs.permit_design_rate_of_physical_cost;
-        const subtotal_a = physical_cost_a + mep_cost_a + permit_cost_a;
-        const contingency_a = subtotal_a * global.contingency_rate;
+        const scenario_a_foundation_cost = (rec.area_m2 * rec.lake_depth_m * rec.cost_per_m3) + (rec.sheet_pile_perimeter_m * rec.cost_per_m_sheet_pile);
+        const scenario_a_results = calculateScenarioCosts(scenario_a_foundation_cost);
 
         const pil = a.piling;
-        const scenario_b_costs = { piling_work: pil.points_count * pil.length_per_point_m * pil.cost_per_m_mini_pile, pile_cap_work: pil.lump_sum_pile_cap, };
-        const physical_cost_b = scenario_b_costs.piling_work + scenario_b_costs.pile_cap_work + totalBuildingCost + totalEquipmentCost + totalSafetyNetCost;
-        const mep_cost_b = totalBuildingCost * a.other_costs.mep_rate_of_building_cost;
-        const permit_cost_b = physical_cost_b * a.other_costs.permit_design_rate_of_physical_cost;
-        const subtotal_b = physical_cost_b + mep_cost_b + permit_cost_b;
-        const contingency_b = subtotal_b * global.contingency_rate;
-        
+        const scenario_b_foundation_cost = (pil.points_count * pil.length_per_point_m * pil.cost_per_m_mini_pile) + pil.lump_sum_pile_cap;
+        const scenario_b_results = calculateScenarioCosts(scenario_b_foundation_cost);
+
+        // --- DIUBAH: Return object sekarang menggunakan hasil perhitungan baru ---
         return {
             equipment_detail: { htmlRows: equipment_detail_rows, total: totalEquipmentCost + totalSafetyNetCost },
             scenario_a: {
                 description: 'Skenario ini melibatkan pengurukan sebagian danau untuk menciptakan daratan baru sebagai landasan konstruksi. Ini bersifat permanen dan memiliki dampak lingkungan yang signifikan.',
                 htmlRows: [
-                    {label: 'Pekerjaan Pengurukan', calculation: `${rec.area_m2} m² × ${rec.lake_depth_m} m @ ...`, value: scenario_a_costs.reclamation_work, path: 'drivingRange.capex_assumptions.reclamation.cost_per_m3'},
-                    {label: 'Dinding Penahan Tanah', calculation: `${rec.sheet_pile_perimeter_m} m @ ...`, value: scenario_a_costs.sheet_pile_work, path: 'drivingRange.capex_assumptions.reclamation.cost_per_m_sheet_pile'},
-                    {label: 'Total Pekerjaan Bangunan', calculation: 'Ref. Tabel Bangunan', value: totalBuildingCost},
-                    {label: 'Total Peralatan & Teknologi', calculation: 'Ref. Tabel Peralatan', value: totalEquipmentCost},
-                    {label: 'MEP', calculation: `${(a.other_costs.mep_rate_of_building_cost*100)}% dari biaya bangunan`, value: mep_cost_a, path: 'drivingRange.capex_assumptions.other_costs.mep_rate_of_building_cost'},
-                    {label: 'Izin, Desain & Pengawasan', calculation: `${(a.other_costs.permit_design_rate_of_physical_cost*100)}% dari biaya fisik`, value: permit_cost_a, path: 'drivingRange.capex_assumptions.other_costs.permit_design_rate_of_physical_cost'},
+                    {label: 'Pekerjaan Pengurukan & Sheet Pile', calculation: 'Estimasi Biaya Fondasi Reklamasi', value: scenario_a_foundation_cost},
+                    {label: 'Total Pekerjaan Bangunan', calculation: 'Estimasi Biaya Struktur Bangunan', value: totalBuildingCost},
+                    {label: 'Total Peralatan & Jaring', calculation: 'Ref. Tabel Peralatan', value: totalEquipmentCost + totalSafetyNetCost},
+                    {label: 'Sistem HVAC (AC)', calculation: `${bld.cafe_area_m2} m² @ ...`, value: scenario_a_results.mep_costs.hvac_cost, path: 'drivingRange.capex_assumptions.mep_systems.hvac_system.cost_per_m2_hvac'},
+                    {label: 'Sistem Plumbing', calculation: `Lump Sum`, value: scenario_a_results.mep_costs.plumbing_cost, path: 'drivingRange.capex_assumptions.mep_systems.plumbing_system.lump_sum_cost'},
+                    {label: 'Sistem Elektrikal', calculation: `${a.mep_systems.electrical_system.rate_of_physical_cost * 100}% dari biaya fisik dasar`, value: scenario_a_results.mep_costs.electrical_cost, path: 'drivingRange.capex_assumptions.mep_systems.electrical_system.rate_of_physical_cost'},
+                    {label: 'Izin, Desain & Pengawasan', calculation: `${a.other_costs.permit_design_rate_of_physical_cost * 100}% dari biaya fisik`, value: scenario_a_results.permit_cost, path: 'drivingRange.capex_assumptions.other_costs.permit_design_rate_of_physical_cost'},
                 ],
-                subtotal: subtotal_a, contingency: contingency_a, total: subtotal_a + contingency_a
+                subtotal: scenario_a_results.subtotal, contingency: scenario_a_results.contingency, total: scenario_a_results.total
             },
             scenario_b: {
                 description: 'Skenario ini tidak menguruk danau, melainkan membangun struktur di atasnya dengan menggunakan pondasi tiang pancang. Skenario ini lebih ramah lingkungan.',
                  htmlRows: [
-                    {label: 'Pekerjaan Tiang Pancang', calculation: `${pil.points_count} titik × ${pil.length_per_point_m} m @ ...`, value: scenario_b_costs.piling_work, path: 'drivingRange.capex_assumptions.piling.cost_per_m_mini_pile'},
-                    {label: 'Pekerjaan Pile Cap & Tie Beam', calculation: `Lump Sum`, value: scenario_b_costs.pile_cap_work, path: 'drivingRange.capex_assumptions.piling.lump_sum_pile_cap'},
-                    {label: 'Total Pekerjaan Bangunan', calculation: 'Ref. Tabel Bangunan', value: totalBuildingCost},
-                    {label: 'Total Peralatan & Teknologi', calculation: 'Ref. Tabel Peralatan', value: totalEquipmentCost},
-                    {label: 'MEP', calculation: `${(a.other_costs.mep_rate_of_building_cost*100)}% dari biaya bangunan`, value: mep_cost_b, path: 'drivingRange.capex_assumptions.other_costs.mep_rate_of_building_cost'},
-                    {label: 'Izin, Desain & Pengawasan', calculation: `${(a.other_costs.permit_design_rate_of_physical_cost*100)}% dari biaya fisik`, value: permit_cost_b, path: 'drivingRange.capex_assumptions.other_costs.permit_design_rate_of_physical_cost'},
+                    {label: 'Pekerjaan Tiang Pancang & Pile Cap', calculation: 'Estimasi Biaya Fondasi Pancang', value: scenario_b_foundation_cost},
+                    {label: 'Total Pekerjaan Bangunan', calculation: 'Estimasi Biaya Struktur Bangunan', value: totalBuildingCost},
+                    {label: 'Total Peralatan & Jaring', calculation: 'Ref. Tabel Peralatan', value: totalEquipmentCost + totalSafetyNetCost},
+                    {label: 'Sistem HVAC (AC)', calculation: `${bld.cafe_area_m2} m² @ ...`, value: scenario_b_results.mep_costs.hvac_cost, path: 'drivingRange.capex_assumptions.mep_systems.hvac_system.cost_per_m2_hvac'},
+                    {label: 'Sistem Plumbing', calculation: `Lump Sum`, value: scenario_b_results.mep_costs.plumbing_cost, path: 'drivingRange.capex_assumptions.mep_systems.plumbing_system.lump_sum_cost'},
+                    {label: 'Sistem Elektrikal', calculation: `${a.mep_systems.electrical_system.rate_of_physical_cost * 100}% dari biaya fisik dasar`, value: scenario_b_results.mep_costs.electrical_cost, path: 'drivingRange.capex_assumptions.mep_systems.electrical_system.rate_of_physical_cost'},
+                    {label: 'Izin, Desain & Pengawasan', calculation: `${a.other_costs.permit_design_rate_of_physical_cost * 100}% dari biaya fisik`, value: scenario_b_results.permit_cost, path: 'drivingRange.capex_assumptions.other_costs.permit_design_rate_of_physical_cost'},
                 ],
-                subtotal: subtotal_b, contingency: contingency_b, total: subtotal_b + contingency_b
+                subtotal: scenario_b_results.subtotal, contingency: scenario_b_results.contingency, total: scenario_b_results.total
             }
         };
     },
