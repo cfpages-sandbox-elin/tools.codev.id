@@ -20,34 +20,45 @@ projectConfig.site_parameters = {
     }
 };
 
-projectConfig.digital_systems = {
+projectConfig.digital_capex = {
     booking_system: {
-        description: "Platform web & mobile-friendly untuk pemesanan lapangan Padel dan bay Driving Range.",
-        features: ["Jadwal ketersediaan real-time", "Gateway pembayaran online (QRIS, VA, Kartu Kredit)", "Manajemen paket & membership"],
-        vendor_examples: "Ayo Indonesia, Lapang.co, atau Custom Development",
-        estimated_cost: 75000000 // Biaya pengembangan / lisensi awal
+        title: "Sistem Booking Online",
+        notes: "Platform terpusat untuk Padel & Driving Range.",
+        items: [
+            { name: "Pengembangan & Lisensi Awal (Tahun Pertama)", quantity: 1, unit_cost: 75000000, brand_example: "Custom Dev / Ayo Indonesia" }
+        ]
     },
     pos_system: {
-        description: "Sistem Point-of-Sale untuk kasir di F&B dan Pro Shop.",
-        features: ["Manajemen inventaris", "Integrasi dengan sistem pembayaran", "Laporan penjualan harian"],
-        vendor_examples: "MokaPOS, Majoo, iReap",
-        estimated_cost: 25000000 // Termasuk hardware (tablet, printer) dan lisensi
+        title: "Sistem Kasir (Point of Sale)",
+        notes: "Sistem terpusat untuk F&B dan Pro Shop dengan beberapa titik hardware.",
+        items: [
+            { name: "Lisensi Software POS (Tahunan)", quantity: 1, unit_cost: 3000000, brand_example: "MokaPOS / Majoo" },
+            { name: "Tablet Kasir Utama", quantity: 2, unit_cost: 5000000, brand_example: "Samsung Galaxy Tab / iPad" },
+            { name: "Printer Struk Thermal", quantity: 2, unit_cost: 1500000, brand_example: "Epson / Star Micronics" },
+            { name: "Cash Drawer (Laci Uang)", quantity: 2, unit_cost: 1000000, brand_example: "-" },
+            { name: "Handheld Terminal (untuk F&B)", quantity: 2, unit_cost: 3500000, brand_example: "Sunmi / iMin" }
+        ]
     },
     cctv_security: {
-        description: "Sistem pengawasan keamanan untuk area parkir, lounge, dan koridor.",
-        features: ["Kamera resolusi tinggi", "Penyimpanan rekaman berbasis cloud/NVR", "Akses pemantauan jarak jauh"],
-        vendor_examples: "Hikvision, Dahua",
-        estimated_cost: 50000000
+        title: "Sistem Keamanan CCTV",
+        notes: "Mencakup area parkir, lounge, koridor, dan kasir.",
+        items: [
+            { name: "Kamera Indoor Dome 4MP", quantity: 8, unit_cost: 1200000, brand_example: "Hikvision / Dahua" },
+            { name: "Kamera Outdoor Bullet 4MP", quantity: 8, unit_cost: 1500000, brand_example: "Hikvision / Dahua" },
+            { name: "Network Video Recorder (NVR) 16 Channel + HDD", quantity: 1, unit_cost: 8000000, brand_example: "Hikvision" },
+            { name: "Biaya Instalasi & Material", quantity: 1, unit_cost: 10000000, brand_example: "-" }
+        ]
     },
     wifi_network: {
-        description: "Infrastruktur jaringan internet untuk operasional dan tamu.",
-        features: ["Cakupan di seluruh area (lounge, bay, kafe)", "Jaringan terpisah untuk tamu dan operasional", "Manajemen bandwidth"],
-        vendor_examples: "Ubiquiti UniFi, TP-Link Omada",
-        estimated_cost: 30000000
-    },
-    // CATATAN: Biaya Ball Tracker tidak dimasukkan di sini karena sudah dihitung
-    // secara spesifik per bay dalam `drivingRange.capex_assumptions.equipment`.
-    // Ini memastikan model biaya tetap konsisten.
+        title: "Infrastruktur Jaringan & WiFi",
+        notes: "Menyediakan koneksi untuk operasional (POS, Ball Tracker) dan tamu.",
+        items: [
+            { name: "Access Point Indoor WiFi 6", quantity: 4, unit_cost: 2500000, brand_example: "Ubiquiti UniFi / TP-Link Omada" },
+            { name: "Access Point Outdoor WiFi 6", quantity: 2, unit_cost: 3500000, brand_example: "Ubiquiti UniFi / TP-Link Omada" },
+            { name: "Managed Switch & Router", quantity: 1, unit_cost: 8000000, brand_example: "MikroTik / Ubiquiti" },
+            { name: "Biaya Instalasi & Kabel", quantity: 1, unit_cost: 5000000, brand_example: "-" }
+        ]
+    }
 };
 
 projectConfig.assumptions = {
