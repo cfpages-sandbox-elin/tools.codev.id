@@ -182,10 +182,12 @@ projectConfig.drivingRange = {
         workdays_in_month: 22, 
         weekend_days_in_month: 8, 
         cogs_rate_fnb: 0.40,
+        operational_hours_per_day: 16, // Asumsi jam buka dari pagi hingga malam
+        avg_session_duration_minutes: 50, // Rata-rata waktu untuk 100 bola + persiapan
         variable_costs_per_session: {
-            electricity_dispenser_kwh: 0.05, // Asumsi kWh untuk dispenser per 100 bola
-            ball_wear_cost_per_100_hits: 8000, // Asumsi biaya keausan/penyusutan bola per 100 pukulan
-            cleaning_supplies: 500 // Asumsi biaya pembersih untuk bay
+            electricity_dispenser_kwh: 0.05, 
+            ball_wear_cost_per_100_hits: 8000,
+            cleaning_supplies: 500
         }
     },
     revenue: {
@@ -272,10 +274,11 @@ projectConfig.padel = {
         weekend_days_in_month: 8, 
         operational_hours_per_day: 18, 
         cogs_rate_fnb: 0.30, 
+        downtime_per_hour_minutes: 10,
         variable_costs_per_hour: {
-            court_lights_kw: 4.5, // Asumsi total kW lampu untuk 1 lapangan
-            ball_replacement_cost_per_hour: 5000, // Asumsi biaya penyusutan bola padel per jam main
-            cleaning_supplies: 2500 // Asumsi biaya pembersih & air untuk lapangan
+            court_lights_kw: 4.5,
+            ball_replacement_cost_per_hour: 5000,
+            cleaning_supplies: 2500
         }
     },
     revenue: {

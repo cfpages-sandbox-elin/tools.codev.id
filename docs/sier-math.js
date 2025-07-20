@@ -453,7 +453,7 @@ const sierMath = {
         } else {
             const vc = unit.operational_assumptions.variable_costs_per_hour;
             const electricityCost = vc.court_lights_kw * kwhPrice;
-            variableCostBreakdown = { 'Listrik (Lampu Lapangan)': electricityCost, 'Penggantian Bola': vc.ball_replacement_cost_per_hour, 'Pembersih Lapangan': vc.cleaning_supplies };
+            variableCostBreakdown = { 'Penggantian Bola': vc.ball_replacement_cost_per_hour, 'Pembersih Lapangan': vc.cleaning_supplies, 'Listrik (Lampu Lapangan)': electricityCost };
             variableCostPerUnit = Object.values(variableCostBreakdown).reduce((sum, val) => sum + val, 0);
             const prices = unit.revenue.main_revenue.price_per_hour;
             pricePerUnit = (prices.weekday_offpeak + prices.weekday_peak + prices.weekend) / 3;
@@ -469,7 +469,12 @@ const sierMath = {
         return { totalFixedCostMonthly, fixedCostBreakdown, variableCostBreakdown, contributionMargin, bepInUnitsMonthly, bepInUnitsDaily, unitLabel };
     },
 
-    // BARU: Fungsi master untuk semua analisis strategi & skenario
+    /**
+     * FUNGSI MASTER BARU/REFACTOR: Menghitung semua analisis strategis untuk satu unit bisnis.
+     * Menggabungkan logika BEP, Profitabilitas, dan Skenario menjadi satu.
+     * @param {string} unitName - 'drivingRange' atau 'padel'
+     * @returns {object} - Objek komprehensif berisi semua data analisis.
+     */
     getStrategicAnalysis(unitName) {
         const bepAnalysis = this.calculateBEP(unitName);
         const mods = projectConfig.assumptions.scenario_modifiers;

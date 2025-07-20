@@ -76,7 +76,7 @@ const sierVisualStrategy = {
                     <!-- Pesimis -->
                     <div class="bg-red-50 p-3 rounded-md border border-red-200 text-center">
                         <p class="font-bold text-red-800">Pesimis</p>
-                        <p class="text-xs text-red-600">(${(mods.pessimistic_revenue * 100 - 100).toFixed(0)}% Revenue)</p>
+                        <p class="text-xs text-red-600">(${ (mods.pessimistic_revenue * 100 - 100).toFixed(0) }% Revenue)</p>
                         <hr class="my-2">
                         <p class="text-sm text-gray-600">Laba Bersih/Thn</p>
                         <p class="font-semibold text-lg ${scenarioAnalysis.pessimistic.netProfit < 0 ? 'text-red-600' : 'text-gray-800'}">Rp ${sierHelpers.formatNumber(Math.round(scenarioAnalysis.pessimistic.netProfit))}</p>
@@ -96,7 +96,7 @@ const sierVisualStrategy = {
                     <!-- Optimis -->
                     <div class="bg-green-50 p-3 rounded-md border border-green-200 text-center">
                         <p class="font-bold text-green-800">Optimis</p>
-                        <p class="text-xs text-green-600">(+${(mods.optimistic_revenue * 100 - 100).toFixed(0)}% Revenue)</p>
+                        <p class="text-xs text-green-600">(+${ (mods.optimistic_revenue * 100 - 100).toFixed(0) }% Revenue)</p>
                         <hr class="my-2">
                         <p class="text-sm text-gray-600">Laba Bersih/Thn</p>
                         <p class="font-semibold text-lg text-gray-800">Rp ${sierHelpers.formatNumber(Math.round(scenarioAnalysis.optimistic.netProfit))}</p>
