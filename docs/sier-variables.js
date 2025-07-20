@@ -3,10 +3,6 @@
 // Objek konfigurasi utama yang menampung semua asumsi proyek.
 const projectConfig = {};
 
-// ====================================================================
-// BAGIAN BARU: Parameter Fisik & Lokasi (Berdasarkan PDF & Pengukuran)
-// Semua data di bawah ini berasal dari analisis gambar teknis dan Google Earth.
-// ====================================================================
 projectConfig.site_parameters = {
     driving_range: {
         // DIUBAH: Panjang bangunan tempat bay berada (dari PDF detail).
@@ -24,10 +20,36 @@ projectConfig.site_parameters = {
     }
 };
 
+projectConfig.digital_systems = {
+    booking_system: {
+        description: "Platform web & mobile-friendly untuk pemesanan lapangan Padel dan bay Driving Range.",
+        features: ["Jadwal ketersediaan real-time", "Gateway pembayaran online (QRIS, VA, Kartu Kredit)", "Manajemen paket & membership"],
+        vendor_examples: "Ayo Indonesia, Lapang.co, atau Custom Development",
+        estimated_cost: 75000000 // Biaya pengembangan / lisensi awal
+    },
+    pos_system: {
+        description: "Sistem Point-of-Sale untuk kasir di F&B dan Pro Shop.",
+        features: ["Manajemen inventaris", "Integrasi dengan sistem pembayaran", "Laporan penjualan harian"],
+        vendor_examples: "MokaPOS, Majoo, iReap",
+        estimated_cost: 25000000 // Termasuk hardware (tablet, printer) dan lisensi
+    },
+    cctv_security: {
+        description: "Sistem pengawasan keamanan untuk area parkir, lounge, dan koridor.",
+        features: ["Kamera resolusi tinggi", "Penyimpanan rekaman berbasis cloud/NVR", "Akses pemantauan jarak jauh"],
+        vendor_examples: "Hikvision, Dahua",
+        estimated_cost: 50000000
+    },
+    wifi_network: {
+        description: "Infrastruktur jaringan internet untuk operasional dan tamu.",
+        features: ["Cakupan di seluruh area (lounge, bay, kafe)", "Jaringan terpisah untuk tamu dan operasional", "Manajemen bandwidth"],
+        vendor_examples: "Ubiquiti UniFi, TP-Link Omada",
+        estimated_cost: 30000000
+    },
+    // CATATAN: Biaya Ball Tracker tidak dimasukkan di sini karena sudah dihitung
+    // secara spesifik per bay dalam `drivingRange.capex_assumptions.equipment`.
+    // Ini memastikan model biaya tetap konsisten.
+};
 
-// ====================================================================
-// Asumsi Finansial & Operasional Global
-// ====================================================================
 projectConfig.assumptions = {
     tax_rate_profit: 0.22,
     discount_rate_wacc: 0.12,
@@ -40,10 +62,6 @@ projectConfig.assumptions = {
     }
 };
 
-
-// ====================================================================
-// Konfigurasi Unit Bisnis DRIVING RANGE
-// ====================================================================
 projectConfig.drivingRange = {
     operational_assumptions: { workdays_in_month: 22, weekend_days_in_month: 8, cogs_rate_fnb: 0.40 },
     revenue: {
@@ -107,9 +125,6 @@ projectConfig.drivingRange = {
     }
 };
 
-// ====================================================================
-// Konfigurasi Unit Bisnis PADEL
-// ====================================================================
 projectConfig.padel = {
     operational_assumptions: { workdays_in_month: 22, weekend_days_in_month: 8, operational_hours_per_day: 18, cogs_rate_fnb: 0.30 },
     revenue: {

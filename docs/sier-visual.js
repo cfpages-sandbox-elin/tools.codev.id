@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sierHelpers.tryToRender(sierVisualSurvey.render.bind(sierVisualSurvey));
         sierHelpers.tryToRender(sierVisualFinance.render.bind(sierVisualFinance));
         sierHelpers.tryToRender(sierVisualTechnical.render.bind(sierVisualTechnical));
-        
+        sierHelpers.tryToRender(sierVisualDigital.render.bind(sierVisualDigital));
         sierHelpers.tryToRender(sierChart.renderAllCharts.bind(sierChart));
     }
 
