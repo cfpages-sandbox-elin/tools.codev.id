@@ -211,9 +211,11 @@ projectConfig.drivingRange = {
             ball_management_system_lump_sum: 200000000 // Sistem kolektor bola, dll.
         },
         safety_net: {
-            // DIUBAH: Sesuai data baru dari gambar
-            field_length_m: 227, // Garis ungu
-            field_width_m: 73,   // Dihitung dari total panjang jaring (527 - 227 - 227)
+            total_perimeter_m: 527,
+            field_length_m: projectConfig.site_parameters.driving_range.field_length_m, 
+            get field_width_m() {
+                return this.total_perimeter_m - (this.field_length_m * 2);
+            },
             netting: {
                 cost_per_m2: 150000,
             },
@@ -221,7 +223,6 @@ projectConfig.drivingRange = {
                 spacing_m: 20,
                 height_distribution: {
                     far_side_m: 12,
-                    // DIUBAH: Ketinggian sisi kiri dan kanan disamakan
                     left_right_side_m: 8,
                 },
                 foundation_cost_per_pole: 25000000,

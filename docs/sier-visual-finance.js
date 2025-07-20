@@ -2,57 +2,32 @@
 // VERSI BARU: Merender semua elemen visual non-chart terkait Keuangan dengan tampilan yang lebih baik.
 
 const sierVisualFinance = {
-
-    /**
-     * Merender tabel asumsi yang interaktif dengan layout dan style yang telah diperbaiki.
-     */
     _renderAssumptionsVisuals() {
         const container = document.getElementById('assumptions-container');
         if (!container) return;
-
         const { assumptions: globalAssumptions, drivingRange, padel } = projectConfig;
 
-        // Helper baru untuk membuat baris-baris tabel dengan style yang lebih baik
         const createTableRows = (data, basePath) => {
             return Object.entries(data).map(([key, value]) => {
-                // Jangan render 'capex' dan 'capex_assumptions' di tabel asumsi utama
                 if (key === 'capex' || key === 'capex_assumptions') return '';
-
                 const currentPath = `${basePath}.${key}`;
                 const translatedKey = sierTranslate.translate(key);
 
-                // Jika nilai bukan objek kompleks, render sebagai baris utama yang bisa diedit
                 if (typeof value !== 'object' || value === null || ('count' in value && 'salary' in value) || ('electricity_kwh_price' in value)) {
-                    let displayValue;
-                    // Format khusus untuk objek gaji atau utilitas
+                    let editControl;
                     if (typeof value === 'object' && value !== null) {
-                         displayValue = Object.entries(value).map(([subKey, subVal]) => {
-                            const translatedSubKey = sierTranslate.translate(subKey);
-                            return `<span class="font-medium">${translatedSubKey}:</span> ${sierHelpers.formatNumber(subVal)}`;
+                        editControl = Object.entries(value).map(([subKey, subVal]) => {
+                           const translatedSubKey = sierTranslate.translate(subKey);
+                           // Objek gaji/utilitas tidak dibuat editable untuk menjaga simplisitas
+                           return `<span class="font-medium">${translatedSubKey}:</span> ${sierHelpers.formatNumber(subVal)}`;
                         }).join(', ');
-                    } else { // Format untuk angka biasa
-                        if ((key.includes('rate') || key.includes('okupansi')) && value < 2 && value > 0) {
-                            displayValue = `${(value * 100).toFixed(1)}%`;
-                        } else {
-                            displayValue = sierHelpers.formatNumber(value);
-                        }
+                    } else {
+                        const isPercent = (key.includes('rate') || key.includes('okupansi')) && value < 2 && value > 0;
+                        // PANGGIL HELPER BARU DI SINI
+                        editControl = sierEditable.createEditableNumber(value, currentPath, { format: isPercent ? 'percent' : '' });
                     }
-                    
-                    const isEditableNumber = typeof value === 'number';
-                    // DIUBAH: Posisi ikon pensil sekarang di kiri, menggunakan flexbox.
-                    const editControls = isEditableNumber 
-                        ? `<div class="relative flex items-center gap-x-3 group">
-                                <a href="#" class="edit-icon text-gray-400 hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z"/></svg>
-                                </a>
-                                <span class="value-display font-semibold text-gray-800">${displayValue}</span>
-                                <input type="number" step="any" value="${value}" data-path="${currentPath}" class="value-input absolute top-1/2 -translate-y-1/2 left-0 w-full p-1 border rounded shadow-lg hidden">
-                           </div>`
-                        : `<span class="font-semibold text-gray-800">${displayValue}</span>`;
-
-                    return `<tr class="border-b border-gray-200 hover:bg-gray-50"><td class="py-3 px-4 text-gray-600 w-2/5">${translatedKey}</td><td class="py-3 px-4">${editControls}</td></tr>`;
+                    return `<tr class="border-b border-gray-200 hover:bg-gray-50"><td class="py-3 px-4 text-gray-600 w-2/5">${translatedKey}</td><td class="py-3 px-4">${editControl}</td></tr>`;
                 } else {
-                    // Jika nilai adalah objek kompleks (seperti Revenue, Opex), render sebagai sub-bagian
                     let subRows = createTableRows(value, currentPath);
                     return `<tr class="border-b border-gray-200"><td class="py-3 px-4 text-gray-600 w-2/5 align-top font-medium">${translatedKey}</td><td class="py-3 px-4"><table class="w-full">${subRows}</table></td></tr>`;
                 }
@@ -61,11 +36,11 @@ const sierVisualFinance = {
 
         const createBusinessModelSection = (title, data, basePath, theme) => {
             const tableContent = createTableRows(data, basePath);
-            let bgColor, textColor;
+            let bgColor;
             switch(theme) {
-                case 'blue': bgColor = 'bg-blue-600'; textColor = 'text-blue-800'; break;
-                case 'purple': bgColor = 'bg-purple-600'; textColor = 'text-purple-800'; break;
-                default: bgColor = 'bg-gray-700'; textColor = 'text-gray-800'; break;
+                case 'blue': bgColor = 'bg-blue-600'; break;
+                case 'purple': bgColor = 'bg-purple-600'; break;
+                default: bgColor = 'bg-gray-700'; break;
             }
 
             return `
@@ -80,13 +55,8 @@ const sierVisualFinance = {
             `;
         };
         
-        // DIUBAH: Layout utama menjadi `space-y-12` untuk tumpukan vertikal.
-        container.innerHTML = `
-            <div class="space-y-12">
-                ${createBusinessModelSection('A. Asumsi Global', globalAssumptions, 'assumptions', 'gray')}
-                ${createBusinessModelSection('B. Model Bisnis Driving Range', drivingRange, 'drivingRange', 'blue')}
-                ${createBusinessModelSection('C. Model Bisnis Padel', padel, 'padel', 'purple')}
-            </div>`;
+        container.innerHTML = `<div class="space-y-12">${createBusinessModelSection('A. Asumsi Global', globalAssumptions, 'assumptions', 'gray')}${createBusinessModelSection('B. Model Bisnis Driving Range', drivingRange, 'drivingRange', 'blue')}${createBusinessModelSection('C. Model Bisnis Padel', padel, 'padel', 'purple')}</div>`;
+
     },
 
     // Sisa fungsi lainnya tidak perlu diubah karena sudah benar
