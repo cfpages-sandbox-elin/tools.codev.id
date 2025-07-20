@@ -465,7 +465,6 @@ const sierMath = {
 
         const bepInUnitsMonthly = totalFixedCostMonthly / contributionMargin;
         const bepInUnitsDaily = bepInUnitsMonthly / 30;
-<<<<<<< HEAD
 
         return { totalFixedCostMonthly, fixedCostBreakdown, variableCostBreakdown, contributionMargin, bepInUnitsMonthly, bepInUnitsDaily, unitLabel };
     },
@@ -479,26 +478,11 @@ const sierMath = {
         const realistic = this._getUnitCalculations(unitName, 1.0, 1.0);
         const pessimistic = this._getUnitCalculations(unitName, mods.pessimistic_revenue, mods.pessimistic_opex);
         const optimistic = this._getUnitCalculations(unitName, mods.optimistic_revenue, mods.optimistic_opex);
-=======
-        let bepPerAssetDaily = 0;
-        if (unitName === 'drivingRange') {
-            bepPerAssetDaily = bepInUnitsDaily / unit.revenue.main_revenue.bays;
-        } else if (unitName === 'padel') {
-            bepPerAssetDaily = bepInUnitsDaily / unit.revenue.main_revenue.courts;
-        }
-
-        // --- BARU: Perhitungan Payback Period ---
-        const unitFinancials = this._getUnitCalculations(unitName);
-        const totalCapex = unitFinancials.capex.total;
-        const annualCashFlow = unitFinancials.pnl.cashFlowFromOps;
-        const paybackPeriodInYears = annualCashFlow > 0 ? (totalCapex / annualCashFlow) : Infinity;
->>>>>>> 5eda9ffd363220490036067e6a92aa1fe6b10f1c
         
         // Fungsi helper untuk menghitung payback period dari data
         const getPayback = (data) => data.pnl.cashFlowFromOps > 0 ? data.capex.total / data.pnl.cashFlowFromOps : Infinity;
 
         return {
-<<<<<<< HEAD
             bepAnalysis: bepAnalysis,
             profitabilityAnalysis: {
                 totalCapex: realistic.capex.total,
@@ -521,20 +505,6 @@ const sierMath = {
                     payback: getPayback(optimistic)
                 }
             }
-=======
-            totalFixedCostMonthly,
-            fixedCostBreakdown,
-            pricePerUnit,
-            variableCostPerUnit,
-            variableCostBreakdown,
-            contributionMargin,
-            bepInUnitsMonthly,
-            bepInUnitsDaily,
-            bepPerAssetDaily,
-            unitLabel,
-            totalCapex, // Kirim data CapEx
-            paybackPeriodInYears // Kirim data Payback Period
->>>>>>> 5eda9ffd363220490036067e6a92aa1fe6b10f1c
         };
     }
 };
