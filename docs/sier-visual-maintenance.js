@@ -1,5 +1,5 @@
 // File: sier-visual-maintenance.js
-// Merender tabel Rencana Pemeliharaan & Biaya Operasional.
+// Merender tabel Rencana Pemeliharaan & Biaya Operasional secara Rinci.
 
 const sierVisualMaintenance = {
     // Fungsi helper untuk mengambil nilai dari path string
@@ -15,13 +15,13 @@ const sierVisualMaintenance = {
         let grandTotalMonthlyCost = 0;
         let tableBodyHtml = '';
 
-        // Pre-calculate values needed for cost basis
+        // --- Pra-kalkulasi nilai basis yang akan digunakan berulang kali ---
         const totalBays = projectConfig.drivingRange.revenue.main_revenue.bays;
         const premiumBaysCount = Math.round(totalBays * projectConfig.drivingRange.capex_assumptions.equipment.premium_bays.percentage_of_total);
         const normalBaysCount = totalBays - premiumBaysCount;
         const ballTrackerCapex = premiumBaysCount * projectConfig.drivingRange.capex_assumptions.equipment.premium_bays.cost_per_bay_ball_tracker;
         const netCapex = (projectConfig.drivingRange.capex_assumptions.safety_net.field_width_m * projectConfig.drivingRange.capex_assumptions.safety_net.poles.height_distribution.far_side_m +
-                       projectConfig.drivingRange.capex_assumptions.safety_net.field_length_m * projectConfig.drivingRange.capex_assumptions.safety_net.poles.height_distribution.left_right_side_m * 2) * 
+                       projectConfig.drivingRange.capex_assumptions.safety_net.field_length_m * projectConfig.drivingRange.capex_assumptions.safety_net.poles.height_distribution.left_right_side_m * 2) *
                        projectConfig.drivingRange.capex_assumptions.safety_net.netting.cost_per_m2;
 
         const preCalculated = {
@@ -30,24 +30,42 @@ const sierVisualMaintenance = {
             netting_material_cost: netCapex
         };
 
+        // --- Loop utama untuk membangun tabel ---
         for (const categoryKey in plan) {
             const category = plan[categoryKey];
             tableBodyHtml += `<tbody class="bg-gray-50"><td colspan="5" class="p-3 font-bold text-gray-800">${category.title}</td></tbody><tbody class="divide-y">`;
 
             category.items.forEach(item => {
                 let costPerCycle = 0;
-                const basis = item.cost_basis;
+                let calculationDetail = '';
+                const calc = item.calculation;
 
-                if (basis.quantity_ref && basis.unit_cost_ref) {
-                    costPerCycle = this._getValueByPath(basis.quantity_ref) * this._getValueByPath(basis.unit_cost_ref);
-                } else if (basis.quantity_calc && basis.unit_cost) {
-                    costPerCycle = preCalculated[basis.quantity_calc] * basis.unit_cost;
-                } else if (basis.percentage_of_capex && basis.capex_ref) {
-                    costPerCycle = preCalculated[basis.capex_ref] * basis.percentage_of_capex;
-                } else if (basis.quantity_ref && basis.unit_cost) {
-                    costPerCycle = this._getValueByPath(basis.quantity_ref) * basis.unit_cost;
-                } else {
-                    costPerCycle = basis.quantity * basis.unit_cost;
+                switch (calc.type) {
+                    case "quantity_x_unit_cost":
+                        const qty = calc.quantity_ref ? this._getValueByPath(calc.quantity_ref) : preCalculated[calc.quantity_calc];
+                        const cost = calc.unit_cost_ref ? this._getValueByPath(calc.unit_cost_ref) : calc.unit_cost;
+                        costPerCycle = qty * cost;
+                        calculationDetail = `${sierHelpers.formatNumber(qty)} unit × Rp ${sierHelpers.formatNumber(cost)}`;
+                        break;
+
+                    case "area_x_rate_x_price":
+                        const unitCount = this._getValueByPath(calc.unit_count_ref);
+                        const totalArea = unitCount * calc.area_m2_per_unit;
+                        const totalRate = totalArea * calc.rate_kg_per_m2;
+                        costPerCycle = totalRate * calc.price_per_kg;
+                        calculationDetail = `${unitCount} lpgn × ${calc.area_m2_per_unit} m² × ${calc.rate_kg_per_m2} kg/m² @ Rp ${sierHelpers.formatNumber(calc.price_per_kg)}/kg`;
+                        break;
+
+                    case "percentage_of_capex":
+                        const capexValue = preCalculated[calc.capex_source];
+                        costPerCycle = capexValue * calc.percentage;
+                        calculationDetail = `${calc.percentage * 100}% dari Rp ${sierHelpers.formatNumber(Math.round(capexValue))}`;
+                        break;
+                    
+                    case "lump_sum":
+                        costPerCycle = calc.cost;
+                        calculationDetail = "Biaya tetap per siklus";
+                        break;
                 }
                 
                 const monthlyCost = costPerCycle / item.lifespan_months;
@@ -56,13 +74,13 @@ const sierVisualMaintenance = {
                 tableBodyHtml += `
                     <tr>
                         <td class="px-3 py-2">${item.name}<em class="block text-xs text-gray-400">${item.notes}</em></td>
-                        <td class="px-3 py-2 text-center">${item.lifespan_months} bulan</td>
+                        <td class="px-3 py-2 text-sm text-gray-600">${calculationDetail}</td>
+                        <td class="px-3 py-2 text-center">${item.lifespan_months} bln</td>
                         <td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(costPerCycle))}</td>
                         <td class="px-3 py-2 text-right font-mono text-blue-600 font-semibold">${sierHelpers.formatNumber(Math.round(monthlyCost))}</td>
                     </tr>
                 `;
             });
-
             tableBodyHtml += `</tbody>`;
         }
         
@@ -76,16 +94,17 @@ const sierVisualMaintenance = {
                     <table class="w-full text-sm">
                         <thead class="bg-gray-200 text-gray-700 uppercase text-xs">
                             <tr>
-                                <th class="p-3 text-left w-2/5">Item Pemeliharaan</th>
-                                <th class="p-3 text-center w-[15%]">Frekuensi</th>
-                                <th class="p-3 text-right w-1/4">Biaya per Siklus (Rp)</th>
-                                <th class="p-3 text-right w-1/4">Estimasi Biaya per Bulan (Rp)</th>
+                                <th class="p-3 text-left w-[30%]">Item Pemeliharaan</th>
+                                <th class="p-3 text-left w-[30%]">Detail Perhitungan</th>
+                                <th class="p-3 text-center w-[10%]">Frekuensi</th>
+                                <th class="p-3 text-right w-[15%]">Biaya per Siklus (Rp)</th>
+                                <th class="p-3 text-right w-[15%]">Estimasi Biaya per Bulan (Rp)</th>
                             </tr>
                         </thead>
                         ${tableBodyHtml}
                         <tfoot>
                             <tr class="bg-orange-600 text-white font-bold text-base">
-                                <td class="p-4" colspan="3">Total Estimasi Biaya Pemeliharaan per Bulan</td>
+                                <td class="p-4" colspan="4">Total Estimasi Biaya Pemeliharaan per Bulan</td>
                                 <td class="p-4 text-right font-mono">${sierHelpers.formatNumber(Math.round(grandTotalMonthlyCost))}</td>
                             </tr>
                         </tfoot>
@@ -93,7 +112,7 @@ const sierVisualMaintenance = {
                 </div>
             </div>
         `;
-        console.log("[sier-visual-maintenance] Rencana Pemeliharaan: Berhasil dirender.");
+        console.log("[sier-visual-maintenance] Rencana Pemeliharaan Rinci: Berhasil dirender.");
     }
 };
 
