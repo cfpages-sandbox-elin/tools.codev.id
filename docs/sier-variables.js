@@ -48,7 +48,7 @@ projectConfig.drivingRange = {
     operational_assumptions: { workdays_in_month: 22, weekend_days_in_month: 8, cogs_rate_fnb: 0.40 },
     revenue: {
         main_revenue: {
-            // DIUBAH: Logika perhitungan bay yang SEKARANG BENAR.
+            // DIUBAH: Logika perhitungan bay sekarang berdasarkan parameter fisik bangunan.
             bays: Math.floor(projectConfig.site_parameters.driving_range.building_length_m / projectConfig.site_parameters.driving_range.bay_width_m) * projectConfig.site_parameters.driving_range.levels,
             price_per_100_balls: 120000,
             occupancy_rate_per_day: { weekday: 2.0, weekend: 5.0 }
@@ -57,11 +57,53 @@ projectConfig.drivingRange = {
     },
     opexMonthly: { salaries_wages: { manager: { count: 1, salary: 12000000 }, supervisor: { count: 2, salary: 7000000 }, admin_cashier: { count: 3, salary: 5000000 }, coach_trainer: { count: 2, salary: 6000000 }, cleaning_security: { count: 4, salary: 4000000 } }, utilities: { electricity_kwh_price: 1700, electricity_kwh_usage: 12000, water_etc: 5000000 }, marketing_promotion: 15000000, maintenance_repair: 12000000, rent_land: 33000000, other_operational: 10000000 },
     capex_assumptions: {
-        reclamation: { area_m2: 4000, lake_depth_m: 4.0, cost_per_m3: 350000, sheet_pile_perimeter_m: 250, cost_per_m_sheet_pile: 2500000 },
-        piling: { points_count: 160, length_per_point_m: 16, cost_per_m_mini_pile: 275000, lump_sum_pile_cap: 450000000 },
-        building: { dr_bays_area_m2: 3204, dr_bays_cost_per_m2: 2500000, cafe_area_m2: 267, cafe_cost_per_m2: 5000000 },
-        equipment: { ball_tracker_bays_count: 12, ball_tracker_cost_per_bay: 120000000, ball_dispenser_system_lump_sum: 300000000, bay_equipment_sets_count: 12, bay_equipment_cost_per_set: 25000000, floating_balls_count: 8000, floating_balls_cost_per_ball: 20000, ball_management_system_lump_sum: 200000000, safety_net_area_m2: 2500, safety_net_cost_per_m2: 150000 },
-        other_costs: { mep_rate_of_building_cost: 0.25, permit_design_rate_of_physical_cost: 0.08 }
+        // KLARIFIKASI: Angka ini adalah placeholder untuk pemodelan biaya dan bukan dari
+        // gambar teknik sipil. Angka ini harus divalidasi oleh konsultan perencana.
+        reclamation: { area_m2: 1000, lake_depth_m: 4.0, cost_per_m3: 350000, sheet_pile_perimeter_m: 140, cost_per_m_sheet_pile: 2500000 },
+        piling: { points_count: 80, length_per_point_m: 16, cost_per_m_mini_pile: 275000, lump_sum_pile_cap: 250000000 },
+
+        building: {
+            // DIUBAH: Area bangunan sesuai PDF.
+            dr_bays_area_m2: 4361,
+            dr_bays_cost_per_m2: 2500000,
+            cafe_area_m2: 267,
+            cafe_cost_per_m2: 5000000
+        },
+        equipment: {
+            // BARU: Logika Bay Premium vs Normal
+            premium_bays: {
+                percentage_of_total: 0.4, // Asumsi 40% dari total bay adalah premium
+                cost_per_bay_ball_tracker: 120000000,
+                cost_per_bay_dispenser: 25000000, // Biaya sistem dispenser per bay premium
+            },
+            normal_bays: {
+                bay_equipment_cost_per_set: 5000000, // Biaya matras & partisi standar
+            },
+            floating_balls_count: 8000,
+            floating_balls_cost_per_ball: 20000,
+            ball_management_system_lump_sum: 200000000 // Sistem kolektor bola, dll.
+        },
+        safety_net: {
+            // DIUBAH: Sesuai data baru dari gambar
+            field_length_m: 227, // Garis ungu
+            field_width_m: 73,   // Dihitung dari total panjang jaring (527 - 227 - 227)
+            netting: {
+                cost_per_m2: 150000,
+            },
+            poles: {
+                spacing_m: 20,
+                height_distribution: {
+                    far_side_m: 12,
+                    // DIUBAH: Ketinggian sisi kiri dan kanan disamakan
+                    left_right_side_m: 8,
+                },
+                foundation_cost_per_pole: 25000000,
+            }
+        },
+        other_costs: {
+            mep_rate_of_building_cost: 0.25,
+            permit_design_rate_of_physical_cost: 0.08
+        }
     }
 };
 

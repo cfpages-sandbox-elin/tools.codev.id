@@ -183,56 +183,71 @@ const sierMath = {
     // ====================================================================
     _calculateDrCapex() {
         const a = projectConfig.drivingRange.capex_assumptions;
+        const siteParams = projectConfig.site_parameters;
+        const drRevenue = projectConfig.drivingRange.revenue.main_revenue;
         const global = projectConfig.assumptions;
         const createRow = (category, component, calc, val, path) => ({ category, component, calculation: calc, value: val, path });
 
+        // --- Perhitungan Jaring Pengaman (Logika Baru) ---
+        const net = a.safety_net;
+        const poles_far = Math.ceil(net.field_width_m / net.poles.spacing_m);
+        const poles_sides = Math.ceil(net.field_length_m / net.poles.spacing_m) * 2; // Kiri dan Kanan
+        const total_poles = poles_far + poles_sides;
+        const pole_foundation_cost = total_poles * net.poles.foundation_cost_per_pole;
+
+        const area_far = net.field_width_m * net.poles.height_distribution.far_side_m;
+        const area_sides = net.field_length_m * net.poles.height_distribution.left_right_side_m * 2; // Kiri dan Kanan
+        const total_net_area = area_far + area_sides;
+        const netting_material_cost = total_net_area * net.netting.cost_per_m2;
+        const totalSafetyNetCost = pole_foundation_cost + netting_material_cost;
+
+        // --- Perhitungan Peralatan (Logika Baru: Premium vs Normal) ---
         const eq = a.equipment;
+        const total_bays = drRevenue.bays;
+        const premium_bays_count = Math.round(total_bays * eq.premium_bays.percentage_of_total);
+        const normal_bays_count = total_bays - premium_bays_count;
+
         const eqCosts = {
-            ball_tracker: eq.ball_tracker_bays_count * eq.ball_tracker_cost_per_bay,
-            dispenser: eq.ball_dispenser_system_lump_sum,
-            bay_equipment: eq.bay_equipment_sets_count * eq.bay_equipment_cost_per_set,
+            ball_tracker: premium_bays_count * eq.premium_bays.cost_per_bay_ball_tracker,
+            dispenser: premium_bays_count * eq.premium_bays.cost_per_bay_dispenser,
+            normal_bay_equip: normal_bays_count * eq.normal_bays.bay_equipment_cost_per_set,
             balls: eq.floating_balls_count * eq.floating_balls_cost_per_ball,
             management: eq.ball_management_system_lump_sum,
-            safety_net: eq.safety_net_area_m2 * eq.safety_net_cost_per_m2,
         };
         const totalEquipmentCost = Object.values(eqCosts).reduce((s, v) => s + v, 0);
         
         const equipment_detail_rows = [
-            createRow('Teknologi', 'Sistem Ball-Tracking', `${eq.ball_tracker_bays_count} bay @ ...`, eqCosts.ball_tracker, 'drivingRange.capex_assumptions.equipment.ball_tracker_cost_per_bay'),
-            createRow('Teknologi', 'Sistem Dispenser Bola', 'Lump Sum', eqCosts.dispenser, 'drivingRange.capex_assumptions.equipment.ball_dispenser_system_lump_sum'),
-            createRow('Operasional', 'Peralatan Bay (Matras & Partisi)', `${eq.bay_equipment_sets_count} set @ ...`, eqCosts.bay_equipment, 'drivingRange.capex_assumptions.equipment.bay_equipment_cost_per_set'),
-            createRow('Operasional', 'Inventaris Bola Apung', `${eq.floating_balls_count} buah @ ...`, eqCosts.balls, 'drivingRange.capex_assumptions.equipment.floating_balls_cost_per_ball'),
+            createRow('Teknologi', 'Sistem Ball-Tracking (Premium)', `${premium_bays_count} bay @ ...`, eqCosts.ball_tracker, 'drivingRange.capex_assumptions.equipment.premium_bays.cost_per_bay_ball_tracker'),
+            createRow('Teknologi', 'Sistem Dispenser Bola (Premium)', `${premium_bays_count} bay @ ...`, eqCosts.dispenser, 'drivingRange.capex_assumptions.equipment.premium_bays.cost_per_bay_dispenser'),
+            createRow('Operasional', 'Peralatan Bay Standar (Normal)', `${normal_bays_count} set @ ...`, eqCosts.normal_bay_equip, 'drivingRange.capex_assumptions.equipment.normal_bays.bay_equipment_cost_per_set'),
+            createRow('Operasional', 'Inventaris Bola Apung', `${eq.floating_balls_count} buah @ ...`, eqCosts.balls, 'drivingRange.capex_assumptions.equipment.floating_balls_count'),
             createRow('Operasional', 'Sistem Manajemen Bola', 'Lump Sum', eqCosts.management, 'drivingRange.capex_assumptions.equipment.ball_management_system_lump_sum'),
-            createRow('Keamanan', 'Jaring Pengaman', `${eq.safety_net_area_m2} m² @ ...`, eqCosts.safety_net, 'drivingRange.capex_assumptions.equipment.safety_net_cost_per_m2'),
+            createRow('Keamanan', 'Pondasi Tiang Jaring', `${total_poles} tiang @ ...`, pole_foundation_cost, 'drivingRange.capex_assumptions.safety_net.poles.foundation_cost_per_pole'),
+            createRow('Keamanan', 'Material & Pemasangan Jaring', `${sierHelpers.formatNumber(Math.round(total_net_area))} m² @ ...`, netting_material_cost, 'drivingRange.capex_assumptions.safety_net.netting.cost_per_m2'),
         ];
         
+        // --- Perhitungan Biaya Bangunan & Total (Sama seperti sebelumnya) ---
         const bld = a.building;
         const totalBuildingCost = (bld.dr_bays_area_m2 * bld.dr_bays_cost_per_m2) + (bld.cafe_area_m2 * bld.cafe_cost_per_m2);
         
         const rec = a.reclamation;
-        const scenario_a_costs = {
-            reclamation_work: rec.area_m2 * rec.lake_depth_m * rec.cost_per_m3,
-            sheet_pile_work: rec.sheet_pile_perimeter_m * rec.cost_per_m_sheet_pile,
-        };
-        const physical_cost_a = scenario_a_costs.reclamation_work + scenario_a_costs.sheet_pile_work + totalBuildingCost + totalEquipmentCost;
+        const scenario_a_costs = { reclamation_work: rec.area_m2 * rec.lake_depth_m * rec.cost_per_m3, sheet_pile_work: rec.sheet_pile_perimeter_m * rec.cost_per_m_sheet_pile, };
+        const physical_cost_a = scenario_a_costs.reclamation_work + scenario_a_costs.sheet_pile_work + totalBuildingCost + totalEquipmentCost + totalSafetyNetCost;
         const mep_cost_a = totalBuildingCost * a.other_costs.mep_rate_of_building_cost;
         const permit_cost_a = physical_cost_a * a.other_costs.permit_design_rate_of_physical_cost;
         const subtotal_a = physical_cost_a + mep_cost_a + permit_cost_a;
         const contingency_a = subtotal_a * global.contingency_rate;
 
         const pil = a.piling;
-        const scenario_b_costs = {
-            piling_work: pil.points_count * pil.length_per_point_m * pil.cost_per_m_mini_pile,
-            pile_cap_work: pil.lump_sum_pile_cap,
-        };
-        const physical_cost_b = scenario_b_costs.piling_work + scenario_b_costs.pile_cap_work + totalBuildingCost + totalEquipmentCost;
+        const scenario_b_costs = { piling_work: pil.points_count * pil.length_per_point_m * pil.cost_per_m_mini_pile, pile_cap_work: pil.lump_sum_pile_cap, };
+        const physical_cost_b = scenario_b_costs.piling_work + scenario_b_costs.pile_cap_work + totalBuildingCost + totalEquipmentCost + totalSafetyNetCost;
         const mep_cost_b = totalBuildingCost * a.other_costs.mep_rate_of_building_cost;
         const permit_cost_b = physical_cost_b * a.other_costs.permit_design_rate_of_physical_cost;
         const subtotal_b = physical_cost_b + mep_cost_b + permit_cost_b;
         const contingency_b = subtotal_b * global.contingency_rate;
         
         return {
-            equipment_detail: { htmlRows: equipment_detail_rows, total: totalEquipmentCost },
+            equipment_detail: { htmlRows: equipment_detail_rows, total: totalEquipmentCost + totalSafetyNetCost },
             scenario_a: {
                 description: 'Skenario ini melibatkan pengurukan sebagian danau untuk menciptakan daratan baru sebagai landasan konstruksi. Ini bersifat permanen dan memiliki dampak lingkungan yang signifikan.',
                 htmlRows: [
