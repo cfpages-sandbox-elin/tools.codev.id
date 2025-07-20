@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sierHelpers.tryToRender(sierVisualDigital.render.bind(sierVisualDigital));
         sierHelpers.tryToRender(sierVisualMaintenance.render.bind(sierVisualMaintenance));
         sierHelpers.tryToRender(sierVisualStrategy.render.bind(sierVisualStrategy));
+        sierHelpers.tryToRender(sierVisualImpact.render.bind(sierVisualImpact));
         sierHelpers.tryToRender(sierChart.renderAllCharts.bind(sierChart));
     }
 
