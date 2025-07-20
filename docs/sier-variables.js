@@ -172,7 +172,16 @@ projectConfig.assumptions = {
 };
 
 projectConfig.drivingRange = {
-    operational_assumptions: { workdays_in_month: 22, weekend_days_in_month: 8, cogs_rate_fnb: 0.40 },
+    operational_assumptions: { 
+        workdays_in_month: 22, 
+        weekend_days_in_month: 8, 
+        cogs_rate_fnb: 0.40,
+        variable_costs_per_session: {
+            electricity_dispenser_kwh: 0.05, // Asumsi kWh untuk dispenser per 100 bola
+            ball_wear_cost_per_100_hits: 8000, // Asumsi biaya keausan/penyusutan bola per 100 pukulan
+            cleaning_supplies: 500 // Asumsi biaya pembersih untuk bay
+        }
+    },
     revenue: {
         main_revenue: {
             // DIUBAH: Logika perhitungan bay sekarang berdasarkan parameter fisik bangunan.
@@ -252,7 +261,17 @@ projectConfig.drivingRange = {
 };
 
 projectConfig.padel = {
-    operational_assumptions: { workdays_in_month: 22, weekend_days_in_month: 8, operational_hours_per_day: 18, cogs_rate_fnb: 0.30 },
+    operational_assumptions: { 
+        workdays_in_month: 22, 
+        weekend_days_in_month: 8, 
+        operational_hours_per_day: 18, 
+        cogs_rate_fnb: 0.30, 
+        variable_costs_per_hour: {
+            court_lights_kw: 4.5, // Asumsi total kW lampu untuk 1 lapangan
+            ball_replacement_cost_per_hour: 5000, // Asumsi biaya penyusutan bola padel per jam main
+            cleaning_supplies: 2500 // Asumsi biaya pembersih & air untuk lapangan
+        }
+    },
     revenue: {
         main_revenue: {
             courts: Math.floor(projectConfig.site_parameters.padel.total_available_area_m2 / projectConfig.site_parameters.padel.area_per_court_m2),

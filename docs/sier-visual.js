@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sierHelpers.tryToRender(sierVisualTechnical.render.bind(sierVisualTechnical));
         sierHelpers.tryToRender(sierVisualDigital.render.bind(sierVisualDigital));
         sierHelpers.tryToRender(sierVisualMaintenance.render.bind(sierVisualMaintenance));
+        sierHelpers.tryToRender(sierVisualStrategy.render.bind(sierVisualStrategy));
         sierHelpers.tryToRender(sierChart.renderAllCharts.bind(sierChart));
     }
 
