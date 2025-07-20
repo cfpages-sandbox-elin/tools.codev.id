@@ -424,6 +424,63 @@ const sierMath = {
         };
     },
 
+    _getDetailedRevenueBreakdown(unitName) {
+        const unit = projectConfig[unitName];
+        const o = unit.operational_assumptions;
+        const m = unit.revenue.main_revenue;
+        const a = unit.revenue.ancillary_revenue;
+        let breakdown = {};
+
+        if (unitName === 'drivingRange') {
+            const daily_sessions_wd = m.bays * m.occupancy_rate_per_day.weekday;
+            const daily_sessions_we = m.bays * m.occupancy_rate_per_day.weekend;
+            
+            const rev_wd_day = daily_sessions_wd * m.price_per_100_balls;
+            const rev_we_day = daily_sessions_we * m.price_per_100_balls;
+            
+            const rev_wd_month = rev_wd_day * o.workdays_in_month;
+            const rev_we_month = rev_we_day * o.weekend_days_in_month;
+            const total_main_rev_month = rev_wd_month + rev_we_month;
+
+            const total_sessions_month = (daily_sessions_wd * o.workdays_in_month) + (daily_sessions_we * o.weekend_days_in_month);
+            const fnb_rev_month = total_sessions_month * a.fnb_avg_spend;
+            
+            breakdown = {
+                rows: [
+                    { item: 'Pendapatan Hari Kerja', calc: `${sierHelpers.formatNumber(daily_sessions_wd.toFixed(1))} sesi/hari @ Rp ${sierHelpers.formatNumber(m.price_per_100_balls)}`, perDay: rev_wd_day, perMonth: rev_wd_month },
+                    { item: 'Pendapatan Akhir Pekan', calc: `${sierHelpers.formatNumber(daily_sessions_we.toFixed(1))} sesi/hari @ Rp ${sierHelpers.formatNumber(m.price_per_100_balls)}`, perDay: rev_we_day, perMonth: rev_we_month },
+                    { item: 'Penjualan F&B', calc: `~${sierHelpers.formatNumber(total_sessions_month.toFixed(0))} sesi/bulan @ Rp ${sierHelpers.formatNumber(a.fnb_avg_spend)}`, perDay: fnb_rev_month / 30, perMonth: fnb_rev_month },
+                    { item: 'Penjualan Pro Shop', calc: 'Estimasi bulanan', perDay: a.pro_shop_sales / 30, perMonth: a.pro_shop_sales }
+                ],
+                total_monthly: total_main_rev_month + fnb_rev_month + a.pro_shop_sales
+            };
+        } else if (unitName === 'padel') {
+            const hours_wd_off = m.courts * m.hours_distribution_per_day.offpeak * m.occupancy_rate.weekday_offpeak;
+            const hours_wd_peak = m.courts * m.hours_distribution_per_day.peak * m.occupancy_rate.weekday_peak;
+            const hours_we = m.courts * o.operational_hours_per_day * m.occupancy_rate.weekend;
+            
+            const rev_wd_off_day = hours_wd_off * m.price_per_hour.weekday_offpeak;
+            const rev_wd_peak_day = hours_wd_peak * m.price_per_hour.weekday_peak;
+            const rev_we_day = hours_we * m.price_per_hour.weekend;
+
+            const total_main_rev_month = (rev_wd_off_day + rev_wd_peak_day) * o.workdays_in_month + rev_we_day * o.weekend_days_in_month;
+            const total_hours_month = (hours_wd_off + hours_wd_peak) * o.workdays_in_month + hours_we * o.weekend_days_in_month;
+            const fnb_rev_month = total_hours_month * a.fnb_avg_spend;
+            
+            breakdown = {
+                rows: [
+                    { item: 'Sewa Hr Kerja (Off-Peak)', calc: `${hours_wd_off.toFixed(1)} jam/hari @ Rp ${sierHelpers.formatNumber(m.price_per_hour.weekday_offpeak)}`, perDay: rev_wd_off_day, perMonth: rev_wd_off_day * o.workdays_in_month },
+                    { item: 'Sewa Hr Kerja (Peak)', calc: `${hours_wd_peak.toFixed(1)} jam/hari @ Rp ${sierHelpers.formatNumber(m.price_per_hour.weekday_peak)}`, perDay: rev_wd_peak_day, perMonth: rev_wd_peak_day * o.workdays_in_month },
+                    { item: 'Sewa Akhir Pekan', calc: `${hours_we.toFixed(1)} jam/hari @ Rp ${sierHelpers.formatNumber(m.price_per_hour.weekend)}`, perDay: rev_we_day, perMonth: rev_we_day * o.weekend_days_in_month },
+                    { item: 'Penjualan F&B', calc: `~${sierHelpers.formatNumber(total_hours_month.toFixed(0))} jam/bulan @ Rp ${sierHelpers.formatNumber(a.fnb_avg_spend)}`, perDay: fnb_rev_month / 30, perMonth: fnb_rev_month },
+                    { item: 'Penjualan Pro Shop', calc: 'Estimasi bulanan', perDay: a.pro_shop_sales / 30, perMonth: a.pro_shop_sales }
+                ],
+                total_monthly: total_main_rev_month + fnb_rev_month + a.pro_shop_sales
+            };
+        }
+        return breakdown;
+    },
+
     /**
      * DIUBAH TOTAL: Menghitung Break-Even Point dengan pendekatan Bottom-Up untuk biaya variabel.
      * @param {string} unitName - 'drivingRange' atau 'padel'
