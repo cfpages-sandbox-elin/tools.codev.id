@@ -441,12 +441,8 @@ const sierMath = {
         }
         const totalFixedCostMonthly = Object.values(fixedCostBreakdown).reduce((sum, val) => sum + val, 0);
         
-        let pricePerUnit = 0;
-        let variableCostPerUnit = 0;
-        let unitLabel = '';
-        let variableCostBreakdown = {};
+        let pricePerUnit = 0, variableCostPerUnit = 0, unitLabel = '', variableCostBreakdown = {};
         const kwhPrice = projectConfig.drivingRange.opexMonthly.utilities.electricity_kwh_price;
-
         if (unitName === 'drivingRange') {
             const vc = unit.operational_assumptions.variable_costs_per_session;
             const electricityCost = vc.electricity_dispenser_kwh * kwhPrice;
@@ -454,7 +450,7 @@ const sierMath = {
             variableCostPerUnit = Object.values(variableCostBreakdown).reduce((sum, val) => sum + val, 0);
             pricePerUnit = unit.revenue.main_revenue.price_per_100_balls;
             unitLabel = 'Sesi';
-        } else if (unitName === 'padel') {
+        } else {
             const vc = unit.operational_assumptions.variable_costs_per_hour;
             const electricityCost = vc.court_lights_kw * kwhPrice;
             variableCostBreakdown = { 'Listrik (Lampu Lapangan)': electricityCost, 'Penggantian Bola': vc.ball_replacement_cost_per_hour, 'Pembersih Lapangan': vc.cleaning_supplies };
@@ -469,6 +465,21 @@ const sierMath = {
 
         const bepInUnitsMonthly = totalFixedCostMonthly / contributionMargin;
         const bepInUnitsDaily = bepInUnitsMonthly / 30;
+<<<<<<< HEAD
+
+        return { totalFixedCostMonthly, fixedCostBreakdown, variableCostBreakdown, contributionMargin, bepInUnitsMonthly, bepInUnitsDaily, unitLabel };
+    },
+
+    // BARU: Fungsi master untuk semua analisis strategi & skenario
+    getStrategicAnalysis(unitName) {
+        const bepAnalysis = this.calculateBEP(unitName);
+        const mods = projectConfig.assumptions.scenario_modifiers;
+
+        // Hitung 3 skenario
+        const realistic = this._getUnitCalculations(unitName, 1.0, 1.0);
+        const pessimistic = this._getUnitCalculations(unitName, mods.pessimistic_revenue, mods.pessimistic_opex);
+        const optimistic = this._getUnitCalculations(unitName, mods.optimistic_revenue, mods.optimistic_opex);
+=======
         let bepPerAssetDaily = 0;
         if (unitName === 'drivingRange') {
             bepPerAssetDaily = bepInUnitsDaily / unit.revenue.main_revenue.bays;
@@ -481,8 +492,36 @@ const sierMath = {
         const totalCapex = unitFinancials.capex.total;
         const annualCashFlow = unitFinancials.pnl.cashFlowFromOps;
         const paybackPeriodInYears = annualCashFlow > 0 ? (totalCapex / annualCashFlow) : Infinity;
+>>>>>>> 5eda9ffd363220490036067e6a92aa1fe6b10f1c
         
+        // Fungsi helper untuk menghitung payback period dari data
+        const getPayback = (data) => data.pnl.cashFlowFromOps > 0 ? data.capex.total / data.pnl.cashFlowFromOps : Infinity;
+
         return {
+<<<<<<< HEAD
+            bepAnalysis: bepAnalysis,
+            profitabilityAnalysis: {
+                totalCapex: realistic.capex.total,
+                annualRevenue: realistic.pnl.annualRevenue,
+                annualNetProfit: realistic.pnl.netProfit,
+                annualCashFlow: realistic.pnl.cashFlowFromOps,
+                paybackPeriod: getPayback(realistic)
+            },
+            scenarioAnalysis: {
+                realistic: {
+                    netProfit: realistic.pnl.netProfit,
+                    payback: getPayback(realistic)
+                },
+                pessimistic: {
+                    netProfit: pessimistic.pnl.netProfit,
+                    payback: getPayback(pessimistic)
+                },
+                optimistic: {
+                    netProfit: optimistic.pnl.netProfit,
+                    payback: getPayback(optimistic)
+                }
+            }
+=======
             totalFixedCostMonthly,
             fixedCostBreakdown,
             pricePerUnit,
@@ -495,6 +534,7 @@ const sierMath = {
             unitLabel,
             totalCapex, // Kirim data CapEx
             paybackPeriodInYears // Kirim data Payback Period
+>>>>>>> 5eda9ffd363220490036067e6a92aa1fe6b10f1c
         };
     }
 };

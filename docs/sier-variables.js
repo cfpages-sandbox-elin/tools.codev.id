@@ -168,6 +168,12 @@ projectConfig.assumptions = {
         civil_construction: 15,
         equipment: 5,
         interior: 7,
+    },
+    scenario_modifiers: {
+        pessimistic_revenue: 0.85, // Pendapatan 15% lebih rendah dari target
+        optimistic_revenue: 1.15,  // Pendapatan 15% lebih tinggi dari target
+        pessimistic_opex: 1.05,     // Biaya operasional 5% lebih tinggi
+        optimistic_opex: 0.98      // Biaya operasional 2% lebih efisien
     }
 };
 
