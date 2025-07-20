@@ -14,8 +14,12 @@ const sierVisualTechnical = {
         }
 
         // Ambil data langsung dari variabel global projectConfig
+        const siteParams = projectConfig.site_parameters;
         const drConfig = projectConfig.drivingRange;
         const padelConfig = projectConfig.padel;
+
+        // Hitung jumlah bay per lantai untuk ditampilkan di deskripsi
+        const baysPerLevel = Math.floor(siteParams.driving_range.building_length_m / siteParams.driving_range.bay_width_m);
 
         // --- 1. Driving Range Section (Data Dinamis) ---
         const drivingRangeHtml = `
@@ -24,23 +28,18 @@ const sierVisualTechnical = {
                 <div class="space-y-3">
                     <div class="p-3 bg-gray-50 rounded-md">
                         <p class="font-semibold text-gray-700">Area & Kapasitas</p>
-                        <p class="text-sm text-gray-600 mt-1">Total <strong>${drConfig.revenue.main_revenue.bays} bay</strong> (lantai 1 & 2). Dimensi per bay: 3.5m (lebar) x 5m (panjang). Area lounge terintegrasi di belakang bay.</p>
+                        <p class="text-sm text-gray-600 mt-1">
+                            Berdasarkan panjang bangunan efektif <strong>${siteParams.driving_range.building_length_m} meter</strong> dan asumsi lebar per bay <strong>${siteParams.driving_range.bay_width_m} meter</strong>, kapasitas maksimal adalah <strong>${baysPerLevel} bay per lantai</strong>. 
+                            Dengan rencana <strong>${siteParams.driving_range.levels} lantai</strong>, total kapasitas menjadi <strong>${drConfig.revenue.main_revenue.bays} bay</strong>, dengan jarak pukul ke danau sejauh <strong>${siteParams.driving_range.field_length_m} meter</strong>.
+                        </p>
                     </div>
                     <div class="p-3 bg-gray-50 rounded-md">
-                        <p class="font-semibold text-gray-700">Matras Pukul</p>
-                        <p class="text-sm text-gray-600 mt-1">Menggunakan matras dual-surface premium (fairway & rough simulation) untuk latihan yang lebih realistis. Contoh merek: TrueStrike / Fiberbuilt.</p>
-                    </div>
-                    <div class="p-3 bg-gray-50 rounded-md">
-                        <p class="font-semibold text-gray-700">Bola Golf</p>
-                        <p class="text-sm text-gray-600 mt-1">Bola apung (floating balls) 2-piece dengan kualitas & kompresi standar, tahan lama untuk penggunaan volume tinggi. Jumlah inventaris awal: <strong>${sierHelpers.formatNumber(drConfig.capex_assumptions.equipment.floating_balls_count)} bola</strong>.</p>
-                    </div>
-                    <div class="p-3 bg-gray-50 rounded-md">
-                        <p class="font-semibold text-gray-700">Jaring Pengaman (Netting)</p>
-                        <p class="text-sm text-gray-600 mt-1">Jaring berbahan High-Density Polyethylene (HDPE) yang tahan UV, tinggi 30-40m dengan tiang baja galvanis. Jarak aman dari SUTT harus diverifikasi dengan PLN.</p>
+                        <p class="font-semibold text-gray-700">Matras Pukul & Bola Golf</p>
+                        <p class="text-sm text-gray-600 mt-1">Menggunakan matras premium dual-surface dan <strong>${sierHelpers.formatNumber(drConfig.capex_assumptions.equipment.floating_balls_count)} bola apung</strong> berkualitas standar.</p>
                     </div>
                     <div class="p-3 bg-gray-50 rounded-md">
                         <p class="font-semibold text-gray-700">Teknologi Ball Tracker</p>
-                        <p class="text-sm text-gray-600 mt-1"><strong>${drConfig.capex_assumptions.equipment.ball_tracker_bays_count} bay</strong> akan dilengkapi dengan teknologi Ball Tracker (misal: Toptracer) sebagai produk premium untuk analisis pukulan dan gamifikasi.</p>
+                        <p class="text-sm text-gray-600 mt-1"><strong>${drConfig.capex_assumptions.equipment.ball_tracker_bays_count} bay</strong> akan dilengkapi dengan teknologi Ball Tracker (misal: Toptracer) sebagai produk premium.</p>
                     </div>
                 </div>
             </div>
@@ -53,28 +52,23 @@ const sierVisualTechnical = {
                 <div class="space-y-3">
                     <div class="p-3 bg-gray-50 rounded-md">
                         <p class="font-semibold text-gray-700">Jumlah & Tipe Lapangan</p>
-                        <p class="text-sm text-gray-600 mt-1"><strong>${padelConfig.revenue.main_revenue.courts} Lapangan</strong> Padel Indoor, sesuai standar International Padel Federation (FIP). Dimensi lapangan: 10m x 20m.</p>
+                        <p class="text-sm text-gray-600 mt-1">Dengan total area tersedia <strong>${sierHelpers.formatNumber(siteParams.padel.total_available_area_m2)} m²</strong> dan asumsi <strong>${siteParams.padel.area_per_court_m2} m² per lapangan</strong>, dapat dibangun <strong>${padelConfig.revenue.main_revenue.courts} Lapangan</strong> Padel Indoor standar FIP.</p>
                     </div>
                     <div class="p-3 bg-gray-50 rounded-md">
-                        <p class="font-semibold text-gray-700">Permukaan (Court)</p>
-                        <p class="text-sm text-gray-600 mt-1">Rumput sintetis monofilamen premium dengan standar World Padel Tour. Contoh merek: Mondo Supercourt, dengan isian pasir silika khusus.</p>
-                    </div>
-                    <div class="p-3 bg-gray-50 rounded-md">
-                        <p class="font-semibold text-gray-700">Dinding Kaca & Penerangan</p>
-                        <p class="text-sm text-gray-600 mt-1">Kaca tempered setebal 12mm dan sistem pencahayaan LED anti-silau > 500 lux untuk memastikan pantulan bola konsisten dan visibilitas optimal.</p>
+                        <p class="font-semibold text-gray-700">Permukaan, Dinding & Penerangan</p>
+                        <p class="text-sm text-gray-600 mt-1">Menggunakan rumput sintetis standar World Padel Tour, kaca tempered 12mm, dan pencahayaan LED anti-silau > 500 lux.</p>
                     </div>
                 </div>
             </div>
         `;
 
-        // --- 3. Human Resources Section (Data Dinamis) ---
-        // Kalkulasi total SDM dari kedua unit bisnis
+        // --- 3. Human Resources Section (Sama seperti sebelumnya, karena sudah dinamis) ---
         const drStaff = drConfig.opexMonthly.salaries_wages;
         const padelStaff = padelConfig.opexMonthly.salaries_wages;
         const totalManagers = drStaff.manager.count + padelStaff.manager.count;
         const totalSupervisors = drStaff.supervisor.count + padelStaff.supervisor.count;
         const totalAdminCashiers = drStaff.admin_cashier.count + padelStaff.admin_cashier.count;
-        const totalCoaches = drStaff.coach_trainer.count + (padelStaff.coach_trainer ? padelStaff.coach_trainer.count : 0);
+        const totalCoaches = drConfig.opexMonthly.salaries_wages.coach_trainer.count + (padelConfig.opexMonthly.salaries_wages.coach_trainer ? padelConfig.opexMonthly.salaries_wages.coach_trainer.count : 0);
         const totalCleaningSecurity = drStaff.cleaning_security.count + padelStaff.cleaning_security.count;
 
         const hrHtml = `
@@ -93,12 +87,10 @@ const sierVisualTechnical = {
             </div>
         `;
 
-        // Gabungkan semua bagian dan render ke dalam kontainer
         container.innerHTML = drivingRangeHtml + padelHtml + hrHtml;
         
         console.log("[sier-visual-technical] Analisis Teknis & Operasional: Berhasil dirender secara dinamis.");
     }
 };
 
-// Lampirkan ke window object agar bisa diakses file lain
 window.sierVisualTechnical = sierVisualTechnical;
