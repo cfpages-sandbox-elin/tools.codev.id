@@ -424,6 +424,11 @@ const sierMath = {
         };
     }
 
+    /**
+     * DIUBAH TOTAL: Menghitung Break-Even Point dengan pendekatan Bottom-Up untuk biaya variabel.
+     * @param {string} unitName - 'drivingRange' atau 'padel'
+     * @returns {object} - Objek berisi semua data BEP yang sudah dihitung.
+     */
     calculateBEP(unitName) {
         const unit = projectConfig[unitName];
         if (!unit) return {};
