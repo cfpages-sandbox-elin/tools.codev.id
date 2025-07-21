@@ -230,27 +230,19 @@ const sierMath = {
     _calculateSharedCapexTotal() {
         const sharedCapex = projectConfig.shared_facilities_capex;
         let grandTotal = 0;
-
-        const bniData = sharedCapex.building_and_interior;
-        const totalArea = Object.values(bniData.area_m2).reduce((sum, area) => sum + area, 0);
-        grandTotal += totalArea * bniData.construction_and_finishing_cost_per_m2;
-
-        const enfData = sharedCapex.equipment_and_furniture;
-        for (const itemKey in enfData) {
-            const item = enfData[itemKey];
-            if (typeof item === 'number') {
-                grandTotal += item;
-            } else {
-                grandTotal += item.quantity * item.unit_cost;
+        for (const categoryKey in sharedCapex) {
+            if (typeof sharedCapex[categoryKey] !== 'object' || !sharedCapex[categoryKey].items) continue;
+            const category = sharedCapex[categoryKey];
+            for (const itemKey in category.items) {
+                const item = category.items[itemKey];
+                if (item.lump_sum) {
+                    grandTotal += item.lump_sum;
+                } else if (item.quantity && item.unit_cost) {
+                    grandTotal += item.quantity * item.unit_cost;
+                }
             }
         }
-
-        const contingency = grandTotal * projectConfig.assumptions.contingency_rate;
-        const totalWithContingency = grandTotal + contingency;
-        
-        // Simpan totalnya agar bisa diakses oleh visual layer
-        projectConfig.shared_facilities_capex.total = totalWithContingency; 
-        return totalWithContingency;
+        return grandTotal;
     },
 
     _calculateDrCapex() {
@@ -294,7 +286,7 @@ const sierMath = {
         
         // --- Perhitungan Biaya Bangunan & Total (Sama seperti sebelumnya) ---
         const bld = a.building;
-        const totalBuildingCost = (bld.dr_bays_area_m2 * bld.dr_bays_cost_per_m2) + (bld.cafe_area_m2 * bld.cafe_cost_per_m2);
+        const totalBuildingCost = (bld.dr_bays_area_m2 * bld.dr_bays_cost_per_m2) + (bld.cafe_area_m2 * bld.cafe_cost_per_m2) + (bld.lockers_mushola_area_m2 * bld.lockers_mushola_cost_per_m2);
         
         const calculateScenarioCosts = (foundationCosts) => {
             const mep = a.mep_systems;
@@ -360,35 +352,49 @@ const sierMath = {
         };
     },
 
+    _calculatePadelCapexScenarioA() {
+        const capex = projectConfig.padel.capex_scenario_a;
+        const numCourts = projectConfig.padel.revenue.main_revenue.courts; // 4 courts
+        let grandTotal = 0;
+        grandTotal += this._calculateTotal(capex.pre_operational);
+        grandTotal += capex.civil_construction.land_preparation;
+        grandTotal += capex.civil_construction.foundation_works_per_court * numCourts;
+        grandTotal += this._calculateTotal(capex.building_structure);
+        let perCourtCost = this._calculateTotal(capex.sport_courts_equipment.per_court_costs);
+        grandTotal += perCourtCost * numCourts;
+        for (const key in capex.sport_courts_equipment.initial_inventory) {
+            grandTotal += capex.sport_courts_equipment.initial_inventory[key].quantity * capex.sport_courts_equipment.initial_inventory[key].unit_cost;
+        }
+        return grandTotal;
+    },
+
+    _calculatePadelCapexScenarioB() {
+        const capex = projectConfig.padel.capex_scenario_b;
+        const numCourts = capex.num_courts; // 2 courts
+        let grandTotal = 0;
+        grandTotal += this._calculateTotal(capex.pre_operational);
+        const renovationData = capex.renovation;
+        grandTotal += renovationData.minor_demolition_and_clearing.lump_sum;
+        grandTotal += renovationData.floor_repair_and_leveling.area_m2 * renovationData.floor_repair_and_leveling.cost_per_m2;
+        grandTotal += renovationData.interior_finishing_painting.area_m2 * renovationData.interior_finishing_painting.cost_per_m2;
+        let perCourtCost = this._calculateTotal(capex.sport_courts_equipment.per_court_costs);
+        grandTotal += perCourtCost * numCourts;
+        for (const key in capex.sport_courts_equipment.initial_inventory) {
+            grandTotal += capex.sport_courts_equipment.initial_inventory[key].quantity * capex.sport_courts_equipment.initial_inventory[key].unit_cost;
+        }
+        return grandTotal;
+    },
+
     _getDetailedCapex(unitName) {
         let total = 0;
-        let breakdown = { civil_construction: 0, building: 0, equipment: 0, interior: 0, other: 0 }; // Untuk depresiasi
-
+        let breakdown = { civil_construction: 0, building: 0, equipment: 0, interior: 0, other: 0 };
         if (unitName === 'drivingRange') {
-            const drCapex = this._calculateDrCapex().scenario_b;
-            total = drCapex.total;
-            // Di sini Anda bisa mengisi breakdown jika diperlukan untuk depresiasi
+            total = this._calculateDrCapex().scenario_b.total; // Menggunakan skenario B sebagai basis
         } else if (unitName === 'padel') {
-            const p = projectConfig.padel;
-            const capex = p.capex;
-            const numCourts = p.revenue.main_revenue.courts;
-            let subtotal = 0;
-
-            subtotal += this._calculateTotal(capex.pre_operational);
-            subtotal += capex.civil_construction.land_preparation;
-            subtotal += capex.civil_construction.foundation_works_per_court * numCourts;
-            subtotal += this._calculateTotal(capex.building_structure);
-            let perCourtCost = this._calculateTotal(capex.sport_courts_equipment.per_court_costs);
-            subtotal += perCourtCost * numCourts;
-            for (const key in capex.sport_courts_equipment.initial_inventory) {
-                const item = capex.sport_courts_equipment.initial_inventory[key];
-                subtotal += item.quantity * item.unit_cost;
-            }
-            
-            const contingency = subtotal * projectConfig.assumptions.contingency_rate;
-            total = subtotal + contingency;
+            // Default ke Skenario A (bangun baru) untuk perhitungan P&L utama
+            const subtotal = this._calculatePadelCapexScenarioA();
+            total = subtotal + (subtotal * projectConfig.assumptions.contingency_rate);
         }
-
         return { total, breakdown };
     },
 
