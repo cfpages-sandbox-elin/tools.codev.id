@@ -2,11 +2,6 @@
 // Bertanggung jawab untuk merender SEMUA ringkasan finansial dan asumsi utama.
 
 const sierVisualFinanceSummary = {
-
-    //======================================================================
-    // BAGIAN 1: FUNGSI RENDER SPESIFIK UNTUK SETIAP BAGIAN SUMMARY
-    //======================================================================
-
     _renderAssumptionsVisuals() {
         const container = document.getElementById('assumptions-container');
         if (!container) return;
@@ -18,10 +13,8 @@ const sierVisualFinanceSummary = {
             'discount_rate_wacc': 'Tingkat diskonto yang digunakan untuk menghitung NPV, merepresentasikan biaya modal.',
             'contingency_rate': 'Alokasi dana darurat sebagai persentase dari total biaya investasi.',
             'salaries_wages': 'Rincian biaya SDM bulanan untuk setiap posisi.',
-            // Tambahkan deskripsi lain jika perlu
         };
 
-        // Helper BARU untuk membuat tabel gaji yang rapi (tidak bersarang)
         const createSalaryTable = (salaryData, basePath) => {
             const rows = Object.entries(salaryData).map(([role, data]) => `
                 <tr class="hover:bg-gray-100">
@@ -32,72 +25,56 @@ const sierVisualFinanceSummary = {
             `).join('');
             return `<div class="mt-2 overflow-hidden border rounded-md">
                         <table class="w-full text-sm">
-                            <thead class="bg-gray-50 text-xs">
-                                <tr>
-                                    <th class="py-1 px-4 text-left font-medium">Posisi</th>
-                                    <th class="py-1 text-center font-medium">Jumlah</th>
-                                    <th class="py-1 px-4 text-right font-medium">Gaji/Bulan</th>
-                                </tr>
-                            </thead>
+                            <thead class="bg-gray-50 text-xs"><tr class="text-left"><th class="py-1 px-4 font-medium">Posisi</th><th class="py-1 text-center font-medium">Jumlah</th><th class="py-1 px-4 text-right font-medium">Gaji/Bulan</th></tr></thead>
                             <tbody class="divide-y">${rows}</tbody>
                         </table>
                     </div>`;
         };
 
-        // Fungsi rekursif utama yang direfaktor total
+        // Fungsi rekursif utama yang SUDAH DIPERBAIKI
         const generateItemsHtml = (data, basePath) => {
             return Object.entries(data).map(([key, value]) => {
-                if (key === 'capex' || key === 'capex_assumptions') return ''; // Abaikan kunci yang tidak relevan
-                
+                if (['capex', 'capex_assumptions', 'notes', 'title'].includes(key)) return '';
+
                 const currentPath = `${basePath}.${key}`;
                 const label = sierTranslate.translate(key);
-                const description = descriptions[key] || ''; // Ambil deskripsi atau string kosong
+                const description = descriptions[key] || '';
 
-                let contentHtml;
-
-                // KASUS KHUSUS: Objek kompleks seperti gaji atau utilitas
+                // KASUS 1: Item khusus seperti Gaji, yang memerlukan tabelnya sendiri.
                 if (key === 'salaries_wages') {
-                    contentHtml = createSalaryTable(value, currentPath);
-                }
-                // KASUS UMUM: Nilai sederhana yang bisa diedit
-                else if (typeof value !== 'object' || value === null) {
-                    const isPercent = (key.includes('rate') || key.includes('okupansi')) && value < 2 && value > 0;
-                    contentHtml = sierEditable.createEditableNumber(value, currentPath, { format: isPercent ? 'percent' : '' });
-                }
-                // KASUS LAIN: Objek sederhana (seperti harga per jam) kita tampilkan inline
-                else if (typeof value === 'object' && !Object.values(value).some(v => typeof v === 'object')) {
-                    contentHtml = Object.entries(value).map(([subKey, subVal]) =>
-                        `<div class="flex justify-between items-center text-sm my-1">
-                            <span class="text-gray-600">${sierTranslate.translate(subKey)}:</span>
-                            ${sierEditable.createEditableNumber(subVal, `${currentPath}.${subKey}`, { format: 'currency' })}
-                        </div>`
-                    ).join('');
-                }
-                // Fallback untuk struktur lain yang mungkin ada
-                else {
-                    return ''; // Atau handle secara spesifik jika ada
-                }
-
-                // Tentukan tata letak berdasarkan jenis konten
-                if (key === 'salaries_wages') {
-                    // Layout untuk item dengan tabel sub-detail
-                    return `<div class="py-4 border-b">
+                    const contentHtml = createSalaryTable(value, currentPath);
+                    return `<div class="py-4 border-b last:border-b-0">
                                 <h4 class="font-semibold text-gray-800">${label}</h4>
                                 ${description ? `<p class="text-xs text-gray-500 mt-1">${description}</p>` : ''}
                                 ${contentHtml}
                             </div>`;
-                } else {
-                    // Layout grid untuk item key-value sederhana
-                    return `<div class="grid grid-cols-1 md:grid-cols-2 items-center gap-x-4 gap-y-1 py-4 border-b">
+                }
+
+                // KASUS 2: Nilai sederhana (angka atau teks) yang ditampilkan dalam format grid.
+                if (typeof value !== 'object' || value === null) {
+                    const isPercent = (key.includes('rate') || key.includes('okupansi')) && value < 2 && value > 0;
+                    const contentHtml = sierEditable.createEditableNumber(value, currentPath, { format: isPercent ? 'percent' : '' });
+                    return `<div class="grid grid-cols-1 md:grid-cols-2 items-center gap-x-4 gap-y-1 py-4 border-b last:border-b-0">
                                 <div>
                                     <h4 class="font-semibold text-gray-800">${label}</h4>
                                     ${description ? `<p class="text-xs text-gray-500 mt-1">${description}</p>` : ''}
                                 </div>
-                                <div class="md:text-right">
-                                    ${contentHtml}
-                                </div>
+                                <div class="md:text-right">${contentHtml}</div>
                             </div>`;
                 }
+
+                // KASUS 3 (PERBAIKAN UTAMA): Nilai adalah sebuah OBJEK. Lakukan rekursi.
+                if (typeof value === 'object') {
+                    const subItemsHtml = generateItemsHtml(value, currentPath); // Panggil diri sendiri
+                    if (subItemsHtml.trim() !== '') {
+                        return `<div class="py-4 border-b last:border-b-0">
+                                    <h4 class="font-semibold text-gray-800 text-base">${label}</h4>
+                                    <div class="pl-4 mt-2 border-l-2 border-gray-200">${subItemsHtml}</div>
+                                </div>`;
+                    }
+                }
+
+                return ''; // Fallback jika tidak ada yang cocok
             }).join('');
         };
 
@@ -135,39 +112,17 @@ const sierVisualFinanceSummary = {
     _renderFinancialSummaryVisuals() {
         const container = document.getElementById('financial-analysis-summary');
         if (!container) return;
-
         const summary = sierMath.getFinancialSummary();
         const { drivingRange: dr, padel, combined, digitalCapexTotal, sharedCapexTotal } = summary;
-        
-        // Kalkulasi kelayakan sudah dilakukan di sierMath, tinggal panggil
         const { paybackPeriod, npv, irr } = combined.feasibility;
-        
-        const capexSummaryHtml = `<div id="capex-summary" class="mb-8 pb-6 border-b">
-            <h3 class="text-xl font-semibold mb-3 text-gray-800">1. Ringkasan Biaya Investasi (CapEx)</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                <div class="bg-gray-100 p-4 rounded-lg text-center"><p class="text-sm text-gray-600">CapEx Driving Range</p><p class="text-2xl font-bold font-mono text-gray-800">${sierHelpers.toBillion(dr.capex.total)}</p></div>
-                <div class="bg-gray-100 p-4 rounded-lg text-center"><p class="text-sm text-gray-600">CapEx Padel</p><p class="text-2xl font-bold font-mono text-gray-800">${sierHelpers.toBillion(padel.capex.total)}</p></div>
-                <div class="bg-gray-100 p-4 rounded-lg text-center"><p class="text-sm text-gray-600">CapEx Teknologi Digital</p><p class="text-2xl font-bold font-mono text-gray-800">${sierHelpers.toBillion(digitalCapexTotal)}</p></div>
-                <div class="bg-gray-100 p-4 rounded-lg text-center"><p class="text-sm text-gray-600">CapEx Fasilitas Umum</p><p class="text-2xl font-bold font-mono text-gray-800">${sierHelpers.toBillion(sharedCapexTotal)}</p></div>
-                <div class="bg-teal-600 text-white p-4 rounded-lg text-center flex flex-col justify-center"><p class="text-sm">Total Investasi Proyek</p><p class="text-3xl font-bold font-mono">${sierHelpers.toBillion(combined.capex.total)}</p></div>
-            </div>
-        </div>`;
-        
+        const capexSummaryHtml = `<div id="capex-summary" class="mb-8 pb-6 border-b"><h3 class="text-xl font-semibold mb-3 text-gray-800">1. Ringkasan Biaya Investasi (CapEx)</h3><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4"><div class="bg-gray-100 p-4 rounded-lg text-center"><p class="text-sm text-gray-600">CapEx Driving Range</p><p class="text-2xl font-bold font-mono text-gray-800">${sierHelpers.toBillion(dr.capex.total)}</p></div><div class="bg-gray-100 p-4 rounded-lg text-center"><p class="text-sm text-gray-600">CapEx Padel</p><p class="text-2xl font-bold font-mono text-gray-800">${sierHelpers.toBillion(padel.capex.total)}</p></div><div class="bg-gray-100 p-4 rounded-lg text-center"><p class="text-sm text-gray-600">CapEx Teknologi Digital</p><p class="text-2xl font-bold font-mono text-gray-800">${sierHelpers.toBillion(digitalCapexTotal)}</p></div><div class="bg-gray-100 p-4 rounded-lg text-center"><p class="text-sm text-gray-600">CapEx Fasilitas Umum</p><p class="text-2xl font-bold font-mono text-gray-800">${sierHelpers.toBillion(sharedCapexTotal)}</p></div><div class="bg-teal-600 text-white p-4 rounded-lg text-center flex flex-col justify-center"><p class="text-sm">Total Investasi Proyek</p><p class="text-3xl font-bold font-mono">${sierHelpers.toBillion(combined.capex.total)}</p></div></div></div>`;
         const pnlSummaryHtml = `<div id="pnl-summary" class="mb-8 pb-6 border-b"><h3 class="text-xl font-semibold mb-3 text-gray-800">2. Proyeksi Laba Rugi (P&L) - Gabungan</h3><div class="overflow-x-auto border rounded-lg">${sierVisualFinanceDetails._createPnlTable(combined.pnl)}</div></div>`;
         const investmentFeasibilityHtml = `<div id="investment-feasibility" class="mb-8 pb-6 border-b"><h3 class="text-xl font-semibold mb-4 text-gray-800">3. Analisis Kelayakan Investasi (Proyek Gabungan)</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="bg-blue-100 p-4 rounded-lg text-center"><p class="text-sm text-blue-800">Payback Period</p><p class="text-3xl font-bold text-blue-700">${paybackPeriod.toFixed(2)}</p><p class="text-xs text-blue-600">Tahun</p></div><div class="bg-green-100 p-4 rounded-lg text-center"><p class="text-sm text-green-800">Net Present Value (NPV)</p><p class="text-3xl font-bold text-green-700">${sierHelpers.toBillion(npv)}</p><p class="text-xs text-green-600">(WACC ${projectConfig.assumptions.discount_rate_wacc * 100}%)</p></div><div class="bg-purple-100 p-4 rounded-lg text-center"><p class="text-sm text-purple-800">Internal Rate of Return (IRR)</p><p class="text-3xl font-bold text-purple-700">${(irr * 100).toFixed(2)}%</p><p class="text-xs text-purple-600">Lebih besar dari WACC, proyek layak</p></div></div></div>`;
         const sensitivityAnalysisHtml = `<div id="sensitivity-analysis"><h3 class="text-xl font-semibold mb-4 text-gray-800">4. Analisis Sensitivitas</h3><p class="text-gray-600 mb-4 text-sm">Analisis ini menguji seberapa besar perubahan Laba Bersih Tahunan jika asumsi pendapatan atau biaya operasional berubah. Ini membantu mengidentifikasi risiko utama terhadap profitabilitas.</p></div>`;
-
         container.innerHTML = `<h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-teal-600 pl-4">Analisis Keuangan & Kelayakan Investasi (Proyek Gabungan)</h2><div class="bg-white p-6 rounded-lg shadow-md mb-8"><div class="p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 mb-6 text-sm"><strong>Disclaimer:</strong> Analisis ini adalah model proyeksi.</div>${capexSummaryHtml}<div id="depreciation-details-container" class="mb-8 pb-6 border-b"></div>${pnlSummaryHtml}${investmentFeasibilityHtml}${sensitivityAnalysisHtml}</div>`;
         this._renderDepreciationDetails();
     },
 
-    //======================================================================
-    // BAGIAN 2: FUNGSI RENDER ORKESTRATOR UTAMA
-    //======================================================================
-
-    /**
-     * Fungsi render utama untuk file ini.
-     */
     render() {
         this._renderAssumptionsVisuals();
         this._renderFinancialSummaryVisuals();
