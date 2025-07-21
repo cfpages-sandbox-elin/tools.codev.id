@@ -390,16 +390,53 @@ const sierMath = {
         };
     },
 
+    _calculateDigitalCapexTotal() {
+        const digitalCapex = projectConfig.digital_capex;
+        let total = 0;
+        for (const systemKey in digitalCapex) {
+            const system = digitalCapex[systemKey];
+            if (system.items) {
+                total += system.items.reduce((sum, item) => sum + (item.quantity * item.unit_cost), 0);
+            }
+        }
+        // --- BARU: Tambahkan biaya ball tracker yang ada di sistem lain ---
+        const drEquipment = projectConfig.drivingRange.capex_assumptions.equipment;
+        const totalBays = projectConfig.drivingRange.revenue.main_revenue.bays;
+        const premiumBaysCount = Math.round(totalBays * drEquipment.premium_bays.percentage_of_total);
+        total += premiumBaysCount * drEquipment.premium_bays.cost_per_bay_ball_tracker;
+        return total;
+    },
+
     getFinancialSummary(revenueMultiplier = 1, opexMultiplier = 1) {
         const dr = this._getUnitCalculations('drivingRange', revenueMultiplier, opexMultiplier);
         const padel = this._getUnitCalculations('padel', revenueMultiplier, opexMultiplier);
+        
+        // --- BARIS BARU: Hitung CAPEX dan Depresiasi Teknologi ---
+        const digitalCapexTotal = this._calculateDigitalCapexTotal();
+        const annualDigitalDepreciation = digitalCapexTotal / 5; // Asumsi masa manfaat 5 tahun
 
-        const combined = { capex: { total: dr.capex.total + padel.capex.total }, pnl: {} };
+        // --- MODIFIKASI: Tambahkan biaya digital ke total gabungan ---
+        const combined = { 
+            capex: { 
+                total: dr.capex.total + padel.capex.total + digitalCapexTotal // Ditambah CAPEX digital
+            }, 
+            pnl: {} 
+        };
+
         for (const key in dr.pnl) {
             combined.pnl[key] = (dr.pnl[key] || 0) + (padel.pnl[key] || 0);
         }
+        
+        // --- MODIFIKASI: Tambahkan depresiasi digital ke total depresiasi ---
+        combined.pnl.annualDepreciation += annualDigitalDepreciation;
+        // Hitung ulang metrik yang terpengaruh oleh depresiasi
+        combined.pnl.ebt = combined.pnl.ebitda - combined.pnl.annualDepreciation;
+        combined.pnl.tax = combined.pnl.ebt > 0 ? combined.pnl.ebt * projectConfig.assumptions.tax_rate_profit : 0;
+        combined.pnl.netProfit = combined.pnl.ebt - combined.pnl.tax;
+        combined.pnl.cashFlowFromOps = combined.pnl.netProfit + combined.pnl.annualDepreciation;
 
-        const totalInvestment = combined.capex.total;
+
+        const totalInvestment = combined.capex.total; // Sekarang menggunakan total yang sudah benar
         const cashFlow = combined.pnl.cashFlowFromOps;
         const paybackPeriod = cashFlow > 0 ? totalInvestment / cashFlow : Infinity;
         
@@ -409,7 +446,6 @@ const sierMath = {
         }
 
         let irr = 0.0;
-        // Simple IRR calculation
         for (let i = 0; i < 1.0; i += 0.001) {
             let tempNpv = -totalInvestment;
             for(let j=1; j<=20; j++) {
@@ -419,7 +455,7 @@ const sierMath = {
         }
         
         return {
-            drivingRange: dr, padel: padel,
+            drivingRange: dr, padel: padel, digitalCapexTotal: digitalCapexTotal,
             combined: { ...combined, feasibility: { paybackPeriod, npv, irr } }
         };
     },

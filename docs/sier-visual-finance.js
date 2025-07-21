@@ -126,25 +126,45 @@ const sierVisualFinance = {
         if (!drContainer || !padelContainer || !summaryContainer) return;
 
         const summary = sierMath.getFinancialSummary();
-        const { drivingRange: dr, padel, combined } = summary;
+        const { drivingRange: dr, padel, combined, digitalCapexTotal } = summary;
 
         const drAnalysisData = sierMath.getStrategicAnalysis('drivingRange');
         const padelAnalysisData = sierMath.getStrategicAnalysis('padel');
         
-        // BARU: Panggil fungsi kalkulasi rincian revenue
         const drRevenueData = sierMath._getDetailedRevenueBreakdown('drivingRange');
         const padelRevenueData = sierMath._getDetailedRevenueBreakdown('padel');
 
         const createPnlTable = (data) => `<div class="overflow-x-auto border rounded-lg"><table class="w-full text-sm"><thead class="bg-gray-50"><tr class="text-left"><th class="px-4 py-2 w-4/5">Deskripsi</th><th class="px-4 py-2 text-right">Nilai (Tahun Pertama)</th></tr></thead><tbody class="divide-y"><tr><td class="px-4 py-2">Pendapatan (Revenue)</td><td class="px-4 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(data.pnl.annualRevenue))}</td></tr><tr><td class="px-4 py-2">Harga Pokok Penjualan (COGS)</td><td class="px-4 py-2 text-right font-mono">(${sierHelpers.formatNumber(Math.round(data.pnl.annualCogs))})</td></tr><tr class="font-semibold"><td class="px-4 py-2">Laba Kotor (Gross Profit)</td><td class="px-4 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(data.pnl.grossProfit))}</td></tr><tr><td class="px-4 py-2">Biaya Operasional (OpEx)</td><td class="px-4 py-2 text-right font-mono">(${sierHelpers.formatNumber(Math.round(data.pnl.annualOpex))})</td></tr><tr class="font-semibold"><td class="px-4 py-2">EBITDA</td><td class="px-4 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(data.pnl.ebitda))}</td></tr><tr><td class="px-4 py-2">Depresiasi & Amortisasi</td><td class="px-4 py-2 text-right font-mono">(${sierHelpers.formatNumber(Math.round(data.pnl.annualDepreciation))})</td></tr><tr class="font-semibold"><td class="px-4 py-2">Laba Sebelum Pajak (EBT)</td><td class="px-4 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(data.pnl.ebt))}</td></tr><tr><td class="px-4 py-2">Pajak Penghasilan</td><td class="px-4 py-2 text-right font-mono">(${sierHelpers.formatNumber(Math.round(data.pnl.tax))})</td></tr><tr class="bg-teal-100 font-bold text-teal-800"><td class="px-4 py-3 text-base">Laba Bersih (Net Profit)</td><td class="px-4 py-3 text-right text-base font-mono">${sierHelpers.formatNumber(Math.round(data.pnl.netProfit))}</td></tr></tbody></table></div>`;
 
-        // Render setiap bagian Driving Range dengan rincian revenue
         drContainer.innerHTML = `<h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-amber-500 pl-4">Analisis Finansial Detail: Driving Range</h2><div class="bg-white p-6 rounded-lg shadow-md mb-8 space-y-8">${this._createRevenueBreakdownSection('drivingRange', drRevenueData)}<h3 class="text-xl font-semibold mb-3 text-gray-800">Proyeksi Laba Rugi (P&L)</h3>${createPnlTable(dr)}${this._createBEPSection(drAnalysisData)}${this._createProfitabilitySection(drAnalysisData)}${this._createScenarioSection(drAnalysisData)}</div>`;
         
-        // Render setiap bagian Padel dengan rincian revenue
         padelContainer.innerHTML = `<h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-purple-600 pl-4">Analisis Finansial Detail: Padel</h2><div class="bg-white p-6 rounded-lg shadow-md mb-8 space-y-8">${this._createRevenueBreakdownSection('padel', padelRevenueData)}<h3 class="text-xl font-semibold mb-3 text-gray-800">Proyeksi Laba Rugi (P&L)</h3>${createPnlTable(padel)}${this._createBEPSection(padelAnalysisData)}${this._createProfitabilitySection(padelAnalysisData)}${this._createScenarioSection(padelAnalysisData)}</div>`;
         
-        // Render bagian Gabungan (Combined)
-        summaryContainer.innerHTML = `<h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-teal-600 pl-4">Analisis Keuangan & Kelayakan Investasi (Proyek Gabungan)</h2><div class="bg-white p-6 rounded-lg shadow-md mb-8"><div class="mb-8 pb-6 border-b"><h3 class="text-xl font-semibold mb-3 text-gray-800">Ringkasan Biaya Investasi (CapEx)</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="bg-gray-100 p-4 rounded-lg text-center"><p class="text-sm text-gray-600">CapEx Driving Range</p><p class="text-2xl font-bold font-mono text-gray-800">${sierHelpers.toBillion(dr.capex.total)}</p></div><div class="bg-gray-100 p-4 rounded-lg text-center"><p class="text-sm text-gray-600">CapEx Padel</p><p class="text-2xl font-bold font-mono text-gray-800">${sierHelpers.toBillion(padel.capex.total)}</p></div><div class="bg-teal-600 text-white p-4 rounded-lg text-center"><p class="text-sm">Total Investasi Proyek</p><p class="text-2xl font-bold font-mono">${sierHelpers.toBillion(combined.capex.total)}</p></div></div></div><h3 class="text-xl font-semibold mb-3 text-gray-800">Proyeksi Laba Rugi (P&L) - Gabungan</h3>${createPnlTable(combined)}<div id="investment-feasibility" class="mt-8 pt-6 border-t"><h3 class="text-xl font-semibold mb-4 text-gray-800">Analisis Kelayakan Investasi (Proyek Gabungan)</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="bg-blue-100 p-4 rounded-lg text-center"><p class="text-sm text-blue-800">Payback Period</p><p class="text-3xl font-bold text-blue-700">${combined.feasibility.paybackPeriod.toFixed(2)}</p><p class="text-xs text-blue-600">Tahun</p></div><div class="bg-green-100 p-4 rounded-lg text-center"><p class="text-sm text-green-800">Net Present Value (NPV)</p><p class="text-3xl font-bold text-green-700">${sierHelpers.toBillion(combined.feasibility.npv)}</p><p class="text-xs text-green-600">(WACC ${projectConfig.assumptions.discount_rate_wacc * 100}%)</p></div><div class="bg-purple-100 p-4 rounded-lg text-center"><p class="text-sm text-purple-800">Internal Rate of Return (IRR)</p><p class="text-3xl font-bold text-purple-700">${(combined.feasibility.irr * 100).toFixed(2)}%</p><p class="text-xs text-purple-600">per Tahun</p></div></div></div></div>`;
+        const capexSummaryHtml = `
+            <div id="capex-summary" class="mb-8 pb-6 border-b">
+                <h3 class="text-xl font-semibold mb-3 text-gray-800">Ringkasan Biaya Investasi (CapEx)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-gray-100 p-4 rounded-lg text-center">
+                        <p class="text-sm text-gray-600">CapEx Driving Range</p>
+                        <p class="text-2xl font-bold font-mono text-gray-800">${sierHelpers.toBillion(dr.capex.total)}</p>
+                    </div>
+                    <div class="bg-gray-100 p-4 rounded-lg text-center">
+                        <p class="text-sm text-gray-600">CapEx Padel</p>
+                        <p class="text-2xl font-bold font-mono text-gray-800">${sierHelpers.toBillion(padel.capex.total)}</p>
+                    </div>
+                    <div class="bg-gray-100 p-4 rounded-lg text-center">
+                        <p class="text-sm text-gray-600">CapEx Teknologi Digital</p>
+                        <p class="text-2xl font-bold font-mono text-gray-800">${sierHelpers.toBillion(digitalCapexTotal)}</p>
+                    </div>
+                    <div class="bg-teal-600 text-white p-4 rounded-lg text-center flex flex-col justify-center">
+                        <p class="text-sm">Total Investasi Proyek</p>
+                        <p class="text-3xl font-bold font-mono">${sierHelpers.toBillion(combined.capex.total)}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        summaryContainer.innerHTML = `<h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-teal-600 pl-4">Analisis Keuangan & Kelayakan Investasi (Proyek Gabungan)</h2><div class="bg-white p-6 rounded-lg shadow-md mb-8">${capexSummaryHtml}<h3 class="text-xl font-semibold mb-3 text-gray-800">Proyeksi Laba Rugi (P&L) - Gabungan</h3>${createPnlTable(combined)}<div id="investment-feasibility" class="mt-8 pt-6 border-t"><h3 class="text-xl font-semibold mb-4 text-gray-800">Analisis Kelayakan Investasi (Proyek Gabungan)</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="bg-blue-100 p-4 rounded-lg text-center"><p class="text-sm text-blue-800">Payback Period</p><p class="text-3xl font-bold text-blue-700">${combined.feasibility.paybackPeriod.toFixed(2)}</p><p class="text-xs text-blue-600">Tahun</p></div><div class="bg-green-100 p-4 rounded-lg text-center"><p class="text-sm text-green-800">Net Present Value (NPV)</p><p class="text-3xl font-bold text-green-700">${sierHelpers.toBillion(combined.feasibility.npv)}</p><p class="text-xs text-green-600">(WACC ${projectConfig.assumptions.discount_rate_wacc * 100}%)</p></div><div class="bg-purple-100 p-4 rounded-lg text-center"><p class="text-sm text-purple-800">Internal Rate of Return (IRR)</p><p class="text-3xl font-bold text-purple-700">${(combined.feasibility.irr * 100).toFixed(2)}%</p><p class="text-xs text-purple-600">per Tahun</p></div></div></div></div>`;
     },
 
     render() {
