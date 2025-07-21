@@ -12,39 +12,109 @@ const sierVisualFinanceSummary = {
         if (!container) return;
         const { assumptions: globalAssumptions, drivingRange, padel } = projectConfig;
 
-        const createTableRows = (data, basePath) => Object.entries(data).map(([key, value]) => {
-            if (key === 'capex' || key === 'capex_assumptions') return '';
-            const currentPath = `${basePath}.${key}`;
-            const translatedKey = sierTranslate.translate(key);
+        // Kamus kecil untuk deskripsi, agar UI lebih informatif
+        const descriptions = {
+            'tax_rate_profit': 'Pajak penghasilan badan yang dikenakan pada laba sebelum pajak.',
+            'discount_rate_wacc': 'Tingkat diskonto yang digunakan untuk menghitung NPV, merepresentasikan biaya modal.',
+            'contingency_rate': 'Alokasi dana darurat sebagai persentase dari total biaya investasi.',
+            'salaries_wages': 'Rincian biaya SDM bulanan untuk setiap posisi.',
+            // Tambahkan deskripsi lain jika perlu
+        };
 
-            if (typeof value !== 'object' || value === null || ('count' in value && 'salary' in value) || ('electricity_kwh_price' in value)) {
-                let editControl;
-                if (typeof value === 'object' && value !== null) {
-                    editControl = Object.entries(value).map(([subKey, subVal]) => `<span class="font-medium">${sierTranslate.translate(subKey)}:</span> ${sierHelpers.formatNumber(subVal)}`).join(', ');
-                } else {
-                    const isPercent = (key.includes('rate') || key.includes('okupansi')) && value < 2 && value > 0;
-                    editControl = sierEditable.createEditableNumber(value, currentPath, { format: isPercent ? 'percent' : '' });
+        // Helper BARU untuk membuat tabel gaji yang rapi (tidak bersarang)
+        const createSalaryTable = (salaryData, basePath) => {
+            const rows = Object.entries(salaryData).map(([role, data]) => `
+                <tr class="hover:bg-gray-100">
+                    <td class="py-1 pl-4 text-gray-600">${sierTranslate.translate(role)}</td>
+                    <td class="py-1 text-center">${sierEditable.createEditableNumber(data.count, `${basePath}.${role}.count`)}</td>
+                    <td class="py-1 text-right">${sierEditable.createEditableNumber(data.salary, `${basePath}.${role}.salary`, { format: 'currency' })}</td>
+                </tr>
+            `).join('');
+            return `<div class="mt-2 overflow-hidden border rounded-md">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-50 text-xs">
+                                <tr>
+                                    <th class="py-1 px-4 text-left font-medium">Posisi</th>
+                                    <th class="py-1 text-center font-medium">Jumlah</th>
+                                    <th class="py-1 px-4 text-right font-medium">Gaji/Bulan</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y">${rows}</tbody>
+                        </table>
+                    </div>`;
+        };
+
+        // Fungsi rekursif utama yang direfaktor total
+        const generateItemsHtml = (data, basePath) => {
+            return Object.entries(data).map(([key, value]) => {
+                if (key === 'capex' || key === 'capex_assumptions') return ''; // Abaikan kunci yang tidak relevan
+                
+                const currentPath = `${basePath}.${key}`;
+                const label = sierTranslate.translate(key);
+                const description = descriptions[key] || ''; // Ambil deskripsi atau string kosong
+
+                let contentHtml;
+
+                // KASUS KHUSUS: Objek kompleks seperti gaji atau utilitas
+                if (key === 'salaries_wages') {
+                    contentHtml = createSalaryTable(value, currentPath);
                 }
-                return `<tr class="border-b border-gray-200 hover:bg-gray-50">
-                            <td class="py-3 px-4 text-gray-600 w-1/5">${translatedKey}</td>
-                            <td class="py-3 px-4 w-4/5">${editControl}</td>
-                        </tr>`;
-            } 
-            else {
-                let subRows = createTableRows(value, currentPath);
-                return `<tr class="border-b border-gray-200">
-                            <td class="py-3 px-4 text-gray-600 w-1/5 align-top font-medium">${translatedKey}</td>
-                            <td class="py-3 px-4 w-4/5"><table class="w-full text-sm"><tbody class="divide-y divide-gray-200">${subRows}</tbody></table></td>
-                        </tr>`;
-            }
-        }).join('');
+                // KASUS UMUM: Nilai sederhana yang bisa diedit
+                else if (typeof value !== 'object' || value === null) {
+                    const isPercent = (key.includes('rate') || key.includes('okupansi')) && value < 2 && value > 0;
+                    contentHtml = sierEditable.createEditableNumber(value, currentPath, { format: isPercent ? 'percent' : '' });
+                }
+                // KASUS LAIN: Objek sederhana (seperti harga per jam) kita tampilkan inline
+                else if (typeof value === 'object' && !Object.values(value).some(v => typeof v === 'object')) {
+                    contentHtml = Object.entries(value).map(([subKey, subVal]) =>
+                        `<div class="flex justify-between items-center text-sm my-1">
+                            <span class="text-gray-600">${sierTranslate.translate(subKey)}:</span>
+                            ${sierEditable.createEditableNumber(subVal, `${currentPath}.${subKey}`, { format: 'currency' })}
+                        </div>`
+                    ).join('');
+                }
+                // Fallback untuk struktur lain yang mungkin ada
+                else {
+                    return ''; // Atau handle secara spesifik jika ada
+                }
+
+                // Tentukan tata letak berdasarkan jenis konten
+                if (key === 'salaries_wages') {
+                    // Layout untuk item dengan tabel sub-detail
+                    return `<div class="py-4 border-b">
+                                <h4 class="font-semibold text-gray-800">${label}</h4>
+                                ${description ? `<p class="text-xs text-gray-500 mt-1">${description}</p>` : ''}
+                                ${contentHtml}
+                            </div>`;
+                } else {
+                    // Layout grid untuk item key-value sederhana
+                    return `<div class="grid grid-cols-1 md:grid-cols-2 items-center gap-x-4 gap-y-1 py-4 border-b">
+                                <div>
+                                    <h4 class="font-semibold text-gray-800">${label}</h4>
+                                    ${description ? `<p class="text-xs text-gray-500 mt-1">${description}</p>` : ''}
+                                </div>
+                                <div class="md:text-right">
+                                    ${contentHtml}
+                                </div>
+                            </div>`;
+                }
+            }).join('');
+        };
 
         const createBusinessModelSection = (title, data, basePath, theme) => {
             const bgColor = theme === 'blue' ? 'bg-blue-600' : theme === 'purple' ? 'bg-purple-600' : 'bg-gray-700';
-            return `<div class="bg-white rounded-lg shadow-md overflow-hidden"><h3 class="text-xl font-bold text-white ${bgColor} p-4">${title}</h3><div class="p-4"><table class="w-full text-sm"><tbody class="divide-y divide-gray-200">${createTableRows(data, basePath)}</tbody></table></div></div>`;
+            const itemsHtml = generateItemsHtml(data, basePath);
+            return `<div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <h3 class="text-xl font-bold text-white ${bgColor} p-4">${title}</h3>
+                        <div class="p-4 md:p-6">${itemsHtml}</div>
+                    </div>`;
         };
         
-        container.innerHTML = `<div class="space-y-12">${createBusinessModelSection('A. Asumsi Global', globalAssumptions, 'assumptions', 'gray')}${createBusinessModelSection('B. Model Bisnis Driving Range', drivingRange, 'drivingRange', 'blue')}${createBusinessModelSection('C. Model Bisnis Padel', padel, 'padel', 'purple')}</div>`;
+        container.innerHTML = `<div class="space-y-12">
+            ${createBusinessModelSection('A. Asumsi Global', globalAssumptions, 'assumptions', 'gray')}
+            ${createBusinessModelSection('B. Model Bisnis Driving Range', drivingRange, 'drivingRange', 'blue')}
+            ${createBusinessModelSection('C. Model Bisnis Padel', padel, 'padel', 'purple')}
+        </div>`;
     },
 
     _renderDepreciationDetails() {
