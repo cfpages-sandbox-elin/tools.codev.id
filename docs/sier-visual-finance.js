@@ -660,13 +660,19 @@ const sierVisualFinance = {
         this._renderPadelCapexDetailsVisuals();
         this._renderOpexDetailsVisuals();
         this._renderSharedCapexVisuals();
-        this._renderFinancialSummaryVisuals();
+
         const drAnalysisData = sierMath.getStrategicAnalysis('drivingRange');
         const padelAnalysisData = sierMath.getStrategicAnalysis('padel');
         const drContainer = document.getElementById('driving-range-financial-analysis');
         const padelContainer = document.getElementById('padel-financial-analysis');
-        if(drContainer) drContainer.innerHTML = `<h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-amber-500 pl-4">Analisis Finansial Detail: Driving Range</h2><div class="bg-white p-6 rounded-lg shadow-md mb-8 space-y-8">${this._createRevenueBreakdownSection('drivingRange', sierMath._getDetailedRevenueBreakdown('drivingRange'))}${this._createBEPSection(drAnalysisData)}${this._createProfitabilitySection(drAnalysisData)}${this._createScenarioSection(drAnalysisData)}</div>`;
-        if(padelContainer) padelContainer.innerHTML = `<h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-purple-600 pl-4">Analisis Finansial Detail: Padel</h2><div class="bg-white p-6 rounded-lg shadow-md mb-8 space-y-8">${this._createRevenueBreakdownSection('padel', sierMath._getDetailedRevenueBreakdown('padel'))}${this._createBEPSection(padelAnalysisData)}${this._createProfitabilitySection(padelAnalysisData)}${this._createScenarioSection(padelAnalysisData)}</div>`;
+        if (drContainer) {
+            drContainer.innerHTML = `<h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-blue-500 pl-4">Analisis Finansial Detail: Driving Range</h2><div class="bg-white p-6 rounded-lg shadow-md mb-8 space-y-8">${this._createRevenueBreakdownSection('drivingRange', sierMath._getDetailedRevenueBreakdown('drivingRange'))}<h3 class="text-xl font-semibold mb-3 text-gray-800">Proyeksi Laba Rugi (P&L)</h3>${createPnlTable(drAnalysisData.profitabilityAnalysis)}<div class="mt-8 space-y-6">${this._createBEPSection('drivingRange', drAnalysisData)}${this._createProfitabilitySection('drivingRange', drAnalysisData)}${this._createScenarioSection('drivingRange', drAnalysisData)}</div></div>`;
+        }
+        if (padelContainer) {
+            padelContainer.innerHTML = `<h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-purple-600 pl-4">Analisis Finansial Detail: Padel</h2><div class="bg-white p-6 rounded-lg shadow-md mb-8 space-y-8">${this._createRevenueBreakdownSection('padel', sierMath._getDetailedRevenueBreakdown('padel'))}<h3 class="text-xl font-semibold mb-3 text-gray-800">Proyeksi Laba Rugi (P&L)</h3>${createPnlTable(padelAnalysisData.profitabilityAnalysis)}<div class="mt-8 space-y-6">${this._createBEPSection('padel', padelAnalysisData)}${this._createProfitabilitySection('padel', padelAnalysisData)}${this._createScenarioSection('padel', padelAnalysisData)}</div></div>`;
+        }
+        
+        this._renderFinancialSummaryVisuals();
     }
 };
 
