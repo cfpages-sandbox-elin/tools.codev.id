@@ -6,12 +6,14 @@ const sierMath = {
     getValueByPath(obj, path) {
         return path.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj);
     },
+
     setValueByPath(obj, path, value) {
         const keys = path.split('.');
         const lastKey = keys.pop();
         const target = keys.reduce((o, k) => o[k] = o[k] || {}, obj);
         target[lastKey] = value;
     },
+
     _calculateTotal(dataObject) {
         if (typeof dataObject !== 'object' || dataObject === null) return 0;
         return Object.values(dataObject).reduce((sum, value) => {
@@ -33,9 +35,6 @@ const sierMath = {
         }, 0);
     },
 
-    // ====================================================================
-    // DEMOGRAPHY & MARKET CALCULATIONS
-    // ====================================================================
     getDemographySummary() {
         if (typeof demographyData === 'undefined') return {};
         const totalPopulation = demographyData.reduce((sum, item) => sum + item.total, 0);
@@ -228,6 +227,32 @@ const sierMath = {
         return totalDepreciation;
     },
 
+    _calculateSharedCapexTotal() {
+        const sharedCapex = projectConfig.shared_facilities_capex;
+        let grandTotal = 0;
+
+        const bniData = sharedCapex.building_and_interior;
+        const totalArea = Object.values(bniData.area_m2).reduce((sum, area) => sum + area, 0);
+        grandTotal += totalArea * bniData.construction_and_finishing_cost_per_m2;
+
+        const enfData = sharedCapex.equipment_and_furniture;
+        for (const itemKey in enfData) {
+            const item = enfData[itemKey];
+            if (typeof item === 'number') {
+                grandTotal += item;
+            } else {
+                grandTotal += item.quantity * item.unit_cost;
+            }
+        }
+
+        const contingency = grandTotal * projectConfig.assumptions.contingency_rate;
+        const totalWithContingency = grandTotal + contingency;
+        
+        // Simpan totalnya agar bisa diakses oleh visual layer
+        projectConfig.shared_facilities_capex.total = totalWithContingency; 
+        return totalWithContingency;
+    },
+
     _calculateDrCapex() {
         const a = projectConfig.drivingRange.capex_assumptions;
         const global = projectConfig.assumptions;
@@ -333,6 +358,38 @@ const sierMath = {
                 subtotal: scenario_b_results.subtotal, contingency: scenario_b_results.contingency, total: scenario_b_results.total
             }
         };
+    },
+
+    _getDetailedCapex(unitName) {
+        let total = 0;
+        let breakdown = { civil_construction: 0, building: 0, equipment: 0, interior: 0, other: 0 }; // Untuk depresiasi
+
+        if (unitName === 'drivingRange') {
+            const drCapex = this._calculateDrCapex().scenario_b;
+            total = drCapex.total;
+            // Di sini Anda bisa mengisi breakdown jika diperlukan untuk depresiasi
+        } else if (unitName === 'padel') {
+            const p = projectConfig.padel;
+            const capex = p.capex;
+            const numCourts = p.revenue.main_revenue.courts;
+            let subtotal = 0;
+
+            subtotal += this._calculateTotal(capex.pre_operational);
+            subtotal += capex.civil_construction.land_preparation;
+            subtotal += capex.civil_construction.foundation_works_per_court * numCourts;
+            subtotal += this._calculateTotal(capex.building_structure);
+            let perCourtCost = this._calculateTotal(capex.sport_courts_equipment.per_court_costs);
+            subtotal += perCourtCost * numCourts;
+            for (const key in capex.sport_courts_equipment.initial_inventory) {
+                const item = capex.sport_courts_equipment.initial_inventory[key];
+                subtotal += item.quantity * item.unit_cost;
+            }
+            
+            const contingency = subtotal * projectConfig.assumptions.contingency_rate;
+            total = subtotal + contingency;
+        }
+
+        return { total, breakdown };
     },
 
     _getUnitCalculations(unitName, revenueMultiplier = 1, opexMultiplier = 1) {
@@ -450,51 +507,50 @@ const sierMath = {
         const dr = this._getUnitCalculations('drivingRange', revenueMultiplier, opexMultiplier);
         const padel = this._getUnitCalculations('padel', revenueMultiplier, opexMultiplier);
         
-        // --- BARIS BARU: Hitung CAPEX dan Depresiasi Teknologi ---
         const digitalCapexTotal = this._calculateDigitalCapexTotal();
-        const annualDigitalDepreciation = digitalCapexTotal / 5; // Asumsi masa manfaat 5 tahun
-
-        // --- MODIFIKASI: Tambahkan biaya digital ke total gabungan ---
+        const sharedCapexTotal = this._calculateSharedCapexTotal();
+        
+        const totalInvestment = dr.capex.total + padel.capex.total + digitalCapexTotal + sharedCapexTotal;
+        
         const combined = { 
-            capex: { 
-                total: dr.capex.total + padel.capex.total + digitalCapexTotal // Ditambah CAPEX digital
-            }, 
+            capex: { total: totalInvestment }, 
             pnl: {} 
         };
 
-        for (const key in dr.pnl) {
-            combined.pnl[key] = (dr.pnl[key] || 0) + (padel.pnl[key] || 0);
+        const drPnl = dr.pnl;
+        const padelPnl = padel.pnl;
+
+        for (const key in drPnl) {
+            combined.pnl[key] = (drPnl[key] || 0) + (padelPnl[key] || 0);
         }
+
+        const annualDigitalDepreciation = digitalCapexTotal / 5;
+        const annualSharedDepreciation = sharedCapexTotal / 20; // Asumsi 20 tahun
+        combined.pnl.annualDepreciation += annualDigitalDepreciation + annualSharedDepreciation;
         
-        // --- MODIFIKASI: Tambahkan depresiasi digital ke total depresiasi ---
-        combined.pnl.annualDepreciation += annualDigitalDepreciation;
-        // Hitung ulang metrik yang terpengaruh oleh depresiasi
         combined.pnl.ebt = combined.pnl.ebitda - combined.pnl.annualDepreciation;
         combined.pnl.tax = combined.pnl.ebt > 0 ? combined.pnl.ebt * projectConfig.assumptions.tax_rate_profit : 0;
         combined.pnl.netProfit = combined.pnl.ebt - combined.pnl.tax;
         combined.pnl.cashFlowFromOps = combined.pnl.netProfit + combined.pnl.annualDepreciation;
 
-
-        const totalInvestment = combined.capex.total; // Sekarang menggunakan total yang sudah benar
         const cashFlow = combined.pnl.cashFlowFromOps;
         const paybackPeriod = cashFlow > 0 ? totalInvestment / cashFlow : Infinity;
         
         let npv = -totalInvestment;
-        for(let i=1; i<=20; i++) {
-            npv += cashFlow / Math.pow(1 + projectConfig.assumptions.discount_rate_wacc, i);
-        }
+        for(let i=1; i<=20; i++) { npv += cashFlow / Math.pow(1 + projectConfig.assumptions.discount_rate_wacc, i); }
 
         let irr = 0.0;
         for (let i = 0; i < 1.0; i += 0.001) {
             let tempNpv = -totalInvestment;
-            for(let j=1; j<=20; j++) {
-                tempNpv += cashFlow / Math.pow(1 + i, j);
-            }
+            for(let j=1; j<=20; j++) { tempNpv += cashFlow / Math.pow(1 + i, j); }
             if (tempNpv < 0) { irr = i > 0 ? i - 0.001 : 0; break; }
         }
         
         return {
-            drivingRange: dr, padel: padel, digitalCapexTotal: digitalCapexTotal,
+            drivingRange: dr, 
+            padel: padel, 
+            digitalCapexTotal: digitalCapexTotal,
+            sharedCapexTotal: sharedCapexTotal,
             combined: { ...combined, feasibility: { paybackPeriod, npv, irr } }
         };
     },
