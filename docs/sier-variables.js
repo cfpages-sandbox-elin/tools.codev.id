@@ -149,7 +149,7 @@ projectConfig.drivingRange = {
     revenue: {
         main_revenue: {
             bays: Math.floor(projectConfig.site_parameters.driving_range.building_length_m / projectConfig.site_parameters.driving_range.bay_width_m) * projectConfig.site_parameters.driving_range.levels,
-            price_per_100_balls: 120000,
+            price_per_100_balls: 135000,
             occupancy_rate_per_day: { weekday: 2.0, weekend: 5.0 }
         },
         ancillary_revenue: { fnb_avg_spend: 35000, pro_shop_sales: 15000000 }
