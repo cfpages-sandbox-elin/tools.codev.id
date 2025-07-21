@@ -58,17 +58,22 @@ const sierVisualFinanceSummary = {
         if (!container) return;
 
         const summary = sierMath.getFinancialSummary();
-        const { drivingRange: dr, padel, combined, digitalCapexTotal } = summary;
-        const sharedCapexTotal = projectConfig.shared_facilities_capex.total || 0;
-        const totalProjectInvestment = dr.capex.total + padel.capex.total + digitalCapexTotal + sharedCapexTotal;
-        const cashFlow = combined.pnl.cashFlowFromOps;
-        const paybackPeriod = cashFlow > 0 ? totalProjectInvestment / cashFlow : Infinity;
-        let npv = -totalProjectInvestment;
-        for (let i = 1; i <= 20; i++) { npv += cashFlow / Math.pow(1 + projectConfig.assumptions.discount_rate_wacc, i); }
-        let irr = 0.0;
-        for (let i = 0; i < 1.0; i += 0.001) { let tempNpv = -totalProjectInvestment; for (let j = 1; j <= 20; j++) { tempNpv += cashFlow / Math.pow(1 + i, j); } if (tempNpv < 0) { irr = i > 0 ? i - 0.001 : 0; break; } }
-
-        const capexSummaryHtml = `<div id="capex-summary" class="mb-8 pb-6 border-b"><h3 class="text-xl font-semibold mb-3 text-gray-800">1. Ringkasan Biaya Investasi (CapEx)</h3><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4"><div class="bg-gray-100 p-4 rounded-lg text-center"><p class="text-sm text-gray-600">CapEx Driving Range</p><p class="text-2xl font-bold font-mono text-gray-800">${sierHelpers.toBillion(dr.capex.total)}</p></div><div class="bg-gray-100 p-4 rounded-lg text-center"><p class="text-sm text-gray-600">CapEx Padel</p><p class="text-2xl font-bold font-mono text-gray-800">${sierHelpers.toBillion(padel.capex.total)}</p></div><div class="bg-gray-100 p-4 rounded-lg text-center"><p class="text-sm text-gray-600">CapEx Teknologi Digital</p><p class="text-2xl font-bold font-mono text-gray-800">${sierHelpers.toBillion(digitalCapexTotal)}</p></div><div class="bg-gray-100 p-4 rounded-lg text-center"><p class="text-sm text-gray-600">CapEx Fasilitas Umum</p><p class="text-2xl font-bold font-mono text-gray-800">${sierHelpers.toBillion(sharedCapexTotal)}</p></div><div class="bg-teal-600 text-white p-4 rounded-lg text-center flex flex-col justify-center"><p class="text-sm">Total Investasi Proyek</p><p class="text-3xl font-bold font-mono">${sierHelpers.toBillion(totalProjectInvestment)}</p></div></div></div>`;
+        const { drivingRange: dr, padel, combined, digitalCapexTotal, sharedCapexTotal } = summary;
+        
+        // Kalkulasi kelayakan sudah dilakukan di sierMath, tinggal panggil
+        const { paybackPeriod, npv, irr } = combined.feasibility;
+        
+        const capexSummaryHtml = `<div id="capex-summary" class="mb-8 pb-6 border-b">
+            <h3 class="text-xl font-semibold mb-3 text-gray-800">1. Ringkasan Biaya Investasi (CapEx)</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                <div class="bg-gray-100 p-4 rounded-lg text-center"><p class="text-sm text-gray-600">CapEx Driving Range</p><p class="text-2xl font-bold font-mono text-gray-800">${sierHelpers.toBillion(dr.capex.total)}</p></div>
+                <div class="bg-gray-100 p-4 rounded-lg text-center"><p class="text-sm text-gray-600">CapEx Padel</p><p class="text-2xl font-bold font-mono text-gray-800">${sierHelpers.toBillion(padel.capex.total)}</p></div>
+                <div class="bg-gray-100 p-4 rounded-lg text-center"><p class="text-sm text-gray-600">CapEx Teknologi Digital</p><p class="text-2xl font-bold font-mono text-gray-800">${sierHelpers.toBillion(digitalCapexTotal)}</p></div>
+                <div class="bg-gray-100 p-4 rounded-lg text-center"><p class="text-sm text-gray-600">CapEx Fasilitas Umum</p><p class="text-2xl font-bold font-mono text-gray-800">${sierHelpers.toBillion(sharedCapexTotal)}</p></div>
+                <div class="bg-teal-600 text-white p-4 rounded-lg text-center flex flex-col justify-center"><p class="text-sm">Total Investasi Proyek</p><p class="text-3xl font-bold font-mono">${sierHelpers.toBillion(combined.capex.total)}</p></div>
+            </div>
+        </div>`;
+        
         const pnlSummaryHtml = `<div id="pnl-summary" class="mb-8 pb-6 border-b"><h3 class="text-xl font-semibold mb-3 text-gray-800">2. Proyeksi Laba Rugi (P&L) - Gabungan</h3><div class="overflow-x-auto border rounded-lg">${sierVisualFinanceDetails._createPnlTable(combined.pnl)}</div></div>`;
         const investmentFeasibilityHtml = `<div id="investment-feasibility" class="mb-8 pb-6 border-b"><h3 class="text-xl font-semibold mb-4 text-gray-800">3. Analisis Kelayakan Investasi (Proyek Gabungan)</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="bg-blue-100 p-4 rounded-lg text-center"><p class="text-sm text-blue-800">Payback Period</p><p class="text-3xl font-bold text-blue-700">${paybackPeriod.toFixed(2)}</p><p class="text-xs text-blue-600">Tahun</p></div><div class="bg-green-100 p-4 rounded-lg text-center"><p class="text-sm text-green-800">Net Present Value (NPV)</p><p class="text-3xl font-bold text-green-700">${sierHelpers.toBillion(npv)}</p><p class="text-xs text-green-600">(WACC ${projectConfig.assumptions.discount_rate_wacc * 100}%)</p></div><div class="bg-purple-100 p-4 rounded-lg text-center"><p class="text-sm text-purple-800">Internal Rate of Return (IRR)</p><p class="text-3xl font-bold text-purple-700">${(irr * 100).toFixed(2)}%</p><p class="text-xs text-purple-600">Lebih besar dari WACC, proyek layak</p></div></div></div>`;
         const sensitivityAnalysisHtml = `<div id="sensitivity-analysis"><h3 class="text-xl font-semibold mb-4 text-gray-800">4. Analisis Sensitivitas</h3><p class="text-gray-600 mb-4 text-sm">Analisis ini menguji seberapa besar perubahan Laba Bersih Tahunan jika asumsi pendapatan atau biaya operasional berubah. Ini membantu mengidentifikasi risiko utama terhadap profitabilitas.</p></div>`;
