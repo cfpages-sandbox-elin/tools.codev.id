@@ -45,6 +45,105 @@ const sierVisualFinance = {
         container.innerHTML = `<div class="space-y-12">${createBusinessModelSection('A. Asumsi Global', globalAssumptions, 'assumptions', 'gray')}${createBusinessModelSection('B. Model Bisnis Driving Range', drivingRange, 'drivingRange', 'blue')}${createBusinessModelSection('C. Model Bisnis Padel', padel, 'padel', 'purple')}</div>`;
     },
 
+    _renderOpexDetailsVisuals() {
+        const container = document.getElementById('opex-details-container');
+        if (!container) return;
+
+        const createUnitOpexTable = (unitName) => {
+            const unitConfig = projectConfig[unitName];
+            const opexData = unitConfig.opexMonthly;
+            let grandTotalOpex = 0;
+
+            // 1. Tabel Gaji & Upah (SDM)
+            const staffData = opexData.salaries_wages;
+            let staffTableRows = '';
+            let totalStaffCost = 0;
+            for (const role in staffData) {
+                const roleData = staffData[role];
+                const totalRoleCost = roleData.count * roleData.salary;
+                totalStaffCost += totalRoleCost;
+                staffTableRows += `
+                    <tr>
+                        <td class="px-3 py-2">${sierTranslate.translate(role)}</td>
+                        <td class="px-3 py-2 text-center">${sierEditable.createEditableNumber(roleData.count, `${unitName}.opexMonthly.salaries_wages.${role}.count`)}</td>
+                        <td class="px-3 py-2 text-right">${sierEditable.createEditableNumber(roleData.salary, `${unitName}.opexMonthly.salaries_wages.${role}.salary`, {format: 'currency'})}</td>
+                        <td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(totalRoleCost))}</td>
+                    </tr>
+                `;
+            }
+            grandTotalOpex += totalStaffCost;
+            const staffTableHtml = `
+                <h4 class="font-semibold text-gray-800 mb-2">1. Gaji & Upah (SDM)</h4>
+                <div class="overflow-x-auto border rounded-lg">
+                    <table class="w-full text-sm"><thead class="bg-gray-100 text-xs uppercase"><tr><th class="p-2 text-left">Posisi</th><th class="p-2 text-center">Jumlah Staf</th><th class="p-2 text-right">Gaji/Orang (Rp)</th><th class="p-2 text-right">Total Biaya (Rp)</th></tr></thead>
+                    <tbody class="divide-y">${staffTableRows}</tbody>
+                    <tfoot class="font-bold bg-gray-100"><tr><td colspan="3" class="p-2 text-right">Subtotal Biaya SDM</td><td class="p-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(totalStaffCost))}</td></tr></tfoot>
+                    </table>
+                </div>`;
+
+            // 2. Tabel Utilitas
+            const utilData = opexData.utilities;
+            let totalUtilCost = (utilData.electricity_kwh_price * utilData.electricity_kwh_usage) + utilData.water_etc;
+            grandTotalOpex += totalUtilCost;
+            const utilTableHtml = `
+                <h4 class="font-semibold text-gray-800 mt-6 mb-2">2. Utilitas</h4>
+                <div class="overflow-x-auto border rounded-lg">
+                    <table class="w-full text-sm"><thead class="bg-gray-100 text-xs uppercase"><tr><th class="p-2 text-left">Komponen</th><th class="p-2 text-right">Asumsi</th><th class="p-2 text-right">Total Biaya (Rp)</th></tr></thead>
+                    <tbody class="divide-y">
+                        <tr><td class="p-2">Listrik</td><td class="p-2 text-right">${sierEditable.createEditableNumber(utilData.electricity_kwh_usage, `${unitName}.opexMonthly.utilities.electricity_kwh_usage`)} kWh @ ${sierEditable.createEditableNumber(utilData.electricity_kwh_price, `${unitName}.opexMonthly.utilities.electricity_kwh_price`, {format: 'currency'})}</td><td class="p-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(utilData.electricity_kwh_price * utilData.electricity_kwh_usage))}</td></tr>
+                        <tr><td class="p-2">Air & Lainnya</td><td class="p-2 text-right">Lump Sum</td><td class="p-2 text-right font-mono">${sierEditable.createEditableNumber(utilData.water_etc, `${unitName}.opexMonthly.utilities.water_etc`, {format: 'currency'})}</td></tr>
+                    </tbody>
+                    <tfoot class="font-bold bg-gray-100"><tr><td colspan="2" class="p-2 text-right">Subtotal Biaya Utilitas</td><td class="p-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(totalUtilCost))}</td></tr></tfoot>
+                    </table>
+                </div>`;
+            
+            // 3. Tabel Biaya Lainnya
+            const otherDataKeys = ['marketing_promotion', 'maintenance_repair', 'other_operational'];
+            let otherTableRows = '';
+            let totalOtherCost = 0;
+            otherDataKeys.forEach(key => {
+                const cost = opexData[key];
+                totalOtherCost += cost;
+                otherTableRows += `<tr><td class="p-2">${sierTranslate.translate(key)}</td><td class="p-2 text-right font-mono">${sierEditable.createEditableNumber(cost, `${unitName}.opexMonthly.${key}`, {format: 'currency'})}</td></tr>`;
+            });
+            grandTotalOpex += totalOtherCost;
+             const otherTableHtml = `
+                <h4 class="font-semibold text-gray-800 mt-6 mb-2">3. Biaya Operasional Lainnya</h4>
+                <div class="overflow-x-auto border rounded-lg">
+                    <table class="w-full text-sm"><thead class="bg-gray-100 text-xs uppercase"><tr><th class="p-2 text-left">Kategori Biaya</th><th class="p-2 text-right">Estimasi Biaya Bulanan (Rp)</th></tr></thead>
+                    <tbody class="divide-y">${otherTableRows}</tbody>
+                    <tfoot class="font-bold bg-gray-100"><tr><td class="p-2 text-right">Subtotal Biaya Lainnya</td><td class="p-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(totalOtherCost))}</td></tr></tfoot>
+                    </table>
+                </div>`;
+
+            return `
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    ${staffTableHtml}
+                    ${utilTableHtml}
+                    ${otherTableHtml}
+                    <div class="mt-6 bg-gray-200 text-gray-800 font-bold p-3 rounded-lg flex justify-between items-center text-lg">
+                        <span>Total Estimasi Biaya Operasional Bulanan</span>
+                        <span class="font-mono">Rp ${sierHelpers.formatNumber(Math.round(grandTotalOpex))}</span>
+                    </div>
+                </div>
+            `;
+        };
+
+        container.innerHTML = `
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-amber-500 pl-4">Rincian Estimasi Biaya Operasional (OpEx) Bulanan</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4 text-center text-blue-700">Driving Range</h3>
+                    ${createUnitOpexTable('drivingRange')}
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4 text-center text-purple-700">Padel</h3>
+                    ${createUnitOpexTable('padel')}
+                </div>
+            </div>
+        `;
+    },
+
     _renderDrCapexDetailsVisuals() {
         const container = document.getElementById('driving-range-capex-details-container');
         if (!container) return;
@@ -276,6 +375,7 @@ const sierVisualFinance = {
         this._renderAssumptionsVisuals();
         this._renderDrCapexDetailsVisuals();
         this._renderPadelCapexDetailsVisuals();
+        this._renderOpexDetailsVisuals();
         this._renderFinancialSummaryVisuals();
     }
 };
