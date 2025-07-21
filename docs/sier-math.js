@@ -407,6 +407,45 @@ const sierMath = {
         return total;
     },
 
+    getDepreciationDetails() {
+        const drCapex = this._getUnitCalculations('drivingRange').capex.breakdown;
+        const padelCapex = this._getUnitCalculations('padel').capex.breakdown;
+        const digitalCapex = this._calculateDigitalCapexTotal();
+        const depRates = projectConfig.assumptions.depreciation_years;
+
+        // Gabungkan semua CAPEX berdasarkan kategori
+        const combinedCapex = {
+            civil_construction: (drCapex.civil_construction || 0) + (padelCapex.civil_construction || 0),
+            building: (drCapex.building || 0) + (padelCapex.building || 0),
+            equipment: (drCapex.equipment || 0) + (padelCapex.equipment || 0),
+            interior: (drCapex.interior || 0) + (padelCapex.interior || 0),
+            other: (drCapex.other || 0) + (padelCapex.other || 0),
+            digital_systems: digitalCapex // Kategori baru untuk teknologi
+        };
+
+        let details = [];
+        let totalAnnualDepreciation = 0;
+
+        for (const category in combinedCapex) {
+            if (combinedCapex[category] > 0) {
+                // Gunakan masa manfaat 5 tahun sebagai default untuk 'other' dan 'digital' jika tidak ditentukan
+                const lifespan = depRates[category] || 5; 
+                const annualDepreciation = combinedCapex[category] / lifespan;
+                totalAnnualDepreciation += annualDepreciation;
+                
+                details.push({
+                    category: sierTranslate.translate(category),
+                    capexValue: combinedCapex[category],
+                    lifespan: lifespan,
+                    lifespanPath: `assumptions.depreciation_years.${category}`,
+                    annualDepreciation: annualDepreciation
+                });
+            }
+        }
+
+        return { details, totalAnnualDepreciation };
+    },
+
     getFinancialSummary(revenueMultiplier = 1, opexMultiplier = 1) {
         const dr = this._getUnitCalculations('drivingRange', revenueMultiplier, opexMultiplier);
         const padel = this._getUnitCalculations('padel', revenueMultiplier, opexMultiplier);

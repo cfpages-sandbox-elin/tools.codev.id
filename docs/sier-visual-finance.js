@@ -386,6 +386,48 @@ const sierVisualFinance = {
     _createProfitabilitySection(analysisData) { /* ... (fungsi ini tidak berubah, tetap sama) ... */ return `<div class="bg-gray-50 p-4 rounded-lg border"><h4 class="font-semibold text-gray-800 mb-2">B. Analisis Profitabilitas & Target Balik Modal (Payback)</h4><p class="text-sm text-gray-600 mb-3">Proyeksi profitabilitas berdasarkan asumsi okupansi saat ini untuk mengukur waktu balik modal.</p><table class="w-full text-sm"><tbody class="divide-y"><tr><td class="py-2 text-gray-600">Total Investasi Awal (CapEx)</td><td class="py-2 text-right font-mono font-bold">Rp ${sierHelpers.formatNumber(Math.round(analysisData.profitabilityAnalysis.totalCapex))}</td></tr><tr><td class="py-2 text-gray-600">Proyeksi Pendapatan Tahunan</td><td class="py-2 text-right font-mono">Rp ${sierHelpers.formatNumber(Math.round(analysisData.profitabilityAnalysis.annualRevenue))}</td></tr><tr class="text-green-700"><td class="py-2 font-semibold">Proyeksi Laba Bersih Tahunan</td><td class="py-2 text-right font-mono font-bold">Rp ${sierHelpers.formatNumber(Math.round(analysisData.profitabilityAnalysis.annualNetProfit))}</td></tr><tr class="text-green-700"><td class="py-2 font-semibold">Proyeksi Arus Kas Bersih Tahunan</td><td class="py-2 text-right font-mono font-bold">Rp ${sierHelpers.formatNumber(Math.round(analysisData.profitabilityAnalysis.annualCashFlow))}</td></tr></tbody><tfoot class="border-t-2"><tr class="font-bold text-lg text-green-600"><td class="py-2">Estimasi Waktu Balik Modal</td><td class="py-2 text-right font-mono">${analysisData.profitabilityAnalysis.paybackPeriod.toFixed(2)} Tahun</td></tr></tfoot></table></div>`; },
     _createScenarioSection(analysisData) { /* ... (fungsi ini tidak berubah, tetap sama) ... */ const mods = projectConfig.assumptions.scenario_modifiers; const formatPayback = (years) => years === Infinity ? '> 15 Thn' : `${years.toFixed(2)} Thn`; return `<div class="bg-gray-50 p-4 rounded-lg border"><h4 class="font-semibold text-gray-800 mb-2">C. Analisis Skenario</h4><p class="text-sm text-gray-600 mb-3">Mengukur dampak perubahan pendapatan terhadap profitabilitas dan waktu balik modal.</p><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4"><div class="bg-red-50 p-3 rounded-md border border-red-200 text-center"><p class="font-bold text-red-800">Pesimis</p><p class="text-xs text-red-600">(${(mods.pessimistic_revenue * 100 - 100).toFixed(0)}% Revenue)</p><hr class="my-2"><p class="text-sm text-gray-600">Laba Bersih/Thn</p><p class="font-semibold text-lg ${analysisData.scenarioAnalysis.pessimistic.netProfit < 0 ? 'text-red-600' : 'text-gray-800'}">Rp ${sierHelpers.formatNumber(Math.round(analysisData.scenarioAnalysis.pessimistic.netProfit))}</p><p class="text-sm text-gray-600 mt-2">Balik Modal</p><p class="font-semibold text-lg text-red-600">${formatPayback(analysisData.scenarioAnalysis.pessimistic.payback)}</p></div><div class="bg-blue-50 p-3 rounded-md border border-blue-200 text-center ring-2 ring-blue-500"><p class="font-bold text-blue-800">Realisitis (Basis)</p><p class="text-xs text-blue-600">(Target Awal)</p><hr class="my-2"><p class="text-sm text-gray-600">Laba Bersih/Thn</p><p class="font-semibold text-lg text-gray-800">Rp ${sierHelpers.formatNumber(Math.round(analysisData.scenarioAnalysis.realistic.netProfit))}</p><p class="text-sm text-gray-600 mt-2">Balik Modal</p><p class="font-semibold text-lg text-blue-600">${formatPayback(analysisData.scenarioAnalysis.realistic.payback)}</p></div><div class="bg-green-50 p-3 rounded-md border border-green-200 text-center"><p class="font-bold text-green-800">Optimis</p><p class="text-xs text-green-600">(+${(mods.optimistic_revenue * 100 - 100).toFixed(0)}% Revenue)</p><hr class="my-2"><p class="text-sm text-gray-600">Laba Bersih/Thn</p><p class="font-semibold text-lg text-gray-800">Rp ${sierHelpers.formatNumber(Math.round(analysisData.scenarioAnalysis.optimistic.netProfit))}</p><p class="text-sm text-gray-600 mt-2">Balik Modal</p><p class="font-semibold text-lg text-green-600">${formatPayback(analysisData.scenarioAnalysis.optimistic.payback)}</p></div></div></div>`; },
 
+    _renderDepreciationDetails() {
+        const container = document.getElementById('depreciation-details-container');
+        if (!container) return;
+
+        const data = sierMath.getDepreciationDetails();
+
+        const tableRows = data.details.map(item => `
+            <tr>
+                <td class="px-3 py-2">${item.category}</td>
+                <td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(item.capexValue))}</td>
+                <td class="px-3 py-2 text-center">${sierEditable.createEditableNumber(item.lifespan, item.lifespanPath)}</td>
+                <td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(item.annualDepreciation))}</td>
+            </tr>
+        `).join('');
+
+        container.innerHTML = `
+            <h3 class="text-xl font-semibold mb-3 text-gray-800">Rincian Perhitungan Depresiasi Aset</h3>
+            <p class="text-sm text-gray-600 mb-4">Tabel ini menjelaskan bagaimana total biaya "Depresiasi & Amortisasi" pada laporan Laba Rugi dihitung, berdasarkan nilai aset dan asumsi masa manfaatnya.</p>
+            <div class="overflow-x-auto border rounded-lg">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-100 text-xs uppercase">
+                        <tr>
+                            <th class="p-2 text-left">Kategori Aset</th>
+                            <th class="p-2 text-right">Total Nilai Aset (CapEx)</th>
+                            <th class="p-2 text-center">Masa Manfaat (Tahun)</th>
+                            <th class="p-2 text-right">Penyusutan per Tahun (Rp)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y">
+                        ${tableRows}
+                    </tbody>
+                    <tfoot class="font-bold bg-gray-200">
+                        <tr>
+                            <td colspan="3" class="p-2 text-right">Total Depresiasi Tahunan</td>
+                            <td class="p-2 text-right font-mono text-base">${sierHelpers.formatNumber(Math.round(data.totalAnnualDepreciation))}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        `;
+    },
+
     _renderFinancialSummaryVisuals() {
         const drContainer = document.getElementById('driving-range-financial-analysis');
         const padelContainer = document.getElementById('padel-financial-analysis');
