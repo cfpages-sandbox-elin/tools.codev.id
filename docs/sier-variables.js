@@ -220,11 +220,60 @@ projectConfig.padel = {
         ancillary_revenue: { fnb_avg_spend: 50000, pro_shop_sales: 20000000 }
     },
     capex: {
-        civil_construction: { land_preparation: 1500000000, foundation_works: 1000000000 },
-        building: { main_structure: 800000000 },
-        equipment: { sport_courts: 350000000 },
-        interior: { finishing_lounge_etc: 300000000 },
-        other: { pre_operational: 100000000 }
+        pre_operational: {
+            permits_and_consulting: 50000000,
+            initial_marketing: 50000000
+        },
+        civil_construction: { 
+            land_preparation: 1500000000, // Asumsi ini mungkin termasuk pondasi dasar
+            foundation_works_per_court: 25000000 // Pondasi spesifik untuk struktur lapangan
+        },
+        building_structure: { // Struktur atap dan penutup bangunan utama
+             main_building_structure_cost: 800000000 
+        },
+        sport_courts_equipment: {
+            notes: "Biaya untuk membangun dan melengkapi lapangan Padel dari nol.",
+            per_court_costs: {
+                steel_structure: 95000000,
+                tempered_glass_12mm: 140000000,
+                artificial_turf_carpet: 55000000,
+                lighting_system_8_lamps: 30000000,
+                net_and_posts: 7500000
+            },
+            initial_inventory: {
+                rental_rackets: {
+                    quantity: 20,
+                    unit_cost: 1000000
+                },
+                ball_tubes: {
+                    quantity: 50, // 50 tabung @ 3 bola
+                    unit_cost: 120000
+                }
+            }
+        }
     },
     opexMonthly: { salaries_wages: { manager: { count: 1, salary: 10000000 }, supervisor: { count: 2, salary: 6500000 }, admin_cashier: { count: 4, salary: 5000000 }, cleaning_security: { count: 4, salary: 4000000 } }, utilities: { electricity_kwh_price: 1700, electricity_kwh_usage: 18000, water_etc: 5000000 }, marketing_promotion: 15000000, maintenance_repair: 10000000, other_operational: 8000000 }
+};
+
+projectConfig.shared_facilities_capex = {
+    title: "Biaya Investasi Fasilitas Umum (Shared)",
+    notes: "Biaya ini digunakan bersama oleh Driving Range dan Padel, dan dialokasikan sebagai biaya proyek umum.",
+    building_and_interior: {
+        area_m2: {
+            lobby_reception: 50,
+            pro_shop: 40,
+            lockers_showers_toilets: 80,
+            mushola: 30
+        },
+        construction_and_finishing_cost_per_m2: 4500000
+    },
+    equipment_and_furniture: {
+        lobby_reception_furniture: 50000000,
+        pro_shop_fixtures_and_displays: 30000000,
+        lockers: {
+            quantity: 50,
+            unit_cost: 1500000
+        },
+        mushola_fittings_and_carpets: 15000000
+    }
 };
