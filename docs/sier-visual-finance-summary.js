@@ -31,16 +31,12 @@ const sierVisualFinanceSummary = {
                     </div>`;
         };
 
-        // Fungsi rekursif utama yang SUDAH DIPERBAIKI
         const generateItemsHtml = (data, basePath) => {
             return Object.entries(data).map(([key, value]) => {
                 if (['capex', 'capex_assumptions', 'notes', 'title'].includes(key)) return '';
-
                 const currentPath = `${basePath}.${key}`;
                 const label = sierTranslate.translate(key);
                 const description = descriptions[key] || '';
-
-                // KASUS 1: Item khusus seperti Gaji, yang memerlukan tabelnya sendiri.
                 if (key === 'salaries_wages') {
                     const contentHtml = createSalaryTable(value, currentPath);
                     return `<div class="py-4 border-b last:border-b-0">
@@ -49,8 +45,6 @@ const sierVisualFinanceSummary = {
                                 ${contentHtml}
                             </div>`;
                 }
-
-                // KASUS 2: Nilai sederhana (angka atau teks) yang ditampilkan dalam format grid.
                 if (typeof value !== 'object' || value === null) {
                     const isPercent = (key.includes('rate') || key.includes('okupansi')) && value < 2 && value > 0;
                     const contentHtml = sierEditable.createEditableNumber(value, currentPath, { format: isPercent ? 'percent' : '' });
@@ -62,10 +56,8 @@ const sierVisualFinanceSummary = {
                                 <div class="md:text-right">${contentHtml}</div>
                             </div>`;
                 }
-
-                // KASUS 3 (PERBAIKAN UTAMA): Nilai adalah sebuah OBJEK. Lakukan rekursi.
                 if (typeof value === 'object') {
-                    const subItemsHtml = generateItemsHtml(value, currentPath); // Panggil diri sendiri
+                    const subItemsHtml = generateItemsHtml(value, currentPath);
                     if (subItemsHtml.trim() !== '') {
                         return `<div class="py-4 border-b last:border-b-0">
                                     <h4 class="font-semibold text-gray-800 text-base">${label}</h4>
@@ -73,8 +65,7 @@ const sierVisualFinanceSummary = {
                                 </div>`;
                     }
                 }
-
-                return ''; // Fallback jika tidak ada yang cocok
+                return '';
             }).join('');
         };
 
@@ -87,11 +78,17 @@ const sierVisualFinanceSummary = {
                     </div>`;
         };
         
-        container.innerHTML = `<div class="space-y-12">
-            ${createBusinessModelSection('A. Asumsi Global', globalAssumptions, 'assumptions', 'gray')}
-            ${createBusinessModelSection('B. Model Bisnis Driving Range', drivingRange, 'drivingRange', 'blue')}
-            ${createBusinessModelSection('C. Model Bisnis Padel', padel, 'padel', 'purple')}
-        </div>`;
+        // --- PERUBAHAN UTAMA ADA DI SINI ---
+        container.innerHTML = `
+            <div class="space-y-12">
+                ${createBusinessModelSection('A. Asumsi Global', globalAssumptions, 'assumptions', 'gray')}
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    ${createBusinessModelSection('B. Model Bisnis Driving Range', drivingRange, 'drivingRange', 'blue')}
+                    ${createBusinessModelSection('C. Model Bisnis Padel', padel, 'padel', 'purple')}
+                </div>
+            </div>
+        `;
     },
 
     _renderDepreciationDetails() {
