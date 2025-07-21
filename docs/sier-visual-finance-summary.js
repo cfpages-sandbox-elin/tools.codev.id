@@ -7,9 +7,6 @@ const sierVisualFinanceSummary = {
     // BAGIAN 1: FUNGSI RENDER SPESIFIK UNTUK SETIAP BAGIAN SUMMARY
     //======================================================================
 
-    /**
-     * Merender bagian asumsi utama.
-     */
     _renderAssumptionsVisuals() {
         const container = document.getElementById('assumptions-container');
         if (!container) return;
@@ -41,9 +38,6 @@ const sierVisualFinanceSummary = {
         container.innerHTML = `<div class="space-y-12">${createBusinessModelSection('A. Asumsi Global', globalAssumptions, 'assumptions', 'gray')}${createBusinessModelSection('B. Model Bisnis Driving Range', drivingRange, 'drivingRange', 'blue')}${createBusinessModelSection('C. Model Bisnis Padel', padel, 'padel', 'purple')}</div>`;
     },
 
-    /**
-     * Merender rincian Depresiasi Aset Gabungan.
-     */
     _renderDepreciationDetails() {
         const container = document.getElementById('depreciation-details-container');
         if (!container) return;
@@ -59,9 +53,6 @@ const sierVisualFinanceSummary = {
         container.innerHTML = `<h3 class="text-xl font-semibold mb-3 text-gray-800">Rincian Perhitungan Depresiasi Aset</h3><p class="text-sm text-gray-600 mb-4">Tabel ini menjelaskan bagaimana total biaya "Depresiasi & Amortisasi" pada laporan Laba Rugi dihitung, berdasarkan nilai aset dan asumsi masa manfaatnya.</p><div class="overflow-x-auto border rounded-lg"><table class="w-full text-sm"><thead class="bg-gray-100 text-xs uppercase"><tr><th class="p-2 text-left">Kategori Aset</th><th class="p-2 text-right">Total Nilai Aset (CapEx)</th><th class="p-2 text-center">Masa Manfaat (Tahun)</th><th class="p-2 text-right">Penyusutan per Tahun (Rp)</th></tr></thead><tbody class="divide-y">${tableRows}</tbody><tfoot class="font-bold bg-gray-200"><tr><td colspan="3" class="p-2 text-right">Total Depresiasi Tahunan</td><td class="p-2 text-right font-mono text-base">${sierHelpers.formatNumber(Math.round(data.totalAnnualDepreciation))}</td></tr></tfoot></table></div>`;
     },
 
-    /**
-     * Merender ringkasan keuangan gabungan.
-     */
     _renderFinancialSummaryVisuals() {
         const container = document.getElementById('financial-analysis-summary');
         if (!container) return;
