@@ -110,24 +110,131 @@ const sierVisualFinanceDetails = {
     _renderPadelCapexDetailsVisuals() {
         const container = document.getElementById('padel-capex-details-container');
         if (!container) return;
-        const padelCapex = projectConfig.padel.capex;
-        const numCourts = projectConfig.padel.revenue.main_revenue.courts;
-        let tableBodyHtml = '', grandTotal = 0;
-        const addCategoryRow = (title) => { tableBodyHtml += `<tbody class="bg-gray-50"><td colspan="3" class="p-3 font-bold text-gray-800">${sierTranslate.translate(title)}</td></tbody>`; };
-        const addItemRow = (label, value, path) => { const itemTotal = value; grandTotal += itemTotal; tableBodyHtml += `<tr><td class="px-3 py-2 text-gray-600 pl-8">${sierTranslate.translate(label)}</td><td class="px-3 py-2 text-gray-500 text-xs">Lump Sum</td><td class="px-3 py-2 text-right font-mono">${sierEditable.createEditableNumber(itemTotal, path, {format: 'currency'})}</td></tr>`; };
-        addCategoryRow('pre_operational'); addItemRow('permits_and_consulting', padelCapex.pre_operational.permits_and_consulting, 'padel.capex.pre_operational.permits_and_consulting'); addItemRow('initial_marketing', padelCapex.pre_operational.initial_marketing, 'padel.capex.pre_operational.initial_marketing');
-        addCategoryRow('civil_construction'); addItemRow('land_preparation', padelCapex.civil_construction.land_preparation, 'padel.capex.civil_construction.land_preparation');
-        const foundationTotal = padelCapex.civil_construction.foundation_works_per_court * numCourts; grandTotal += foundationTotal; tableBodyHtml += `<tr><td class="px-3 py-2 text-gray-600 pl-8">Pondasi Lapangan</td><td class="px-3 py-2 text-gray-500 text-xs">${numCourts} lpgn @ ${sierEditable.createEditableNumber(padelCapex.civil_construction.foundation_works_per_court, 'padel.capex.civil_construction.foundation_works_per_court', {format: 'currency'})}</td><td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(foundationTotal)}</td></tr>`;
-        addCategoryRow('building_structure'); addItemRow('main_building_structure_cost', padelCapex.building_structure.main_building_structure_cost, 'padel.capex.building_structure.main_building_structure_cost');
-        addCategoryRow('sport_courts_equipment'); const courtsData = padelCapex.sport_courts_equipment; let perCourtTotal = 0;
-        for (const itemKey in courtsData.per_court_costs) { const itemValue = courtsData.per_court_costs[itemKey]; perCourtTotal += itemValue; tableBodyHtml += `<tr><td class="px-3 py-2 text-gray-600 pl-8">- ${sierTranslate.translate(itemKey)}</td><td class="px-3 py-2 text-gray-500 text-xs">Biaya per lapangan</td><td class="px-3 py-2 text-right font-mono">${sierEditable.createEditableNumber(itemValue, `padel.capex.sport_courts_equipment.per_court_costs.${itemKey}`, {format: 'currency'})}</td></tr>`; }
-        tableBodyHtml += `<tr class="font-semibold bg-gray-100"><td class="px-3 py-2 text-right" colspan="2">Subtotal Biaya per Lapangan</td><td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(perCourtTotal)}</td></tr>`;
-        const allCourtsTotal = perCourtTotal * numCourts; grandTotal += allCourtsTotal; tableBodyHtml += `<tr class="font-bold"><td class="px-3 py-2 text-right" colspan="2">Total untuk ${numCourts} Lapangan</td><td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(allCourtsTotal)}</td></tr>`;
-        const inventoryData = courtsData.initial_inventory; let inventoryTotal = 0;
-        for (const itemKey in inventoryData) { const item = inventoryData[itemKey]; const itemTotal = item.quantity * item.unit_cost; inventoryTotal += itemTotal; tableBodyHtml += `<tr><td class="px-3 py-2 text-gray-600 pl-8">- ${sierTranslate.translate(itemKey)}</td><td class="px-3 py-2 text-gray-500 text-xs">${sierEditable.createEditableNumber(item.quantity, `padel.capex.sport_courts_equipment.initial_inventory.${itemKey}.quantity`)} unit @ ${sierEditable.createEditableNumber(item.unit_cost, `padel.capex.sport_courts_equipment.initial_inventory.${itemKey}.unit_cost`, {format: 'currency'})}</td><td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(itemTotal)}</td></tr>`; }
-        grandTotal += inventoryTotal;
-        const contingencyRate = projectConfig.assumptions.contingency_rate; const contingency = grandTotal * contingencyRate; const finalTotal = grandTotal + contingency;
-        container.innerHTML = `<h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-purple-600 pl-4">Rincian Estimasi Biaya Investasi (CapEx): Padel</h2><div class="bg-white p-6 rounded-lg shadow-md mb-8"><div class="overflow-x-auto border rounded-lg"><table class="w-full text-sm"><thead class="bg-gray-200 text-xs uppercase"><tr><th class="p-2 text-left w-1/2">Komponen Biaya</th><th class="p-2 text-left w-1/4">Detail Perhitungan</th><th class="p-2 text-right w-1/4">Estimasi Biaya (Rp)</th></tr></thead>${tableBodyHtml}<tfoot class="font-bold"><tr class="bg-gray-200"><td class="p-3 text-right" colspan="2">Subtotal Biaya Fisik & Pra-Operasional</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(grandTotal))}</td></tr><tr class="bg-yellow-200"><td class="p-3 text-right" colspan="2">Kontingensi (${sierEditable.createEditableNumber(contingencyRate, 'assumptions.contingency_rate', {format: 'percent'})})</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(contingency))}</td></tr><tr class="bg-purple-600 text-white text-lg"><td class="p-3 text-right" colspan="2">Total Estimasi Investasi Padel</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(finalTotal))}</td></tr></tfoot></table></div></div>`;
+
+        const createScenarioTable = (capexConfig, costCalculationFunc) => {
+            let tableBodyHtml = '';
+            let grandTotal = 0;
+
+            const numCourts = capexConfig.num_courts || projectConfig.padel.revenue.main_revenue.courts;
+
+            const addCategoryRow = (title) => {
+                tableBodyHtml += `<tbody class="bg-gray-50"><td colspan="3" class="p-3 font-bold text-gray-800">${sierTranslate.translate(title)}</td></tbody><tbody class="divide-y">`;
+            };
+            const addItemRow = (label, detail, value) => {
+                grandTotal += value;
+                tableBodyHtml += `<tr><td class="px-3 py-2 text-gray-600 pl-8">${label}</td><td class="px-3 py-2 text-gray-500 text-xs">${detail}</td><td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(value))}</td></tr>`;
+            };
+
+            // Biaya Pra-Operasional
+            if (capexConfig.pre_operational) {
+                addCategoryRow('pre_operational');
+                for (const key in capexConfig.pre_operational) {
+                    addItemRow(sierTranslate.translate(key), 'Lump Sum', capexConfig.pre_operational[key]);
+                }
+            }
+
+            // Biaya Konstruksi Sipil (Hanya untuk Skenario A)
+            if (capexConfig.civil_construction) {
+                addCategoryRow('civil_construction');
+                addItemRow(sierTranslate.translate('land_preparation'), 'Lump Sum', capexConfig.civil_construction.land_preparation);
+                const foundationTotal = capexConfig.civil_construction.foundation_works_per_court * numCourts;
+                addItemRow('Pondasi Lapangan', `${numCourts} lpgn @ Rp ${sierHelpers.formatNumber(capexConfig.civil_construction.foundation_works_per_court)}`, foundationTotal);
+            }
+
+            // Biaya Renovasi (Hanya untuk Skenario B)
+            if (capexConfig.renovation) {
+                addCategoryRow('renovation');
+                const renovationData = capexConfig.renovation;
+                addItemRow('Pembongkaran & Pembersihan Minor', 'Lump Sum', renovationData.minor_demolition_and_clearing.lump_sum);
+                const floorRepairCost = renovationData.floor_repair_and_leveling.area_m2 * renovationData.floor_repair_and_leveling.cost_per_m2;
+                addItemRow('Perbaikan & Leveling Lantai', `${renovationData.floor_repair_and_leveling.area_m2} m² @ Rp ${sierHelpers.formatNumber(renovationData.floor_repair_and_leveling.cost_per_m2)}`, floorRepairCost);
+                const finishingCost = renovationData.interior_finishing_painting.area_m2 * renovationData.interior_finishing_painting.cost_per_m2;
+                addItemRow('Finishing & Pengecatan Interior', `${renovationData.interior_finishing_painting.area_m2} m² @ Rp ${sierHelpers.formatNumber(renovationData.interior_finishing_painting.cost_per_m2)}`, finishingCost);
+            }
+
+            // Biaya Struktur Bangunan (Hanya untuk Skenario A)
+            if (capexConfig.building_structure) {
+                addCategoryRow('building_structure');
+                addItemRow(sierTranslate.translate('main_building_structure_cost'), 'Lump Sum', capexConfig.building_structure.main_building_structure_cost);
+            }
+
+            // Biaya Peralatan Lapangan
+            if (capexConfig.sport_courts_equipment) {
+                const courtsData = capexConfig.sport_courts_equipment;
+                addCategoryRow('sport_courts_equipment');
+
+                let perCourtTotal = 0;
+                for (const itemKey in courtsData.per_court_costs) {
+                    const itemValue = courtsData.per_court_costs[itemKey];
+                    perCourtTotal += itemValue;
+                    tableBodyHtml += `<tr><td class="px-3 py-2 text-gray-600 pl-12">- ${sierTranslate.translate(itemKey)}</td><td class="px-3 py-2 text-gray-500 text-xs">Biaya per lapangan</td><td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(itemValue)}</td></tr>`;
+                }
+                tableBodyHtml += `<tr class="font-semibold bg-gray-100"><td class="px-3 py-2 text-right" colspan="2">Subtotal Biaya per Lapangan</td><td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(perCourtTotal)}</td></tr>`;
+
+                const allCourtsTotal = perCourtTotal * numCourts;
+                grandTotal += allCourtsTotal;
+                tableBodyHtml += `<tr class="font-bold"><td class="px-3 py-2 text-right text-gray-800" colspan="2">Total untuk ${numCourts} Lapangan</td><td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(allCourtsTotal)}</td></tr>`;
+
+                let inventoryTotal = 0;
+                for (const itemKey in courtsData.initial_inventory) {
+                    const item = courtsData.initial_inventory[itemKey];
+                    const itemTotal = item.quantity * item.unit_cost;
+                    inventoryTotal += itemTotal;
+                    tableBodyHtml += `<tr><td class="px-3 py-2 text-gray-600 pl-12">- Inventaris Awal: ${sierTranslate.translate(itemKey)}</td><td class="px-3 py-2 text-gray-500 text-xs">${item.quantity} unit @ Rp ${sierHelpers.formatNumber(item.unit_cost)}</td><td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(itemTotal)}</td></tr>`;
+                }
+                grandTotal += inventoryTotal;
+            }
+            tableBodyHtml += `</tbody>`;
+
+            const subtotal = grandTotal; // Total sebelum kontingensi
+            const contingency = subtotal * projectConfig.assumptions.contingency_rate;
+            const finalTotal = subtotal + contingency;
+
+            return `
+                <div class="mb-12">
+                    <h3 class="text-xl font-semibold mb-2 text-gray-800">${capexConfig.title}</h3>
+                    <p class="text-gray-600 mb-4 text-sm">${capexConfig.notes}</p>
+                    <div class="overflow-x-auto border rounded-lg">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-200 text-xs uppercase">
+                                <tr>
+                                    <th class="p-2 text-left w-1/2">Komponen Biaya</th>
+                                    <th class="p-2 text-left w-1/4">Detail Perhitungan</th>
+                                    <th class="p-2 text-right w-1/4">Estimasi Biaya (Rp)</th>
+                                </tr>
+                            </thead>
+                            ${tableBodyHtml}
+                            <tfoot class="font-bold">
+                                <tr class="bg-gray-200">
+                                    <td class="p-3 text-right" colspan="2">Subtotal Biaya</td>
+                                    <td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(subtotal))}</td>
+                                </tr>
+                                <tr class="bg-yellow-200">
+                                    <td class="p-3 text-right" colspan="2">Kontingensi (${(projectConfig.assumptions.contingency_rate * 100)}%)</td>
+                                    <td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(contingency))}</td>
+                                </tr>
+                                <tr class="bg-purple-600 text-white text-lg">
+                                    <td class="p-3 text-right" colspan="2">Total Estimasi Investasi (Skenario Ini)</td>
+                                    <td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(finalTotal))}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>`;
+        };
+
+        const scenarioA_Html = createScenarioTable(projectConfig.padel.capex_scenario_a, sierMath._calculatePadelCapexScenarioA);
+        const scenarioB_Html = createScenarioTable(projectConfig.padel.capex_scenario_b, sierMath._calculatePadelCapexScenarioB);
+
+        container.innerHTML = `
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-purple-600 pl-4">Rincian Estimasi Biaya Investasi (CapEx): Padel</h2>
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                ${scenarioA_Html}
+                ${scenarioB_Html}
+                <div class="p-4 bg-purple-50 border-l-4 border-purple-400 text-sm text-purple-800">
+                    <strong>Rekomendasi:</strong> <strong>Skenario B (Renovasi)</strong> menawarkan penghematan biaya awal yang sangat besar (~${(1 - (sierMath._calculatePadelCapexScenarioB() / sierMath._calculatePadelCapexScenarioA()) * 100).toFixed(0)}%), cocok untuk validasi pasar dengan risiko lebih rendah. <strong>Skenario A (Pembangunan Baru)</strong> memiliki potensi pendapatan jangka panjang yang lebih tinggi karena kapasitas ganda, namun dengan investasi awal yang jauh lebih besar.
+                </div>
+            </div>`;
     },
 
     _renderSharedCapexVisuals() {
@@ -135,23 +242,27 @@ const sierVisualFinanceDetails = {
         if (!container) return;
         const sharedCapex = projectConfig.shared_facilities_capex;
         let tableBodyHtml = '', grandTotal = 0;
-        const bniData = sharedCapex.building_and_interior;
-        const totalArea = Object.values(bniData.area_m2).reduce((sum, area) => sum + area, 0);
-        const bniTotalCost = totalArea * bniData.construction_and_finishing_cost_per_m2;
-        grandTotal += bniTotalCost;
-        tableBodyHtml += `<tbody class="bg-gray-50"><td colspan="3" class="p-3 font-bold text-gray-800">Bangunan & Interior</td></tbody>`;
-        for (const areaKey in bniData.area_m2) { tableBodyHtml += `<tr><td class="px-3 py-2 text-gray-600 pl-8">- Area ${sierTranslate.translate(areaKey)}</td><td class="px-3 py-2 text-gray-500 text-xs">${sierEditable.createEditableNumber(bniData.area_m2[areaKey], `shared_facilities_capex.building_and_interior.area_m2.${areaKey}`)} m²</td><td></td></tr>`; }
-        tableBodyHtml += `<tr class="font-semibold"><td class="px-3 py-2 text-right" colspan="2">Total Area (${sierHelpers.formatNumber(totalArea)} m²) @ ${sierEditable.createEditableNumber(bniData.construction_and_finishing_cost_per_m2, 'shared_facilities_capex.building_and_interior.construction_and_finishing_cost_per_m2', {format: 'currency'})}/m²</td><td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(bniTotalCost)}</td></tr>`;
-        const enfData = sharedCapex.equipment_and_furniture; let enfTotalCost = 0;
-        tableBodyHtml += `<tbody class="bg-gray-50"><td colspan="3" class="p-3 font-bold text-gray-800">Peralatan & Furnitur</td></tbody>`;
-        for (const itemKey in enfData) {
-            const item = enfData[itemKey]; let itemTotal, detailHtml;
-            if (typeof item === 'number') { itemTotal = item; detailHtml = `Lump Sum`; enfTotalCost += itemTotal; tableBodyHtml += `<tr><td class="px-3 py-2 text-gray-600 pl-8">- ${sierTranslate.translate(itemKey)}</td><td class="px-3 py-2 text-gray-500 text-xs">${detailHtml}</td><td class="px-3 py-2 text-right font-mono">${sierEditable.createEditableNumber(item, `shared_facilities_capex.equipment_and_furniture.${itemKey}`, {format: 'currency'})}</td></tr>`; }
-            else { itemTotal = item.quantity * item.unit_cost; detailHtml = `${sierEditable.createEditableNumber(item.quantity, `shared_facilities_capex.equipment_and_furniture.${itemKey}.quantity`)} unit @ ${sierEditable.createEditableNumber(item.unit_cost, `shared_facilities_capex.equipment_and_furniture.${itemKey}.unit_cost`, {format: 'currency'})}`; enfTotalCost += itemTotal; tableBodyHtml += `<tr><td class="px-3 py-2 text-gray-600 pl-8">- ${sierTranslate.translate(itemKey)}</td><td class="px-3 py-2 text-gray-500 text-xs">${detailHtml}</td><td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(itemTotal)}</td></tr>`; }
+
+        for (const categoryKey in sharedCapex) {
+            const categoryData = sharedCapex[categoryKey];
+            if (typeof categoryData !== 'object' || !categoryData.title) continue;
+
+            let categoryTotal = 0;
+            tableBodyHtml += `<tbody class="bg-gray-50"><td colspan="3" class="p-3 font-bold text-gray-800">${categoryData.title}</td></tbody>`;
+            for (const itemKey in categoryData.items) {
+                const item = categoryData.items[itemKey];
+                let itemTotal = item.lump_sum ? item.lump_sum : item.quantity * item.unit_cost;
+                let detailHtml = item.lump_sum ? 'Lump Sum' : `${item.quantity} ${item.unit} @ Rp ${sierHelpers.formatNumber(item.unit_cost)}`;
+                categoryTotal += itemTotal;
+                tableBodyHtml += `<tr><td class="px-3 py-2 text-gray-600 pl-8">${item.description}</td><td class="px-3 py-2 text-gray-500 text-xs">${detailHtml}</td><td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(itemTotal)}</td></tr>`;
+            }
+            grandTotal += categoryTotal;
+            tableBodyHtml += `<tr class="font-semibold bg-gray-100"><td class="px-3 py-2 text-right" colspan="2">Subtotal ${categoryData.title}</td><td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(categoryTotal)}</td></tr>`;
         }
-        grandTotal += enfTotalCost;
-        const contingencyRate = projectConfig.assumptions.contingency_rate; const contingency = grandTotal * contingencyRate; const finalTotal = grandTotal + contingency;
-        container.innerHTML = `<h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-emerald-600 pl-4">Rincian Estimasi Biaya Investasi (CapEx): Fasilitas Umum</h2><div class="bg-white p-6 rounded-lg shadow-md mb-8"><p class="text-gray-600 mb-6">${sharedCapex.notes}</p><div class="overflow-x-auto border rounded-lg"><table class="w-full text-sm"><thead class="bg-gray-200 text-xs uppercase"><tr><th class="p-2 text-left w-1/2">Komponen Biaya</th><th class="p-2 text-left w-1/4">Detail Perhitungan</th><th class="p-2 text-right w-1/4">Estimasi Biaya (Rp)</th></tr></thead>${tableBodyHtml}<tfoot class="font-bold"><tr class="bg-gray-200"><td class="p-3 text-right" colspan="2">Subtotal Biaya Fisik</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(grandTotal))}</td></tr><tr class="bg-yellow-200"><td class="p-3 text-right" colspan="2">Kontingensi (${sierEditable.createEditableNumber(contingencyRate, 'assumptions.contingency_rate', {format: 'percent'})})</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(contingency))}</td></tr><tr class="bg-emerald-600 text-white text-lg"><td class="p-3 text-right" colspan="2">Total Estimasi Investasi Fasilitas Umum</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(finalTotal))}</td></tr></tfoot></table></div></div>`;
+        const contingency = grandTotal * projectConfig.assumptions.contingency_rate;
+        const finalTotal = grandTotal + contingency;
+
+        container.innerHTML = `<h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-emerald-600 pl-4">Rincian Estimasi Biaya Investasi (CapEx): Fasilitas Umum</h2><div class="bg-white p-6 rounded-lg shadow-md mb-8"><p class="text-gray-600 mb-6">${sharedCapex.notes}</p><div class="overflow-x-auto border rounded-lg"><table class="w-full text-sm"><thead class="bg-gray-200 text-xs uppercase"><tr><th class="p-2 text-left w-2/5">Komponen Biaya</th><th class="p-2 text-left w-2/5">Detail Perhitungan</th><th class="p-2 text-right w-1/5">Biaya (Rp)</th></tr></thead>${tableBodyHtml}<tfoot class="font-bold"><tr class="bg-gray-200"><td class="p-3 text-right" colspan="2">Subtotal</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(grandTotal))}</td></tr><tr class="bg-yellow-200"><td class="p-3 text-right" colspan="2">Kontingensi (${(projectConfig.assumptions.contingency_rate * 100)}%)</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(contingency))}</td></tr><tr class="bg-emerald-600 text-white text-lg"><td class="p-3 text-right" colspan="2">Total Estimasi Investasi</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(finalTotal))}</td></tr></tfoot></table></div></div>`;
     },
 
     _renderUnitFinancialDetail(unitName) {
