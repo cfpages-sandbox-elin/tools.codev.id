@@ -162,17 +162,13 @@ projectConfig.drivingRange = {
             dr_bays_area_m2: 4361,
             dr_bays_cost_per_m2: 2500000,
             cafe_area_m2: 267,
-            cafe_cost_per_m2: 5000000
+            cafe_cost_per_m2: 5000000,
+            lockers_mushola_area_m2: 150,
+            lockers_mushola_cost_per_m2: 3500000
         },
         equipment: {
-            premium_bays: {
-                percentage_of_total: 0.4,
-                cost_per_bay_ball_tracker: 120000000,
-                cost_per_bay_dispenser: 25000000,
-            },
-            normal_bays: {
-                bay_equipment_cost_per_set: 5000000,
-            },
+            premium_bays: { percentage_of_total: 0.4, cost_per_bay_ball_tracker: 120000000, cost_per_bay_dispenser: 25000000, },
+            normal_bays: { bay_equipment_cost_per_set: 5000000, },
             floating_balls_count: 8000,
             floating_balls_cost_per_ball: 20000,
             ball_management_system_lump_sum: 200000000
@@ -182,11 +178,7 @@ projectConfig.drivingRange = {
             field_length_m: projectConfig.site_parameters.driving_range.field_length_m, 
             get field_width_m() { return this.total_perimeter_m - (this.field_length_m * 2); },
             netting: { cost_per_m2: 150000, },
-            poles: {
-                spacing_m: 20,
-                height_distribution: { far_side_m: 12, left_right_side_m: 8 },
-                foundation_cost_per_pole: 25000000,
-            }
+            poles: { spacing_m: 20, height_distribution: { far_side_m: 12, left_right_side_m: 8 }, foundation_cost_per_pole: 25000000, }
         },
         mep_systems: {
             hvac_system: { cost_per_m2_hvac: 750000, },
@@ -204,11 +196,7 @@ projectConfig.padel = {
         operational_hours_per_day: 18, 
         cogs_rate_fnb: 0.30,
         downtime_per_hour_minutes: 10,
-        variable_costs_per_hour: {
-            court_lights_kw: 4.5,
-            ball_replacement_cost_per_hour: 5000,
-            cleaning_supplies: 2500
-        }
+        variable_costs_per_hour: { court_lights_kw: 4.5, ball_replacement_cost_per_hour: 5000, cleaning_supplies: 2500 }
     },
     revenue: {
         main_revenue: {
@@ -219,37 +207,30 @@ projectConfig.padel = {
         },
         ancillary_revenue: { fnb_avg_spend: 50000, pro_shop_sales: 20000000 }
     },
-    capex: {
-        pre_operational: {
-            permits_and_consulting: 50000000,
-            initial_marketing: 50000000
-        },
-        civil_construction: { 
-            land_preparation: 1500000000, // Asumsi ini mungkin termasuk pondasi dasar
-            foundation_works_per_court: 25000000 // Pondasi spesifik untuk struktur lapangan
-        },
-        building_structure: { // Struktur atap dan penutup bangunan utama
-             main_building_structure_cost: 800000000 
+    capex_scenario_a: {
+        title: "Skenario A: Pembangunan Baru (Kapasitas 4 Lapangan)",
+        notes: "Membangun seluruh fasilitas Padel dari nol, termasuk struktur bangunan utama. Memaksimalkan kapasitas lahan.",
+        pre_operational: { permits_and_consulting: 50000000, initial_marketing: 50000000 },
+        civil_construction: { land_preparation: 150000000, foundation_works_per_court: 25000000 },
+        building_structure: { main_building_structure_cost: 800000000 },
+        sport_courts_equipment: {
+            per_court_costs: { steel_structure: 95000000, tempered_glass_12mm: 140000000, artificial_turf_carpet: 55000000, lighting_system_8_lamps: 30000000, net_and_posts: 7500000 },
+            initial_inventory: { rental_rackets: { quantity: 20, unit_cost: 1000000 }, ball_tubes: { quantity: 50, unit_cost: 120000 } }
+        }
+    },
+    capex_scenario_b: {
+        title: "Skenario B: Renovasi Lapangan Futsal (Kapasitas 2 Lapangan)",
+        notes: "Memanfaatkan struktur bangunan eksisting lapangan futsal untuk mengurangi biaya investasi awal secara drastis.",
+        num_courts: 2,
+        pre_operational: { permits_and_consulting: 25000000, initial_marketing: 30000000 },
+        renovation: {
+            minor_demolition_and_clearing: { lump_sum: 15000000 },
+            floor_repair_and_leveling: { area_m2: 500, cost_per_m2: 150000 },
+            interior_finishing_painting: { area_m2: 500, cost_per_m2: 200000 }
         },
         sport_courts_equipment: {
-            notes: "Biaya untuk membangun dan melengkapi lapangan Padel dari nol.",
-            per_court_costs: {
-                steel_structure: 95000000,
-                tempered_glass_12mm: 140000000,
-                artificial_turf_carpet: 55000000,
-                lighting_system_8_lamps: 30000000,
-                net_and_posts: 7500000
-            },
-            initial_inventory: {
-                rental_rackets: {
-                    quantity: 20,
-                    unit_cost: 1000000
-                },
-                ball_tubes: {
-                    quantity: 50, // 50 tabung @ 3 bola
-                    unit_cost: 120000
-                }
-            }
+            per_court_costs: { steel_structure: 95000000, tempered_glass_12mm: 140000000, artificial_turf_carpet: 55000000, lighting_system_8_lamps: 30000000, net_and_posts: 7500000 },
+            initial_inventory: { rental_rackets: { quantity: 10, unit_cost: 1000000 }, ball_tubes: { quantity: 25, unit_cost: 120000 } }
         }
     },
     opexMonthly: { salaries_wages: { manager: { count: 1, salary: 10000000 }, supervisor: { count: 2, salary: 6500000 }, admin_cashier: { count: 4, salary: 5000000 }, cleaning_security: { count: 4, salary: 4000000 } }, utilities: { electricity_kwh_price: 1700, electricity_kwh_usage: 18000, water_etc: 5000000 }, marketing_promotion: 15000000, maintenance_repair: 10000000, other_operational: 8000000 }
@@ -257,23 +238,30 @@ projectConfig.padel = {
 
 projectConfig.shared_facilities_capex = {
     title: "Biaya Investasi Fasilitas Umum (Shared)",
-    notes: "Biaya ini digunakan bersama oleh Driving Range dan Padel, dan dialokasikan sebagai biaya proyek umum.",
-    building_and_interior: {
-        area_m2: {
-            lobby_reception: 50,
-            pro_shop: 40,
-            lockers_showers_toilets: 80,
-            mushola: 30
-        },
-        construction_and_finishing_cost_per_m2: 4500000
+    notes: "Biaya ini digunakan bersama oleh Driving Range dan Padel, dan dialokasikan sebagai biaya proyek umum. Ini adalah fasilitas yang berdiri sendiri terpisah dari bangunan utama DR dan Padel.",
+    cafe: {
+        title: "Kafe & Titik Pertemuan (267 m²)",
+        area_m2: 267,
+        items: {
+            construction: { description: "Konstruksi & Finishing Interior", quantity: 267, unit: "m²", unit_cost: 4000000 },
+            kitchen_equipment: { description: "Peralatan Dapur & Bar Profesional", lump_sum: 150000000 },
+            furniture: { description: "Furnitur (Meja, Kursi, Sofa)", lump_sum: 80000000 }
+        }
     },
-    equipment_and_furniture: {
-        lobby_reception_furniture: 50000000,
-        pro_shop_fixtures_and_displays: 30000000,
-        lockers: {
-            quantity: 50,
-            unit_cost: 1500000
-        },
-        mushola_fittings_and_carpets: 15000000
+    parking_area: {
+        title: "Area Parkir (607.5 m²)",
+        area_m2: 607.5,
+        items: {
+            paving: { description: "Perkerasan (Paving Block/Aspal)", quantity: 607.5, unit: "m²", unit_cost: 250000 },
+            lighting: { description: "Tiang Lampu & Instalasi Penerangan", quantity: 10, unit: "titik", unit_cost: 5000000 },
+            marking: { description: "Pengecatan Marka Parkir", lump_sum: 10000000 }
+        }
+    },
+    road_access: {
+        title: "Akses Jalan (217.5 m²)",
+        area_m2: 217.5,
+        items: {
+            paving: { description: "Perkerasan Jalan Akses", quantity: 217.5, unit: "m²", unit_cost: 300000 }
+        }
     }
 };
