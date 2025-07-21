@@ -341,7 +341,48 @@ const sierVisualFinance = {
         `;
     },
 
-    _createBEPSection(analysisData) { /* ... (fungsi ini tidak berubah, tetap sama) ... */ return `<div class="bg-gray-50 p-4 rounded-lg border"><h4 class="font-semibold text-gray-800 mb-2">A. Analisis Titik Impas Operasional (BEP)</h4><p class="text-sm text-gray-600 mb-3">Target penjualan minimum agar tidak rugi secara operasional (laba = 0).</p><div class="grid grid-cols-1 lg:grid-cols-2 gap-4"><div><table class="w-full text-sm"><tbody class="divide-y">${Object.entries(analysisData.bepAnalysis.fixedCostBreakdown).map(([key, value]) => `<tr><td class="py-1 text-gray-600">${key}</td><td class="py-1 text-right font-mono">Rp ${sierHelpers.formatNumber(Math.round(value))}</td></tr>`).join('')}</tbody><tfoot class="border-t-2"><tr class="font-bold"><td class="py-1">Total Biaya Tetap Bulanan</td><td class="py-1 text-right font-mono">Rp ${sierHelpers.formatNumber(Math.round(analysisData.bepAnalysis.totalFixedCostMonthly))}</td></tr></tfoot></table></div><div class="bg-white p-3 rounded-md shadow-sm text-center flex flex-col justify-center"><p class="text-sm font-semibold text-gray-700">Target BEP Bulanan</p><p class="text-4xl font-bold text-blue-700 mt-1">${sierHelpers.formatNumber(Math.ceil(analysisData.bepAnalysis.bepInUnitsMonthly))}</p><p class="text-sm text-gray-500">${analysisData.bepAnalysis.unitLabel}</p><p class="text-xs text-gray-500 mt-2">(~${Math.ceil(analysisData.bepAnalysis.bepInUnitsDaily)} ${analysisData.bepAnalysis.unitLabel} / hari)</p></div></div></div>`; },
+    _createBEPSection(analysisData) {
+        const bep = analysisData.bepAnalysis;
+
+        const fixedCostTable = Object.entries(bep.fixedCostBreakdown).map(([key, value]) => `<tr><td class="py-1 pr-2">${key}</td><td class="py-1 text-right font-mono">Rp ${sierHelpers.formatNumber(Math.round(value))}</td></tr>`).join('');
+        
+        const variableCostTable = Object.entries(bep.variableCostBreakdown).map(([key, value]) => `<tr><td class="py-1 pr-2">${key}</td><td class="py-1 text-right font-mono">Rp ${sierHelpers.formatNumber(Math.round(value))}</td></tr>`).join('');
+        const totalVariableCost = Object.values(bep.variableCostBreakdown).reduce((sum, val) => sum + val, 0);
+
+        return `
+            <div class="bg-gray-50 p-4 rounded-lg border">
+                <h4 class="font-semibold text-gray-800 mb-2">A. Analisis Titik Impas Operasional (BEP)</h4>
+                <p class="text-sm text-gray-600 mb-3">Target penjualan minimum agar tidak rugi secara operasional (laba = 0), dihitung dengan membagi Biaya Tetap dengan Margin Kontribusi (Harga Jual - Biaya Variabel).</p>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-4">
+                    
+                    <!-- Kolom Biaya Tetap -->
+                    <div>
+                        <h5 class="font-medium text-gray-700 mb-1">Biaya Tetap Bulanan</h5>
+                        <table class="w-full text-xs">${fixedCostTable}
+                            <tfoot class="border-t-2"><tr class="font-semibold"><td class="py-1 pr-2">Total Biaya Tetap</td><td class="py-1 text-right font-mono">Rp ${sierHelpers.formatNumber(Math.round(bep.totalFixedCostMonthly))}</td></tr></tfoot>
+                        </table>
+                    </div>
+
+                    <!-- Kolom Biaya Variabel -->
+                    <div>
+                        <h5 class="font-medium text-gray-700 mb-1">Biaya Variabel per ${bep.unitLabel}</h5>
+                         <table class="w-full text-xs">${variableCostTable}
+                            <tfoot class="border-t-2"><tr class="font-semibold"><td class="py-1 pr-2">Total Biaya Variabel</td><td class="py-1 text-right font-mono">Rp ${sierHelpers.formatNumber(Math.round(totalVariableCost))}</td></tr></tfoot>
+                        </table>
+                    </div>
+                    
+                    <!-- Kolom Hasil BEP (Gabung 2 kolom) -->
+                    <div class="lg:col-span-2 mt-4 bg-white p-3 rounded-md shadow-sm text-center">
+                        <p class="text-sm font-semibold text-gray-700">Target Break-Even Point Bulanan</p>
+                        <p class="text-4xl font-bold text-blue-700 mt-1">${sierHelpers.formatNumber(Math.ceil(bep.bepInUnitsMonthly))}</p>
+                        <p class="text-sm text-gray-500">${bep.unitLabel}</p>
+                        <p class="text-xs text-gray-500 mt-2">(Rata-rata ~${Math.ceil(bep.bepInUnitsDaily)} ${bep.unitLabel} / hari untuk mencapai BEP)</p>
+                    </div>
+
+                </div>
+            </div>
+        `;
+    },
     _createProfitabilitySection(analysisData) { /* ... (fungsi ini tidak berubah, tetap sama) ... */ return `<div class="bg-gray-50 p-4 rounded-lg border"><h4 class="font-semibold text-gray-800 mb-2">B. Analisis Profitabilitas & Target Balik Modal (Payback)</h4><p class="text-sm text-gray-600 mb-3">Proyeksi profitabilitas berdasarkan asumsi okupansi saat ini untuk mengukur waktu balik modal.</p><table class="w-full text-sm"><tbody class="divide-y"><tr><td class="py-2 text-gray-600">Total Investasi Awal (CapEx)</td><td class="py-2 text-right font-mono font-bold">Rp ${sierHelpers.formatNumber(Math.round(analysisData.profitabilityAnalysis.totalCapex))}</td></tr><tr><td class="py-2 text-gray-600">Proyeksi Pendapatan Tahunan</td><td class="py-2 text-right font-mono">Rp ${sierHelpers.formatNumber(Math.round(analysisData.profitabilityAnalysis.annualRevenue))}</td></tr><tr class="text-green-700"><td class="py-2 font-semibold">Proyeksi Laba Bersih Tahunan</td><td class="py-2 text-right font-mono font-bold">Rp ${sierHelpers.formatNumber(Math.round(analysisData.profitabilityAnalysis.annualNetProfit))}</td></tr><tr class="text-green-700"><td class="py-2 font-semibold">Proyeksi Arus Kas Bersih Tahunan</td><td class="py-2 text-right font-mono font-bold">Rp ${sierHelpers.formatNumber(Math.round(analysisData.profitabilityAnalysis.annualCashFlow))}</td></tr></tbody><tfoot class="border-t-2"><tr class="font-bold text-lg text-green-600"><td class="py-2">Estimasi Waktu Balik Modal</td><td class="py-2 text-right font-mono">${analysisData.profitabilityAnalysis.paybackPeriod.toFixed(2)} Tahun</td></tr></tfoot></table></div>`; },
     _createScenarioSection(analysisData) { /* ... (fungsi ini tidak berubah, tetap sama) ... */ const mods = projectConfig.assumptions.scenario_modifiers; const formatPayback = (years) => years === Infinity ? '> 15 Thn' : `${years.toFixed(2)} Thn`; return `<div class="bg-gray-50 p-4 rounded-lg border"><h4 class="font-semibold text-gray-800 mb-2">C. Analisis Skenario</h4><p class="text-sm text-gray-600 mb-3">Mengukur dampak perubahan pendapatan terhadap profitabilitas dan waktu balik modal.</p><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4"><div class="bg-red-50 p-3 rounded-md border border-red-200 text-center"><p class="font-bold text-red-800">Pesimis</p><p class="text-xs text-red-600">(${(mods.pessimistic_revenue * 100 - 100).toFixed(0)}% Revenue)</p><hr class="my-2"><p class="text-sm text-gray-600">Laba Bersih/Thn</p><p class="font-semibold text-lg ${analysisData.scenarioAnalysis.pessimistic.netProfit < 0 ? 'text-red-600' : 'text-gray-800'}">Rp ${sierHelpers.formatNumber(Math.round(analysisData.scenarioAnalysis.pessimistic.netProfit))}</p><p class="text-sm text-gray-600 mt-2">Balik Modal</p><p class="font-semibold text-lg text-red-600">${formatPayback(analysisData.scenarioAnalysis.pessimistic.payback)}</p></div><div class="bg-blue-50 p-3 rounded-md border border-blue-200 text-center ring-2 ring-blue-500"><p class="font-bold text-blue-800">Realisitis (Basis)</p><p class="text-xs text-blue-600">(Target Awal)</p><hr class="my-2"><p class="text-sm text-gray-600">Laba Bersih/Thn</p><p class="font-semibold text-lg text-gray-800">Rp ${sierHelpers.formatNumber(Math.round(analysisData.scenarioAnalysis.realistic.netProfit))}</p><p class="text-sm text-gray-600 mt-2">Balik Modal</p><p class="font-semibold text-lg text-blue-600">${formatPayback(analysisData.scenarioAnalysis.realistic.payback)}</p></div><div class="bg-green-50 p-3 rounded-md border border-green-200 text-center"><p class="font-bold text-green-800">Optimis</p><p class="text-xs text-green-600">(+${(mods.optimistic_revenue * 100 - 100).toFixed(0)}% Revenue)</p><hr class="my-2"><p class="text-sm text-gray-600">Laba Bersih/Thn</p><p class="font-semibold text-lg text-gray-800">Rp ${sierHelpers.formatNumber(Math.round(analysisData.scenarioAnalysis.optimistic.netProfit))}</p><p class="text-sm text-gray-600 mt-2">Balik Modal</p><p class="font-semibold text-lg text-green-600">${formatPayback(analysisData.scenarioAnalysis.optimistic.payback)}</p></div></div></div>`; },
 
@@ -376,6 +417,12 @@ const sierVisualFinance = {
         this._renderDrCapexDetailsVisuals();
         this._renderPadelCapexDetailsVisuals();
         this._renderOpexDetailsVisuals();
+        const drAnalysisData = sierMath.getStrategicAnalysis('drivingRange');
+        const padelAnalysisData = sierMath.getStrategicAnalysis('padel');
+        const drContainer = document.getElementById('driving-range-financial-analysis');
+        const padelContainer = document.getElementById('padel-financial-analysis');
+        if(drContainer) drContainer.innerHTML = `<h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-amber-500 pl-4">Analisis Finansial Detail: Driving Range</h2><div class="bg-white p-6 rounded-lg shadow-md mb-8 space-y-8">${this._createRevenueBreakdownSection('drivingRange', sierMath._getDetailedRevenueBreakdown('drivingRange'))}${this._createBEPSection(drAnalysisData)}${this._createProfitabilitySection(drAnalysisData)}${this._createScenarioSection(drAnalysisData)}</div>`;
+        if(padelContainer) padelContainer.innerHTML = `<h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-purple-600 pl-4">Analisis Finansial Detail: Padel</h2><div class="bg-white p-6 rounded-lg shadow-md mb-8 space-y-8">${this._createRevenueBreakdownSection('padel', sierMath._getDetailedRevenueBreakdown('padel'))}${this._createBEPSection(padelAnalysisData)}${this._createProfitabilitySection(padelAnalysisData)}${this._createScenarioSection(padelAnalysisData)}</div>`;
         this._renderFinancialSummaryVisuals();
     }
 };
