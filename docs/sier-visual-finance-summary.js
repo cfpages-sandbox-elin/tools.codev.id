@@ -16,6 +16,7 @@ const sierVisualFinanceSummary = {
             if (key === 'capex' || key === 'capex_assumptions') return '';
             const currentPath = `${basePath}.${key}`;
             const translatedKey = sierTranslate.translate(key);
+
             if (typeof value !== 'object' || value === null || ('count' in value && 'salary' in value) || ('electricity_kwh_price' in value)) {
                 let editControl;
                 if (typeof value === 'object' && value !== null) {
@@ -24,9 +25,17 @@ const sierVisualFinanceSummary = {
                     const isPercent = (key.includes('rate') || key.includes('okupansi')) && value < 2 && value > 0;
                     editControl = sierEditable.createEditableNumber(value, currentPath, { format: isPercent ? 'percent' : '' });
                 }
-                return `<tr class="border-b border-gray-200 hover:bg-gray-50"><td class="py-3 px-4 text-gray-600 w-1/5">${translatedKey}</td><td class="py-3 px-4 w-4/5">${editControl}</td></tr>`;
-            } else {
-                return `<tr class="border-b border-gray-200"><td class="py-3 px-4 text-gray-600 w-1/5 align-top font-medium">${translatedKey}</td><td class="py-3 px-4 w-4/5"><table class="w-full text-sm"><tbody class="divide-y divide-gray-200">${createTableRows(value, currentPath)}</tbody></table></td></tr>`;
+                return `<tr class="border-b border-gray-200 hover:bg-gray-50">
+                            <td class="py-3 px-4 text-gray-600 w-1/5">${translatedKey}</td>
+                            <td class="py-3 px-4 w-4/5">${editControl}</td>
+                        </tr>`;
+            } 
+            else {
+                let subRows = createTableRows(value, currentPath);
+                return `<tr class="border-b border-gray-200">
+                            <td class="py-3 px-4 text-gray-600 w-1/5 align-top font-medium">${translatedKey}</td>
+                            <td class="py-3 px-4 w-4/5"><table class="w-full text-sm"><tbody class="divide-y divide-gray-200">${subRows}</tbody></table></td>
+                        </tr>`;
             }
         }).join('');
 
