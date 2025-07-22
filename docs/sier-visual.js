@@ -87,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sierHelpers.tryToRender(sierVisualMaintenance.render.bind(sierVisualMaintenance));
         sierHelpers.tryToRender(sierVisualStrategy.render.bind(sierVisualStrategy));
         sierHelpers.tryToRender(sierVisualImpact.render.bind(sierVisualImpact));
+        sierHelpers.tryToRender(sierVisualMeetingPoint.renderAll.bind(sierVisualMeetingPoint));
         sierHelpers.tryToRender(sierChart.renderAllCharts.bind(sierChart));
 
         // Panggil pemrosesan markdown setelah semua visual diperbarui
