@@ -2,11 +2,6 @@
 // Bertanggung jawab untuk merender SEMUA rincian finansial (OpEx, CapEx, Analisis).
 
 const sierVisualFinanceDetails = {
-
-    //======================================================================
-    // BAGIAN 1: FUNGSI-FUNGSI HELPER UNTUK MEMBUAT KOMPONEN VISUAL
-    //======================================================================
-
     _createPnlTable(pnlData) {
         if (!pnlData) return '<p class="text-red-500">Data P&L tidak tersedia.</p>';
         return `<table class="w-full text-sm">
@@ -20,21 +15,130 @@ const sierVisualFinanceDetails = {
                 <tr><td class="px-4 py-2">Depresiasi & Amortisasi</td><td class="px-4 py-2 text-right font-mono">(${sierHelpers.formatNumber(Math.round(pnlData.annualDepreciation))})</td></tr>
                 <tr class="font-semibold"><td class="px-4 py-2">Laba Sebelum Pajak (EBT)</td><td class="px-4 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(pnlData.ebt))}</td></tr>
                 <tr><td class="px-4 py-2">Pajak Penghasilan (${(projectConfig.assumptions.tax_rate_profit * 100)}%)</td><td class="px-4 py-2 text-right font-mono">(${sierHelpers.formatNumber(Math.round(pnlData.tax))})</td></tr>
-                <tr class="bg-teal-100 font-bold text-teal-800"><td class="px-4 py-3 text-base">Laba Bersih (Net Profit)</td><td class="px-4 py-3 text-right text-base font-mono">${sierHelpers.formatNumber(Math.round(pnlData.netProfit))}</td></tr>
+                <tr class="bg-teal-100 font-bold text-teal-800"><td class="px-4 py-3 text-base">Laba Bersih (Net Profit)</td><td class="px-4 py-3 text-base font-mono">${sierHelpers.formatNumber(Math.round(pnlData.netProfit))}</td></tr>
             </tbody>
         </table>`;
     },
 
-    _createRevenueBreakdownSection(revenueData) {
-        if (!revenueData || !revenueData.rows) return '';
+    _createRevenueBreakdownSection(unitName) {
+        const unit = projectConfig[unitName];
+        if (!unit) return '';
+
+        const o = unit.operational_assumptions;
+        const m = unit.revenue.main_revenue;
+        const a = unit.revenue.ancillary_revenue;
         const formatRp = (num) => sierHelpers.formatNumber(Math.round(num));
-        const tableRows = revenueData.rows.map(row => `
-            <tr class="hover:bg-gray-50">
-                <td class="p-2">${row.item}</td><td class="p-2 text-xs text-gray-500">${row.calc}</td>
-                <td class="p-2 text-right font-mono">${formatRp(row.perDay)}</td><td class="p-2 text-right font-mono">${formatRp(row.perMonth)}</td>
-                <td class="p-2 text-right font-mono">${formatRp(row.perMonth * 12)}</td>
-            </tr>`).join('');
-        return `<div class="mb-8 pb-6 border-b"><h3 class="text-xl font-semibold mb-3 text-gray-800">Proyeksi Rincian Pendapatan</h3><div class="overflow-x-auto border rounded-lg"><table class="w-full text-sm"><thead class="bg-gray-100 text-xs uppercase"><tr><th class="p-2 text-left">Sumber Pendapatan</th><th class="p-2 text-left">Detail Perhitungan</th><th class="p-2 text-right">Per Hari (Avg)</th><th class="p-2 text-right">Per Bulan</th><th class="p-2 text-right">Per Tahun</th></tr></thead><tbody class="divide-y">${tableRows}</tbody><tfoot class="bg-gray-200 font-bold"><tr><td class="p-2" colspan="2">Total Estimasi Pendapatan</td><td class="p-2 text-right font-mono">${formatRp(revenueData.total_monthly / 30)}</td><td class="p-2 text-right font-mono">${formatRp(revenueData.total_monthly)}</td><td class="p-2 text-right font-mono">${formatRp(revenueData.total_monthly * 12)}</td></tr></tfoot></table></div></div>`;
+
+        let tableRows = '';
+        let totalMonthlyRevenue = 0;
+        let totalMonthlySessions = 0; // Untuk F&B
+
+        if (unitName === 'drivingRange') {
+            const maxSessionsPerBay = o.operational_hours_per_day / (o.avg_session_duration_minutes / 60);
+            
+            // Hari Kerja
+            const sessionsPerBayWD = m.occupancy_rate_per_day.weekday;
+            const occupancyRateWD = sessionsPerBayWD / maxSessionsPerBay;
+            const totalSessionsWD = m.bays * sessionsPerBayWD;
+            const revPerDayWD = totalSessionsWD * m.price_per_100_balls;
+            const revPerMonthWD = revPerDayWD * o.workdays_in_month;
+            totalMonthlySessions += totalSessionsWD * o.workdays_in_month;
+
+            tableRows += `
+                <tr class="hover:bg-gray-50">
+                    <td class="p-2">Pendapatan Hari Kerja</td>
+                    <td class="p-2 text-xs text-gray-500">(${m.bays} bay × ${maxSessionsPerBay.toFixed(1)} sesi/bay) × <strong>${(occupancyRateWD * 100).toFixed(1)}%</strong> okupansi</td>
+                    <td class="p-2 text-right font-mono">${formatRp(revPerDayWD)}</td>
+                    <td class="p-2 text-right font-mono">${formatRp(revPerMonthWD)}</td>
+                </tr>`;
+
+            // Akhir Pekan
+            const sessionsPerBayWE = m.occupancy_rate_per_day.weekend;
+            const occupancyRateWE = sessionsPerBayWE / maxSessionsPerBay;
+            const totalSessionsWE = m.bays * sessionsPerBayWE;
+            const revPerDayWE = totalSessionsWE * m.price_per_100_balls;
+            const revPerMonthWE = revPerDayWE * o.weekend_days_in_month;
+            totalMonthlySessions += totalSessionsWE * o.weekend_days_in_month;
+            
+            tableRows += `
+                <tr class="hover:bg-gray-50">
+                    <td class="p-2">Pendapatan Akhir Pekan</td>
+                    <td class="p-2 text-xs text-gray-500">(${m.bays} bay × ${maxSessionsPerBay.toFixed(1)} sesi/bay) × <strong>${(occupancyRateWE * 100).toFixed(1)}%</strong> okupansi</td>
+                    <td class="p-2 text-right font-mono">${formatRp(revPerDayWE)}</td>
+                    <td class="p-2 text-right font-mono">${formatRp(revPerMonthWE)}</td>
+                </tr>`;
+
+            totalMonthlyRevenue = revPerMonthWD + revPerMonthWE;
+
+        } else if (unitName === 'padel') {
+            const numCourts = m.courts;
+
+            // Weekday Off-Peak
+            const maxHoursWDO = numCourts * m.hours_distribution_per_day.offpeak;
+            const actualHoursWDO = maxHoursWDO * m.occupancy_rate.weekday_offpeak;
+            const revPerDayWDO = actualHoursWDO * m.price_per_hour.weekday_offpeak;
+            const revPerMonthWDO = revPerDayWDO * o.workdays_in_month;
+            totalMonthlySessions += actualHoursWDO * o.workdays_in_month;
+            tableRows += `
+                <tr class="hover:bg-gray-50">
+                    <td class="p-2">Sewa Hr Kerja (Off-Peak)</td>
+                    <td class="p-2 text-xs text-gray-500">(${numCourts} lpgn × ${m.hours_distribution_per_day.offpeak} jam) × <strong>${(m.occupancy_rate.weekday_offpeak * 100).toFixed(0)}%</strong> okupansi</td>
+                    <td class="p-2 text-right font-mono">${formatRp(revPerDayWDO)}</td>
+                    <td class="p-2 text-right font-mono">${formatRp(revPerMonthWDO)}</td>
+                </tr>`;
+
+            // Weekday Peak
+            const maxHoursWDP = numCourts * m.hours_distribution_per_day.peak;
+            const actualHoursWDP = maxHoursWDP * m.occupancy_rate.weekday_peak;
+            const revPerDayWDP = actualHoursWDP * m.price_per_hour.weekday_peak;
+            const revPerMonthWDP = revPerDayWDP * o.workdays_in_month;
+            totalMonthlySessions += actualHoursWDP * o.workdays_in_month;
+            tableRows += `
+                <tr class="hover:bg-gray-50">
+                    <td class="p-2">Sewa Hr Kerja (Peak)</td>
+                    <td class="p-2 text-xs text-gray-500">(${numCourts} lpgn × ${m.hours_distribution_per_day.peak} jam) × <strong>${(m.occupancy_rate.weekday_peak * 100).toFixed(0)}%</strong> okupansi</td>
+                    <td class="p-2 text-right font-mono">${formatRp(revPerDayWDP)}</td>
+                    <td class="p-2 text-right font-mono">${formatRp(revPerMonthWDP)}</td>
+                </tr>`;
+
+            // Weekend
+            const maxHoursWE = numCourts * o.operational_hours_per_day;
+            const actualHoursWE = maxHoursWE * m.occupancy_rate.weekend;
+            const revPerDayWE = actualHoursWE * m.price_per_hour.weekend;
+            const revPerMonthWE = revPerDayWE * o.weekend_days_in_month;
+            totalMonthlySessions += actualHoursWE * o.weekend_days_in_month;
+            tableRows += `
+                <tr class="hover:bg-gray-50">
+                    <td class="p-2">Sewa Akhir Pekan</td>
+                    <td class="p-2 text-xs text-gray-500">(${numCourts} lpgn × ${o.operational_hours_per_day} jam) × <strong>${(m.occupancy_rate.weekend * 100).toFixed(0)}%</strong> okupansi</td>
+                    <td class="p-2 text-right font-mono">${formatRp(revPerDayWE)}</td>
+                    <td class="p-2 text-right font-mono">${formatRp(revPerMonthWE)}</td>
+                </tr>`;
+            
+            totalMonthlyRevenue = revPerMonthWDO + revPerMonthWDP + revPerMonthWE;
+        }
+
+        // Ancillary Revenue (berlaku untuk keduanya)
+        const fnb_rev_month = totalMonthlySessions * a.fnb_avg_spend;
+        const pro_shop_rev_month = a.pro_shop_sales;
+        totalMonthlyRevenue += fnb_rev_month + pro_shop_rev_month;
+        
+        const unitLabel = (unitName === 'drivingRange') ? 'sesi' : 'jam';
+        tableRows += `
+            <tr class="hover:bg-gray-50 bg-gray-50">
+                <td class="p-2">Penjualan F&B</td>
+                <td class="p-2 text-xs text-gray-500">~${formatRp(totalMonthlySessions)} ${unitLabel}/bulan × Rp ${formatRp(a.fnb_avg_spend)}</td>
+                <td class="p-2 text-right font-mono">${formatRp(fnb_rev_month / 30)}</td>
+                <td class="p-2 text-right font-mono">${formatRp(fnb_rev_month)}</td>
+            </tr>
+            <tr class="hover:bg-gray-50 bg-gray-50">
+                <td class="p-2">Penjualan Pro Shop</td>
+                <td class="p-2 text-xs text-gray-500">Estimasi bulanan</td>
+                <td class="p-2 text-right font-mono">${formatRp(pro_shop_rev_month / 30)}</td>
+                <td class="p-2 text-right font-mono">${formatRp(pro_shop_rev_month)}</td>
+            </tr>`;
+        
+        return `<div class="mb-8 pb-6 border-b"><h3 class="text-xl font-semibold mb-3 text-gray-800">Proyeksi Rincian Pendapatan</h3><div class="overflow-x-auto border rounded-lg"><table class="w-full text-sm"><thead class="bg-gray-100 text-xs uppercase"><tr><th class="p-2 text-left">Sumber Pendapatan</th><th class="p-2 text-left">Detail Perhitungan (Kapasitas × Okupansi)</th><th class="p-2 text-right">Per Hari (Avg)</th><th class="p-2 text-right">Per Bulan</th></tr></thead><tbody class="divide-y">${tableRows}</tbody><tfoot class="bg-gray-200 font-bold"><tr><td class="p-2" colspan="2">Total Estimasi Pendapatan</td><td class="p-2 text-right font-mono">${formatRp(totalMonthlyRevenue / 30)}</td><td class="p-2 text-right font-mono">${formatRp(totalMonthlyRevenue)}</td></tr></tfoot></table></div></div>`;
     },
 
     _createBEPSection(analysisData) {
@@ -273,15 +377,30 @@ const sierVisualFinanceDetails = {
         const { containerId, title, borderColor } = config[unitName];
         const container = document.getElementById(containerId);
         if (!container) return;
+        
         const unitCalculations = sierMath._getUnitCalculations(unitName);
         const strategicAnalysis = sierMath.getStrategicAnalysis(unitName);
-        const revenueBreakdown = sierMath._getDetailedRevenueBreakdown(unitName);
-        const revenueHtml = this._createRevenueBreakdownSection(revenueBreakdown);
+        
+        // Panggil fungsi yang sudah di-refactor
+        const revenueHtml = this._createRevenueBreakdownSection(unitName);
+        
         const pnlTableHtml = this._createPnlTable(unitCalculations.pnl);
         const bepHtml = this._createBEPSection(strategicAnalysis);
         const profitabilityHtml = this._createProfitabilitySection(strategicAnalysis);
         const scenarioHtml = this._createScenarioSection(strategicAnalysis);
-        container.innerHTML = `<h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 ${borderColor} pl-4">${title}</h2><div class="bg-white p-6 rounded-lg shadow-md mb-8 space-y-8">${revenueHtml}<h3 class="text-xl font-semibold mb-3 text-gray-800">Proyeksi Laba Rugi (P&L)</h3><div class="overflow-x-auto border rounded-lg">${pnlTableHtml}</div><div class="mt-8 space-y-6">${bepHtml}${profitabilityHtml}${scenarioHtml}</div></div>`;
+
+        container.innerHTML = `
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 ${borderColor} pl-4">${title}</h2>
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8 space-y-8">
+                ${revenueHtml}
+                <h3 class="text-xl font-semibold mb-3 text-gray-800">Proyeksi Laba Rugi (P&L)</h3>
+                <div class="overflow-x-auto border rounded-lg">${pnlTableHtml}</div>
+                <div class="mt-8 space-y-6">
+                    ${bepHtml}
+                    ${profitabilityHtml}
+                    ${scenarioHtml}
+                </div>
+            </div>`;
     },
 
     /**
