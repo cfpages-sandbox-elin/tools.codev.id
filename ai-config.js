@@ -753,6 +753,41 @@ export const aiAudioProviders = {
     }
 };
 
+/**
+ * Creates a standard handler for text generation with any OpenAI-compatible API.
+ * @param {string} apiKeyEnvVar - The name of the environment variable for the API key.
+ * @param {string} endpointUrl - The base URL for the chat completions endpoint.
+ * @param {Object} [extraHeaders={}] - Any additional headers required by the provider.
+ * @returns {Object} A provider handler configuration.
+ */
+const createOpenAICompatibleHandler = (apiKeyEnvVar, endpointUrl, extraHeaders = {}) => ({
+    apiKeyEnvVar,
+    text: {
+        buildRequest: (modelConfig, apiKey, prompt, isCheck) => {
+            const body = {
+                model: modelConfig.id,
+                messages: [{ role: 'user', content: prompt }],
+                max_tokens: isCheck ? 10 : (modelConfig.maxOutputTokens || 4096),
+                temperature: isCheck ? 0.1 : 0.7,
+            };
+            return {
+                url: endpointUrl,
+                options: {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`,
+                        ...extraHeaders
+                    },
+                    body: JSON.stringify(body)
+                }
+            };
+        },
+        parseResponse: (data) => data?.choices?.[0]?.message?.content,
+    }
+});
+
+
 export const apiProviderHandlers = {
     google: {
         apiKeyEnvVar: 'GOOGLE_API_KEY',
@@ -766,62 +801,28 @@ export const apiProviderHandlers = {
                         maxOutputTokens: isCheck ? 10 : (modelConfig.maxOutputTokens || 8192),
                     }
                 };
-                return {
-                    url: endpoint,
-                    options: { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
-                };
+                return { url: endpoint, options: { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } };
             },
             parseResponse: (data) => data?.candidates?.[0]?.content?.parts?.[0]?.text,
         },
         image: {
             buildRequest: (modelConfig, apiKey, payload) => {
                 const { prompt, numImages, aspectRatio } = payload;
-                const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelConfig.id}:generateImage?key=${apiKey}`;
-                const body = {
-                    prompt: prompt,
-                    ...(numImages && { number_of_images: numImages }),
-                    ...(aspectRatio && { aspect_ratio: aspectRatio }),
-                };
-                return {
-                    url: endpoint,
-                    options: { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
-                };
+                // Google has two different image generation model types with different endpoints/bodies
+                if (modelConfig.id.includes('imagen')) {
+                    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelConfig.id}:generateImage?key=${apiKey}`;
+                    const body = { prompt, ...(numImages && { number_of_images: numImages }), ...(aspectRatio && { aspect_ratio: aspectRatio }) };
+                    return { url: endpoint, options: { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } };
+                }
+                // Default to Gemini-style image generation
+                const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelConfig.id}:generateContent?key=${apiKey}`;
+                const body = { contents: [{ parts: [{ text: `Generate an image of: ${prompt}` }] }], generationConfig: { responseMimeType: "image/png" } };
+                return { url: endpoint, options: { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } };
             },
-            parseResponse: (data) => data?.generatedImages?.[0]?.image?.imageBytes,
-        }
-    },
-    openai: {
-        apiKeyEnvVar: 'OPENAI_API_KEY',
-        text: {
-            buildRequest: (modelConfig, apiKey, prompt, isCheck) => {
-                const body = {
-                    model: modelConfig.id,
-                    messages: [{ role: 'user', content: prompt }],
-                    max_tokens: isCheck ? 5 : (modelConfig.maxOutputTokens || 4096),
-                };
-                return {
-                    url: `https://api.openai.com/v1/chat/completions`,
-                    options: { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, body: JSON.stringify(body) }
-                };
+            parseResponse: (data, modelConfig) => {
+                 if (modelConfig.id.includes('imagen')) return data?.generatedImages?.[0]?.image?.imageBytes;
+                 return data?.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
             },
-            parseResponse: (data) => data?.choices?.[0]?.message?.content,
-        },
-        image: {
-             buildRequest: (modelConfig, apiKey, payload) => {
-                const { prompt, numImages, aspectRatio } = payload;
-                const body = {
-                    model: modelConfig.id,
-                    prompt: prompt,
-                    n: numImages || 1,
-                    size: aspectRatio || "1024x1024", // Default size for DALL-E
-                    response_format: "b64_json",
-                };
-                return {
-                    url: `https://api.openai.com/v1/images/generations`,
-                    options: { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, body: JSON.stringify(body) }
-                };
-            },
-            parseResponse: (data) => data?.data?.[0]?.b64_json,
         }
     },
     anthropic: {
@@ -841,24 +842,48 @@ export const apiProviderHandlers = {
             parseResponse: (data) => data?.content?.[0]?.text,
         }
     },
-    // Add handlers for xai, deepseek, etc. in the same pattern
-    xai: {
-        apiKeyEnvVar: 'XAI_API_KEY',
-        text: { // Assumes OpenAI-compatible API structure
-            buildRequest: (modelConfig, apiKey, prompt, isCheck) => {
+
+    // --- OpenAI-Compatible Handlers ---
+    openai: {
+        ...createOpenAICompatibleHandler('OPENAI_API_KEY', 'https://api.openai.com/v1/chat/completions'),
+        image: {
+             apiKeyEnvVar: 'OPENAI_API_KEY',
+             buildRequest: (modelConfig, apiKey, payload) => {
+                const { prompt, numImages, aspectRatio } = payload;
                 const body = {
-                    model: modelConfig.id,
-                    messages: [{ role: 'user', content: prompt }],
-                    max_tokens: isCheck ? 5 : (modelConfig.maxOutputTokens || 4096),
+                    model: modelConfig.id, // e.g., 'dall-e-3'
+                    prompt: prompt,
+                    n: numImages || 1,
+                    size: aspectRatio || "1024x1024",
+                    response_format: "b64_json",
                 };
                 return {
-                    url: `https://api.x.ai/v1/chat/completions`,
+                    url: `https://api.openai.com/v1/images/generations`,
                     options: { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, body: JSON.stringify(body) }
                 };
             },
-            parseResponse: (data) => data?.choices?.[0]?.message?.content,
+            parseResponse: (data) => data?.data?.[0]?.b64_json,
         }
-    }
+    },
+    openrouter: createOpenAICompatibleHandler(
+        'OPENROUTER_API_KEY',
+        'https://openrouter.ai/api/v1/chat/completions',
+        {
+            // IMPORTANT: Replace with your actual site URL and App Name
+            'HTTP-Referer': 'https://tools.codev.id',
+            'X-Title': 'Codev AI Tool'
+        }
+    ),
+    mistral: createOpenAICompatibleHandler('MISTRAL_API_KEY', 'https://api.mistral.ai/v1/chat/completions'),
+    groq: createOpenAICompatibleHandler('GROQ_API_KEY', 'https://api.groq.com/openai/v1/chat/completions'),
+    deepseek: createOpenAICompatibleHandler('DEEPSEEK_API_KEY', 'https://api.deepseek.com/v1/chat/completions'),
+    xai: createOpenAICompatibleHandler('XAI_API_KEY', 'https://api.x.ai/v1/chat/completions'),
+    huggingface: createOpenAICompatibleHandler(
+        'HF_API_KEY',
+        // Note: This endpoint may vary depending on if you are using a Serverless Inference API
+        // or a dedicated Inference Endpoint. This is a common structure.
+        'https://api-inference.huggingface.co/v1/chat/completions'
+    ),
 };
 
 console.log("ai-config.js loaded with a fully standardized and scalable model structure.");
