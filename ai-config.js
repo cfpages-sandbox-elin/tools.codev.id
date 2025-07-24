@@ -753,4 +753,112 @@ export const aiAudioProviders = {
     }
 };
 
+export const apiProviderHandlers = {
+    google: {
+        apiKeyEnvVar: 'GOOGLE_API_KEY',
+        text: {
+            buildRequest: (modelConfig, apiKey, prompt, isCheck) => {
+                const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelConfig.id}:generateContent?key=${apiKey}`;
+                const body = {
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: {
+                        temperature: isCheck ? 0.1 : 0.7,
+                        maxOutputTokens: isCheck ? 10 : (modelConfig.maxOutputTokens || 8192),
+                    }
+                };
+                return {
+                    url: endpoint,
+                    options: { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+                };
+            },
+            parseResponse: (data) => data?.candidates?.[0]?.content?.parts?.[0]?.text,
+        },
+        image: {
+            buildRequest: (modelConfig, apiKey, payload) => {
+                const { prompt, numImages, aspectRatio } = payload;
+                const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelConfig.id}:generateImage?key=${apiKey}`;
+                const body = {
+                    prompt: prompt,
+                    ...(numImages && { number_of_images: numImages }),
+                    ...(aspectRatio && { aspect_ratio: aspectRatio }),
+                };
+                return {
+                    url: endpoint,
+                    options: { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+                };
+            },
+            parseResponse: (data) => data?.generatedImages?.[0]?.image?.imageBytes,
+        }
+    },
+    openai: {
+        apiKeyEnvVar: 'OPENAI_API_KEY',
+        text: {
+            buildRequest: (modelConfig, apiKey, prompt, isCheck) => {
+                const body = {
+                    model: modelConfig.id,
+                    messages: [{ role: 'user', content: prompt }],
+                    max_tokens: isCheck ? 5 : (modelConfig.maxOutputTokens || 4096),
+                };
+                return {
+                    url: `https://api.openai.com/v1/chat/completions`,
+                    options: { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, body: JSON.stringify(body) }
+                };
+            },
+            parseResponse: (data) => data?.choices?.[0]?.message?.content,
+        },
+        image: {
+             buildRequest: (modelConfig, apiKey, payload) => {
+                const { prompt, numImages, aspectRatio } = payload;
+                const body = {
+                    model: modelConfig.id,
+                    prompt: prompt,
+                    n: numImages || 1,
+                    size: aspectRatio || "1024x1024", // Default size for DALL-E
+                    response_format: "b64_json",
+                };
+                return {
+                    url: `https://api.openai.com/v1/images/generations`,
+                    options: { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, body: JSON.stringify(body) }
+                };
+            },
+            parseResponse: (data) => data?.data?.[0]?.b64_json,
+        }
+    },
+    anthropic: {
+        apiKeyEnvVar: 'ANTHROPIC_API_KEY',
+        text: {
+            buildRequest: (modelConfig, apiKey, prompt, isCheck) => {
+                const body = {
+                    model: modelConfig.id,
+                    messages: [{ role: 'user', content: prompt }],
+                    max_tokens: isCheck ? 5 : (modelConfig.maxOutputTokens || 4096),
+                };
+                return {
+                    url: `https://api.anthropic.com/v1/messages`,
+                    options: { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' }, body: JSON.stringify(body) }
+                };
+            },
+            parseResponse: (data) => data?.content?.[0]?.text,
+        }
+    },
+    // Add handlers for xai, deepseek, etc. in the same pattern
+    xai: {
+        apiKeyEnvVar: 'XAI_API_KEY',
+        text: { // Assumes OpenAI-compatible API structure
+            buildRequest: (modelConfig, apiKey, prompt, isCheck) => {
+                const body = {
+                    model: modelConfig.id,
+                    messages: [{ role: 'user', content: prompt }],
+                    max_tokens: isCheck ? 5 : (modelConfig.maxOutputTokens || 4096),
+                };
+                return {
+                    url: `https://api.x.ai/v1/chat/completions`,
+                    options: { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, body: JSON.stringify(body) }
+                };
+            },
+            parseResponse: (data) => data?.choices?.[0]?.message?.content,
+        }
+    }
+};
+
 console.log("ai-config.js loaded with a fully standardized and scalable model structure.");
