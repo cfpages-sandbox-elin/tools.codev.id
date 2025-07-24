@@ -558,147 +558,6 @@ export const aiTextProviders = {
             }
         ]
     },
-
-    // --- Other providers (can be updated to the new detailed format later) ---
-    google: {
-        models: [
-            {
-                id: 'gemini-2.5-pro',
-                name: 'Gemini 2.5 Pro',
-                developer: 'Google',
-                description: "Best for coding, reasoning, and multimodal understanding. Use to reason over complex problems, tackle difficult code, math and STEM problems, or analyze large datasets, codebases or documents.",
-                knowledge_cutoff: 'Jan 2025',
-                pricing: {
-                    // Per 1M tokens
-                    input: { low_context: 1.25, high_context: 2.50 },
-                    output: { low_context: 10.00, high_context: 15.00 }
-                },
-                rate_limits: {
-                    paid: '150 RPM'
-                    // Free tier details not specified in provided text
-                }
-            },
-            {
-                id: 'gemini-2.5-flash',
-                name: 'Gemini 2.5 Flash',
-                developer: 'Google',
-                description: "Best for large scale processing (e.g. multiple PDFs), low latency/high volume tasks which require thinking, and agentic use cases. Use to reason over complex problems, show the thinking process, and call tools natively.",
-                knowledge_cutoff: 'Jan 2025',
-                pricing: {
-                    // Per 1M tokens
-                    input: 0.30,
-                    output: 2.50
-                },
-                rate_limits: {
-                    paid: '1000 RPM',
-                    free: '10 RPM, 500 req/day'
-                }
-            },
-            {
-                id: 'gemini-2.5-flash-lite-preview-06-17',
-                name: 'Gemini 2.5 Flash-Lite Preview 06-17',
-                developer: 'Google',
-                description: "Best for large scale processing, low latency/high volume tasks, and lower cost. Use for data transformation, translation, and summarization.",
-                knowledge_cutoff: 'Jan 2025',
-                pricing: {
-                    // Per 1M tokens
-                    input: 0.10,
-                    output: 0.40
-                },
-                rate_limits: {
-                    paid: '4000 RPM',
-                    free: '15 RPM, 500 req/day'
-                }
-            },
-            {
-                id: 'gemini-2.0-flash',
-                name: 'Gemini 2.0 Flash',
-                developer: 'Google',
-                description: "Best for multimodal understanding, realtime streaming, and native tool use. Use to process 10,000 lines of code, call tools natively (like Search), and stream images/video in realtime. Alias for gemini-2.0-flash-001.",
-                knowledge_cutoff: 'Aug 2024',
-                pricing: {
-                    // Per 1M tokens
-                    input: 0.10,
-                    output: 0.40
-                },
-                rate_limits: {
-                    paid: '2000 RPM',
-                    free: '15 RPM, 1500 req/day'
-                }
-            },
-            {
-                id: 'gemini-2.0-flash-lite',
-                name: 'Gemini 2.0 Flash-Lite',
-                developer: 'Google',
-                description: "Best for long context, realtime streaming, and native tool use. Use to process 10,000 lines of code and call tools natively. Alias for gemini-2.0-flash-lite-001.",
-                knowledge_cutoff: 'Aug 2024',
-                pricing: {
-                    // Per 1M tokens
-                    input: 0.075,
-                    output: 0.30
-                },
-                rate_limits: {
-                    paid: '4000 RPM',
-                    free: '30 RPM, 1500 req/day'
-                }
-            },
-            {
-                id: 'gemma-3n-e2b-it',
-                name: 'Gemma 3n E2B',
-                developer: 'Google',
-                description: "Best for low latency, multilingual tasks, and summarization. Use for data transformation, text translation, and summarizing research content.",
-                knowledge_cutoff: 'Aug 2024',
-                pricing: { input: 0.00, output: 0.00 },
-                rate_limits: {
-                    free: '30 RPM, 14400 req/day'
-                }
-            },
-            {
-                id: 'gemma-3n-e4b-it',
-                name: 'Gemma 3n E4B',
-                developer: 'Google',
-                description: "Best for low latency, multilingual tasks, and summarization. Use for data transformation, text translation, and summarizing research content.",
-                knowledge_cutoff: 'Aug 2024',
-                pricing: { input: 0.00, output: 0.00 },
-                rate_limits: {
-                    free: '30 RPM, 14400 req/day'
-                }
-            },
-            {
-                id: 'gemma-3-4b-it',
-                name: 'Gemma 3 4B',
-                developer: 'Google',
-                description: "Best for multimodal, multilingual, and low latency tasks. Use for visual and text processing, text translation, and summarizing text research content.",
-                knowledge_cutoff: 'Aug 2024',
-                pricing: { input: 0.00, output: 0.00 },
-                rate_limits: {
-                    free: '30 RPM, 14400 req/day'
-                }
-            },
-            {
-                id: 'gemma-3-12b-it',
-                name: 'Gemma 3 12B',
-                developer: 'Google',
-                description: "Best for multimodal, multilingual, and summarization tasks. Use for visual and text processing, text translation, and summarizing text research content.",
-                knowledge_cutoff: 'Aug 2024',
-                pricing: { input: 0.00, output: 0.00 },
-                rate_limits: {
-                    free: '30 RPM, 14400 req/day'
-                }
-            },
-            {
-                id: 'gemma-3-27b-it',
-                name: 'Gemma 3 27B',
-                developer: 'Google',
-                description: "Best for multimodal, multilingual, and summarization tasks. Use for visual and text processing, text translation, and summarizing image and text content.",
-                knowledge_cutoff: 'Aug 2024',
-                pricing: { input: 0.00, output: 0.00 },
-                rate_limits: {
-                    free: '30 RPM, 14400 req/day'
-                }
-            }
-        ]
-    },
     openai: {
         models: [
             {
@@ -761,20 +620,6 @@ export const aiTextProviders = {
                 }
             },
             {
-                id: 'gpt-4o-audio-preview-2025-06-03',
-                name: 'GPT-4o Audio Preview',
-                developer: 'OpenAI',
-                description: "GPT-4o model capable of audio inputs and outputs.",
-                pricing: { // Per 1M tokens
-                    input: 2.50,
-                    input_alt: null, // No value provided
-                    output: 10.00
-                },
-                rate_limits: {
-                    standard: '250,000 TPM, 3,000 RPM'
-                }
-            },
-            {
                 id: 'gpt-4o-mini-2024-07-18',
                 name: 'GPT-4o mini',
                 developer: 'OpenAI',
@@ -782,20 +627,6 @@ export const aiTextProviders = {
                 pricing: { // Per 1M tokens
                     input: 0.15,
                     input_alt: 0.075,
-                    output: 0.60
-                },
-                rate_limits: {
-                    standard: '10,000,000 TPM, 10,000 RPM, 1,000,000,000 TPD'
-                }
-            },
-            {
-                id: 'gpt-4o-mini-audio-preview-2024-12-17',
-                name: 'GPT-4o mini Audio Preview',
-                developer: 'OpenAI',
-                description: "Smaller model capable of audio inputs and outputs.",
-                pricing: { // Per 1M tokens
-                    input: 0.15,
-                    input_alt: null, // No value provided
                     output: 0.60
                 },
                 rate_limits: {
@@ -1369,6 +1200,40 @@ export const aiImageProviders = {
 };
 
 export const aiAudioProviders = {
+    openai: {
+        models: [
+            {
+                id: 'gpt-4o-audio-preview-2025-06-03',
+                name: 'GPT-4o Audio Preview',
+                developer: 'OpenAI',
+                description: "GPT-4o model capable of audio inputs and outputs.",
+                io_type: "Audio/Text-to-Text",
+                pricing: { // Per 1M tokens
+                    input_text: 2.50,
+                    output_text: 10.00
+                    // Note: Per-minute audio pricing not specified in data
+                },
+                rate_limits: {
+                    standard: '250,000 TPM, 3,000 RPM'
+                }
+            },
+            {
+                id: 'gpt-4o-mini-audio-preview-2024-12-17',
+                name: 'GPT-4o mini Audio Preview',
+                developer: 'OpenAI',
+                description: "Smaller model capable of audio inputs and outputs.",
+                io_type: "Audio/Text-to-Text",
+                pricing: { // Per 1M tokens
+                    input_text: 0.15,
+                    output_text: 0.60
+                    // Note: Per-minute audio pricing not specified in data
+                },
+                rate_limits: {
+                    standard: '10,000,000 TPM, 10,000 RPM, 1,000,000,000 TPD'
+                }
+            }
+        ]
+    },
     mistral: {
         models: [
             {
