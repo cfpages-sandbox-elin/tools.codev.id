@@ -7,7 +7,7 @@
  * Endpoint: /ai-api
  */
 
-import { aiTextProviders, aiImageProviders, aiAudioProviders, apiProviderHandlers } from './ai-config.js';
+import { aiTextProviders, aiImageProviders, aiAudioProviders, apiProviderHandlers } from '/ai-config.js';
 
 // --- Constants ---
 const MAX_RETRIES = 3;
