@@ -4,9 +4,8 @@
 const sierVisualTechnical = {
     render() {
         const container = document.getElementById('technical-operational-analysis');
-        if (!container || !container.parentElement) return;
+        if (!container) return;
 
-        // Ambil data konfigurasi
         const siteParams = projectConfig.site_parameters;
         const drConfig = projectConfig.drivingRange;
         const padelConfig = projectConfig.padel;
@@ -38,7 +37,7 @@ const sierVisualTechnical = {
             </div>
         `;
 
-        // --- 2. Spesifikasi Teknis Turunan (Informasi Lama yang Ditingkatkan) ---
+        // --- 2. Spesifikasi Teknis Turunan (This part remains the same) ---
         const baysPerLevel = Math.floor(siteParams.driving_range.building_length_m / siteParams.driving_range.bay_width_m);
         const total_bays = drConfig.revenue.main_revenue.bays;
         const premium_bays_percentage = drConfig.capex_assumptions.equipment.premium_bays.percentage_of_total;
@@ -67,7 +66,7 @@ const sierVisualTechnical = {
             </div>
         `;
 
-        // --- 3. Rencana SDM (Struktur Tim) ---
+        // --- 3. Rencana SDM (This part remains the same) ---
         const drStaff = drConfig.opexMonthly.salaries_wages;
         const padelStaff = padelConfig.opexMonthly.salaries_wages;
         const totalStaff = Object.values(drStaff).reduce((sum, role) => sum + role.count, 0) + Object.values(padelStaff).reduce((sum, role) => sum + role.count, 0);
@@ -82,19 +81,19 @@ const sierVisualTechnical = {
             </div>
         `;
 
-        // Gabungkan semua bagian dan render ke kontainer utama
-        const parentContainer = container.parentElement;
-        parentContainer.innerHTML = `
-            <p class="text-gray-600 mb-6">
-                Keberhasilan sebuah ide bergantung pada eksekusi teknis dan operasional yang unggul. Analisis ini membedah elemen-elemen teknis krusial dari proyek, mulai dari parameter desain dasar hingga rencana sumber daya manusia, untuk memastikan fasilitas yang dibangun tidak hanya memenuhi, tetapi melampaui ekspektasi pasar.
-            </p>
-            <div id="technicalAnalysisContainer" class="space-y-8">
-                ${baseParamsHtml}
-                ${derivedSpecsHtml}
-                ${hrHtml}
+        container.innerHTML = `
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <p class="text-gray-600 mb-6">
+                    Keberhasilan sebuah ide bergantung pada eksekusi teknis dan operasional yang unggul. Analisis ini membedah elemen-elemen teknis krusial dari proyek, mulai dari parameter desain dasar hingga rencana sumber daya manusia, untuk memastikan fasilitas yang dibangun tidak hanya memenuhi, tetapi melampaui ekspektasi pasar.
+                </p>
+                <div id="technicalAnalysisContainer" class="space-y-8">
+                    ${baseParamsHtml}
+                    ${derivedSpecsHtml}
+                    ${hrHtml}
+                </div>
             </div>
         `;
-        console.log("[sier-visual-technical] Analisis Teknis & Operasional: Berhasil dirender ulang dengan parameter dasar.");
+        console.log("[sier-visual-technical] Analisis Teknis & Operasional: Berhasil dirender ulang dengan benar.");
     }
 };
 
