@@ -83,6 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sierHelpers.tryToRender(sierVisualFinanceDetails.render.bind(sierVisualFinanceDetails));
         sierHelpers.tryToRender(sierVisualFinanceSummary.render.bind(sierVisualFinanceSummary));
         sierHelpers.tryToRender(sierVisualTechnical.render.bind(sierVisualTechnical));
+        sierHelpers.tryToRender(sierVisualTechnicalDiagrams.renderAll.bind(sierVisualTechnicalDiagrams));
         sierHelpers.tryToRender(sierVisualDigital.render.bind(sierVisualDigital));
         sierHelpers.tryToRender(sierVisualMaintenance.render.bind(sierVisualMaintenance));
         sierHelpers.tryToRender(sierVisualStrategy.render.bind(sierVisualStrategy));
