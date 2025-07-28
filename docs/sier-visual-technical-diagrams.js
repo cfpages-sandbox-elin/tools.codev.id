@@ -69,7 +69,7 @@ const sierVisualTechnicalDiagrams = {
         
         container.innerHTML = `
             <div style="position: relative; width: 100%; max-width: 1000px; margin: auto; border: 1px solid #ccc; background: #000;">
-                <img src="https://i.imgur.com/1G2iBfP.png" alt="Citra Satelit Lokasi Proyek SIER" style="display: block; width: 100%; height: auto;">
+                <img src="/img/citra-satelit-proyek-sier.png" alt="Citra Satelit Lokasi Proyek SIER" style="display: block; width: 100%; height: auto;">
                 <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">${svgContent}</div>
             </div>
             ${legendContent}
