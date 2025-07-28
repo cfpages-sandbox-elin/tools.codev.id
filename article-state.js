@@ -5,7 +5,6 @@ import {
     BULK_ARTICLES_STORAGE_KEY, CUSTOM_MODELS_STORAGE_KEY, SITEMAP_STORAGE_KEY
 } from './article-config.js';
 import { findCheapestModel, logToConsole } from './article-helpers.js';
-import { ALL_PROVIDERS_CONFIG } from './article-ui.js'; 
 
 // --- In-Memory State ---
 let appState = { ...importedDefaultSettings };
@@ -184,24 +183,6 @@ export function resetAllData() {
     } else {
         logToConsole('Reset cancelled by user.', 'info');
     }
-}
-
-export function addProviderToState() {
-    const currentState = getState();
-    const newProviderList = [...(currentState.textProviders || [])];
-
-    // Add the first available provider as the default for the new row
-    const firstProviderKey = Object.keys(ALL_PROVIDERS_CONFIG.text)[0];
-    const firstProviderConfig = ALL_PROVIDERS_CONFIG.text[firstProviderKey];
-    const defaultModel = findCheapestModel(firstProviderConfig?.models.map(m => m.id)) || '';
-
-    newProviderList.push({ 
-        provider: firstProviderKey, 
-        model: defaultModel, 
-        useCustom: false, // You can phase out 'custom' model logic or keep it
-        customModel: '' 
-    });
-    updateState({ textProviders: newProviderList });
 }
 
 export function removeProviderFromState(index) {

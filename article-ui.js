@@ -1,5 +1,5 @@
 // article-ui.js (v8.24 multiple providers)
-import { aiTextProviders, aiImageProviders, languageOptions, defaultSettings } from './article-config.js';
+import { languageOptions, defaultSettings } from './article-config.js';
 import { getState, updateState, getBulkPlan, addProviderToState, removeProviderFromState, updateProviderInState, updateCustomModelState, getCustomModelState } from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2 } from './article-helpers.js';
 
@@ -406,7 +406,7 @@ export function populateImageModels(setDefault = false) {
         return;
     }
 
-    const providerConfig = imageProviders[providerKey];
+    const providerConfig = ALL_PROVIDERS_CONFIG.image[providerKey];
     const models = providerConfig?.models || [];
     const aspectRatios = providerConfig?.aspectRatios || ["1:1"];
     const standardModelFromState = state.imageModel;

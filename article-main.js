@@ -1,5 +1,4 @@
 // article-main.js (v8.21 munculin text area)
-
 import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
 import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
 import {
@@ -13,6 +12,31 @@ import { handleGenerateStructure, handleGenerateArticle } from './article-single
 import { prepareKeywords, handleGeneratePlan, handleStartBulkGeneration, handleDownloadZip } from './article-bulk.js';
 import { handleGenerateIdeas } from './article-ideas.js'; 
 import { handleSpinSelectedText, handleSelection, highlightSpintax, handleSpinArticle, pauseSpinning, stopSpinningProcess } from './article-spinner.js';
+
+function addProviderToState() {
+    const currentState = getState();
+    const newProviderList = [...(currentState.textProviders || [])];
+    const textProvidersConfig = ALL_PROVIDERS_CONFIG.text;
+
+    if (Object.keys(textProvidersConfig).length === 0) {
+        logToConsole("Provider configs not loaded yet. Cannot add new provider.", "warn");
+        return;
+    }
+
+    const firstProviderKey = Object.keys(textProvidersConfig)[0];
+    const firstProviderConfig = textProvidersConfig[firstProviderKey];
+    const defaultModel = findCheapestModel(firstProviderConfig?.models.map(m => m.id)) || '';
+
+    newProviderList.push({ 
+        provider: firstProviderKey, 
+        model: defaultModel, 
+        useCustom: false,
+        customModel: '' 
+    });
+
+    updateState({ textProviders: newProviderList });
+    renderAiProviderRows(); // Re-render the UI after state is updated
+}
 
 // Flag to prevent multiple initializations
 let appInitialized = false;
@@ -33,6 +57,9 @@ function initializeApp() {
     const initialState = loadState();
     logToConsole("Applying loaded state to UI...", "info");
     updateUIFromState(initialState);
+
+    const addProviderBtn = getElement('addProviderBtn');
+    addProviderBtn?.addEventListener('click', addProviderToState);
 
     setupStep4Listeners();
     logToConsole("Setting up other event listeners...", "info");
