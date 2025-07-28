@@ -1957,34 +1957,118 @@
         <section id="sec-technical-operational">
             <h2 class="text-3xl font-bold mb-8 text-gray-800 border-b-4 border-gray-500 pb-3 mt-16">6. Analisis Teknis & Operasional</h2>
 
-            <!-- Section Analisis Teknis & Operasional -->
-            <div id="technical-operational-analysis" class="mt-12">
-                <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-gray-600 pl-4">Analisis Teknis & Operasional</h2>
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <p class="text-gray-600 mb-6">
+                    Analisis ini mengkaji kelayakan fisik dan operasional dari setiap komponen proyek: Driving Range, Lapangan Padel, dan Meeting Point. Fokusnya adalah pada kesesuaian lokasi, tantangan konstruksi, kepatuhan regulasi, dan potensi implementasi berdasarkan kondisi riil di lapangan.
+                </p>
 
-                <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-                    <p class="text-gray-600 mb-6">
-                        Keberhasilan sebuah ide bergantung pada eksekusi teknis dan operasional yang unggul. Analisis ini membedah elemen-elemen teknis krusial dari proyek, mulai dari spesifikasi lapangan hingga rencana sumber daya manusia, untuk memastikan fasilitas yang dibangun tidak hanya memenuhi, tetapi melampaui ekspektasi pasar.
-                    </p>
-
-                    <div id="technicalAnalysisContainer" class="space-y-8">
-                        <!-- Konten teknis akan diisi oleh JavaScript -->
-                        <div class="text-center p-8">
-                            <p class="text-gray-500">Memuat detail analisis teknis...</p>
+                <!-- 1. Tinjauan Proyek & Analisis Lokasi -->
+                <div id="site-layout-analysis" class="mb-10 pb-6 border-b">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">1. Tinjauan Proyek & Analisis Lokasi</h3>
+                    <p class="text-gray-600 mb-4">Proyek ini mengusulkan pembangunan fasilitas olahraga dan bisnis terpadu di atas dan di sekitar danau (waduk) eksisting dalam kawasan SIER. Peta lokasi di bawah ini mengidentifikasi komponen-komponen utama:</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="p-4 bg-gray-50 rounded-lg border">
+                            <p class="font-semibold text-gray-700">Komponen Utama Proyek:</p>
+                            <ul class="list-disc pl-5 mt-2 text-sm space-y-1">
+                                <li><strong>Driving Range:</strong> Area pemukul (bay) berukuran 12m x 85m di atas danau (area kuning), dengan panjang lapangan 227m (garis ungu) dan jaring pengaman sepanjang 533m (garis hijau).</li>
+                                <li><strong>Lapangan Padel:</strong> Dua lokasi potensial dengan total hingga 4 lapangan indoor.
+                                    <ul class="list-circle pl-5 mt-1">
+                                        <li><strong>Lokasi #1:</strong> Renovasi sebagian gedung Futsal.</li>
+                                        <li><strong>Lokasi #2:</strong> Pembangunan baru di lahan Gedung Koperasi.</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Meeting Point:</strong> Renovasi Gedung Arsip menjadi pusat bisnis modern.</li>
+                            </ul>
+                        </div>
+                        <div class="p-4 bg-gray-50 rounded-lg border">
+                            <p class="font-semibold text-gray-700">Kondisi Eksisting & Batasan:</p>
+                            <ul class="list-disc pl-5 mt-2 text-sm space-y-1">
+                                <li><strong>Saluran Udara Tegangan Tinggi (SUTT):</strong> Melintasi area, menciptakan zona aman (area merah) selebar 10m yang tidak boleh ada bangunan. [4, 5, 7, 10, 11]</li>
+                                <li><strong>Fasilitas Olahraga Lain:</strong> Lapangan Futsal, Basket, Tenis, dan Bulutangkis sudah ada.</li>
+                                <li><strong>Jalur Perawatan Danau:</strong> Terdapat jalur manuver untuk excavator apung pembersih danau (digambarkan dengan garis biru pada citra satelit kedua).</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Analisis Rinci Biaya Teknologi Digital -->
-            <div id="digital-tech-analysis-container" class="mt-12">
-                <!-- Konten akan dibuat oleh sier-visual-digital.js -->
-            </div>
+                <!-- 2. Analisis Kelayakan Teknis: Driving Range -->
+                <div id="driving-range-technical-feasibility" class="mb-10 pb-6 border-b">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">2. Analisis Kelayakan Teknis: Driving Range <span class="text-red-600">(Risiko Kritis)</span></h3>
+                    <p class="text-gray-600 mb-4">Meskipun secara finansial tampak menjanjikan, analisis teknis mendalam mengidentifikasi beberapa <strong>hambatan fundamental (showstoppers)</strong> yang membuat implementasi proyek Driving Range di lokasi yang diusulkan menjadi **sangat tidak layak dan tidak direkomendasikan** untuk saat ini.</p>
+                    <div class="space-y-6">
+                        <div class="p-4 bg-red-50 border-l-4 border-red-500">
+                            <h4 class="font-bold text-red-800">a. Pelanggaran Regulasi Ruang Terbuka Hijau (RTH)</h4>
+                            <p class="mt-2 text-gray-700 text-sm">Danau/waduk dihitung sebagai RTH. Kawasan industri SIER diwajibkan oleh hukum (UU No. 26/2007 & Peraturan Menteri Perindustrian No. 40/2016) untuk mempertahankan proporsi RTH minimal. [1, 2, 3, 6, 8] Dengan kondisi RTH SIER yang sudah di ambang batas, mengurangi area danau dengan konstruksi (bahkan dengan pondasi tiang pancang) berisiko melanggar hukum dan akan ditolak dalam proses perizinan lingkungan dan tata ruang.</p>
+                        </div>
+                        <div class="p-4 bg-red-50 border-l-4 border-red-500">
+                            <h4 class="font-bold text-red-800">b. Tantangan Konstruksi Fondasi di Danau Tertutup</h4>
+                            <p class="mt-2 text-gray-700 text-sm">Pembangunan struktur di atas air memerlukan pondasi tiang pancang. Proses ini menghadapi kesulitan teknis yang ekstrem di lokasi ini: [9, 12, 14, 17, 18]</p>
+                            <ul class="list-disc pl-5 mt-2 text-sm space-y-1">
+                                <li><strong>Akses Alat Berat Tidak Memadai:</strong> Tidak ada akses bagi ponton/tongkang yang membawa mesin pancang untuk masuk ke danau yang tertutup. Membawa alat berat melalui darat dan merakitnya di danau sangat tidak efisien dan berbiaya sangat tinggi.</li>
+                                <li><strong>Keterbatasan Jangkauan dari Darat:</strong> Menggunakan mesin pancang dari darat memiliki keterbatasan jangkauan. Untuk mencapai titik tengah danau, diperlukan crane dengan jangkauan sangat panjang yang memerlukan landasan kerja yang stabil, yang sulit disiapkan di tepi danau yang lunak.</li>
+                                <li><strong>Gangguan Lingkungan:</strong> Proses pemancangan akan menyebabkan getaran dan mengaduk sedimen dasar danau, berpotensi merusak ekosistem dan kualitas air secara signifikan.</li>
+                            </ul>
+                        </div>
+                        <div class="p-4 bg-red-50 border-l-4 border-red-500">
+                            <h4 class="font-bold text-red-800">c. Konflik Operasional dengan Jalur Perawatan Danau</h4>
+                            <p class="mt-2 text-gray-700 text-sm">Pemasangan jaring pengaman driving range (garis hijau) akan secara permanen memblokir jalur manuver excavator apung (garis biru). Ini akan melumpuhkan kegiatan pemeliharaan dan pembersihan danau yang bersifat rutin dan esensial, menciptakan masalah operasional jangka panjang.</p>
+                        </div>
+                    </div>
+                    <p class="mt-6 font-semibold text-center text-gray-800 bg-yellow-100 p-3 rounded-lg">Kesimpulan: Proyek pembangunan Driving Range di atas danau harus <strong>DITUNDA</strong> hingga ditemukan solusi fundamental untuk ketiga isu regulasi, teknis, dan operasional di atas.</p>
+                </div>
 
-            <!-- Rencana & Estimasi Biaya Pemeliharaan -->
-            <div id="maintenance-plan-container" class="mt-12">
-                <!-- Konten akan dibuat oleh sier-visual-maintenance.js -->
+                <!-- 3. Analisis Kelayakan Teknis: Lapangan Padel -->
+                <div id="padel-technical-feasibility" class="mb-10 pb-6 border-b">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">3. Analisis Kelayakan Teknis: Lapangan Padel <span class="text-green-600">(Sangat Layak)</span></h3>
+                    <p class="text-gray-600 mb-4">Berbeda dengan Driving Range, pembangunan lapangan Padel sangat layak secara teknis dan memiliki dua opsi implementasi yang realistis.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="p-4 bg-green-50 border-l-4 border-green-500">
+                            <h4 class="font-bold text-green-800">a. Opsi 1: Renovasi Gedung Futsal (Lokasi #1)</h4>
+                            <p class="mt-2 text-gray-700 text-sm">Gedung futsal eksisting memiliki dua lapangan. Satu lapangan berukuran 15.8m x 31.7m. Dengan ruang sisa di sisi-sisinya (6m dan 3.3m), total lebar area mencapai ~25m. Ini **lebih dari cukup** untuk membangun <strong>dua lapangan padel standar</strong> (masing-masing 10m x 20m) yang diletakkan berdampingan. Opsi ini menawarkan biaya investasi yang lebih rendah karena memanfaatkan struktur atap dan dinding yang sudah ada.</p>
+                        </div>
+                        <div class="p-4 bg-green-50 border-l-4 border-green-500">
+                            <h4 class="font-bold text-green-800">b. Opsi 2: Pembangunan Baru di Lahan Gedung Koperasi (Lokasi #2)</h4>
+                            <p class="mt-2 text-gray-700 text-sm">Lahan Gedung Koperasi yang akan didemolisi memiliki estimasi dimensi 42m x 11m. Ini juga **sangat memungkinkan** untuk pembangunan <strong>dua lapangan padel standar</strong> (membutuhkan area ~40m x 10m). Opsi ini memberikan keleluasaan desain yang lebih besar untuk fasilitas pendukung seperti lounge dan kamar ganti.</p>
+                        </div>
+                    </div>
+                    <p class="mt-6 font-semibold text-center text-gray-800 bg-yellow-100 p-3 rounded-lg">Kesimpulan: Proyek Padel dapat dilanjutkan. Rekomendasi awal adalah memulai dengan **Opsi 1 (Renovasi Futsal)** untuk kecepatan implementasi dan efisiensi biaya.</p>
+                </div>
+
+                <!-- 4. Konsep & Analisis Teknis: Meeting Point -->
+                <div id="meeting-point-technical-analysis">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">4. Konsep & Analisis Teknis: Meeting Point <span class="text-blue-600">(Potensi Tinggi)</span></h3>
+                    <p class="text-gray-600 mb-4">Renovasi Gedung Arsip menjadi Meeting Point memiliki potensi besar untuk melayani kebutuhan tenant SIER dan pasar eksternal. Konsep yang diusulkan adalah **"SIER Business Lounge & Meeting Pods"**, sebuah fasilitas hybrid yang menggabungkan kenyamanan kafe dengan fungsionalitas ruang meeting privat. [13, 15, 16]</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="p-4 bg-blue-50 border-l-4 border-blue-500">
+                            <h4 class="font-bold text-blue-800">a. Konsep Desain & Tata Ruang</h4>
+                            <p class="mt-2 text-gray-700 text-sm">Gedung akan dibagi menjadi dua zona utama:</p>
+                            <ul class="list-disc pl-5 mt-2 text-sm space-y-1">
+                                <li><strong>Open Lounge:</strong> Area bergaya kafe modern dengan sofa, meja komunal, dan bar kopi. Ideal untuk pertemuan informal, kerja remote, atau menunggu.</li>
+                                <li><strong>Privacy Zone:</strong> Area dengan beberapa <strong>"Meeting Pods"</strong>, yaitu bilik kaca kedap suara untuk 2-4 orang, dilengkapi meja, kursi, monitor, dan stop kontak. Ideal untuk diskusi rahasia, wawancara, atau presentasi kecil.</li>
+                            </ul>
+                        </div>
+                        <div class="p-4 bg-blue-50 border-l-4 border-blue-500">
+                            <h4 class="font-bold text-blue-800">b. Pertimbangan Teknis Renovasi</h4>
+                            <p class="mt-2 text-gray-700 text-sm">Renovasi perlu fokus pada:</p>
+                            <ul class="list-disc pl-5 mt-2 text-sm space-y-1">
+                                <li><strong>Struktur:</strong> Pengecekan kekuatan struktur eksisting, terutama jika ada rencana penambahan lantai.</li>
+                                <li><strong>Akustik:</strong> Investasi pada material kedap suara untuk dinding dan pintu Meeting Pods.</li>
+                                <li><strong>MEP (Mekanikal, Elektrikal, Plumbing):</strong> Peningkatan sistem HVAC (AC), penambahan titik listrik di banyak lokasi, dan modernisasi toilet.</li>
+                                <li><strong>Jaringan:</strong> Penyediaan Wi-Fi berkecepatan tinggi yang andal di seluruh area.</li>
+                            </ul>
+                        </div>
+                        <div class="p-4 bg-blue-50 border-l-4 border-blue-500">
+                            <h4 class="font-bold text-blue-800">c. Integrasi & Sinergi</h4>
+                            <p class="mt-2 text-gray-700 text-sm">Fasilitas ini secara alami akan bersinergi dengan fasilitas olahraga, menciptakan paket penawaran unik:</p>
+                            <ul class="list-disc pl-5 mt-2 text-sm space-y-1">
+                                <li><strong>Paket Korporat "Meet & Play":</strong> Menawarkan paket meeting di pagi/siang hari, dilanjutkan dengan sesi bermain Padel bersama di sore hari.</li>
+                                <li><strong>Sarana Networking:</strong> Menjadi hub bagi para eksekutif dan karyawan tenant SIER untuk berjejaring setelah jam kerja.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <p class="mt-6 font-semibold text-center text-gray-800 bg-yellow-100 p-3 rounded-lg">Kesimpulan: Konsep Meeting Point ini sangat relevan dengan kebutuhan pasar korporat di SIER dan sekitarnya. Proyek ini direkomendasikan untuk dilanjutkan ke tahap desain detail.</p>
+                </div>
             </div>
-        
         </section>
 
         <section id="sec-financial-analysis">
