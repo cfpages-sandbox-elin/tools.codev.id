@@ -4,7 +4,8 @@ import {
     APP_STATE_STORAGE_KEY, BULK_PLAN_STORAGE_KEY,
     BULK_ARTICLES_STORAGE_KEY, CUSTOM_MODELS_STORAGE_KEY, SITEMAP_STORAGE_KEY
 } from './article-config.js';
-import { logToConsole } from './article-helpers.js';
+import { findCheapestModel, logToConsole } from './article-helpers.js';
+import { ALL_PROVIDERS_CONFIG } from './article-ui.js'; 
 
 // --- In-Memory State ---
 let appState = { ...importedDefaultSettings };
@@ -187,18 +188,25 @@ export function resetAllData() {
 
 export function addProviderToState() {
     const currentState = getState();
-    const newProviderList = [...currentState.textProviders];
+    const newProviderList = [...(currentState.textProviders || [])];
+
     // Add the first available provider as the default for the new row
-    const firstProviderKey = Object.keys(aiTextProviders)[0];
-    const firstModel = aiTextProviders[firstProviderKey]?.models[0] || '';
-    newProviderList.push({ provider: firstProviderKey, model: firstModel, useCustom: false, customModel: '' });
+    const firstProviderKey = Object.keys(ALL_PROVIDERS_CONFIG.text)[0];
+    const firstProviderConfig = ALL_PROVIDERS_CONFIG.text[firstProviderKey];
+    const defaultModel = findCheapestModel(firstProviderConfig?.models.map(m => m.id)) || '';
+
+    newProviderList.push({ 
+        provider: firstProviderKey, 
+        model: defaultModel, 
+        useCustom: false, // You can phase out 'custom' model logic or keep it
+        customModel: '' 
+    });
     updateState({ textProviders: newProviderList });
 }
 
 export function removeProviderFromState(index) {
     const currentState = getState();
     const newProviderList = currentState.textProviders.filter((_, i) => i !== index);
-    // Ensure at least one provider remains
     if (newProviderList.length === 0) {
         logToConsole("Cannot remove the last provider.", "warn");
         return;
@@ -212,11 +220,11 @@ export function updateProviderInState(index, key, value) {
     if (newProviderList[index]) {
         newProviderList[index][key] = value;
 
-        // If the provider itself changes, reset the model to the default for that new provider
+        // If the provider itself changes, reset the model to its default
         if (key === 'provider') {
-            const newProviderModels = aiTextProviders[value]?.models || [];
-            newProviderList[index].model = findCheapestModel(newProviderModels);
-            newProviderList[index].useCustom = false; // Reset custom state
+            const newProviderConfig = ALL_PROVIDERS_CONFIG.text[value];
+            const availableModels = newProviderConfig?.models.map(m => m.id) || [];
+            newProviderList[index].model = findCheapestModel(availableModels) || '';
         }
         
         updateState({ textProviders: newProviderList });

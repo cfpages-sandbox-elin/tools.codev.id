@@ -879,6 +879,17 @@ export default {
 
         const { action, providerKey, model, prompt, ...otherParams } = requestData;
 
+        if (action === 'get_all_providers') {
+            // This new action returns all the configuration data to the frontend
+            console.log("Action: get_all_providers. Returning full provider configuration.");
+            return jsonResponse({
+                success: true,
+                textProviders: aiTextProviders,
+                imageProviders: aiImageProviders,
+                // You can add audioProviders etc. here in the future
+            });
+        }
+
         if (!action) {
             return jsonResponse({ success: false, error: 'Missing action.' }, 400);
         }

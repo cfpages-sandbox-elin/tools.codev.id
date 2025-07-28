@@ -4,6 +4,7 @@ import { getState, updateState, getBulkPlan, addProviderToState, removeProviderF
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2 } from './article-helpers.js';
 
 // --- DOM Element References (Centralized) ---
+let ALL_PROVIDERS_CONFIG = { text: {}, image: {} };
 let domElements = {}; // Keep private to this module
 
 // Map JS variable names to actual HTML IDs
@@ -127,6 +128,27 @@ const querySelectorKeys = {
     planningTableBody: '#planningTable tbody'
 };
 
+export async function initializeProviderUI() {
+    logToConsole("Fetching all provider configurations from backend...", "info");
+    try {
+        const result = await callAI('get_all_providers', {}, null, null);
+        if (result.success) {
+            ALL_PROVIDERS_CONFIG.text = result.textProviders;
+            ALL_PROVIDERS_CONFIG.image = result.imageProviders;
+            logToConsole("Successfully loaded all provider configurations.", "success");
+            // Now render the UI with the loaded state
+            renderAiProviderRows();
+            populateImageModels(); // This can now use the fetched config
+        } else {
+            throw new Error(result.error || "Failed to fetch configurations.");
+        }
+    } catch (error) {
+        logToConsole(`Critical Error: Could not load provider configs. ${error.message}`, "error");
+        const container = getElement('aiProviderContainer');
+        if(container) container.innerHTML = `<p class="text-red-500">Could not load AI provider configurations from the server. Please refresh.</p>`;
+    }
+}
+
 export function cacheDomElements() {
     logToConsole("Attempting to cache DOM elements...", "info");
     let allFound = true;
@@ -227,83 +249,88 @@ export function renderAiProviderRows() {
     const state = getState();
     container.innerHTML = ''; // Clear existing rows
 
+    // If no providers in state (e.g., first load), add one
+    if (!state.textProviders || state.textProviders.length === 0) {
+        addProviderToState(); // Function from article-state.js
+        return; // The state change will trigger a re-render
+    }
+
     state.textProviders.forEach((providerState, index) => {
         const row = createAiProviderRow(providerState, index);
         container.appendChild(row);
     });
+
+    // Add event listener for the "Add Provider" button
+    getElement('addProviderBtn')?.addEventListener('click', () => {
+         addProviderToState();
+         renderAiProviderRows(); // Re-render after adding
+    });
 }
 
+// Helper function to create a single row (this is the core of the new UI)
 function createAiProviderRow(providerState, index) {
     const row = document.createElement('div');
-    row.className = 'grid grid-cols-1 md:grid-cols-3 gap-x-4 p-2 border rounded-md bg-gray-50';
+    row.className = 'grid grid-cols-1 md:grid-cols-4 gap-x-4 p-3 border rounded-md bg-gray-50/50 shadow-sm';
     row.dataset.index = index;
 
-    // --- Provider Selection ---
-    const providerDiv = document.createElement('div');
-    providerDiv.innerHTML = `<label class="compact-label">Provider #${index + 1}:</label>`;
+    // --- Column 1: Provider & Model Selection ---
+    const selectionDiv = document.createElement('div');
+    selectionDiv.className = 'flex flex-col space-y-2';
+    
+    // Provider Select
     const providerSelect = document.createElement('select');
-    providerSelect.className = 'compact-select';
-    populateSelect(providerSelect, Object.keys(aiTextProviders), providerState.provider);
+    providerSelect.className = 'compact-select text-sm';
+    populateSelect(providerSelect, Object.keys(ALL_PROVIDERS_CONFIG.text), providerState.provider);
     providerSelect.addEventListener('change', (e) => {
         updateProviderInState(index, 'provider', e.target.value);
-        renderAiProviderRows(); // Re-render to update model list
+        renderAiProviderRows(); // Re-render to update model list and specs
         checkApiStatus();
     });
-    providerDiv.appendChild(providerSelect);
-
-    // --- Model Selection ---
-    const modelDiv = document.createElement('div');
-    modelDiv.innerHTML = `<label class="compact-label">Model:</label>`;
+    
+    // Model Select
     const modelSelect = document.createElement('select');
-    modelSelect.className = 'compact-select';
-    const availableModels = aiTextProviders[providerState.provider]?.models || [];
+    modelSelect.className = 'compact-select text-sm';
+    const availableModels = ALL_PROVIDERS_CONFIG.text[providerState.provider]?.models.map(m => m.id) || [];
     populateSelect(modelSelect, availableModels, providerState.model);
     modelSelect.addEventListener('change', (e) => {
-        if (!providerState.useCustom) {
-            updateProviderInState(index, 'model', e.target.value);
-            checkApiStatus();
-        }
-    });
-    const customModelInput = document.createElement('input');
-    customModelInput.type = 'text';
-    customModelInput.className = 'custom-input-visible hidden w-full';
-    customModelInput.placeholder = 'Enter custom model name';
-    customModelInput.value = getCustomModelState('text', providerState.provider) || providerState.customModel;
-    customModelInput.addEventListener('blur', (e) => {
-        if(providerState.useCustom) {
-            updateCustomModelState('text', providerState.provider, e.target.value);
-            updateProviderInState(index, 'customModel', e.target.value);
-            checkApiStatus();
-        }
-    });
-    const useCustomLabel = document.createElement('label');
-    useCustomLabel.className = 'text-xs flex items-center mt-1';
-    const useCustomCheckbox = document.createElement('input');
-    useCustomCheckbox.type = 'checkbox';
-    useCustomCheckbox.className = 'h-3 w-3 mr-1';
-    useCustomCheckbox.checked = providerState.useCustom;
-    useCustomCheckbox.addEventListener('change', (e) => {
-        const isChecked = e.target.checked;
-        updateProviderInState(index, 'useCustom', isChecked);
-        renderAiProviderRows(); // Re-render to toggle visibility
+        updateProviderInState(index, 'model', e.target.value);
+        renderAiProviderRows(); // Re-render to update specs
         checkApiStatus();
     });
-    useCustomLabel.appendChild(useCustomCheckbox);
-    useCustomLabel.append(' Use Custom');
-    modelDiv.appendChild(modelSelect);
-    modelDiv.appendChild(customModelInput);
-    modelDiv.appendChild(useCustomLabel);
 
-    // Toggle visibility based on 'useCustom'
-    disableElement(modelSelect, providerState.useCustom);
-    showElement(customModelInput, providerState.useCustom);
+    selectionDiv.innerHTML = `<label class="compact-label font-semibold text-gray-700">Provider #${index + 1}</label>`;
+    selectionDiv.appendChild(providerSelect);
+    selectionDiv.appendChild(modelSelect);
 
-    // --- Actions (Remove button) ---
+
+    // --- Column 2 & 3: Model Specifications ---
+    const specsDiv = document.createElement('div');
+    specsDiv.className = 'md:col-span-2 text-xs text-gray-600 grid grid-cols-2 gap-x-4 gap-y-1 items-center mt-2 md:mt-0';
+    const modelConfig = ALL_PROVIDERS_CONFIG.text[providerState.provider]?.models.find(m => m.id === providerState.model);
+
+    if (modelConfig) {
+         specsDiv.innerHTML = `
+            <div class="font-medium text-gray-800 col-span-2 border-b pb-1 mb-1">${modelConfig.name || modelConfig.id}</div>
+            <div><strong>Context:</strong> ${(modelConfig.contextWindow / 1000).toLocaleString()}k</div>
+            <div><strong>Developer:</strong> ${modelConfig.developer || 'N/A'}</div>
+            <div><strong>Params:</strong> ${modelConfig.parameters || 'N/A'}</div>
+            <div class="col-span-2 pt-1">
+                <span class="inline-block bg-blue-100 text-blue-800 rounded-full px-2 py-0.5">${modelConfig.features.multilingual ? 'Multilingual' : 'English'}</span>
+                <span class="inline-block bg-green-100 text-green-800 rounded-full px-2 py-0.5">${modelConfig.features.jsonMode ? 'JSON' : ''}</span>
+                <span class="inline-block bg-purple-100 text-purple-800 rounded-full px-2 py-0.5">${modelConfig.modality.includes('vision') ? 'Vision' : 'Text'}</span>
+            </div>
+         `;
+    } else {
+        specsDiv.innerHTML = `<p class="text-gray-400 col-span-2">Select a model to see details.</p>`;
+    }
+
+
+    // --- Column 4: Actions (Remove button) ---
     const actionDiv = document.createElement('div');
-    actionDiv.className = 'flex items-end justify-end';
+    actionDiv.className = 'flex items-center justify-end mt-2 md:mt-0';
     const removeBtn = document.createElement('button');
     removeBtn.className = 'reset-button text-xs !py-1 !px-2';
-    removeBtn.textContent = '- Remove';
+    removeBtn.innerHTML = `× Remove`; // Use an 'x' for a cleaner look
     if (getState().textProviders.length <= 1) {
         disableElement(removeBtn, true); // Don't allow removing the last one
     }
@@ -314,8 +341,8 @@ function createAiProviderRow(providerState, index) {
     });
     actionDiv.appendChild(removeBtn);
 
-    row.appendChild(providerDiv);
-    row.appendChild(modelDiv);
+    row.appendChild(selectionDiv);
+    row.appendChild(specsDiv);
     row.appendChild(actionDiv);
 
     return row;

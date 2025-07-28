@@ -63,7 +63,6 @@ export async function handleGeneratePlan() {
     const batchSize = parseInt(ui.batchSizeInput?.value, 10) || 10;
     logToConsole(`Using batch size of ${batchSize} and ${selectedProviders.length} providers.`, 'info');
 
-    let allPlanItems = [];
     let providerIndex = 0; // For round-robin
 
     for (let i = 0; i < keywords.length; i += batchSize) {
@@ -118,9 +117,94 @@ export async function handleGeneratePlan() {
     }
 }
 
-// --- Start Bulk Generation ---
+async function generateSingleBulkArticle(item, index, providerConfig, state) {
+    updatePlanItemStatusUI(index, 'Generating');
+    updateBulkPlanItem(index, { status: 'Generating', error: null });
+
+    try {
+        logToConsole(`[Worker using ${providerConfig.provider}] Generating structure for: "${item.keyword}"`, 'info');
+        
+        // 1. Generate Structure
+        const structurePrompt = getBulkStructurePrompt(item);
+        const structurePayload = {
+            providerKey: providerConfig.provider,
+            model: providerConfig.model,
+            prompt: structurePrompt
+        };
+        const structureResult = await callAI('generate', structurePayload, null, null);
+        if (!structureResult?.success || !structureResult.text) {
+            throw new Error(`Structure generation failed: ${structureResult?.error || 'No text returned'}`);
+        }
+
+        const structure = structureResult.text;
+        const outlineSections = getArticleOutlinesV2(structure);
+        if (outlineSections.length === 0) {
+            throw new Error("No primary sections were parsed from the generated structure.");
+        }
+
+        // 2. Loop through sections to generate text and images
+        let combinedArticleContent = ''; 
+        let previousSectionContent = '';
+        
+        for (let j = 0; j < outlineSections.length; j++) {
+            const section = outlineSections[j];
+
+            logToConsole(`  -> [Worker] Generating section ${j+1} for "${item.keyword}"`, 'info');
+            const textPrompt = getBulkSectionTextPrompt(item, section, previousSectionContent);
+            const textPayload = {
+                providerKey: providerConfig.provider,
+                model: providerConfig.model,
+                prompt: textPrompt
+            };
+            const textResult = await callAI('generate', textPayload, null, null);
+            if (!textResult?.success || !textResult.text) {
+                throw new Error(`Text generation failed for section ${j+1} ("${section.heading}")`);
+            }
+
+            const currentSectionText = textResult.text.trim() + '\n\n';
+            combinedArticleContent += currentSectionText;
+            previousSectionContent = currentSectionText;
+            
+            // 3. Handle Image Generation (if enabled)
+            if (state.generateImages) {
+                const imagePayload = buildBulkImagePayload(item, currentSectionText, section.heading, j + 1);
+                const imageResult = await callAI('generate_image', imagePayload, null, null);
+                if (imageResult?.success && imageResult.imageData) {
+                    const filename = imagePayload.filename;
+                    if (state.imageStorage === 'github') {
+                        // `bulkImagesToUpload` is a module-level variable accessible here
+                        bulkImagesToUpload.push({ filename: filename, base64: imageResult.imageData, articleFilename: item.filename });
+                        combinedArticleContent += `[Uploading image: ${filename}...]` + '\n\n';
+                    } else {
+                        const altText = `Image for ${section.heading.substring(0, 50)}`;
+                        combinedArticleContent += `![${altText}](data:image/png;base64,${imageResult.imageData})` + '\n\n';
+                    }
+                } else {
+                    combinedArticleContent += `[Image generation failed for this section]\n\n`;
+                }
+            }
+            await delay(200); // Small delay between sections
+        } // End section loop
+
+        // 4. Save the completed article
+        const articleFilename = item.filename || `${slugify(item.slug || item.keyword)}.md`;
+        addBulkArticle(articleFilename, combinedArticleContent);
+        updatePlanItemStatusUI(index, 'Completed');
+        updateBulkPlanItem(index, { status: 'Completed', filename: articleFilename });
+        logToConsole(`[Worker] Article COMPLETED for: ${item.keyword}`, 'success');
+
+    } catch (error) {
+        logToConsole(`[Worker] FAILED processing item ${item.keyword}: ${error.message}`, 'error');
+        updatePlanItemStatusUI(index, 'Failed', error.message);
+        updateBulkPlanItem(index, { status: 'Failed', error: error.message });
+    }
+}
+
 export async function handleStartBulkGeneration() {
-    if (isBulkRunning) { logToConsole("Bulk generation already running.", "warn"); return; }
+    if (isBulkRunning) {
+        logToConsole("Bulk generation already running.", "warn");
+        return;
+    }
     
     const state = getState();
     const selectedProviders = state.textProviders;
@@ -129,134 +213,59 @@ export async function handleStartBulkGeneration() {
         return;
     }
 
-    currentBulkPlan = getBulkPlan(); // Get a fresh copy at the start
-    if (currentBulkPlan.length === 0) { alert("Planning table is empty."); return; }
+    currentBulkPlan = getBulkPlan();
+    if (currentBulkPlan.length === 0) {
+        alert("Planning table is empty.");
+        return;
+    }
 
     isBulkRunning = true;
-    logToConsole(`Starting bulk generation with ${selectedProviders.length} providers.`, "info");
+    const concurrencyLimit = selectedProviders.length;
+    logToConsole(`Starting CONCURRENT bulk generation with ${concurrencyLimit} providers.`, "info");
 
     const ui = { 
         button: getElement('startBulkGenerationBtn'),
         downloadBulkZipBtn: getElement('downloadBulkZipBtn'),
         bulkGenProgress: getElement('bulkGenerationProgress'),
-        bulkCurrentNum: getElement('bulkCurrentNum'),
-        bulkTotalNum: getElement('bulkTotalNum'),
-        bulkCurrentKeyword: getElement('bulkCurrentKeyword'),
-        uploadProgressContainer: getElement('bulkUploadProgressContainer'),
-        uploadProgressBar: getElement('bulkUploadProgressBar'),
-        uploadProgressText: getElement('bulkUploadProgressText')
+        bulkTotalNum: getElement('bulkTotalNum')
     };
-
     disableElement(ui.button, true); 
     showElement(ui.downloadBulkZipBtn, false);
     showElement(ui.bulkGenProgress, true);
-    if(ui.bulkTotalNum) ui.bulkTotalNum.textContent = currentBulkPlan.length;
-    hideProgressBar(ui.uploadProgressBar, ui.uploadProgressContainer, ui.uploadProgressText);
     bulkImagesToUpload = [];
 
+    const itemsToProcess = currentBulkPlan
+        .map((item, index) => ({ ...item, originalIndex: index }))
+        .filter(item => !(item.status?.startsWith('Completed')));
+
+    if(ui.bulkTotalNum) ui.bulkTotalNum.textContent = itemsToProcess.length;
+    const taskQueue = [...itemsToProcess];
     let providerIndex = 0;
 
-    for (let i = 0; i < currentBulkPlan.length; i++) {
-        const item = currentBulkPlan[i];
+    const worker = async () => {
+        while (taskQueue.length > 0) {
+            const item = taskQueue.shift();
+            if (!item) continue;
 
-        const currentItemState = getBulkPlan().find(p => p.keyword === item.keyword);
-        if (currentItemState?.status === 'Completed' || currentItemState?.status?.startsWith('Completed')) {
-            logToConsole(`Skipping completed item: ${item.keyword}`, 'info');
-            updatePlanItemStatusUI(i, currentItemState.status, currentItemState.error);
-            continue;
-        }
-
-        if(ui.bulkCurrentNum) ui.bulkCurrentNum.textContent = i + 1;
-        if(ui.bulkCurrentKeyword) ui.bulkCurrentKeyword.textContent = item.keyword;
-        updatePlanItemStatusUI(i, 'Generating');
-        updateBulkPlanItem(i, { status: 'Generating', error: null });
-
-        try {
-            const structureProvider = selectedProviders[providerIndex % selectedProviders.length];
+            const providerForThisTask = selectedProviders[providerIndex % concurrencyLimit];
             providerIndex++;
-
-            logToConsole(`Generating structure for: "${item.keyword}" using ${structureProvider.provider}`, 'info');
-            const structurePrompt = getBulkStructurePrompt(item);
-            const structurePayload = {
-                providerKey: structureProvider.provider,
-                model: structureProvider.useCustom ? structureProvider.customModel : structureProvider.model,
-                prompt: structurePrompt
-            };
-            const structureResult = await callAI('generate', structurePayload, null, null);
-            if (!structureResult?.success || !structureResult.text) throw new Error(`Structure failed: ${structureResult?.error || 'No text'}`);
-
-            const structure = structureResult.text;
-            const outlineSections = getArticleOutlinesV2(structure);
-            if (outlineSections.length === 0) throw new Error("No primary sections parsed from structure.");
-
-            let combinedArticleContent = ''; 
-            let previousSectionContent = '';
             
-            for (let j = 0; j < outlineSections.length; j++) {
-                const section = outlineSections[j];
-
-                const sectionProvider = selectedProviders[providerIndex % selectedProviders.length];
-                providerIndex++;
-
-                logToConsole(`  -> Generating section ${j+1} for "${item.keyword}" using ${sectionProvider.provider}`, 'info');
-                const textPrompt = getBulkSectionTextPrompt(item, section, previousSectionContent);
-                const textPayload = {
-                    providerKey: sectionProvider.provider,
-                    model: sectionProvider.useCustom ? sectionProvider.customModel : sectionProvider.model,
-                    prompt: textPrompt
-                };
-                const textResult = await callAI('generate', textPayload, null, null);
-                if (!textResult?.success || !textResult.text) throw new Error(`Text failed section ${j+1} ("${section.heading}"): ${textResult?.error || 'No text'}`);
-
-                const currentSectionText = textResult.text.trim() + '\n\n';
-                combinedArticleContent += currentSectionText;
-                previousSectionContent = currentSectionText;
-                
-                if (state.generateImages) {
-                    const imagePayload = buildBulkImagePayload(item, currentSectionText, section.heading, j + 1);
-                    const imageResult = await callAI('generate_image', imagePayload, null, null);
-                    if (imageResult?.success && imageResult.imageData) {
-                        const filename = imagePayload.filename;
-                        const altText = `Image for ${section.heading.substring(0, 50)}`;
-                        const placeholderId = `img-placeholder-${filename.replace(/\./g, '-')}`;
-                        if (state.imageStorage === 'github') {
-                            bulkImagesToUpload.push({ filename: filename, base64: imageResult.imageData, articleFilename: item.filename, placeholderId: placeholderId });
-                            combinedArticleContent += `[Uploading image: ${filename}...]` + '\n\n';
-                            logToConsole(`Image ${filename} queued for Github upload.`, 'info');
-                        } else {
-                            combinedArticleContent += `![${altText}](data:image/png;base64,${imageResult.imageData})` + '\n\n';
-                            logToConsole(`Image for section ${j+1} embedded as base64.`, 'success');
-                        }
-                    } else {
-                        logToConsole(`Failed image gen section ${j+1}. Error: ${imageResult?.error || 'Unknown'}`, 'warn');
-                        combinedArticleContent += `[Image generation failed for this section]\n\n`;
-                    }
-                }
-                await delay(200);
-            } // End section loop
-
-            // 7. Save the completed article
-            const articleFilename = item.filename || `${slugify(item.slug || item.keyword)}.md`;
-            addBulkArticle(articleFilename, combinedArticleContent);
-            updatePlanItemStatusUI(i, 'Completed');
-            updateBulkPlanItem(i, { status: 'Completed', filename: articleFilename });
-            logToConsole(`Article generation completed for: ${item.keyword}`, 'success');
-
-        } catch (error) {
-            logToConsole(`Failed processing item ${i+1} (${item.keyword}): ${error.message}`, 'error');
-            updatePlanItemStatusUI(i, 'Failed', error.message);
-            updateBulkPlanItem(i, { status: 'Failed', error: error.message });
+            await generateSingleBulkArticle(item, item.originalIndex, providerForThisTask, state);
         }
-        await delay(500); // Delay between keywords
-    } // End main bulk loop
+    };
 
-    // 8. Finalize the process
+    const workerPromises = [];
+    for (let i = 0; i < concurrencyLimit; i++) {
+        workerPromises.push(worker());
+    }
+
+    await Promise.all(workerPromises);
+
+    logToConsole("All concurrent workers have finished their tasks.", "info");
     saveBulkArticlesState();
 
     if (state.generateImages && state.imageStorage === 'github' && bulkImagesToUpload.length > 0) {
         await uploadBulkImagesToGithub();
-    } else {
-        hideProgressBar(ui.uploadProgressBar, ui.uploadProgressContainer, ui.uploadProgressText);
     }
 
     isBulkRunning = false; 
@@ -269,12 +278,8 @@ export async function handleStartBulkGeneration() {
     }
 
     logToConsole("Bulk generation process finished.", "info");
-    alert("Bulk generation process complete. Check statuses and download ZIP if needed.");
+    alert("Concurrent bulk generation process complete. Check statuses and download ZIP if needed.");
 }
-
-// --- Build Payload Functions (Bulk Mode Specific Helpers) ---
-// Note: These prompt-building functions are now removed and imported from article-prompts.js
-//       Helper functions that remain are for parsing or packaging data.
 
 function parsePlanResponse(responseText, originalKeywords) {
     let plan = []; try { plan = JSON.parse(responseText); if (!Array.isArray(plan)) throw new Error("Not array."); plan = plan.filter(item => item && item.keyword && item.title && item.slug && item.intent); plan.forEach(item => { item.slug = slugify(item.slug || item.title || item.keyword); }); } catch (e) { logToConsole(`JSON parse failed: ${e.message}. Fallback parsing.`, 'warn'); originalKeywords.forEach(kw => { let title = `Title for ${kw}`, slug = slugify(kw), intent = 'Informational'; plan.push({ keyword: kw, title: title.replace(/^"|"$/g, ''), slug: slug, intent: intent.replace(/^"|"$/g, '') }); }); } return plan;

@@ -3,7 +3,7 @@
 import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
 import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
 import {
-    cacheDomElements, getElement, populateAiProviders, populateTextModels,
+    cacheDomElements, getElement, renderAiProviderRows, initializeProviderUI,
     populateImageModels, updateUIFromState, updateUIBasedOnMode, toggleCustomModelUI,
     populateLanguagesUI, populateDialectsUI, toggleGithubOptions, checkApiStatus,
     displaySitemapUrlsUI, updateCounts, updateStructureCountDisplay
@@ -27,6 +27,7 @@ function initializeApp() {
     let criticalMissing = false;
     criticalElementsCheck.forEach(jsKey => { if (!getElement(jsKey)) { logToConsole(`FATAL: Critical element with JS key '${jsKey}' missing after cache attempt. Cannot initialize UI.`, "error"); criticalMissing = true; } });
     if (criticalMissing) { return; }
+    initializeProviderUI();
 
     logToConsole("Loading application state...", "info");
     const initialState = loadState();
@@ -62,17 +63,6 @@ function setupConfigurationListeners() {
 
     forceReloadBtn?.addEventListener('click', () => { logToConsole("Attempting hard refresh...", "warn"); location.reload(true); });
     resetDataBtn?.addEventListener('click', resetAllData);
-
-    aiProviderSelect?.addEventListener('change', (e) => {
-        const newProvider = e.target.value;
-        updateState({ textProvider: newProvider, textModel: '', useCustomTextModel: false }); 
-        populateTextModels(true); 
-        const selectedDefaultModel = getElement('aiModelSelect')?.value || '';
-        updateState({ textModel: selectedDefaultModel }); 
-        if(useCustomAiModelCheckbox) useCustomAiModelCheckbox.checked = false; 
-        toggleCustomModelUI('text'); 
-        checkApiStatus(); 
-    });
 
     aiModelSelect?.addEventListener('change', (e) => {
         if (!getElement('useCustomAiModelCheckbox')?.checked) {
