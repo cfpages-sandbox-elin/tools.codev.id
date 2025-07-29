@@ -1,21 +1,15 @@
 /**
  * =================================================================================
- * CORS Bypass Proxy for Cloudflare Functions
+ * CORS Bypass & YouTube Transcript Fetcher
  * =================================================================================
- * This function acts as a secure proxy to fetch content from whitelisted domains,
- * bypassing client-side CORS restrictions.
+ * Now with a dedicated mode to fetch YouTube transcripts directly,
+ * removing the need for third-party services.
  *
  * Endpoint: /bypass-cors
- * Method: POST, GET (for debug)
- * Body: { "url": "https://target-url.com" }
+ * Modes:
+ *  - 'youtube': { "mode": "youtube", "videoId": "..." }
+ *  - 'proxy' (default): { "url": "..." }
  */
-
-// --- Security: Whitelist allowed hostnames ---
-const ALLOWED_HOSTNAMES = [
-  'www.youtube.com',
-  'youtube.com',
-  'youtube-transcript-api.com',
-];
 
 // --- Reusable Helper Functions ---
 const jsonResponse = (data, status = 200) => {
@@ -31,7 +25,6 @@ const jsonResponse = (data, status = 200) => {
 };
 
 const handleOptions = (request) => {
-  // Always respond to OPTIONS requests with CORS headers for preflight checks.
   return new Response(null, {
     headers: {
       'Access-Control-Allow-Origin': '*',
@@ -41,66 +34,108 @@ const handleOptions = (request) => {
   });
 };
 
-// --- Main Request Handler (Modern Syntax) ---
+// --- Main Request Handler ---
 export async function onRequest({ request }) {
 
-  // Handle CORS preflight requests first.
-  if (request.method === 'OPTIONS') {
-    return handleOptions(request);
-  }
+  if (request.method === 'OPTIONS') return handleOptions(request);
+  if (request.method === 'GET') return jsonResponse({ status: "ok", message: "YouTube Transcript Fetcher is live!" }, 200);
+  if (request.method !== 'POST') return new Response(`Method Not Allowed`, { status: 405 });
 
-  // Handle GET requests for simple debugging.
-  if (request.method === 'GET') {
-    return jsonResponse({
-      status: "ok",
-      message: "bypass-cors function is running and correctly deployed!",
-      timestamp: new Date().toISOString()
-    }, 200);
-  }
-
-  // From here, we only handle POST requests.
-  if (request.method !== 'POST') {
-    return new Response(`Method Not Allowed`, { status: 405 });
-  }
-
-  // --- Main Logic for POST ---
-  let targetUrl;
   try {
     const body = await request.json();
-    targetUrl = body.url;
+    const mode = body.mode || 'proxy'; // Default to 'proxy' for backwards compatibility
 
-    if (!targetUrl) {
-      return jsonResponse({ error: 'The "url" property is missing in the request body.' }, 400);
-    }
-    
-    const urlObject = new URL(targetUrl);
+    if (mode === 'youtube') {
+      const { videoId } = body;
+      if (!videoId) return jsonResponse({ error: 'Missing "videoId" for YouTube mode.' }, 400);
+      
+      return await fetchYouTubeTranscript(videoId);
 
-    // Security Check: Ensure the requested hostname is in our whitelist.
-    if (!ALLOWED_HOSTNAMES.includes(urlObject.hostname)) {
-      console.warn(`Forbidden request to non-whitelisted hostname: ${urlObject.hostname}`);
-      return jsonResponse({ error: 'Requests to this host are not allowed.' }, 403);
+    } else if (mode === 'proxy') {
+      const { url } = body;
+      if (!url) return jsonResponse({ error: 'Missing "url" for proxy mode.' }, 400);
+
+      const urlObject = new URL(url);
+      const ALLOWED_HOSTNAMES = ['www.some-other-allowed-site.com']; // Keep for other potential uses
+      if (!ALLOWED_HOSTNAMES.includes(urlObject.hostname)) {
+        return jsonResponse({ error: 'Requests to this host are not allowed in proxy mode.' }, 403);
+      }
+      
+      const response = await fetch(url, { headers: { 'User-Agent': 'Cloudflare-Function-Proxy/1.0' } });
+      const newResponse = new Response(response.body, response);
+      newResponse.headers.set('Access-Control-Allow-Origin', '*');
+      return newResponse;
+
+    } else {
+      return jsonResponse({ error: `Unknown mode: ${mode}` }, 400);
     }
 
   } catch (err) {
     return jsonResponse({ error: `Invalid request: ${err.message}` }, 400);
   }
+}
 
-  // --- Perform the actual fetch to the target URL ---
+/**
+ * Fetches transcript directly from YouTube.
+ * @param {string} videoId The YouTube video ID.
+ */
+async function fetchYouTubeTranscript(videoId) {
   try {
-    const response = await fetch(targetUrl, {
-      headers: { 'User-Agent': 'Cloudflare-Function-Proxy/1.0' }
+    // 1. Fetch the main video page HTML
+    const videoPageResponse = await fetch(`https://www.youtube.com/watch?v=${videoId}`);
+    if (!videoPageResponse.ok) {
+        return jsonResponse({ error: `Could not fetch YouTube video page (Status: ${videoPageResponse.status})` }, 502);
+    }
+    const videoPageHtml = await videoPageResponse.text();
+
+    // 2. Parse the HTML to find the caption track URL
+    // This is a complex regex to find the right JavaScript object in the page source.
+    const captionsJsonRegex = /"captionTracks":(\[.*?\])/;
+    const match = videoPageHtml.match(captionsJsonRegex);
+
+    if (!match || !match[1]) {
+      return jsonResponse({ error: "Could not find transcript data in the video page. Captions may be disabled." }, 404);
+    }
+
+    const captionTracks = JSON.parse(match[1]);
+    
+    // Find the English auto-generated caption track, or the first available one.
+    const transcriptUrl = captionTracks.find(t => t.languageCode === 'en' && t.kind === 'asr')?.baseUrl ||
+                          captionTracks[0]?.baseUrl;
+
+    if (!transcriptUrl) {
+      return jsonResponse({ error: "No usable caption track URL found." }, 404);
+    }
+
+    // 3. Fetch the actual transcript data (which is in XML format)
+    const transcriptResponse = await fetch(transcriptUrl);
+     if (!transcriptResponse.ok) {
+        return jsonResponse({ error: `Could not fetch transcript XML (Status: ${transcriptResponse.status})` }, 502);
+    }
+    const transcriptXml = await transcriptResponse.text();
+
+    // 4. Parse the XML and convert it to the JSON format our app wants
+    const lines = [...transcriptXml.matchAll(/<text start="([^"]+)" dur="[^"]+">([^<]+)<\/text>/g)];
+    const transcriptJson = lines.map(lineMatch => {
+        const start = parseFloat(lineMatch[1]);
+        // Decode HTML entities like &
+        const text = lineMatch[2].replace(/&#39;/g, "'")
+                                 .replace(/&quot;/g, '"')
+                                 .replace(/"/g, '"')
+                                 .replace(/'/g, "'")
+                                 .replace(/&/g, '&')
+                                 .replace(/'/g, "'");
+
+        return {
+            text: text,
+            start: start,
+        };
     });
-    
-    // Re-create the response to add our own CORS headers.
-    const newResponse = new Response(response.body, response);
-    
-    // Add CORS headers to the final response.
-    newResponse.headers.set('Access-Control-Allow-Origin', '*');
-    newResponse.headers.set('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
-    
-    return newResponse;
+
+    return jsonResponse(transcriptJson, 200);
 
   } catch (error) {
-    return jsonResponse({ error: `Failed to fetch from target URL: ${error.message}` }, 502);
+    console.error("YouTube transcript fetch error:", error);
+    return jsonResponse({ error: `An internal error occurred: ${error.message}` }, 500);
   }
 }

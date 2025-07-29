@@ -49,32 +49,34 @@ document.addEventListener('DOMContentLoaded', () => {
      * @returns {Promise<object>} A promise that resolves to an object with { fullText, timedText }.
      */
     async function getYouTubeTranscript(videoId) {
-        console.log(`Fetching transcript for video ID: ${videoId}`);
-        // This free API returns a JSON transcript. We'll use our bypass to get it.
-        const transcriptApiUrl = `https://youtube-transcript-api.com/?video_id=${videoId}`;
-
+        console.log(`Requesting transcript for video ID: ${videoId} from our backend.`);
+        
         const response = await fetch('/bypass-cors', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: transcriptApiUrl }),
+            body: JSON.stringify({
+                mode: 'youtube', // Use the new dedicated mode
+                videoId: videoId
+            }),
         });
 
         if (!response.ok) {
-            throw new Error(`Failed to fetch transcript. Status: ${response.status}`);
+            let errorJson;
+            try { errorJson = await response.json(); } catch (e) {}
+            const errorMessage = errorJson?.error || `Failed to fetch transcript. Status: ${response.status}`;
+            throw new Error(errorMessage);
         }
 
         const transcriptData = await response.json();
         
         if (!Array.isArray(transcriptData) || transcriptData.length === 0) {
-            throw new Error('Transcript not found or is empty. The video may not have captions enabled.');
+            throw new Error('Transcript not found or is empty.');
         }
 
         // Process the data into the format our app expects.
+        // The backend now returns { text: "...", start: seconds }
         const fullText = transcriptData.map(line => line.text).join(' ');
-        const timedText = transcriptData.map(line => ({
-            start: line.offset / 1000, // Convert milliseconds to seconds
-            text: line.text,
-        }));
+        const timedText = transcriptData; // The format is already correct!
         
         return { fullText, timedText };
     }
