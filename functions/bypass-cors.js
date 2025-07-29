@@ -6,130 +6,101 @@
  * bypassing client-side CORS restrictions.
  *
  * Endpoint: /bypass-cors
- * Method: POST
+ * Method: POST, GET (for debug)
  * Body: { "url": "https://target-url.com" }
  */
 
-// SECURITY: Only allow requests to these specific hostnames.
-// This prevents the function from being used as an open proxy for malicious activities.
+// --- Security: Whitelist allowed hostnames ---
 const ALLOWED_HOSTNAMES = [
   'www.youtube.com',
   'youtube.com',
-  // A simple, free API to get YouTube transcripts by video ID.
-  'youtube-transcript-api.com', 
+  'youtube-transcript-api.com',
 ];
 
-// Standard CORS headers.
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*', // Or specify your domain for better security
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+// --- Reusable Helper Functions ---
+const jsonResponse = (data, status = 200) => {
+  return new Response(JSON.stringify(data), {
+    status: status,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    }
+  });
 };
 
-/**
- * Handles CORS preflight requests (OPTIONS).
- */
-function handleOptions(request) {
-  if (
-    request.headers.get('Origin') !== null &&
-    request.headers.get('Access-Control-Request-Method') !== null &&
-    request.headers.get('Access-Control-Request-Headers') !== null
-  ) {
-    // Handle CORS preflight requests.
-    return new Response(null, {
-      headers: CORS_HEADERS,
+const handleOptions = (request) => {
+  // Always respond to OPTIONS requests with CORS headers for preflight checks.
+  return new Response(null, {
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    }
+  });
+};
+
+// --- Main Request Handler (Modern Syntax) ---
+export async function onRequest({ request }) {
+
+  // Handle CORS preflight requests first.
+  if (request.method === 'OPTIONS') {
+    return handleOptions(request);
+  }
+
+  // Handle GET requests for simple debugging.
+  if (request.method === 'GET') {
+    return jsonResponse({
+      status: "ok",
+      message: "bypass-cors function is running and correctly deployed!",
+      timestamp: new Date().toISOString()
+    }, 200);
+  }
+
+  // From here, we only handle POST requests.
+  if (request.method !== 'POST') {
+    return new Response(`Method Not Allowed`, { status: 405 });
+  }
+
+  // --- Main Logic for POST ---
+  let targetUrl;
+  try {
+    const body = await request.json();
+    targetUrl = body.url;
+
+    if (!targetUrl) {
+      return jsonResponse({ error: 'The "url" property is missing in the request body.' }, 400);
+    }
+    
+    const urlObject = new URL(targetUrl);
+
+    // Security Check: Ensure the requested hostname is in our whitelist.
+    if (!ALLOWED_HOSTNAMES.includes(urlObject.hostname)) {
+      console.warn(`Forbidden request to non-whitelisted hostname: ${urlObject.hostname}`);
+      return jsonResponse({ error: 'Requests to this host are not allowed.' }, 403);
+    }
+
+  } catch (err) {
+    return jsonResponse({ error: `Invalid request: ${err.message}` }, 400);
+  }
+
+  // --- Perform the actual fetch to the target URL ---
+  try {
+    const response = await fetch(targetUrl, {
+      headers: { 'User-Agent': 'Cloudflare-Function-Proxy/1.0' }
     });
-  } else {
-    // Handle standard OPTIONS request.
-    return new Response(null, {
-      headers: {
-        Allow: 'POST, OPTIONS',
-      },
-    });
+    
+    // Re-create the response to add our own CORS headers.
+    const newResponse = new Response(response.body, response);
+    
+    // Add CORS headers to the final response.
+    newResponse.headers.set('Access-Control-Allow-Origin', '*');
+    newResponse.headers.set('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+    
+    return newResponse;
+
+  } catch (error) {
+    return jsonResponse({ error: `Failed to fetch from target URL: ${error.message}` }, 502);
   }
 }
-
-/**
- * Main fetch handler.
- */
-export default {
-  async fetch(request, env) {
-    if (request.method === 'GET') {
-      return new Response(JSON.stringify({
-        status: "ok",
-        message: "bypass-cors function is running!",
-        timestamp: new Date().toISOString()
-      }), {
-        status: 200,
-        headers: {
-          ...CORS_HEADERS, // Use existing CORS headers
-          'Content-Type': 'application/json'
-        },
-      });
-    }
-
-    // --- Handle CORS preflight (OPTIONS) requests ---
-    if (request.method === 'OPTIONS') {
-      return handleOptions(request); // Assumes handleOptions function exists above
-    }
-
-    // --- Handle actual proxy (POST) requests ---
-    if (request.method !== 'POST') {
-      return new Response('Method Not Allowed. This endpoint only accepts POST.', {
-        status: 405,
-        headers: CORS_HEADERS
-      });
-    }
-
-    // --- Main Logic for POST ---
-    let targetUrl;
-    try {
-      const body = await request.json();
-      targetUrl = body.url;
-
-      if (!targetUrl) {
-        throw new Error('The "url" property is missing in the request body.');
-      }
-      
-      const urlObject = new URL(targetUrl);
-
-      // Security Check
-      if (!ALLOWED_HOSTNAMES.includes(urlObject.hostname)) {
-        console.warn(`Forbidden request to non-whitelisted hostname: ${urlObject.hostname}`);
-        return new Response(JSON.stringify({ error: 'Requests to this host are not allowed.' }), {
-          status: 403, // Forbidden
-          headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
-        });
-      }
-
-    } catch (err) {
-      return new Response(JSON.stringify({ error: `Invalid request: ${err.message}` }), {
-        status: 400, // Bad Request
-        headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // --- Perform the actual fetch ---
-    try {
-      const response = await fetch(targetUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
-      });
-      
-      const newResponse = new Response(response.body, response);
-      newResponse.headers.set('Content-Type', response.headers.get('Content-Type') || 'text/plain');
-      Object.entries(CORS_HEADERS).forEach(([key, value]) => {
-        newResponse.headers.set(key, value);
-      });
-      
-      return newResponse;
-
-    } catch (error) {
-      return new Response(JSON.stringify({ error: `Failed to fetch from target URL: ${error.message}` }), {
-        status: 502, // Bad Gateway
-        headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
-      });
-    }
-  },
-};
