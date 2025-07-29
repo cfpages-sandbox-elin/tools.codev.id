@@ -116,26 +116,111 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const transcriptData = await getYouTubeTranscript(url);
-            const prompt = createAnalysisPrompt(transcriptData.fullText);
-            const aiResult = await fetchAiAnalysis(prompt);
 
-            if (aiResult.success) {
-                const analysis = JSON.parse(aiResult.text);
-                renderResults(analysis, transcriptData.timedText);
-            } else {
-                throw new Error(aiResult.error);
-            }
+            localStorage.setItem('currentTranscriptData', JSON.stringify(transcriptData));
+            console.log("Transcript data saved to localStorage.");
+
+            renderTranscript(transcriptData);
+
         } catch (error) {
-            console.error("Analysis failed:", error);
-            showError(error.message || "An unknown error occurred.");
+            console.error("Transcript fetching failed:", error);
+            showError(error.message || "An unknown error occurred during transcript fetching.");
         } finally {
             loader.classList.add('hidden');
         }
     }
 
-    // --- UI Update Functions (renderResults, resetState, etc.) ---
-    // These functions can remain the same as the previous light/dark mode version
-    // ... (pasting them here for completeness) ...
+    function renderTranscript(transcriptData) {
+        const transcriptContainer = document.getElementById('transcript-container');
+        if (!transcriptContainer) return;
+
+        const transcriptHtml = transcriptData.timedText.map(line =>
+            `<div class="flex items-start gap-3 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-slate-700/50">
+                <span class="text-xs font-mono bg-gray-200 dark:bg-slate-700 text-indigo-600 dark:text-sky-400 px-2 py-1 rounded">${parseFloat(line.start).toFixed(1)}s</span>
+                <p class="flex-1 text-gray-800 dark:text-slate-300">${line.text}</p>
+            </div>`
+        ).join('');
+
+        transcriptContainer.innerHTML = `
+            <div class="bg-white dark:bg-slate-800/50 p-5 rounded-lg shadow-md">
+                <details>
+                    <summary class="cursor-pointer text-xl font-semibold text-indigo-500 dark:text-sky-300 hover:text-indigo-700 dark:hover:text-sky-200">View Full Transcript (${transcriptData.timedText.length} lines)</summary>
+                    <div class="mt-4 space-y-2 border-t border-gray-200 dark:border-slate-700 pt-4">${transcriptHtml}</div>
+                </details>
+                <div class="mt-4 text-right">
+                    <button id="analyze-transcript-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition-colors">
+                        Analyze Transcript 🤖
+                    </button>
+                </div>
+            </div>
+        `;
+
+        // IMPORTANT: Add the event listener to the newly created button
+        document.getElementById('analyze-transcript-btn').addEventListener('click', handleAiAnalysis);
+    }
+
+    async function handleAiAnalysis() {
+        const analyzeBtn = document.getElementById('analyze-transcript-btn');
+        const analysisContainer = document.getElementById('analysis-container');
+        if (!analysisContainer) return;
+
+        // Show a loading state on the button
+        analyzeBtn.disabled = true;
+        analyzeBtn.innerHTML = 'Analyzing... <span class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white ml-2"></span>';
+        
+        try {
+            // Step 1: Retrieve transcript from localStorage
+            const storedData = localStorage.getItem('currentTranscriptData');
+            if (!storedData) {
+                throw new Error("No transcript data found in storage. Please fetch a transcript first.");
+            }
+            const transcriptData = JSON.parse(storedData);
+
+            // Step 2: Create prompt and call AI
+            const prompt = createAnalysisPrompt(transcriptData.fullText);
+            const aiResult = await fetchAiAnalysis(prompt);
+
+            if (aiResult.success) {
+                const analysis = JSON.parse(aiResult.text);
+                renderAnalysis(analysis); // Render the new content
+            } else {
+                throw new Error(aiResult.error);
+            }
+        } catch (error) {
+            console.error("AI Analysis failed:", error);
+            showError(error.message || "An unknown error occurred during AI analysis.");
+        } finally {
+            // Hide the button after analysis is done to prevent re-analysis
+            analyzeBtn.style.display = 'none'; 
+        }
+    }
+
+    function renderAnalysis(analysis) {
+        const analysisContainer = document.getElementById('analysis-container');
+        if (!analysisContainer) return;
+        
+        const createSection = (title, items) => {
+            if (!items || items.length === 0) return '';
+            const listItems = items.map(item => `<li class="p-3 bg-gray-100 dark:bg-slate-800 rounded-md shadow-sm">${item}</li>`).join('');
+            return `
+                <div class="bg-white dark:bg-slate-800/50 p-5 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-semibold text-indigo-500 dark:text-sky-300 mb-4">${title}</h2>
+                    <ul class="space-y-3 text-gray-700 dark:text-slate-300">${listItems}</ul>
+                </div>
+            `;
+        };
+
+        analysisContainer.innerHTML = `
+            <div class="bg-white dark:bg-slate-800/50 p-5 rounded-lg shadow-md">
+                <h2 class="text-2xl font-semibold text-indigo-500 dark:text-sky-300 mb-4">Summary 📝</h2>
+                <p class="text-gray-700 dark:text-slate-300 leading-relaxed">${analysis.summary}</p>
+            </div>
+            ${createSection("Key Takeaways 🔑", analysis.takeaways)}
+            ${createSection("Ideas from Content 💡", analysis.extracted_ideas)}
+            ${createSection("Further Ideas ✨", analysis.further_ideas)}
+        `;
+    }
+
     function renderResults(analysis, timedText) {
         const createSection = (title, items) => {
             if (!items || items.length === 0) return '';
@@ -169,12 +254,20 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
     }
+
     function resetState() {
         loader.classList.add('hidden');
         errorMessage.classList.add('hidden');
         errorMessage.textContent = '';
-        outputContent.innerHTML = '';
+        // Clear both containers
+        const transcriptContainer = document.getElementById('transcript-container');
+        const analysisContainer = document.getElementById('analysis-container');
+        if (transcriptContainer) transcriptContainer.innerHTML = '';
+        if (analysisContainer) analysisContainer.innerHTML = '';
+        // Clear localStorage
+        localStorage.removeItem('currentTranscriptData');
     }
+
     function showError(message) {
         errorMessage.textContent = `Error: ${message}`;
         errorMessage.classList.remove('hidden');
