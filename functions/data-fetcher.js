@@ -1,9 +1,10 @@
 /**
  * =================================================================================
- * Data Fetcher v5 (Production Ready)
+ * Data Fetcher v6 (Expert Headers)
  * =================================================================================
- * This version includes enhanced logging and a more resilient XML parser
- * to handle variations in YouTube's transcript format.
+ * This version mimics browser headers more closely when fetching the final
+ * transcript data, which is crucial for bypassing YouTube's anti-scraping
+ * measures that can return an empty body.
  *
  * Endpoint: /data-fetcher
  */
@@ -25,7 +26,7 @@ const handleOptions = (request) => {
 // --- Main Request Handler ---
 export async function onRequest({ request }) {
   if (request.method === 'OPTIONS') return handleOptions(request);
-  if (request.method === 'GET') return jsonResponse({ status: "ok", message: "Data Fetcher v5 (Production Ready) is live!" }, 200);
+  if (request.method === 'GET') return jsonResponse({ status: "ok", message: "Data Fetcher v6 (Expert Headers) is live!" }, 200);
   if (request.method !== 'POST') return new Response(`Method Not Allowed`, { status: 405 });
 
   try {
@@ -47,8 +48,8 @@ export async function onRequest({ request }) {
  */
 async function getTranscriptFromYouTube(videoId) {
   try {
-    // 1. Fetch video page to get player response
-    const videoPageUrl = `https://www.youtube.com/watch?v=${videoId}&lang=en`;
+    // 1. Fetch video page
+    const videoPageUrl = `https://www.youtube.com/watch?v=${videoId}`;
     console.log(`[${videoId}] Step 1: Fetching video page...`);
     const pageResponse = await fetch(videoPageUrl, {
       headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36' }
@@ -57,13 +58,13 @@ async function getTranscriptFromYouTube(videoId) {
     const html = await pageResponse.text();
 
     const playerResponseMatch = html.match(/var ytInitialPlayerResponse = ({.*?});/);
-    if (!playerResponseMatch) return jsonResponse({ error: "Could not find player data. Video may be private or restricted." }, 404);
+    if (!playerResponseMatch) return jsonResponse({ error: "Could not find player data in HTML." }, 404);
     
     let playerResponse;
     try {
         playerResponse = JSON.parse(playerResponseMatch[1]);
     } catch(e) {
-        return jsonResponse({ error: "Could not parse YouTube's video data. The page format may have changed." }, 500);
+        return jsonResponse({ error: "Could not parse YouTube's video data." }, 500);
     }
     
     // 2. Find best available English transcript URL
@@ -78,17 +79,26 @@ async function getTranscriptFromYouTube(videoId) {
 
     if (!transcriptInfo || !transcriptInfo.baseUrl) return jsonResponse({ error: "Could not find an English transcript for this video." }, 404);
     
-    console.log(`[${videoId}] Step 2: Found transcript URL. Fetching XML...`);
+    console.log(`[${videoId}] Step 2: Found transcript URL. Fetching XML with enhanced headers...`);
 
-    // 3. Fetch the transcript XML
-    const xmlResponse = await fetch(transcriptInfo.baseUrl);
+    // 3. Fetch the transcript XML with browser-like headers
+    const xmlResponse = await fetch(transcriptInfo.baseUrl, {
+        headers: {
+            'Accept-Language': 'en-US,en;q=0.9',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
+        }
+    });
     if (!xmlResponse.ok) return jsonResponse({ error: `Could not fetch transcript XML (Status: ${xmlResponse.status})` }, 502);
     const xmlText = await xmlResponse.text();
 
-    // *** ENHANCED LOGGING & PARSING ***
-    console.log(`[${videoId}] Step 3: Received XML data (first 500 chars): ${xmlText.substring(0, 500)}`);
+    if (!xmlText) {
+        console.error(`[${videoId}] The fetched transcript XML was empty.`);
+        return jsonResponse({ error: "YouTube returned an empty transcript file." }, 404);
+    }
+
+    console.log(`[${videoId}] Step 3: Received XML data (length: ${xmlText.length}). Parsing...`);
     
-    // Using a more resilient, non-greedy regex to capture text content.
+    // 4. Parse the XML
     const lines = [...xmlText.matchAll(/<text start="([^"]+)" dur="[^"]+">(.*?)<\/text>/gs)];
     const transcriptJson = lines.map(lineMatch => {
         const text = lineMatch[2]
