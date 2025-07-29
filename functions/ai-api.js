@@ -624,6 +624,175 @@ const aiTextProviders = {
             }
         ]
     },
+    google: {
+        models: [
+            {
+                id: 'gemini-2.5-pro',
+                name: 'Gemini 2.5 Pro',
+                developer: 'Google',
+                provider: 'Google',
+                description: 'Best for complex coding, reasoning, and multimodal understanding, with a very long context window.',
+                modality: ['multimodal'],
+                parameters: 'Unknown',
+                contextWindow: 2000000, // 2M tokens
+                maxOutputTokens: 8192,
+                knowledgeCutoff: '2025-01',
+                pricing: {
+                    currency: 'USD', unit: 'per_1m_tokens', input: null, output: null,
+                    tiers: [
+                        { name: 'Up to 200K tokens', input: 1.25, output: 10.00 },
+                        { name: 'Over 200K tokens', input: 2.50, output: 15.00 }
+                    ]
+                },
+                rateLimits: { requestsPerMinute: 150, tokensPerMinute: null, requestsPerDay: null, tokensPerDay: null },
+                features: { vision: true, toolUse: true, jsonMode: true, extendedThinking: true, multilingual: true },
+            },
+            {
+                id: 'gemini-2.5-flash',
+                name: 'Gemini 2.5 Flash',
+                developer: 'Google',
+                provider: 'Google',
+                description: 'Best for large scale processing, agentic use cases, and tasks requiring low latency and high volume.',
+                modality: ['multimodal'],
+                parameters: 'Unknown',
+                contextWindow: 1000000, // 1M tokens
+                maxOutputTokens: 8192,
+                knowledgeCutoff: '2025-01',
+                pricing: { currency: 'USD', unit: 'per_1m_tokens', input: 0.30, output: 2.50 },
+                rateLimits: {
+                    requestsPerMinute: 1000, tokensPerMinute: null, requestsPerDay: null, tokensPerDay: null,
+                    tiers: [{ name: 'Free Tier', requestsPerMinute: 10, requestsPerDay: 500 }]
+                },
+                features: { vision: true, toolUse: true, jsonMode: true, extendedThinking: true, multilingual: true },
+            },
+            {
+                id: 'gemini-2.5-flash-lite',
+                name: 'Gemini 2.5 Flash-Lite',
+                developer: 'Google',
+                provider: 'Google',
+                description: 'A lower-cost version of Flash, ideal for data transformation, translation, and summarization at scale.',
+                modality: ['multimodal'],
+                parameters: 'Unknown',
+                contextWindow: 1000000, // 1M tokens
+                maxOutputTokens: 8192,
+                knowledgeCutoff: '2025-01',
+                pricing: { currency: 'USD', unit: 'per_1m_tokens', input: 0.10, output: 0.40 },
+                rateLimits: {
+                    requestsPerMinute: 4000, tokensPerMinute: null, requestsPerDay: null, tokensPerDay: null,
+                    tiers: [{ name: 'Free Tier', requestsPerMinute: 15, requestsPerDay: 500 }]
+                },
+                features: { vision: true, toolUse: true, jsonMode: true, extendedThinking: false, multilingual: true },
+            },
+            {
+                id: 'gemini-2.0-flash',
+                name: 'Gemini 2.0 Flash',
+                developer: 'Google',
+                provider: 'Google',
+                description: 'Excellent for multimodal understanding, realtime streaming, and native tool use.',
+                modality: ['multimodal'],
+                parameters: 'Unknown',
+                contextWindow: 1000000, // 1M tokens
+                maxOutputTokens: 8192,
+                knowledgeCutoff: '2024-08',
+                pricing: { currency: 'USD', unit: 'per_1m_tokens', input: 0.10, output: 0.40 },
+                rateLimits: {
+                    requestsPerMinute: 2000, tokensPerMinute: null, requestsPerDay: null, tokensPerDay: null,
+                    tiers: [{ name: 'Free Tier', requestsPerMinute: 15, requestsPerDay: 1500 }]
+                },
+                features: { vision: true, toolUse: true, jsonMode: true, extendedThinking: false, multilingual: true },
+            },
+            {
+                id: 'gemini-2.0-flash-lite',
+                name: 'Gemini 2.0 Flash-Lite',
+                developer: 'Google',
+                provider: 'Google',
+                description: 'Optimized for long context, realtime streaming, and native tool use at a lower cost.',
+                modality: ['multimodal'],
+                parameters: 'Unknown',
+                contextWindow: 1000000, // 1M tokens
+                maxOutputTokens: 8192,
+                knowledgeCutoff: '2024-08',
+                pricing: { currency: 'USD', unit: 'per_1m_tokens', input: 0.075, output: 0.30 },
+                rateLimits: {
+                    requestsPerMinute: 4000, tokensPerMinute: null, requestsPerDay: null, tokensPerDay: null,
+                    tiers: [{ name: 'Free Tier', requestsPerMinute: 30, requestsPerDay: 1500 }]
+                },
+                features: { vision: true, toolUse: true, jsonMode: true, extendedThinking: false, multilingual: true },
+            },
+            {
+                id: 'gemma-3-27b-it',
+                name: 'Gemma 3 27B',
+                developer: 'Google',
+                provider: 'Google',
+                description: 'Free-to-use multimodal model for visual/text processing, translation, and summarization.',
+                modality: ['multimodal'],
+                parameters: '27B',
+                contextWindow: 98304,
+                maxOutputTokens: 16384,
+                knowledgeCutoff: '2024-08',
+                pricing: { currency: 'USD', unit: 'per_1m_tokens', input: 0.00, output: 0.00 },
+                rateLimits: {
+                    requestsPerMinute: null, tokensPerMinute: null, requestsPerDay: null, tokensPerDay: null,
+                    tiers: [{ name: 'Free Tier', requestsPerMinute: 30, requestsPerDay: 14400 }]
+                },
+                features: { vision: true, toolUse: true, jsonMode: true, extendedThinking: false, multilingual: true },
+            },
+            {
+                id: 'gemma-3-12b-it',
+                name: 'Gemma 3 12B',
+                developer: 'Google',
+                provider: 'Google',
+                description: 'Free-to-use multimodal model for visual/text processing, translation, and summarization.',
+                modality: ['multimodal'],
+                parameters: '12B',
+                contextWindow: 98304,
+                maxOutputTokens: 16384,
+                knowledgeCutoff: '2024-08',
+                pricing: { currency: 'USD', unit: 'per_1m_tokens', input: 0.00, output: 0.00 },
+                rateLimits: {
+                    requestsPerMinute: null, tokensPerMinute: null, requestsPerDay: null, tokensPerDay: null,
+                    tiers: [{ name: 'Free Tier', requestsPerMinute: 30, requestsPerDay: 14400 }]
+                },
+                features: { vision: true, toolUse: true, jsonMode: true, extendedThinking: false, multilingual: true },
+            },
+            {
+                id: 'gemma-3n-e4b-it',
+                name: 'Gemma 3n E4B',
+                developer: 'Google',
+                provider: 'Google',
+                description: 'Free-to-use, low-latency model for data transformation, translation, and summarization.',
+                modality: ['multimodal'],
+                parameters: '4B',
+                contextWindow: 32768, // A reasonable estimate, though not specified
+                maxOutputTokens: 8192,
+                knowledgeCutoff: '2024-08',
+                pricing: { currency: 'USD', unit: 'per_1m_tokens', input: 0.00, output: 0.00 },
+                rateLimits: {
+                    requestsPerMinute: null, tokensPerMinute: null, requestsPerDay: null, tokensPerDay: null,
+                    tiers: [{ name: 'Free Tier', requestsPerMinute: 30, requestsPerDay: 14400 }]
+                },
+                features: { vision: true, toolUse: true, jsonMode: true, extendedThinking: false, multilingual: true },
+            },
+            {
+                id: 'gemma-3n-e2b-it',
+                name: 'Gemma 3n E2B',
+                developer: 'Google',
+                provider: 'Google',
+                description: 'Free-to-use, low-latency model for data transformation, translation, and summarization.',
+                modality: ['multimodal'],
+                parameters: '2B',
+                contextWindow: 32768, // A reasonable estimate, though not specified
+                maxOutputTokens: 8192,
+                knowledgeCutoff: '2024-08',
+                pricing: { currency: 'USD', unit: 'per_1m_tokens', input: 0.00, output: 0.00 },
+                rateLimits: {
+                    requestsPerMinute: null, tokensPerMinute: null, requestsPerDay: null, tokensPerDay: null,
+                    tiers: [{ name: 'Free Tier', requestsPerMinute: 30, requestsPerDay: 14400 }]
+                },
+                features: { vision: true, toolUse: true, jsonMode: true, extendedThinking: false, multilingual: true },
+            },
+        ]
+    },
 };
 
 const aiImageProviders = {
