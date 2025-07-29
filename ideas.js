@@ -2,23 +2,59 @@ import { updateState, getState } from './ideas-state.js';
 import { getProviderConfig, getTranscript, getAiAnalysis } from './ideas-api.js';
 import { cacheElements, initApiKeyUI, showError, toggleLoader, resetOutput, renderTranscriptUI, renderAnalysisUI } from './ideas-ui.js';
 import { createAnalysisPrompt } from './ideas-prompts.js';
+import { getYouTubeVideoId } from './ideas-helpers.js';
 
 // --- Event Handlers (must be exportable to be used in UI module) ---
 
 async function handleFetchTranscript() {
-    const urlInput = document.getElementById('url-input'); // Direct access for simplicity here
+    const urlInput = document.getElementById('url-input');
     const url = urlInput.value.trim();
-    if (!url) { showError("Please enter a URL."); return; }
-    if (!getState().supadataApiKey) { showError("Please enter your Supadata API Key first."); return; }
+    if (!url) {
+        showError("Please enter a URL.");
+        return;
+    }
+
+    const videoId = getYouTubeVideoId(url);
+    if (!videoId) {
+        showError("Could not find a valid YouTube Video ID in the URL.");
+        return;
+    }
+    
+    if (!getState().supadataApiKey) {
+        showError("Please enter your Supadata API Key first.");
+        return;
+    }
 
     resetOutput();
     toggleLoader(true);
     updateState({ isLoading: true });
 
     try {
-        const transcriptData = await getTranscript(url);
+        let transcriptData = null;
+        const cacheKey = `transcript_${videoId}`;
+
+        // 1. Check localStorage for a cached version
+        const cachedTranscript = localStorage.getItem(cacheKey);
+
+        if (cachedTranscript) {
+            console.log(`Loading transcript for video ID [${videoId}] from cache.`);
+            // A small delay to make the UI feel responsive even when loading instantly
+            await new Promise(resolve => setTimeout(resolve, 200)); 
+            transcriptData = JSON.parse(cachedTranscript);
+        } else {
+            console.log(`Transcript for video ID [${videoId}] not in cache. Fetching from API...`);
+            // 2. If not cached, fetch from the API
+            transcriptData = await getTranscript(url); // The API needs the full URL
+            
+            // 3. Save the newly fetched data to the cache
+            localStorage.setItem(cacheKey, JSON.stringify(transcriptData));
+            console.log(`Saved new transcript for video ID [${videoId}] to cache.`);
+        }
+
+        // 4. Update state and render the UI, regardless of the source
         updateState({ currentTranscript: transcriptData });
         renderTranscriptUI();
+
     } catch (error) {
         showError(error.message);
     } finally {
