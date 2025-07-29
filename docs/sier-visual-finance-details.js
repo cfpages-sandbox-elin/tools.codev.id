@@ -352,6 +352,49 @@ const sierVisualFinanceDetails = {
             </div>`;
     },
 
+    _createRevenueBreakdownSectionMeetingPoint() {
+        const unit = projectConfig.meetingPoint;
+        const o = unit.operational_assumptions;
+        const opDays = o.workdays_in_month + o.weekend_days_in_month;
+        const formatRp = (num) => sierHelpers.formatNumber(Math.round(num));
+        let totalMonthlyRevenue = 0;
+        let tableRows = '';
+
+        // Rooms
+        let roomsMonthlyRev = 0;
+        for (const key in unit.revenue.meeting_rooms) {
+            const room = unit.revenue.meeting_rooms[key];
+            const monthlyRev = room.count * room.price_per_hour * room.occupancy_rate * 10 * o.workdays_in_month;
+            roomsMonthlyRev += monthlyRev;
+            tableRows += `<tr><td class="p-2 pl-4">- ${sierTranslate.translate(key)}</td><td class="p-2 text-xs text-gray-500">${room.count} unit @ ${(room.occupancy_rate * 100).toFixed(0)}% okupansi</td><td class="p-2 text-right font-mono">${formatRp(monthlyRev)}</td></tr>`;
+        }
+        totalMonthlyRevenue += roomsMonthlyRev;
+
+        // Coworking
+        const coworking = unit.revenue.coworking.daily_pass_seats;
+        const coworkingRev = coworking.count * coworking.price_per_day * coworking.occupancy_rate * opDays;
+        totalMonthlyRevenue += coworkingRev;
+        tableRows += `<tr><td class="p-2">Coworking (Daily Pass)</td><td class="p-2 text-xs text-gray-500">${coworking.count} kursi @ ${(coworking.occupancy_rate * 100).toFixed(0)}% okupansi</td><td class="p-2 text-right font-mono">${formatRp(coworkingRev)}</td></tr>`;
+        
+        // Virtual Office
+        const vo = unit.revenue.virtual_office;
+        const voRev = vo.packages.count * vo.packages.avg_price_per_month;
+        totalMonthlyRevenue += voRev;
+        tableRows += `<tr><td class="p-2">Virtual Office</td><td class="p-2 text-xs text-gray-500">${vo.packages.count} paket terjual</td><td class="p-2 text-right font-mono">${formatRp(voRev)}</td></tr>`;
+
+        // Ancillary
+        const fnbRev = unit.revenue.ancillary.fnb_lounge_sales_monthly;
+        totalMonthlyRevenue += fnbRev;
+        tableRows += `<tr><td class="p-2">Penjualan F&B Lounge</td><td class="p-2 text-xs text-gray-500">Estimasi bulanan</td><td class="p-2 text-right font-mono">${formatRp(fnbRev)}</td></tr>`;
+        
+        const parking = unit.revenue.ancillary.parking_revenue;
+        const parkingRev = parking.spots * parking.avg_rate_per_day * parking.occupancy_rate * opDays;
+        totalMonthlyRevenue += parkingRev;
+        tableRows += `<tr><td class="p-2">Pendapatan Parkir</td><td class="p-2 text-xs text-gray-500">${parking.spots} spot @ ${(parking.occupancy_rate * 100).toFixed(0)}% okupansi</td><td class="p-2 text-right font-mono">${formatRp(parkingRev)}</td></tr>`;
+
+        return `<div class="mb-8 pb-6 border-b"><h3 class="text-xl font-semibold mb-3 text-gray-800">Proyeksi Rincian Pendapatan</h3><div class="overflow-x-auto border rounded-lg"><table class="w-full text-sm"><thead class="bg-gray-100 text-xs uppercase"><tr><th class="p-2 text-left">Sumber Pendapatan</th><th class="p-2 text-left">Detail Perhitungan</th><th class="p-2 text-right">Per Bulan</th></tr></thead><tbody class="divide-y">${tableRows}</tbody><tfoot class="bg-gray-200 font-bold"><tr><td class="p-2" colspan="2">Total Estimasi Pendapatan</td><td class="p-2 text-right font-mono">${formatRp(totalMonthlyRevenue)}</td></tr></tfoot></table></div></div>`;
+    },
+
     _renderUnitFinancialDetail(unitName) {
         const config = {
             drivingRange: { containerId: 'driving-range-financial-analysis', title: 'Analisis Finansial Detail: Driving Range', borderColor: 'border-blue-500' },
@@ -386,6 +429,43 @@ const sierVisualFinanceDetails = {
             </div>`;
     },
 
+    _renderUnitFinancialDetailMeetingPoint() {
+        const container = document.getElementById('meeting-point-financial-analysis');
+        if (!container) return;
+
+        const strategicAnalysis = sierMath.getStrategicAnalysisMeetingPoint();
+        const unitCalculations = sierMath._getMeetingPointCalculations(); // Get realistic data
+
+        const revenueHtml = this._createRevenueBreakdownSectionMeetingPoint();
+        const pnlTableHtml = this._createPnlTable(unitCalculations.pnl);
+        const profitabilityHtml = this._createProfitabilitySection(strategicAnalysis);
+        const scenarioHtml = this._createScenarioSection(strategicAnalysis);
+
+        // BEP Section khusus untuk Meeting Point (berbasis Rupiah)
+        const bepHtml = `<div class="bg-gray-50 p-4 rounded-lg border">
+            <h4 class="font-semibold text-gray-800 mb-2">A. Analisis Titik Impas Operasional (BEP)</h4>
+            <p class="text-sm text-gray-600 mb-3">Target pendapatan minimum untuk menutupi semua biaya tetap (operasional & depresiasi).</p>
+            <div class="text-center bg-white p-3 rounded-md shadow-sm">
+                 <p class="text-sm font-semibold text-gray-700">Target Pendapatan Tahunan untuk BEP</p>
+                 <p class="text-4xl font-bold text-cyan-700 mt-1">Rp ${sierHelpers.formatNumber(Math.round(strategicAnalysis.bepAnalysis.bepInRevenue))}</p>
+                 <p class="text-xs text-gray-500 mt-2">(~Rp ${sierHelpers.formatNumber(Math.round(strategicAnalysis.bepAnalysis.bepInRevenue/12))} / bulan)</p>
+            </div>
+        </div>`;
+        
+        container.innerHTML = `
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-cyan-600 pl-4">Analisis Finansial Detail: Meeting Point</h2>
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8 space-y-8">
+                ${revenueHtml}
+                <h3 class="text-xl font-semibold mb-3 text-gray-800">Proyeksi Laba Rugi (P&L)</h3>
+                <div class="overflow-x-auto border rounded-lg">${pnlTableHtml}</div>
+                <div class="mt-8 space-y-6">
+                    ${bepHtml}
+                    ${profitabilityHtml}
+                    ${scenarioHtml}
+                </div>
+            </div>`;
+    },
+
     /**
      * Fungsi render orkestrator untuk file ini.
      */
@@ -397,6 +477,7 @@ const sierVisualFinanceDetails = {
         this._renderUnitFinancialDetail('drivingRange');
         this._renderUnitFinancialDetail('padel');
         this._renderMeetingPointCapexDetailsVisuals();
+        this._renderUnitFinancialDetailMeetingPoint();
         console.log("[sier-visual-finance-details] SEMUA detail finansial (OpEx, CapEx, Analisis) telah dirender.");
     }
 };

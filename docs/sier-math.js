@@ -404,17 +404,117 @@ const sierMath = {
     },
 
     _calculateMeetingPointCapex(scenarioKey) {
-        const capex = projectConfig.meetingPoint[scenarioKey];
-        if (!capex) return 0;
-        
+        const capexConfig = projectConfig.meetingPoint[scenarioKey];
+        if (!capexConfig) return 0;
         let grandTotal = 0;
-        // Iterasi melalui semua kategori utama dalam skenario (misal: renovation_costs, equipment_and_furniture)
-        for(const category in capex) {
-            if (typeof capex[category] === 'object') {
-                grandTotal += this._calculateTotal(capex[category]);
+        
+        const processCategory = (categoryData) => {
+            let categoryTotal = 0;
+            for (const key in categoryData) {
+                const item = categoryData[key];
+                if (item.lump_sum) {
+                    categoryTotal += item.lump_sum;
+                } else if (item.area_m2 && item.cost_per_m2) {
+                    categoryTotal += item.area_m2 * item.cost_per_m2;
+                }
+            }
+            return categoryTotal;
+        };
+
+        for (const categoryKey in capexConfig) {
+            if (typeof capexConfig[categoryKey] === 'object' && !['title', 'notes'].includes(categoryKey)) {
+                grandTotal += processCategory(capexConfig[categoryKey]);
             }
         }
-        return grandTotal;
+        
+        // Menambahkan kontingensi
+        const subtotal = grandTotal;
+        const contingency = subtotal * projectConfig.assumptions.contingency_rate;
+        return subtotal + contingency;
+    },
+
+    _getMeetingPointCalculations(revenueMultiplier = 1, opexMultiplier = 1) {
+        const unit = projectConfig.meetingPoint;
+        const o = unit.operational_assumptions;
+        const global = projectConfig.assumptions;
+        
+        let monthlyRevenue = 0;
+
+        // Pendapatan Meeting Room & Coworking
+        const opDays = o.workdays_in_month + o.weekend_days_in_month;
+        const opHoursPerDay = 10; // Asumsi jam operasional efektif
+        for(const key in unit.revenue.meeting_rooms){
+            const room = unit.revenue.meeting_rooms[key];
+            monthlyRevenue += room.count * room.price_per_hour * room.occupancy_rate * opHoursPerDay * o.workdays_in_month;
+        }
+        const coworking = unit.revenue.coworking.daily_pass_seats;
+        monthlyRevenue += coworking.count * coworking.price_per_day * coworking.occupancy_rate * opDays;
+        
+        // Pendapatan Virtual Office & F&B
+        monthlyRevenue += unit.revenue.virtual_office.packages.count * unit.revenue.virtual_office.packages.avg_price_per_month;
+        monthlyRevenue += unit.revenue.ancillary.fnb_lounge_sales_monthly;
+        
+        // PENDAPATAN PARKIR (BARU)
+        const parking = unit.revenue.ancillary.parking_revenue;
+        monthlyRevenue += parking.spots * parking.avg_rate_per_day * parking.occupancy_rate * opDays;
+        
+        const monthlyRevenueTotal = monthlyRevenue * revenueMultiplier;
+        const annualRevenue = monthlyRevenueTotal * 12;
+
+        const cogsMonthly = (unit.revenue.ancillary.fnb_lounge_sales_monthly * o.cogs_rate_fnb) * revenueMultiplier;
+        const annualCogs = cogsMonthly * 12;
+        
+        const adjustedOpexMonthly = this._calculateTotal(unit.opexMonthly) * opexMultiplier;
+        const annualOpex = adjustedOpexMonthly * 12;
+
+        const grossProfit = annualRevenue - annualCogs;
+        const ebitda = grossProfit - annualOpex;
+
+        // Menggunakan skenario A (renovasi) sebagai basis
+        const capexTotal = this._calculateMeetingPointCapex('capex_scenario_a');
+        const annualDepreciation = capexTotal / 15; // Asumsi rata-rata masa manfaat 15 tahun
+        
+        const ebt = ebitda - annualDepreciation;
+        const tax = ebt > 0 ? ebt * global.tax_rate_profit : 0;
+        const netProfit = ebt - tax;
+        const cashFlowFromOps = netProfit + annualDepreciation;
+
+        return {
+            capex: { total: capexTotal },
+            pnl: { annualRevenue, annualCogs, annualOpex, grossProfit, ebitda, annualDepreciation, ebt, tax, netProfit, cashFlowFromOps }
+        };
+    },
+
+    getStrategicAnalysisMeetingPoint() {
+        const bepAnalysis = {}; // BEP lebih kompleks, kita sederhanakan
+        const realistic = this._getMeetingPointCalculations(1.0, 1.0);
+        const fixedCosts = realistic.pnl.annualOpex + realistic.pnl.annualDepreciation;
+        const cogsRate = realistic.pnl.annualCogs / realistic.pnl.annualRevenue;
+        
+        // BEP dalam bentuk Rupiah Revenue
+        bepAnalysis.bepInRevenue = fixedCosts / (1 - cogsRate);
+        
+        const mods = projectConfig.assumptions.scenario_modifiers;
+        const pessimistic = this._getMeetingPointCalculations(mods.pessimistic_revenue, mods.pessimistic_opex);
+        const optimistic = this._getMeetingPointCalculations(mods.optimistic_revenue, mods.optimistic_opex);
+        
+        const getPayback = (data) => data.pnl.cashFlowFromOps > 0 ? data.capex.total / data.pnl.cashFlowFromOps : Infinity;
+
+        return {
+            bepAnalysis,
+            profitabilityAnalysis: {
+                totalCapex: realistic.capex.total,
+                annualRevenue: realistic.pnl.annualRevenue,
+                annualNetProfit: realistic.pnl.netProfit,
+                annualCashFlow: realistic.pnl.cashFlowFromOps,
+                paybackPeriod: getPayback(realistic)
+            },
+            scenarioAnalysis: {
+                realistic: { netProfit: realistic.pnl.netProfit, payback: getPayback(realistic) },
+                pessimistic: { netProfit: pessimistic.pnl.netProfit, payback: getPayback(pessimistic) },
+                optimistic: { netProfit: optimistic.pnl.netProfit, payback: getPayback(optimistic) }
+            }
+        };
     },
 
     _getDetailedCapex(unitName) {
@@ -544,11 +644,12 @@ const sierMath = {
     getFinancialSummary(revenueMultiplier = 1, opexMultiplier = 1) {
         const dr = this._getUnitCalculations('drivingRange', revenueMultiplier, opexMultiplier);
         const padel = this._getUnitCalculations('padel', revenueMultiplier, opexMultiplier);
+        const mp = this._getMeetingPointCalculations(revenueMultiplier, opexMultiplier); // BARU
         
         const digitalCapexTotal = this._calculateDigitalCapexTotal();
         const sharedCapexTotal = this._calculateSharedCapexTotal();
         
-        const totalInvestment = dr.capex.total + padel.capex.total + digitalCapexTotal + sharedCapexTotal;
+        const totalInvestment = dr.capex.total + padel.capex.total + mp.capex.total + digitalCapexTotal + sharedCapexTotal;
         
         const combined = { 
             capex: { total: totalInvestment }, 
@@ -557,13 +658,14 @@ const sierMath = {
 
         const drPnl = dr.pnl;
         const padelPnl = padel.pnl;
+        const mpPnl = mp.pnl; // BARU
 
         for (const key in drPnl) {
-            combined.pnl[key] = (drPnl[key] || 0) + (padelPnl[key] || 0);
+            combined.pnl[key] = (drPnl[key] || 0) + (padelPnl[key] || 0) + (mpPnl[key] || 0);
         }
 
         const annualDigitalDepreciation = digitalCapexTotal / 5;
-        const annualSharedDepreciation = sharedCapexTotal / 20; // Asumsi 20 tahun
+        const annualSharedDepreciation = sharedCapexTotal / 20;
         combined.pnl.annualDepreciation += annualDigitalDepreciation + annualSharedDepreciation;
         
         combined.pnl.ebt = combined.pnl.ebitda - combined.pnl.annualDepreciation;
@@ -587,6 +689,7 @@ const sierMath = {
         return {
             drivingRange: dr, 
             padel: padel, 
+            meetingPoint: mp,
             digitalCapexTotal: digitalCapexTotal,
             sharedCapexTotal: sharedCapexTotal,
             combined: { ...combined, feasibility: { paybackPeriod, npv, irr } }
