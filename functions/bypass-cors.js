@@ -54,10 +54,7 @@ function handleOptions(request) {
  */
 export default {
   async fetch(request, env) {
-    // --- ADD THIS DEBUGGING BLOCK ---
     if (request.method === 'GET') {
-      return new Response("Bypass-CORS function is LIVE!", { status: 200 });
-    }
       return new Response(JSON.stringify({
         status: "ok",
         message: "bypass-cors function is running!",
@@ -71,11 +68,20 @@ export default {
       });
     }
 
-    // We only accept POST requests.
-    if (request.method !== 'POST') {
-      return new Response('Method Not Allowed', { status: 405, headers: CORS_HEADERS });
+    // --- Handle CORS preflight (OPTIONS) requests ---
+    if (request.method === 'OPTIONS') {
+      return handleOptions(request); // Assumes handleOptions function exists above
     }
 
+    // --- Handle actual proxy (POST) requests ---
+    if (request.method !== 'POST') {
+      return new Response('Method Not Allowed. This endpoint only accepts POST.', {
+        status: 405,
+        headers: CORS_HEADERS
+      });
+    }
+
+    // --- Main Logic for POST ---
     let targetUrl;
     try {
       const body = await request.json();
@@ -87,7 +93,7 @@ export default {
       
       const urlObject = new URL(targetUrl);
 
-      // --- Security Check ---
+      // Security Check
       if (!ALLOWED_HOSTNAMES.includes(urlObject.hostname)) {
         console.warn(`Forbidden request to non-whitelisted hostname: ${urlObject.hostname}`);
         return new Response(JSON.stringify({ error: 'Requests to this host are not allowed.' }), {
@@ -103,22 +109,16 @@ export default {
       });
     }
 
+    // --- Perform the actual fetch ---
     try {
-      // Fetch the content from the target URL.
-      // It's good practice to set a User-Agent.
       const response = await fetch(targetUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         }
       });
       
-      // Re-create the response to add our CORS headers.
       const newResponse = new Response(response.body, response);
-
-      // Copy essential headers from the original response.
       newResponse.headers.set('Content-Type', response.headers.get('Content-Type') || 'text/plain');
-      
-      // Add our CORS headers to the new response.
       Object.entries(CORS_HEADERS).forEach(([key, value]) => {
         newResponse.headers.set(key, value);
       });
