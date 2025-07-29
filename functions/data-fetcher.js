@@ -1,10 +1,9 @@
 /**
  * =================================================================================
- * Data Fetcher v1 (Self-Contained Library Logic)
+ * Data Fetcher v2 (Intelligent Transcript Selection)
  * =================================================================================
- * A multi-purpose function to fetch external data.
- * - 'youtube' mode: Reliably scrapes YouTube transcripts.
- * - 'proxy' mode (future): Can be used for generic URL proxying.
+ * Implements the logic from python's youtube-transcript-api to intelligently
+ * find the best available English transcript (manual or auto-generated).
  *
  * Endpoint: /data-fetcher
  */
@@ -29,9 +28,8 @@ const handleOptions = (request) => {
 
 // --- Main Request Handler ---
 export async function onRequest({ request }) {
-
   if (request.method === 'OPTIONS') return handleOptions(request);
-  if (request.method === 'GET') return jsonResponse({ status: "ok", message: "Data Fetcher v1 (Self-Contained) is live!" }, 200);
+  if (request.method === 'GET') return jsonResponse({ status: "ok", message: "Data Fetcher v2 (Intelligent Transcript Selection) is live!" }, 200);
   if (request.method !== 'POST') return new Response(`Method Not Allowed`, { status: 405 });
 
   try {
@@ -39,87 +37,72 @@ export async function onRequest({ request }) {
     if (body.mode === 'youtube') {
       const { videoId } = body;
       if (!videoId) return jsonResponse({ error: 'Missing "videoId" for YouTube mode.' }, 400);
-      
-      // Call our robust, self-contained transcript fetching logic.
       return await getTranscriptFromYouTube(videoId);
     }
-    
     return jsonResponse({ error: 'Invalid or missing mode in request body.' }, 400);
-
   } catch (err) {
     return jsonResponse({ error: `Invalid request: ${err.message}` }, 400);
   }
 }
 
 /**
- * Implements the logic from youtube-transcript libraries directly.
+ * Implements the logic from python's youtube-transcript-api directly.
  * @param {string} videoId The YouTube video ID.
  */
 async function getTranscriptFromYouTube(videoId) {
   try {
-    // 1. Fetch the main video page HTML with a standard browser User-Agent.
+    // 1. Fetch the main video page HTML
     const videoPageUrl = `https://www.youtube.com/watch?v=${videoId}`;
     console.log(`[${videoId}] Fetching video page: ${videoPageUrl}`);
     const pageResponse = await fetch(videoPageUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-      }
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' }
     });
-
-    if (!pageResponse.ok) {
-      return jsonResponse({ error: `YouTube returned status ${pageResponse.status}. The video may be unavailable.` }, 404);
-    }
+    if (!pageResponse.ok) return jsonResponse({ error: `YouTube returned status ${pageResponse.status}. Video may be private or deleted.` }, 404);
     const html = await pageResponse.text();
 
-    // 2. Find the Player Response JSON embedded in the HTML.
-    // This is more reliable than the old method.
+    // 2. Find the Player Response JSON embedded in the HTML
     const playerResponseMatch = html.match(/var ytInitialPlayerResponse = ({.*?});/);
-    if (!playerResponseMatch || !playerResponseMatch[1]) {
-       return jsonResponse({ error: "Could not find player data in the video page. This might be a private or restricted video." }, 404);
-    }
+    if (!playerResponseMatch) return jsonResponse({ error: "Could not find player data. Video may be private or restricted." }, 404);
     const playerResponse = JSON.parse(playerResponseMatch[1]);
     
-    // 3. Navigate the complex JSON to find the caption tracks.
+    // 3. Get the list of all available caption tracks
     const captionTracks = playerResponse?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
-    if (!captionTracks || captionTracks.length === 0) {
-       return jsonResponse({ error: "Transcripts are disabled for this video." }, 404);
-    }
+    if (!captionTracks || captionTracks.length === 0) return jsonResponse({ error: "Transcripts are disabled for this video." }, 404);
     
-    // 4. Find the URL for the English auto-generated transcript (or the first available).
-    // We prioritize 'a.en' (auto-generated English) or any 'en' track.
-    const transcriptInfo = captionTracks.find(t => t.vssId === 'a.en') ||
-                           captionTracks.find(t => t.vssId.startsWith('.en')) ||
-                           captionTracks[0]; // Fallback to the very first track
+    // 4. Find the best available English transcript URL using a priority system
+    console.log(`[${videoId}] Found ${captionTracks.length} available transcript tracks. Searching for English...`);
+    const transcriptInfo = 
+        // Priority 1: Manually created English transcript
+        captionTracks.find(t => t.vssId === '.en') || 
+        // Priority 2: Auto-generated English transcript
+        captionTracks.find(t => t.vssId === 'a.en') ||
+        // Priority 3: Any other English variant (e.g., .en-US, .en-GB)
+        captionTracks.find(t => t.vssId.startsWith('.en')) ||
+        captionTracks.find(t => t.vssId.startsWith('a.en'));
 
     if (!transcriptInfo || !transcriptInfo.baseUrl) {
-        return jsonResponse({ error: "Could not find a valid transcript URL." }, 404);
+        return jsonResponse({ error: "Could not find an English transcript for this video." }, 404);
     }
+    
+    console.log(`[${videoId}] Found best transcript track: ${transcriptInfo.name.simpleText} (vssId: ${transcriptInfo.vssId}). Fetching...`);
 
-    // 5. Fetch the transcript XML from the found URL.
-    console.log(`[${videoId}] Fetching transcript from: ${transcriptInfo.baseUrl}`);
+    // 5. Fetch the transcript XML
     const xmlResponse = await fetch(transcriptInfo.baseUrl);
     if (!xmlResponse.ok) return jsonResponse({ error: `Could not fetch transcript XML (Status: ${xmlResponse.status})` }, 502);
     const xmlText = await xmlResponse.text();
 
-    // 6. Parse the XML and convert it to the clean JSON our app expects.
+    // 6. Parse the XML and convert it to clean JSON
     const lines = [...xmlText.matchAll(/<text start="([^"]+)" dur="[^"]+">([^<]+)<\/text>/g)];
     const transcriptJson = lines.map(lineMatch => {
-        // Decode HTML entities like & and '
         const text = lineMatch[2]
           .replace(/&#39;/g, "'").replace(/'/g, "'")
           .replace(/&quot;/g, '"').replace(/"/g, '"')
           .replace(/'/g, "'")
           .replace(/&/g, '&');
-
-        return {
-            text: text,
-            start: parseFloat(lineMatch[1]),
-        };
+        return { text, start: parseFloat(lineMatch[1]) };
     });
 
-    if (transcriptJson.length === 0) {
-      return jsonResponse({ error: "Method parsed 0 transcript lines from the data source."}, 404);
-    }
+    if (transcriptJson.length === 0) return jsonResponse({ error: "Successfully fetched transcript data, but it contained 0 lines."}, 404);
     
     console.log(`[${videoId}] Successfully fetched and parsed ${transcriptJson.length} transcript lines.`);
     return jsonResponse(transcriptJson, 200);
