@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function getYouTubeTranscript(videoId) {
         console.log(`Requesting transcript for video ID: ${videoId} from our smart backend.`);
         
-        const response = await fetch('/bypass-cors', {
+        const response = await fetch('/data-fetcher', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
