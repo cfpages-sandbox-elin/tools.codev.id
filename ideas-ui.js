@@ -102,56 +102,73 @@ export function renderTranscriptUI() {
         <div id="analysis-container" class="space-y-6"></div>
     `;
     populateAiSelectors(); // This will now also update the token limit info
-    document.getElementById('analyze-transcript-btn').addEventListener('click', handleAnalyzeTranscript);
 }
 
-function populateAiSelectors() {
+export function updateModelUI() {
     const providerSelect = document.getElementById('ai-provider-select');
     const modelSelect = document.getElementById('ai-model-select');
     const modelTokenInfo = document.getElementById('model-token-limit-info');
     const { allAiProviders } = getState();
     if (!providerSelect || !modelSelect || !modelTokenInfo || !allAiProviders) return;
 
-    // A model is "free" if its base price is 0 or it has a specific "Free Tier" rate limit.
+    // A model is "free" if its base price is 0 or it has a "Free Tier" rate limit.
     const isFree = (model) => {
         const hasFreePrice = model.pricing?.input === 0.00 && model.pricing?.output === 0.00;
         const hasFreeTier = model.rateLimits?.tiers?.some(tier => tier.name.toLowerCase().includes('free'));
         return hasFreePrice || hasFreeTier;
     };
 
+    // This filtering logic must be done here to know which providers have free models.
     const freeProviders = {};
     for (const key in allAiProviders) {
-        const filteredModels = allAiProviders[key].models.filter(m => isFree(m));
+        const filteredModels = allAiProviders[key].models.filter(model => isFree(model));
         if (filteredModels.length > 0) {
             freeProviders[key] = { ...allAiProviders[key], models: filteredModels };
         }
     }
 
+    const selectedProviderKey = providerSelect.value;
+    const models = freeProviders[selectedProviderKey]?.models || [];
+
+    // Update the model dropdown
+    modelSelect.innerHTML = models.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+
+    // Update the token limit info based on the newly selected model
+    const selectedModelId = modelSelect.value;
+    const selectedModel = models.find(m => m.id === selectedModelId);
+    if (selectedModel && selectedModel.contextWindow) {
+        modelTokenInfo.innerHTML = `Selected Model Max Tokens: <strong class="text-indigo-600 dark:text-sky-400">${selectedModel.contextWindow.toLocaleString()}</strong>`;
+    } else {
+        modelTokenInfo.textContent = 'Selected Model Max Tokens: Unknown';
+    }
+}
+
+function populateAiSelectors() {
+    const providerSelect = document.getElementById('ai-provider-select');
+    const { allAiProviders } = getState();
+    if (!providerSelect || !allAiProviders) return;
+
+    // The same dynamic filtering logic to find which providers to show
+    const isFree = (model) => {
+        const hasFreePrice = model.pricing?.input === 0.00 && model.pricing?.output === 0.00;
+        const hasFreeTier = model.rateLimits?.tiers?.some(tier => tier.name.toLowerCase().includes('free'));
+        return hasFreePrice || hasFreeTier;
+    };
+    const freeProviders = {};
+    for (const key in allAiProviders) {
+        if (allAiProviders[key].models.some(model => isFree(model))) {
+            freeProviders[key] = allAiProviders[key];
+        }
+    }
+
+    // Populate the provider dropdown
     providerSelect.innerHTML = Object.keys(freeProviders).map(key => {
-        // Find the original provider name (e.g., "Google", not "google")
-        const providerName = allAiProviders[key].models[0].provider;
-        return `<option value="${key}">${providerName}</option>`
+        const providerName = freeProviders[key].models[0].provider;
+        return `<option value="${key}">${providerName}</option>`;
     }).join('');
 
-    const updateUI = () => {
-        const selectedProviderKey = providerSelect.value;
-        // Populate model dropdown
-        const models = freeProviders[selectedProviderKey]?.models || [];
-        modelSelect.innerHTML = models.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
-        
-        // Update the token limit info
-        const selectedModelId = modelSelect.value;
-        const selectedModel = models.find(m => m.id === selectedModelId);
-        if (selectedModel && selectedModel.contextWindow) {
-            modelTokenInfo.innerHTML = `Selected Model Max Tokens: <strong class="text-indigo-600 dark:text-sky-400">${selectedModel.contextWindow.toLocaleString()}</strong>`;
-        } else {
-            modelTokenInfo.textContent = 'Selected Model Max Tokens: Unknown';
-        }
-    };
-
-    providerSelect.addEventListener('change', updateUI);
-    modelSelect.addEventListener('change', updateUI); // Also update when model changes
-    updateUI(); // Initial population
+    // Now, call our reusable function to populate the models for the default provider
+    updateModelUI();
 }
 
 /**

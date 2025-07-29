@@ -1,6 +1,6 @@
 import { updateState, getState } from './ideas-state.js';
 import { getProviderConfig, getTranscript, getAiAnalysis } from './ideas-api.js';
-import { cacheElements, initApiKeyUI, showError, toggleLoader, resetOutput, renderTranscriptUI, renderAnalysisUI } from './ideas-ui.js';
+import { cacheElements, initApiKeyUI, showError, toggleLoader, resetOutput, renderTranscriptUI, renderAnalysisUI, updateModelUI } from './ideas-ui.js';
 import { createAnalysisPrompt } from './ideas-prompts.js';
 import { getYouTubeVideoId } from './ideas-helpers.js';
 
@@ -89,6 +89,26 @@ export async function handleAnalyzeTranscript() {
     } finally {
         analyzeBtn.style.display = 'none';
         updateState({ isLoading: false });
+    }
+}
+
+function attachTranscriptUIListeners() {
+    const analyzeBtn = document.getElementById('analyze-transcript-btn');
+    const providerSelect = document.getElementById('ai-provider-select');
+    const modelSelect = document.getElementById('ai-model-select');
+    
+    if (analyzeBtn) {
+        analyzeBtn.addEventListener('click', handleAnalyzeTranscript);
+    }
+    
+    // When the provider changes, we call the dedicated UI function to update the models.
+    if (providerSelect) {
+        providerSelect.addEventListener('change', updateModelUI);
+    }
+
+    // Also update the token info when the model itself changes.
+    if (modelSelect) {
+        modelSelect.addEventListener('change', updateModelUI);
     }
 }
 
