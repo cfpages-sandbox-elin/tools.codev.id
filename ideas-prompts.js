@@ -5,7 +5,7 @@
  * Keeping them separate makes them easier to manage and refine.
  */
 
-function createAnalysisPrompt(transcript) {
+export function createAnalysisPrompt(transcript) {
     /**
      * Creates a structured prompt for the AI to analyze a video transcript.
      * @param {string} transcript - The full text content of the video transcript.
