@@ -1,10 +1,10 @@
 /**
  * =================================================================================
- * Data Fetcher v6 (Expert Headers)
+ * Data Fetcher v7 (Lightweight Proxy)
  * =================================================================================
- * This version mimics browser headers more closely when fetching the final
- * transcript data, which is crucial for bypassing YouTube's anti-scraping
- * measures that can return an empty body.
+ * This version exclusively uses a lightweight proxy to a reliable external
+ * service. This avoids hitting Cloudflare's free tier CPU/subrequest limits
+ * that heavy on-worker scraping can cause, solving the "no logs" crash issue.
  *
  * Endpoint: /data-fetcher
  */
@@ -25,8 +25,9 @@ const handleOptions = (request) => {
 
 // --- Main Request Handler ---
 export async function onRequest({ request }) {
+  // Standard handlers, no changes needed here.
   if (request.method === 'OPTIONS') return handleOptions(request);
-  if (request.method === 'GET') return jsonResponse({ status: "ok", message: "Data Fetcher v6 (Expert Headers) is live!" }, 200);
+  if (request.method === 'GET') return jsonResponse({ status: "ok", message: "Data Fetcher v7 (Lightweight Proxy) is live!" }, 200);
   if (request.method !== 'POST') return new Response(`Method Not Allowed`, { status: 405 });
 
   try {
@@ -34,91 +35,63 @@ export async function onRequest({ request }) {
     if (body.mode === 'youtube') {
       const { videoId } = body;
       if (!videoId) return jsonResponse({ error: 'Missing "videoId" for YouTube mode.' }, 400);
-      return await getTranscriptFromYouTube(videoId);
+      
+      // Directly call the reliable, lightweight proxy method.
+      return await fetchFromProxy(videoId);
     }
+    
     return jsonResponse({ error: 'Invalid or missing mode in request body.' }, 400);
+
   } catch (err) {
     return jsonResponse({ error: `Invalid request: ${err.message}` }, 400);
   }
 }
 
 /**
- * Implements the most reliable self-contained fetching logic.
- * @param {string} videoId The YouTube video ID.
+ * Uses a reliable third-party open-source service to get the transcript.
+ * This is the primary and only method for stability and performance.
  */
-async function getTranscriptFromYouTube(videoId) {
+async function fetchFromProxy(videoId) {
   try {
-    // 1. Fetch video page
-    const videoPageUrl = `https://www.youtube.com/watch?v=${videoId}`;
-    console.log(`[${videoId}] Step 1: Fetching video page...`);
-    const pageResponse = await fetch(videoPageUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36' }
+    const proxyUrl = `https://yt-transcript-api.vercel.app/?videoId=${videoId}`;
+    console.log(`[${videoId}] Offloading fetch to reliable proxy: ${proxyUrl}`);
+    
+    // This is the ONLY fetch call our function makes. It is very fast and lightweight.
+    const response = await fetch(proxyUrl, {
+      headers: { 'User-Agent': 'Codev-Idea-Engine/1.0' }
     });
-    if (!pageResponse.ok) return jsonResponse({ error: `YouTube returned status ${pageResponse.status}. Video may be private or deleted.` }, 404);
-    const html = await pageResponse.text();
-
-    const playerResponseMatch = html.match(/var ytInitialPlayerResponse = ({.*?});/);
-    if (!playerResponseMatch) return jsonResponse({ error: "Could not find player data in HTML." }, 404);
     
-    let playerResponse;
-    try {
-        playerResponse = JSON.parse(playerResponseMatch[1]);
-    } catch(e) {
-        return jsonResponse({ error: "Could not parse YouTube's video data." }, 500);
-    }
-    
-    // 2. Find best available English transcript URL
-    const captionTracks = playerResponse?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
-    if (!captionTracks || captionTracks.length === 0) return jsonResponse({ error: "Transcripts are disabled for this video." }, 404);
-    
-    const transcriptInfo = 
-        captionTracks.find(t => t.vssId === '.en') || 
-        captionTracks.find(t => t.vssId === 'a.en') ||
-        captionTracks.find(t => t.vssId.startsWith('.en')) ||
-        captionTracks.find(t => t.vssId.startsWith('a.en'));
-
-    if (!transcriptInfo || !transcriptInfo.baseUrl) return jsonResponse({ error: "Could not find an English transcript for this video." }, 404);
-    
-    console.log(`[${videoId}] Step 2: Found transcript URL. Fetching XML with enhanced headers...`);
-
-    // 3. Fetch the transcript XML with browser-like headers
-    const xmlResponse = await fetch(transcriptInfo.baseUrl, {
-        headers: {
-            'Accept-Language': 'en-US,en;q=0.9',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
-        }
-    });
-    if (!xmlResponse.ok) return jsonResponse({ error: `Could not fetch transcript XML (Status: ${xmlResponse.status})` }, 502);
-    const xmlText = await xmlResponse.text();
-
-    if (!xmlText) {
-        console.error(`[${videoId}] The fetched transcript XML was empty.`);
-        return jsonResponse({ error: "YouTube returned an empty transcript file." }, 404);
+    // Check if the proxy service itself returned an error.
+    if (!response.ok) {
+      // Pass the error from the proxy service back to our client.
+      const errorBody = await response.text();
+      return new Response(errorBody, {
+          status: response.status,
+          headers: {
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*'
+          }
+      });
     }
 
-    console.log(`[${videoId}] Step 3: Received XML data (length: ${xmlText.length}). Parsing...`);
-    
-    // 4. Parse the XML
-    const lines = [...xmlText.matchAll(/<text start="([^"]+)" dur="[^"]+">(.*?)<\/text>/gs)];
-    const transcriptJson = lines.map(lineMatch => {
-        const text = lineMatch[2]
-          .replace(/&#39;/g, "'").replace(/'/g, "'")
-          .replace(/&quot;/g, '"').replace(/"/g, '"')
-          .replace(/'/g, "'")
-          .replace(/&/g, '&');
-        return { text, start: parseFloat(lineMatch[1]) };
-    });
+    const data = await response.json();
+    const apiResponse = data.apiResponse;
 
-    if (transcriptJson.length === 0) {
-      console.error(`[${videoId}] Failed to parse any lines from the received XML.`);
-      return jsonResponse({ error: "Could not parse transcript from the received data. Format may be unexpected."}, 404);
+    if (!Array.isArray(apiResponse) || apiResponse.length === 0) {
+      return jsonResponse({ error: "The proxy service returned no transcript data. The video may not have captions." }, 404);
     }
-    
-    console.log(`[${videoId}] Step 4: Successfully parsed ${transcriptJson.length} transcript lines.`);
-    return jsonResponse(transcriptJson, 200);
 
+    // Normalize the data to the format our frontend expects: { text, start }
+    const normalizedJson = apiResponse.map(line => ({
+      text: line.text,
+      start: line.offset / 1000, // Convert ms to seconds
+    }));
+    
+    console.log(`[${videoId}] Successfully fetched and processed ${normalizedJson.length} lines via proxy.`);
+    return jsonResponse(normalizedJson, 200);
+    
   } catch (error) {
-    console.error(`[${videoId}] A critical error occurred:`, error);
-    return jsonResponse({ error: `An internal error occurred: ${error.message}` }, 500);
+    console.error(`[${videoId}] Proxy Fetch Internal Error:`, error);
+    return jsonResponse({ error: `An internal error occurred while contacting the proxy service: ${error.message}` }, 500);
   }
 }
