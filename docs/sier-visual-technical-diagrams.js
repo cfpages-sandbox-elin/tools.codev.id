@@ -1,5 +1,5 @@
 // File: sier-visual-technical-diagrams.js
-// VERSI 3.0: Overlay SVG yang presisi mengikuti perspektif citra satelit.
+// VERSI 3.1: Memperbaiki error dan menambahkan fungsi render diagram detail.
 
 const sierVisualTechnicalDiagrams = {
     // Properti untuk menyimpan state
@@ -23,9 +23,6 @@ const sierVisualTechnicalDiagrams = {
         }
     },
 
-    /**
-     * Mengubah string 'x1,y1 x2,y2 ...' menjadi array objek [{x, y}, {x, y}]
-     */
     _stringToPoints(str) {
         return str.split(' ').map(pair => {
             const [x, y] = pair.split(',').map(Number);
@@ -33,16 +30,10 @@ const sierVisualTechnicalDiagrams = {
         });
     },
 
-    /**
-     * Mengubah array objek menjadi string 'x1,y1 x2,y2 ...'
-     */
     _pointsToString(points) {
         return points.map(p => `${p.x},${p.y}`).join(' ');
     },
 
-    /**
-     * Memuat koordinat dari localStorage.
-     */
     _loadCoordinates() {
         const savedCoords = localStorage.getItem('sierSvgCoords');
         if (savedCoords) {
@@ -55,9 +46,6 @@ const sierVisualTechnicalDiagrams = {
         }
     },
 
-    /**
-     * Menyimpan koordinat ke localStorage.
-     */
     _saveCoordinates() {
         try {
             localStorage.setItem('sierSvgCoords', JSON.stringify(this.coords));
@@ -66,10 +54,7 @@ const sierVisualTechnicalDiagrams = {
             console.error("Gagal menyimpan koordinat ke localStorage.", e);
         }
     },
-    
-    /**
-     * Merender ulang SATU BENTUK SPESIFIK berdasarkan data terbaru.
-     */
+
     _updateShape(shapeId) {
         const shapeElement = this.svg.querySelector(`[data-shape-id="${shapeId}"]`);
         if (!shapeElement) return;
@@ -84,10 +69,7 @@ const sierVisualTechnicalDiagrams = {
             shapeElement.setAttribute('y2', p2.y);
         }
     },
-    
-    /**
-     * Fungsi utama untuk merender denah proyek dan handle editornya.
-     */
+
     _renderSiteOverlay() {
         const container = document.getElementById('site-layout-container');
         if (!container) return;
@@ -140,7 +122,6 @@ const sierVisualTechnicalDiagrams = {
             </svg>
         `;
         
-        // Render UI kontrol dan SVG
         container.innerHTML = `
             <div id="svg-controls" class="p-2 bg-gray-200 rounded-t-lg flex items-center justify-between">
                 <div class="flex items-center">
@@ -157,51 +138,124 @@ const sierVisualTechnicalDiagrams = {
         
         this.svg = document.getElementById('interactive-svg');
     },
+
+    _createPadelVis() {
+        const container = document.getElementById('padel-conversion-vis');
+        if (!container) return;
+        container.innerHTML = `
+            <svg viewBox="0 0 500 250" class="w-full h-auto">
+                <rect x="1" y="1" width="498" height="248" fill="#f0fdf4" stroke="#dcfce7" stroke-width="2"/>
+                <text x="250" y="25" font-size="14" font-weight="bold" text-anchor="middle" fill="#166534">Area Futsal Eksisting</text>
+                
+                <text x="250" y="50" font-size="12" text-anchor="middle" fill="#52525b">Lebar Total: ~15.8 m</text>
+                <line x1="10" y1="60" x2="490" y2="60" stroke="#9ca3af" stroke-dasharray="2 2" />
+                <path d="M10 55 L10 65" stroke="#9ca3af"/>
+                <path d="M490 55 L490 65" stroke="#9ca3af"/>
+
+                <text x="45" y="150" font-size="12" text-anchor="middle" fill="#52525b" transform="rotate(-90, 45, 150)">Panjang Total: ~41 m</text>
+                <line x1="60" y1="70" x2="60" y2="230" stroke="#9ca3af" stroke-dasharray="2 2" />
+                <path d="M55 70 L65 70" stroke="#9ca3af"/>
+                <path d="M55 230 L65 230" stroke="#9ca3af"/>
+                
+                <!-- Padel Courts -->
+                <g>
+                    <rect x="80" y="75" width="180" height="150" fill="#a7f3d0" stroke="#15803d" stroke-width="1.5" />
+                    <text x="170" y="145" font-size="12" font-weight="semibold" text-anchor="middle" fill="#14532d">Lapangan Padel 1</text>
+                    <text x="170" y="165" font-size="10" text-anchor="middle" fill="#166534">(20m x 10m)</text>
+                </g>
+                <g>
+                    <rect x="270" y="75" width="180" height="150" fill="#a7f3d0" stroke="#15803d" stroke-width="1.5" />
+                    <text x="360" y="145" font-size="12" font-weight="semibold" text-anchor="middle" fill="#14532d">Lapangan Padel 2</text>
+                    <text x="360" y="165" font-size="10" text-anchor="middle" fill="#166534">(20m x 10m)</text>
+                </g>
+                
+                <!-- Labels Sisa Ruang -->
+                <text x="200" y="240" font-size="10" text-anchor="middle" fill="#52525b">Total Panjang 2 Lapangan: 40m</text>
+                <text x="350" y="70" font-size="10" text-anchor="middle" fill="#52525b">Lebar 1 Lapangan: 10m</text>
+            </svg>
+        `;
+    },
+
+    _createMeetingPointVis() {
+        const container = document.getElementById('meeting-point-concept-vis');
+        if (!container) return;
+        container.innerHTML = `
+            <svg viewBox="0 0 500 300" class="w-full h-auto">
+                <rect x="1" y="1" width="498" height="298" fill="#f0f9ff" stroke="#e0f2fe" stroke-width="2"/>
+                <text x="250" y="25" font-size="14" font-weight="bold" text-anchor="middle" fill="#0369a1">Konsep Denah "SIER Business Lounge"</text>
+
+                <!-- Zona Kiri: Lounge & Kafe -->
+                <rect x="20" y="50" width="220" height="230" fill="#e0f2fe" stroke="#7dd3fc" stroke-width="1.5"/>
+                <text x="130" y="160" font-size="16" font-weight="bold" text-anchor="middle" fill="#0c4a6e">Open Lounge & Cafe</text>
+                <text x="130" y="180" font-size="10" text-anchor="middle" fill="#075985">(Area Kerja Fleksibel, Sofa, Bar Kopi)</text>
+                
+                <!-- Zona Kanan Atas: Meeting Pods -->
+                <rect x="260" y="50" width="220" height="150" fill="#f3e8ff" stroke="#c084fc" stroke-width="1.5"/>
+                <text x="370" y="70" font-size="14" font-weight="bold" text-anchor="middle" fill="#5b21b6">Privacy Zone</text>
+                
+                <rect x="270" y="90" width="60" height="50" fill="#faf5ff" stroke="#d8b4fe"/>
+                <text x="300" y="118" font-size="9" text-anchor="middle" fill="#7e22ce">Pod 1<br>(2-4pax)</text>
+                <rect x="340" y="90" width="60" height="50" fill="#faf5ff" stroke="#d8b4fe"/>
+                <text x="370" y="118" font-size="9" text-anchor="middle" fill="#7e22ce">Pod 2<br>(2-4pax)</text>
+                <rect x="410" y="90" width="60" height="50" fill="#faf5ff" stroke="#d8b4fe"/>
+                <text x="440" y="118" font-size="9" text-anchor="middle" fill="#7e22ce">Pod 3<br>(2-4pax)</text>
+                <rect x="270" y="150" width="200" height="40" fill="#faf5ff" stroke="#d8b4fe"/>
+                <text x="370" y="175" font-size="10" text-anchor="middle" fill="#7e22ce">Meeting Room (6-8pax)</text>
+
+                <!-- Zona Kanan Bawah: Fasilitas -->
+                <rect x="260" y="210" width="220" height="70" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+                <text x="370" y="245" font-size="12" font-weight="semibold" text-anchor="middle" fill="#334155">Area Servis (Toilet, Dapur, Gudang)</text>
+            </svg>
+        `;
+    },
     
-    /**
-     * Mengatur semua event listener untuk UI dan interaksi SVG.
-     */
     _setupUIControls() {
         // Toggle Overlay
-        document.getElementById('toggle-svg').addEventListener('change', (e) => {
-            document.getElementById('svg-overlay').style.display = e.target.checked ? 'block' : 'none';
-        });
+        const toggleSwitch = document.getElementById('toggle-svg');
+        if(toggleSwitch) {
+            toggleSwitch.addEventListener('change', (e) => {
+                const overlay = document.getElementById('svg-overlay');
+                if(overlay) overlay.style.display = e.target.checked ? 'block' : 'none';
+            });
+        }
 
         // Tombol Mode Edit
-        document.getElementById('edit-mode-btn').addEventListener('click', (e) => {
-            this.isEditing = !this.isEditing;
-            e.target.textContent = this.isEditing ? 'Simpan & Keluar Mode Edit' : 'Mode Edit';
-            e.target.classList.toggle('bg-green-500', this.isEditing);
-            e.target.classList.toggle('hover:bg-green-600', this.isEditing);
-            e.target.classList.toggle('bg-blue-500', !this.isEditing);
-            e.target.classList.toggle('hover:bg-blue-600', !this.isEditing);
-            
-            // Re-render hanya handle, bukan seluruh SVG
-            const handleContainer = this.svg.querySelector('#handle-container');
-            if (this.isEditing) {
-                const shapes = ['netPolygon', 'bayAreaPolygon', 'suttZonePolygon', 'fieldLengthLine', 'excavatorPath'];
-                const points = this._stringToPoints(this.coords['netPolygon']);
-                handleContainer.innerHTML = shapes.map(shapeId => 
-                    this._stringToPoints(this.coords[shapeId]).map((p, index) => 
-                        `<circle class="handle" data-shape-id="${shapeId}" data-point-index="${index}" cx="${p.x}" cy="${p.y}" r="8" />`
-                    ).join('')
-                ).join('');
-            } else {
-                handleContainer.innerHTML = '';
-            }
-        });
+        const editButton = document.getElementById('edit-mode-btn');
+        if(editButton) {
+            editButton.addEventListener('click', (e) => {
+                this.isEditing = !this.isEditing;
+                e.target.textContent = this.isEditing ? 'Simpan & Keluar Mode Edit' : 'Mode Edit';
+                e.target.classList.toggle('bg-green-500', this.isEditing);
+                e.target.classList.toggle('hover:bg-green-600', this.isEditing);
+                e.target.classList.toggle('bg-blue-500', !this.isEditing);
+                e.target.classList.toggle('hover:bg-blue-600', !this.isEditing);
+                
+                const handleContainer = this.svg.querySelector('#handle-container');
+                if (this.isEditing) {
+                    const shapes = ['netPolygon', 'bayAreaPolygon', 'suttZonePolygon', 'fieldLengthLine', 'excavatorPath'];
+                    handleContainer.innerHTML = shapes.map(shapeId => 
+                        this._stringToPoints(this.coords[shapeId]).map((p, index) => 
+                            `<circle class="handle" data-shape-id="${shapeId}" data-point-index="${index}" cx="${p.x}" cy="${p.y}" r="8" />`
+                        ).join('')
+                    ).join('');
+                } else {
+                    handleContainer.innerHTML = '';
+                    this._saveCoordinates(); // Simpan saat keluar mode edit
+                }
+            });
+        }
 
         // Mouse Events untuk Dragging
         const svgWrapper = document.getElementById('svg-wrapper');
-        svgWrapper.addEventListener('mousedown', this._onMouseDown.bind(this));
-        document.addEventListener('mousemove', this._onMouseMove.bind(this));
-        document.addEventListener('mouseup', this._onMouseUp.bind(this));
+        if(svgWrapper) {
+            svgWrapper.addEventListener('mousedown', this._onMouseDown.bind(this));
+            document.addEventListener('mousemove', this._onMouseMove.bind(this));
+            document.addEventListener('mouseup', this._onMouseUp.bind(this));
+        }
     },
-
-    /**
-     * Konversi koordinat layar ke koordinat SVG.
-     */
+    
     _getSVGPoint(e) {
+        if (!this.svg) return { x: 0, y: 0 };
         const pt = this.svg.createSVGPoint();
         pt.x = e.clientX;
         pt.y = e.clientY;
@@ -210,13 +264,11 @@ const sierVisualTechnicalDiagrams = {
 
     _onMouseDown(e) {
         if (!this.isEditing) return;
-        
         const target = e.target;
         if (target.classList.contains('handle') || target.closest('.draggable-shape')) {
             e.preventDefault();
             this.isDragging = true;
             this.activeElement = target.classList.contains('handle') ? target : target.closest('.draggable-shape');
-            
             const pt = this._getSVGPoint(e);
             if (this.activeElement.tagName === 'g') { // Marker
                  const transform = this.activeElement.transform.baseVal[0];
@@ -234,38 +286,31 @@ const sierVisualTechnicalDiagrams = {
         
         e.preventDefault();
         const pt = this._getSVGPoint(e);
-        const newX = pt.x - this.offset.x;
-        const newY = pt.y - this.offset.y;
-
         const shapeId = this.activeElement.dataset.shapeId;
 
-        // Jika menggeser handle (titik sudut)
         if (this.activeElement.classList.contains('handle')) {
             const pointIndex = parseInt(this.activeElement.dataset.pointIndex);
             this.activeElement.setAttribute('cx', pt.x);
             this.activeElement.setAttribute('cy', pt.y);
-            
             let points = this._stringToPoints(this.coords[shapeId]);
             points[pointIndex] = { x: pt.x, y: pt.y };
             this.coords[shapeId] = this._pointsToString(points);
             this._updateShape(shapeId);
-        }
-        // Jika menggeser seluruh bentuk
-        else if (this.activeElement.classList.contains('draggable-shape')) {
-             if (this.activeElement.tagName === 'g') { // Marker
+        } else if (this.activeElement.classList.contains('draggable-shape')) {
+             if (this.activeElement.tagName === 'g') {
+                 const newX = pt.x - this.offset.x;
+                 const newY = pt.y - this.offset.y;
                  this.activeElement.setAttribute('transform', `translate(${newX}, ${newY})`);
                  this.coords.markers[shapeId] = { ...this.coords.markers[shapeId], x: newX, y: newY };
-             } else { // Polygon, Polyline, Line
+             } else {
                 const dx = pt.x - this.offset.x;
                 const dy = pt.y - this.offset.y;
                 let points = this._stringToPoints(this.coords[shapeId]);
                 let newPoints = points.map(p => ({ x: p.x + dx, y: p.y + dy }));
                 this.coords[shapeId] = this._pointsToString(newPoints);
                 this._updateShape(shapeId);
-                this.offset.x = pt.x; // Update offset untuk pergerakan selanjutnya
+                this.offset.x = pt.x;
                 this.offset.y = pt.y;
-
-                // Geser juga handle-nya
                 this.svg.querySelectorAll(`.handle[data-shape-id="${shapeId}"]`).forEach(handle => {
                     handle.setAttribute('cx', parseFloat(handle.getAttribute('cx')) + dx);
                     handle.setAttribute('cy', parseFloat(handle.getAttribute('cy')) + dy);
@@ -278,20 +323,19 @@ const sierVisualTechnicalDiagrams = {
         if (this.isDragging) {
             this.isDragging = false;
             this.activeElement = null;
-            this._saveCoordinates(); // Simpan setelah selesai menggeser
+            // Tidak menyimpan otomatis di sini, tapi saat keluar mode edit
         }
     },
 
     renderAll() {
         this._loadCoordinates();
         this._renderSiteOverlay();
-        this._setupUIControls(); // Harus dipanggil setelah render
+        this._setupUIControls();
 
-        // Kita tetap panggil render diagram detail lainnya
+        // Panggil render diagram detail lainnya
         this._createPadelVis();
         this._createMeetingPointVis();
         
-        // Menambahkan style untuk UI editor
         const style = document.createElement('style');
         style.textContent = `
             .handle { fill: #3b82f6; stroke: #fff; stroke-width: 2px; cursor: move; }
