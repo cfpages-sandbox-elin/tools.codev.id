@@ -1,10 +1,6 @@
-// article-state.js (v8.24 multi ai provider)
-import {
-    defaultSettings as importedDefaultSettings,
-    APP_STATE_STORAGE_KEY, BULK_PLAN_STORAGE_KEY,
-    BULK_ARTICLES_STORAGE_KEY, CUSTOM_MODELS_STORAGE_KEY, SITEMAP_STORAGE_KEY
-} from './article-config.js';
-import { findCheapestModel, logToConsole } from './article-helpers.js';
+// article-state.js (v8.24 multi ai provider) - CORRECTED
+import { defaultSettings as importedDefaultSettings, storageKeys } from './article-config.js';
+import { logToConsole } from './article-helpers.js';
 
 // --- In-Memory State ---
 let appState = { ...importedDefaultSettings };
@@ -32,15 +28,10 @@ export function getAllBulkArticles() {
 // --- State Savers/Loaders ---
 export function loadState() {
     try {
-        const savedState = localStorage.getItem(APP_STATE_STORAGE_KEY);
+        const savedState = localStorage.getItem(storageKeys.APP_STATE);
         if (savedState) {
             const parsed = JSON.parse(savedState);
-            // Merge, ensuring new defaults are present if not in saved state
-            appState = {
-                ...importedDefaultSettings,
-                ...parsed
-            };
-            // Ensure textProviders is a non-empty array for backwards compatibility
+            appState = { ...importedDefaultSettings, ...parsed };
             if (!Array.isArray(appState.textProviders) || appState.textProviders.length === 0) {
                 appState.textProviders = importedDefaultSettings.textProviders;
             }
@@ -59,7 +50,7 @@ export function loadState() {
 
 export function saveState() {
     try {
-        localStorage.setItem(APP_STATE_STORAGE_KEY, JSON.stringify(appState));
+        localStorage.setItem(storageKeys.APP_STATE, JSON.stringify(appState));
     } catch (error) {
         logToConsole(`Error saving app state: ${error.message}`, 'error');
     }
@@ -73,7 +64,7 @@ export function updateState(newState) {
 // Custom Models
 function loadCustomModelsState() {
     try {
-        const stored = localStorage.getItem(CUSTOM_MODELS_STORAGE_KEY);
+        const stored = localStorage.getItem(storageKeys.CUSTOM_MODELS);
         customModels = stored ? JSON.parse(stored) : { text: {}, image: {} };
         customModels.text = customModels.text || {}; 
         customModels.image = customModels.image || {};
@@ -86,7 +77,7 @@ function loadCustomModelsState() {
 
 export function saveCustomModelsState() {
     try {
-        localStorage.setItem(CUSTOM_MODELS_STORAGE_KEY, JSON.stringify(customModels));
+        localStorage.setItem(storageKeys.CUSTOM_MODELS, JSON.stringify(customModels));
         logToConsole('Custom models saved.', 'info');
     } catch (error) {
         logToConsole(`Error saving custom models: ${error.message}`, 'error');
@@ -106,7 +97,7 @@ export function getCustomModelState(type, provider) {
 // Bulk Plan
 function loadBulkPlanState() {
     try {
-        const storedPlan = localStorage.getItem(BULK_PLAN_STORAGE_KEY);
+        const storedPlan = localStorage.getItem(storageKeys.BULK_PLAN);
         bulkPlan = storedPlan ? JSON.parse(storedPlan) : [];
         logToConsole(`Bulk plan loaded (${bulkPlan.length} items).`, 'info');
     } catch (error) {
@@ -117,7 +108,7 @@ function loadBulkPlanState() {
 
 export function saveBulkPlanState() {
     try {
-        localStorage.setItem(BULK_PLAN_STORAGE_KEY, JSON.stringify(bulkPlan));
+        localStorage.setItem(storageKeys.BULK_PLAN, JSON.stringify(bulkPlan));
         logToConsole('Bulk plan saved.', 'info');
     } catch (error) {
         logToConsole(`Error saving bulk plan: ${error.message}`, 'error');
@@ -141,7 +132,7 @@ export function updateBulkPlanItem(index, updates) {
 // Bulk Articles
 function loadBulkArticlesState() {
     try {
-        const storedArticles = localStorage.getItem(BULK_ARTICLES_STORAGE_KEY);
+        const storedArticles = localStorage.getItem(storageKeys.BULK_ARTICLES);
         bulkArticles = storedArticles ? JSON.parse(storedArticles) : {};
         logToConsole(`Bulk articles loaded (${Object.keys(bulkArticles).length} articles).`, 'info');
     } catch (error) {
@@ -152,7 +143,7 @@ function loadBulkArticlesState() {
 
 export function saveBulkArticlesState() {
     try {
-        localStorage.setItem(BULK_ARTICLES_STORAGE_KEY, JSON.stringify(bulkArticles));
+        localStorage.setItem(storageKeys.BULK_ARTICLES, JSON.stringify(bulkArticles));
     } catch (error) {
         logToConsole(`Error saving bulk articles (might be too large): ${error.message}`, 'error');
     }
@@ -167,13 +158,14 @@ export function addBulkArticle(filename, content) {
 export function resetAllData() {
     if (confirm("Are you sure you want to reset ALL settings, custom models, and bulk progress? This cannot be undone.")) {
         logToConsole('Resetting all application data...', 'warn');
-        localStorage.removeItem(APP_STATE_STORAGE_KEY);
-        localStorage.removeItem(CUSTOM_MODELS_STORAGE_KEY);
-        localStorage.removeItem(BULK_PLAN_STORAGE_KEY);
-        localStorage.removeItem(BULK_ARTICLES_STORAGE_KEY);
-        localStorage.removeItem(SITEMAP_STORAGE_KEY);
+        // Corrected: Use storageKeys properties
+        localStorage.removeItem(storageKeys.APP_STATE);
+        localStorage.removeItem(storageKeys.CUSTOM_MODELS);
+        localStorage.removeItem(storageKeys.BULK_PLAN);
+        localStorage.removeItem(storageKeys.BULK_ARTICLES);
+        localStorage.removeItem(storageKeys.SITEMAP);
 
-        appState = { ...appDefaultSettings }; // Reset to full defaults
+        appState = { ...importedDefaultSettings }; 
         customModels = { text: {}, image: {} };
         bulkPlan = [];
         bulkArticles = {};
@@ -182,33 +174,6 @@ export function resetAllData() {
         window.location.reload();
     } else {
         logToConsole('Reset cancelled by user.', 'info');
-    }
-}
-
-export function removeProviderFromState(index) {
-    const currentState = getState();
-    const newProviderList = currentState.textProviders.filter((_, i) => i !== index);
-    if (newProviderList.length === 0) {
-        logToConsole("Cannot remove the last provider.", "warn");
-        return;
-    }
-    updateState({ textProviders: newProviderList });
-}
-
-export function updateProviderInState(index, key, value) {
-    const currentState = getState();
-    const newProviderList = [...currentState.textProviders];
-    if (newProviderList[index]) {
-        newProviderList[index][key] = value;
-
-        // If the provider itself changes, reset the model to its default
-        if (key === 'provider') {
-            const newProviderConfig = ALL_PROVIDERS_CONFIG.text[value];
-            const availableModels = newProviderConfig?.models.map(m => m.id) || [];
-            newProviderList[index].model = findCheapestModel(availableModels) || '';
-        }
-        
-        updateState({ textProviders: newProviderList });
     }
 }
 
