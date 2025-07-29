@@ -49,13 +49,13 @@ document.addEventListener('DOMContentLoaded', () => {
      * @returns {Promise<object>} A promise that resolves to an object with { fullText, timedText }.
      */
     async function getYouTubeTranscript(videoId) {
-        console.log(`Requesting transcript for video ID: ${videoId} from our backend.`);
+        console.log(`Requesting transcript for video ID: ${videoId} from our smart backend.`);
         
         const response = await fetch('/bypass-cors', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                mode: 'youtube', // Use the new dedicated mode
+                mode: 'youtube', // The only mode we need now
                 videoId: videoId
             }),
         });
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!response.ok) {
             let errorJson;
             try { errorJson = await response.json(); } catch (e) {}
-            const errorMessage = errorJson?.error || `Failed to fetch transcript. Status: ${response.status}`;
+            const errorMessage = errorJson?.error || `Failed to fetch transcript after all attempts. Status: ${response.status}`;
             throw new Error(errorMessage);
         }
 
@@ -73,10 +73,8 @@ document.addEventListener('DOMContentLoaded', () => {
             throw new Error('Transcript not found or is empty.');
         }
 
-        // Process the data into the format our app expects.
-        // The backend now returns { text: "...", start: seconds }
         const fullText = transcriptData.map(line => line.text).join(' ');
-        const timedText = transcriptData; // The format is already correct!
+        const timedText = transcriptData;
         
         return { fullText, timedText };
     }
