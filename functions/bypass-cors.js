@@ -54,9 +54,19 @@ function handleOptions(request) {
  */
 export default {
   async fetch(request, env) {
-    // Handle OPTIONS requests for CORS preflight.
-    if (request.method === 'OPTIONS') {
-      return handleOptions(request);
+    // --- ADD THIS DEBUGGING BLOCK ---
+    if (request.method === 'GET') {
+      return new Response(JSON.stringify({
+        status: "ok",
+        message: "bypass-cors function is running!",
+        timestamp: new Date().toISOString()
+      }), {
+        status: 200,
+        headers: {
+          ...CORS_HEADERS, // Use existing CORS headers
+          'Content-Type': 'application/json'
+        },
+      });
     }
 
     // We only accept POST requests.
