@@ -104,12 +104,31 @@ export function renderTranscriptUI() {
     populateAiSelectors(); // This will now also update the token limit info
 }
 
-export function updateModelUI() {
+export function updateTokenInfoUI() {
     const providerSelect = document.getElementById('ai-provider-select');
     const modelSelect = document.getElementById('ai-model-select');
     const modelTokenInfo = document.getElementById('model-token-limit-info');
     const { allAiProviders } = getState();
     if (!providerSelect || !modelSelect || !modelTokenInfo || !allAiProviders) return;
+
+    const selectedProviderKey = providerSelect.value;
+    const selectedModelId = modelSelect.value;
+    
+    // Find the specific model object from the full provider list
+    const selectedModel = allAiProviders[selectedProviderKey]?.models.find(m => m.id === selectedModelId);
+
+    if (selectedModel && selectedModel.contextWindow) {
+        modelTokenInfo.innerHTML = `Selected Model Max Tokens: <strong class="text-indigo-600 dark:text-sky-400">${selectedModel.contextWindow.toLocaleString()}</strong>`;
+    } else {
+        modelTokenInfo.textContent = 'Selected Model Max Tokens: Unknown';
+    }
+}
+
+export function updateModelDropdownUI() {
+    const providerSelect = document.getElementById('ai-provider-select');
+    const modelSelect = document.getElementById('ai-model-select');
+    const { allAiProviders } = getState();
+    if (!providerSelect || !modelSelect || !allAiProviders) return;
 
     // A model is "free" if its base price is 0 or it has a "Free Tier" rate limit.
     const isFree = (model) => {
@@ -118,29 +137,16 @@ export function updateModelUI() {
         return hasFreePrice || hasFreeTier;
     };
 
-    // This filtering logic must be done here to know which providers have free models.
-    const freeProviders = {};
-    for (const key in allAiProviders) {
-        const filteredModels = allAiProviders[key].models.filter(model => isFree(model));
-        if (filteredModels.length > 0) {
-            freeProviders[key] = { ...allAiProviders[key], models: filteredModels };
-        }
-    }
-
     const selectedProviderKey = providerSelect.value;
-    const models = freeProviders[selectedProviderKey]?.models || [];
+    const providerData = allAiProviders[selectedProviderKey];
+    const freeModels = providerData ? providerData.models.filter(model => isFree(model)) : [];
 
-    // Update the model dropdown
-    modelSelect.innerHTML = models.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+    // Rebuild the model dropdown's HTML
+    modelSelect.innerHTML = freeModels.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
 
-    // Update the token limit info based on the newly selected model
-    const selectedModelId = modelSelect.value;
-    const selectedModel = models.find(m => m.id === selectedModelId);
-    if (selectedModel && selectedModel.contextWindow) {
-        modelTokenInfo.innerHTML = `Selected Model Max Tokens: <strong class="text-indigo-600 dark:text-sky-400">${selectedModel.contextWindow.toLocaleString()}</strong>`;
-    } else {
-        modelTokenInfo.textContent = 'Selected Model Max Tokens: Unknown';
-    }
+    // CRITICAL: After rebuilding the model list, immediately update the token info
+    // for the new default selection.
+    updateTokenInfoUI();
 }
 
 function populateAiSelectors() {
@@ -148,12 +154,12 @@ function populateAiSelectors() {
     const { allAiProviders } = getState();
     if (!providerSelect || !allAiProviders) return;
 
-    // The same dynamic filtering logic to find which providers to show
     const isFree = (model) => {
         const hasFreePrice = model.pricing?.input === 0.00 && model.pricing?.output === 0.00;
         const hasFreeTier = model.rateLimits?.tiers?.some(tier => tier.name.toLowerCase().includes('free'));
         return hasFreePrice || hasFreeTier;
     };
+
     const freeProviders = {};
     for (const key in allAiProviders) {
         if (allAiProviders[key].models.some(model => isFree(model))) {
@@ -161,14 +167,13 @@ function populateAiSelectors() {
         }
     }
 
-    // Populate the provider dropdown
     providerSelect.innerHTML = Object.keys(freeProviders).map(key => {
         const providerName = freeProviders[key].models[0].provider;
         return `<option value="${key}">${providerName}</option>`;
     }).join('');
 
     // Now, call our reusable function to populate the models for the default provider
-    updateModelUI();
+    updateModelDropdownUI();
 }
 
 /**

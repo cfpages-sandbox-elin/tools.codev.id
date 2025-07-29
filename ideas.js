@@ -1,6 +1,6 @@
 import { updateState, getState } from './ideas-state.js';
 import { getProviderConfig, getTranscript, getAiAnalysis } from './ideas-api.js';
-import { cacheElements, initApiKeyUI, showError, toggleLoader, resetOutput, renderTranscriptUI, renderAnalysisUI, updateModelUI } from './ideas-ui.js';
+import { cacheElements, initApiKeyUI, showError, toggleLoader, resetOutput, renderTranscriptUI, renderAnalysisUI, updateModelDropdownUI, updateTokenInfoUI } from './ideas-ui.js';
 import { createAnalysisPrompt } from './ideas-prompts.js';
 import { getYouTubeVideoId } from './ideas-helpers.js';
 
@@ -101,14 +101,16 @@ function attachTranscriptUIListeners() {
         analyzeBtn.addEventListener('click', handleAnalyzeTranscript);
     }
     
-    // When the provider changes, we call the dedicated UI function to update the models.
+    // When the provider changes, rebuild the model dropdown.
+    // The rebuild function will also update the token info automatically.
     if (providerSelect) {
-        providerSelect.addEventListener('change', updateModelUI);
+        providerSelect.addEventListener('change', updateModelDropdownUI);
     }
 
-    // Also update the token info when the model itself changes.
+    // *** THE CRITICAL FIX ***
+    // When the model itself changes, we ONLY need to update the token info text.
     if (modelSelect) {
-        modelSelect.addEventListener('change', updateModelUI);
+        modelSelect.addEventListener('change', updateTokenInfoUI);
     }
 }
 
