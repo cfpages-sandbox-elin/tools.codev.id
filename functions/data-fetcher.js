@@ -1,9 +1,11 @@
 /**
  * =================================================================================
- * Data Fetcher v3 (Direct Internal API)
+ * Data Fetcher v4 (Hybrid HTML + XML Fetch)
  * =================================================================================
- * This version targets YouTube's internal 'get_transcript' API directly,
- * which is more reliable than scraping the main video watch page.
+ * This version uses the most reliable self-contained method:
+ * 1. Scrapes the video watch page to get the list of available transcript tracks.
+ * 2. Fetches the chosen transcript track's XML data directly.
+ * This avoids calling the complex internal 'get_transcript' API and is more stable.
  *
  * Endpoint: /data-fetcher
  */
@@ -25,7 +27,7 @@ const handleOptions = (request) => {
 // --- Main Request Handler ---
 export async function onRequest({ request }) {
   if (request.method === 'OPTIONS') return handleOptions(request);
-  if (request.method === 'GET') return jsonResponse({ status: "ok", message: "Data Fetcher v3 (Direct Internal API) is live!" }, 200);
+  if (request.method === 'GET') return jsonResponse({ status: "ok", message: "Data Fetcher v4 (Hybrid HTML + XML Fetch) is live!" }, 200);
   if (request.method !== 'POST') return new Response(`Method Not Allowed`, { status: 405 });
 
   try {
@@ -42,65 +44,71 @@ export async function onRequest({ request }) {
 }
 
 /**
- * Uses a more direct approach by calling YouTube's internal get_transcript API.
+ * Implements the most reliable self-contained fetching logic.
  * @param {string} videoId The YouTube video ID.
  */
 async function getTranscriptFromYouTube(videoId) {
   try {
-    // 1. Fetch the main video page to get the necessary internal API key.
-    const videoPageUrl = `https://www.youtube.com/watch?v=${videoId}`;
-    console.log(`[${videoId}] Step 1: Fetching video page to find API key...`);
+    // 1. Fetch the main video page HTML.
+    const videoPageUrl = `https://www.youtube.com/watch?v=${videoId}&lang=en`;
+    console.log(`[${videoId}] Step 1: Fetching video page: ${videoPageUrl}`);
     const pageResponse = await fetch(videoPageUrl, {
       headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36' }
     });
     if (!pageResponse.ok) return jsonResponse({ error: `YouTube returned status ${pageResponse.status}. Video may be private or deleted.` }, 404);
     const html = await pageResponse.text();
 
-    // 2. Extract the INNERTUBE_API_KEY. This is essential for the internal API call.
-    const apiKeyMatch = html.match(/"INNERTUBE_API_KEY":"(.*?)"/);
-    if (!apiKeyMatch || !apiKeyMatch[1]) return jsonResponse({ error: "Could not extract internal API key from YouTube page." }, 500);
-    const INNERTUBE_API_KEY = apiKeyMatch[1];
-    console.log(`[${videoId}] Step 1: Found INNERTUBE_API_KEY.`);
-
-    // 3. Extract the client context information.
-    const contextMatch = html.match(/"INNERTUBE_CONTEXT":({.*?})/);
-    if (!contextMatch || !contextMatch[1]) return jsonResponse({ error: "Could not extract internal API context." }, 500);
-    const INNERTUBE_CONTEXT = JSON.parse(contextMatch[1]);
-    console.log(`[${videoId}] Step 1: Found INNERTUBE_CONTEXT.`);
-
-    // 4. Make the POST request to the 'get_transcript' internal API endpoint.
-    const apiUrl = `https://www.youtube.com/youtubei/v1/get_transcript?key=${INNERTUBE_API_KEY}`;
-    console.log(`[${videoId}] Step 2: Calling internal get_transcript API...`);
-    const apiResponse = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        context: INNERTUBE_CONTEXT,
-        params: playerResponse?.captions?.playerCaptionsTracklistRenderer?.captionTracks?.[0]?.baseUrl.split('?')[1],
-      })
-    });
-
-    if (!apiResponse.ok) return jsonResponse({ error: `YouTube's internal API failed with status ${apiResponse.status}`}, 502);
-    const transcriptData = await apiResponse.json();
-
-    // 5. Check for the transcript data in the response.
-    const cues = transcriptData?.actions?.[0]?.updateEngagementPanelAction?.content?.transcriptRenderer?.content?.transcriptSearchPanelRenderer?.body?.transcriptSegmentListRenderer?.initialSegments;
-    if (!cues || cues.length === 0) {
-      return jsonResponse({ error: "API response did not contain transcript cues. Captions may be disabled." }, 404);
+    // 2. Find the Player Response JSON embedded in the HTML.
+    const playerResponseMatch = html.match(/var ytInitialPlayerResponse = ({.*?});/);
+    if (!playerResponseMatch || !playerResponseMatch[1]) {
+       return jsonResponse({ error: "Could not find player data in the video page. This might be a private or restricted video." }, 404);
     }
     
-    // 6. Parse the cues into our standard format.
-    const transcriptJson = cues.map(cueItem => {
-      const cue = cueItem.transcriptSegmentRenderer;
-      return {
-        text: cue.snippet.runs.map(r => r.text).join(''),
-        start: parseInt(cue.startMs, 10) / 1000,
-      };
+    // ** THE FIX IS HERE **
+    // We now parse the JSON in a try-catch block to handle malformed data.
+    let playerResponse;
+    try {
+        playerResponse = JSON.parse(playerResponseMatch[1]);
+    } catch(e) {
+        console.error(`[${videoId}] Failed to parse ytInitialPlayerResponse. Error: ${e.message}`);
+        // This is a more helpful error message.
+        return jsonResponse({ error: "Could not parse YouTube's video data. The page format may have changed." }, 500);
+    }
+    
+    // 3. Get the list of all available caption tracks from the parsed data.
+    const captionTracks = playerResponse?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
+    if (!captionTracks || captionTracks.length === 0) return jsonResponse({ error: "Transcripts are disabled for this video." }, 404);
+    
+    // 4. Find the best available English transcript URL.
+    const transcriptInfo = 
+        captionTracks.find(t => t.vssId === '.en') || 
+        captionTracks.find(t => t.vssId === 'a.en') ||
+        captionTracks.find(t => t.vssId.startsWith('.en')) ||
+        captionTracks.find(t => t.vssId.startsWith('a.en'));
+
+    if (!transcriptInfo || !transcriptInfo.baseUrl) return jsonResponse({ error: "Could not find an English transcript for this video." }, 404);
+    
+    console.log(`[${videoId}] Step 2: Found transcript URL. Fetching XML...`);
+
+    // 5. Fetch the transcript XML from the found URL.
+    const xmlResponse = await fetch(transcriptInfo.baseUrl);
+    if (!xmlResponse.ok) return jsonResponse({ error: `Could not fetch transcript XML (Status: ${xmlResponse.status})` }, 502);
+    const xmlText = await xmlResponse.text();
+
+    // 6. Parse the XML and convert it to clean JSON.
+    const lines = [...xmlText.matchAll(/<text start="([^"]+)" dur="[^"]+">([^<]+)<\/text>/g)];
+    const transcriptJson = lines.map(lineMatch => {
+        const text = lineMatch[2]
+          .replace(/&#39;/g, "'").replace(/'/g, "'")
+          .replace(/&quot;/g, '"').replace(/"/g, '"')
+          .replace(/'/g, "'")
+          .replace(/&/g, '&');
+        return { text, start: parseFloat(lineMatch[1]) };
     });
 
     if (transcriptJson.length === 0) return jsonResponse({ error: "Successfully fetched transcript data, but it contained 0 lines."}, 404);
     
-    console.log(`[${videoId}] Step 2: Successfully fetched and parsed ${transcriptJson.length} transcript lines from internal API.`);
+    console.log(`[${videoId}] Step 3: Successfully fetched and parsed ${transcriptJson.length} transcript lines.`);
     return jsonResponse(transcriptJson, 200);
 
   } catch (error) {
