@@ -385,6 +385,38 @@ const sierMath = {
         return grandTotal;
     },
 
+    _calculatePadelCapexScenarioC() {
+        const capex = projectConfig.padel.capex_scenario_c;
+        const numCourts = capex.num_courts;
+        let grandTotal = 0;
+        
+        grandTotal += this._calculateTotal(capex.pre_operational);
+        grandTotal += this._calculateTotal(capex.demolition_and_construction);
+
+        let perCourtCost = this._calculateTotal(capex.sport_courts_equipment.per_court_costs);
+        grandTotal += perCourtCost * numCourts;
+        
+        for (const key in capex.sport_courts_equipment.initial_inventory) {
+            grandTotal += capex.sport_courts_equipment.initial_inventory[key].quantity * capex.sport_courts_equipment.initial_inventory[key].unit_cost;
+        }
+        
+        return grandTotal;
+    },
+
+    _calculateMeetingPointCapex(scenarioKey) {
+        const capex = projectConfig.meetingPoint[scenarioKey];
+        if (!capex) return 0;
+        
+        let grandTotal = 0;
+        // Iterasi melalui semua kategori utama dalam skenario (misal: renovation_costs, equipment_and_furniture)
+        for(const category in capex) {
+            if (typeof capex[category] === 'object') {
+                grandTotal += this._calculateTotal(capex[category]);
+            }
+        }
+        return grandTotal;
+    },
+
     _getDetailedCapex(unitName) {
         let total = 0;
         let breakdown = { civil_construction: 0, building: 0, equipment: 0, interior: 0, other: 0 };

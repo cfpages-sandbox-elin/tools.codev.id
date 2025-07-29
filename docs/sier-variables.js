@@ -225,10 +225,27 @@ projectConfig.padel = {
         pre_operational: { permits_and_consulting: 25000000, initial_marketing: 30000000 },
         renovation: {
             minor_demolition_and_clearing: { lump_sum: 15000000 },
+            toilet_demolition_and_relocation: { lump_sum: 20000000 }, 
             floor_repair_and_leveling: { area_m2: 500, cost_per_m2: 150000 },
             interior_finishing_painting: { area_m2: 500, cost_per_m2: 200000 }
         },
         sport_courts_equipment: {
+            per_court_costs: { steel_structure: 95000000, tempered_glass_12mm: 140000000, artificial_turf_carpet: 55000000, lighting_system_8_lamps: 30000000, net_and_posts: 7500000 },
+            initial_inventory: { rental_rackets: { quantity: 10, unit_cost: 1000000 }, ball_tubes: { quantity: 25, unit_cost: 120000 } }
+        }
+    },
+    capex_scenario_c: {
+        title: "Skenario C: Bangun Ulang di Lahan Koperasi (Kapasitas 2 Lapangan)",
+        notes: "Mendmolisi bangunan Koperasi eksisting dan membangun fasilitas Padel baru yang didesain khusus untuk 2 lapangan.",
+        num_courts: 2,
+        pre_operational: { permits_and_consulting: 35000000, initial_marketing: 40000000 },
+        demolition_and_construction: {
+            building_demolition: { lump_sum: 50000000 },
+            land_preparation_and_foundation: { area_m2: 600, cost_per_m2: 400000 },
+            building_structure_2_courts: { area_m2: 600, cost_per_m2: 2000000 },
+            interior_and_facade: { lump_sum: 250000000 }
+        },
+        sport_courts_equipment: { // Sama dengan skenario renovasi untuk 2 lapangan
             per_court_costs: { steel_structure: 95000000, tempered_glass_12mm: 140000000, artificial_turf_carpet: 55000000, lighting_system_8_lamps: 30000000, net_and_posts: 7500000 },
             initial_inventory: { rental_rackets: { quantity: 10, unit_cost: 1000000 }, ball_tubes: { quantity: 25, unit_cost: 120000 } }
         }
@@ -263,5 +280,83 @@ projectConfig.shared_facilities_capex = {
         items: {
             paving: { description: "Perkerasan Jalan Akses", quantity: 217.5, unit: "m²", unit_cost: 300000 }
         }
+    }
+};
+
+projectConfig.meetingPoint = {
+    operational_assumptions: {
+        workdays_in_month: 22,
+        weekend_days_in_month: 8,
+        cogs_rate_fnb: 0.45
+    },
+    revenue: {
+        meeting_rooms: {
+            small_pod_4pax: { count: 4, price_per_hour: 150000, occupancy_rate: 0.30 },
+            medium_room_8pax: { count: 2, price_per_hour: 250000, occupancy_rate: 0.35 },
+            training_room_20pax: { count: 1, price_per_hour: 500000, occupancy_rate: 0.25 }
+        },
+        coworking: {
+            daily_pass_seats: { count: 15, price_per_day: 100000, occupancy_rate: 0.40 }
+        },
+        virtual_office: {
+            packages: { count: 50, avg_price_per_month: 350000 }
+        },
+        ancillary: {
+            fnb_lounge_sales_monthly: 30000000,
+            parking_revenue: {
+                spots: 50,
+                avg_rate_per_day: 15000,
+                occupancy_rate: 0.50
+            }
+        }
+    },
+    opexMonthly: {
+        salaries_wages: {
+            community_manager: { count: 1, salary: 9000000 },
+            front_desk_admin: { count: 2, salary: 5000000 },
+            barista_staff: { count: 2, salary: 4500000 },
+            cleaning_security: { count: 2, salary: 4000000 }
+        },
+        utilities: {
+            electricity_kwh_price: 1700,
+            electricity_kwh_usage: 8000,
+            internet_dedicated: 5000000,
+            water_etc: 3000000
+        },
+        marketing_promotion: 10000000,
+        maintenance_repair: 5000000,
+        other_operational: 7000000
+    },
+    capex_scenario_a: {
+        title: "Skenario A: Renovasi Gedung Arsip",
+        notes: "Memanfaatkan struktur gedung eksisting untuk efisiensi biaya, dengan fokus pada perombakan total interior dan fasad.",
+        renovation_costs: {
+            structural_reinforcement: { lump_sum: 150000000 },
+            interior_works_pods: { area_m2: 500, cost_per_m2: 2500000 },
+            mep_upgrade_hvac: { area_m2: 500, cost_per_m2: 750000 },
+            facade_modernization: { lump_sum: 200000000 }
+        },
+        equipment_and_furniture: {
+            furniture_lounge_coworking: { lump_sum: 300000000 },
+            av_equipment_meeting_rooms: { lump_sum: 150000000 },
+            cafe_bar_equipment: { lump_sum: 100000000 }
+        },
+        pre_operational: { permits_and_consulting: 40000000 }
+    },
+    capex_scenario_b: {
+        title: "Skenario B: Bangun Ulang dari Nol",
+        notes: "Mendmolisi gedung eksisting untuk membangun 'Business Hub' yang ikonik dan didesain sesuai konsep ideal.",
+        demolition_and_construction: {
+            building_demolition: { lump_sum: 80000000 },
+            foundation_and_structure: { area_m2: 500, cost_per_m2: 3000000 },
+            architecture_facade: { area_m2: 500, cost_per_m2: 2000000 },
+            interior_works_pods: { area_m2: 500, cost_per_m2: 3000000 },
+        },
+        equipment_and_furniture: { // Sama dengan skenario renovasi
+            furniture_lounge_coworking: { lump_sum: 300000000 },
+            av_equipment_meeting_rooms: { lump_sum: 150000000 },
+            cafe_bar_equipment: { lump_sum: 100000000 }
+        },
+        pre_operational: { permits_and_consulting: 75000000 }
     }
 };
