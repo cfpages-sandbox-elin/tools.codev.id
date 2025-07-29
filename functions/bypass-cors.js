@@ -56,6 +56,8 @@ export default {
   async fetch(request, env) {
     // --- ADD THIS DEBUGGING BLOCK ---
     if (request.method === 'GET') {
+      return new Response("Bypass-CORS function is LIVE!", { status: 200 });
+    }
       return new Response(JSON.stringify({
         status: "ok",
         message: "bypass-cors function is running!",
