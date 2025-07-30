@@ -68,6 +68,18 @@ function extractAndParseJson(text) {
     }
 }
 
+function getVideoTypeFromText(text) {
+    const lowercasedText = text.toLowerCase();
+    if (lowercasedText.includes('tutorial')) {
+        return 'Tutorial';
+    }
+    if (lowercasedText.includes('podcast')) {
+        return 'Podcast';
+    }
+    // Default to "Ideas List" if the others aren't found or it's ambiguous.
+    return 'Ideas List';
+}
+
 async function handleAnalyzeTranscript() {
     const analyzeBtn = document.getElementById('analyze-transcript-btn');
     const provider = document.getElementById('ai-provider-select').value;
@@ -84,7 +96,7 @@ async function handleAnalyzeTranscript() {
     updateState({ isLoading: true });
 
     try {
-        const cacheKey = `analysis_v2_${currentVideoId}`; // Use a new cache key version
+        const cacheKey = `analysis_v2_${currentVideoId}`;
         const cachedAnalysis = localStorage.getItem(cacheKey);
 
         let analysis;
@@ -98,7 +110,8 @@ async function handleAnalyzeTranscript() {
             const classificationResult = await getAiAnalysis(classificationPrompt, provider, model);
             if (!classificationResult.success) throw new Error(`Classification failed: ${classificationResult.error}`);
             
-            const { videoType } = extractAndParseJson(classificationResult.text);
+            // FIX: Use the new robust helper function instead of trying to parse JSON.
+            const videoType = getVideoTypeFromText(classificationResult.text);
             console.log(`Video classified as: ${videoType}`);
 
             // STEP 2: Choose the correct detailed prompt based on classification
@@ -106,7 +119,7 @@ async function handleAnalyzeTranscript() {
                 'Tutorial': createTutorialPrompt,
                 'Podcast': createPodcastPrompt,
                 'Ideas List': createIdeasListPrompt,
-                'Other': createIdeasListPrompt // Default to ideas list for 'Other'
+                'Other': createIdeasListPrompt
             };
             const analysisPrompt = (promptSelector[videoType] || createIdeasListPrompt)(currentTranscript.fullText);
             
@@ -116,11 +129,10 @@ async function handleAnalyzeTranscript() {
             
             analysis = extractAndParseJson(analysisResult.text);
 
-            // Save the final, structured analysis to cache
             localStorage.setItem(cacheKey, JSON.stringify(analysis));
         }
 
-        renderAnalysisUI(analysis); // This will now call the new dispatcher
+        renderAnalysisUI(analysis);
         attachTranscriptUIListeners();
 
     } catch (error) {
