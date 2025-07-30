@@ -208,27 +208,33 @@ export function renderAnalysisUI(analysis) {
         finalHtml += renderSummaryUI(analysis.summary, getState().currentVideoId);
     }
 
-    // Conditionally render the tutorial guide
+    // Conditionally render other sections based on what the AI returned
     if (analysis.guide) {
         finalHtml += renderTutorialUI(analysis.guide);
     }
-
-    // Conditionally render the podcast details
     if (analysis.podcastDetails) {
         finalHtml += renderPodcastUI(analysis.podcastDetails);
     }
-
-    // Conditionally render the insights/ideas list
     if (analysis.insights) {
         finalHtml += renderIdeasListUI(analysis.insights);
     }
-
-    analysisContainer.innerHTML = finalHtml;
-
-    // A check in case the AI returns an empty object
-    if (finalHtml === '') {
-        analysisContainer.innerHTML = `<p class="text-center text-gray-500">The AI could not extract any structured information from this video.</p>`;
+    
+    // If the AI returned an empty object, show a message.
+    if (!analysis.summary && !analysis.guide && !analysis.podcastDetails && !analysis.insights) {
+         finalHtml = `<p class="text-center text-gray-500">The AI could not extract any structured information from this video.</p>`;
     }
+
+    // NEW: Add a section with a button to re-run the analysis
+    const reanalyzeSection = `
+        <div class="mt-6 p-4 bg-gray-100 dark:bg-slate-900/50 rounded-lg text-center">
+            <p class="text-sm text-gray-600 dark:text-slate-400 mb-2">Not satisfied? Try again with a different model.</p>
+            <button id="reanalyze-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors">
+                Re-analyze with Selected Model
+            </button>
+        </div>
+    `;
+    
+    analysisContainer.innerHTML = finalHtml + reanalyzeSection;
 }
 
 function renderSummaryUI(summary, videoId) {

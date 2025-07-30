@@ -173,30 +173,75 @@ async function handleGenerateMoreIdeas() {
     }
 }
 
+async function handleReanalyze() {
+    const btn = document.getElementById('reanalyze-btn');
+    if (!btn) return;
+    
+    // Get the currently selected provider and model from the UI
+    const provider = document.getElementById('ai-provider-select').value;
+    const model = document.getElementById('ai-model-select').value;
+    const { currentTranscript, currentVideoId } = getState();
+
+    if (!currentTranscript || !currentVideoId) {
+        showError("Cannot re-analyze: missing transcript or video ID.");
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = 'Re-analyzing... <span class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>';
+    
+    try {
+        console.log(`Re-analyzing [${currentVideoId}] with ${provider}/${model}...`);
+        const prompt = createComprehensiveAnalysisPrompt(currentTranscript.fullText);
+        const result = await getAiAnalysis(prompt, provider, model);
+
+        if (!result.success) {
+            throw new Error(`Re-analysis failed: ${result.error}`);
+        }
+        
+        const newAnalysis = extractAndParseJson(result.text);
+
+        // Overwrite the existing cache with the new analysis data
+        const cacheKey = `analysis_v3_${currentVideoId}`;
+        localStorage.setItem(cacheKey, JSON.stringify(newAnalysis));
+        console.log(`Cache for [${currentVideoId}] overwritten with new analysis.`);
+        
+        // Re-render the entire UI with the new data
+        renderAnalysisUI(newAnalysis);
+        // CRITICAL: Re-attach all listeners because the DOM was just rebuilt
+        attachTranscriptUIListeners();
+
+    } catch (error) {
+        showError(error.message);
+        // On error, re-enable the button so the user can try again
+        btn.disabled = false;
+        btn.innerHTML = 'Re-analyze with Selected Model';
+    }
+}
+
 function attachTranscriptUIListeners() {
     const analyzeBtn = document.getElementById('analyze-transcript-btn');
     const providerSelect = document.getElementById('ai-provider-select');
     const modelSelect = document.getElementById('ai-model-select');
     const moreIdeasBtn = document.getElementById('generate-more-ideas-btn');
+    const reanalyzeBtn = document.getElementById('reanalyze-btn'); // Get the new button
     
     if (analyzeBtn) {
         analyzeBtn.addEventListener('click', handleAnalyzeTranscript);
     }
-    
     if (providerSelect) {
         providerSelect.addEventListener('change', updateModelDropdownUI);
     }
-
     if (modelSelect) {
         modelSelect.addEventListener('change', updateTokenInfoUI);
     }
-    
     if (moreIdeasBtn) {
         moreIdeasBtn.addEventListener('click', handleGenerateMoreIdeas);
     }
+    if (reanalyzeBtn) {
+        reanalyzeBtn.addEventListener('click', handleReanalyze);
+    }
 }
-
-// --- Application Initialization ---
 
 function init() {
     cacheElements();
