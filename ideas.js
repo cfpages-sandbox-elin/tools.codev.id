@@ -1,4 +1,4 @@
-// ideas.js v1.15
+// ideas.js v1.15 automatic
 import { updateState, getState } from './ideas-state.js';
 import { getProviderConfig, getTranscript, getAiAnalysis } from './ideas-api.js';
 import { cacheElements, initApiKeyUI, showError, toggleLoader, resetOutput, renderTranscriptUI, renderAnalysisUI, updateModelDropdownUI, updateTokenInfoUI, populateMoreIdeasProviderDropdown, updateMoreIdeasModelDropdown } from './ideas-ui.js';
@@ -6,6 +6,40 @@ import { createComprehensiveAnalysisPrompt, createMoreIdeasPrompt } from './idea
 import { getYouTubeVideoId } from './ideas-helpers.js';
 
 // --- Event Handlers (must be exportable to be used in UI module) ---
+function handleUrlInput() {
+    const url = document.getElementById('url-input').value;
+    const videoId = getYouTubeVideoId(url);
+
+    if (!videoId) {
+        // If the URL is invalid or cleared, do nothing.
+        return;
+    }
+
+    // 1. Check for the final product: the analysis cache.
+    const analysisCacheKey = `analysis_v3_${videoId}`;
+    const cachedAnalysisJSON = localStorage.getItem(analysisCacheKey);
+
+    if (cachedAnalysisJSON) {
+        // 2. If analysis exists, we also need the transcript. Check both potential sources.
+        let cachedTranscriptJSON = localStorage.getItem(`transcript_supadata_${videoId}`);
+        if (!cachedTranscriptJSON) {
+            cachedTranscriptJSON = localStorage.getItem(`transcript_rapidapi_${videoId}`);
+        }
+
+        // 3. If both caches exist, we can display the results immediately.
+        if (cachedTranscriptJSON) {
+            try {
+                const analysisData = JSON.parse(cachedAnalysisJSON);
+                const transcriptData = JSON.parse(cachedTranscriptJSON);
+                displayFullAnalysis(transcriptData, analysisData);
+            } catch (e) {
+                console.error("Failed to parse cached data. It might be corrupted.", e);
+                // Clear the corrupted cache to prevent this from happening again.
+                localStorage.removeItem(analysisCacheKey);
+            }
+        }
+    }
+}
 
 async function handleFetchTranscript() {
     const urlInput = document.getElementById('url-input');
@@ -149,16 +183,12 @@ async function handleAnalyzeTranscript() {
             console.log(`V3 analysis for [${currentVideoId}] saved to cache.`);
         }
 
-        if (aiSelectionContainer) {
-            aiSelectionContainer.remove(); 
-        }
+        displayFullAnalysis(getState().currentTranscript, analysis);
 
-        renderAnalysisUI(analysis);
-        attachTranscriptUIListeners(); // This will now attach listeners to the NEW controls.
-        
     } catch (error) {
         showError(error.message);
         
+        const analyzeBtn = document.getElementById('analyze-transcript-btn');
         if (analyzeBtn) {
             analyzeBtn.disabled = false;
             analyzeBtn.innerHTML = 'Analyze Transcript';
@@ -308,6 +338,37 @@ function attachTranscriptUIListeners() {
     }
 }
 
+function displayFullAnalysis(transcriptData, analysisData) {
+    const videoId = getYouTubeVideoId(document.getElementById('url-input').value);
+
+    // 1. Update the application state
+    updateState({ 
+        currentTranscript: transcriptData, 
+        currentVideoId: videoId,
+        isLoading: false
+    });
+    
+    // 2. Reset any previous output and hide loaders
+    resetOutput();
+    toggleLoader(false);
+
+    // 3. Render the transcript details section (collapsible)
+    renderTranscriptUI(transcriptData);
+    
+    // 4. Render the analysis results (summary, insights, etc.)
+    renderAnalysisUI(analysisData);
+
+    // 5. Remove the initial "Analyze Transcript" selection box, as we've already analyzed.
+    const aiSelectionContainer = document.getElementById('ai-selection-container');
+    if (aiSelectionContainer) {
+        aiSelectionContainer.remove();
+    }
+
+    // 6. CRITICAL: Attach listeners to all the new buttons and dropdowns we just created.
+    attachTranscriptUIListeners();
+    console.log(`Successfully displayed cached analysis for video ID: ${videoId}`);
+}
+
 function init() {
     cacheElements();
     initApiKeyUI();
@@ -322,8 +383,9 @@ function init() {
         .then(providers => updateState({ allAiProviders: providers }))
         .catch(err => showError(err.message));
 
-    // Attach main event listeners
     document.getElementById('analyze-btn').addEventListener('click', handleFetchTranscript);
+    
+    document.getElementById('url-input').addEventListener('input', handleUrlInput);
 
     document.getElementById('url-input').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') handleFetchTranscript();
