@@ -49,6 +49,29 @@ async function handleFetchTranscript() {
     }
 }
 
+function extractAndParseJson(text) {
+    // Find the first opening curly brace, marking the start of the JSON
+    const startIndex = text.indexOf('{');
+    // Find the last closing curly brace, marking the potential end of the JSON
+    const endIndex = text.lastIndexOf('}');
+
+    if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
+        throw new Error("Could not find a valid JSON object structure in the AI's response.");
+    }
+
+    // Extract the substring that is most likely the JSON content
+    const jsonString = text.substring(startIndex, endIndex + 1);
+
+    try {
+        // Attempt to parse this potentially "dirty" JSON string
+        return JSON.parse(jsonString);
+    } catch (error) {
+        // If parsing fails, throw a more informative error for debugging
+        throw new Error(`Failed to parse the extracted JSON. Error: ${error.message}`);
+    }
+}
+
+
 async function handleAnalyzeTranscript() {
     const analyzeBtn = document.getElementById('analyze-transcript-btn');
     const provider = document.getElementById('ai-provider-select').value;
@@ -60,34 +83,23 @@ async function handleAnalyzeTranscript() {
     analyzeBtn.innerHTML = 'Analyzing... <span class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>';
     updateState({ isLoading: true });
 
-    let result;
+    let result; 
 
     try {
         const prompt = createAnalysisPrompt(currentTranscript.fullText);
-        result = await getAiAnalysis(prompt, provider, model); // Assign to the outer variable
+        result = await getAiAnalysis(prompt, provider, model);
 
         if (result.success) {
-            let analysisText = result.text;
-            const jsonRegex = /```json\s*({[\s\S]*?})\s*```|({[\s\S]*})/;
-            const match = analysisText.match(jsonRegex);
-
-            if (match) {
-                analysisText = match[1] || match[2];
-            } else {
-                throw new Error("Could not find a valid JSON object in the AI's response.");
-            }
-
-            const analysis = JSON.parse(analysisText);
+            // Use the new robust function to extract and parse the JSON
+            const analysis = extractAndParseJson(result.text);
             console.log("AI Analysis Complete:", analysis);
             renderAnalysisUI(analysis);
         } else {
-            // This handles cases where the API call was successful but the action failed server-side
             throw new Error(result.error || "The AI API returned an unspecified error.");
         }
     } catch (error) {
         let errorMessage = error.message;
         if (result && result.text) {
-             // Append the raw text from the AI to help debug parsing issues.
              errorMessage += ` | AI Response: "${result.text}"`;
         }
         showError(errorMessage);
