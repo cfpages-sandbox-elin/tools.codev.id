@@ -3,15 +3,18 @@ import { getState } from './ideas-state.js';
 const elements = {};
 
 export function cacheElements() {
-    elements.apiKeyInput = document.getElementById('supadata-api-key');
+    // Input elements
+    elements.urlInput = document.getElementById('url-input');
     elements.supadataApiKeyInput = document.getElementById('supadata-api-key');
     elements.rapidapiApiKeyInput = document.getElementById('rapidapi-api-key');
+
+    // Button elements
+    elements.analyzeBtn = document.getElementById('analyze-btn');
+    
+    // Container/Display elements
     elements.apiKeyDetails = document.getElementById('api-key-details');
     elements.supadataApiKeyStatusIcon = document.getElementById('supadata-api-key-status-icon');
     elements.rapidapiApiKeyStatusIcon = document.getElementById('rapidapi-api-key-status-icon');
-    elements.apiKeyStatusIcon = document.getElementById('api-key-status-icon');
-    elements.urlInput = document.getElementById('url-input');
-    elements.analyzeBtn = document.getElementById('analyze-btn');
     elements.loader = document.getElementById('loader');
     elements.errorMessage = document.getElementById('error-message');
     elements.outputContent = document.getElementById('output-content');
