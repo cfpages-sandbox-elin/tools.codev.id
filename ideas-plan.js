@@ -1,5 +1,4 @@
-// ideas-plan.js
-
+// ideas-plan.js v1.15
 import { getState } from './ideas-state.js';
 import { getAiAnalysis } from './ideas-api.js';
 import { showError } from './ideas-ui.js';

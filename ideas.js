@@ -1,4 +1,5 @@
-// ideas.js v1.15 automatic + fix re-analyze ai dropdown
+// ideas.js v1.15 tab click + automatic + fix re-analyze ai dropdown
+import { initPlanTab } from './ideas-plan.js';
 import { updateState, getState } from './ideas-state.js';
 import { getProviderConfig, getTranscript, getAiAnalysis } from './ideas-api.js';
 import { cacheElements, initApiKeyUI, showError, toggleLoader, resetOutput, renderTranscriptUI, renderAnalysisUI, updateModelDropdownUI, updateTokenInfoUI, populateMoreIdeasProviderDropdown, updateMoreIdeasModelDropdown } from './ideas-ui.js';
@@ -309,6 +310,38 @@ async function handleReanalyze() {
     }
 }
 
+function handleTabClick(event) {
+    const clickedButton = event.currentTarget;
+    const targetTab = clickedButton.dataset.tab; // e.g., 'brainstorm' or 'plan'
+
+    // Get all tab buttons and content panes
+    const tabButtons = document.querySelectorAll('#main-tabs .tab-btn');
+    const tabContents = document.querySelectorAll('main > div');
+
+    // Update button styles: Deactivate all, then activate the clicked one
+    tabButtons.forEach(btn => {
+        btn.classList.remove('border-indigo-500', 'text-indigo-600');
+        btn.classList.add('border-transparent', 'text-gray-500', 'hover:border-gray-300', 'hover:text-gray-700', 'dark:text-slate-400', 'dark:hover:border-slate-500', 'dark:hover:text-slate-300');
+    });
+    clickedButton.classList.add('border-indigo-500', 'text-indigo-600');
+    clickedButton.classList.remove('border-transparent', 'text-gray-500', 'hover:border-gray-300', 'hover:text-gray-700', 'dark:text-slate-400', 'dark:hover:border-slate-500', 'dark:hover:text-slate-300');
+
+    // Show/hide content panes
+    tabContents.forEach(content => {
+        content.classList.add('hidden');
+    });
+    document.getElementById(`${targetTab}-content`).classList.remove('hidden');
+
+    // Update the state
+    updateState({ activeTab: targetTab });
+
+    // --- CRITICAL: If the plan tab was clicked, initialize its content ---
+    if (targetTab === 'plan') {
+        console.log("Plan tab clicked. Initializing planning blueprints...");
+        initPlanTab();
+    }
+}
+
 function attachTranscriptUIListeners() {
     // --- Main analysis controls ---
     const analyzeBtn = document.getElementById('analyze-transcript-btn');
@@ -372,10 +405,14 @@ function init() {
     const savedRapidapiKey = localStorage.getItem('rapidapiApiKey');
     updateState({ supadataApiKey: savedSupadataKey, rapidapiApiKey: savedRapidapiKey });
     
-    // Asynchronously load AI provider config
     getProviderConfig()
         .then(providers => updateState({ allAiProviders: providers }))
         .catch(err => showError(err.message));
+
+    const tabButtons = document.querySelectorAll('#main-tabs .tab-btn');
+    tabButtons.forEach(button => {
+        button.addEventListener('click', handleTabClick);
+    });
 
     document.getElementById('analyze-btn').addEventListener('click', handleFetchTranscript);
     
