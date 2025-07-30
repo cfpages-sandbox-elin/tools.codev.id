@@ -1,4 +1,4 @@
-// ideas.js v1.15 automatic
+// ideas.js v1.15 automatic + fix re-analyze ai dropdown
 import { updateState, getState } from './ideas-state.js';
 import { getProviderConfig, getTranscript, getAiAnalysis } from './ideas-api.js';
 import { cacheElements, initApiKeyUI, showError, toggleLoader, resetOutput, renderTranscriptUI, renderAnalysisUI, updateModelDropdownUI, updateTokenInfoUI, populateMoreIdeasProviderDropdown, updateMoreIdeasModelDropdown } from './ideas-ui.js';
@@ -341,30 +341,24 @@ function attachTranscriptUIListeners() {
 function displayFullAnalysis(transcriptData, analysisData) {
     const videoId = getYouTubeVideoId(document.getElementById('url-input').value);
 
-    // 1. Update the application state
     updateState({ 
         currentTranscript: transcriptData, 
         currentVideoId: videoId,
         isLoading: false
     });
     
-    // 2. Reset any previous output and hide loaders
     resetOutput();
     toggleLoader(false);
 
-    // 3. Render the transcript details section (collapsible)
     renderTranscriptUI(transcriptData);
     
-    // 4. Render the analysis results (summary, insights, etc.)
-    renderAnalysisUI(analysisData);
-
-    // 5. Remove the initial "Analyze Transcript" selection box, as we've already analyzed.
     const aiSelectionContainer = document.getElementById('ai-selection-container');
     if (aiSelectionContainer) {
         aiSelectionContainer.remove();
     }
 
-    // 6. CRITICAL: Attach listeners to all the new buttons and dropdowns we just created.
+    renderAnalysisUI(analysisData);
+
     attachTranscriptUIListeners();
     console.log(`Successfully displayed cached analysis for video ID: ${videoId}`);
 }

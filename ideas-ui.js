@@ -256,12 +256,12 @@ export function renderAnalysisUI(analysis) {
          finalHtml = `<p class="text-center text-gray-500">The AI could not extract any structured information from this video.</p>`;
     }
 
+    // The Re-analysis Controls Section
     const reanalyzeSection = `
         <div class="mt-8 p-5 bg-white dark:bg-slate-900/50 rounded-lg shadow-md border-t-4 border-indigo-500 dark:border-sky-500">
             <h3 class="text-xl font-semibold text-gray-800 dark:text-slate-100 mb-4">Re-analyze or Refine ⚙️</h3>
             <p class="text-sm text-gray-600 dark:text-slate-400 mb-4">Not satisfied? Try again with a different model to get a new perspective.</p>
             
-            <!-- Model Selection Dropdowns -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end mb-4">
                 <div>
                     <label for="ai-provider-select" class="block text-sm font-medium text-gray-700 dark:text-slate-300">Provider</label>
@@ -273,10 +273,8 @@ export function renderAnalysisUI(analysis) {
                 </div>
             </div>
             
-             <!-- Token Info -->
              <div id="model-token-limit-info" class="text-xs text-gray-500 dark:text-slate-400 mb-4">Selected Model Max Tokens: <span class="font-semibold">...</span></div>
 
-            <!-- Re-analyze Button -->
             <div class="text-right">
                 <button id="reanalyze-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors">
                     Re-analyze with Selected Model
