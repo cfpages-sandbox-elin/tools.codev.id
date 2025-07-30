@@ -41,3 +41,62 @@ ${transcript}
 Provide your analysis as a single JSON object now.
 `;
 }
+
+export function createPlanPrompt(idea) {
+    return `
+You are a world-class startup founder, product manager, and software architect. Your task is to create a comprehensive and actionable blueprint for the following product idea.
+
+**Product Idea:**
+- Title: "${idea.title}"
+- Description: "${idea.description}"
+
+**Instructions:**
+Provide your analysis STRICTLY in the form of a single, valid JSON object. Do not include any text before or after the JSON. The JSON object must have the following structure:
+
+{
+  "feasibilityAnalysis": {
+    "overallScore": "A single number from 1-10 representing the overall viability of this idea.",
+    "aiBuildability": {
+      "score": "A number from 1-10. 10 means it's easily and almost fully automatable with current AI tech. 1 means it requires significant human intervention.",
+      "reasoning": "A brief explanation for the score."
+    },
+    "marketDemand": {
+      "score": "A number from 1-10. 10 means a large, desperate market exists. 1 means it's a solution looking for a problem.",
+      "reasoning": "A brief explanation for the score, considering market size and user pain point."
+    },
+    "monetizationPotential": {
+      "score": "A number from 1-10. 10 means high willingness to pay and clear revenue models (e.g., B2B SaaS). 1 means difficult to monetize.",
+      "reasoning": "A brief explanation for the score, suggesting a primary revenue model (e.g., subscription, usage-based)."
+    }
+  },
+  "mvp": {
+    "features": [
+      "A string array listing the 3-5 absolute essential features for the Minimum Viable Product. Be specific."
+    ],
+    "techStack": [
+      {
+        "component": "Frontend",
+        "recommendation": "e.g., React with Next.js and Tailwind CSS"
+      },
+      {
+        "component": "Backend",
+        "recommendation": "e.g., Node.js with Express, or Python with FastAPI"
+      },
+      {
+        "component": "Database",
+        "recommendation": "e.g., PostgreSQL or Firestore"
+      },
+      {
+        "component": "Core AI Provider",
+        "recommendation": "e.g., OpenAI API for text, Anthropic for reasoning"
+      }
+    ]
+  },
+  "goToMarketStrategy": [
+    "A string array listing 3-5 concrete, actionable steps to get the first 100 users. e.g., 'Post on Indie Hackers with a demo video', 'Engage with target users in relevant subreddits'."
+  ]
+}
+
+Now, generate the complete JSON object for the provided product idea.
+`;
+}

@@ -1,10 +1,10 @@
-// A simple state management object.
 const appState = {
     supadataApiKey: null,
     allAiProviders: null,
     currentTranscript: null,
     currentVideoId: null,
     isLoading: false,
+    activeTab: 'brainstorm', // Add this line
 };
 
 /**

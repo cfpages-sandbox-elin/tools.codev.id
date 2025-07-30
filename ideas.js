@@ -1,7 +1,7 @@
 import { updateState, getState } from './ideas-state.js';
 import { getProviderConfig, getTranscript, getAiAnalysis } from './ideas-api.js';
 import { cacheElements, initApiKeyUI, showError, toggleLoader, resetOutput, renderTranscriptUI, renderAnalysisUI, updateModelDropdownUI, updateTokenInfoUI } from './ideas-ui.js';
-import { createAnalysisPrompt } from './ideas-prompts.js';
+import { createAnalysisPrompt, createMoreIdeasPrompt } from './ideas-prompts.js';
 import { getYouTubeVideoId } from './ideas-helpers.js';
 
 // --- Event Handlers (must be exportable to be used in UI module) ---
@@ -124,10 +124,55 @@ async function handleAnalyzeTranscript() {
     }
 }
 
+async function handleGenerateMoreIdeas() {
+    const btn = document.getElementById('generate-more-ideas-btn');
+    if (!btn) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Generating...';
+
+    const { currentVideoId } = getState();
+    const analysisCacheKey = `analysis_${currentVideoId}`;
+    const cachedAnalysis = JSON.parse(localStorage.getItem(analysisCacheKey) || '{}');
+    const existingIdeas = cachedAnalysis.insights?.filter(i => i.category === 'Product Idea') || [];
+
+    // Use a default planning model for this creative task
+    const provider = 'google';
+    const model = 'gemini-2.5-pro';
+
+    try {
+        const prompt = createMoreIdeasPrompt(existingIdeas);
+        const result = await getAiAnalysis(prompt, provider, model);
+
+        if (result.success) {
+            const newIdeas = JSON.parse(result.text); // The prompt asks for a direct array
+            
+            // Merge new ideas with existing analysis
+            cachedAnalysis.insights.push(...newIdeas);
+            
+            // Save the updated analysis back to the cache
+            localStorage.setItem(analysisCacheKey, JSON.stringify(cachedAnalysis));
+            
+            // Re-render the UI to show everything
+            renderAnalysisUI(cachedAnalysis);
+            attachTranscriptUIListeners(); // Re-attach listeners as the DOM was rebuilt
+
+        } else {
+            throw new Error(result.error);
+        }
+
+    } catch (error) {
+        showError(`Failed to generate more ideas: ${error.message}`);
+    } finally {
+        // The button will be re-rendered, so no need to re-enable it here.
+    }
+}
+
 function attachTranscriptUIListeners() {
     const analyzeBtn = document.getElementById('analyze-transcript-btn');
     const providerSelect = document.getElementById('ai-provider-select');
     const modelSelect = document.getElementById('ai-model-select');
+    const moreIdeasBtn = document.getElementById('generate-more-ideas-btn');
     
     if (analyzeBtn) {
         analyzeBtn.addEventListener('click', handleAnalyzeTranscript);
@@ -140,6 +185,10 @@ function attachTranscriptUIListeners() {
     if (modelSelect) {
         modelSelect.addEventListener('change', updateTokenInfoUI);
     }
+    
+    if (moreIdeasBtn) {
+        moreIdeasBtn.addEventListener('click', handleGenerateMoreIdeas);
+    }
 }
 
 // --- Application Initialization ---
@@ -147,6 +196,42 @@ function attachTranscriptUIListeners() {
 function init() {
     cacheElements();
     initApiKeyUI();
+
+    const tabs = document.querySelectorAll('.tab-btn');
+    const tabContents = {
+        brainstorm: document.getElementById('brainstorm-content'),
+        plan: document.getElementById('plan-content')
+    };
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const tabName = tab.dataset.tab;
+            
+            // Update state
+            updateState({ activeTab: tabName });
+
+            // Update button styles
+            tabs.forEach(t => {
+                const isActive = t.dataset.tab === tabName;
+                t.classList.toggle('border-indigo-500', isActive);
+                t.classList.toggle('text-indigo-600', isActive);
+                t.classList.toggle('border-transparent', !isActive);
+                t.classList.toggle('text-gray-500', !isActive);
+                t.setAttribute('aria-current', isActive ? 'page' : 'false');
+            });
+
+            // Show/hide content
+            Object.values(tabContents).forEach(content => content.classList.add('hidden'));
+            tabContents[tabName].classList.remove('hidden');
+
+            // If switching to the plan tab, initialize it
+            if (tabName === 'plan') {
+                import('./ideas-plan.js').then(module => {
+                    module.initPlanTab();
+                });
+            }
+        });
+    });
 
     // Load initial state
     const savedKey = localStorage.getItem('supadataApiKey');

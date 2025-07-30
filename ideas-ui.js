@@ -223,6 +223,14 @@ export function renderAnalysisUI(analysis) {
             </li>
         `).join('');
 
+        const moreIdeasButton = category === 'Product Idea' ? `
+            <div class="mt-4 text-right">
+                <button id="generate-more-ideas-btn" class="text-sm bg-indigo-100 text-indigo-700 font-semibold py-2 px-3 rounded-md hover:bg-indigo-200 dark:bg-sky-900/50 dark:text-sky-300 dark:hover:bg-sky-900">
+                    + Generate More Ideas
+                </button>
+            </div>
+        ` : '';
+
         return `
             <div class="bg-white dark:bg-slate-800/50 p-5 rounded-lg shadow-md">
                 <h2 class="text-2xl font-semibold text-indigo-500 dark:text-sky-300 mb-4">${details.title}</h2>

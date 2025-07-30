@@ -62,12 +62,12 @@
 
         <!-- Centered Tabs -->
         <div class="mb-6 border-b border-gray-200 dark:border-slate-700">
-            <nav class="flex justify-center space-x-4" aria-label="Tabs">
-                <button id="tab-brainstorm" class="tab-btn active text-indigo-600 dark:text-sky-400 border-indigo-600 dark:border-sky-400 px-4 py-2 font-medium text-lg rounded-t-lg border-b-2">
+            <nav id="main-tabs" class="-mb-px flex justify-center space-x-8" aria-label="Tabs">
+                <button data-tab="brainstorm" class="tab-btn border-indigo-500 text-indigo-600 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium" aria-current="page">
                     Brainstorm 🧠
                 </button>
-                <button id="tab-execute" class="tab-btn text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-white px-4 py-2 font-medium text-lg rounded-t-lg">
-                    Execute 🚀
+                <button data-tab="plan" class="tab-btn border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-slate-400 dark:hover:border-slate-500 dark:hover:text-slate-300 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium">
+                    Plan & Strategize 📒
                 </button>
             </nav>
         </div>
@@ -75,10 +75,10 @@
         <!-- Tab Content -->
         <main>
             <!-- Brainstorm Tab -->
-            <div id="content-brainstorm" class="tab-content">
+            <div id="brainstorm-content" class="tab-content">
                 <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md">
                     <p class="text-gray-600 dark:text-slate-300 mb-4">Enter a YouTube URL to analyze its content and spark new ideas.</p>
-                    <div class="flex flex-col sm:flex-row gap-3">
+                    <div id="url-input-container" class="flex flex-col sm:flex-row gap-3">
                         <input type="text" id="url-input" class="flex-grow bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-md p-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g., https://www.youtube.com/watch?v=...">
                         <button id="analyze-btn" class="bg-indigo-600 hover:bg-indigo-700 dark:bg-sky-600 dark:hover:bg-sky-700 text-white font-bold py-3 px-6 rounded-md transition-colors">
                             Analyze ✨
@@ -100,11 +100,8 @@
             </div>
 
             <!-- Execute Tab -->
-            <div id="content-execute" class="tab-content hidden">
-                <div class="bg-white dark:bg-slate-800 p-8 rounded-lg text-center shadow-md">
-                    <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">Execution Planner</h2>
-                    <p class="text-gray-500 dark:text-slate-400 mt-2">This section is coming soon! Plan and track your best ideas here.</p>
-                </div>
+            <div id="plan-content" class="hidden space-y-6">
+                <!-- Planning blueprints will be rendered here by ideas-plan.js -->
             </div>
         </main>
     </div>
