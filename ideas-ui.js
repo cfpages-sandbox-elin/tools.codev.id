@@ -39,6 +39,15 @@ export function resetOutput() {
     elements.outputContent.innerHTML = '';
 }
 
+function isFree(model) {
+    if (!model) return false;
+    // Check for explicit zero pricing
+    const hasFreePrice = model.pricing?.input === 0.00 && model.pricing?.output === 0.00;
+    // Check for a rate-limit tier that is explicitly named 'free'
+    const hasFreeTier = model.rateLimits?.tiers?.some(tier => tier.name.toLowerCase().includes('free'));
+    return hasFreePrice || hasFreeTier;
+}
+
 function estimateTokens(text) {
     if (!text) return 0;
     // A common rule of thumb: 1 token is roughly 4 characters.
@@ -101,15 +110,9 @@ function populateAiSelectors() {
     const { allAiProviders } = getState();
     if (!providerSelect || !allAiProviders) return;
 
-    const isFree = (model) => {
-        const hasFreePrice = model.pricing?.input === 0.00 && model.pricing?.output === 0.00;
-        const hasFreeTier = model.rateLimits?.tiers?.some(tier => tier.name.toLowerCase().includes('free'));
-        return hasFreePrice || hasFreeTier;
-    };
-
     const freeProviders = {};
     for (const key in allAiProviders) {
-        if (allAiProviders[key].models.some(isFree)) {
+        if (allAiProviders[key].models.some(isFree)) { // Use the shared helper
             freeProviders[key] = allAiProviders[key];
         }
     }
@@ -129,13 +132,14 @@ export function updateModelDropdownUI() {
     const { allAiProviders } = getState();
     if (!providerSelect || !modelSelect || !allAiProviders) return;
 
-    const isFree = (model) => { /* ... this dynamic logic is correct, no changes needed ... */ };
     const selectedProviderKey = providerSelect.value;
     const providerData = allAiProviders[selectedProviderKey];
+    
     const freeModels = providerData ? providerData.models.filter(isFree) : [];
 
     modelSelect.innerHTML = freeModels.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
-    updateTokenInfoUI(); // Automatically update token info after model list changes
+    
+    updateTokenInfoUI();
 }
 
 export function updateTokenInfoUI() {
@@ -147,12 +151,13 @@ export function updateTokenInfoUI() {
 
     const selectedProviderKey = providerSelect.value;
     const selectedModelId = modelSelect.value;
+    
     const selectedModel = allAiProviders[selectedProviderKey]?.models.find(m => m.id === selectedModelId);
 
     if (selectedModel && selectedModel.contextWindow) {
         modelTokenInfo.innerHTML = `Selected Model Max Tokens: <strong class="text-indigo-600 dark:text-sky-400">${selectedModel.contextWindow.toLocaleString()}</strong>`;
     } else {
-        modelTokenInfo.textContent = 'Selected Model Max Tokens: Unknown';
+        modelTokenInfo.innerHTML = 'Selected Model Max Tokens: <span class="font-semibold">Unknown</span>';
     }
 }
 
