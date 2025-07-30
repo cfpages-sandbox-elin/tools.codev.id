@@ -106,7 +106,7 @@ async function handleFetchTranscript() {
     }
 }
 
-function extractAndParseJson(text) {
+export function extractAndParseJson(text) {
     // Find the first opening curly brace or square bracket
     const firstBrace = text.indexOf('{');
     const firstBracket = text.indexOf('[');
