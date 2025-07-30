@@ -122,7 +122,6 @@ async function handleAnalyzeTranscript() {
             const result = await getAiAnalysis(prompt, provider, model);
 
             if (!result.success) {
-                // If the API returns a structured failure, throw it to the catch block.
                 throw new Error(result.error || `API returned success:false`);
             }
             
@@ -131,24 +130,21 @@ async function handleAnalyzeTranscript() {
             console.log(`V3 analysis for [${currentVideoId}] saved to cache.`);
         }
 
-        renderAnalysisUI(analysis);
-        attachTranscriptUIListeners();
-        
-        // FIX: Only hide the selection container on a complete success.
         if (aiSelectionContainer) {
-            aiSelectionContainer.style.display = 'none';
+            aiSelectionContainer.remove(); 
         }
 
+        renderAnalysisUI(analysis);
+        attachTranscriptUIListeners(); // This will now attach listeners to the NEW controls.
+        
     } catch (error) {
         showError(error.message);
         
-        // FIX: On error, re-enable the button so the user can retry.
         if (analyzeBtn) {
             analyzeBtn.disabled = false;
             analyzeBtn.innerHTML = 'Analyze Transcript';
         }
     } finally {
-        // The finally block is now only responsible for the global loading state.
         updateState({ isLoading: false });
     }
 }
