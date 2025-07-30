@@ -1,4 +1,4 @@
-// ideas-plan.js v1.15
+// ideas-plan.js v1.15 multi provider
 import { getState } from './ideas-state.js';
 import { getAiAnalysis } from './ideas-api.js';
 import { showError } from './ideas-ui.js';
@@ -35,28 +35,40 @@ function selectPlanningModels() {
     }
 
     const MIN_CONTEXT_WINDOW = 65536; // Require at least a 64k context window
-    const MAX_MODELS_TO_USE = 5;
-    let candidates = [];
+    const MAX_PROVIDERS_TO_USE = 5;
+    let providerCandidates = {};
 
+    // 1. Find the best model for EACH provider
     for (const providerKey in allAiProviders) {
         const provider = allAiProviders[providerKey];
+        let bestModelForProvider = null;
+
         for (const model of provider.models) {
-            // Check if the model is free and has a large enough context window
+            // Check if the model is suitable
             if (isFreeForPlanning(model, providerKey) && model.contextWindow >= MIN_CONTEXT_WINDOW) {
-                candidates.push({ 
-                    providerKey, 
-                    modelId: model.id, 
-                    contextWindow: model.contextWindow 
-                });
+                // If we haven't found a model for this provider yet, or this one is better
+                if (!bestModelForProvider || model.contextWindow > bestModelForProvider.contextWindow) {
+                    bestModelForProvider = {
+                        providerKey,
+                        modelId: model.id.split('/').pop(), // Sanitize the ID
+                        contextWindow: model.contextWindow
+                    };
+                }
             }
+        }
+
+        // If we found a suitable model for this provider, add it to our list of candidates
+        if (bestModelForProvider) {
+            providerCandidates[providerKey] = bestModelForProvider;
         }
     }
 
-    // Sort candidates by context window size in descending order (best first)
-    candidates.sort((a, b) => b.contextWindow - a.contextWindow);
+    // 2. Convert to an array and sort by context window to get the best providers first
+    const sortedCandidates = Object.values(providerCandidates)
+                                   .sort((a, b) => b.contextWindow - a.contextWindow);
 
-    // Return the top N candidates
-    return candidates.slice(0, MAX_MODELS_TO_USE);
+    // 3. Return the top N providers
+    return sortedCandidates.slice(0, MAX_PROVIDERS_TO_USE);
 }
 
 
@@ -104,6 +116,8 @@ export async function initPlanTab() {
     }
 }
 
+const delay = ms => new Promise(res => setTimeout(res, ms));
+
 async function generateAndRenderPlanForIdea(idea, container, planningModels) {
     const ideaSlug = idea.title.toLowerCase().replace(/\s+/g, '-').slice(0, 30);
     const planCacheKey = `plan_${getState().currentVideoId}_${ideaSlug}`;
@@ -115,7 +129,7 @@ async function generateAndRenderPlanForIdea(idea, container, planningModels) {
             <p class="text-sm text-gray-600 dark:text-slate-400 mb-4">${idea.description}</p>
             <div class="border-t border-gray-200 dark:border-slate-700 pt-4">
                 <div class="loader-container text-center">
-                    <p class="font-semibold">Generating strategic plans from ${planningModels.length} different AIs...</p>
+                    <p class="font-semibold">Generating strategic plans from ${planningModels.length} different AI providers...</p>
                     <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500 mt-2"></div>
                 </div>
                 <div class="results-container"></div>
@@ -135,11 +149,16 @@ async function generateAndRenderPlanForIdea(idea, container, planningModels) {
         return;
     }
 
-    const planPromises = planningModels.map(config => {
-        const prompt = createPlanPrompt(idea);
-        return getAiAnalysis(prompt, config.providerKey, config.modelId)
-            .then(response => ({ ...response, ...config }))
-            .catch(error => ({ success: false, error: error.message, ...config }));
+    const STAGGER_DELAY_MS = 250; // 250ms delay between each API call
+
+    const planPromises = planningModels.map((config, index) => {
+        return delay(index * STAGGER_DELAY_MS).then(() => {
+            console.log(`[Staggered Call] Requesting plan from ${config.providerKey}/${config.modelId}...`);
+            const prompt = createPlanPrompt(idea);
+            return getAiAnalysis(prompt, config.providerKey, config.modelId)
+                .then(response => ({ ...response, ...config }))
+                .catch(error => ({ success: false, error: error.message, ...config }));
+        });
     });
 
     const results = await Promise.allSettled(planPromises);
