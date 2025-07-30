@@ -235,13 +235,28 @@ function renderSummaryUI(summary, videoId) {
     if (!summary || !videoId) return '';
     
     const subTopicsHtml = (summary.subTopics || []).map(topic => {
-        const youtubeLink = `https://www.youtube.com/watch?v=${videoId}&t=${Math.floor(topic.startTime)}s`;
-        return `
-            <a href="${youtubeLink}" target="_blank" class="block p-3 bg-gray-100 dark:bg-slate-800 rounded-md shadow-sm hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors">
-                <span class="font-semibold text-indigo-600 dark:text-sky-400">${topic.title}</span>
-                <span class="text-xs font-mono ml-2 text-gray-500 dark:text-slate-400">@${new Date(topic.startTime * 1000).toISOString().substr(14, 5)}</span>
-            </a>
-        `;
+        // FIX: Validate that startTime is a usable number before creating a Date.
+        const isValidTime = typeof topic.startTime === 'number' && !isNaN(topic.startTime);
+        
+        if (isValidTime) {
+            // If the time is valid, create a clickable link with a timestamp.
+            const youtubeLink = `https://www.youtube.com/watch?v=${videoId}&t=${Math.floor(topic.startTime)}s`;
+            const timestamp = new Date(topic.startTime * 1000).toISOString().substr(14, 5);
+            return `
+                <a href="${youtubeLink}" target="_blank" class="block p-3 bg-gray-100 dark:bg-slate-800 rounded-md shadow-sm hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors">
+                    <span class="font-semibold text-indigo-600 dark:text-sky-400">${topic.title}</span>
+                    <span class="text-xs font-mono ml-2 text-gray-500 dark:text-slate-400">@${timestamp}</span>
+                </a>
+            `;
+        } else {
+            // If the time is invalid, render a non-clickable item to prevent errors.
+            return `
+                <div class="block p-3 bg-gray-100 dark:bg-slate-800 rounded-md shadow-sm">
+                    <span class="font-semibold text-gray-700 dark:text-slate-300">${topic.title}</span>
+                    <span class="text-xs font-mono ml-2 text-red-500">(Time N/A)</span>
+                </div>
+            `;
+        }
     }).join('');
 
     return `
