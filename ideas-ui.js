@@ -192,9 +192,53 @@ export function renderAnalysisUI(analysis) {
     const analysisContainer = document.getElementById('analysis-container');
     if (!analysisContainer) return;
 
-    // --- Group insights by category ---
-    const insightsByCategory = (analysis.insights || []).reduce((acc, insight) => {
-        // Use 'Uncategorized' as a fallback, though the prompt requires a category.
+    // The shared summary section is rendered first
+    analysisContainer.innerHTML = renderSummaryUI(analysis.summary, getState().currentVideoId);
+    
+    // Dispatch to the correct renderer based on the video type
+    switch (analysis.videoType) {
+        case 'Tutorial':
+            analysisContainer.innerHTML += renderTutorialUI(analysis.guide);
+            break;
+        case 'Podcast':
+            analysisContainer.innerHTML += renderPodcastUI(analysis.podcastDetails);
+            break;
+        case 'Ideas List':
+        case 'Other':
+        default:
+            analysisContainer.innerHTML += renderIdeasListUI(analysis.insights);
+            break;
+    }
+}
+
+function renderSummaryUI(summary, videoId) {
+    if (!summary || !videoId) return '';
+    
+    const subTopicsHtml = (summary.subTopics || []).map(topic => {
+        const youtubeLink = `https://www.youtube.com/watch?v=${videoId}&t=${Math.floor(topic.startTime)}s`;
+        return `
+            <a href="${youtubeLink}" target="_blank" class="block p-3 bg-gray-100 dark:bg-slate-800 rounded-md shadow-sm hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors">
+                <span class="font-semibold text-indigo-600 dark:text-sky-400">${topic.title}</span>
+                <span class="text-xs font-mono ml-2 text-gray-500 dark:text-slate-400">@${new Date(topic.startTime * 1000).toISOString().substr(14, 5)}</span>
+            </a>
+        `;
+    }).join('');
+
+    return `
+        <div class="bg-white dark:bg-slate-800/50 p-5 rounded-lg shadow-md">
+            <h2 class="text-2xl font-semibold text-indigo-500 dark:text-sky-300 mb-2">Summary 📝</h2>
+            <p class="text-gray-700 dark:text-slate-300 mb-4"><strong>Main Topic:</strong> ${summary.mainTopic || 'N/A'}</p>
+            <h3 class="font-semibold text-lg text-gray-800 dark:text-slate-200 mb-3">Key Sections:</h3>
+            <div class="space-y-2">${subTopicsHtml}</div>
+        </div>
+    `;
+}
+
+function renderIdeasListUI(insights) {
+    if (!insights || insights.length === 0) return '<p>No insights were generated.</p>';
+    
+    // Group insights by their category
+    const insightsByCategory = insights.reduce((acc, insight) => {
         const category = insight.category || 'Uncategorized';
         if (!acc[category]) {
             acc[category] = [];
@@ -203,7 +247,7 @@ export function renderAnalysisUI(analysis) {
         return acc;
     }, {});
     
-    // --- Define category titles and icons for better presentation ---
+    // Define titles and icons for a prettier display
     const categoryDetails = {
         "Product Idea": { title: "Product Ideas 💡", icon: "💡" },
         "Marketing Strategy": { title: "Marketing Strategies 📈", icon: "📈" },
@@ -213,9 +257,10 @@ export function renderAnalysisUI(analysis) {
         "Uncategorized": { title: "Other Insights", icon: "" }
     };
 
-    // --- Build the HTML for each category section ---
-    const sectionsHtml = Object.keys(insightsByCategory).map(category => {
+    // Build the HTML for each category section
+    return Object.keys(insightsByCategory).map(category => {
         const details = categoryDetails[category] || { title: category, icon: "" };
+        
         const listItems = insightsByCategory[category].map(item => `
             <li class="p-4 bg-gray-100 dark:bg-slate-800 rounded-lg shadow-sm">
                 <h3 class="font-semibold text-md text-gray-800 dark:text-slate-200">${item.title}</h3>
@@ -223,6 +268,7 @@ export function renderAnalysisUI(analysis) {
             </li>
         `).join('');
 
+        // Crucially, only add the "Generate More Ideas" button to the "Product Idea" category
         const moreIdeasButton = category === 'Product Idea' ? `
             <div class="mt-4 text-right">
                 <button id="generate-more-ideas-btn" class="text-sm bg-indigo-100 text-indigo-700 font-semibold py-2 px-3 rounded-md hover:bg-indigo-200 dark:bg-sky-900/50 dark:text-sky-300 dark:hover:bg-sky-900">
@@ -231,20 +277,77 @@ export function renderAnalysisUI(analysis) {
             </div>
         ` : '';
 
+        // Combine everything for this section
         return `
             <div class="bg-white dark:bg-slate-800/50 p-5 rounded-lg shadow-md">
                 <h2 class="text-2xl font-semibold text-indigo-500 dark:text-sky-300 mb-4">${details.title}</h2>
                 <ul class="space-y-4">${listItems}</ul>
+                ${moreIdeasButton}
             </div>
         `;
     }).join('');
+}
 
-    // --- Render the final HTML ---
-    analysisContainer.innerHTML = `
+function renderTutorialUI(guide) {
+    if (!guide) return '';
+
+    const toolsHtml = (guide.tools || []).map(tool => `<li class="p-3 bg-gray-100 dark:bg-slate-800 rounded-md shadow-sm">${tool}</li>`).join('');
+    const stepsHtml = (guide.steps || []).map((step, index) => `
+        <li class="flex items-start gap-4">
+            <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-indigo-500 text-white font-bold rounded-full">${index + 1}</div>
+            <div>
+                <h4 class="font-semibold text-lg text-gray-800 dark:text-slate-200">${step.title}</h4>
+                <p class="mt-1 text-gray-600 dark:text-slate-400">${step.description}</p>
+            </div>
+        </li>
+    `).join('');
+
+    return `
         <div class="bg-white dark:bg-slate-800/50 p-5 rounded-lg shadow-md">
-            <h2 class="text-2xl font-semibold text-indigo-500 dark:text-sky-300 mb-4">Summary 📝</h2>
-            <p class="text-gray-700 dark:text-slate-300 leading-relaxed">${analysis.summary || "No summary provided."}</p>
+            <h2 class="text-2xl font-semibold text-indigo-500 dark:text-sky-300 mb-4">Tutorial Guide 📖</h2>
+            <div class="mb-6">
+                <h3 class="font-bold text-lg text-gray-800 dark:text-slate-200">Goal:</h3>
+                <p class="mt-1 text-gray-700 dark:text-slate-300">${guide.goal}</p>
+            </div>
+            <div class="mb-6">
+                <h3 class="font-bold text-lg text-gray-800 dark:text-slate-200">Required Tools:</h3>
+                <ul class="mt-2 space-y-2">${toolsHtml}</ul>
+            </div>
+            <div>
+                <h3 class="font-bold text-lg text-gray-800 dark:text-slate-200">Steps:</h3>
+                <ol class="mt-2 space-y-6">${stepsHtml}</ol>
+            </div>
         </div>
-        ${sectionsHtml}
+    `;
+}
+
+function renderPodcastUI(details) {
+    if (!details) return '';
+
+    const guestsHtml = (details.guests || []).map(guest => `
+        <div class="p-3 bg-gray-100 dark:bg-slate-800 rounded-md shadow-sm">
+            <p class="font-semibold text-gray-800 dark:text-slate-200">${guest.name}</p>
+            <p class="text-sm text-gray-600 dark:text-slate-400">${guest.credentials}</p>
+        </div>
+    `).join('');
+    const topicsHtml = (details.keyTopics || []).map(topic => `<li class="p-2 bg-gray-100 dark:bg-slate-800 rounded-md">${topic}</li>`).join('');
+    const adviceHtml = (details.actionableAdvice || []).map(advice => `<li class="p-3 bg-gray-100 dark:bg-slate-800 rounded-md shadow-sm">${advice}</li>`).join('');
+
+    return `
+        <div class="bg-white dark:bg-slate-800/50 p-5 rounded-lg shadow-md space-y-6">
+            <h2 class="text-2xl font-semibold text-indigo-500 dark:text-sky-300">Podcast Analysis 🎙️</h2>
+            <div>
+                <h3 class="font-bold text-lg text-gray-800 dark:text-slate-200">Guests & Speakers:</h3>
+                <div class="mt-2 space-y-2">${guestsHtml}</div>
+            </div>
+            <div>
+                <h3 class="font-bold text-lg text-gray-800 dark:text-slate-200">Key Topics Discussed:</h3>
+                <ul class="mt-2 space-y-2 text-sm">${topicsHtml}</ul>
+            </div>
+            <div>
+                <h3 class="font-bold text-lg text-gray-800 dark:text-slate-200">Actionable Advice:</h3>
+                <ul class="mt-2 space-y-3">${adviceHtml}</ul>
+            </div>
+        </div>
     `;
 }

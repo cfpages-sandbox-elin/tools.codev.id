@@ -1,3 +1,90 @@
+// ideas-prompts.js
+export function createClassificationPrompt(transcript) {
+    return `
+You are a content classification expert. Based on the provided transcript, determine the primary category of the video.
+Respond ONLY with a single, valid JSON object with one key: "videoType".
+The value for "videoType" MUST be one of the following exact strings: ["Tutorial", "Podcast", "Ideas List", "Other"].
+
+- "Tutorial": If the video provides step-by-step instructions to achieve a specific outcome.
+- "Podcast": If the video is primarily a conversation or interview between two or more people.
+- "Ideas List": If the video's main purpose is to present a list of ideas, concepts, or examples.
+- "Other": If it does not clearly fit the above categories.
+
+Here is the transcript:
+--- TRANSCRIPT START ---
+${transcript.substring(0, 4000)}
+--- TRANSCRIPT END ---
+
+Now, provide the classification as a single JSON object.
+`;
+}
+
+export function createIdeasListPrompt(transcript) {
+    return `
+You are an expert analyst and business strategist. Your task is to dissect the following video transcript, which has been identified as an "Ideas List", and extract structured, actionable insights.
+
+Please adhere strictly to the following instructions:
+1.  Provide your analysis ONLY in the form of a single, valid JSON object.
+2.  The root of the JSON object must have three keys: "videoType", "summary", and "insights".
+3.  Set the "videoType" key to the string "Ideas List".
+4.  The "summary" key must be an object with two keys:
+    - "mainTopic": A short string describing the central theme of the video.
+    - "subTopics": An array of objects, where each object has "title", "startTime", and "endTime" in seconds, representing a distinct section of the video.
+5.  The "insights" key must be an array of objects. Each insight object MUST have "category", "title", and "description".
+    - "category" must be one of: ["Product Idea", "Marketing Strategy", "Business Process", "Core Principle", "Tool/Resource"].
+
+--- TRANSCRIPT START ---
+${transcript}
+--- TRANSCRIPT END ---
+
+Provide your complete analysis as a single JSON object now.
+`;
+}
+
+export function createTutorialPrompt(transcript) {
+    return `
+You are an expert technical writer and educator. Your task is to deconstruct the following video transcript, which has been identified as a "Tutorial", into a clear, structured guide.
+
+Please adhere strictly to the following instructions:
+1.  Provide your analysis ONLY in the form of a single, valid JSON object.
+2.  The root of the JSON object must have three keys: "videoType", "summary", and "guide".
+3.  Set the "videoType" key to the string "Tutorial".
+4.  The "summary" key must be an object with "mainTopic" and an array of "subTopics" (each with "title", "startTime", "endTime").
+5.  The "guide" key must be an object with three keys:
+    - "goal": A string describing the final outcome of the tutorial.
+    - "tools": An array of strings listing the necessary tools, software, or resources.
+    - "steps": An array of objects, where each object has a "title" and "description" for a single step in the process.
+
+--- TRANSCRIPT START ---
+${transcript}
+--- TRANSCRIPT END ---
+
+Provide your complete analysis as a single JSON object now.
+`;
+}
+
+export function createPodcastPrompt(transcript) {
+    return `
+You are an expert podcast analyst and researcher. Your task is to analyze the following video transcript, which has been identified as a "Podcast", and extract key information about the speakers and content.
+
+Please adhere strictly to the following instructions:
+1.  Provide your analysis ONLY in the form of a single, valid JSON object.
+2.  The root of the JSON object must have three keys: "videoType", "summary", and "podcastDetails".
+3.  Set the "videoType" key to the string "Podcast".
+4.  The "summary" key must be an object with "mainTopic" and an array of "subTopics" (each with "title", "startTime", "endTime").
+5.  The "podcastDetails" key must be an object with:
+    - "guests": An array of objects, each with "name" and "credentials" (a string describing their expertise or achievements).
+    - "keyTopics": An array of strings listing the main topics discussed.
+    - "actionableAdvice": An array of strings, where each string is a direct piece of advice or a key takeaway given during the conversation.
+
+--- TRANSCRIPT START ---
+${transcript}
+--- TRANSCRIPT END ---
+
+Provide your complete analysis as a single JSON object now.
+`;
+}
+
 export function createAnalysisPrompt(transcript) {
     /**
      * Creates a structured prompt for the AI to analyze a video transcript.

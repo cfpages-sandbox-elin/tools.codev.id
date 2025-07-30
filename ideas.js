@@ -1,7 +1,7 @@
 import { updateState, getState } from './ideas-state.js';
 import { getProviderConfig, getTranscript, getAiAnalysis } from './ideas-api.js';
 import { cacheElements, initApiKeyUI, showError, toggleLoader, resetOutput, renderTranscriptUI, renderAnalysisUI, updateModelDropdownUI, updateTokenInfoUI } from './ideas-ui.js';
-import { createAnalysisPrompt, createMoreIdeasPrompt } from './ideas-prompts.js';
+import { createClassificationPrompt, createIdeasListPrompt, createTutorialPrompt, createPodcastPrompt, createMoreIdeasPrompt } from './ideas-prompts.js';
 import { getYouTubeVideoId } from './ideas-helpers.js';
 
 // --- Event Handlers (must be exportable to be used in UI module) ---
@@ -72,54 +72,62 @@ async function handleAnalyzeTranscript() {
     const analyzeBtn = document.getElementById('analyze-transcript-btn');
     const provider = document.getElementById('ai-provider-select').value;
     const model = document.getElementById('ai-model-select').value;
-    const { currentTranscript, currentVideoId } = getState(); 
+    const { currentTranscript, currentVideoId } = getState();
 
-    if (!currentTranscript) { showError("No transcript available to analyze."); return; }
-    if (!currentVideoId) { showError("Could not determine Video ID for caching."); return; }
+    if (!currentTranscript || !currentVideoId) {
+        showError("No transcript available or video ID is missing.");
+        return;
+    }
 
     analyzeBtn.disabled = true;
     analyzeBtn.innerHTML = 'Analyzing... <span class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>';
     updateState({ isLoading: true });
 
-    let result;
-
     try {
-        const cacheKey = `analysis_${currentVideoId}`;
+        const cacheKey = `analysis_v2_${currentVideoId}`; // Use a new cache key version
         const cachedAnalysis = localStorage.getItem(cacheKey);
 
+        let analysis;
         if (cachedAnalysis) {
-            console.log(`Loading AI analysis for [${currentVideoId}] from cache.`);
-            await new Promise(resolve => setTimeout(resolve, 200)); // Simulate loading
-            const analysis = JSON.parse(cachedAnalysis);
-            renderAnalysisUI(analysis);
+            console.log(`Loading V2 analysis for [${currentVideoId}] from cache.`);
+            analysis = JSON.parse(cachedAnalysis);
         } else {
-            console.log(`Fetching AI analysis for [${currentVideoId}] from API...`);
-            const prompt = createAnalysisPrompt(currentTranscript.fullText);
-            result = await getAiAnalysis(prompt, provider, model);
+            // STEP 1: Classify the video type
+            analyzeBtn.innerHTML = 'Classifying Video...';
+            const classificationPrompt = createClassificationPrompt(currentTranscript.fullText);
+            const classificationResult = await getAiAnalysis(classificationPrompt, provider, model);
+            if (!classificationResult.success) throw new Error(`Classification failed: ${classificationResult.error}`);
+            
+            const { videoType } = extractAndParseJson(classificationResult.text);
+            console.log(`Video classified as: ${videoType}`);
 
-            if (result.success) {
-                const analysis = extractAndParseJson(result.text);
+            // STEP 2: Choose the correct detailed prompt based on classification
+            const promptSelector = {
+                'Tutorial': createTutorialPrompt,
+                'Podcast': createPodcastPrompt,
+                'Ideas List': createIdeasListPrompt,
+                'Other': createIdeasListPrompt // Default to ideas list for 'Other'
+            };
+            const analysisPrompt = (promptSelector[videoType] || createIdeasListPrompt)(currentTranscript.fullText);
+            
+            analyzeBtn.innerHTML = 'Deep Analyzing...';
+            const analysisResult = await getAiAnalysis(analysisPrompt, provider, model);
+            if (!analysisResult.success) throw new Error(`Detailed analysis failed: ${analysisResult.error}`);
+            
+            analysis = extractAndParseJson(analysisResult.text);
 
-                // NEW: Save the successful analysis to localStorage
-                localStorage.setItem(cacheKey, JSON.stringify(analysis));
-                console.log(`AI Analysis for [${currentVideoId}] saved to cache.`);
-                
-                renderAnalysisUI(analysis);
-            } else {
-                throw new Error(result.error || "The AI API returned an unspecified error.");
-            }
+            // Save the final, structured analysis to cache
+            localStorage.setItem(cacheKey, JSON.stringify(analysis));
         }
+
+        renderAnalysisUI(analysis); // This will now call the new dispatcher
+        attachTranscriptUIListeners();
+
     } catch (error) {
-        let errorMessage = error.message;
-        if (result && result.text) {
-             errorMessage += ` | AI Response: "${result.text}"`;
-        }
-        showError(errorMessage);
+        showError(error.message);
     } finally {
         const aiSelectionContainer = document.getElementById('ai-selection-container');
-        if (aiSelectionContainer) {
-            aiSelectionContainer.style.display = 'none';
-        }
+        if (aiSelectionContainer) aiSelectionContainer.style.display = 'none';
         updateState({ isLoading: false });
     }
 }
