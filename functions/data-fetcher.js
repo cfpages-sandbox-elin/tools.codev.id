@@ -1,18 +1,53 @@
 /**
  * =================================================================================
- * Data Fetcher v8 (Supadata Proxy)
+ * Data Fetcher v9 (Multi-Provider Proxy)
  * =================================================================================
- * This function securely proxies requests to the Supadata.ai API.
- * It takes the API key from the request body and places it in the
- * 'x-api-key' header, keeping it hidden from the client's browser.
+ * This function securely proxies requests to multiple transcript providers.
+ * It expects a 'provider' field in the request to determine the target API.
  *
  * Endpoint: /data-fetcher
+ * Providers: 'supadata', 'rapidapi'
  */
 
 const SUPADATA_API_ENDPOINT = 'https://api.supadata.ai/v1/transcript';
+const RAPIDAPI_ENDPOINT_HOST = 'https://youtube-captions-transcript-subtitles-video-combiner.p.rapidapi.com';
+
+async function handleSupadataRequest(apiKey, videoUrl) {
+    const targetUrl = new URL(SUPADATA_API_ENDPOINT);
+    targetUrl.searchParams.append('url', videoUrl);
+    targetUrl.searchParams.append('mode', 'native');
+    console.log(`Proxying to Supadata for: ${videoUrl}`);
+
+    const response = await fetch(targetUrl.toString(), {
+        headers: { 'x-api-key': apiKey, 'User-Agent': 'Codev-Idea-Engine/2.0' }
+    });
+
+    if (response.status === 202) {
+        throw new Error('The video is too long for Supadata synchronous fetching.');
+    }
+    return response;
+}
+
+async function handleRapidApiRequest(apiKey, videoId) {
+    if (!videoId) {
+        throw new Error('RapidAPI requires a videoId, but it was not provided.');
+    }
+    const targetUrl = `${RAPIDAPI_ENDPOINT_HOST}/download-json/${videoId}?language=en`;
+    console.log(`Proxying to RapidAPI for videoId: ${videoId}`);
+
+    const response = await fetch(targetUrl, {
+        headers: {
+            'x-rapidapi-key': apiKey,
+            'x-rapidapi-host': RAPIDAPI_ENDPOINT_HOST
+        }
+    });
+
+    // The RapidAPI endpoint helpfully returns a JSON array directly.
+    return response;
+}
+
 
 export async function onRequest(context) {
-  // Standard CORS preflight handler
   if (context.request.method === 'OPTIONS') {
     return new Response(null, {
       headers: {
@@ -29,43 +64,29 @@ export async function onRequest(context) {
   }
 
   try {
-    const { apiKey, videoUrl } = await context.request.json();
+    const { provider, apiKey, videoUrl, videoId } = await context.request.json();
 
-    if (!apiKey || !videoUrl) {
-      return new Response(JSON.stringify({ error: 'Missing apiKey or videoUrl in request.' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-      });
+    if (!provider || !apiKey || !videoUrl) {
+      return new Response(JSON.stringify({ error: 'Missing provider, apiKey, or videoUrl.' }), { status: 400 });
     }
 
-    // Construct the target URL with query parameters.
-    // Use `mode=native` to only fetch existing transcripts and save credits.
-    const targetUrl = new URL(SUPADATA_API_ENDPOINT);
-    targetUrl.searchParams.append('url', videoUrl);
-    targetUrl.searchParams.append('mode', 'native'); 
-    
-    console.log(`Proxying request to Supadata for URL: ${videoUrl}`);
-
-    // Fetch from Supadata, adding the API key to the header.
-    const response = await fetch(targetUrl.toString(), {
-      headers: {
-        'x-api-key': apiKey,
-        'User-Agent': 'Codev-Idea-Engine/2.0'
-      }
-    });
-
-    // Supadata API may return 202 for async jobs, which we are not handling yet.
-    // For now, we treat it as an unsupported response.
-    if (response.status === 202) {
-        console.warn('Supadata returned a 202 Accepted. Asynchronous jobs are not yet supported.');
-        return new Response(JSON.stringify({ error: 'The video is too long and requires processing. Asynchronous fetching is not yet supported.' }), {
-            status: 400, // Bad Request, as our client can't handle it.
-            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-        });
+    let apiResponse;
+    if (provider === 'supadata') {
+        apiResponse = await handleSupadataRequest(apiKey, videoUrl);
+    } else if (provider === 'rapidapi') {
+        apiResponse = await handleRapidApiRequest(apiKey, videoId);
+    } else {
+        return new Response(JSON.stringify({ error: `Unknown provider: ${provider}` }), { status: 400 });
     }
 
-    // Create a new response so we can modify the headers for CORS
-    const newResponse = new Response(response.body, response);
+    // Check if the upstream API call failed
+    if (!apiResponse.ok) {
+        const errorBody = await apiResponse.text();
+        console.error(`Upstream API Error (${provider}, ${apiResponse.status}): ${errorBody}`);
+        return new Response(JSON.stringify({ error: `The '${provider}' API failed with status ${apiResponse.status}.` }), { status: apiResponse.status });
+    }
+
+    const newResponse = new Response(apiResponse.body, apiResponse);
     newResponse.headers.set('Access-Control-Allow-Origin', '*');
     newResponse.headers.set('Content-Type', 'application/json');
 
@@ -73,9 +94,6 @@ export async function onRequest(context) {
 
   } catch (error) {
     console.error(`[data-fetcher] A critical error occurred:`, error);
-    return new Response(JSON.stringify({ error: `An internal error occurred: ${error.message}` }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-    });
+    return new Response(JSON.stringify({ error: `An internal error occurred: ${error.message}` }), { status: 500 });
   }
 }

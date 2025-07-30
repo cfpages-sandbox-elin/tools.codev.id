@@ -4,7 +4,11 @@ const elements = {};
 
 export function cacheElements() {
     elements.apiKeyInput = document.getElementById('supadata-api-key');
+    elements.supadataApiKeyInput = document.getElementById('supadata-api-key');
+    elements.rapidapiApiKeyInput = document.getElementById('rapidapi-api-key');
     elements.apiKeyDetails = document.getElementById('api-key-details');
+    elements.supadataApiKeyStatusIcon = document.getElementById('supadata-api-key-status-icon');
+    elements.rapidapiApiKeyStatusIcon = document.getElementById('rapidapi-api-key-status-icon');
     elements.apiKeyStatusIcon = document.getElementById('api-key-status-icon');
     elements.urlInput = document.getElementById('url-input');
     elements.analyzeBtn = document.getElementById('analyze-btn');
@@ -14,14 +18,28 @@ export function cacheElements() {
 }
 
 export function initApiKeyUI() {
-    const savedKey = localStorage.getItem('supadataApiKey');
-    if (savedKey) {
-        elements.apiKeyInput.value = savedKey;
-        elements.apiKeyDetails.open = false;
-        elements.apiKeyStatusIcon.textContent = '✅';
+    const savedSupadataKey = localStorage.getItem('supadataApiKey');
+    const savedRapidapiKey = localStorage.getItem('rapidapiApiKey');
+
+    if (savedSupadataKey) {
+        elements.supadataApiKeyInput.value = savedSupadataKey;
+        elements.supadataApiKeyStatusIcon.textContent = '✅';
     } else {
+        elements.supadataApiKeyStatusIcon.textContent = '⚠️';
+    }
+
+    if (savedRapidapiKey) {
+        elements.rapidapiApiKeyInput.value = savedRapidapiKey;
+        elements.rapidapiApiKeyStatusIcon.textContent = '✅';
+    } else {
+        elements.rapidapiApiKeyStatusIcon.textContent = '⚠️';
+    }
+
+    // Open the details section only if NEITHER key is present
+    if (!savedSupadataKey && !savedRapidapiKey) {
         elements.apiKeyDetails.open = true;
-        elements.apiKeyStatusIcon.textContent = '⚠️';
+    } else {
+        elements.apiKeyDetails.open = false;
     }
 }
 

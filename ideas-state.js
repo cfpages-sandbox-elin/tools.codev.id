@@ -1,10 +1,11 @@
 const appState = {
     supadataApiKey: null,
+    rapidapiApiKey: null,
     allAiProviders: null,
     currentTranscript: null,
     currentVideoId: null,
     isLoading: false,
-    activeTab: 'brainstorm', // Add this line
+    activeTab: 'brainstorm',
 };
 
 /**

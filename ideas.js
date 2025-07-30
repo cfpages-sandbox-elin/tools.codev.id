@@ -10,39 +10,63 @@ async function handleFetchTranscript() {
     const urlInput = document.getElementById('url-input');
     const url = urlInput.value.trim();
     if (!url) { showError("Please enter a URL."); return; }
+    
     const videoId = getYouTubeVideoId(url);
-    if (!videoId) { showError("Could not find a valid YouTube Video ID in the URL."); return; }
-    if (!getState().supadataApiKey) { showError("Please enter your Supadata API Key first."); return; }
+    if (!videoId) { showError("Could not find a valid YouTube Video ID."); return; }
+
+    const { supadataApiKey, rapidapiApiKey } = getState();
+    if (!supadataApiKey && !rapidapiApiKey) {
+        showError("Please enter at least one API Key (Supadata or RapidAPI).");
+        return;
+    }
 
     resetOutput();
     toggleLoader(true);
     updateState({ isLoading: true });
 
-    try {
-        const cacheKey = `transcript_${videoId}`;
-        const cachedTranscript = localStorage.getItem(cacheKey);
-        let transcriptData;
+    // Define the providers to try, in order of preference
+    const providersToTry = [];
+    if (supadataApiKey) providersToTry.push('supadata');
+    if (rapidapiApiKey) providersToTry.push('rapidapi');
+    
+    let transcriptData = null;
+    let lastError = null;
 
-        if (cachedTranscript) {
-            console.log(`Loading transcript for [${videoId}] from cache.`);
-            await new Promise(resolve => setTimeout(resolve, 200)); 
-            transcriptData = JSON.parse(cachedTranscript);
-        } else {
-            console.log(`Fetching transcript for [${videoId}] from API...`);
-            transcriptData = await getTranscript(url);
-            localStorage.setItem(cacheKey, JSON.stringify(transcriptData));
+    for (const provider of providersToTry) {
+        try {
+            console.log(`Attempting to fetch transcript with [${provider}]...`);
+            const cacheKey = `transcript_${provider}_${videoId}`;
+            const cachedTranscript = localStorage.getItem(cacheKey);
+
+            if (cachedTranscript) {
+                console.log(`Loading transcript for [${videoId}] from [${provider}] cache.`);
+                transcriptData = JSON.parse(cachedTranscript);
+            } else {
+                transcriptData = await getTranscript(provider, url, videoId);
+                localStorage.setItem(cacheKey, JSON.stringify(transcriptData));
+            }
+
+            // If we succeed, break the loop
+            if (transcriptData) {
+                console.log(`Successfully fetched transcript using [${provider}].`);
+                break;
+            }
+        } catch (error) {
+            console.warn(`Failed to fetch transcript with [${provider}]:`, error.message);
+            lastError = error;
+            // Continue to the next provider
         }
+    }
 
+    toggleLoader(false);
+    updateState({ isLoading: false });
+    
+    if (transcriptData) {
         updateState({ currentTranscript: transcriptData, currentVideoId: videoId });
-        
         renderTranscriptUI(transcriptData);
         attachTranscriptUIListeners();
-
-    } catch (error) {
-        showError(error.message);
-    } finally {
-        toggleLoader(false);
-        updateState({ isLoading: false });
+    } else {
+        showError(`All transcript providers failed. Last error: ${lastError.message}`);
     }
 }
 
@@ -247,45 +271,10 @@ function init() {
     cacheElements();
     initApiKeyUI();
 
-    const tabs = document.querySelectorAll('.tab-btn');
-    const tabContents = {
-        brainstorm: document.getElementById('brainstorm-content'),
-        plan: document.getElementById('plan-content')
-    };
-
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            const tabName = tab.dataset.tab;
-            
-            // Update state
-            updateState({ activeTab: tabName });
-
-            // Update button styles
-            tabs.forEach(t => {
-                const isActive = t.dataset.tab === tabName;
-                t.classList.toggle('border-indigo-500', isActive);
-                t.classList.toggle('text-indigo-600', isActive);
-                t.classList.toggle('border-transparent', !isActive);
-                t.classList.toggle('text-gray-500', !isActive);
-                t.setAttribute('aria-current', isActive ? 'page' : 'false');
-            });
-
-            // Show/hide content
-            Object.values(tabContents).forEach(content => content.classList.add('hidden'));
-            tabContents[tabName].classList.remove('hidden');
-
-            // If switching to the plan tab, initialize it
-            if (tabName === 'plan') {
-                import('./ideas-plan.js').then(module => {
-                    module.initPlanTab();
-                });
-            }
-        });
-    });
-
     // Load initial state
-    const savedKey = localStorage.getItem('supadataApiKey');
-    updateState({ supadataApiKey: savedKey });
+    const savedSupadataKey = localStorage.getItem('supadataApiKey');
+    const savedRapidapiKey = localStorage.getItem('rapidapiApiKey');
+    updateState({ supadataApiKey: savedSupadataKey, rapidapiApiKey: savedRapidapiKey });
     
     // Asynchronously load AI provider config
     getProviderConfig()
@@ -301,7 +290,15 @@ function init() {
         const key = e.target.value.trim();
         updateState({ supadataApiKey: key || null });
         localStorage.setItem('supadataApiKey', key);
-        document.getElementById('api-key-status-icon').textContent = key ? '✅' : '⚠️';
+        document.getElementById('supadata-api-key-status-icon').textContent = key ? '✅' : '⚠️';
+    });
+    
+    // Add listener for the new RapidAPI key input
+    document.getElementById('rapidapi-api-key').addEventListener('input', (e) => {
+        const key = e.target.value.trim();
+        updateState({ rapidapiApiKey: key || null });
+        localStorage.setItem('rapidapiApiKey', key);
+        document.getElementById('rapidapi-api-key-status-icon').textContent = key ? '✅' : '⚠️';
     });
 }
 
