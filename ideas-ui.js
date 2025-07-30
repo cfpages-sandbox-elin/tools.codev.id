@@ -1,4 +1,4 @@
-// ideas-ui.js v1.15
+// ideas-ui.js v1.15 exported
 import { getState } from './ideas-state.js';
 
 const elements = {};
@@ -328,7 +328,7 @@ function renderSummaryUI(summary, videoId) {
     `;
 }
 
-function populateMoreIdeasProviderDropdown() {
+export function populateMoreIdeasProviderDropdown() {
     const providerSelect = document.getElementById('more-ideas-provider-select');
     const { allAiProviders } = getState();
     if (!providerSelect || !allAiProviders) return;
@@ -350,7 +350,7 @@ function populateMoreIdeasProviderDropdown() {
     updateMoreIdeasModelDropdown();
 }
 
-function updateMoreIdeasModelDropdown() {
+export function updateMoreIdeasModelDropdown() {
     const providerSelect = document.getElementById('more-ideas-provider-select');
     const modelSelect = document.getElementById('more-ideas-model-select');
     const { allAiProviders } = getState();
