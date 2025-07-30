@@ -60,9 +60,11 @@ async function handleAnalyzeTranscript() {
     analyzeBtn.innerHTML = 'Analyzing... <span class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>';
     updateState({ isLoading: true });
 
+    let result;
+
     try {
         const prompt = createAnalysisPrompt(currentTranscript.fullText);
-        const result = await getAiAnalysis(prompt, provider, model);
+        result = await getAiAnalysis(prompt, provider, model); // Assign to the outer variable
 
         if (result.success) {
             let analysisText = result.text;
@@ -70,22 +72,26 @@ async function handleAnalyzeTranscript() {
             const match = analysisText.match(jsonRegex);
 
             if (match) {
-                // Use the first non-null capture group, which will be the pure JSON string
                 analysisText = match[1] || match[2];
+            } else {
+                throw new Error("Could not find a valid JSON object in the AI's response.");
             }
 
             const analysis = JSON.parse(analysisText);
             console.log("AI Analysis Complete:", analysis);
             renderAnalysisUI(analysis);
         } else {
-            throw new Error(result.error);
+            // This handles cases where the API call was successful but the action failed server-side
+            throw new Error(result.error || "The AI API returned an unspecified error.");
         }
     } catch (error) {
-        // Add the original AI text to the error for easier debugging
-        const aiResponseText = error.message.includes("JSON") ? ` | AI Response: ${result.text}` : '';
-        showError(`${error.message}${aiResponseText}`);
+        let errorMessage = error.message;
+        if (result && result.text) {
+             // Append the raw text from the AI to help debug parsing issues.
+             errorMessage += ` | AI Response: "${result.text}"`;
+        }
+        showError(errorMessage);
     } finally {
-        // Hide the analysis button section after an attempt
         const aiSelectionContainer = document.getElementById('ai-selection-container');
         if (aiSelectionContainer) {
             aiSelectionContainer.style.display = 'none';
