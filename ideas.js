@@ -1,6 +1,7 @@
+// ideas.js v1.15
 import { updateState, getState } from './ideas-state.js';
 import { getProviderConfig, getTranscript, getAiAnalysis } from './ideas-api.js';
-import { cacheElements, initApiKeyUI, showError, toggleLoader, resetOutput, renderTranscriptUI, renderAnalysisUI, updateModelDropdownUI, updateTokenInfoUI } from './ideas-ui.js';
+import { cacheElements, initApiKeyUI, showError, toggleLoader, resetOutput, renderTranscriptUI, renderAnalysisUI, updateModelDropdownUI, updateTokenInfoUI, populateMoreIdeasProviderDropdown, updateMoreIdeasModelDropdown } from './ideas-ui.js';
 import { createComprehensiveAnalysisPrompt, createMoreIdeasPrompt } from './ideas-prompts.js';
 import { getYouTubeVideoId } from './ideas-helpers.js';
 
@@ -71,13 +72,31 @@ async function handleFetchTranscript() {
 }
 
 function extractAndParseJson(text) {
-    // Find the first opening curly brace, marking the start of the JSON
-    const startIndex = text.indexOf('{');
-    // Find the last closing curly brace, marking the potential end of the JSON
-    const endIndex = text.lastIndexOf('}');
+    // Find the first opening curly brace or square bracket
+    const firstBrace = text.indexOf('{');
+    const firstBracket = text.indexOf('[');
+    
+    let startIndex = -1;
+
+    // Determine the actual start index. If one isn't found, use the other.
+    // If both are found, use the one that appears first.
+    if (firstBrace === -1) {
+        startIndex = firstBracket;
+    } else if (firstBracket === -1) {
+        startIndex = firstBrace;
+    } else {
+        startIndex = Math.min(firstBrace, firstBracket);
+    }
+
+    // Find the last closing curly brace or square bracket
+    const lastBrace = text.lastIndexOf('}');
+    const lastBracket = text.lastIndexOf(']');
+    
+    // The end index is simply the one that appears latest in the string
+    const endIndex = Math.max(lastBrace, lastBracket);
 
     if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
-        throw new Error("Could not find a valid JSON object structure in the AI's response.");
+        throw new Error("Could not find a valid JSON object or array structure in the AI's response.");
     }
 
     // Extract the substring that is most likely the JSON content
@@ -88,7 +107,7 @@ function extractAndParseJson(text) {
         return JSON.parse(jsonString);
     } catch (error) {
         // If parsing fails, throw a more informative error for debugging
-        throw new Error(`Failed to parse the extracted JSON. Error: ${error.message}`);
+        throw new Error(`Failed to parse the extracted JSON. Error: ${error.message}. Raw JSON string: ${jsonString}`);
     }
 }
 
@@ -151,45 +170,66 @@ async function handleAnalyzeTranscript() {
 
 async function handleGenerateMoreIdeas() {
     const btn = document.getElementById('generate-more-ideas-btn');
-    if (!btn) return;
+    const providerSelect = document.getElementById('more-ideas-provider-select');
+    const modelSelect = document.getElementById('more-ideas-model-select');
+    
+    if (!btn || !providerSelect || !modelSelect) {
+        showError("Could not find the 'Generate More Ideas' controls.");
+        return;
+    }
 
     btn.disabled = true;
-    btn.textContent = 'Generating...';
+    btn.innerHTML = 'Generating... <span class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>';
 
     const { currentVideoId } = getState();
-    const analysisCacheKey = `analysis_${currentVideoId}`;
+    const analysisCacheKey = `analysis_v3_${currentVideoId}`;
     const cachedAnalysis = JSON.parse(localStorage.getItem(analysisCacheKey) || '{}');
     const existingIdeas = cachedAnalysis.insights?.filter(i => i.category === 'Product Idea') || [];
 
-    // Use a default planning model for this creative task
-    const provider = 'google';
-    const model = 'gemini-2.5-pro';
+    const provider = providerSelect.value;
+    const model = modelSelect.value;
 
     try {
         const prompt = createMoreIdeasPrompt(existingIdeas);
         const result = await getAiAnalysis(prompt, provider, model);
 
         if (result.success) {
-            const newIdeas = JSON.parse(result.text); // The prompt asks for a direct array
-            
+            // --- THIS IS THE FIX ---
+            // Use our robust extractor instead of a direct parse.
+            const newIdeasData = extractAndParseJson(result.text);
+
+            // Safety check: ensure we're working with an array.
+            const newIdeas = Array.isArray(newIdeasData) ? newIdeasData : [];
+            // --- END OF FIX ---
+
+            if (newIdeas.length === 0) {
+                // Let the user know if the AI returned nothing useful
+                showError("The AI didn't generate any new ideas in the correct format. Try a different model.");
+                 // Re-enable the button so the user can retry
+                btn.disabled = false;
+                btn.innerHTML = 'Generate with Selected Model ✨';
+                return; // Stop execution
+            }
+
             // Merge new ideas with existing analysis
             cachedAnalysis.insights.push(...newIdeas);
             
             // Save the updated analysis back to the cache
             localStorage.setItem(analysisCacheKey, JSON.stringify(cachedAnalysis));
             
-            // Re-render the UI to show everything
+            // Re-render the UI to show everything, which also rebuilds the button
             renderAnalysisUI(cachedAnalysis);
-            attachTranscriptUIListeners(); // Re-attach listeners as the DOM was rebuilt
+            attachTranscriptUIListeners(); // Re-attach all listeners
 
         } else {
-            throw new Error(result.error);
+            throw new Error(result.error || "The AI failed to generate new ideas.");
         }
 
     } catch (error) {
         showError(`Failed to generate more ideas: ${error.message}`);
-    } finally {
-        // The button will be re-rendered, so no need to re-enable it here.
+        // Re-enable the button on failure so the user can retry
+        btn.disabled = false;
+        btn.innerHTML = 'Generate with Selected Model ✨';
     }
 }
 
@@ -240,26 +280,31 @@ async function handleReanalyze() {
 }
 
 function attachTranscriptUIListeners() {
+    // --- Main analysis controls ---
     const analyzeBtn = document.getElementById('analyze-transcript-btn');
+    const reanalyzeBtn = document.getElementById('reanalyze-btn');
     const providerSelect = document.getElementById('ai-provider-select');
     const modelSelect = document.getElementById('ai-model-select');
-    const moreIdeasBtn = document.getElementById('generate-more-ideas-btn');
-    const reanalyzeBtn = document.getElementById('reanalyze-btn'); // Get the new button
     
-    if (analyzeBtn) {
-        analyzeBtn.addEventListener('click', handleAnalyzeTranscript);
-    }
-    if (providerSelect) {
-        providerSelect.addEventListener('change', updateModelDropdownUI);
-    }
-    if (modelSelect) {
-        modelSelect.addEventListener('change', updateTokenInfoUI);
-    }
+    if (analyzeBtn) analyzeBtn.addEventListener('click', handleAnalyzeTranscript);
+    if (reanalyzeBtn) reanalyzeBtn.addEventListener('click', handleReanalyze);
+    if (providerSelect) providerSelect.addEventListener('change', updateModelDropdownUI);
+    if (modelSelect) modelSelect.addEventListener('change', updateTokenInfoUI);
+    
+    // --- "Generate More Ideas" controls ---
+    const moreIdeasBtn = document.getElementById('generate-more-ideas-btn');
+    const moreIdeasProviderSelect = document.getElementById('more-ideas-provider-select');
+    
     if (moreIdeasBtn) {
         moreIdeasBtn.addEventListener('click', handleGenerateMoreIdeas);
     }
-    if (reanalyzeBtn) {
-        reanalyzeBtn.addEventListener('click', handleReanalyze);
+    
+    // If the "more ideas" controls are on the page, initialize them
+    if (moreIdeasProviderSelect) {
+        // Populate the dropdowns with options
+        populateMoreIdeasProviderDropdown();
+        // Add the listener to update the model list when the provider changes
+        moreIdeasProviderSelect.addEventListener('change', updateMoreIdeasModelDropdown);
     }
 }
 

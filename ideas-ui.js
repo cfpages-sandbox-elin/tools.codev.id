@@ -1,3 +1,4 @@
+// ideas-ui.js v1.15
 import { getState } from './ideas-state.js';
 
 const elements = {};
@@ -327,10 +328,45 @@ function renderSummaryUI(summary, videoId) {
     `;
 }
 
+function populateMoreIdeasProviderDropdown() {
+    const providerSelect = document.getElementById('more-ideas-provider-select');
+    const { allAiProviders } = getState();
+    if (!providerSelect || !allAiProviders) return;
+
+    // We can use the same logic to find providers with free models
+    const freeProviders = {};
+    for (const key in allAiProviders) {
+        if (allAiProviders[key].models.some(model => isFree(model, key))) {
+            freeProviders[key] = allAiProviders[key];
+        }
+    }
+
+    providerSelect.innerHTML = Object.keys(freeProviders).map(key => {
+        const providerName = freeProviders[key].models[0].provider;
+        return `<option value="${key}">${providerName}</option>`;
+    }).join('');
+
+    // Trigger the model dropdown update initially
+    updateMoreIdeasModelDropdown();
+}
+
+function updateMoreIdeasModelDropdown() {
+    const providerSelect = document.getElementById('more-ideas-provider-select');
+    const modelSelect = document.getElementById('more-ideas-model-select');
+    const { allAiProviders } = getState();
+    if (!providerSelect || !modelSelect || !allAiProviders) return;
+
+    const selectedProviderKey = providerSelect.value;
+    const providerData = allAiProviders[selectedProviderKey];
+    
+    const freeModels = providerData ? providerData.models.filter(model => isFree(model, selectedProviderKey)) : [];
+
+    modelSelect.innerHTML = freeModels.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+}
+
 function renderIdeasListUI(insights) {
     if (!insights || insights.length === 0) return '<p>No insights were generated.</p>';
     
-    // Group insights by their category
     const insightsByCategory = insights.reduce((acc, insight) => {
         const category = insight.category || 'Uncategorized';
         if (!acc[category]) {
@@ -340,7 +376,6 @@ function renderIdeasListUI(insights) {
         return acc;
     }, {});
     
-    // Define titles and icons for a prettier display
     const categoryDetails = {
         "Product Idea": { title: "Product Ideas 💡", icon: "💡" },
         "Marketing Strategy": { title: "Marketing Strategies 📈", icon: "📈" },
@@ -350,7 +385,6 @@ function renderIdeasListUI(insights) {
         "Uncategorized": { title: "Other Insights", icon: "" }
     };
 
-    // Build the HTML for each category section
     return Object.keys(insightsByCategory).map(category => {
         const details = categoryDetails[category] || { title: category, icon: "" };
         
@@ -361,21 +395,32 @@ function renderIdeasListUI(insights) {
             </li>
         `).join('');
 
-        // Crucially, only add the "Generate More Ideas" button to the "Product Idea" category
-        const moreIdeasButton = category === 'Product Idea' ? `
-            <div class="mt-4 text-right">
-                <button id="generate-more-ideas-btn" class="text-sm bg-indigo-100 text-indigo-700 font-semibold py-2 px-3 rounded-md hover:bg-indigo-200 dark:bg-sky-900/50 dark:text-sky-300 dark:hover:bg-sky-900">
-                    + Generate More Ideas
-                </button>
+        const moreIdeasControls = category === 'Product Idea' ? `
+            <div class="mt-6 border-t border-gray-200 dark:border-slate-700 pt-4">
+                <h4 class="font-semibold text-gray-700 dark:text-slate-300 mb-3">Generate More Ideas</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                     <div>
+                        <label for="more-ideas-provider-select" class="sr-only">Provider</label>
+                        <select id="more-ideas-provider-select" class="block w-full text-sm rounded-md border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></select>
+                    </div>
+                    <div>
+                        <label for="more-ideas-model-select" class="sr-only">Model</label>
+                        <select id="more-ideas-model-select" class="block w-full text-sm rounded-md border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></select>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <button id="generate-more-ideas-btn" class="text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md transition-colors dark:bg-sky-600 dark:hover:bg-sky-700">
+                        Generate with Selected Model ✨
+                    </button>
+                </div>
             </div>
         ` : '';
 
-        // Combine everything for this section
         return `
             <div class="bg-white dark:bg-slate-800/50 p-5 rounded-lg shadow-md">
                 <h2 class="text-2xl font-semibold text-indigo-500 dark:text-sky-300 mb-4">${details.title}</h2>
                 <ul class="space-y-4">${listItems}</ul>
-                ${moreIdeasButton}
+                ${moreIdeasControls}
             </div>
         `;
     }).join('');
