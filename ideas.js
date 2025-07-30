@@ -35,8 +35,8 @@ async function handleFetchTranscript() {
 
         updateState({ currentTranscript: transcriptData });
         
-        // Step 1: Render the UI
-        renderTranscriptUI();
+        // Step 1: Render the UI with the fetched data
+        renderTranscriptUI(transcriptData);
         
         // Step 2: Attach listeners to the newly created UI
         attachTranscriptUIListeners();
