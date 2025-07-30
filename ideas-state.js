@@ -3,6 +3,7 @@ const appState = {
     supadataApiKey: null,
     allAiProviders: null,
     currentTranscript: null,
+    currentVideoId: null,
     isLoading: false,
 };
 

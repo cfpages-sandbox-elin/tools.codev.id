@@ -33,12 +33,9 @@ async function handleFetchTranscript() {
             localStorage.setItem(cacheKey, JSON.stringify(transcriptData));
         }
 
-        updateState({ currentTranscript: transcriptData });
+        updateState({ currentTranscript: transcriptData, currentVideoId: videoId });
         
-        // Step 1: Render the UI with the fetched data
         renderTranscriptUI(transcriptData);
-        
-        // Step 2: Attach listeners to the newly created UI
         attachTranscriptUIListeners();
 
     } catch (error) {
@@ -71,31 +68,46 @@ function extractAndParseJson(text) {
     }
 }
 
-
 async function handleAnalyzeTranscript() {
     const analyzeBtn = document.getElementById('analyze-transcript-btn');
     const provider = document.getElementById('ai-provider-select').value;
     const model = document.getElementById('ai-model-select').value;
-    const { currentTranscript } = getState();
+    const { currentTranscript, currentVideoId } = getState(); 
+
     if (!currentTranscript) { showError("No transcript available to analyze."); return; }
+    if (!currentVideoId) { showError("Could not determine Video ID for caching."); return; }
 
     analyzeBtn.disabled = true;
     analyzeBtn.innerHTML = 'Analyzing... <span class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>';
     updateState({ isLoading: true });
 
-    let result; 
+    let result;
 
     try {
-        const prompt = createAnalysisPrompt(currentTranscript.fullText);
-        result = await getAiAnalysis(prompt, provider, model);
+        const cacheKey = `analysis_${currentVideoId}`;
+        const cachedAnalysis = localStorage.getItem(cacheKey);
 
-        if (result.success) {
-            // Use the new robust function to extract and parse the JSON
-            const analysis = extractAndParseJson(result.text);
-            console.log("AI Analysis Complete:", analysis);
+        if (cachedAnalysis) {
+            console.log(`Loading AI analysis for [${currentVideoId}] from cache.`);
+            await new Promise(resolve => setTimeout(resolve, 200)); // Simulate loading
+            const analysis = JSON.parse(cachedAnalysis);
             renderAnalysisUI(analysis);
         } else {
-            throw new Error(result.error || "The AI API returned an unspecified error.");
+            console.log(`Fetching AI analysis for [${currentVideoId}] from API...`);
+            const prompt = createAnalysisPrompt(currentTranscript.fullText);
+            result = await getAiAnalysis(prompt, provider, model);
+
+            if (result.success) {
+                const analysis = extractAndParseJson(result.text);
+
+                // NEW: Save the successful analysis to localStorage
+                localStorage.setItem(cacheKey, JSON.stringify(analysis));
+                console.log(`AI Analysis for [${currentVideoId}] saved to cache.`);
+                
+                renderAnalysisUI(analysis);
+            } else {
+                throw new Error(result.error || "The AI API returned an unspecified error.");
+            }
         }
     } catch (error) {
         let errorMessage = error.message;
