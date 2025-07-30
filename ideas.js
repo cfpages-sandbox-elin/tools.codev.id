@@ -9,51 +9,37 @@ import { getYouTubeVideoId } from './ideas-helpers.js';
 async function handleFetchTranscript() {
     const urlInput = document.getElementById('url-input');
     const url = urlInput.value.trim();
-    if (!url) {
-        showError("Please enter a URL.");
-        return;
-    }
-
+    if (!url) { showError("Please enter a URL."); return; }
     const videoId = getYouTubeVideoId(url);
-    if (!videoId) {
-        showError("Could not find a valid YouTube Video ID in the URL.");
-        return;
-    }
-    
-    if (!getState().supadataApiKey) {
-        showError("Please enter your Supadata API Key first.");
-        return;
-    }
+    if (!videoId) { showError("Could not find a valid YouTube Video ID in the URL."); return; }
+    if (!getState().supadataApiKey) { showError("Please enter your Supadata API Key first."); return; }
 
     resetOutput();
     toggleLoader(true);
     updateState({ isLoading: true });
 
     try {
-        let transcriptData = null;
         const cacheKey = `transcript_${videoId}`;
-
-        // 1. Check localStorage for a cached version
         const cachedTranscript = localStorage.getItem(cacheKey);
+        let transcriptData;
 
         if (cachedTranscript) {
-            console.log(`Loading transcript for video ID [${videoId}] from cache.`);
-            // A small delay to make the UI feel responsive even when loading instantly
+            console.log(`Loading transcript for [${videoId}] from cache.`);
             await new Promise(resolve => setTimeout(resolve, 200)); 
             transcriptData = JSON.parse(cachedTranscript);
         } else {
-            console.log(`Transcript for video ID [${videoId}] not in cache. Fetching from API...`);
-            // 2. If not cached, fetch from the API
-            transcriptData = await getTranscript(url); // The API needs the full URL
-            
-            // 3. Save the newly fetched data to the cache
+            console.log(`Fetching transcript for [${videoId}] from API...`);
+            transcriptData = await getTranscript(url);
             localStorage.setItem(cacheKey, JSON.stringify(transcriptData));
-            console.log(`Saved new transcript for video ID [${videoId}] to cache.`);
         }
 
-        // 4. Update state and render the UI, regardless of the source
         updateState({ currentTranscript: transcriptData });
+        
+        // Step 1: Render the UI
         renderTranscriptUI();
+        
+        // Step 2: Attach listeners to the newly created UI
+        attachTranscriptUIListeners();
 
     } catch (error) {
         showError(error.message);
@@ -63,7 +49,7 @@ async function handleFetchTranscript() {
     }
 }
 
-export async function handleAnalyzeTranscript() {
+async function handleAnalyzeTranscript() {
     const analyzeBtn = document.getElementById('analyze-transcript-btn');
     const provider = document.getElementById('ai-provider-select').value;
     const model = document.getElementById('ai-model-select').value;
@@ -101,14 +87,10 @@ function attachTranscriptUIListeners() {
         analyzeBtn.addEventListener('click', handleAnalyzeTranscript);
     }
     
-    // When the provider changes, rebuild the model dropdown.
-    // The rebuild function will also update the token info automatically.
     if (providerSelect) {
         providerSelect.addEventListener('change', updateModelDropdownUI);
     }
 
-    // *** THE CRITICAL FIX ***
-    // When the model itself changes, we ONLY need to update the token info text.
     if (modelSelect) {
         modelSelect.addEventListener('change', updateTokenInfoUI);
     }
