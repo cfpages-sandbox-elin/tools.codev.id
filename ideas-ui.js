@@ -39,13 +39,30 @@ export function resetOutput() {
     elements.outputContent.innerHTML = '';
 }
 
-function isFree(model) {
+function isFree(model, providerKey) {
     if (!model) return false;
-    // Check for explicit zero pricing
-    const hasFreePrice = model.pricing?.input === 0.00 && model.pricing?.output === 0.00;
-    // Check for a rate-limit tier that is explicitly named 'free'
-    const hasFreeTier = model.rateLimits?.tiers?.some(tier => tier.name.toLowerCase().includes('free'));
-    return hasFreePrice || hasFreeTier;
+
+    if (providerKey === 'openrouter' || providerKey === 'huggingface') {
+        return true;
+    }
+
+    if (model.pricing?.input === 0.00 && model.pricing?.output === 0.00) {
+        return true;
+    }
+
+    const hasFreeTierInArray = model.rateLimits?.tiers?.some(tier =>
+        tier.name.toLowerCase().includes('free')
+    );
+    if (hasFreeTierInArray) {
+        return true;
+    }
+    
+    const hasFreeTierInNotes = model.rateLimits?.notes?.toLowerCase().includes('free tier');
+    if (hasFreeTierInNotes) {
+        return true;
+    }
+
+    return false;
 }
 
 function estimateTokens(text) {
@@ -68,8 +85,8 @@ export function renderTranscriptUI(transcriptData) {
         </div>`
     ).join('');
 
-    const transcriptTokens = Math.ceil((transcriptData.fullText || '').length / 4);
-    const promptTemplateTokens = 250;
+    const transcriptTokens = estimateTokens(transcriptData.fullText);
+    const promptTemplateTokens = 250; // A reasonable constant for your prompt's overhead
     const totalInputTokens = transcriptTokens + promptTemplateTokens;
 
     elements.outputContent.innerHTML = `
@@ -82,7 +99,18 @@ export function renderTranscriptUI(transcriptData) {
         <div id="ai-selection-container" class="bg-white dark:bg-slate-800/50 p-5 rounded-lg shadow-md">
             <h3 class="text-xl font-semibold text-gray-800 dark:text-slate-100 mb-4">Analyze with AI 🤖</h3>
             <div class="text-sm text-gray-600 dark:text-slate-300 bg-gray-100 dark:bg-slate-700/50 p-3 rounded-md mb-4">
-                <p>Estimated Input: <strong class="text-indigo-600 dark:text-sky-400">${totalInputTokens.toLocaleString()} tokens</strong> <span class="text-xs">(${transcriptTokens.toLocaleString()} from transcript + ~${promptTemplateTokens} for prompt)</span></p>
+                <div class="flex items-center">
+                    <p>Approximate Input: <strong class="text-indigo-600 dark:text-sky-400">${totalInputTokens.toLocaleString()} tokens</strong></p>
+                    <div class="relative group ml-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 text-gray-400">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-7-4a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM9 9a1 1 0 0 0 0 2v3a1 1 0 0 0 1 1h1a1 1 0 1 0 0-2v-3a1 1 0 0 0-1-1H9Z" clip-rule="evenodd" />
+                        </svg>
+                        <span class="absolute bottom-full mb-2 w-48 p-2 text-xs text-white bg-black rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none -translate-x-1/2 left-1/2">
+                            This is a rough guide based on character count (1 token ≈ 4 chars). Actual token count varies by model.
+                        </span>
+                    </div>
+                </div>
+                <p class="text-xs mt-1">(${transcriptTokens.toLocaleString()} from transcript + ~${promptTemplateTokens} for prompt)</p>
                 <p id="model-token-limit-info" class="mt-1">Selected Model Max Tokens: <span class="font-semibold">...</span></p>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
@@ -112,7 +140,7 @@ function populateAiSelectors() {
 
     const freeProviders = {};
     for (const key in allAiProviders) {
-        if (allAiProviders[key].models.some(isFree)) { // Use the shared helper
+        if (allAiProviders[key].models.some(model => isFree(model, key))) {
             freeProviders[key] = allAiProviders[key];
         }
     }
@@ -122,7 +150,6 @@ function populateAiSelectors() {
         return `<option value="${key}">${providerName}</option>`;
     }).join('');
 
-    // Now call the reusable functions to populate the models and token info
     updateModelDropdownUI();
 }
 
@@ -135,7 +162,7 @@ export function updateModelDropdownUI() {
     const selectedProviderKey = providerSelect.value;
     const providerData = allAiProviders[selectedProviderKey];
     
-    const freeModels = providerData ? providerData.models.filter(isFree) : [];
+    const freeModels = providerData ? providerData.models.filter(model => isFree(model, selectedProviderKey)) : [];
 
     modelSelect.innerHTML = freeModels.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
     

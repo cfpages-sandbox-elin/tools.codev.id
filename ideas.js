@@ -57,23 +57,39 @@ async function handleAnalyzeTranscript() {
     if (!currentTranscript) { showError("No transcript available to analyze."); return; }
 
     analyzeBtn.disabled = true;
-    analyzeBtn.innerHTML = 'Analyzing... <span class="inline-block animate-spin ..."></span>';
+    analyzeBtn.innerHTML = 'Analyzing... <span class="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span>';
     updateState({ isLoading: true });
 
     try {
         const prompt = createAnalysisPrompt(currentTranscript.fullText);
         const result = await getAiAnalysis(prompt, provider, model);
+
         if (result.success) {
-            const analysis = JSON.parse(result.text);
+            let analysisText = result.text;
+            const jsonRegex = /```json\s*({[\s\S]*?})\s*```|({[\s\S]*})/;
+            const match = analysisText.match(jsonRegex);
+
+            if (match) {
+                // Use the first non-null capture group, which will be the pure JSON string
+                analysisText = match[1] || match[2];
+            }
+
+            const analysis = JSON.parse(analysisText);
             console.log("AI Analysis Complete:", analysis);
-            renderAnalysisUI(analysis); // You would build out this function
+            renderAnalysisUI(analysis);
         } else {
             throw new Error(result.error);
         }
     } catch (error) {
-        showError(error.message);
+        // Add the original AI text to the error for easier debugging
+        const aiResponseText = error.message.includes("JSON") ? ` | AI Response: ${result.text}` : '';
+        showError(`${error.message}${aiResponseText}`);
     } finally {
-        analyzeBtn.style.display = 'none';
+        // Hide the analysis button section after an attempt
+        const aiSelectionContainer = document.getElementById('ai-selection-container');
+        if (aiSelectionContainer) {
+            aiSelectionContainer.style.display = 'none';
+        }
         updateState({ isLoading: false });
     }
 }
