@@ -1,6 +1,6 @@
 /**
  * =================================================================================
- * Data Fetcher v9 (Multi-Provider Proxy)
+ * Data Fetcher v9.1 (Multi-Provider Proxy with Version Check)
  * =================================================================================
  * This function securely proxies requests to multiple transcript providers.
  * It expects a 'provider' field in the request to determine the target API.
@@ -8,6 +8,9 @@
  * Endpoint: /data-fetcher
  * Providers: 'supadata', 'rapidapi'
  */
+
+// --- NEW: Version constant for easy checking ---
+const VERSION = "9.1";
 
 const SUPADATA_API_ENDPOINT = 'https://api.supadata.ai/v1/transcript';
 const RAPIDAPI_ENDPOINT_HOST = 'https://youtube-captions-transcript-subtitles-video-combiner.p.rapidapi.com';
@@ -29,9 +32,6 @@ async function handleSupadataRequest(apiKey, videoUrl) {
 }
 
 async function handleRapidApiRequest(apiKey, videoId) {
-    if (!videoId) {
-        throw new Error('RapidAPI requires a videoId, but it was not provided.');
-    }
     const targetUrl = `${RAPIDAPI_ENDPOINT_HOST}/download-json/${videoId}?language=en`;
     console.log(`Proxying to RapidAPI for videoId: ${videoId}`);
 
@@ -42,12 +42,23 @@ async function handleRapidApiRequest(apiKey, videoId) {
         }
     });
 
-    // The RapidAPI endpoint helpfully returns a JSON array directly.
     return response;
 }
 
 
 export async function onRequest(context) {
+  // --- NEW: Add a version check for GET requests ---
+  if (context.request.method === 'GET') {
+    const responseBody = {
+        status: 'ok',
+        version: VERSION,
+        message: 'Data Fetcher is operational. Please use POST to fetch data.'
+    };
+    return new Response(JSON.stringify(responseBody), {
+        headers: { 'Content-Type': 'application/json' }
+    });
+  }
+    
   if (context.request.method === 'OPTIONS') {
     return new Response(null, {
       headers: {
@@ -66,26 +77,33 @@ export async function onRequest(context) {
   try {
     const { provider, apiKey, videoUrl, videoId } = await context.request.json();
 
-    if (!provider || !apiKey || !videoUrl) {
-      return new Response(JSON.stringify({ error: 'Missing provider, apiKey, or videoUrl.' }), { status: 400 });
-    }
-
     let apiResponse;
     if (provider === 'supadata') {
+        // --- NEW: Provider-specific validation ---
+        if (!apiKey || !videoUrl) {
+            return new Response(JSON.stringify({ error: 'Supadata provider requires apiKey and videoUrl.' }), { status: 400 });
+        }
         apiResponse = await handleSupadataRequest(apiKey, videoUrl);
+
     } else if (provider === 'rapidapi') {
+        // --- NEW: Provider-specific validation ---
+        if (!apiKey || !videoId) {
+            return new Response(JSON.stringify({ error: 'RapidAPI provider requires apiKey and videoId.' }), { status: 400 });
+        }
         apiResponse = await handleRapidApiRequest(apiKey, videoId);
+
     } else {
-        return new Response(JSON.stringify({ error: `Unknown provider: ${provider}` }), { status: 400 });
+        return new Response(JSON.stringify({ error: `Unknown or missing provider.` }), { status: 400 });
     }
 
     // Check if the upstream API call failed
     if (!apiResponse.ok) {
         const errorBody = await apiResponse.text();
         console.error(`Upstream API Error (${provider}, ${apiResponse.status}): ${errorBody}`);
-        return new Response(JSON.stringify({ error: `The '${provider}' API failed with status ${apiResponse.status}.` }), { status: apiResponse.status });
+        return new Response(JSON.stringify({ error: `The '${provider}' API failed with status ${apiResponse.status}. Details: ${errorBody}` }), { status: apiResponse.status });
     }
-
+    
+    // We create a new response to gain control over the headers.
     const newResponse = new Response(apiResponse.body, apiResponse);
     newResponse.headers.set('Access-Control-Allow-Origin', '*');
     newResponse.headers.set('Content-Type', 'application/json');

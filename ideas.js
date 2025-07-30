@@ -279,9 +279,11 @@ function init() {
 
     // Attach main event listeners
     document.getElementById('analyze-btn').addEventListener('click', handleFetchTranscript);
+
     document.getElementById('url-input').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') handleFetchTranscript();
     });
+
     document.getElementById('supadata-api-key').addEventListener('input', (e) => {
         const key = e.target.value.trim();
         updateState({ supadataApiKey: key || null });
@@ -289,7 +291,6 @@ function init() {
         document.getElementById('supadata-api-key-status-icon').textContent = key ? '✅' : '⚠️';
     });
     
-    // Add listener for the new RapidAPI key input
     document.getElementById('rapidapi-api-key').addEventListener('input', (e) => {
         const key = e.target.value.trim();
         updateState({ rapidapiApiKey: key || null });
