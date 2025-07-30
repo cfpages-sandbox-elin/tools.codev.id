@@ -42,14 +42,22 @@ export function resetOutput() {
 function isFree(model, providerKey) {
     if (!model) return false;
 
-    if (providerKey === 'openrouter' || providerKey === 'huggingface') {
+    // FIX: Make the 'openrouter' check more specific. Only models with null pricing are free.
+    if (providerKey === 'openrouter') {
+        return model.pricing === null;
+    }
+    
+    // This rule remains for providers that are entirely free.
+    if (providerKey === 'huggingface') {
         return true;
     }
 
+    // Rule for explicit zero-cost pricing.
     if (model.pricing?.input === 0.00 && model.pricing?.output === 0.00) {
         return true;
     }
 
+    // Rule for a 'Free Tier' in the rate limits tiers array.
     const hasFreeTierInArray = model.rateLimits?.tiers?.some(tier =>
         tier.name.toLowerCase().includes('free')
     );
@@ -57,6 +65,7 @@ function isFree(model, providerKey) {
         return true;
     }
     
+    // Rule for 'free tier' text in the general rate limit notes.
     const hasFreeTierInNotes = model.rateLimits?.notes?.toLowerCase().includes('free tier');
     if (hasFreeTierInNotes) {
         return true;

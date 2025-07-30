@@ -70,6 +70,7 @@ function extractAndParseJson(text) {
 
 async function handleAnalyzeTranscript() {
     const analyzeBtn = document.getElementById('analyze-transcript-btn');
+    const aiSelectionContainer = document.getElementById('ai-selection-container');
     const provider = document.getElementById('ai-provider-select').value;
     const model = document.getElementById('ai-model-select').value;
     const { currentTranscript, currentVideoId } = getState();
@@ -84,7 +85,7 @@ async function handleAnalyzeTranscript() {
     updateState({ isLoading: true });
 
     try {
-        const cacheKey = `analysis_v3_${currentVideoId}`; // Use a new cache version
+        const cacheKey = `analysis_v3_${currentVideoId}`;
         const cachedAnalysis = localStorage.getItem(cacheKey);
 
         let analysis;
@@ -97,23 +98,33 @@ async function handleAnalyzeTranscript() {
             const result = await getAiAnalysis(prompt, provider, model);
 
             if (!result.success) {
-                throw new Error(`Comprehensive analysis failed: ${result.error}`);
+                // If the API returns a structured failure, throw it to the catch block.
+                throw new Error(result.error || `API returned success:false`);
             }
             
             analysis = extractAndParseJson(result.text);
-
             localStorage.setItem(cacheKey, JSON.stringify(analysis));
             console.log(`V3 analysis for [${currentVideoId}] saved to cache.`);
         }
 
-        renderAnalysisUI(analysis); // This will call the new flexible renderer
+        renderAnalysisUI(analysis);
         attachTranscriptUIListeners();
+        
+        // FIX: Only hide the selection container on a complete success.
+        if (aiSelectionContainer) {
+            aiSelectionContainer.style.display = 'none';
+        }
 
     } catch (error) {
         showError(error.message);
+        
+        // FIX: On error, re-enable the button so the user can retry.
+        if (analyzeBtn) {
+            analyzeBtn.disabled = false;
+            analyzeBtn.innerHTML = 'Analyze Transcript';
+        }
     } finally {
-        const aiSelectionContainer = document.getElementById('ai-selection-container');
-        if (aiSelectionContainer) aiSelectionContainer.style.display = 'none';
+        // The finally block is now only responsible for the global loading state.
         updateState({ isLoading: false });
     }
 }
