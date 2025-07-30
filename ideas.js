@@ -1,7 +1,7 @@
 import { updateState, getState } from './ideas-state.js';
 import { getProviderConfig, getTranscript, getAiAnalysis } from './ideas-api.js';
 import { cacheElements, initApiKeyUI, showError, toggleLoader, resetOutput, renderTranscriptUI, renderAnalysisUI, updateModelDropdownUI, updateTokenInfoUI } from './ideas-ui.js';
-import { createClassificationPrompt, createIdeasListPrompt, createTutorialPrompt, createPodcastPrompt, createMoreIdeasPrompt } from './ideas-prompts.js';
+import { createComprehensiveAnalysisPrompt, createMoreIdeasPrompt } from './ideas-prompts.js';
 import { getYouTubeVideoId } from './ideas-helpers.js';
 
 // --- Event Handlers (must be exportable to be used in UI module) ---
@@ -68,18 +68,6 @@ function extractAndParseJson(text) {
     }
 }
 
-function getVideoTypeFromText(text) {
-    const lowercasedText = text.toLowerCase();
-    if (lowercasedText.includes('tutorial')) {
-        return 'Tutorial';
-    }
-    if (lowercasedText.includes('podcast')) {
-        return 'Podcast';
-    }
-    // Default to "Ideas List" if the others aren't found or it's ambiguous.
-    return 'Ideas List';
-}
-
 async function handleAnalyzeTranscript() {
     const analyzeBtn = document.getElementById('analyze-transcript-btn');
     const provider = document.getElementById('ai-provider-select').value;
@@ -96,43 +84,29 @@ async function handleAnalyzeTranscript() {
     updateState({ isLoading: true });
 
     try {
-        const cacheKey = `analysis_v2_${currentVideoId}`;
+        const cacheKey = `analysis_v3_${currentVideoId}`; // Use a new cache version
         const cachedAnalysis = localStorage.getItem(cacheKey);
 
         let analysis;
         if (cachedAnalysis) {
-            console.log(`Loading V2 analysis for [${currentVideoId}] from cache.`);
+            console.log(`Loading V3 analysis for [${currentVideoId}] from cache.`);
             analysis = JSON.parse(cachedAnalysis);
         } else {
-            // STEP 1: Classify the video type
-            analyzeBtn.innerHTML = 'Classifying Video...';
-            const classificationPrompt = createClassificationPrompt(currentTranscript.fullText);
-            const classificationResult = await getAiAnalysis(classificationPrompt, provider, model);
-            if (!classificationResult.success) throw new Error(`Classification failed: ${classificationResult.error}`);
-            
-            // FIX: Use the new robust helper function instead of trying to parse JSON.
-            const videoType = getVideoTypeFromText(classificationResult.text);
-            console.log(`Video classified as: ${videoType}`);
+            console.log(`Performing comprehensive analysis for [${currentVideoId}]...`);
+            const prompt = createComprehensiveAnalysisPrompt(currentTranscript.fullText);
+            const result = await getAiAnalysis(prompt, provider, model);
 
-            // STEP 2: Choose the correct detailed prompt based on classification
-            const promptSelector = {
-                'Tutorial': createTutorialPrompt,
-                'Podcast': createPodcastPrompt,
-                'Ideas List': createIdeasListPrompt,
-                'Other': createIdeasListPrompt
-            };
-            const analysisPrompt = (promptSelector[videoType] || createIdeasListPrompt)(currentTranscript.fullText);
+            if (!result.success) {
+                throw new Error(`Comprehensive analysis failed: ${result.error}`);
+            }
             
-            analyzeBtn.innerHTML = 'Deep Analyzing...';
-            const analysisResult = await getAiAnalysis(analysisPrompt, provider, model);
-            if (!analysisResult.success) throw new Error(`Detailed analysis failed: ${analysisResult.error}`);
-            
-            analysis = extractAndParseJson(analysisResult.text);
+            analysis = extractAndParseJson(result.text);
 
             localStorage.setItem(cacheKey, JSON.stringify(analysis));
+            console.log(`V3 analysis for [${currentVideoId}] saved to cache.`);
         }
 
-        renderAnalysisUI(analysis);
+        renderAnalysisUI(analysis); // This will call the new flexible renderer
         attachTranscriptUIListeners();
 
     } catch (error) {

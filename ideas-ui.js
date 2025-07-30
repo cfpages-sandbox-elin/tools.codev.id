@@ -192,22 +192,33 @@ export function renderAnalysisUI(analysis) {
     const analysisContainer = document.getElementById('analysis-container');
     if (!analysisContainer) return;
 
-    // The shared summary section is rendered first
-    analysisContainer.innerHTML = renderSummaryUI(analysis.summary, getState().currentVideoId);
-    
-    // Dispatch to the correct renderer based on the video type
-    switch (analysis.videoType) {
-        case 'Tutorial':
-            analysisContainer.innerHTML += renderTutorialUI(analysis.guide);
-            break;
-        case 'Podcast':
-            analysisContainer.innerHTML += renderPodcastUI(analysis.podcastDetails);
-            break;
-        case 'Ideas List':
-        case 'Other':
-        default:
-            analysisContainer.innerHTML += renderIdeasListUI(analysis.insights);
-            break;
+    let finalHtml = '';
+
+    // Always render the summary if it exists
+    if (analysis.summary) {
+        finalHtml += renderSummaryUI(analysis.summary, getState().currentVideoId);
+    }
+
+    // Conditionally render the tutorial guide
+    if (analysis.guide) {
+        finalHtml += renderTutorialUI(analysis.guide);
+    }
+
+    // Conditionally render the podcast details
+    if (analysis.podcastDetails) {
+        finalHtml += renderPodcastUI(analysis.podcastDetails);
+    }
+
+    // Conditionally render the insights/ideas list
+    if (analysis.insights) {
+        finalHtml += renderIdeasListUI(analysis.insights);
+    }
+
+    analysisContainer.innerHTML = finalHtml;
+
+    // A check in case the AI returns an empty object
+    if (finalHtml === '') {
+        analysisContainer.innerHTML = `<p class="text-center text-gray-500">The AI could not extract any structured information from this video.</p>`;
     }
 }
 

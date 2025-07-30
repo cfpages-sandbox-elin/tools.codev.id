@@ -1,127 +1,54 @@
 // ideas-prompts.js
-export function createClassificationPrompt(transcript) {
+export function createComprehensiveAnalysisPrompt(transcript) {
     return `
-    You are a content classification expert. Based on the provided transcript, determine the primary category of the video.
-    Respond ONLY with a single, valid JSON object with one key: "videoType".
-    The value for "videoType" MUST be one of the following exact strings: ["Tutorial", "Podcast", "Ideas List", "Other"].
+You are an expert analyst, strategist, and educator. Your task is to perform a comprehensive analysis of the following video transcript and structure your findings in a single JSON object.
 
-    - "Tutorial": If the video provides step-by-step instructions to achieve a specific outcome.
-    - "Podcast": If the video is primarily a conversation or interview between two or more people.
-    - "Ideas List": If the video's main purpose is to present a list of ideas, concepts, or examples.
-    - "Other": If it does not clearly fit the above categories.
+**CRITICAL INSTRUCTION:**
+Analyze the content and only include the top-level keys in your JSON response that are RELEVANT to the video. For example:
+- If the video is a tutorial, you MUST include the "guide" key.
+- If the video is a podcast/interview, you MUST include the "podcastDetails" key.
+- If the video contains lists of ideas, strategies, or principles, you MUST include the "insights" key.
+- If a section is not relevant, DO NOT include its key in the final JSON object.
+- You MUST always include the "summary" key.
 
-    Here is the transcript:
-    --- TRANSCRIPT START ---
-    ${transcript.substring(0, 4000)}
-    --- TRANSCRIPT END ---
+**JSON Object Schema Definition:**
 
-    Now, provide the classification as a single JSON object.
-    `;
-}
-
-export function createIdeasListPrompt(transcript) {
-    return `
-    You are an expert analyst and business strategist. Your task is to dissect the following video transcript, which has been identified as an "Ideas List", and extract structured, actionable insights.
-
-    Please adhere strictly to the following instructions:
-    1.  Provide your analysis ONLY in the form of a single, valid JSON object.
-    2.  The root of the JSON object must have three keys: "videoType", "summary", and "insights".
-    3.  Set the "videoType" key to the string "Ideas List".
-    4.  The "summary" key must be an object with two keys:
-        - "mainTopic": A short string describing the central theme of the video.
-        - "subTopics": An array of objects, where each object has "title", "startTime", and "endTime" in seconds, representing a distinct section of the video.
-    5.  The "insights" key must be an array of objects. Each insight object MUST have "category", "title", and "description".
-        - "category" must be one of: ["Product Idea", "Marketing Strategy", "Business Process", "Core Principle", "Tool/Resource"].
-
-    --- TRANSCRIPT START ---
-    ${transcript}
-    --- TRANSCRIPT END ---
-
-    Provide your complete analysis as a single JSON object now.
-    `;
-}
-
-export function createTutorialPrompt(transcript) {
-    return `
-    You are an expert technical writer and educator. Your task is to deconstruct the following video transcript, which has been identified as a "Tutorial", into a clear, structured guide.
-
-    Please adhere strictly to the following instructions:
-    1.  Provide your analysis ONLY in the form of a single, valid JSON object.
-    2.  The root of the JSON object must have three keys: "videoType", "summary", and "guide".
-    3.  Set the "videoType" key to the string "Tutorial".
-    4.  The "summary" key must be an object with "mainTopic" and an array of "subTopics" (each with "title", "startTime", "endTime").
-    5.  The "guide" key must be an object with three keys:
-        - "goal": A string describing the final outcome of the tutorial.
-        - "tools": An array of strings listing the necessary tools, software, or resources.
-        - "steps": An array of objects, where each object has a "title" and "description" for a single step in the process.
-
-    --- TRANSCRIPT START ---
-    ${transcript}
-    --- TRANSCRIPT END ---
-
-    Provide your complete analysis as a single JSON object now.
-    `;
-}
-
-export function createPodcastPrompt(transcript) {
-    return `
-    You are an expert podcast analyst and researcher. Your task is to analyze the following video transcript, which has been identified as a "Podcast", and extract key information about the speakers and content.
-
-    Please adhere strictly to the following instructions:
-    1.  Provide your analysis ONLY in the form of a single, valid JSON object.
-    2.  The root of the JSON object must have three keys: "videoType", "summary", and "podcastDetails".
-    3.  Set the "videoType" key to the string "Podcast".
-    4.  The "summary" key must be an object with "mainTopic" and an array of "subTopics" (each with "title", "startTime", "endTime").
-    5.  The "podcastDetails" key must be an object with:
-        - "guests": An array of objects, each with "name" and "credentials" (a string describing their expertise or achievements).
-        - "keyTopics": An array of strings listing the main topics discussed.
-        - "actionableAdvice": An array of strings, where each string is a direct piece of advice or a key takeaway given during the conversation.
-
-    --- TRANSCRIPT START ---
-    ${transcript}
-    --- TRANSCRIPT END ---
-
-    Provide your complete analysis as a single JSON object now.
-    `;
-}
-
-export function createAnalysisPrompt(transcript) {
-    return `
-    You are an expert analyst, business strategist, and system designer. Your task is to dissect the following video transcript and extract structured, categorized, and actionable insights.
-
-    Please adhere strictly to the following instructions:
-    1.  Read the entire transcript to deeply understand the content, arguments, and underlying systems.
-    2.  Provide your analysis ONLY in the form of a single, valid JSON object. Do not include any text, greetings, or explanations before or after the JSON object.
-    3.  The root of the JSON object must have two keys: "summary" and "insights".
-    4.  For the "summary" key, provide a concise 2-4 sentence summary of the video.
-    5.  The "insights" key must be an array of objects. Each object in the array represents a single, distinct, and actionable piece of information.
-    6.  Each insight object MUST have the following three keys:
-        - "category": A string that classifies the insight. You MUST use one of the following exact category names: ["Product Idea", "Marketing Strategy", "Business Process", "Core Principle", "Tool/Resource"].
-        - "title": A short, descriptive title for the insight (5-10 words).
-        - "description": A detailed, actionable explanation of the insight (2-4 sentences). Explain it clearly enough that someone could start acting on it.
-
-    EXAMPLE of a single insight object:
+{
+  "summary": {
+    "mainTopic": "A short string describing the central theme of the video.",
+    "subTopics": [
+        { "title": "Title of a distinct section", "startTime": "Start time in seconds", "endTime": "End time in seconds" }
+    ]
+  },
+  "guide": {
+    "goal": "The final outcome of the tutorial.",
+    "tools": ["An array of necessary tools, software, or resources."],
+    "steps": [
+        { "title": "Title of a step", "description": "Detailed description of the step." }
+    ]
+  },
+  "podcastDetails": {
+    "guests": [
+        { "name": "Guest's name", "credentials": "Their expertise or achievements." }
+    ],
+    "keyTopics": ["An array of the main topics discussed."],
+    "actionableAdvice": ["An array of direct advice or key takeaways."]
+  },
+  "insights": [
     {
-    "category": "Product Idea",
-    "title": "AI-Powered Podcast Note Generator",
-    "description": "Develop a micro-SaaS that takes a podcast audio file and automatically generates comprehensive show notes, timestamps for key topics, and social media teaser clips. This solves the tedious post-production work for content creators."
+      "category": "MUST be one of: ['Product Idea', 'Marketing Strategy', 'Business Process', 'Core Principle', 'Tool/Resource']",
+      "title": "A short, descriptive title for the insight.",
+      "description": "A detailed, actionable explanation of the insight."
     }
+  ]
+}
 
-    Here are the definitions for each category:
-    - Product Idea: A specific, buildable product or service concept mentioned or implied in the video.
-    - Marketing Strategy: A specific tactic or method for acquiring customers, building an audience, or growing a business.
-    - Business Process: A step-by-step system, workflow, or operational procedure for building, launching, or running a business.
-    - Core Principle: A high-level concept, mental model, or fundamental belief that guides strategic decisions.
-    - Tool/Resource: A specific software, book, person, or external resource that was mentioned as being useful.
+--- TRANSCRIPT START ---
+${transcript}
+--- TRANSCRIPT END ---
 
-    Now, analyze the following transcript and generate the complete JSON object with "summary" and the array of "insights". List as many high-quality insights as you can find.
-
-    --- TRANSCRIPT START ---
-    ${transcript}
-    --- TRANSCRIPT END ---
-
-    Provide your analysis as a single JSON object now.
-    `;
+Now, provide your complete analysis as a single, valid JSON object, including ONLY the relevant top-level keys based on the content.
+`;
 }
 
 export function createPlanPrompt(idea) {
@@ -153,7 +80,7 @@ export function createPlanPrompt(idea) {
     },
     "mvp": {
         "features": [
-        "A string array listing the 3-5 absolute essential features for the Minimum Viable Product. Be specific."
+        "A string array listing several absolute essential features for the Minimum Viable Product. Be specific."
         ],
         "techStack": [
         {
@@ -166,7 +93,7 @@ export function createPlanPrompt(idea) {
         },
         {
             "component": "Database",
-            "recommendation": "e.g., PostgreSQL or Firestore"
+            "recommendation": "e.g., PostgreSQL or Firestore or Supabase"
         },
         {
             "component": "Core AI Provider",
@@ -175,7 +102,7 @@ export function createPlanPrompt(idea) {
         ]
     },
     "goToMarketStrategy": [
-        "A string array listing 3-5 concrete, actionable steps to get the first 100 users. e.g., 'Post on Indie Hackers with a demo video', 'Engage with target users in relevant subreddits'."
+        "A string array listing several concrete, actionable steps to get the first 100 users. e.g., 'Post on Indie Hackers with a demo video', 'Engage with target users in relevant subreddits'."
     ]
     }
 
