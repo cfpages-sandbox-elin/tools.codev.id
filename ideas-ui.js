@@ -192,24 +192,51 @@ export function renderAnalysisUI(analysis) {
     const analysisContainer = document.getElementById('analysis-container');
     if (!analysisContainer) return;
 
-    const createSection = (title, items) => {
-        if (!items || items.length === 0) return '';
-        const listItems = items.map(item => `<li class="p-3 bg-gray-100 dark:bg-slate-800 rounded-md shadow-sm">${item}</li>`).join('');
-        return `
-            <div class="bg-white dark:bg-slate-800/50 p-5 rounded-lg shadow-md">
-                <h2 class="text-2xl font-semibold text-indigo-500 dark:text-sky-300 mb-4">${title}</h2>
-                <ul class="space-y-3 text-gray-700 dark:text-slate-300">${listItems}</ul>
-            </div>
-        `;
+    // --- Group insights by category ---
+    const insightsByCategory = (analysis.insights || []).reduce((acc, insight) => {
+        // Use 'Uncategorized' as a fallback, though the prompt requires a category.
+        const category = insight.category || 'Uncategorized';
+        if (!acc[category]) {
+            acc[category] = [];
+        }
+        acc[category].push(insight);
+        return acc;
+    }, {});
+    
+    // --- Define category titles and icons for better presentation ---
+    const categoryDetails = {
+        "Product Idea": { title: "Product Ideas 💡", icon: "💡" },
+        "Marketing Strategy": { title: "Marketing Strategies 📈", icon: "📈" },
+        "Business Process": { title: "Business Processes & Systems ⚙️", icon: "⚙️" },
+        "Core Principle": { title: "Core Principles & Concepts 🧠", icon: "🧠" },
+        "Tool/Resource": { title: "Tools & Resources 🛠️", icon: "🛠️" },
+        "Uncategorized": { title: "Other Insights", icon: "" }
     };
 
+    // --- Build the HTML for each category section ---
+    const sectionsHtml = Object.keys(insightsByCategory).map(category => {
+        const details = categoryDetails[category] || { title: category, icon: "" };
+        const listItems = insightsByCategory[category].map(item => `
+            <li class="p-4 bg-gray-100 dark:bg-slate-800 rounded-lg shadow-sm">
+                <h3 class="font-semibold text-md text-gray-800 dark:text-slate-200">${item.title}</h3>
+                <p class="mt-1 text-sm text-gray-600 dark:text-slate-400">${item.description}</p>
+            </li>
+        `).join('');
+
+        return `
+            <div class="bg-white dark:bg-slate-800/50 p-5 rounded-lg shadow-md">
+                <h2 class="text-2xl font-semibold text-indigo-500 dark:text-sky-300 mb-4">${details.title}</h2>
+                <ul class="space-y-4">${listItems}</ul>
+            </div>
+        `;
+    }).join('');
+
+    // --- Render the final HTML ---
     analysisContainer.innerHTML = `
         <div class="bg-white dark:bg-slate-800/50 p-5 rounded-lg shadow-md">
             <h2 class="text-2xl font-semibold text-indigo-500 dark:text-sky-300 mb-4">Summary 📝</h2>
-            <p class="text-gray-700 dark:text-slate-300 leading-relaxed">${analysis.summary}</p>
+            <p class="text-gray-700 dark:text-slate-300 leading-relaxed">${analysis.summary || "No summary provided."}</p>
         </div>
-        ${createSection("Key Takeaways 🔑", analysis.takeaways)}
-        ${createSection("Ideas from Content 💡", analysis.extracted_ideas)}
-        ${createSection("Further Ideas ✨", analysis.further_ideas)}
+        ${sectionsHtml}
     `;
 }
