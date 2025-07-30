@@ -24,25 +24,37 @@ export function initApiKeyUI() {
     const savedSupadataKey = localStorage.getItem('supadataApiKey');
     const savedRapidapiKey = localStorage.getItem('rapidapiApiKey');
 
-    if (savedSupadataKey) {
-        elements.supadataApiKeyInput.value = savedSupadataKey;
-        elements.supadataApiKeyStatusIcon.textContent = '✅';
+    // Safety check for Supadata elements
+    if (elements.supadataApiKeyInput && elements.supadataApiKeyStatusIcon) {
+        if (savedSupadataKey) {
+            elements.supadataApiKeyInput.value = savedSupadataKey;
+            elements.supadataApiKeyStatusIcon.textContent = '✅';
+        } else {
+            elements.supadataApiKeyStatusIcon.textContent = '⚠️';
+        }
     } else {
-        elements.supadataApiKeyStatusIcon.textContent = '⚠️';
+        console.error("Could not find the Supadata API key input/status elements in the HTML.");
     }
 
-    if (savedRapidapiKey) {
-        elements.rapidapiApiKeyInput.value = savedRapidapiKey;
-        elements.rapidapiApiKeyStatusIcon.textContent = '✅';
+    // Safety check for RapidAPI elements
+    if (elements.rapidapiApiKeyInput && elements.rapidapiApiKeyStatusIcon) {
+        if (savedRapidapiKey) {
+            elements.rapidapiApiKeyInput.value = savedRapidapiKey;
+            elements.rapidapiApiKeyStatusIcon.textContent = '✅';
+        } else {
+            elements.rapidapiApiKeyStatusIcon.textContent = '⚠️';
+        }
     } else {
-        elements.rapidapiApiKeyStatusIcon.textContent = '⚠️';
+        console.error("Could not find the RapidAPI key input/status elements in the HTML.");
     }
 
     // Open the details section only if NEITHER key is present
-    if (!savedSupadataKey && !savedRapidapiKey) {
-        elements.apiKeyDetails.open = true;
-    } else {
-        elements.apiKeyDetails.open = false;
+    if (elements.apiKeyDetails) {
+        if (!savedSupadataKey && !savedRapidapiKey) {
+            elements.apiKeyDetails.open = true;
+        } else {
+            elements.apiKeyDetails.open = false;
+        }
     }
 }
 
