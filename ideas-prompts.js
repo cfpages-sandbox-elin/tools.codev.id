@@ -1,4 +1,4 @@
-// ideas-prompts.js
+// ideas-prompts.js v1.15 +prd
 export function createComprehensiveAnalysisPrompt(transcript) {
     return `
 You are an expert analyst, strategist, and educator. Your task is to perform a comprehensive analysis of the following video transcript and structure your findings in a single JSON object.
@@ -134,5 +134,41 @@ export function createMoreIdeasPrompt(existingIdeas) {
     ]
 
     Now, generate the JSON array of new, unique product ideas.
+    `;
+}
+
+export function createPrdPrompt(ideaTitle, planJson) {
+    return `
+    You are a Senior Product Manager at a top tech company. Your task is to generate a concise but comprehensive Product Requirements Document (PRD) in Markdown format based on an AI-generated strategic plan.
+
+    **Product Name:** ${ideaTitle}
+
+    **AI-Generated Strategic Plan (JSON):**
+    ${planJson}
+
+    **Instructions:**
+    Generate a PRD in Markdown format. The PRD should include the following sections:
+
+    1.  **Introduction & Vision:**
+        *   **Problem:** What problem is this product solving?
+        *   **Solution:** Briefly describe the product and its core value proposition.
+        *   **Target Audience:** Who are the primary users?
+
+    2.  **Goals & Success Metrics:**
+        *   **Business Goals:** What are the high-level business objectives? (e.g., Acquire 1,000 paying users in 6 months).
+        *   **Product Goals:** What should the product achieve? (e.g., Automate 90% of the grant proposal drafting process).
+        *   **Key Metrics (KPIs):** How will success be measured? (e.g., User Activation Rate, Conversion to Paid, Churn Rate).
+
+    3.  **MVP Feature Set:**
+        *   List the core features from the plan as a bulleted list. Provide a one-sentence description for each feature explaining its purpose.
+
+    4.  **Technical & Feasibility Summary:**
+        *   Briefly summarize the feasibility analysis from the plan.
+        *   List the recommended technical stack.
+
+    5.  **Go-to-Market Strategy:**
+        *   Summarize the key steps from the go-to-market plan.
+
+    Now, generate the complete PRD in Markdown format. Use clear headings and formatting.
     `;
 }
