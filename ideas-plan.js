@@ -1,4 +1,4 @@
-// ideas-plan.js v1.15 simple ver
+// ideas-plan.js v1.15 ideaslug + simple ver
 import { getState } from './ideas-state.js';
 import { getAiAnalysis } from './ideas-api.js';
 import { showError } from './ideas-ui.js';
@@ -50,8 +50,7 @@ function renderPlanContent(plan) {
 }
 
 // Renders the complete UI for a product card, including the plan and its controls.
-function renderPlanAndControls(container, plan, idea, providerKey, modelId) {
-    const ideaSlug = idea.title.toLowerCase().replace(/\s+/g, '-').slice(0, 30);
+function renderPlanAndControls(container, plan, idea, providerKey, modelId, ideaSlug) {
     container.innerHTML = `
         <div class="space-y-3 text-sm" id="plan-content-${ideaSlug}">
             ${renderPlanContent(plan)}
@@ -70,7 +69,7 @@ function renderPlanAndControls(container, plan, idea, providerKey, modelId) {
             </div>
         </div>
     `;
-    attachPlanEventListeners(container, providerKey);
+    attachPlanEventListeners(container, providerKey, ideaSlug);
 }
 
 // --- B. EVENT HANDLERS AND LISTENERS ---
@@ -114,11 +113,10 @@ async function handleReplan(event) {
 }
 
 // Wires up the controls for a single product card.
-function attachPlanEventListeners(container, initialProvider) {
+function attachPlanEventListeners(container, initialProvider, ideaSlug) {
     const replanButton = container.querySelector('.replan-btn');
     if (!replanButton) return;
 
-    const ideaSlug = replanButton.dataset.ideaSlug;
     const providerSelect = document.getElementById(`replan-provider-${ideaSlug}`);
     const modelSelect = document.getElementById(`replan-model-${ideaSlug}`);
     
@@ -142,8 +140,14 @@ function attachPlanEventListeners(container, initialProvider) {
 
 // Fetches and renders a plan for ONE product idea.
 async function generateAndRenderPlanForIdea(idea, container) {
-    const ideaSlug = idea.title.toLowerCase().replace(/\s+/g, '-').slice(0, 30);
-    const planCacheKey = `plan_v3_${getState().currentVideoId}_${ideaSlug}`; // New, simpler cache key
+    // --- CREATE THE SANITIZED SLUG ONCE HERE ---
+    const ideaSlug = idea.title
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '') // Remove all non-word, non-space, non-hyphen characters
+        .replace(/\s+/g, '-')     // Replace spaces with hyphens
+        .slice(0, 50);            // Use a slightly longer slice for uniqueness
+    
+    const planCacheKey = `plan_v3_${getState().currentVideoId}_${ideaSlug}`;
     const planCardId = `plan-card-${ideaSlug}`;
 
     container.innerHTML += `
@@ -160,7 +164,7 @@ async function generateAndRenderPlanForIdea(idea, container) {
     if (cachedData) {
         console.log(`Loading plan for [${idea.title}] from cache.`);
         const { plan, providerKey, modelId } = JSON.parse(cachedData);
-        renderPlanAndControls(resultsContainer, plan, idea, providerKey, modelId);
+        renderPlanAndControls(resultsContainer, plan, idea, providerKey, modelId, ideaSlug);
         return;
     }
 
@@ -178,7 +182,7 @@ async function generateAndRenderPlanForIdea(idea, container) {
         if (!result.success) throw new Error(result.error);
         
         const plan = extractAndParseJson(result.text);
-        renderPlanAndControls(resultsContainer, plan, idea, defaultModel.providerKey, defaultModel.modelId);
+        renderPlanAndControls(resultsContainer, plan, idea, defaultModel.providerKey, defaultModel.modelId, ideaSlug);
         
         localStorage.setItem(planCacheKey, JSON.stringify({ plan, providerKey: defaultModel.providerKey, modelId: defaultModel.modelId }));
     } catch (e) {
