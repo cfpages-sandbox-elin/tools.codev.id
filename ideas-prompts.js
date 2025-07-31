@@ -1,4 +1,4 @@
-// ideas-prompts.js v2.00 so deep
+// ideas-prompts.js v2.01 acp prompts
 function formatTranscriptWithTimestamps(timedTextArray) {
     if (!timedTextArray || !Array.isArray(timedTextArray)) return "";
     return timedTextArray.map(line => `[${line.start.toFixed(1)}s] ${line.text}`).join('\n');
@@ -418,13 +418,13 @@ export function createAdvancedAnalysisPrompt(idea, moduleType) {
         **JSON Schema:** {
           "audienceAnalysis": {
             "targetDefinition": "A clear definition of the primary target audience.",
-            "needsAnalysis": "A list of the core needs and pain points of this audience.",
+            "needsAnalysis": ["A list of the core needs and pain points of this audience."],
             "contentGaps": "What content is missing that this audience would value?"
           },
           "communityAnalysis": {
             "platformStrategy": "Which platforms (e.g., Reddit, Facebook, Discord) are best and why?",
-            "trustBuilding": "List of 2-3 tactics to build trust with the community (e.g., 'Founder AMA sessions').",
-            "engagementRituals": "List of 2-3 repeatable events to foster engagement (e.g., 'Weekly design showcase')."
+            "trustBuilding": ["List of several tactics to build trust with the community (e.g., 'Founder AMA sessions')."],
+            "engagementRituals": ["List of several repeatable events to foster engagement (e.g., 'Weekly design showcase')."]
           },
           "productAnalysis": {
             "coreOffering": "A summary of the product's main value proposition.",

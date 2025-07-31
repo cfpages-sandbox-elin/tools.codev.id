@@ -1,4 +1,4 @@
-// ideas-deep.js (Complete, Corrected Version)
+// ideas-deep.js (Complete, Corrected Version) regen button
 import { getAiAnalysis } from './ideas-api.js';
 import { createAdvancedAnalysisPrompt } from './ideas-prompts.js';
 
@@ -138,7 +138,9 @@ function renderModuleDetailCard(module) {
 async function runSingleAnalysis(idea, module) {
     const detailCard = document.getElementById(`detail-card-${module.id}`);
     const summaryCardContent = document.querySelector(`#summary-card-${module.id} .summary-content`);
-    if (!detailCard || detailCard.querySelector('.regenerate-btn')) return;
+    if (!detailCard || detailCard.querySelector('.regenerate-btn')) {
+        return;
+    }
 
     const ideaSlug = getIdeaSlug(idea.title);
     const cacheKey = `deep_analysis_v4_${module.id}_${ideaSlug}`;
@@ -162,7 +164,15 @@ async function runSingleAnalysis(idea, module) {
 
     } catch (error) {
         const errorMsg = `Error: ${error.message}`;
-        detailCard.querySelector('.detail-content-area').innerHTML = `<p class="text-red-500 text-sm">${errorMsg}</p>`;
+        const errorHtml = `
+            <p class="text-red-500 text-sm mb-4">${errorMsg}</p>
+            <div class="mt-6 text-right">
+                <button class="regenerate-btn text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1 px-3 rounded-md" data-module-id="${module.id}">
+                    Re-generate
+                </button>
+            </div>
+        `;
+        detailCard.querySelector('.detail-content-area').innerHTML = errorHtml;
         if(summaryCardContent) summaryCardContent.innerHTML = `<strong class="text-red-500">Failed</strong>`;
     }
 }
