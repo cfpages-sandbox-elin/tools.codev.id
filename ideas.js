@@ -1,4 +1,4 @@
-// ideas.js v2.00
+// ideas.js v2.00 so deep
 import { initPlanTab } from './ideas-plan.js';
 import { initStealTab } from './ideas-steal.js';
 import { initDeepAnalysis } from './ideas-deep.js';
@@ -369,7 +369,7 @@ function handleTabClick(event) {
     const targetTab = clickedButton.dataset.tab;
 
     const tabButtons = document.querySelectorAll('#main-tabs .tab-btn');
-    const tabContents = document.querySelectorAll('main > div.tab-content'); // More specific selector
+    const tabContents = document.querySelectorAll('main > div.tab-content');
 
     // Update button styles
     tabButtons.forEach(btn => {
@@ -396,22 +396,21 @@ function handleTabClick(event) {
     } else if (targetTab === 'steal' && !getState().stealTabInitialized) {
         initStealTab();
         updateState({ stealTabInitialized: true });
+    } else if (targetTab === 'deep-analysis') {
+        initDeepAnalysis(getState().activeDeepAnalysisIdea);
     }
 }
 
-// Global listener for deep analysis
 document.addEventListener('click', (e) => {
     if (e.target && e.target.classList.contains('deep-analyze-btn')) {
         const idea = JSON.parse(e.target.dataset.idea);
         
-        // 1. Programmatically switch to the 'deep-analysis' tab
+        updateState({ activeDeepAnalysisIdea: idea });
+
         const deepAnalysisButton = document.querySelector('button[data-tab="deep-analysis"]');
         if (deepAnalysisButton) {
             handleTabClick({ currentTarget: deepAnalysisButton });
         }
-        
-        // 2. Initialize the deep analysis with the specific idea
-        initDeepAnalysis(idea);
     }
 });
 

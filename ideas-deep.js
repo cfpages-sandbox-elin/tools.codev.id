@@ -1,4 +1,4 @@
-// ideas-deep.js v2.00
+// ideas-deep.js v2.00 deeper
 import { getAiAnalysis } from './ideas-api.js';
 import { extractAndParseJson } from './ideas.js';
 import { createAdvancedAnalysisPrompt } from './ideas-prompts.js';
@@ -123,6 +123,23 @@ async function runSingleAnalysis(idea, module) {
 export function initDeepAnalysis(idea) {
     const container = document.getElementById('deep-analysis-content');
     
+    if (!idea) {
+        container.innerHTML = `
+            <div class="text-center p-8 bg-white dark:bg-slate-800/50 rounded-lg shadow-md">
+                <h3 class="text-2xl font-semibold text-gray-700 dark:text-slate-200">Deep Analysis🔬</h3>
+                <p class="mt-2 text-gray-500 dark:text-slate-400">
+                    Click the "Deep Analyze" button on an idea in the 
+                    <span class="font-semibold text-indigo-500">Brainstorm</span> or 
+                    <span class="font-semibold text-purple-500">Steal</span> tabs 
+                    to see a detailed breakdown here.
+                </p>
+            </div>
+        `;
+        return;
+    }
+
+    const ideaSlug = getIdeaSlug(idea.title);
+
     container.innerHTML = `
         <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md mb-6">
             <h2 class="text-3xl font-bold text-gray-800 dark:text-white">${idea.title}</h2>
@@ -142,7 +159,6 @@ export function initDeepAnalysis(idea) {
             const moduleId = button.dataset.moduleId;
             const module = analysisModules.find(m => m.id === moduleId);
             
-            // Explicitly show loading spinner in the content area
             const contentContainer = button.closest('.p-5');
             contentContainer.innerHTML = `
                 <div class="card-content-area text-center py-4">
@@ -150,8 +166,6 @@ export function initDeepAnalysis(idea) {
                 </div>`;
             
             await runSingleAnalysis(idea, module);
-
-            // Note: runSingleAnalysis now re-renders the content, so we don't need to reset the button text here
         }
     });
 

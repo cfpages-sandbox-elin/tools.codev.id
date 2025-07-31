@@ -1,3 +1,4 @@
+// ideas-state.js v2.00 deep
 const appState = {
     supadataApiKey: null,
     rapidapiApiKey: null,
@@ -6,6 +7,7 @@ const appState = {
     currentVideoId: null,
     isLoading: false,
     activeTab: 'brainstorm',
+    activeDeepAnalysisIdea: null,
 };
 
 /**
