@@ -1,4 +1,4 @@
-// ideas-plan.js with auto prd + fix
+// ideas-plan.js with collapsible
 import { getState } from './ideas-state.js';
 import { getAiAnalysis } from './ideas-api.js';
 import { showError } from './ideas-ui.js';
@@ -259,14 +259,12 @@ async function generateAndRenderPlanForIdea(idea, container, isReplan = false) {
 export async function initPlanTab() {
     const planContainer = document.getElementById('plan-content');
     planContainer.innerHTML = '';
-    
-    // Add "Re-plan All" button
+
     const headerDiv = document.createElement('div');
     headerDiv.className = 'text-right mb-4';
     headerDiv.innerHTML = `<button id="replan-all-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md text-sm">🔄 Re-plan All Products</button>`;
     planContainer.appendChild(headerDiv);
     headerDiv.querySelector('#replan-all-btn').addEventListener('click', () => {
-        // Clear caches to force regeneration
         const { currentVideoId } = getState();
         const analysis = JSON.parse(localStorage.getItem(`analysis_v3_${currentVideoId}`) || '{}');
         const ideas = analysis.insights?.filter(i => i.category === 'Product Idea') || [];
@@ -275,30 +273,47 @@ export async function initPlanTab() {
             localStorage.removeItem(`plan_v3_${currentVideoId}_${ideaSlug}`);
             localStorage.removeItem(`prd_v2_${currentVideoId}_${ideaSlug}`);
         });
-        initPlanTab(); // Re-run the whole process
+        initPlanTab();
     });
 
     const productIdeasContainer = document.createElement('div');
-    productIdeasContainer.className = 'space-y-6';
+    productIdeasContainer.className = 'space-y-4'; // Use a smaller gap for collapsed cards
     planContainer.appendChild(productIdeasContainer);
-    
+
     const { currentVideoId } = getState();
     const productIdeas = JSON.parse(localStorage.getItem(`analysis_v3_${currentVideoId}`) || '{}').insights?.filter(i => i.category === 'Product Idea') || [];
 
-    // Staggered loop
+    if (productIdeas.length === 0) {
+        productIdeasContainer.innerHTML = `<p class="text-center text-gray-500 dark:text-slate-400">No 'Product Ideas' were found to plan for.</p>`;
+        return;
+    }
+
     (async () => {
         for (const [index, idea] of productIdeas.entries()) {
-            const cardContainer = document.createElement('div');
-            cardContainer.id = `plan-card-${idea.title.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').slice(0, 50)}`;
-            cardContainer.className = "bg-white dark:bg-slate-800/50 p-5 rounded-lg shadow-md";
+            const ideaSlug = idea.title.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').slice(0, 50);
+            
+            const cardContainer = document.createElement('details'); // Use <details> tag
+            cardContainer.id = `plan-card-${ideaSlug}`;
+            cardContainer.className = "bg-white dark:bg-slate-800/50 p-5 rounded-lg shadow-md group";
+            
             cardContainer.innerHTML = `
-                <h2 class="text-2xl font-semibold text-indigo-500 dark:text-sky-300 mb-2">${idea.title}</h2>
-                <p class="text-sm text-gray-600 dark:text-slate-400 mb-4">${idea.description}</p>
-                <div class="results-container border-t border-gray-200 dark:border-slate-700 pt-4"></div>
+                <summary class="list-none cursor-pointer">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h2 class="text-2xl font-semibold text-indigo-500 dark:text-sky-300">${idea.title}</h2>
+                            <p class="text-sm text-gray-600 dark:text-slate-400 mt-1">${idea.description}</p>
+                        </div>
+                        <div class="text-xl text-gray-400 group-open:rotate-180 transition-transform duration-300">▼</div>
+                    </div>
+                </summary>
+                <div class="results-container border-t border-gray-200 dark:border-slate-700 pt-4 mt-4">
+                    <!-- Dynamic content will be loaded here -->
+                </div>
             `;
+
             productIdeasContainer.appendChild(cardContainer);
             
-            await delay(index * 500); // Stagger API calls
+            await delay(index * 500);
             generateAndRenderPlanForIdea(idea, cardContainer.querySelector('.results-container'));
         }
     })();
