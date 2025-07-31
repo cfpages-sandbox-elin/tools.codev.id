@@ -1,54 +1,54 @@
-// ideas-prompts.js v1.15 +prd
+// ideas-prompts.js v1.15 +betterprd +prd 
 export function createComprehensiveAnalysisPrompt(transcript) {
     return `
-You are an expert analyst, strategist, and educator. Your task is to perform a comprehensive analysis of the following video transcript and structure your findings in a single JSON object.
+    You are an expert analyst, strategist, and educator. Your task is to perform a comprehensive analysis of the following video transcript and structure your findings in a single JSON object.
 
-**CRITICAL INSTRUCTION:**
-Analyze the content and only include the top-level keys in your JSON response that are RELEVANT to the video. For example:
-- If the video is a tutorial, you MUST include the "guide" key.
-- If the video is a podcast/interview, you MUST include the "podcastDetails" key.
-- If the video contains lists of ideas, strategies, or principles, you MUST include the "insights" key.
-- If a section is not relevant, DO NOT include its key in the final JSON object.
-- You MUST always include the "summary" key.
+    **CRITICAL INSTRUCTION:**
+    Analyze the content and only include the top-level keys in your JSON response that are RELEVANT to the video. For example:
+    - If the video is a tutorial, you MUST include the "guide" key.
+    - If the video is a podcast/interview, you MUST include the "podcastDetails" key.
+    - If the video contains lists of ideas, strategies, or principles, you MUST include the "insights" key.
+    - If a section is not relevant, DO NOT include its key in the final JSON object.
+    - You MUST always include the "summary" key.
 
-**JSON Object Schema Definition:**
+    **JSON Object Schema Definition:**
 
-{
-  "summary": {
-    "mainTopic": "A short string describing the central theme of the video.",
-    "subTopics": [
-        { "title": "Title of a distinct section", "startTime": "Start time in seconds", "endTime": "End time in seconds" }
-    ]
-  },
-  "guide": {
-    "goal": "The final outcome of the tutorial.",
-    "tools": ["An array of necessary tools, software, or resources."],
-    "steps": [
-        { "title": "Title of a step", "description": "Detailed description of the step." }
-    ]
-  },
-  "podcastDetails": {
-    "guests": [
-        { "name": "Guest's name", "credentials": "Their expertise or achievements." }
-    ],
-    "keyTopics": ["An array of the main topics discussed."],
-    "actionableAdvice": ["An array of direct advice or key takeaways."]
-  },
-  "insights": [
     {
-      "category": "MUST be one of: ['Product Idea', 'Marketing Strategy', 'Business Process', 'Core Principle', 'Tool/Resource']",
-      "title": "A short, descriptive title for the insight.",
-      "description": "A detailed, actionable explanation of the insight."
+    "summary": {
+        "mainTopic": "A short string describing the central theme of the video.",
+        "subTopics": [
+            { "title": "Title of a distinct section", "startTime": "Start time in seconds", "endTime": "End time in seconds" }
+        ]
+    },
+    "guide": {
+        "goal": "The final outcome of the tutorial.",
+        "tools": ["An array of necessary tools, software, or resources."],
+        "steps": [
+            { "title": "Title of a step", "description": "Detailed description of the step." }
+        ]
+    },
+    "podcastDetails": {
+        "guests": [
+            { "name": "Guest's name", "credentials": "Their expertise or achievements." }
+        ],
+        "keyTopics": ["An array of the main topics discussed."],
+        "actionableAdvice": ["An array of direct advice or key takeaways."]
+    },
+    "insights": [
+        {
+        "category": "MUST be one of: ['Product Idea', 'Marketing Strategy', 'Business Process', 'Core Principle', 'Tool/Resource']",
+        "title": "A short, descriptive title for the insight.",
+        "description": "A detailed, actionable explanation of the insight."
+        }
+    ]
     }
-  ]
-}
 
---- TRANSCRIPT START ---
-${transcript}
---- TRANSCRIPT END ---
+    --- TRANSCRIPT START ---
+    ${transcript}
+    --- TRANSCRIPT END ---
 
-Now, provide your complete analysis as a single, valid JSON object, including ONLY the relevant top-level keys based on the content.
-`;
+    Now, provide your complete analysis as a single, valid JSON object, including ONLY the relevant top-level keys based on the content.
+    `;
 }
 
 export function createPlanPrompt(idea) {
@@ -139,36 +139,50 @@ export function createMoreIdeasPrompt(existingIdeas) {
 
 export function createPrdPrompt(ideaTitle, planJson) {
     return `
-    You are a Senior Product Manager at a top tech company. Your task is to generate a concise but comprehensive Product Requirements Document (PRD) in Markdown format based on an AI-generated strategic plan.
+    You are an expert Senior Product Manager writing a Product Requirements Document (PRD). Your task is to generate a comprehensive PRD in Markdown format based on a product idea and its strategic plan.
 
-    **Product Name:** ${ideaTitle}
+    **Product Idea:** ${ideaTitle}
 
-    **AI-Generated Strategic Plan (JSON):**
+    **Strategic Plan (JSON):**
     ${planJson}
 
     **Instructions:**
-    Generate a PRD in Markdown format. The PRD should include the following sections:
+    Generate a world-class PRD in Markdown format. The PRD must be clear, user-centric, and actionable. Use the following structure and headings precisely:
 
-    1.  **Introduction & Vision:**
-        *   **Problem:** What problem is this product solving?
-        *   **Solution:** Briefly describe the product and its core value proposition.
-        *   **Target Audience:** Who are the primary users?
+    # Product Requirements Document: ${ideaTitle}
 
-    2.  **Goals & Success Metrics:**
-        *   **Business Goals:** What are the high-level business objectives? (e.g., Acquire 1,000 paying users in 6 months).
-        *   **Product Goals:** What should the product achieve? (e.g., Automate 90% of the grant proposal drafting process).
-        *   **Key Metrics (KPIs):** How will success be measured? (e.g., User Activation Rate, Conversion to Paid, Churn Rate).
+    ## 1. Overview & Vision
+    *   **Problem Statement:** Clearly articulate the core problem this product solves, based on the plan's 'marketDemand' reasoning.
+    *   **Vision & Solution:** Briefly describe the product and its value proposition.
+    *   **Target Audience:** Define the primary user persona(s) this product is for.
 
-    3.  **MVP Feature Set:**
-        *   List the core features from the plan as a bulleted list. Provide a one-sentence description for each feature explaining its purpose.
+    ## 2. Goals & Success Metrics
+    *   **Business Goals:** State 1-2 high-level business objectives (e.g., achieve a certain revenue, capture a market segment).
+    *   **Product Goals:** State 1-2 product-specific goals (e.g., reduce time spent on X by 50%).
+    *   **Key Performance Indicators (KPIs):** List 3-4 measurable metrics to track success (e.g., Daily Active Users, Conversion Rate, Task Success Rate).
 
-    4.  **Technical & Feasibility Summary:**
-        *   Briefly summarize the feasibility analysis from the plan.
-        *   List the recommended technical stack.
+    ## 3. User Stories & Core User Flow
+    Describe the primary user journey. Then, for each feature in the MVP, write a user story in this format:
+    *   **As a** [user type], **I want to** [perform an action], **so that I can** [achieve a benefit].
 
-    5.  **Go-to-Market Strategy:**
-        *   Summarize the key steps from the go-to-market plan.
+    ## 4. Scope & Features for MVP
+    ### In Scope
+    *   List all features from the 'mvp.features' section of the plan.
 
-    Now, generate the complete PRD in Markdown format. Use clear headings and formatting.
+    ### Out of Scope
+    *   Based on the MVP, list 2-3 reasonable features or capabilities that will **not** be included in the initial release to maintain focus.
+
+    ## 5. Technical Considerations
+    *   **Proposed Tech Stack:** List the components and recommendations from the 'mvp.techStack' section.
+    *   **Dependencies:** Mention any potential external dependencies (e.g., reliance on a specific third-party API).
+
+    ## 6. Go-to-Market Strategy
+    *   Summarize the key steps from the 'goToMarketStrategy' section of the plan into a numbered list.
+    
+    ## 7. Open Questions
+    *   List 1-2 critical questions that the team needs to answer during design or development (e.g., "What is the most intuitive way to handle data import errors?").
+
+    ---
+    *Document End*
     `;
 }
