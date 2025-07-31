@@ -1,4 +1,4 @@
-// ideas-prompts.js v1.15 re-summarize +betterprd +prd 
+// ideas-prompts.js v2.00
 function formatTranscriptWithTimestamps(timedTextArray) {
     if (!timedTextArray || !Array.isArray(timedTextArray)) return "";
     return timedTextArray.map(line => `[${line.start.toFixed(1)}s] ${line.text}`).join('\n');
@@ -219,4 +219,71 @@ export function createPrdPrompt(ideaTitle, planJson) {
     ---
     *Document End*
     `;
+}
+
+export function createStealIdeasPrompt(pageText) {
+    return `
+    You are an expert business analyst and venture capitalist with a keen eye for identifying opportunities in text. Analyze the following text content from a webpage. Your task is to extract any potential product ideas, business models, or unique strategies mentioned.
+
+    **Instructions:**
+    1. Read through the text and identify 3-5 distinct, actionable ideas.
+    2. For each idea, create a short title and a one-sentence description.
+    3. The "category" for all these ideas MUST be "Stolen Idea".
+    4. Provide your output ONLY as a valid JSON array of objects. Do not include any text before or after the JSON.
+
+    **Example Output Format:**
+    [
+      {
+        "category": "Stolen Idea",
+        "title": "AI-Powered Meeting Summarizer",
+        "description": "A service that connects to Zoom/Google Meet and automatically generates concise meeting notes and action items."
+      }
+    ]
+
+    --- WEBPAGE TEXT START ---
+    ${pageText.substring(0, 15000)}
+    --- WEBPAGE TEXT END ---
+
+    Now, generate the JSON array of stolen ideas based on the text provided. If no ideas are found, return an empty array [].
+    `;
+}
+
+export function createDeepAnalysisPrompt(idea, analysisType) {
+    const baseInstruction = `You are a world-class startup analyst. Given the following product idea, provide a detailed analysis for the specified section.
+    Product Idea Title: "${idea.title}"
+    Product Idea Description: "${idea.description}"
+    Respond ONLY with a single, valid JSON object and no other text.`;
+
+    const prompts = {
+        swot: `
+        ${baseInstruction}
+        Analyze its viability. The JSON object must have keys: "opportunity", "problem", "feasibility", "timing". Each key should have a nested object with "score" (a number 1-10) and "reasoning" (a brief string).
+        `,
+        businessModel: `
+        ${baseInstruction}
+        Propose a 3-tier value ladder. The JSON object must have keys: "leadMagnet", "introOffer", "coreProduct". Each key should have a nested object with "name" (a string, e.g., "Free Analyzer Tool"), "price" (a string, e.g., "Free" or "$49"), and "description" (a brief string).
+        `,
+        market: `
+        ${baseInstruction}
+        Analyze its market position. The JSON object must have keys: "targetAudience" (string), "mainCompetitor" (string), and "supportingTrend" (string).
+        `,
+        channels: `
+        ${baseInstruction}
+        Analyze its go-to-market potential on social channels. The JSON object must have keys: "reddit", "facebook", "youtube". Each key should have a nested object with "score" (a number 1-10) and "strategy" (a brief string for that channel).
+        `,
+        seo: `
+        ${baseInstruction}
+        Suggest initial SEO keywords. The JSON object must have a single key "keywords", which is an array of 3-5 relevant, long-tail keyword strings.
+        `,
+        execution: `
+        ${baseInstruction}
+        Outline an execution plan. The JSON object must have a single key "plan", which is a concise string paragraph outlining the MVP and initial launch strategy.
+        `,
+        acp: `
+        ${baseInstruction}
+        Analyze it using the A.C.P. (Audience, Community, Product) framework. The JSON object must have keys: "audience", "community", "product". Each key should have a nested object with "score" (a number 1-10) and "reasoning" (a brief string).
+        `
+    };
+
+    return prompts[analysisType] || baseInstruction;
 }

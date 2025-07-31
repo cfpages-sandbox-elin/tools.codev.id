@@ -1,16 +1,15 @@
 /**
  * =================================================================================
- * Data Fetcher v9.1 (Multi-Provider Proxy with Version Check)
+ * Data Fetcher v9.2 (Multi-Provider Proxy with URL Scraping)
  * =================================================================================
- * This function securely proxies requests to multiple transcript providers.
- * It expects a 'provider' field in the request to determine the target API.
+ * This function securely proxies requests to multiple data providers, now
+ * including a URL scraper.
  *
  * Endpoint: /data-fetcher
- * Providers: 'supadata', 'rapidapi'
+ * Providers: 'supadata', 'rapidapi', 'url_scraper'
  */
 
-// --- NEW: Version constant for easy checking ---
-const VERSION = "9.1";
+const VERSION = "9.2";
 
 const SUPADATA_API_ENDPOINT = 'https://api.supadata.ai/v1/transcript';
 const RAPIDAPI_ENDPOINT_HOST = 'https://youtube-captions-transcript-subtitles-video-combiner.p.rapidapi.com';
@@ -45,16 +44,50 @@ async function handleRapidApiRequest(apiKey, videoId) {
     return response;
 }
 
+async function handleScraperRequest(url) {
+    console.log(`Scraping text from URL: ${url}`);
+    
+    // Fetch the HTML content from the target URL
+    const response = await fetch(url, {
+        headers: {
+            // A realistic User-Agent can help avoid being blocked by some sites
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to fetch URL with status: ${response.status}`);
+    }
+
+    let textContent = '';
+
+    // Use HTMLRewriter to parse the HTML stream and extract text
+    const rewriter = new HTMLRewriter()
+        .on('p, h1, h2, h3, h4, h5, h6, li, article, main', {
+            // This handler is called for each chunk of text within the specified elements
+            text(text) {
+                // Append the text chunk, cleaning up whitespace.
+                textContent += text.text.trim();
+                // If it's the last text chunk in its element, add a space for separation.
+                if (text.lastInTextNode) {
+                    textContent += ' ';
+                }
+            }
+        });
+    
+    // Transform the response through the rewriter and wait for it to finish.
+    await rewriter.transform(response).text();
+
+    return textContent.trim();
+}
 
 export async function onRequest(context) {
-  // --- NEW: Add a version check for GET requests ---
   if (context.request.method === 'GET') {
-    const responseBody = {
+    return new Response(JSON.stringify({
         status: 'ok',
         version: VERSION,
         message: 'Data Fetcher is operational. Please use POST to fetch data.'
-    };
-    return new Response(JSON.stringify(responseBody), {
+    }), {
         headers: { 'Content-Type': 'application/json' }
     });
   }
@@ -69,46 +102,64 @@ export async function onRequest(context) {
     });
   }
 
-  // We only accept POST requests
   if (context.request.method !== 'POST') {
     return new Response('Method Not Allowed', { status: 405 });
   }
 
   try {
-    const { provider, apiKey, videoUrl, videoId } = await context.request.json();
+    const body = await context.request.json();
+    const { provider, apiKey, videoUrl, videoId, url } = body;
 
+    let responseBody;
     let apiResponse;
+
     if (provider === 'supadata') {
-        // --- NEW: Provider-specific validation ---
         if (!apiKey || !videoUrl) {
             return new Response(JSON.stringify({ error: 'Supadata provider requires apiKey and videoUrl.' }), { status: 400 });
         }
         apiResponse = await handleSupadataRequest(apiKey, videoUrl);
 
     } else if (provider === 'rapidapi') {
-        // --- NEW: Provider-specific validation ---
         if (!apiKey || !videoId) {
             return new Response(JSON.stringify({ error: 'RapidAPI provider requires apiKey and videoId.' }), { status: 400 });
         }
         apiResponse = await handleRapidApiRequest(apiKey, videoId);
 
+    } else if (provider === 'url_scraper') {
+        // --- NEW: Logic for the URL scraper provider ---
+        if (!url) {
+            return new Response(JSON.stringify({ error: 'url_scraper provider requires a url.' }), { status: 400 });
+        }
+        const extractedText = await handleScraperRequest(url);
+        // We directly create the response body here, no upstream API call needed
+        responseBody = { text: extractedText };
+
     } else {
         return new Response(JSON.stringify({ error: `Unknown or missing provider.` }), { status: 400 });
     }
 
-    // Check if the upstream API call failed
-    if (!apiResponse.ok) {
-        const errorBody = await apiResponse.text();
-        console.error(`Upstream API Error (${provider}, ${apiResponse.status}): ${errorBody}`);
-        return new Response(JSON.stringify({ error: `The '${provider}' API failed with status ${apiResponse.status}. Details: ${errorBody}` }), { status: apiResponse.status });
+    let finalResponse;
+    if (responseBody) {
+        // This path is for the scraper which builds its own response
+        finalResponse = new Response(JSON.stringify(responseBody), {
+            headers: {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            }
+        });
+    } else {
+        // This path is for proxied APIs (Supadata, RapidAPI)
+        if (!apiResponse.ok) {
+            const errorBody = await apiResponse.text();
+            console.error(`Upstream API Error (${provider}, ${apiResponse.status}): ${errorBody}`);
+            return new Response(JSON.stringify({ error: `The '${provider}' API failed with status ${apiResponse.status}. Details: ${errorBody}` }), { status: apiResponse.status });
+        }
+        finalResponse = new Response(apiResponse.body, apiResponse);
+        finalResponse.headers.set('Access-Control-Allow-Origin', '*');
+        finalResponse.headers.set('Content-Type', 'application/json');
     }
-    
-    // We create a new response to gain control over the headers.
-    const newResponse = new Response(apiResponse.body, apiResponse);
-    newResponse.headers.set('Access-Control-Allow-Origin', '*');
-    newResponse.headers.set('Content-Type', 'application/json');
 
-    return newResponse;
+    return finalResponse;
 
   } catch (error) {
     console.error(`[data-fetcher] A critical error occurred:`, error);

@@ -1,3 +1,4 @@
+// ideas-api.js v2.00
 import { getState } from './ideas-state.js';
 
 export async function getProviderConfig() {
@@ -55,4 +56,22 @@ export async function getAiAnalysis(prompt, providerKey, modelId) {
         throw new Error(errorData.error || `AI API returned status: ${response.status}`);
     }
     return response.json();
+}
+
+export async function scrapeUrl(url) {
+    const response = await fetch('/data-fetcher', { // Target the data-fetcher endpoint
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            provider: 'url_scraper',
+            url: url
+        }),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Scraping failed with status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data.text; // Expects the backend to return { "text": "..." }
 }

@@ -1,4 +1,4 @@
-// ideas-ui.js v1.15 better2 ui + re-summarize
+// ideas-ui.js v2.00
 import { getState } from './ideas-state.js';
 
 const elements = {};
@@ -386,18 +386,31 @@ function renderIdeasListUI(insights) {
         "Business Process": { title: "Business Processes & Systems ⚙️", icon: "⚙️" },
         "Core Principle": { title: "Core Principles & Concepts 🧠", icon: "🧠" },
         "Tool/Resource": { title: "Tools & Resources 🛠️", icon: "🛠️" },
-        "Uncategorized": { title: "Other Insights", icon: "" }
+        "Uncategorized": { title: "Other Insights", icon: "" },
+        "Stolen Idea": { title: "Stolen Ideas 🕵️", icon: "🕵️" }
     };
 
     return Object.keys(insightsByCategory).map(category => {
         const details = categoryDetails[category] || { title: category, icon: "" };
         
-        const listItems = insightsByCategory[category].map(item => `
+        const listItems = insightsByCategory[category].map((item, index) => {
+            const ideaData = JSON.stringify(item); // Stringify the whole item
+            
+            const deepAnalysisButton = category === 'Product Idea' || category === 'Stolen Idea' ? `
+                <button 
+                    class="deep-analyze-btn mt-2 text-xs bg-purple-600 hover:bg-purple-700 text-white font-semibold py-1 px-3 rounded-md transition-colors"
+                    data-idea='${ideaData}'>
+                    Deep Analyze 🔬
+                </button>
+            ` : '';
+
+            return `
             <li class="p-4 bg-gray-100 dark:bg-slate-800 rounded-lg shadow-sm">
                 <h3 class="font-semibold text-md text-gray-800 dark:text-slate-200">${item.title}</h3>
                 <p class="mt-1 text-sm text-gray-600 dark:text-slate-400">${item.description}</p>
+                ${deepAnalysisButton}
             </li>
-        `).join('');
+        `}).join('');
 
         const moreIdeasControls = category === 'Product Idea' ? `
             <div class="mt-6 border-t border-gray-200 dark:border-slate-700 pt-4">

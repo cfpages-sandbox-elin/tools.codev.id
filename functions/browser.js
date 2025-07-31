@@ -1,5 +1,4 @@
 // /functions/browser.js
-
 /**
  * Cloudflare Worker to fetch content from a given URL.
  * Handles POST requests with a 'url' property in the JSON body.

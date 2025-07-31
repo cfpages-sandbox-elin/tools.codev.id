@@ -29,7 +29,7 @@
     <div class="container mx-auto p-4 md:p-8 max-w-4xl">
         <header class="text-center mb-6 relative">
             <h1 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white">
-                Idea Engine 💡 v1.15
+                Idea Engine 💡 v2.00
             </h1>
             <p class="text-gray-500 dark:text-slate-400 mt-2">Turn content into actionable ideas.</p>
             <!-- Theme Toggle Button -->
@@ -80,8 +80,14 @@
                 <button data-tab="brainstorm" class="tab-btn border-indigo-500 text-indigo-600 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium" aria-current="page">
                     Brainstorm 🧠
                 </button>
+                <button data-tab="steal" class="tab-btn border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-slate-400 dark:hover:border-slate-500 dark:hover:text-slate-300 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium">
+                    Steal 🕵️
+                </button>
                 <button data-tab="plan" class="tab-btn border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-slate-400 dark:hover:border-slate-500 dark:hover:text-slate-300 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium">
                     Plan & Strategize 📒
+                </button>
+                <button data-tab="deep-analysis" class="tab-btn border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-slate-400 dark:hover:border-slate-500 dark:hover:text-slate-300 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium">
+                    Deep Analysis 🔬
                 </button>
             </nav>
         </div>
@@ -113,9 +119,19 @@
                 </div>
             </div>
 
-            <!-- Execute Tab -->
+            <!-- Steal Tab -->
+            <div id="steal-content" class="hidden space-y-6">
+                <!-- Content will be rendered here by ideas-steal.js -->
+            </div>
+
+            <!-- Plan Tab -->
             <div id="plan-content" class="hidden space-y-6">
                 <!-- Planning blueprints will be rendered here by ideas-plan.js -->
+            </div>
+
+            <!-- Deep Analysis Tab -->
+            <div id="deep-analysis-content" class="hidden space-y-6">
+                 <!-- Deep analysis will be rendered here by ideas-deep.js -->
             </div>
         </main>
     </div>
@@ -126,6 +142,9 @@
     <script type="module" src="ideas-state.js"></script>
     <script type="module" src="ideas-api.js"></script>
     <script type="module" src="ideas-ui.js"></script>
+    <script type="module" src="ideas-steal.js"></script>
+    <script type="module" src="ideas-deep.js"></script>
+    <script type="module" src="ideas-plan.js"></script>
     <script type="module" src="ideas.js"></script>
     <script src="ideas-darklight.js"></script>
 </body>

@@ -1,5 +1,7 @@
-// ideas.js v1.15 really?
+// ideas.js v2.00
 import { initPlanTab } from './ideas-plan.js';
+import { initStealTab } from './ideas-steal.js';
+import { initDeepAnalysis } from './ideas-deep.js';
 import { updateState, getState } from './ideas-state.js';
 import { getProviderConfig, getTranscript, getAiAnalysis } from './ideas-api.js';
 import { cacheElements, initApiKeyUI, showError, toggleLoader, resetOutput, renderTranscriptUI, renderAnalysisUI, updateModelDropdownUI, updateTokenInfoUI, populateMoreIdeasProviderDropdown, updateMoreIdeasModelDropdown } from './ideas-ui.js';
@@ -364,35 +366,54 @@ async function handleResummarize() {
 
 function handleTabClick(event) {
     const clickedButton = event.currentTarget;
-    const targetTab = clickedButton.dataset.tab; // e.g., 'brainstorm' or 'plan'
+    const targetTab = clickedButton.dataset.tab;
 
-    // Get all tab buttons and content panes
     const tabButtons = document.querySelectorAll('#main-tabs .tab-btn');
-    const tabContents = document.querySelectorAll('main > div');
+    const tabContents = document.querySelectorAll('main > div.tab-content'); // More specific selector
 
-    // Update button styles: Deactivate all, then activate the clicked one
+    // Update button styles
     tabButtons.forEach(btn => {
         btn.classList.remove('border-indigo-500', 'text-indigo-600');
         btn.classList.add('border-transparent', 'text-gray-500', 'hover:border-gray-300', 'hover:text-gray-700', 'dark:text-slate-400', 'dark:hover:border-slate-500', 'dark:hover:text-slate-300');
+        btn.removeAttribute('aria-current');
     });
     clickedButton.classList.add('border-indigo-500', 'text-indigo-600');
     clickedButton.classList.remove('border-transparent', 'text-gray-500', 'hover:border-gray-300', 'hover:text-gray-700', 'dark:text-slate-400', 'dark:hover:border-slate-500', 'dark:hover:text-slate-300');
+    clickedButton.setAttribute('aria-current', 'page');
 
     // Show/hide content panes
     tabContents.forEach(content => {
         content.classList.add('hidden');
     });
-    document.getElementById(`${targetTab}-content`).classList.remove('hidden');
+    const targetContent = document.getElementById(`${targetTab}-content`);
+    if(targetContent) targetContent.classList.remove('hidden');
 
-    // Update the state
     updateState({ activeTab: targetTab });
 
-    // --- CRITICAL: If the plan tab was clicked, initialize its content ---
-    if (targetTab === 'plan') {
-        console.log("Plan tab clicked. Initializing planning blueprints...");
+    if (targetTab === 'plan' && !getState().planTabInitialized) {
         initPlanTab();
+        updateState({ planTabInitialized: true });
+    } else if (targetTab === 'steal' && !getState().stealTabInitialized) {
+        initStealTab();
+        updateState({ stealTabInitialized: true });
     }
 }
+
+// Global listener for deep analysis
+document.addEventListener('click', (e) => {
+    if (e.target && e.target.classList.contains('deep-analyze-btn')) {
+        const idea = JSON.parse(e.target.dataset.idea);
+        
+        // 1. Programmatically switch to the 'deep-analysis' tab
+        const deepAnalysisButton = document.querySelector('button[data-tab="deep-analysis"]');
+        if (deepAnalysisButton) {
+            handleTabClick({ currentTarget: deepAnalysisButton });
+        }
+        
+        // 2. Initialize the deep analysis with the specific idea
+        initDeepAnalysis(idea);
+    }
+});
 
 function attachTranscriptUIListeners() {
     // --- Main analysis controls ---
@@ -504,5 +525,4 @@ function init() {
     });
 }
 
-// --- Entry Point ---
 document.addEventListener('DOMContentLoaded', init);
