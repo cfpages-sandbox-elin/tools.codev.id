@@ -1,4 +1,4 @@
-// ideas.js v1.15 re-summarize + tab click + automatic + fix re-analyze ai dropdown
+// ideas.js v1.15 really?
 import { initPlanTab } from './ideas-plan.js';
 import { updateState, getState } from './ideas-state.js';
 import { getProviderConfig, getTranscript, getAiAnalysis } from './ideas-api.js';
@@ -349,13 +349,16 @@ async function handleResummarize() {
         const summaryContainer = document.getElementById('summary-container');
         if (summaryContainer) {
             summaryContainer.innerHTML = renderSummaryUI(fullAnalysis.summary, currentVideoId);
+            attachTranscriptUIListeners(); 
         }
         
     } catch (error) {
         showError(error.message);
     } finally {
-        btn.disabled = false;
-        btn.innerHTML = 'Re-summarize';
+        // We no longer need to manually re-enable the button here,
+        // because renderSummaryUI() creates a new, enabled button,
+        // and attachTranscriptUIListeners() wires it up.
+        // The original button is gone.
     }
 }
 
