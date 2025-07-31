@@ -1,73 +1,161 @@
-// ideas-deep.js
+// ideas-deep.js v2.00
 import { getAiAnalysis } from './ideas-api.js';
 import { extractAndParseJson } from './ideas.js';
-import { createDeepAnalysisPrompt } from './ideas-prompts.js';
+import { createAdvancedAnalysisPrompt } from './ideas-prompts.js';
 
+// --- THE COMPLETE LIST OF ANALYSIS MODULES ---
 const analysisModules = [
-    { id: 'swot', title: 'Viability Analysis' },
-    { id: 'businessModel', title: 'Business Model Tiers' },
-    { id: 'market', title: 'Market Positioning' },
-    { id: 'channels', title: 'Go-to-Market Channels' },
-    { id: 'seo', title: 'SEO Keyword Ideas' },
-    { id: 'execution', title: 'Execution Plan' },
-    { id: 'acp', title: 'A.C.P. Framework' },
+    { id: 'viabilitySnapshot', title: 'Viability Snapshot', icon: '💡' },
+    { id: 'marketGap', title: 'Market Gap Analysis', icon: '🔍' },
+    { id: 'whyNow', title: '"Why Now?" Timing Analysis', icon: '⌛' },
+    { id: 'valueLadder', title: 'Value Ladder Strategy', icon: '🪜' },
+    { id: 'valueEquation', title: 'Value Equation', icon: '⚖️' },
+    { id: 'marketMatrix', title: 'Market Matrix', icon: '📈' },
+    { id: 'acpFramework', title: 'A.C.P. Framework', icon: '🎯' },
+    { id: 'communitySignals', title: 'Community & GTM Signals', icon: '📢' },
+    { id: 'keywordAnalysis', title: 'Keyword & SEO Analysis', icon: '🔑' },
+    { id: 'executionPlan', title: 'Phased Execution Plan', icon: '🗺️' },
 ];
 
-function renderCardPlaceholder(module) {
+function getIdeaSlug(ideaTitle) {
+    return ideaTitle.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').slice(0, 50);
+}
+
+// --- RENDER FUNCTIONS (with improved display logic) ---
+
+function renderModuleCard(module, idea) {
+    const ideaSlug = getIdeaSlug(idea.title);
+    const cacheKey = `deep_analysis_v2_${module.id}_${ideaSlug}`;
+    const cachedData = localStorage.getItem(cacheKey);
+    
+    let contentHTML = `
+        <div class="card-content-area text-center py-4">
+            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-500"></div>
+            <p class="text-sm text-gray-400 mt-2">Analyzing...</p>
+        </div>
+    `;
+    let summaryScoreHTML = `<span class="score-badge bg-gray-400">...</span>`;
+
+    if (cachedData) {
+        try {
+            const data = JSON.parse(cachedData);
+            contentHTML = renderModuleContent(module.id, data);
+            
+            // Get score from various possible keys
+            const score = data.overallScore || data.uniquenessScore || data.potentialScore || null;
+            summaryScoreHTML = `<span class="score-badge">${score ? `${score}/10` : '✓'}</span>`;
+
+        } catch (e) {
+            contentHTML = `<p class="text-red-500 text-sm">Error: Failed to parse cached data.</p>`;
+        }
+    }
+    
     return `
-        <div id="card-${module.id}" class="bg-white dark:bg-slate-800/50 p-5 rounded-lg shadow-md">
-            <h3 class="text-xl font-semibold text-indigo-500 dark:text-sky-300 mb-3">${module.title}</h3>
-            <div class="card-content-area text-center py-4">
-                <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-500"></div>
-                <p class="text-sm text-gray-400 mt-2">Analyzing...</p>
-            </div>
+        <details class="bg-white dark:bg-slate-800/50 rounded-lg shadow-md overflow-hidden group" id="card-${module.id}">
+            <summary class="list-none cursor-pointer p-5 flex justify-between items-center border-b border-gray-200 dark:border-slate-700">
+                <div class="flex items-center">
+                    <span class="text-2xl mr-3">${module.icon}</span>
+                    <h3 class="text-xl font-semibold text-indigo-500 dark:text-sky-300">${module.title}</h3>
+                </div>
+                <div class="flex items-center">
+                    ${summaryScoreHTML}
+                    <div class="text-xl text-gray-400 ml-4 group-open:rotate-180 transition-transform duration-300">▼</div>
+                </div>
+            </summary>
+            <div class="p-5 bg-gray-50 dark:bg-slate-800">${contentHTML}</div>
+        </details>
+    `;
+}
+
+function renderModuleContent(moduleId, data) {
+    const prettyJSON = JSON.stringify(data, null, 2);
+    return `
+        <pre class="text-xs bg-gray-100 dark:bg-slate-900/50 p-3 rounded-md overflow-x-auto"><code>${prettyJSON}</code></pre>
+        <div class="mt-4 text-right">
+            <button class="regenerate-btn text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1 px-3 rounded-md" data-module-id="${moduleId}">
+                Re-generate
+            </button>
         </div>
     `;
 }
 
-function renderAnalysisResult(moduleId, data) {
-    const cardContent = document.querySelector(`#card-${moduleId} .card-content-area`);
-    if (!cardContent) return;
-
-    let html = '';
-    // This is a simple renderer; it could be much more sophisticated
-    // with custom UI for each module type.
-    html = `<pre class="text-xs bg-gray-100 dark:bg-slate-900/50 p-3 rounded-md overflow-x-auto"><code>${JSON.stringify(data, null, 2)}</code></pre>`;
-    
-    cardContent.innerHTML = html;
-}
-
-function renderAnalysisError(moduleId, error) {
-    const cardContent = document.querySelector(`#card-${moduleId} .card-content-area`);
-    if (cardContent) {
-        cardContent.innerHTML = `<p class="text-red-500 text-sm">Error: ${error.message}</p>`;
+function renderModuleError(moduleId, error) {
+    const cardContentContainer = document.querySelector(`#card-${moduleId} .p-5`);
+    if (cardContentContainer) {
+        cardContentContainer.innerHTML = `<p class="text-red-500 text-sm">Error: ${error.message}</p>`;
     }
 }
 
-export async function initDeepAnalysis(idea) {
+// --- LOGIC FUNCTIONS ---
+
+async function runSingleAnalysis(idea, module) {
+    const card = document.getElementById(`card-${module.id}`);
+    if (!card || card.querySelector('.regenerate-btn')) {
+        return; // Already rendered from cache
+    }
+    
+    const ideaSlug = getIdeaSlug(idea.title);
+    const cacheKey = `deep_analysis_v2_${module.id}_${ideaSlug}`;
+
+    try {
+        const prompt = createAdvancedAnalysisPrompt(idea, module.id);
+        const result = await getAiAnalysis(prompt, 'groq', 'llama-3.1-8b-instant');
+        if (!result.success) throw new Error(result.error);
+        
+        const analysisData = JSON.parse(result.text); // Using direct parse for strict JSON prompts
+        localStorage.setItem(cacheKey, JSON.stringify(analysisData));
+
+        card.querySelector('.p-5').innerHTML = renderModuleContent(module.id, analysisData);
+        
+        const score = analysisData.overallScore || analysisData.uniquenessScore || analysisData.potentialScore || null;
+        const scoreBadge = card.querySelector('.score-badge');
+        if (scoreBadge) {
+             scoreBadge.textContent = score ? `${score}/10` : '✓';
+        }
+
+    } catch (error) {
+        renderModuleError(module.id, error);
+    }
+}
+
+// --- INITIALIZATION ---
+
+export function initDeepAnalysis(idea) {
     const container = document.getElementById('deep-analysis-content');
     
-    // 1. Render the main structure and placeholders
     container.innerHTML = `
         <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md mb-6">
             <h2 class="text-3xl font-bold text-gray-800 dark:text-white">${idea.title}</h2>
             <p class="text-gray-600 dark:text-slate-400 mt-2">${idea.description}</p>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            ${analysisModules.map(renderCardPlaceholder).join('')}
+        <div class="space-y-4" id="deep-analysis-cards">
+            ${analysisModules.map(module => renderModuleCard(module, idea)).join('')}
         </div>
     `;
 
-    // 2. Run all analyses in parallel
-    analysisModules.forEach(async (module) => {
-        try {
-            const prompt = createDeepAnalysisPrompt(idea, module.id);
-            const result = await getAiAnalysis(prompt, 'groq', 'llama3-8b-8192');
-            if (!result.success) throw new Error(result.error);
-            const analysisData = extractAndParseJson(result.text);
-            renderAnalysisResult(module.id, analysisData);
-        } catch (error) {
-            renderAnalysisError(module.id, error);
+    container.addEventListener('click', async (e) => {
+        if (e.target && e.target.classList.contains('regenerate-btn')) {
+            const button = e.target;
+            button.disabled = true;
+            button.textContent = 'Generating...';
+            
+            const moduleId = button.dataset.moduleId;
+            const module = analysisModules.find(m => m.id === moduleId);
+            
+            // Explicitly show loading spinner in the content area
+            const contentContainer = button.closest('.p-5');
+            contentContainer.innerHTML = `
+                <div class="card-content-area text-center py-4">
+                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-500"></div>
+                </div>`;
+            
+            await runSingleAnalysis(idea, module);
+
+            // Note: runSingleAnalysis now re-renders the content, so we don't need to reset the button text here
         }
+    });
+
+    analysisModules.forEach(module => {
+        runSingleAnalysis(idea, module);
     });
 }

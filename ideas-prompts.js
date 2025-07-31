@@ -1,4 +1,4 @@
-// ideas-prompts.js v2.00 steal prompt better desc
+// ideas-prompts.js v2.00 so deep
 function formatTranscriptWithTimestamps(timedTextArray) {
     if (!timedTextArray || !Array.isArray(timedTextArray)) return "";
     return timedTextArray.map(line => `[${line.start.toFixed(1)}s] ${line.text}`).join('\n');
@@ -286,4 +286,177 @@ export function createDeepAnalysisPrompt(idea, analysisType) {
     };
 
     return prompts[analysisType] || baseInstruction;
+}
+
+export function createAdvancedAnalysisPrompt(idea, moduleType) {
+    const baseInstruction = `You are a world-class business and product strategist from a top-tier consulting firm. Your analysis is sharp, concise, and data-driven.
+    
+    **Product Idea to Analyze:**
+    - **Title:** "${idea.title}"
+    - **Description:** "${idea.description}"
+
+    **Your Task:**
+    Provide a detailed analysis for the requested module. Respond ONLY with a single, valid JSON object that strictly follows the specified schema. Do not include any text, markdown formatting, or explanations outside of the JSON object. For any scores, provide a realistic but estimated number from 1 to 10. For statistics, provide realistic estimations.`;
+
+    const prompts = {
+        // --- HIGH LEVEL ---
+        viabilitySnapshot: `
+        ${baseInstruction}
+        **Module:** Viability Snapshot
+        **JSON Schema:** {
+          "opportunity": { "score": "1-10", "reasoning": "Briefly explain the market opportunity." },
+          "problemSeverity": { "score": "1-10", "reasoning": "How painful is the problem for the target audience?" },
+          "feasibility": { "score": "1-10", "reasoning": "How technically and operationally feasible is this idea?" },
+          "timing": { "score": "1-10", "reasoning": "Why is now the perfect time to build this?" }
+        }`,
+
+        // --- STRATEGY & MODEL ---
+        marketGap: `
+        ${baseInstruction}
+        **Module:** Market Gap Analysis
+        **JSON Schema:** {
+          "overallScore": "1-10", "summary": "A one-sentence summary of the biggest market gap.",
+          "underservedSegments": [ { "name": "e.g., Renters with Odd Layouts", "description": "Why they are underserved.", "score": "1-10" } ],
+          "featureGaps": [ { "name": "e.g., Lack of Photo-Based Design Tools", "description": "A feature missing from current solutions.", "score": "1-10" } ],
+          "geographicOpportunities": [ { "name": "e.g., Urban Centers in Asia-Pacific", "description": "Why this geographic region is a key opportunity.", "score": "1-10" } ],
+          "integrationOpportunities": [ { "name": "e.g., Partnerships with PropTech Platforms", "description": "How integrating with other tech could create value.", "score": "1-10" } ]
+        }`,
+
+        whyNow: `
+        ${baseInstruction}
+        **Module:** "Why Now?" Timing Analysis
+        **JSON Schema:** {
+          "overallScore": "1-10", "summary": "Brief summary explaining the timing.",
+          "marketFactors": [ { "name": "e.g., DIY Market Growth", "description": "A market trend creating this opportunity.", "score": "1-10" } ],
+          "techEnablers": [ { "name": "e.g., AI & AR Advancements", "description": "A technology that makes this newly feasible.", "score": "1-10" } ],
+          "timingRisks": [ { "name": "e.g., AI Tool Complexity", "description": "A risk related to timing.", "score": "1-10, where 10 is high risk." } ]
+        }`,
+        
+        valueLadder: `
+        ${baseInstruction}
+        **Module:** Value Ladder Strategy
+        **JSON Schema:** {
+          "leadMagnet": { "name": "Name of the free offer", "price": "Free", "valueProvided": "What the user gets.", "goal": "The business goal (e.g., Gather leads)." },
+          "frontendOffer": { "name": "Name of the low-cost initial product", "price": "e.g., $99-$250", "valueProvided": "What the user gets.", "goal": "The business goal (e.g., Convert leads to customers)." },
+          "coreOffer": { "name": "Name of the main product/service", "price": "e.g., $500-$1,500", "valueProvided": "What the user gets.", "goal": "The business goal (e.g., Generate core revenue)." },
+          "continuityProgram": { "name": "Name of the subscription", "price": "e.g., $30-$50/month", "valueProvided": "What the user gets.", "goal": "The business goal (e.g., Create recurring revenue)." },
+          "backendOffer": { "name": "Name of the high-ticket service/product", "price": "e.g., $10,000+/year", "valueProvided": "What the user gets for the premium price.", "goal": "The business goal (e.g., Secure high-value partnerships or clients)." }
+        }`,
+
+        executionPlan: `
+        ${baseInstruction}
+        **Module:** Phased Execution Plan
+        **JSON Schema:** {
+          "sidebarAnalysis": {
+            "successMetrics": { "churnRate": "<5%", "pilotConversion": "20% from freemium to pay" },
+            "resourceRequirements": { "budget": "$100k-$200k for initial development", "team": "1 Founder, 1 UX/UI Designer, 2 Engineers" },
+            "riskAssessment": { "aiToolInaccuracy": "Risk description", "competitorResponse": "Risk description" }
+          },
+          "part1_BusinessModel": { 
+            "businessType": "e.g., B2C SaaS Platform with a physical product component.",
+            "marketPosition": "A concise statement about where this product fits in the market.",
+            "targetAudience": ["Primary target persona (e.g., 'Apartment Dwellers')", "Secondary target persona (e.g., 'Homeowners with underutilized spaces')"],
+            "keyCompetitors": ["List of 1-2 main competitors."]
+          },
+          "part2_Phase1_Roadmap": { 
+            "title": "Phase 1: MVP & Launch (0-6 Months)",
+            "coreStrategy": {
+              "mvpApproach": "Description of the core MVP, focusing on solving one key problem.",
+              "initialOffer": { "name": "Name of the first paid product", "price": "e.g., $250-$600", "details": "Description of what's included." }
+            },
+            "leadGenerationStrategy": {
+              "leadMagnet": "e.g., 'Free web-based AI layout analyzer tool.'",
+              "valueDemonstration": "How you will prove the value (e.g., 'Interactive design previews').",
+              "acquisitionChannels": [
+                { "channel": "Google Ads", "tactic": "Target long-tail keywords for home solution seekers.", "metric": "Click-through rate" },
+                { "channel": "YouTube/TikTok", "tactic": "Create tutorial and transformation videos.", "metric": "View-to-lead conversion" }
+              ]
+            }
+          },
+          "part3_GrowthStrategy": { 
+            "title": "Phase 2: Growth & Scaling (6-18 Months)",
+            "goal": "e.g., 'Achieve 10,000 active platform users within 12 months.'",
+            "strategicFocus": ["e.g., 'Expand product features', 'Develop strategic partnerships'"],
+            "pricingEvolution": "Describe how pricing will evolve (e.g., 'Introduce tiered subscription models')."
+          },
+          "part4_ImplementationPlan": {
+            "title": "Step-by-Step Implementation",
+            "steps": [
+              "Finalize AI tool development and beta test.",
+              "Launch marketing campaigns focused on key acquisition channels.",
+              "Establish partnerships with furniture manufacturers.",
+              "Gather user feedback for V2 planning."
+            ]
+          }
+        }`,
+
+        // --- FRAMEWORKS ---
+        valueEquation: `
+        ${baseInstruction}
+        **Module:** Value Equation Analysis (Hormozi)
+        **JSON Schema:** {
+          "overallScore": "1-10",
+          "dreamOutcome": { "description": "How well it delivers the user's ultimate goal.", "score": "1-10" },
+          "perceivedLikelihood": { "description": "User's belief in achieving the outcome.", "score": "1-10" },
+          "timeDelay": { "description": "Time to get the result (lower is better).", "score": "1-10, 10 is fastest." },
+          "effortAndSacrifice": { "description": "User's work required (lower is better).", "score": "1-10, 10 is zero effort." },
+          "improvementSuggestions": ["List of 2-3 concrete suggestions to improve the value prop."]
+        }`,
+
+        marketMatrix: `
+        ${baseInstruction}
+        **Module:** Market Matrix Analysis
+        **JSON Schema:** {
+          "uniquenessScore": "1-10", "valueScore": "1-10",
+          "quadrant": "One of: 'Category King', 'Commodity Play', 'High Impact', 'Low Impact'.",
+          "analysis": "A brief explanation of why it fits into that quadrant, considering its uniqueness and value."
+        }`,
+
+        acpFramework: `
+        ${baseInstruction}
+        **Module:** A.C.P. Framework Analysis
+        **JSON Schema:** {
+          "audienceAnalysis": {
+            "targetDefinition": "A clear definition of the primary target audience.",
+            "needsAnalysis": "A list of the core needs and pain points of this audience.",
+            "contentGaps": "What content is missing that this audience would value?"
+          },
+          "communityAnalysis": {
+            "platformStrategy": "Which platforms (e.g., Reddit, Facebook, Discord) are best and why?",
+            "trustBuilding": "List of 2-3 tactics to build trust with the community (e.g., 'Founder AMA sessions').",
+            "engagementRituals": "List of 2-3 repeatable events to foster engagement (e.g., 'Weekly design showcase')."
+          },
+          "productAnalysis": {
+            "coreOffering": "A summary of the product's main value proposition.",
+            "developmentRoadmap": "Briefly describe the key phases of the product roadmap.",
+            "engagementMechanics": "How will the product itself encourage repeat usage and community interaction?"
+          }
+        }`,
+        
+        // --- GO-TO-MARKET ---
+        communitySignals: `
+        ${baseInstruction}
+        **Module:** Community Signal Analysis
+        **JSON Schema:** {
+          "summary": "A one to two-sentence summary of the overall community landscape and potential.",
+          "reddit": { "communitiesFound": "Number", "totalMembers": "e.g., 2.5M+", "analysis": "Analysis of the discussion themes and user sentiment in relevant subreddits." },
+          "facebook": { "groupsFound": "Number", "totalMembers": "e.g., 150K+", "analysis": "Analysis of the types of content and user engagement in relevant Facebook groups." },
+          "youtube": { "channelsAnalyzed": "Number", "contentTheme": "The dominant theme of relevant video content (e.g., 'DIY Tutorials').", "analysis": "Analysis of viewer engagement, comments, and gaps in video content." }
+        }`,
+
+        keywordAnalysis: `
+        ${baseInstruction}
+        **Module:** Keyword & SEO Analysis
+        **JSON Schema:** {
+          "summary": "A one-sentence summary of the keyword opportunity.",
+          "mainKeyword": {
+            "keyword": "e.g., home decor", "volume": "e.g., 550K", "growth": "e.g., +233%", "cpc": "e.g., $0.91", "competition": "LOW"
+          },
+          "fastestGrowing": [ { "keyword": "e.g., AI interior design", "volume": "e.g., 22.2K", "growth": "e.g., +150%" } ],
+          "highestVolume": [ { "keyword": "e.g., room decor", "volume": "e.g., 246K", "growth": "e.g., +90%" } ],
+          "mostRelevant": [ { "keyword": "e.g., awkward living room layout ideas", "volume": "e.g., 5.4K", "growth": "e.g., -15%" } ]
+        }`
+    };
+
+    return prompts[moduleType] || baseInstruction;
 }
