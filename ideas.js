@@ -1,9 +1,9 @@
-// ideas.js v1.15 tab click + automatic + fix re-analyze ai dropdown
+// ideas.js v1.15 re-summarize + tab click + automatic + fix re-analyze ai dropdown
 import { initPlanTab } from './ideas-plan.js';
 import { updateState, getState } from './ideas-state.js';
 import { getProviderConfig, getTranscript, getAiAnalysis } from './ideas-api.js';
 import { cacheElements, initApiKeyUI, showError, toggleLoader, resetOutput, renderTranscriptUI, renderAnalysisUI, updateModelDropdownUI, updateTokenInfoUI, populateMoreIdeasProviderDropdown, updateMoreIdeasModelDropdown } from './ideas-ui.js';
-import { createComprehensiveAnalysisPrompt, createMoreIdeasPrompt } from './ideas-prompts.js';
+import { createComprehensiveAnalysisPrompt, createMoreIdeasPrompt, createResummarizePrompt } from './ideas-prompts.js';
 import { getYouTubeVideoId } from './ideas-helpers.js';
 
 // --- Event Handlers (must be exportable to be used in UI module) ---
@@ -172,7 +172,7 @@ async function handleAnalyzeTranscript() {
             analysis = JSON.parse(cachedAnalysis);
         } else {
             console.log(`Performing comprehensive analysis for [${currentVideoId}]...`);
-            const prompt = createComprehensiveAnalysisPrompt(currentTranscript.fullText);
+            const prompt = createComprehensiveAnalysisPrompt(currentTranscript);
             const result = await getAiAnalysis(prompt, provider, model);
 
             if (!result.success) {
@@ -283,7 +283,7 @@ async function handleReanalyze() {
     
     try {
         console.log(`Re-analyzing [${currentVideoId}] with ${provider}/${model}...`);
-        const prompt = createComprehensiveAnalysisPrompt(currentTranscript.fullText);
+        const prompt = createComprehensiveAnalysisPrompt(currentTranscript);
         const result = await getAiAnalysis(prompt, provider, model);
 
         if (!result.success) {
@@ -307,6 +307,55 @@ async function handleReanalyze() {
         // On error, re-enable the button so the user can try again
         btn.disabled = false;
         btn.innerHTML = 'Re-analyze with Selected Model';
+    }
+}
+
+async function handleResummarize() {
+    const btn = document.getElementById('resummarize-btn');
+    if (!btn) return;
+    
+    const { currentTranscript, currentVideoId } = getState();
+    if (!currentTranscript) {
+        showError("No transcript available to re-summarize.");
+        return;
+    }
+    
+    btn.disabled = true;
+    btn.innerHTML = 'Summarizing...';
+
+    // Get the selected model for this action
+    const provider = document.getElementById('resummarize-provider-select').value;
+    const model = document.getElementById('resummarize-model-select').value;
+
+    try {
+        const prompt = createResummarizePrompt(currentTranscript);
+        const result = await getAiAnalysis(prompt, provider, model);
+
+        if (!result.success) throw new Error(result.error);
+        
+        const newSummaryData = extractAndParseJson(result.text);
+
+        // Fetch the existing full analysis from cache
+        const analysisCacheKey = `analysis_v3_${currentVideoId}`;
+        const fullAnalysis = JSON.parse(localStorage.getItem(analysisCacheKey) || '{}');
+
+        // Replace the old summary with the new one
+        fullAnalysis.summary = newSummaryData.summary;
+
+        // Save the updated full analysis back to the cache
+        localStorage.setItem(analysisCacheKey, JSON.stringify(fullAnalysis));
+        
+        // Re-render the summary section specifically
+        const summaryContainer = document.getElementById('summary-container');
+        if (summaryContainer) {
+            summaryContainer.innerHTML = renderSummaryUI(fullAnalysis.summary, currentVideoId);
+        }
+        
+    } catch (error) {
+        showError(error.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Re-summarize';
     }
 }
 
@@ -357,16 +406,31 @@ function attachTranscriptUIListeners() {
     // --- "Generate More Ideas" controls ---
     const moreIdeasBtn = document.getElementById('generate-more-ideas-btn');
     const moreIdeasProviderSelect = document.getElementById('more-ideas-provider-select');
+    const resummarizeBtn = document.getElementById('resummarize-btn');
+    const resummarizeProviderSelect = document.getElementById('resummarize-provider-select');
+    
+    if (resummarizeBtn) {
+        resummarizeBtn.addEventListener('click', handleResummarize);
+    }
+
+    if (resummarizeProviderSelect) {
+        const modelSelect = document.getElementById('resummarize-model-select');
+        const { allAiProviders } = getState();
+        resummarizeProviderSelect.innerHTML = Object.keys(allAiProviders).map(key => `<option value="${key}">${allAiProviders[key].models[0].provider}</option>`).join('');
+        const updateModels = () => {
+            modelSelect.innerHTML = allAiProviders[resummarizeProviderSelect.value].models.map(m => `<option value="${m.id.split('/').pop()}">${m.name}</option>`).join('');
+        };
+        resummarizeProviderSelect.value = 'google'; // Default
+        updateModels();
+        resummarizeProviderSelect.addEventListener('change', updateModels);
+    }
     
     if (moreIdeasBtn) {
         moreIdeasBtn.addEventListener('click', handleGenerateMoreIdeas);
     }
     
-    // If the "more ideas" controls are on the page, initialize them
     if (moreIdeasProviderSelect) {
-        // Populate the dropdowns with options
         populateMoreIdeasProviderDropdown();
-        // Add the listener to update the model list when the provider changes
         moreIdeasProviderSelect.addEventListener('change', updateMoreIdeasModelDropdown);
     }
 }

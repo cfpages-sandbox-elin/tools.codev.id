@@ -1,4 +1,4 @@
-// ideas-ui.js v1.15 exported
+// ideas-ui.js v1.15 re-summarize
 import { getState } from './ideas-state.js';
 
 const elements = {};
@@ -133,46 +133,50 @@ export function renderTranscriptUI(transcriptData) {
     const totalInputTokens = transcriptTokens + promptTemplateTokens;
 
     elements.outputContent.innerHTML = `
-        <div id="transcript-container" class="bg-white dark:bg-slate-800/50 p-5 rounded-lg shadow-md">
+        <div id="transcript-container" class="bg-white dark:bg-slate-800/50 p-5 rounded-lg shadow-md space-y-6">
             <details>
                 <summary class="cursor-pointer text-xl font-semibold text-indigo-500 dark:text-sky-300 hover:text-indigo-700 dark:hover:text-sky-200">View Full Transcript (${transcriptData.timedText.length} lines)</summary>
                 <div class="mt-4 space-y-2 border-t border-gray-200 dark:border-slate-700 pt-4 max-h-96 overflow-y-auto">${transcriptHtml}</div>
             </details>
-        </div>
-        <div id="ai-selection-container" class="bg-white dark:bg-slate-800/50 p-5 rounded-lg shadow-md">
-            <h3 class="text-xl font-semibold text-gray-800 dark:text-slate-100 mb-4">Analyze with AI 🤖</h3>
-            <div class="text-sm text-gray-600 dark:text-slate-300 bg-gray-100 dark:bg-slate-700/50 p-3 rounded-md mb-4">
-                <div class="flex items-center">
-                    <p>Approximate Input: <strong class="text-indigo-600 dark:text-sky-400">${totalInputTokens.toLocaleString()} tokens</strong></p>
-                    <div class="relative group ml-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 text-gray-400">
-                            <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-7-4a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM9 9a1 1 0 0 0 0 2v3a1 1 0 0 0 1 1h1a1 1 0 1 0 0-2v-3a1 1 0 0 0-1-1H9Z" clip-rule="evenodd" />
-                        </svg>
-                        <span class="absolute bottom-full mb-2 w-48 p-2 text-xs text-white bg-black rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none -translate-x-1/2 left-1/2">
-                            This is a rough guide based on character count (1 token ≈ 4 chars). Actual token count varies by model.
-                        </span>
+
+            <div id="reanalyze-controls-container" class="hidden p-4 bg-gray-100 dark:bg-slate-900/50 rounded-lg">
+                <!-- Content will be added by renderAnalysisUI -->
+            </div>
+            
+            <div id="ai-selection-container" class="p-5 rounded-lg shadow-inner bg-gray-50 dark:bg-slate-800">
+                <h3 class="text-xl font-semibold text-gray-800 dark:text-slate-100 mb-4">Analyze with AI 🤖</h3>
+                <div class="text-sm text-gray-600 dark:text-slate-300 bg-gray-100 dark:bg-slate-700/50 p-3 rounded-md mb-4">
+                    <div class="flex items-center">
+                        <p>Approximate Input: <strong class="text-indigo-600 dark:text-sky-400">${totalInputTokens.toLocaleString()} tokens</strong></p>
+                        <div class="relative group ml-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 text-gray-400">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-7-4a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM9 9a1 1 0 0 0 0 2v3a1 1 0 0 0 1 1h1a1 1 0 1 0 0-2v-3a1 1 0 0 0-1-1H9Z" clip-rule="evenodd" />
+                            </svg>
+                            <span class="absolute bottom-full mb-2 w-48 p-2 text-xs text-white bg-black rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none -translate-x-1/2 left-1/2">
+                                This is a rough guide based on character count (1 token ≈ 4 chars). Actual token count varies by model.
+                            </span>
+                        </div>
+                    </div>
+                    <p class="text-xs mt-1">(${transcriptTokens.toLocaleString()} from transcript + ~${promptTemplateTokens} for prompt)</p>
+                    <p id="model-token-limit-info" class="mt-1">Selected Model Max Tokens: <span class="font-semibold">...</span></p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                    <div>
+                        <label for="ai-provider-select" class="block text-sm font-medium text-gray-700 dark:text-slate-300">Provider</label>
+                        <select id="ai-provider-select" class="mt-1 block w-full rounded-md border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></select>
+                    </div>
+                    <div>
+                        <label for="ai-model-select" class="block text-sm font-medium text-gray-700 dark:text-slate-300">Model</label>
+                        <select id="ai-model-select" class="mt-1 block w-full rounded-md border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></select>
                     </div>
                 </div>
-                <p class="text-xs mt-1">(${transcriptTokens.toLocaleString()} from transcript + ~${promptTemplateTokens} for prompt)</p>
-                <p id="model-token-limit-info" class="mt-1">Selected Model Max Tokens: <span class="font-semibold">...</span></p>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-                <div>
-                    <label for="ai-provider-select" class="block text-sm font-medium text-gray-700 dark:text-slate-300">Provider</label>
-                    <select id="ai-provider-select" class="mt-1 block w-full rounded-md border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></select>
+                <div class="mt-4 text-right">
+                    <button id="analyze-transcript-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition-colors">Analyze Transcript</button>
                 </div>
-                <div>
-                    <label for="ai-model-select" class="block text-sm font-medium text-gray-700 dark:text-slate-300">Model</label>
-                    <select id="ai-model-select" class="mt-1 block w-full rounded-md border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></select>
-                </div>
-            </div>
-            <div class="mt-4 text-right">
-                 <button id="analyze-transcript-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition-colors">Analyze Transcript</button>
             </div>
         </div>
-        <div id="analysis-container" class="space-y-6"></div>
+        <div id="analysis-container" class="space-y-6 mt-6"></div>
     `;
-
     populateAiSelectors();
 }
 
@@ -233,12 +237,27 @@ export function updateTokenInfoUI() {
 
 export function renderAnalysisUI(analysis) {
     const analysisContainer = document.getElementById('analysis-container');
-    if (!analysisContainer) return;
+    const reanalyzeContainer = document.getElementById('reanalyze-controls-container');
+    if (!analysisContainer || !reanalyzeContainer) return;
+    
+    // Make the re-analyze container visible, as it's hidden by default
+    reanalyzeContainer.classList.remove('hidden');
+
+    // Build and inject the re-analyze controls into its dedicated container
+    reanalyzeContainer.innerHTML = `
+        <h3 class="text-lg font-semibold text-gray-800 dark:text-slate-100 mb-3">Analysis Controls ⚙️</h3>
+        <p class="text-xs text-gray-500 dark:text-slate-400 mb-2">Use these controls to re-generate the entire analysis below.</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+            <select id="ai-provider-select" class="w-full text-xs rounded-md border-gray-300 dark:border-slate-500 bg-white dark:bg-slate-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></select>
+            <select id="ai-model-select" class="w-full text-xs rounded-md border-gray-300 dark:border-slate-500 bg-white dark:bg-slate-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></select>
+            <button id="reanalyze-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs py-2 px-3 rounded-md w-full">Re-analyze All</button>
+        </div>
+    `;
 
     let finalHtml = '';
 
     if (analysis.summary) {
-        finalHtml += renderSummaryUI(analysis.summary, getState().currentVideoId);
+        finalHtml += `<div id="summary-container">${renderSummaryUI(analysis.summary, getState().currentVideoId)}</div>`;
     }
 
     if (analysis.guide) {
@@ -251,48 +270,19 @@ export function renderAnalysisUI(analysis) {
         finalHtml += renderIdeasListUI(analysis.insights);
     }
     
-    // If the AI returned an empty object, show a message.
     if (!analysis.summary && !analysis.guide && !analysis.podcastDetails && !analysis.insights) {
          finalHtml = `<p class="text-center text-gray-500">The AI could not extract any structured information from this video.</p>`;
     }
 
-    // The Re-analysis Controls Section
-    const reanalyzeSection = `
-        <div class="mt-8 p-5 bg-white dark:bg-slate-900/50 rounded-lg shadow-md border-t-4 border-indigo-500 dark:border-sky-500">
-            <h3 class="text-xl font-semibold text-gray-800 dark:text-slate-100 mb-4">Re-analyze or Refine ⚙️</h3>
-            <p class="text-sm text-gray-600 dark:text-slate-400 mb-4">Not satisfied? Try again with a different model to get a new perspective.</p>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end mb-4">
-                <div>
-                    <label for="ai-provider-select" class="block text-sm font-medium text-gray-700 dark:text-slate-300">Provider</label>
-                    <select id="ai-provider-select" class="mt-1 block w-full rounded-md border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></select>
-                </div>
-                <div>
-                    <label for="ai-model-select" class="block text-sm font-medium text-gray-700 dark:text-slate-300">Model</label>
-                    <select id="ai-model-select" class="mt-1 block w-full rounded-md border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></select>
-                </div>
-            </div>
-            
-             <div id="model-token-limit-info" class="text-xs text-gray-500 dark:text-slate-400 mb-4">Selected Model Max Tokens: <span class="font-semibold">...</span></div>
+    analysisContainer.innerHTML = finalHtml;
 
-            <div class="text-right">
-                <button id="reanalyze-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors">
-                    Re-analyze with Selected Model
-                </button>
-            </div>
-        </div>
-    `;
-    
-    analysisContainer.innerHTML = finalHtml + reanalyzeSection;
-    
-    populateAiSelectors();
+    populateAiSelectors(); 
 }
 
 function renderSummaryUI(summary, videoId) {
     if (!summary || !videoId) return '';
     
     const subTopicsHtml = (summary.subTopics || []).map(topic => {
-        // FIX: Validate that startTime is a usable number before creating a Date.
         const isValidTime = typeof topic.startTime === 'number' && !isNaN(topic.startTime);
         
         if (isValidTime) {
@@ -300,7 +290,7 @@ function renderSummaryUI(summary, videoId) {
             const youtubeLink = `https://www.youtube.com/watch?v=${videoId}&t=${Math.floor(topic.startTime)}s`;
             const timestamp = new Date(topic.startTime * 1000).toISOString().substr(14, 5);
             return `
-                <a href="${youtubeLink}" target="_blank" class="block p-3 bg-gray-100 dark:bg-slate-800 rounded-md shadow-sm hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors">
+                <a href="${youtubeLink}" target="_blank" rel="noopener noreferrer" class="block p-3 bg-gray-100 dark:bg-slate-800 rounded-md shadow-sm hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors">
                     <span class="font-semibold text-indigo-600 dark:text-sky-400">${topic.title}</span>
                     <span class="text-xs font-mono ml-2 text-gray-500 dark:text-slate-400">@${timestamp}</span>
                 </a>
@@ -316,12 +306,25 @@ function renderSummaryUI(summary, videoId) {
         }
     }).join('');
 
+    // --- NEW: Re-summarize Controls ---
+    const resummarizeControls = `
+        <div class="mt-4 pt-4 border-t border-gray-200 dark:border-slate-700">
+             <p class="text-xs text-gray-500 dark:text-slate-400 mb-2">Not happy with this summary? Try again with a different model.</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2 items-center">
+                <select id="resummarize-provider-select" class="w-full text-xs rounded-md border-gray-300 dark:border-slate-500 bg-white dark:bg-slate-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></select>
+                <select id="resummarize-model-select" class="w-full text-xs rounded-md border-gray-300 dark:border-slate-500 bg-white dark:bg-slate-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></select>
+                <button id="resummarize-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2 px-3 rounded-md w-full">Re-summarize</button>
+            </div>
+        </div>
+    `;
+
     return `
         <div class="bg-white dark:bg-slate-800/50 p-5 rounded-lg shadow-md">
             <h2 class="text-2xl font-semibold text-indigo-500 dark:text-sky-300 mb-2">Summary 📝</h2>
             <p class="text-gray-700 dark:text-slate-300 mb-4"><strong>Main Topic:</strong> ${summary.mainTopic || 'N/A'}</p>
             <h3 class="font-semibold text-lg text-gray-800 dark:text-slate-200 mb-3">Key Sections:</h3>
             <div class="space-y-2">${subTopicsHtml}</div>
+            ${resummarizeControls}
         </div>
     `;
 }

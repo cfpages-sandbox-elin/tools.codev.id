@@ -1,7 +1,14 @@
-// ideas-prompts.js v1.15 +betterprd +prd 
-export function createComprehensiveAnalysisPrompt(transcript) {
+// ideas-prompts.js v1.15 re-summarize +betterprd +prd 
+function formatTranscriptWithTimestamps(timedTextArray) {
+    if (!timedTextArray || !Array.isArray(timedTextArray)) return "";
+    return timedTextArray.map(line => `[${line.start.toFixed(1)}s] ${line.text}`).join('\n');
+}
+
+export function createComprehensiveAnalysisPrompt(transcriptData) {
+    const formattedTranscript = formatTranscriptWithTimestamps(transcriptData.timedText);
+
     return `
-    You are an expert analyst, strategist, and educator. Your task is to perform a comprehensive analysis of the following video transcript and structure your findings in a single JSON object.
+    You are an expert analyst, strategist, and educator. Your task is to perform a comprehensive analysis of the following video transcript and structure your findings in a single JSON object. The transcript is formatted as [timestamp_in_seconds] text.
 
     **CRITICAL INSTRUCTION:**
     Analyze the content and only include the top-level keys in your JSON response that are RELEVANT to the video. For example:
@@ -10,14 +17,14 @@ export function createComprehensiveAnalysisPrompt(transcript) {
     - If the video contains lists of ideas, strategies, or principles, you MUST include the "insights" key.
     - If a section is not relevant, DO NOT include its key in the final JSON object.
     - You MUST always include the "summary" key.
+    When creating the "summary.subTopics", you MUST use the timestamps from the transcript to provide an accurate "startTime" for each sub-topic. The "startTime" must be a number representing the start time in seconds.
 
     **JSON Object Schema Definition:**
-
     {
     "summary": {
         "mainTopic": "A short string describing the central theme of the video.",
         "subTopics": [
-            { "title": "Title of a distinct section", "startTime": "Start time in seconds", "endTime": "End time in seconds" }
+            { "title": "Title of a distinct section", "startTime": 123.4 }
         ]
     },
     "guide": {
@@ -44,10 +51,37 @@ export function createComprehensiveAnalysisPrompt(transcript) {
     }
 
     --- TRANSCRIPT START ---
-    ${transcript}
+    ${formattedTranscript}
     --- TRANSCRIPT END ---
 
-    Now, provide your complete analysis as a single, valid JSON object, including ONLY the relevant top-level keys based on the content.
+    Now, provide your complete analysis as a single, valid JSON object, including ONLY the relevant top-level keys based on the content. Ensure all "startTime" values are numbers.
+    `;
+}
+
+export function createResummarizePrompt(transcriptData) {
+    const formattedTranscript = formatTranscriptWithTimestamps(transcriptData.timedText);
+    
+    return `
+    You are an expert summarizer. Your task is to analyze the following timestamped video transcript and generate ONLY a new "summary" object.
+
+    **CRITICAL INSTRUCTION:**
+    You MUST use the timestamps from the transcript to provide an accurate "startTime" for each sub-topic. The "startTime" must be a number representing the start time in seconds.
+
+    **JSON Object Schema Definition:**
+    {
+    "summary": {
+        "mainTopic": "A short string describing the central theme of the video.",
+        "subTopics": [
+            { "title": "Title of a distinct section", "startTime": 123.4 }
+        ]
+    }
+    }
+
+    --- TRANSCRIPT START ---
+    ${formattedTranscript}
+    --- TRANSCRIPT END ---
+
+    Now, provide your complete analysis as a single, valid JSON object containing only the "summary" key.
     `;
 }
 
