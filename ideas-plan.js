@@ -1,4 +1,4 @@
-// ideas-plan.js with auto prd
+// ideas-plan.js with auto prd + fix
 import { getState } from './ideas-state.js';
 import { getAiAnalysis } from './ideas-api.js';
 import { showError } from './ideas-ui.js';
@@ -88,8 +88,9 @@ function attachPlanEventListeners(container, initialProvider) {
 
     if (replanButton) {
         const ideaSlug = replanButton.dataset.ideaSlug;
+        const planCard = document.getElementById(`plan-card-${ideaSlug}`);
+        const resultsContainer = planCard.querySelector('.results-container');
         replanButton.addEventListener('click', () => {
-             const resultsContainer = document.querySelector(`#plan-card-${ideaSlug} .results-container`);
              generateAndRenderPlanForIdea({ title: replanButton.dataset.ideaTitle, description: replanButton.dataset.ideaDescription }, resultsContainer, true);
         });
         // Populate dropdowns for re-plan
@@ -105,7 +106,7 @@ function attachPlanEventListeners(container, initialProvider) {
         providerSelect.addEventListener('change', updateModels);
     }
     
-    // Attach Re-generate PRD Listeners
+    // --- FIX #1: Use the correct variable name 'regeneratePrdButton' ---
     if (regeneratePrdButton) {
         const ideaSlug = regeneratePrdButton.dataset.ideaSlug;
         regeneratePrdButton.addEventListener('click', (e) => generateAndRenderPrd(e.currentTarget, true));
@@ -117,12 +118,11 @@ function attachPlanEventListeners(container, initialProvider) {
         const updateModels = () => {
             modelSelect.innerHTML = allAiProviders[providerSelect.value].models.map(m => `<option value="${m.id.split('/').pop()}">${m.name}</option>`).join('');
         };
-        providerSelect.value = 'google'; // Default to a good text model provider
+        const defaultPrdProvider = selectDefaultModel('prd');
+        providerSelect.value = defaultPrdProvider ? defaultPrdProvider.providerKey : 'google';
         updateModels();
         providerSelect.addEventListener('change', updateModels);
     }
-    
-    if (generatePrdButton) generatePrdButton.addEventListener('click', handleGeneratePrd);
 
     if (copyPrdButton) {
         copyPrdButton.addEventListener('click', (e) => {
