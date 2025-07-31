@@ -1,4 +1,4 @@
-// ideas-steal.js v2.00 with selectior
+// ideas-steal.js v2.00 +cache with selector
 import { scrapeUrl, getAiAnalysis } from './ideas-api.js';
 import { extractAndParseJson } from './ideas.js';
 import { createStealIdeasPrompt } from './ideas-prompts.js';
@@ -23,12 +23,10 @@ function renderInitialUI(container) {
             <h2 class="text-2xl font-semibold mb-4 text-indigo-500 dark:text-sky-300">Steal Ideas From a URL 🕵️</h2>
             <p class="text-gray-600 dark:text-slate-300 mb-4">Enter any article or landing page. We'll scrape its text and use AI to find hidden business ideas.</p>
             
-            <!-- URL Input -->
             <div class="flex flex-col sm:flex-row gap-3">
                 <input type="text" id="steal-url-input" class="flex-grow bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-md p-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g., https://www.example.com/article">
             </div>
 
-            <!-- NEW: AI Model Selection -->
             <div class="mt-4 p-4 bg-gray-50 dark:bg-slate-800/50 rounded-lg border dark:border-slate-700">
                 <h3 class="text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Select an AI Model</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -43,7 +41,6 @@ function renderInitialUI(container) {
                 </div>
             </div>
 
-            <!-- Action Button -->
             <div class="mt-4">
                 <button id="steal-btn" class="w-full bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-800 text-white font-bold py-3 px-6 rounded-md transition-colors">
                     Steal Ideas ✨
@@ -52,6 +49,35 @@ function renderInitialUI(container) {
         </div>
         <div id="steal-results-area" class="mt-8 space-y-6"></div>
     `;
+}
+
+function handleUrlInput() {
+    const urlInput = document.getElementById('steal-url-input');
+    const resultsArea = document.getElementById('steal-results-area');
+    const url = urlInput.value.trim();
+
+    if (!url) {
+        resultsArea.innerHTML = ''; // Clear results if input is empty
+        return;
+    }
+
+    const cacheKey = `stolen_ideas_${url}`;
+    const cachedIdeas = localStorage.getItem(cacheKey);
+
+    if (cachedIdeas) {
+        try {
+            const ideas = JSON.parse(cachedIdeas);
+            if (ideas.length > 0) {
+                console.log(`Loading stolen ideas for [${url}] from cache.`);
+                resultsArea.innerHTML = renderIdeasListUI(ideas);
+            } else {
+                resultsArea.innerHTML = `<p class="text-center text-gray-500 dark:text-slate-400">Previously analyzed, but no ideas were found on this page.</p>`;
+            }
+        } catch (e) {
+            console.error("Failed to parse cached stolen ideas:", e);
+            localStorage.removeItem(cacheKey); // Clear corrupted cache
+        }
+    }
 }
 
 async function handleSteal() {
@@ -65,6 +91,15 @@ async function handleSteal() {
         return;
     }
 
+    const cacheKey = `stolen_ideas_${url}`;
+    const cachedIdeas = localStorage.getItem(cacheKey);
+
+    if (cachedIdeas) {
+        console.log(`Cache hit for [${url}]. Re-rendering from cache.`);
+        handleUrlInput(); // Simply re-render from cache
+        return;
+    }
+
     stealBtn.disabled = true;
     stealBtn.innerHTML = 'Scraping...';
     resultsArea.innerHTML = `<div class="flex justify-center items-center py-10"><div class="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-500"></div></div>`;
@@ -73,7 +108,6 @@ async function handleSteal() {
         const text = await scrapeUrl(url);
         stealBtn.innerHTML = 'Analyzing...';
 
-        // --- FIX: Get provider and model from the new dropdowns ---
         const provider = document.getElementById('steal-ai-provider-select').value;
         const model = document.getElementById('steal-ai-model-select').value;
         
@@ -83,6 +117,9 @@ async function handleSteal() {
         if (!result.success) throw new Error(result.error);
         
         const ideas = extractAndParseJson(result.text);
+
+        localStorage.setItem(cacheKey, JSON.stringify(ideas));
+        console.log(`Saved stolen ideas for [${url}] to cache.`);
 
         if (ideas.length > 0) {
             resultsArea.innerHTML = renderIdeasListUI(ideas);
@@ -98,7 +135,6 @@ async function handleSteal() {
     }
 }
 
-// --- NEW: Function to populate the AI model dropdown ---
 function updateStealModelDropdown() {
     const providerSelect = document.getElementById('steal-ai-provider-select');
     const modelSelect = document.getElementById('steal-ai-model-select');
@@ -113,7 +149,6 @@ function updateStealModelDropdown() {
     modelSelect.innerHTML = freeModels.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
 }
 
-// --- NEW: Function to populate both selectors ---
 function populateStealSelectors() {
     const providerSelect = document.getElementById('steal-ai-provider-select');
     const { allAiProviders } = getState();
@@ -132,24 +167,23 @@ function populateStealSelectors() {
         return `<option value="${key}">${providerName}</option>`;
     }).join('');
 
-    // Set a default and update models
-    providerSelect.value = 'groq'; // Default to Groq if available
+    providerSelect.value = 'groq';
     updateStealModelDropdown();
 
-    // Add event listener
     providerSelect.addEventListener('change', updateStealModelDropdown);
 }
-
 
 export function initStealTab() {
     const stealContainer = document.getElementById('steal-content');
     renderInitialUI(stealContainer);
     
-    // Populate the new selectors
     populateStealSelectors();
 
+    const stealUrlInput = document.getElementById('steal-url-input');
+    
     document.getElementById('steal-btn').addEventListener('click', handleSteal);
-    document.getElementById('steal-url-input').addEventListener('keypress', (e) => {
+    stealUrlInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') handleSteal();
     });
+    stealUrlInput.addEventListener('input', handleUrlInput); // Check cache on paste/type
 }
