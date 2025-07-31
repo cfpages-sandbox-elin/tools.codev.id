@@ -1,4 +1,4 @@
-// ideas-steal.js v2.00 +cache with selector
+// ideas-steal.js v2.00 re-steal
 import { scrapeUrl, getAiAnalysis } from './ideas-api.js';
 import { extractAndParseJson } from './ideas.js';
 import { createStealIdeasPrompt } from './ideas-prompts.js';
@@ -51,13 +51,30 @@ function renderInitialUI(container) {
     `;
 }
 
+function updateStealButtonState(isCached) {
+    const stealBtn = document.getElementById('steal-btn');
+    if (!stealBtn) return;
+
+    if (isCached) {
+        stealBtn.innerHTML = 'Re-steal Ideas 🔄';
+        stealBtn.classList.remove('bg-purple-600', 'hover:bg-purple-700', 'dark:bg-purple-700', 'dark:hover:bg-purple-800');
+        stealBtn.classList.add('bg-orange-500', 'hover:bg-orange-600', 'dark:bg-orange-600', 'dark:hover:bg-orange-700');
+    } else {
+        stealBtn.innerHTML = 'Steal Ideas ✨';
+        stealBtn.classList.remove('bg-orange-500', 'hover:bg-orange-600', 'dark:bg-orange-600', 'dark:hover:bg-orange-700');
+        stealBtn.classList.add('bg-purple-600', 'hover:bg-purple-700', 'dark:bg-purple-700', 'dark:hover:bg-purple-800');
+    }
+}
+
+
 function handleUrlInput() {
     const urlInput = document.getElementById('steal-url-input');
     const resultsArea = document.getElementById('steal-results-area');
     const url = urlInput.value.trim();
 
     if (!url) {
-        resultsArea.innerHTML = ''; // Clear results if input is empty
+        resultsArea.innerHTML = '';
+        updateStealButtonState(false);
         return;
     }
 
@@ -65,6 +82,7 @@ function handleUrlInput() {
     const cachedIdeas = localStorage.getItem(cacheKey);
 
     if (cachedIdeas) {
+        updateStealButtonState(true);
         try {
             const ideas = JSON.parse(cachedIdeas);
             if (ideas.length > 0) {
@@ -75,8 +93,12 @@ function handleUrlInput() {
             }
         } catch (e) {
             console.error("Failed to parse cached stolen ideas:", e);
-            localStorage.removeItem(cacheKey); // Clear corrupted cache
+            localStorage.removeItem(cacheKey);
+            updateStealButtonState(false);
         }
+    } else {
+        updateStealButtonState(false);
+        resultsArea.innerHTML = '';
     }
 }
 
@@ -92,13 +114,6 @@ async function handleSteal() {
     }
 
     const cacheKey = `stolen_ideas_${url}`;
-    const cachedIdeas = localStorage.getItem(cacheKey);
-
-    if (cachedIdeas) {
-        console.log(`Cache hit for [${url}]. Re-rendering from cache.`);
-        handleUrlInput(); // Simply re-render from cache
-        return;
-    }
 
     stealBtn.disabled = true;
     stealBtn.innerHTML = 'Scraping...';
@@ -119,19 +134,20 @@ async function handleSteal() {
         const ideas = extractAndParseJson(result.text);
 
         localStorage.setItem(cacheKey, JSON.stringify(ideas));
-        console.log(`Saved stolen ideas for [${url}] to cache.`);
+        console.log(`Saved/Overwrote stolen ideas for [${url}] in cache.`);
 
         if (ideas.length > 0) {
             resultsArea.innerHTML = renderIdeasListUI(ideas);
         } else {
             resultsArea.innerHTML = `<p class="text-center text-gray-500 dark:text-slate-400">The AI couldn't find any specific business ideas on that page. Try another one!</p>`;
         }
+        
+        updateStealButtonState(true);
 
     } catch (error) {
         resultsArea.innerHTML = `<div class="bg-red-100 dark:bg-red-900/50 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 p-4 rounded-lg">Error: ${error.message}</div>`;
     } finally {
         stealBtn.disabled = false;
-        stealBtn.innerHTML = 'Steal Ideas ✨';
     }
 }
 
@@ -185,5 +201,5 @@ export function initStealTab() {
     stealUrlInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') handleSteal();
     });
-    stealUrlInput.addEventListener('input', handleUrlInput); // Check cache on paste/type
+    stealUrlInput.addEventListener('input', handleUrlInput);
 }
