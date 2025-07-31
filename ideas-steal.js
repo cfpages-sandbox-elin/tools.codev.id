@@ -1,17 +1,51 @@
-// ideas-steal.js
+// ideas-steal.js v2.00 with selectior
 import { scrapeUrl, getAiAnalysis } from './ideas-api.js';
 import { extractAndParseJson } from './ideas.js';
 import { createStealIdeasPrompt } from './ideas-prompts.js';
 import { renderIdeasListUI } from './ideas-ui.js';
+import { getState } from './ideas-state.js';
+
+function isFree(model, providerKey) {
+    if (!model) return false;
+    if (providerKey === 'openrouter' && model.pricing === null) return true;
+    if (providerKey === 'huggingface') return true;
+    if (model.pricing?.input === 0.00 && model.pricing?.output === 0.00) return true;
+    const hasFreeTierInArray = model.rateLimits?.tiers?.some(tier => tier.name.toLowerCase().includes('free'));
+    if (hasFreeTierInArray) return true;
+    const hasFreeTierInNotes = model.rateLimits?.notes?.toLowerCase().includes('free tier');
+    if (hasFreeTierInNotes) return true;
+    return false;
+}
 
 function renderInitialUI(container) {
     container.innerHTML = `
         <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md">
             <h2 class="text-2xl font-semibold mb-4 text-indigo-500 dark:text-sky-300">Steal Ideas From a URL 🕵️</h2>
             <p class="text-gray-600 dark:text-slate-300 mb-4">Enter any article or landing page. We'll scrape its text and use AI to find hidden business ideas.</p>
+            
+            <!-- URL Input -->
             <div class="flex flex-col sm:flex-row gap-3">
                 <input type="text" id="steal-url-input" class="flex-grow bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-md p-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g., https://www.example.com/article">
-                <button id="steal-btn" class="bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-800 text-white font-bold py-3 px-6 rounded-md transition-colors">
+            </div>
+
+            <!-- NEW: AI Model Selection -->
+            <div class="mt-4 p-4 bg-gray-50 dark:bg-slate-800/50 rounded-lg border dark:border-slate-700">
+                <h3 class="text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Select an AI Model</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label for="steal-ai-provider-select" class="sr-only">Provider</label>
+                        <select id="steal-ai-provider-select" class="block w-full text-sm rounded-md border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></select>
+                    </div>
+                    <div>
+                        <label for="steal-ai-model-select" class="sr-only">Model</label>
+                        <select id="steal-ai-model-select" class="block w-full text-sm rounded-md border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Button -->
+            <div class="mt-4">
+                <button id="steal-btn" class="w-full bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-800 text-white font-bold py-3 px-6 rounded-md transition-colors">
                     Steal Ideas ✨
                 </button>
             </div>
@@ -36,21 +70,20 @@ async function handleSteal() {
     resultsArea.innerHTML = `<div class="flex justify-center items-center py-10"><div class="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-500"></div></div>`;
 
     try {
-        // Step 1: Scrape text from URL
         const text = await scrapeUrl(url);
-        
         stealBtn.innerHTML = 'Analyzing...';
 
-        // Step 2: Use AI to find ideas in the text
+        // --- FIX: Get provider and model from the new dropdowns ---
+        const provider = document.getElementById('steal-ai-provider-select').value;
+        const model = document.getElementById('steal-ai-model-select').value;
+        
         const prompt = createStealIdeasPrompt(text);
-        // Using a capable free model by default
-        const result = await getAiAnalysis(prompt, 'groq', 'llama3-8b-8192');
+        const result = await getAiAnalysis(prompt, provider, model);
 
         if (!result.success) throw new Error(result.error);
         
         const ideas = extractAndParseJson(result.text);
 
-        // Step 3: Render the results
         if (ideas.length > 0) {
             resultsArea.innerHTML = renderIdeasListUI(ideas);
         } else {
@@ -65,9 +98,55 @@ async function handleSteal() {
     }
 }
 
+// --- NEW: Function to populate the AI model dropdown ---
+function updateStealModelDropdown() {
+    const providerSelect = document.getElementById('steal-ai-provider-select');
+    const modelSelect = document.getElementById('steal-ai-model-select');
+    const { allAiProviders } = getState();
+
+    if (!providerSelect || !modelSelect || !allAiProviders) return;
+
+    const selectedProviderKey = providerSelect.value;
+    const providerData = allAiProviders[selectedProviderKey];
+    
+    const freeModels = providerData ? providerData.models.filter(model => isFree(model, selectedProviderKey)) : [];
+    modelSelect.innerHTML = freeModels.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+}
+
+// --- NEW: Function to populate both selectors ---
+function populateStealSelectors() {
+    const providerSelect = document.getElementById('steal-ai-provider-select');
+    const { allAiProviders } = getState();
+
+    if (!providerSelect || !allAiProviders) return;
+
+    const freeProviders = {};
+    for (const key in allAiProviders) {
+        if (allAiProviders[key].models.some(model => isFree(model, key))) {
+            freeProviders[key] = allAiProviders[key];
+        }
+    }
+    
+    providerSelect.innerHTML = Object.keys(freeProviders).map(key => {
+        const providerName = freeProviders[key].models[0].provider;
+        return `<option value="${key}">${providerName}</option>`;
+    }).join('');
+
+    // Set a default and update models
+    providerSelect.value = 'groq'; // Default to Groq if available
+    updateStealModelDropdown();
+
+    // Add event listener
+    providerSelect.addEventListener('change', updateStealModelDropdown);
+}
+
+
 export function initStealTab() {
     const stealContainer = document.getElementById('steal-content');
     renderInitialUI(stealContainer);
+    
+    // Populate the new selectors
+    populateStealSelectors();
 
     document.getElementById('steal-btn').addEventListener('click', handleSteal);
     document.getElementById('steal-url-input').addEventListener('keypress', (e) => {
