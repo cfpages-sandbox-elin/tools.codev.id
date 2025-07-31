@@ -1,4 +1,4 @@
-// ideas-ui.js v2.00
+// ideas-ui.js v2.00 export
 import { getState } from './ideas-state.js';
 
 const elements = {};
@@ -282,7 +282,7 @@ export function renderAnalysisUI(analysis) {
     populateAiSelectors(); 
 }
 
-function renderSummaryUI(summary, videoId) {
+export function renderSummaryUI(summary, videoId) {
     if (!summary || !videoId) return '';
     
     const subTopicsHtml = (summary.subTopics || []).map(topic => {
@@ -368,7 +368,7 @@ export function updateMoreIdeasModelDropdown() {
     modelSelect.innerHTML = freeModels.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
 }
 
-function renderIdeasListUI(insights) {
+export function renderIdeasListUI(insights) {
     if (!insights || insights.length === 0) return '<p>No insights were generated.</p>';
     
     const insightsByCategory = insights.reduce((acc, insight) => {
@@ -443,7 +443,7 @@ function renderIdeasListUI(insights) {
     }).join('');
 }
 
-function renderTutorialUI(guide) {
+export function renderTutorialUI(guide) {
     if (!guide) return '';
 
     const toolsHtml = (guide.tools || []).map(tool => `<li class="p-3 bg-gray-100 dark:bg-slate-800 rounded-md shadow-sm">${tool}</li>`).join('');
@@ -476,7 +476,7 @@ function renderTutorialUI(guide) {
     `;
 }
 
-function renderPodcastUI(details) {
+export function renderPodcastUI(details) {
     if (!details) return '';
 
     const guestsHtml = (details.guests || []).map(guest => `
