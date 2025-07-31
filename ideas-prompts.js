@@ -1,4 +1,4 @@
-// ideas-prompts.js v2.00 steal prompt
+// ideas-prompts.js v2.00 steal prompt better desc
 function formatTranscriptWithTimestamps(timedTextArray) {
     if (!timedTextArray || !Array.isArray(timedTextArray)) return "";
     return timedTextArray.map(line => `[${line.start.toFixed(1)}s] ${line.text}`).join('\n');
@@ -227,7 +227,7 @@ export function createStealIdeasPrompt(pageText) {
 
     **Instructions:**
     1. Read through the text and identify all distinct, actionable ideas.
-    2. For each idea, create a short title and a one-sentence description.
+    2. For each idea, create a short title and a three-sentence descriptive description.
     3. The "category" for all these ideas MUST be "Stolen Idea".
     4. Provide your output ONLY as a valid JSON array of objects. Do not include any text before or after the JSON.
 
