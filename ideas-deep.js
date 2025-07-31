@@ -1,6 +1,5 @@
-// ideas-deep.js v2.01 prettier
+// ideas-deep.js v2.01 very pretty
 import { getAiAnalysis } from './ideas-api.js';
-import { extractAndParseJson } from './ideas.js';
 import { createAdvancedAnalysisPrompt } from './ideas-prompts.js';
 
 const analysisModules = [
@@ -20,13 +19,14 @@ function getIdeaSlug(ideaTitle) {
     return ideaTitle.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').slice(0, 50);
 }
 
+// --- UI HELPER FUNCTIONS ---
 function renderScoreBadge(score, text = "/10") {
-    if (!score) return '';
+    if (!score && score !== 0) return '';
     const scoreNum = parseInt(score, 10);
     let bgColor = 'bg-gray-400';
     if (scoreNum >= 8) bgColor = 'bg-green-500';
     else if (scoreNum >= 5) bgColor = 'bg-yellow-500';
-    else if (scoreNum > 0) bgColor = 'bg-red-500';
+    else if (scoreNum >= 0) bgColor = 'bg-red-500';
     return `<span class="text-white text-xs font-bold px-2 py-1 rounded-full ${bgColor}">${score}${text}</span>`;
 }
 
@@ -37,358 +37,155 @@ function renderInfoCard(item, scoreKey = 'score') {
                 <h5 class="font-semibold text-gray-800 dark:text-slate-200">${item.name}</h5>
                 ${renderScoreBadge(item[scoreKey])}
             </div>
-            <p class="text-sm text-gray-600 dark:text-slate-400 mt-1">${item.description}</p>
+            <p class="text-sm text-gray-600 dark:text-slate-400 mt-1">${item.description || item.reasoning || ''}</p>
         </div>
     `;
 }
 
-// --- NEW: MASTER UI RENDERER ---
-function renderModuleUI(moduleId, data) {
-    let contentHtml = '';
-    switch (moduleId) {
-        case 'viabilitySnapshot': contentHtml = renderViabilitySnapshot(data); break;
-        case 'marketGap': contentHtml = renderMarketGap(data); break;
-        case 'whyNow': contentHtml = renderWhyNow(data); break;
-        case 'valueLadder': contentHtml = renderValueLadder(data); break;
-        case 'valueEquation': contentHtml = renderValueEquation(data); break;
-        case 'marketMatrix': contentHtml = renderMarketMatrix(data); break;
-        case 'acpFramework': contentHtml = renderAcpFramework(data); break;
-        case 'communitySignals': contentHtml = renderCommunitySignals(data); break;
-        case 'keywordAnalysis': contentHtml = renderKeywordAnalysis(data); break;
-        case 'executionPlan': contentHtml = renderExecutionPlan(data); break;
-        default: contentHtml = `<pre class="text-xs"><code>${JSON.stringify(data, null, 2)}</code></pre>`;
-    }
-    
-    return `
-        ${contentHtml}
-        <div class="mt-4 text-right">
-            <button class="regenerate-btn text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1 px-3 rounded-md" data-module-id="${moduleId}">
-                Re-generate
-            </button>
-        </div>
-    `;
-}
-
+// --- NEW: SPECIFIC RENDERERS FOR EACH MODULE ---
 function renderViabilitySnapshot(data) {
     if (!data) return '<p>No data available.</p>';
     const items = [
-        { name: 'Opportunity', ...data.opportunity },
-        { name: 'Problem Severity', ...data.problemSeverity },
-        { name: 'Feasibility', ...data.feasibility },
-        { name: 'Timing', ...data.timing },
+        { name: 'Opportunity', ...data.opportunity }, { name: 'Problem Severity', ...data.problemSeverity },
+        { name: 'Feasibility', ...data.feasibility }, { name: 'Timing', ...data.timing },
     ];
-    return `
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            ${items.map(item => `
-                <div class="bg-gray-100 dark:bg-slate-700/50 p-4 rounded-lg">
-                    <div class="flex justify-between items-center mb-2">
-                        <h4 class="font-bold text-gray-800 dark:text-slate-200">${item.name}</h4>
-                        ${renderScoreBadge(item.score)}
-                    </div>
-                    <p class="text-sm text-gray-600 dark:text-slate-400">${item.reasoning}</p>
-                </div>
-            `).join('')}
-        </div>
-    `;
+    return `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">${items.map(item => renderInfoCard(item)).join('')}</div>`;
 }
 
 function renderMarketGap(data) {
     if (!data) return '<p>No data available.</p>';
-    return `
-        <p class="mb-4 text-gray-700 dark:text-slate-300">${data.summary}</p>
-        <div class="space-y-4">
-            <div>
-                <h4 class="font-bold mb-2 text-gray-800 dark:text-slate-200">Underserved Segments</h4>
-                <div class="space-y-2">${(data.underservedSegments || []).map(item => renderInfoCard(item)).join('')}</div>
-            </div>
-            <div>
-                <h4 class="font-bold mb-2 text-gray-800 dark:text-slate-200">Feature Gaps</h4>
-                <div class="space-y-2">${(data.featureGaps || []).map(item => renderInfoCard(item)).join('')}</div>
-            </div>
-            <div>
-                <h4 class="font-bold mb-2 text-gray-800 dark:text-slate-200">Integration Opportunities</h4>
-                <div class="space-y-2">${(data.integrationOpportunities || []).map(item => renderInfoCard(item)).join('')}</div>
-            </div>
-        </div>
-    `;
+    return `<p class="mb-4 text-gray-700 dark:text-slate-300">${data.summary}</p><div class="space-y-4">${Object.keys(data).filter(k => Array.isArray(data[k])).map(key => `<div><h4 class="font-bold mb-2 text-gray-800 dark:text-slate-200">${key.replace(/([A-Z])/g, ' $1').trim()}</h4><div class="space-y-2">${(data[key] || []).map(item => renderInfoCard(item)).join('')}</div></div>`).join('')}</div>`;
 }
 
 function renderWhyNow(data) {
     if (!data) return '<p>No data available.</p>';
-    return `
-        <p class="mb-4 text-gray-700 dark:text-slate-300">${data.summary}</p>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="space-y-2">
-                <h4 class="font-bold text-gray-800 dark:text-slate-200">Market Factors</h4>
-                ${(data.marketFactors || []).map(item => renderInfoCard(item)).join('')}
-            </div>
-            <div class="space-y-2">
-                <h4 class="font-bold text-gray-800 dark:text-slate-200">Tech Enablers</h4>
-                ${(data.techEnablers || []).map(item => renderInfoCard(item)).join('')}
-            </div>
-            <div class="space-y-2 col-span-full">
-                <h4 class="font-bold text-red-500 dark:text-red-400">Timing Risks</h4>
-                ${(data.timingRisks || []).map(item => renderInfoCard(item)).join('')}
-            </div>
-        </div>
-    `;
+    return `<p class="mb-4 text-gray-700 dark:text-slate-300">${data.summary}</p><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div class="space-y-2"><h4 class="font-bold text-gray-800 dark:text-slate-200">Market Factors</h4>${(data.marketFactors || []).map(item => renderInfoCard(item)).join('')}</div><div class="space-y-2"><h4 class="font-bold text-gray-800 dark:text-slate-200">Tech Enablers</h4>${(data.techEnablers || []).map(item => renderInfoCard(item)).join('')}</div><div class="space-y-2 col-span-full"><h4 class="font-bold text-red-500 dark:text-red-400">Timing Risks</h4>${(data.timingRisks || []).map(item => renderInfoCard(item)).join('')}</div></div>`;
 }
 
 function renderValueLadder(data) {
     if (!data) return '<p>No data available.</p>';
-    const ladder = [
-        { tier: 'Lead Magnet', ...data.leadMagnet },
-        { tier: 'Frontend Offer', ...data.frontendOffer },
-        { tier: 'Core Offer', ...data.coreOffer },
-        { tier: 'Continuity Program', ...data.continuityProgram },
-        { tier: 'Backend Offer', ...data.backendOffer },
-    ];
+    const ladder = [ { tier: 'Lead Magnet', ...data.leadMagnet }, { tier: 'Frontend Offer', ...data.frontendOffer }, { tier: 'Core Offer', ...data.coreOffer }, { tier: 'Continuity Program', ...data.continuityProgram }, { tier: 'Backend Offer', ...data.backendOffer } ];
+    return `<div class="space-y-4">${ladder.map(item => `<div class="bg-gray-100 dark:bg-slate-700/50 p-4 rounded-lg border-l-4 border-indigo-500"><div class="flex justify-between items-start"><div><p class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">${item.tier}</p><h4 class="text-lg font-bold text-gray-800 dark:text-slate-200">${item.name}</h4></div><span class="font-semibold text-indigo-600 dark:text-sky-400">${item.price}</span></div><div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm"><div><p class="font-semibold text-gray-700 dark:text-slate-300">Value Provided:</p><p class="text-gray-600 dark:text-slate-400">${item.valueProvided}</p></div><div><p class="font-semibold text-gray-700 dark:text-slate-300">Goal:</p><p class="text-gray-600 dark:text-slate-400">${item.goal}</p></div></div></div>`).join('')}</div>`;
+}
 
-    return `
-        <div class="space-y-4">
-            ${ladder.map(item => `
-                <div class="bg-gray-100 dark:bg-slate-700/50 p-4 rounded-lg border-l-4 border-indigo-500">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">${item.tier}</p>
-                            <h4 class="text-lg font-bold text-gray-800 dark:text-slate-200">${item.name}</h4>
-                        </div>
-                        <span class="font-semibold text-indigo-600 dark:text-sky-400">${item.price}</span>
-                    </div>
-                    <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <p class="font-semibold text-gray-700 dark:text-slate-300">Value Provided:</p>
-                            <p class="text-gray-600 dark:text-slate-400">${item.valueProvided}</p>
-                        </div>
-                        <div>
-                            <p class="font-semibold text-gray-700 dark:text-slate-300">Goal:</p>
-                            <p class="text-gray-600 dark:text-slate-400">${item.goal}</p>
-                        </div>
-                    </div>
-                </div>
-            `).join('')}
-        </div>
-    `;
+function renderValueEquation(data) {
+    if (!data) return '<p>No data available.</p>';
+    const items = [ { name: 'Dream Outcome', ...data.dreamOutcome }, { name: 'Perceived Likelihood', ...data.perceivedLikelihood }, { name: 'Time Delay', ...data.timeDelay }, { name: 'Effort & Sacrifice', ...data.effortAndSacrifice } ];
+    return `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">${items.map(item => renderInfoCard(item)).join('')}</div><div class="mt-4"><h4 class="font-bold text-gray-800 dark:text-slate-200">Improvement Suggestions</h4><ul class="list-disc list-inside mt-2 text-sm text-gray-600 dark:text-slate-400">${(data.improvementSuggestions || []).map(s => `<li>${s}</li>`).join('')}</ul></div>`;
+}
+
+function renderMarketMatrix(data) {
+    if (!data) return '<p>No data available.</p>';
+    const quadrants = { 'Category King': 'bg-green-100 dark:bg-green-900/50 border-green-500', 'High Impact': 'bg-blue-100 dark:bg-blue-900/50 border-blue-500', 'Commodity Play': 'bg-yellow-100 dark:bg-yellow-900/50 border-yellow-500', 'Low Impact': 'bg-red-100 dark:bg-red-900/50 border-red-500' };
+    return `<div class="text-center p-4 rounded-lg border-2 ${quadrants[data.quadrant] || 'bg-gray-100'}"><p class="text-sm font-semibold text-gray-500 dark:text-slate-400">Position</p><h3 class="text-2xl font-bold text-gray-800 dark:text-slate-200">${data.quadrant}</h3><p class="mt-2 text-sm text-gray-600 dark:text-slate-400">${data.analysis}</p></div><div class="flex justify-around mt-4 text-center"><div class="font-semibold">Uniqueness: ${renderScoreBadge(data.uniquenessScore)}</div><div class="font-semibold">Value: ${renderScoreBadge(data.valueScore)}</div></div>`;
+}
+
+function renderAcpFramework(data) {
+    if (!data) return '<p>No data available.</p>';
+    const sections = [ { title: 'Audience Analysis', data: data.audienceAnalysis }, { title: 'Community Analysis', data: data.communityAnalysis }, { title: 'Product Analysis', data: data.productAnalysis } ];
+    return `<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">${sections.map(sec => `<div class="bg-gray-100 dark:bg-slate-700/50 p-4 rounded-lg"><h4 class="font-bold mb-3 text-lg text-gray-800 dark:text-slate-200">${sec.title}</h4><div class="space-y-3 text-sm">${Object.entries(sec.data).map(([key, value]) => `<div><p class="font-semibold text-gray-700 dark:text-slate-300">${key.replace(/([A-Z])/g, ' $1').trim()}:</p>${Array.isArray(value) ? `<ul class="list-disc list-inside pl-2 text-gray-600 dark:text-slate-400">`+value.map(v => `<li>${v}</li>`).join('')+`</ul>` : `<p class="text-gray-600 dark:text-slate-400">${value}</p>`}</div>`).join('')}</div></div>`).join('')}</div>`;
+}
+
+function renderCommunitySignals(data) {
+    if (!data) return '<p>No data available.</p>';
+    const platforms = [ { name: 'Reddit', ...data.reddit }, { name: 'Facebook', ...data.facebook }, { name: 'YouTube', ...data.youtube } ];
+    return `<p class="mb-4 text-gray-700 dark:text-slate-300">${data.summary}</p><div class="grid grid-cols-1 lg:grid-cols-3 gap-4">${platforms.map(p => `<div class="bg-gray-100 dark:bg-slate-700/50 p-4 rounded-lg"><div class="flex justify-between items-center"><h4 class="font-bold text-lg text-gray-800 dark:text-slate-200">${p.name}</h4>${renderScoreBadge(p.potentialScore)}</div><p class="text-sm text-gray-600 dark:text-slate-400 mt-2">${p.analysis}</p></div>`).join('')}</div>`;
+}
+
+function renderKeywordAnalysis(data) {
+    if (!data) return '<p>No data available.</p>';
+    const renderKeywordList = (list) => (list || []).map(kw => `<li class="flex justify-between items-center text-sm p-2 rounded-md hover:bg-gray-200 dark:hover:bg-slate-700"><span class="text-gray-700 dark:text-slate-300">${kw.keyword}</span><span class="font-mono text-xs text-gray-500 dark:text-slate-400">${kw.volume} ${kw.growth ? `(${kw.growth})` : ''}</span></li>`).join('');
+    return `<p class="mb-4 text-gray-700 dark:text-slate-300">${data.summary}</p><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="bg-gray-100 dark:bg-slate-700/50 p-3 rounded-lg"><h4 class="font-bold text-gray-800 dark:text-slate-200 mb-2">Fastest Growing</h4><ul>${renderKeywordList(data.fastestGrowing)}</ul></div><div class="bg-gray-100 dark:bg-slate-700/50 p-3 rounded-lg"><h4 class="font-bold text-gray-800 dark:text-slate-200 mb-2">Highest Volume</h4><ul>${renderKeywordList(data.highestVolume)}</ul></div><div class="bg-gray-100 dark:bg-slate-700/50 p-3 rounded-lg"><h4 class="font-bold text-gray-800 dark:text-slate-200 mb-2">Most Relevant</h4><ul>${renderKeywordList(data.mostRelevant)}</ul></div></div>`;
 }
 
 function renderExecutionPlan(data) {
-    if (!data) return '<p>No data available.</p>';
-
-    const renderSidebar = (sidebar) => {
-        if (!sidebar) return '';
-        return `
-            <div class="space-y-4 p-4 bg-gray-100 dark:bg-slate-900/50 rounded-lg">
-                <div>
-                    <h5 class="font-bold text-gray-800 dark:text-slate-200">Success Metrics</h5>
-                    <ul class="list-disc list-inside text-sm text-gray-600 dark:text-slate-400 mt-1">
-                        <li>Churn Rate: <strong>${sidebar.successMetrics?.churnRate || 'N/A'}</strong></li>
-                        <li>Pilot Conversion: <strong>${sidebar.successMetrics?.pilotConversion || 'N/A'}</strong></li>
-                    </ul>
-                </div>
-                <div>
-                    <h5 class="font-bold text-gray-800 dark:text-slate-200">Resource Requirements</h5>
-                    <ul class="list-disc list-inside text-sm text-gray-600 dark:text-slate-400 mt-1">
-                        <li>Budget: <strong>${sidebar.resourceRequirements?.budget || 'N/A'}</strong></li>
-                        <li>Team: <strong>${sidebar.resourceRequirements?.team || 'N/A'}</strong></li>
-                    </ul>
-                </div>
-                <div>
-                    <h5 class="font-bold text-gray-800 dark:text-slate-200">Risk Assessment</h5>
-                    <ul class="list-disc list-inside text-sm text-gray-600 dark:text-slate-400 mt-1">
-                        ${Object.entries(sidebar.riskAssessment || {}).map(([risk, desc]) => `<li><strong>${risk}:</strong> ${desc}</li>`).join('')}
-                    </ul>
-                </div>
-            </div>
-        `;
-    };
-
-    const renderPart = (partData, partTitle) => {
-        if (!partData) return '';
-        return `
-            <div class="mt-6">
-                <h4 class="text-lg font-bold text-indigo-600 dark:text-sky-400 border-b border-gray-300 dark:border-slate-600 pb-1 mb-3">${partTitle}</h4>
-                <div class="space-y-3 text-sm">
-                    ${partData.businessType ? `<div><strong class="text-gray-700 dark:text-slate-300">Business Type:</strong> <span class="text-gray-600 dark:text-slate-400">${partData.businessType}</span></div>` : ''}
-                    ${partData.marketPosition ? `<div><strong class="text-gray-700 dark:text-slate-300">Market Position:</strong> <span class="text-gray-600 dark:text-slate-400">${partData.marketPosition}</span></div>` : ''}
-                    ${partData.targetAudience ? `<div><strong class="text-gray-700 dark:text-slate-300">Target Audience:</strong> <ul class="list-disc list-inside pl-4 text-gray-600 dark:text-slate-400">${partData.targetAudience.map(p => `<li>${p}</li>`).join('')}</ul></div>` : ''}
-                    ${partData.keyCompetitors ? `<div><strong class="text-gray-700 dark:text-slate-300">Key Competitors:</strong> <ul class="list-disc list-inside pl-4 text-gray-600 dark:text-slate-400">${partData.keyCompetitors.map(c => `<li>${c}</li>`).join('')}</ul></div>` : ''}
-                </div>
-            </div>
-        `;
-    };
-    
-    const renderPhase = (phaseData) => {
-        if (!phaseData) return '';
-        return `
-            <div class="mt-6">
-                <h4 class="text-lg font-bold text-indigo-600 dark:text-sky-400 border-b border-gray-300 dark:border-slate-600 pb-1 mb-3">${phaseData.title}</h4>
-                ${phaseData.coreStrategy ? `
-                    <div class="p-3 bg-gray-100 dark:bg-slate-700/50 rounded-md">
-                        <strong class="text-gray-700 dark:text-slate-300">Core Strategy:</strong>
-                        <p class="text-sm text-gray-600 dark:text-slate-400 pl-2">${phaseData.coreStrategy.mvpApproach}</p>
-                        <p class="text-sm text-gray-600 dark:text-slate-400 pl-2 mt-1"><strong>Initial Offer:</strong> ${phaseData.coreStrategy.initialOffer.name} (${phaseData.coreStrategy.initialOffer.price})</p>
-                    </div>
-                ` : ''}
-                ${phaseData.leadGenerationStrategy ? `
-                    <div class="mt-3 p-3 bg-gray-100 dark:bg-slate-700/50 rounded-md">
-                        <strong class="text-gray-700 dark:text-slate-300">Lead Generation:</strong>
-                        <ul class="list-none space-y-2 mt-2 text-sm">${(phaseData.leadGenerationStrategy.acquisitionChannels || []).map(ch => `
-                            <li>
-                                <p class="font-semibold text-gray-600 dark:text-slate-400">${ch.channel}</p>
-                                <p class="text-xs text-gray-500 dark:text-slate-500 pl-2">${ch.tactic} (Metric: ${ch.metric})</p>
-                            </li>
-                        `).join('')}</ul>
-                    </div>
-                ` : ''}
-                ${phaseData.goal ? `<p class="text-sm text-gray-600 dark:text-slate-400"><strong>Goal:</strong> ${phaseData.goal}</p>`: ''}
-                ${phaseData.strategicFocus ? `<p class="text-sm text-gray-600 dark:text-slate-400"><strong>Strategic Focus:</strong> ${phaseData.strategicFocus.join(', ')}</p>`: ''}
-            </div>
-        `;
-    };
-
-    const renderImplementation = (implData) => {
-        if (!implData) return '';
-        return `
-             <div class="mt-6">
-                <h4 class="text-lg font-bold text-indigo-600 dark:text-sky-400 border-b border-gray-300 dark:border-slate-600 pb-1 mb-3">${implData.title}</h4>
-                <ol class="list-decimal list-inside text-sm text-gray-600 dark:text-slate-400 space-y-1">
-                    ${(implData.steps || []).map(step => `<li>${step}</li>`).join('')}
-                </ol>
-            </div>
-        `;
-    }
-
-    return `
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div class="lg:col-span-2">
-                ${renderPart(data.part1_BusinessModel, 'Part 1: Business Model & Market')}
-                ${renderPhase(data.part2_Phase1_Roadmap)}
-                ${renderPhase(data.part3_GrowthStrategy)}
-                ${renderImplementation(data.part4_ImplementationPlan)}
-            </div>
-            <div class="lg:col-span-1">
-                ${renderSidebar(data.sidebarAnalysis)}
-            </div>
-        </div>
-    `;
+    return `<div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-2">${Object.entries(data).filter(([key]) => key.startsWith('part')).map(([key, partData]) => `<div class="mt-4"><h4 class="text-lg font-bold text-indigo-600 dark:text-sky-400 border-b border-gray-300 dark:border-slate-600 pb-1 mb-3">${partData.title || key.replace('part','Part ')}</h4><div class="space-y-3 text-sm">${Object.entries(partData).filter(([k]) => k !== 'title').map(([k,v]) => `<div><strong class="text-gray-700 dark:text-slate-300">${k.replace(/([A-Z])/g, ' $1').trim()}:</strong> `+(typeof v === 'object' ? `<div class="pl-4">${Object.entries(v).map(([sk,sv]) => `<p><span class="font-semibold">${sk.replace(/([A-Z])/g, ' $1').trim()}:</span> ${sv}</p>`).join('')}</div>` : `<span class="text-gray-600 dark:text-slate-400">${v}</span>`)+`</div>`).join('')}</div></div>`).join('')}</div><div class="lg:col-span-1"><div class="space-y-4 p-4 bg-gray-100 dark:bg-slate-900/50 rounded-lg">${Object.entries(data.sidebarAnalysis || {}).map(([key, val])=>`<div><h5 class="font-bold text-gray-800 dark:text-slate-200">${key.replace(/([A-Z])/g, ' $1').trim()}</h5><div class="text-sm text-gray-600 dark:text-slate-400 mt-1">${Object.entries(val).map(([k,v])=>`<p><strong>${k.replace(/([A-Z])/g, ' $1').trim()}:</strong> ${v}</p>`).join('')}</div></div>`).join('')}</div></div></div>`; 
 }
 
-function renderModuleCard(module, idea) {
-    const ideaSlug = getIdeaSlug(idea.title);
-    const cacheKey = `deep_analysis_v3_${module.id}_${ideaSlug}`; // Incremented cache version
-    const cachedData = localStorage.getItem(cacheKey);
-    
-    let contentHTML = `
-        <div class="card-content-area text-center py-4">
-            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-500"></div>
-            <p class="text-sm text-gray-400 mt-2">Analyzing...</p>
-        </div>
-    `;
-    let summaryScoreHTML = `<span class="score-badge bg-gray-400">...</span>`;
-
-    if (cachedData) {
-        try {
-            const data = JSON.parse(cachedData);
-            contentHTML = renderModuleUI(module.id, data); // Use the new master renderer
-            const score = data.overallScore || data.uniquenessScore || (data.mainKeyword && '✓') || null;
-            summaryScoreHTML = `<span class="score-badge">${score ? (typeof score === 'string' ? score : `${score}/10`) : '✓'}</span>`;
-        } catch (e) {
-            contentHTML = `<p class="text-red-500 text-sm">Error parsing cache: ${e.message}</p>`;
-        }
+// --- NEW: MASTER UI RENDERER ---
+function renderModuleDetailContent(moduleId, data) {
+    let contentHtml = '';
+    const renderers = { viabilitySnapshot, marketGap, whyNow, valueLadder, valueEquation, marketMatrix, acpFramework, communitySignals, keywordAnalysis, executionPlan };
+    if (renderers[moduleId]) {
+        contentHtml = renderers[moduleId](data);
+    } else {
+        contentHtml = `<pre class="text-xs"><code>${JSON.stringify(data, null, 2)}</code></pre>`;
     }
-    
-    return `
-        <details class="bg-white dark:bg-slate-800/50 rounded-lg shadow-md overflow-hidden group" id="card-${module.id}">
-            <summary class="list-none cursor-pointer p-5 flex justify-between items-center border-b border-gray-200 dark:border-slate-700">
-                <div class="flex items-center">
-                    <span class="text-2xl mr-3">${module.icon}</span>
-                    <h3 class="text-xl font-semibold text-indigo-500 dark:text-sky-300">${module.title}</h3>
-                </div>
-                <div class="flex items-center">
-                    ${summaryScoreHTML}
-                    <div class="text-xl text-gray-400 ml-4 group-open:rotate-180 transition-transform duration-300">▼</div>
-                </div>
-            </summary>
-            <div class="p-5 bg-gray-50 dark:bg-slate-800">${contentHTML}</div>
-        </details>
-    `;
+    return `${contentHtml}<div class="mt-6 text-right"><button class="regenerate-btn text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1 px-3 rounded-md" data-module-id="${moduleId}">Re-generate</button></div>`;
 }
 
+// --- NEW: SUMMARY & CARD PLACEHOLDER RENDERERS ---
+function renderModuleSummary(module) {
+    return `<div class="summary-card bg-white dark:bg-slate-800/50 p-3 rounded-lg shadow-md flex items-center" id="summary-card-${module.id}"><span class="text-xl mr-3">${module.icon}</span><div><p class="text-sm font-semibold text-gray-800 dark:text-slate-200">${module.title}</p><div class="summary-content text-xs text-gray-500 dark:text-slate-400 mt-1">Analyzing...</div></div></div>`;
+}
+
+function renderModuleDetailCard(module) {
+    return `<div class="detail-card bg-white dark:bg-slate-800/50 rounded-lg shadow-md" id="detail-card-${module.id}"><h3 class="text-xl font-semibold text-indigo-500 dark:text-sky-300 p-4 border-b border-gray-200 dark:border-slate-700 flex items-center"><span class="text-2xl mr-3">${module.icon}</span>${module.title}</h3><div class="p-4 detail-content-area bg-gray-50 dark:bg-slate-800"><div class="text-center py-4"><div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-500"></div></div></div></div>`;
+}
+
+// --- LOGIC FUNCTIONS ---
 async function runSingleAnalysis(idea, module) {
-    const card = document.getElementById(`card-${module.id}`);
-    if (!card || card.querySelector('.regenerate-btn')) {
-        return;
-    }
-    
+    const detailCard = document.getElementById(`detail-card-${module.id}`);
+    const summaryCardContent = document.querySelector(`#summary-card-${module.id} .summary-content`);
+    if (!detailCard || detailCard.querySelector('.regenerate-btn')) return;
+
     const ideaSlug = getIdeaSlug(idea.title);
-    const cacheKey = `deep_analysis_v3_${module.id}_${ideaSlug}`;
+    const cacheKey = `deep_analysis_v4_${module.id}_${ideaSlug}`;
 
     try {
-        const prompt = createAdvancedAnalysisPrompt(idea, module.id);
-        const result = await getAiAnalysis(prompt, 'groq', 'llama-3.1-8b-instant');
-        if (!result.success) throw new Error(result.error);
-        
-        const analysisData = JSON.parse(result.text);
-        localStorage.setItem(cacheKey, JSON.stringify(analysisData));
+        const cachedData = localStorage.getItem(cacheKey);
+        let analysisData;
+        if(cachedData) {
+            analysisData = JSON.parse(cachedData);
+        } else {
+            const prompt = createAdvancedAnalysisPrompt(idea, module.id);
+            const result = await getAiAnalysis(prompt, 'groq', 'llama-3.1-8b-instant');
+            if (!result.success) throw new Error(result.error);
+            analysisData = JSON.parse(result.text);
+            localStorage.setItem(cacheKey, JSON.stringify(analysisData));
+        }
 
-        card.querySelector('.p-5').innerHTML = renderModuleUI(module.id, analysisData);
-        
-        const score = analysisData.overallScore || analysisData.uniquenessScore || (analysisData.mainKeyword && '✓') || null;
-        const scoreBadge = card.querySelector('.score-badge');
-        if (scoreBadge) {
-             scoreBadge.textContent = score ? (typeof score === 'string' ? score : `${score}/10`) : '✓';
-        }
+        // Update Detail Card
+        detailCard.querySelector('.detail-content-area').innerHTML = renderModuleDetailContent(module.id, analysisData);
+        // Update Summary Card
+        const score = analysisData.overallScore || analysisData.uniquenessScore || (analysisData.mainKeyword && '✓') || '✓';
+        if(summaryCardContent) summaryCardContent.innerHTML = `<strong class="text-green-500">Complete</strong> ${renderScoreBadge(score, '')}`;
+
     } catch (error) {
-        const contentContainer = card.querySelector('.p-5');
-        if (contentContainer) {
-            contentContainer.innerHTML = `<p class="text-red-500 text-sm">Error: ${error.message}</p>`;
-        }
+        const errorMsg = `Error: ${error.message}`;
+        detailCard.querySelector('.detail-content-area').innerHTML = `<p class="text-red-500 text-sm">${errorMsg}</p>`;
+        if(summaryCardContent) summaryCardContent.innerHTML = `<strong class="text-red-500">Failed</strong>`;
     }
 }
 
 // --- INITIALIZATION ---
 export function initDeepAnalysis(idea) {
     const container = document.getElementById('deep-analysis-content');
-    
-    if (!idea) {
-        container.innerHTML = `
-            <div class="text-center p-8 bg-white dark:bg-slate-800/50 rounded-lg shadow-md">
-                <h3 class="text-2xl font-semibold text-gray-700 dark:text-slate-200">Deep Analysis🔬</h3>
-                <p class="mt-2 text-gray-500 dark:text-slate-400">
-                    Click the "Deep Analyze" button on an idea in the 
-                    <span class="font-semibold text-indigo-500">Brainstorm</span> or 
-                    <span class="font-semibold text-purple-500">Steal</span> tabs 
-                    to see a detailed breakdown here.
-                </p>
-            </div>
-        `;
-        return;
-    }
+    if (!idea) { /* ... placeholder logic ... */ return; }
 
     container.innerHTML = `
         <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md mb-6">
             <h2 class="text-3xl font-bold text-gray-800 dark:text-white">${idea.title}</h2>
             <p class="text-gray-600 dark:text-slate-400 mt-2">${idea.description}</p>
         </div>
-        <div class="space-y-4" id="deep-analysis-cards">
-            ${analysisModules.map(module => renderModuleCard(module, idea)).join('')}
-        </div>
+        <h3 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">Analysis Dashboard</h3>
+        <div id="deep-analysis-summary-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">${analysisModules.map(renderModuleSummary).join('')}</div>
+        <h3 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">Detailed Breakdown</h3>
+        <div id="deep-analysis-cards-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-6">${analysisModules.map(renderModuleDetailCard).join('')}</div>
     `;
 
     container.addEventListener('click', async (e) => {
         if (e.target && e.target.classList.contains('regenerate-btn')) {
             const button = e.target;
-            button.disabled = true;
-            button.textContent = 'Generating...';
-            
             const moduleId = button.dataset.moduleId;
             const module = analysisModules.find(m => m.id === moduleId);
+            const detailCard = document.getElementById(`detail-card-${module.id}`);
+            const summaryCardContent = document.querySelector(`#summary-card-${module.id} .summary-content`);
             
-            const contentContainer = button.closest('.p-5');
-            contentContainer.innerHTML = `
-                <div class="card-content-area text-center py-4">
-                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-500"></div>
-                </div>`;
+            // Invalidate cache and re-run
+            localStorage.removeItem(`deep_analysis_v4_${module.id}_${getIdeaSlug(idea.title)}`);
+            detailCard.querySelector('.detail-content-area').innerHTML = `<div class="text-center py-4"><div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-500"></div></div>`;
+            if (summaryCardContent) summaryCardContent.innerHTML = `Re-analyzing...`;
             
             await runSingleAnalysis(idea, module);
         }
