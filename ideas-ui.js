@@ -1,4 +1,4 @@
-// ideas-ui.js v1.15 better ui + re-summarize
+// ideas-ui.js v1.15 better2 ui + re-summarize
 import { getState } from './ideas-state.js';
 
 const elements = {};
@@ -139,41 +139,45 @@ export function renderTranscriptUI(transcriptData) {
                 <div class="mt-4 space-y-2 border-t border-gray-200 dark:border-slate-700 pt-4 max-h-96 overflow-y-auto">${transcriptHtml}</div>
             </details>
         </div>
-        <div id="reanalyze-controls-container" class="hidden p-4 bg-gray-100 dark:bg-slate-900/50 rounded-lg">
-            <!-- Content will be added by renderAnalysisUI -->
-        </div>
         
-        <div id="ai-selection-container" class="p-5 rounded-lg shadow-inner bg-gray-50 dark:bg-slate-800">
-            <h3 class="text-xl font-semibold text-gray-800 dark:text-slate-100 mb-4">Analyze with AI 🤖</h3>
-            <div class="text-sm text-gray-600 dark:text-slate-300 bg-gray-100 dark:bg-slate-700/50 p-3 rounded-md mb-4">
-                <div class="flex items-center">
-                    <p>Approximate Input: <strong class="text-indigo-600 dark:text-sky-400">${totalInputTokens.toLocaleString()} tokens</strong></p>
-                    <div class="relative group ml-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 text-gray-400">
-                            <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-7-4a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM9 9a1 1 0 0 0 0 2v3a1 1 0 0 0 1 1h1a1 1 0 1 0 0-2v-3a1 1 0 0 0-1-1H9Z" clip-rule="evenodd" />
-                        </svg>
-                        <span class="absolute bottom-full mb-2 w-48 p-2 text-xs text-white bg-black rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none -translate-x-1/2 left-1/2">
-                            This is a rough guide based on character count (1 token ≈ 4 chars). Actual token count varies by model.
-                        </span>
+        <div id="reanalyze-container" class="bg-white dark:bg-slate-800/50 p-5 rounded-lg shadow-md space-y-6">
+            <div id="reanalyze-controls-container" class="hidden p-4 bg-gray-100 dark:bg-slate-900/50 rounded-lg">
+                <!-- Content will be added by renderAnalysisUI -->
+            </div>
+            
+            <div id="ai-selection-container" class="p-5 rounded-lg shadow-inner bg-gray-50 dark:bg-slate-800">
+                <h3 class="text-xl font-semibold text-gray-800 dark:text-slate-100 mb-4">Analyze with AI 🤖</h3>
+                <div class="text-sm text-gray-600 dark:text-slate-300 bg-gray-100 dark:bg-slate-700/50 p-3 rounded-md mb-4">
+                    <div class="flex items-center">
+                        <p>Approximate Input: <strong class="text-indigo-600 dark:text-sky-400">${totalInputTokens.toLocaleString()} tokens</strong></p>
+                        <div class="relative group ml-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4 text-gray-400">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-7-4a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM9 9a1 1 0 0 0 0 2v3a1 1 0 0 0 1 1h1a1 1 0 1 0 0-2v-3a1 1 0 0 0-1-1H9Z" clip-rule="evenodd" />
+                            </svg>
+                            <span class="absolute bottom-full mb-2 w-48 p-2 text-xs text-white bg-black rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none -translate-x-1/2 left-1/2">
+                                This is a rough guide based on character count (1 token ≈ 4 chars). Actual token count varies by model.
+                            </span>
+                        </div>
+                    </div>
+                    <p class="text-xs mt-1">(${transcriptTokens.toLocaleString()} from transcript + ~${promptTemplateTokens} for prompt)</p>
+                    <p id="model-token-limit-info" class="mt-1">Selected Model Max Tokens: <span class="font-semibold">...</span></p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                    <div>
+                        <label for="ai-provider-select" class="block text-sm font-medium text-gray-700 dark:text-slate-300">Provider</label>
+                        <select id="ai-provider-select" class="mt-1 block w-full rounded-md border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></select>
+                    </div>
+                    <div>
+                        <label for="ai-model-select" class="block text-sm font-medium text-gray-700 dark:text-slate-300">Model</label>
+                        <select id="ai-model-select" class="mt-1 block w-full rounded-md border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></select>
                     </div>
                 </div>
-                <p class="text-xs mt-1">(${transcriptTokens.toLocaleString()} from transcript + ~${promptTemplateTokens} for prompt)</p>
-                <p id="model-token-limit-info" class="mt-1">Selected Model Max Tokens: <span class="font-semibold">...</span></p>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-                <div>
-                    <label for="ai-provider-select" class="block text-sm font-medium text-gray-700 dark:text-slate-300">Provider</label>
-                    <select id="ai-provider-select" class="mt-1 block w-full rounded-md border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></select>
+                <div class="mt-4 text-right">
+                    <button id="analyze-transcript-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition-colors">Analyze Transcript</button>
                 </div>
-                <div>
-                    <label for="ai-model-select" class="block text-sm font-medium text-gray-700 dark:text-slate-300">Model</label>
-                    <select id="ai-model-select" class="mt-1 block w-full rounded-md border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></select>
-                </div>
-            </div>
-            <div class="mt-4 text-right">
-                <button id="analyze-transcript-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition-colors">Analyze Transcript</button>
             </div>
         </div>
+        
         <div id="analysis-container" class="space-y-6 mt-6"></div>
     `;
     populateAiSelectors();
