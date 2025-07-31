@@ -1,4 +1,4 @@
-// ideas-prompts.js v2.00
+// ideas-prompts.js v2.00 steal prompt
 function formatTranscriptWithTimestamps(timedTextArray) {
     if (!timedTextArray || !Array.isArray(timedTextArray)) return "";
     return timedTextArray.map(line => `[${line.start.toFixed(1)}s] ${line.text}`).join('\n');
@@ -226,7 +226,7 @@ export function createStealIdeasPrompt(pageText) {
     You are an expert business analyst and venture capitalist with a keen eye for identifying opportunities in text. Analyze the following text content from a webpage. Your task is to extract any potential product ideas, business models, or unique strategies mentioned.
 
     **Instructions:**
-    1. Read through the text and identify 3-5 distinct, actionable ideas.
+    1. Read through the text and identify all distinct, actionable ideas.
     2. For each idea, create a short title and a one-sentence description.
     3. The "category" for all these ideas MUST be "Stolen Idea".
     4. Provide your output ONLY as a valid JSON array of objects. Do not include any text before or after the JSON.
