@@ -1,4 +1,4 @@
-// ideas-ui.js v2.00 export
+// ideas-ui.js v2.00 fix
 import { getState } from './ideas-state.js';
 
 const elements = {};
@@ -282,7 +282,7 @@ export function renderAnalysisUI(analysis) {
     populateAiSelectors(); 
 }
 
-export function renderSummaryUI(summary, videoId) {
+function renderSummaryUI(summary, videoId) {
     if (!summary || !videoId) return '';
     
     const subTopicsHtml = (summary.subTopics || []).map(topic => {
@@ -443,7 +443,7 @@ export function renderIdeasListUI(insights) {
     }).join('');
 }
 
-export function renderTutorialUI(guide) {
+function renderTutorialUI(guide) {
     if (!guide) return '';
 
     const toolsHtml = (guide.tools || []).map(tool => `<li class="p-3 bg-gray-100 dark:bg-slate-800 rounded-md shadow-sm">${tool}</li>`).join('');
@@ -476,7 +476,7 @@ export function renderTutorialUI(guide) {
     `;
 }
 
-export function renderPodcastUI(details) {
+function renderPodcastUI(details) {
     if (!details) return '';
 
     const guestsHtml = (details.guests || []).map(guest => `
