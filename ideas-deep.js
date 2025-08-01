@@ -1,4 +1,4 @@
-// ideas-deep.js titlecase + no card + regen button
+// ideas-deep.js v2.01 executeplan
 import { getAiAnalysis } from './ideas-api.js';
 import { createAdvancedAnalysisPrompt } from './ideas-prompts.js';
 
@@ -107,23 +107,81 @@ function renderKeywordAnalysis(data) {
 
 function renderExecutionPlan(data) {
     if (!data) return '<p>No data available.</p>';
-    const renderSidebar = (sidebar) => { 
-        if (!sidebar) return ''; 
-        return `<div class="space-y-4 p-4 bg-gray-100 dark:bg-slate-900/50 rounded-lg">${Object.entries(sidebar || {}).map(([key, val])=>`<div><h5 class="font-bold text-gray-800 dark:text-slate-200">${toTitleCase(key)}</h5><div class="text-sm text-gray-600 dark:text-slate-400 mt-1">${Object.entries(val).map(([k,v])=>`<p><strong>${toTitleCase(k)}:</strong> ${v}</p>`).join('')}</div></div>`).join('')}</div>`; 
+    const renderSidebar = (sidebar) => {
+        if (!sidebar) return '';
+        return `
+            <div class="space-y-4 p-4 bg-gray-100 dark:bg-slate-900/50 rounded-lg h-full">
+                ${Object.entries(sidebar).map(([key, val]) => `
+                    <div>
+                        <h5 class="font-bold text-gray-800 dark:text-slate-200">${toTitleCase(key)}</h5>
+                        <div class="text-sm text-gray-600 dark:text-slate-400 mt-1">
+                            ${Array.isArray(val)
+                                ? `<ul class="list-disc list-inside">${val.map(v => `<li>${v}</li>`).join('')}</ul>`
+                                : Object.entries(val).map(([k,v]) => `<p><strong>${toTitleCase(k)}:</strong> ${v}</p>`).join('')
+                            }
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
     };
-    const renderPart = (partData, partTitle) => { 
-        if (!partData) return ''; 
-        return `<div class="mt-6"><h4 class="text-lg font-bold text-indigo-600 dark:text-sky-400 border-b border-gray-300 dark:border-slate-600 pb-1 mb-3">${partTitle}</h4><div class="space-y-3 text-sm">${Object.entries(partData).map(([key,value]) => `<div><strong class="text-gray-700 dark:text-slate-300">${toTitleCase(key)}:</strong> ${Array.isArray(value) ? `<ul class="list-disc list-inside pl-4 text-gray-600 dark:text-slate-400">${value.map(p => `<li>${p}</li>`).join('')}</ul>` : `<span class="text-gray-600 dark:text-slate-400">${value}</span>`}</div>`).join('')}</div></div>`; 
+    const renderSection = (partData, defaultTitle) => {
+        if (!partData) return '';
+        const title = partData.title || defaultTitle;
+        return `
+            <div class="mt-6">
+                <h4 class="text-lg font-bold text-indigo-600 dark:text-sky-400 border-b border-gray-300 dark:border-slate-600 pb-1 mb-3">${title}</h4>
+                <div class="space-y-4 text-sm">
+                    ${Object.entries(partData).filter(([key]) => key !== 'title').map(([key, value]) => {
+                        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                            // Render nested objects like coreStrategy, leadGenerationStrategy
+                            return `
+                                <div class="p-3 bg-gray-100 dark:bg-slate-700/50 rounded-md">
+                                    <strong class="text-gray-700 dark:text-slate-300">${toTitleCase(key)}:</strong>
+                                    ${Object.entries(value).map(([subKey, subValue]) => {
+                                        if (Array.isArray(subValue)) {
+                                            return `<div class="mt-2 pl-2">
+                                                        <p class="font-semibold text-gray-600 dark:text-slate-400">${toTitleCase(subKey)}:</p>
+                                                        <ul class="list-none space-y-1 mt-1 text-xs">
+                                                            ${subValue.map(item => `<li><p class="font-semibold text-gray-500 dark:text-slate-400">${item.channel}</p><p class="text-gray-500 dark:text-slate-500 pl-2">${item.tactic}</p></li>`).join('')}
+                                                        </ul>
+                                                    </div>`;
+                                        } else if (typeof subValue === 'object' && subValue !== null) {
+                                            return `<div class="mt-1 pl-2 text-xs"><p>${toTitleCase(subKey)}: ${subValue.name} (${subValue.price})</p><p class="text-gray-500 dark:text-slate-500 pl-2">${subValue.details}</p></div>`;
+                                        } else {
+                                            return `<p class="pl-2 mt-1"><strong class="font-semibold">${toTitleCase(subKey)}:</strong> <span class="text-gray-600 dark:text-slate-400">${subValue}</span></p>`;
+                                        }
+                                    }).join('')}
+                                </div>
+                            `;
+                        } else {
+                            // Render simple key-value pairs or arrays
+                            return `<div>
+                                        <strong class="text-gray-700 dark:text-slate-300">${toTitleCase(key)}:</strong> 
+                                        ${Array.isArray(value) 
+                                            ? `<ul class="list-disc list-inside pl-4 text-gray-600 dark:text-slate-400">${value.map(p => `<li>${p}</li>`).join('')}</ul>` 
+                                            : `<span class="text-gray-600 dark:text-slate-400">${value}</span>`
+                                        }
+                                    </div>`;
+                        }
+                    }).join('')}
+                </div>
+            </div>
+        `;
     };
-    const renderPhase = (phaseData) => { 
-        if (!phaseData) return ''; 
-        return `<div class="mt-6"><h4 class="text-lg font-bold text-indigo-600 dark:text-sky-400 border-b border-gray-300 dark:border-slate-600 pb-1 mb-3">${phaseData.title}</h4>${phaseData.coreStrategy ? `<div class="p-3 bg-gray-100 dark:bg-slate-700/50 rounded-md"><strong class="text-gray-700 dark:text-slate-300">Core Strategy:</strong><p class="text-sm text-gray-600 dark:text-slate-400 pl-2">${phaseData.coreStrategy.mvpApproach}</p><p class="text-sm text-gray-600 dark:text-slate-400 pl-2 mt-1"><strong>Initial Offer:</strong> ${phaseData.coreStrategy.initialOffer.name} (${phaseData.coreStrategy.initialOffer.price})</p></div>` : ''}${phaseData.leadGenerationStrategy ? `<div class="mt-3 p-3 bg-gray-100 dark:bg-slate-700/50 rounded-md"><strong class="text-gray-700 dark:text-slate-300">Lead Generation:</strong><ul class="list-none space-y-2 mt-2 text-sm">${(phaseData.leadGenerationStrategy.acquisitionChannels || []).map(ch => `<li><p class="font-semibold text-gray-600 dark:text-slate-400">${ch.channel}</p><p class="text-xs text-gray-500 dark:text-slate-500 pl-2">${ch.tactic} (Metric: ${ch.metric})</p></li>`).join('')}</ul></div>` : ''}${phaseData.goal ? `<p class="text-sm text-gray-600 dark:text-slate-400"><strong>Goal:</strong> ${phaseData.goal}</p>`: ''}${phaseData.strategicFocus ? `<p class="text-sm text-gray-600 dark:text-slate-400"><strong>Strategic Focus:</strong> ${phaseData.strategicFocus.join(', ')}</p>`: ''}</div>`; 
-    };
-    const renderImplementation = (implData) => { 
-        if (!implData) return ''; 
-        return `<div class="mt-6"><h4 class="text-lg font-bold text-indigo-600 dark:text-sky-400 border-b border-gray-300 dark:border-slate-600 pb-1 mb-3">${implData.title}</h4><ol class="list-decimal list-inside text-sm text-gray-600 dark:text-slate-400 space-y-1">${(implData.steps || []).map(step => `<li>${step}</li>`).join('')}</ol></div>`; 
-    }
-    return `<div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-2">${renderPart(data.part1_BusinessModel, 'Part 1: Business Model & Market')}${renderPhase(data.part2_Phase1_Roadmap)}${renderPhase(data.part3_GrowthStrategy)}${renderImplementation(data.part4_ImplementationPlan)}</div><div class="lg:col-span-1">${renderSidebar(data.sidebarAnalysis)}</div></div>`;
+    return `
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2">
+                ${renderSection(data.part1_BusinessModel, 'Part 1: Business Model & Market')}
+                ${renderSection(data.part2_Phase1_Roadmap)}
+                ${renderSection(data.part3_Phase2_Roadmap)}
+                ${renderSection(data.part4_ImplementationPlan)}
+            </div>
+            <div class="lg:col-span-1">
+                ${renderSidebar(data.sidebarAnalysis)}
+            </div>
+        </div>
+    `;
 }
 
 // --- MASTER UI RENDERER ---

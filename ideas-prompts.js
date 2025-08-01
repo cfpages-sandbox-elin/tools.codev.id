@@ -1,4 +1,4 @@
-// ideas-prompts.js v2.01 acp prompts
+// ideas-prompts.js v2.01 execute plan prompts
 function formatTranscriptWithTimestamps(timedTextArray) {
     if (!timedTextArray || !Array.isArray(timedTextArray)) return "";
     return timedTextArray.map(line => `[${line.start.toFixed(1)}s] ${line.text}`).join('\n');
@@ -345,12 +345,16 @@ export function createAdvancedAnalysisPrompt(idea, moduleType) {
 
         executionPlan: `
         ${baseInstruction}
+
         **Module:** Phased Execution Plan
-        **JSON Schema:** {
+
+        **JSON Schema:**
+        {
           "sidebarAnalysis": {
             "successMetrics": { "churnRate": "<5%", "pilotConversion": "20% from freemium to pay" },
             "resourceRequirements": { "budget": "$100k-$200k for initial development", "team": "1 Founder, 1 UX/UI Designer, 2 Engineers" },
-            "riskAssessment": { "aiToolInaccuracy": "Risk description", "competitorResponse": "Risk description" }
+            "riskAssessment": { "aiToolInaccuracy": "Risk description", "competitorResponse": "Risk description" },
+            "nextActionSteps": ["Develop MVP landing page within 1 month.", "Secure 3 pilot customers for beta testing."]
           },
           "part1_BusinessModel": { 
             "businessType": "e.g., B2C SaaS Platform with a physical product component.",
@@ -359,7 +363,7 @@ export function createAdvancedAnalysisPrompt(idea, moduleType) {
             "keyCompetitors": ["List of 1-2 main competitors."]
           },
           "part2_Phase1_Roadmap": { 
-            "title": "Phase 1: MVP & Launch (0-6 Months)",
+            "title": "Part 2: Phase 1 Roadmap (0-6 Months)",
             "coreStrategy": {
               "mvpApproach": "Description of the core MVP, focusing on solving one key problem.",
               "initialOffer": { "name": "Name of the first paid product", "price": "e.g., $250-$600", "details": "Description of what's included." }
@@ -373,14 +377,16 @@ export function createAdvancedAnalysisPrompt(idea, moduleType) {
               ]
             }
           },
-          "part3_GrowthStrategy": { 
-            "title": "Phase 2: Growth & Scaling (6-18 Months)",
-            "goal": "e.g., 'Achieve 10,000 active platform users within 12 months.'",
-            "strategicFocus": ["e.g., 'Expand product features', 'Develop strategic partnerships'"],
-            "pricingEvolution": "Describe how pricing will evolve (e.g., 'Introduce tiered subscription models')."
+          "part3_Phase2_Roadmap": { 
+            "title": "Part 3: Phase 2 Roadmap (6-18 Months)",
+            "growthStrategy": {
+                "goal": "e.g., 'Achieve 10,000 active platform users within 12 months.'",
+                "strategicFocus": ["e.g., 'Expand product features', 'Develop strategic partnerships'"],
+                "pricingEvolution": "Describe how pricing will evolve (e.g., 'Introduce tiered subscription models')."
+            }
           },
           "part4_ImplementationPlan": {
-            "title": "Step-by-Step Implementation",
+            "title": "Part 4: Step-by-Step Implementation",
             "steps": [
               "Finalize AI tool development and beta test.",
               "Launch marketing campaigns focused on key acquisition channels.",
