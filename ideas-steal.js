@@ -1,4 +1,4 @@
-// ideas-steal.js v2.05 re-steal-html with PARALLEL processing, provider SELECTION, and GRACEFUL failure
+// ideas-steal.js v2.02 fix save rawhtml
 import { scrapeUrl, getAiAnalysis } from './ideas-api.js';
 import { extractAndParseJson } from './ideas.js';
 import { createStealIdeasPrompt } from './ideas-prompts.js';
@@ -85,7 +85,12 @@ function handleUrlInput() {
     const urlInput = document.getElementById('steal-url-input');
     const sourceUrlInput = document.getElementById('steal-source-url-input');
     const resultsArea = document.getElementById('steal-results-area');
-    const isHtmlMode = !document.getElementById('steal-html-container').classList.contains('hidden');
+    const htmlInput = document.getElementById('steal-html-input');
+    const urlContainer = document.getElementById('steal-url-container');
+    const htmlContainer = document.getElementById('steal-html-container');
+    
+    // Determine the active URL from whichever input is visible and has focus/content.
+    const isHtmlMode = !htmlContainer.classList.contains('hidden');
     const url = isHtmlMode ? sourceUrlInput.value.trim() : urlInput.value.trim();
 
     if (!url) {
@@ -97,9 +102,7 @@ function handleUrlInput() {
     const htmlCacheKey = `stolen_html_${url}`;
     const cachedHtml = localStorage.getItem(htmlCacheKey);
     if (cachedHtml && !isHtmlMode) {
-        const htmlInput = document.getElementById('steal-html-input');
-        const urlContainer = document.getElementById('steal-url-container');
-        const htmlContainer = document.getElementById('steal-html-container');
+        console.log(`Found cached HTML for [${url}]. Populating and switching view.`);
         htmlInput.value = cachedHtml;
         sourceUrlInput.value = url;
         urlContainer.classList.add('hidden');
@@ -114,7 +117,7 @@ function handleUrlInput() {
         try {
             const ideas = JSON.parse(cachedIdeas);
             if (ideas.length > 0) {
-                resultsArea.innerHTML = renderIdeasListUI(ideas);
+                resultsArea.innerHTML = renderIdeasListUI(ideas, url);
             } else {
                 resultsArea.innerHTML = `<p class="text-center text-gray-500 dark:text-slate-400">Previously analyzed, but no ideas were found.</p>`;
             }
@@ -299,6 +302,7 @@ export function initStealTab() {
 
     const stealUrlInput = document.getElementById('steal-url-input');
     const sourceUrlInput = document.getElementById('steal-source-url-input');
+    const htmlInput = document.getElementById('steal-html-input');
 
     toggleHtmlLink.addEventListener('click', (e) => {
         e.preventDefault();
@@ -317,6 +321,17 @@ export function initStealTab() {
     document.getElementById('steal-btn').addEventListener('click', handleSteal);
     
     stealUrlInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSteal(); });
+
     stealUrlInput.addEventListener('input', handleUrlInput);
     sourceUrlInput.addEventListener('input', handleUrlInput);
+    
+    htmlInput.addEventListener('input', () => {
+        const url = sourceUrlInput.value.trim();
+        const html = htmlInput.value.trim();
+        if (url && html) {
+            const htmlCacheKey = `stolen_html_${url}`;
+            localStorage.setItem(htmlCacheKey, html);
+            console.log(`Saved raw HTML for [${url}] on paste.`);
+        }
+    });
 }
