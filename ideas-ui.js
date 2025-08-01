@@ -1,4 +1,4 @@
-// ideas-ui.js v2.02 remove slider +fix
+// ideas-ui.js v2.03 card
 import { getState } from './ideas-state.js';
 
 const elements = {};
@@ -463,18 +463,22 @@ export function renderIdeasListUI(data, sourceUrl = '', favoriteTitles = [], ded
         const analyzeBtnClass = isFavorite ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-purple-600 hover:bg-purple-700';
 
         return `
-        <div class="bg-white dark:bg-slate-800 p-5 rounded-lg shadow-md border-l-4 ${cardBorderClass} transition-all duration-300">
-            <div class="flex justify-between items-start gap-4">
-                <div>
-                    <span class="text-xs font-semibold uppercase px-2 py-1 rounded-full ${labelBgClass} ${labelTextClass}">Stolen Idea</span>
-                    <h3 class="text-xl font-bold mt-2 text-gray-900 dark:text-white">${idea.title}</h3>
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-lg shadow-md border-l-4 ${cardBorderClass} transition-all duration-300 flex flex-col h-full">
+            <div class="flex-grow">
+                <div class="flex justify-between items-start gap-4">
+                    <div>
+                        <span class="text-xs font-semibold uppercase px-2 py-1 rounded-full ${labelBgClass} ${labelTextClass}">Stolen Idea</span>
+                        <h3 class="text-xl font-bold mt-2 text-gray-900 dark:text-white">${idea.title}</h3>
+                    </div>
+                    <button class="favorite-btn p-1 rounded-full flex-shrink-0" data-idea-title="${encodeURIComponent(idea.title)}">
+                        <svg class="w-6 h-6 ${starClass} transition-colors" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                    </button>
                 </div>
-                <button class="favorite-btn p-1 rounded-full flex-shrink-0" data-idea-title="${encodeURIComponent(idea.title)}">
-                    <svg class="w-6 h-6 ${starClass} transition-colors" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
-                </button>
+                <p class="text-gray-600 dark:text-slate-300 mt-2">${idea.description}</p>
             </div>
-            <p class="text-gray-600 dark:text-slate-300 mt-2">${idea.description}</p>
-            <button class="deep-analyze-btn mt-2 text-xs text-white font-semibold py-1 px-3 rounded-md ${analyzeBtnClass}" data-idea='${JSON.stringify(idea)}'>Deep Analyze 🔬</button>
+            <div class="mt-4">
+                <button class="deep-analyze-btn text-xs text-white font-semibold py-1 px-3 rounded-md ${analyzeBtnClass}" data-idea='${JSON.stringify(idea)}'>Deep Analyze 🔬</button>
+            </div>
         </div>
         `;
     };
@@ -488,7 +492,7 @@ export function renderIdeasListUI(data, sourceUrl = '', favoriteTitles = [], ded
                     <span>★ Favorites <span class="text-sm font-normal text-gray-500 dark:text-slate-400">(${favoriteIdeas.length} ideas)</span></span>
                     <span class="text-gray-400 text-2xl transition-transform duration-300 transform group-open:rotate-180">▼</span>
                 </summary>
-                <div class="mt-4 space-y-4">
+                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     ${favoriteIdeas.map(renderIdeaCard).join('')}
                 </div>
             </details>
@@ -504,16 +508,15 @@ export function renderIdeasListUI(data, sourceUrl = '', favoriteTitles = [], ded
     for (const groupLabel of sortedGroupLabels) {
         const ideasInGroup = nonFavoriteGroups[groupLabel];
         if (ideasInGroup.length === 0) continue;
-        const groupContent = ideasInGroup.map(renderIdeaCard).join('');
         const isOpen = groupLabel !== 'Ungrouped';
         groupsHtml += `
             <details class="group-container bg-gray-50 dark:bg-slate-800/50 p-4 rounded-lg" ${isOpen ? 'open' : ''}>
                 <summary class="list-none cursor-pointer font-bold text-xl text-indigo-700 dark:text-sky-400 flex justify-between items-center">
                     <span>${groupLabel} <span class="text-sm font-normal text-gray-500 dark:text-slate-400">(${ideasInGroup.length} ideas)</span></span>
-                    <span class="text-gray-400 text-2xl transition-transform duration-300 transform group-open:rotate-180">▼</span>
+                    <span class="text-gray-400 text-xl transition-transform duration-300 transform group-open:rotate-180">▼</span>
                 </summary>
-                <div class="mt-4 space-y-4">
-                    ${groupContent}
+                <div class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    ${ideasInGroup.map(renderIdeaCard).join('')}
                 </div>
             </details>
         `;
