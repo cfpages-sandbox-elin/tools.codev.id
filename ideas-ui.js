@@ -1,4 +1,4 @@
-// ideas-ui.js v2.02 sort favorite
+// ideas-ui.js v2.02 manual dedupe
 import { getState } from './ideas-state.js';
 
 const elements = {};
@@ -436,7 +436,21 @@ export function renderIdeasListUI(ideas, sourceUrl = '', favoriteTitles = []) {
         const favoriteText = favoriteCount > 0 
             ? ` <span class="font-bold text-yellow-400">${favoriteCount} ★</span> favorited.` 
             : '';
-        counterHtml = `<div class="mb-6 text-center text-lg text-gray-700 dark:text-slate-300"><p>🎉 <span class="font-bold text-indigo-500 dark:text-sky-400">${ideas.length}</span> ${ideaText} stolen from <span class="font-semibold break-all">${sourceUrl}</span>!${favoriteText}</p></div>`;
+        
+        const deduplicateButtonHtml = `
+            <button class="deduplicate-btn ml-4 text-sm bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-700 dark:text-slate-200 font-semibold py-1 px-3 rounded-md transition-colors"
+                    data-source-url="${sourceUrl}">
+                Deduplicate 🧹
+            </button>
+        `;
+
+        counterHtml = `
+            <div class="mb-6 text-center text-lg text-gray-700 dark:text-slate-300 flex justify-center items-center">
+                <p>
+                    🎉 <span class="font-bold text-indigo-500 dark:text-sky-400">${ideas.length}</span> ${ideaText} stolen from <span class="font-semibold break-all">${sourceUrl}</span>!<br>${favoriteText}
+                </p>
+                ${deduplicateButtonHtml}
+            </div>`;
     }
 
     const ideasHtml = ideas.map(idea => {

@@ -1,4 +1,4 @@
-// ideas-steal.js v2.02 protect favorite +slight fix +healing
+// ideas-steal.js v2.02 manual dedupe
 import { scrapeUrl, getAiAnalysis } from './ideas-api.js';
 import { extractAndParseJson } from './ideas.js';
 import { createStealIdeasPrompt } from './ideas-prompts.js';
@@ -167,23 +167,16 @@ function handleUrlInput() {
 
     const ideasCacheKey = `stolen_ideas_${url}`;
     const favoritesCacheKey = `stolen_favorites_${url}`;
-    const cachedIdeasJSON = localStorage.getItem(ideasCacheKey);
+    const cachedIdeasJSON = localStorage.getItem(ideasCacheKey); // Just get the raw JSON
     const cachedFavorites = JSON.parse(localStorage.getItem(favoritesCacheKey) || '[]');
 
     if (cachedIdeasJSON) {
         updateStealButtonState(true);
         try {
             const ideasFromCache = JSON.parse(cachedIdeasJSON);
-            
-            const cleanIdeas = deduplicateIdeas(ideasFromCache, cachedFavorites);
-
-            if (cleanIdeas.length < ideasFromCache.length) {
-                console.log(`Self-healing: Cleaned ${ideasFromCache.length - cleanIdeas.length} duplicates from cache for ${url}`);
-                localStorage.setItem(ideasCacheKey, JSON.stringify(cleanIdeas));
-            }
-            
-            if (cleanIdeas.length > 0) {
-                resultsArea.innerHTML = renderIdeasListUI(cleanIdeas, url, cachedFavorites);
+            const resultsArea = document.getElementById('steal-results-area');
+            if (ideasFromCache.length > 0) {
+                resultsArea.innerHTML = renderIdeasListUI(ideasFromCache, url, cachedFavorites);
             } else {
                 resultsArea.innerHTML = `<p class="text-center text-gray-500 dark:text-slate-400">Previously analyzed, but no ideas were found.</p>`;
             }
@@ -194,7 +187,49 @@ function handleUrlInput() {
         }
     } else {
         updateStealButtonState(false);
-        resultsArea.innerHTML = '';
+        document.getElementById('steal-results-area').innerHTML = '';
+    }
+}
+
+async function handleDeduplicateClick(event) {
+    const button = event.target.closest('.deduplicate-btn');
+    if (!button) return;
+
+    const url = button.dataset.sourceUrl;
+    if (!url) return;
+
+    button.disabled = true;
+    button.textContent = 'Working...';
+
+    const ideasCacheKey = `stolen_ideas_${url}`;
+    const favoritesCacheKey = `stolen_favorites_${url}`;
+
+    const ideasFromCache = JSON.parse(localStorage.getItem(ideasCacheKey) || '[]');
+    const favorites = JSON.parse(localStorage.getItem(favoritesCacheKey) || '[]');
+
+    const cleanIdeas = deduplicateIdeas(ideasFromCache, favorites);
+    const numRemoved = ideasFromCache.length - cleanIdeas.length;
+
+    // Save the cleaned list back to the cache
+    localStorage.setItem(ideasCacheKey, JSON.stringify(cleanIdeas));
+
+    // Re-render the entire results area with the new data
+    const resultsArea = document.getElementById('steal-results-area');
+    resultsArea.innerHTML = renderIdeasListUI(cleanIdeas, url, favorites);
+    
+    // Provide feedback on the new button after re-render
+    const newButton = resultsArea.querySelector('.deduplicate-btn');
+    if (newButton) {
+        newButton.disabled = true;
+        if (numRemoved > 0) {
+            newButton.textContent = `✅ ${numRemoved} Removed!`;
+        } else {
+            newButton.textContent = `✅ No duplicates found!`;
+        }
+        setTimeout(() => {
+            newButton.disabled = false;
+            newButton.innerHTML = 'Deduplicate 🧹';
+        }, 2500);
     }
 }
 
@@ -409,7 +444,13 @@ export function initStealTab() {
     });
     
     document.getElementById('steal-btn').addEventListener('click', handleSteal);
-    resultsArea.addEventListener('click', handleFavoriteClick);
+    resultsArea.addEventListener('click', (e) => {
+        if (e.target.closest('.favorite-btn')) {
+            handleFavoriteClick(e);
+        } else if (e.target.closest('.deduplicate-btn')) {
+            handleDeduplicateClick(e);
+        }
+    });
     
     stealUrlInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSteal(); });
 
