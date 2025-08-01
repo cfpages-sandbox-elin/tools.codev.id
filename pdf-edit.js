@@ -1,4 +1,4 @@
-// file pdf-edit.js
+// file pdf-edit.js add image
 document.addEventListener('DOMContentLoaded', () => {
     const { PDFDocument, rgb, StandardFonts } = PDFLib;
 
@@ -9,6 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const toolbar = document.getElementById('edit-toolbar');
     const brushTool = document.getElementById('edit-tool-brush');
     const textTool = document.getElementById('edit-tool-text');
+    const imageTool = document.getElementById('edit-tool-image'); // New
+    const imageUploadInput = document.getElementById('edit-image-upload'); // New
     const eraserTool = document.getElementById('edit-tool-eraser');
     const colorPicker = document.getElementById('edit-color-picker');
     const sizeSlider = document.getElementById('edit-size-slider');
@@ -25,9 +27,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let baseCanvases = [];
     let overlayCanvases = [];
     let textEdits = [];
+    let imageEdits = []; // New
     let previousTool = 'brush';
     let isDrawing = false;
-    let activeTool = 'brush'; // 'brush', 'text', 'eraser'
+    let activeTool = 'brush'; // 'brush', 'text', 'eraser', 'eyedropper'
     let brushColor = '#ef4444';
     let brushSize = 5;
     let lastPos = { x: 0, y: 0 };
@@ -38,6 +41,8 @@ document.addEventListener('DOMContentLoaded', () => {
     textTool.addEventListener('click', () => setActiveTool('text'));
     eraserTool.addEventListener('click', () => setActiveTool('eraser'));
     eyedropperTool.addEventListener('click', () => setActiveTool('eyedropper'));
+    imageTool.addEventListener('click', () => imageUploadInput.click()); // New
+    imageUploadInput.addEventListener('change', handleImageUpload); // New
     colorPicker.addEventListener('input', (e) => brushColor = e.target.value);
     sizeSlider.addEventListener('input', (e) => {
         brushSize = e.target.value;
@@ -51,6 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
             previousTool = activeTool;
         }
         activeTool = tool;
+        // The image tool is just a trigger, not a persistent state, so it's not included here.
         brushTool.classList.toggle('active-tool', tool === 'brush');
         textTool.classList.toggle('active-tool', tool === 'text');
         eraserTool.classList.toggle('active-tool', tool === 'eraser');
@@ -73,6 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
         baseCanvases = [];
         overlayCanvases = [];
         textEdits = [];
+        imageEdits = [];
         toolbar.classList.add('hidden');
 
         try {
@@ -96,20 +103,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const page = await pdfDoc.getPage(pageNum);
         const viewport = page.getViewport({ scale: 1.5 }); // Higher scale for better quality
 
-        // Create a wrapper for each page
         const pageWrapper = document.createElement('div');
         pageWrapper.className = 'page-wrapper';
         pageWrapper.style.width = `${viewport.width}px`;
         pageWrapper.style.height = `${viewport.height}px`;
+        pageWrapper.dataset.pageIndex = pageNum - 1;
 
-        // Base canvas for the PDF page content
         const baseCanvas = document.createElement('canvas');
         baseCanvas.width = viewport.width;
         baseCanvas.height = viewport.height;
-        const baseCtx = baseCanvas.getContext('2d');
         baseCanvases[pageNum - 1] = baseCanvas;
 
-        // Overlay canvas for drawing
         const overlayCanvas = document.createElement('canvas');
         overlayCanvas.className = 'edit-overlay-canvas';
         overlayCanvas.width = viewport.width;
@@ -120,10 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
         pageWrapper.appendChild(overlayCanvas);
         previewContainer.appendChild(pageWrapper);
 
-        // Render the PDF page content
-        await page.render({ canvasContext: baseCtx, viewport: viewport }).promise;
-
-        // Add event listeners to the overlay
+        await page.render({ canvasContext: baseCanvas.getContext('2d'), viewport: viewport }).promise;
         addDrawingListeners(overlayCanvas);
     }
 
@@ -155,30 +156,158 @@ document.addEventListener('DOMContentLoaded', () => {
             if (activeTool === 'text') {
                 const text = prompt('Enter text to add:');
                 if (text) {
-                    // Store the text edit object
-                    textEdits.push({
-                        text,
-                        pos,
-                        pageIndex,
-                        font: fontSelect.value,
-                        color: brushColor,
-                        size: brushSize * 1.5 // Scale for better visual size
-                    });
-                    // Draw a preview on the overlay canvas
+                    textEdits.push({ text, pos, pageIndex, font: fontSelect.value, color: brushColor, size: brushSize * 1.5 });
                     addTextToCanvas(canvas, text, pos, fontSelect.value, brushColor, brushSize * 1.5);
                 }
             } else if (activeTool === 'eyedropper') {
-                const baseCanvas = baseCanvases[pageIndex];
-                const baseCtx = baseCanvas.getContext('2d');
+                const baseCtx = baseCanvases[pageIndex].getContext('2d');
                 const p = baseCtx.getImageData(pos.x, pos.y, 1, 1).data;
                 const hex = rgbToHex(p[0], p[1], p[2]);
                 colorPicker.value = hex;
                 brushColor = hex;
-                // Switch back to the previous tool
                 setActiveTool(previousTool);
             }
         });
     }
+
+    // --- NEW: Image Editing Functions ---
+
+    function handleImageUpload(e) {
+        const file = e.target.files[0];
+        if (!file || !file.type.startsWith('image/')) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const dataUrl = event.target.result;
+            const img = new Image();
+            img.onload = () => {
+                // Find current page in view to add the image to
+                const pageWrappers = [...document.querySelectorAll('.page-wrapper')];
+                let targetPageWrapper = pageWrappers.find(pw => {
+                    const rect = pw.getBoundingClientRect();
+                    return rect.top < window.innerHeight && rect.bottom > 0;
+                }) || pageWrappers[0];
+
+                if (!targetPageWrapper) {
+                     showStatus('error', 'Could not find a page to add the image to.');
+                     return;
+                }
+
+                const pageIndex = parseInt(targetPageWrapper.dataset.pageIndex, 10);
+                const initialWidth = 200;
+                const aspectRatio = img.height / img.width;
+
+                const edit = {
+                    id: `img-${Date.now()}`,
+                    pageIndex,
+                    dataUrl,
+                    x: 50,
+                    y: 50,
+                    width: initialWidth,
+                    height: initialWidth * aspectRatio,
+                    aspectRatio: aspectRatio,
+                };
+                imageEdits.push(edit);
+                createImageOnPage(edit);
+            };
+            img.src = dataUrl;
+        };
+        reader.readAsDataURL(file);
+        e.target.value = ''; // Reset input
+    }
+
+    function createImageOnPage(edit) {
+        const pageWrapper = document.querySelector(`.page-wrapper[data-page-index="${edit.pageIndex}"]`);
+        if (!pageWrapper) return;
+        
+        const wrapper = document.createElement('div');
+        wrapper.id = edit.id;
+        wrapper.className = 'edit-object-wrapper';
+        wrapper.style.left = `${edit.x}px`;
+        wrapper.style.top = `${edit.y}px`;
+        wrapper.style.width = `${edit.width}px`;
+        wrapper.style.height = `${edit.height}px`;
+
+        const img = document.createElement('img');
+        img.src = edit.dataUrl;
+        wrapper.appendChild(img);
+
+        const resizeHandle = document.createElement('div');
+        resizeHandle.className = 'resize-handle br';
+        wrapper.appendChild(resizeHandle);
+        
+        pageWrapper.appendChild(wrapper);
+        
+        addMoveAndResizeListeners(wrapper, edit);
+    }
+    
+    function addMoveAndResizeListeners(element, edit) {
+        let isDragging = false;
+        let isResizing = false;
+        let startX, startY, startLeft, startTop, startWidth, startHeight;
+
+        const onMouseDown = (e) => {
+            e.stopPropagation();
+            isDragging = true;
+            element.classList.add('selected');
+            startX = e.clientX;
+            startY = e.clientY;
+            startLeft = element.offsetLeft;
+            startTop = element.offsetTop;
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        };
+
+        const onResizeMouseDown = (e) => {
+            e.stopPropagation();
+            isResizing = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            startWidth = element.offsetWidth;
+            startHeight = element.offsetHeight;
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        };
+        
+        const onMouseMove = (e) => {
+            if (isDragging) {
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                element.style.left = `${startLeft + dx}px`;
+                element.style.top = `${startTop + dy}px`;
+            } else if (isResizing) {
+                const dx = e.clientX - startX;
+                const newWidth = startWidth + dx;
+                if (newWidth > 20) { // min width
+                    element.style.width = `${newWidth}px`;
+                    element.style.height = `${newWidth * edit.aspectRatio}px`;
+                }
+            }
+        };
+
+        const onMouseUp = () => {
+            if (isDragging || isResizing) {
+                // Update the master edit object in the array
+                const currentEdit = imageEdits.find(item => item.id === edit.id);
+                if (currentEdit) {
+                    currentEdit.x = element.offsetLeft;
+                    currentEdit.y = element.offsetTop;
+                    currentEdit.width = element.offsetWidth;
+                    currentEdit.height = element.offsetHeight;
+                }
+            }
+            isDragging = false;
+            isResizing = false;
+            element.classList.remove('selected');
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        };
+
+        element.addEventListener('mousedown', onMouseDown);
+        element.querySelector('.resize-handle').addEventListener('mousedown', onResizeMouseDown);
+    }
+
+    // --- End of Image Editing Functions ---
 
     function getMousePos(canvas, evt) {
         const rect = canvas.getBoundingClientRect();
@@ -197,14 +326,16 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.lineWidth = brushSize;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
+        ctx.globalCompositeOperation = activeTool === 'eraser' ? 'destination-out' : 'source-over';
         ctx.stroke();
+        ctx.globalCompositeOperation = 'source-over';
     }
     
     function addTextToCanvas(canvas, text, pos, font, color, size) {
         const ctx = canvas.getContext('2d');
-        ctx.font = `${size}px "${font}"`; // Use selected font for preview
+        ctx.font = `${size}px "${font}"`;
         ctx.fillStyle = color;
-        ctx.textBaseline = 'top'; // Align text consistently
+        ctx.textBaseline = 'top';
         ctx.fillText(text, pos.x, pos.y);
     }
 
@@ -218,70 +349,71 @@ document.addEventListener('DOMContentLoaded', () => {
             const pages = pdfDoc.getPages();
             const fontCache = new Map();
 
-            // Helper to load/get fonts
             const getFont = async (fontName) => {
                 if (fontCache.has(fontName)) return fontCache.get(fontName);
-
                 let font;
-                if (Object.values(StandardFonts).includes(fontName)) {
-                    font = await pdfDoc.embedFont(fontName);
-                } else {
-                    // Fetch Google Font
-                    const fontUrl = `https://fonts.gstatic.com/s/${fontName.toLowerCase().replace(/\s/g, '')}/v30/KFOlCnqEu92Fr1MmEU9fBBc4.ttf`; // A common variant URL, may need adjustment for other weights
-                    try {
+                try {
+                    if (Object.values(StandardFonts).includes(fontName)) {
+                        font = await pdfDoc.embedFont(fontName);
+                    } else {
+                        const fontUrl = `https://fonts.gstatic.com/s/${fontName.toLowerCase().replace(/\s/g, '')}/v30/KFOlCnqEu92Fr1MmEU9fBBc4.ttf`;
                         const fontBytes = await fetch(fontUrl).then(res => res.arrayBuffer());
                         font = await pdfDoc.embedFont(fontBytes);
-                    } catch(e) {
-                        console.warn(`Could not fetch font ${fontName}. Falling back to Helvetica.`, e);
-                        font = await pdfDoc.embedFont(StandardFonts.Helvetica);
                     }
+                } catch(e) {
+                    console.warn(`Could not fetch font ${fontName}. Falling back to Helvetica.`, e);
+                    font = await pdfDoc.embedFont(StandardFonts.Helvetica);
                 }
                 fontCache.set(fontName, font);
                 return font;
             };
 
-            // 1. Embed drawings from overlay canvases
+            // Layer 1: Drawings from overlay canvases
             for (let i = 0; i < pages.length; i++) {
-                const page = pages[i];
                 const overlay = overlayCanvases[i];
                 if (!overlay) continue;
-
-                const isOverlayEmpty = !overlay.getContext('2d')
-                    .getImageData(0, 0, overlay.width, overlay.height).data
-                    .some(channel => channel !== 0);
-
+                const isOverlayEmpty = !overlay.getContext('2d').getImageData(0, 0, overlay.width, overlay.height).data.some(channel => channel !== 0);
                 if (isOverlayEmpty) continue;
 
                 const overlayPng = await pdfDoc.embedPng(overlay.toDataURL());
-                page.drawImage(overlayPng, {
-                    x: 0,
-                    y: 0,
-                    width: page.getWidth(),
-                    height: page.getHeight(),
-                });
+                pages[i].drawImage(overlayPng, { x: 0, y: 0, width: pages[i].getWidth(), height: pages[i].getHeight() });
             }
 
-            // 2. Embed text edits as real text
+            // Layer 2: Images
+            for (const edit of imageEdits) {
+                const page = pages[edit.pageIndex];
+                const imageBytes = await fetch(edit.dataUrl).then(res => res.arrayBuffer());
+                const embeddedImg = edit.dataUrl.startsWith('data:image/png')
+                    ? await pdfDoc.embedPng(imageBytes)
+                    : await pdfDoc.embedJpg(imageBytes);
+
+                const canvasWidth = baseCanvases[edit.pageIndex].width;
+                const scale = page.getWidth() / canvasWidth;
+
+                const x = edit.x * scale;
+                const y = page.getHeight() - (edit.y * scale) - (edit.height * scale); // Convert top-left to bottom-left
+                const width = edit.width * scale;
+                const height = edit.height * scale;
+
+                page.drawImage(embeddedImg, { x, y, width, height });
+            }
+
+            // Layer 3: Text
             for (const edit of textEdits) {
                 const page = pages[edit.pageIndex];
                 const font = await getFont(edit.font);
-
-                // Convert hex color to RGB
                 const r = parseInt(edit.color.slice(1, 3), 16) / 255;
                 const g = parseInt(edit.color.slice(3, 5), 16) / 255;
                 const b = parseInt(edit.color.slice(5, 7), 16) / 255;
-
-                // pdf-lib's y-origin is bottom-left, canvas's is top-left
-                const y = page.getHeight() - edit.pos.y;
-
-                page.drawText(edit.text, {
-                    x: edit.pos.x,
-                    y: y,
-                    font: font,
-                    size: edit.size,
-                    color: rgb(r, g, b),
-                    lineHeight: edit.size * 1.2, // Add line height for better layout
-                });
+                
+                const canvasWidth = baseCanvases[edit.pageIndex].width;
+                const scale = page.getWidth() / canvasWidth;
+                
+                const x = edit.pos.x * scale;
+                const y = page.getHeight() - (edit.pos.y * scale);
+                const size = edit.size * scale;
+                
+                page.drawText(edit.text, { x, y: y - size, font, size, color: rgb(r, g, b) });
             }
 
             const pdfBytes = await pdfDoc.save();
@@ -293,14 +425,13 @@ document.addEventListener('DOMContentLoaded', () => {
             link.download = `edited-document.pdf`;
             link.textContent = 'Download Edited PDF';
             link.className = 'text-green-600 font-bold underline';
-
-            showStatus('success', '');
-            statusDiv.innerHTML = ''; // Clear status before adding link
+            
+            statusDiv.innerHTML = '';
             statusDiv.appendChild(link);
             
         } catch(err) {
             console.error("Save PDF Error:", err);
-            showStatus('error', 'Failed to save the PDF.');
+            showStatus('error', 'Failed to save the PDF. Could not embed resources.');
         } finally {
             saveButton.disabled = false;
         }
