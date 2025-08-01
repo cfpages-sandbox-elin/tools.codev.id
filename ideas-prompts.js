@@ -1,4 +1,4 @@
-// ideas-prompts.js v2.01 execute plan prompts
+// ideas-prompts.js v2.01 steal bigger
 function formatTranscriptWithTimestamps(timedTextArray) {
     if (!timedTextArray || !Array.isArray(timedTextArray)) return "";
     return timedTextArray.map(line => `[${line.start.toFixed(1)}s] ${line.text}`).join('\n');
@@ -241,7 +241,7 @@ export function createStealIdeasPrompt(pageText) {
     ]
 
     --- WEBPAGE TEXT START ---
-    ${pageText.substring(0, 15000)}
+    ${pageText.substring(0, 90000)}
     --- WEBPAGE TEXT END ---
 
     Now, generate the JSON array of stolen ideas based on the text provided. If no ideas are found, return an empty array [].
