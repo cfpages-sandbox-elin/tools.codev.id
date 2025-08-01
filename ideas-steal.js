@@ -1,4 +1,4 @@
-// ideas-steal.js v2.00 re-steal
+// ideas-steal.js v2.01 re-steal-html
 import { scrapeUrl, getAiAnalysis } from './ideas-api.js';
 import { extractAndParseJson } from './ideas.js';
 import { createStealIdeasPrompt } from './ideas-prompts.js';
@@ -21,10 +21,33 @@ function renderInitialUI(container) {
     container.innerHTML = `
         <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md">
             <h2 class="text-2xl font-semibold mb-4 text-indigo-500 dark:text-sky-300">Steal Ideas From a URL 🕵️</h2>
-            <p class="text-gray-600 dark:text-slate-300 mb-4">Enter any article or landing page. We'll scrape its text and use AI to find hidden business ideas.</p>
+            <p class="text-gray-600 dark:text-slate-300 mb-4">Enter any article, landing page, or paste its raw HTML. We'll use AI to find hidden business ideas.</p>
             
-            <div class="flex flex-col sm:flex-row gap-3">
-                <input type="text" id="steal-url-input" class="flex-grow bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-md p-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g., https://www.example.com/article">
+            <!-- URL Input Container -->
+            <div id="steal-url-container">
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <input type="text" id="steal-url-input" class="flex-grow bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-md p-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g., https://www.example.com/article">
+                </div>
+                <div class="text-right mt-2">
+                    <a href="#" id="toggle-html-input" class="text-sm text-indigo-600 dark:text-sky-400 hover:underline">...or paste raw HTML</a>
+                </div>
+            </div>
+
+            <!-- Raw HTML Input Container (hidden by default) -->
+            <div id="steal-html-container" class="hidden">
+                 <div class="space-y-3">
+                    <div>
+                        <label for="steal-source-url-input" class="block text-sm font-medium text-gray-700 dark:text-slate-300">Original URL (for caching)</label>
+                        <input type="text" id="steal-source-url-input" class="mt-1 block w-full bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-md p-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500" placeholder="https://www.example.com/protected-page">
+                    </div>
+                    <div>
+                        <label for="steal-html-input" class="block text-sm font-medium text-gray-700 dark:text-slate-300">Paste Raw HTML Here</label>
+                        <textarea id="steal-html-input" rows="6" class="mt-1 block w-full bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-md p-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500" placeholder="<!DOCTYPE html>..."></textarea>
+                    </div>
+                </div>
+                <div class="text-right mt-2">
+                    <a href="#" id="toggle-url-input" class="text-sm text-indigo-600 dark:text-sky-400 hover:underline">...or use a URL instead</a>
+                </div>
             </div>
 
             <div class="mt-4 p-4 bg-gray-50 dark:bg-slate-800/50 rounded-lg border dark:border-slate-700">
@@ -69,8 +92,12 @@ function updateStealButtonState(isCached) {
 
 function handleUrlInput() {
     const urlInput = document.getElementById('steal-url-input');
+    const sourceUrlInput = document.getElementById('steal-source-url-input');
     const resultsArea = document.getElementById('steal-results-area');
-    const url = urlInput.value.trim();
+    
+    // Use the URL from whichever input is currently visible and being used
+    const isHtmlMode = document.getElementById('steal-html-container').style.display !== 'none';
+    const url = isHtmlMode ? sourceUrlInput.value.trim() : urlInput.value.trim();
 
     if (!url) {
         resultsArea.innerHTML = '';
@@ -89,7 +116,7 @@ function handleUrlInput() {
                 console.log(`Loading stolen ideas for [${url}] from cache.`);
                 resultsArea.innerHTML = renderIdeasListUI(ideas);
             } else {
-                resultsArea.innerHTML = `<p class="text-center text-gray-500 dark:text-slate-400">Previously analyzed, but no ideas were found on this page.</p>`;
+                resultsArea.innerHTML = `<p class="text-center text-gray-500 dark:text-slate-400">Previously analyzed, but no ideas were found for this content.</p>`;
             }
         } catch (e) {
             console.error("Failed to parse cached stolen ideas:", e);
@@ -102,25 +129,57 @@ function handleUrlInput() {
     }
 }
 
+function extractTextFromHtml(htmlString) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlString, 'text/html');
+    return doc.body.textContent || "";
+}
+
 async function handleSteal() {
-    const urlInput = document.getElementById('steal-url-input');
     const resultsArea = document.getElementById('steal-results-area');
     const stealBtn = document.getElementById('steal-btn');
-    const url = urlInput.value.trim();
+    
+    const urlInput = document.getElementById('steal-url-input');
+    const htmlInput = document.getElementById('steal-html-input');
+    const sourceUrlInput = document.getElementById('steal-source-url-input');
 
-    if (!url) {
-        resultsArea.innerHTML = `<div class="bg-red-100 dark:bg-red-900/50 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 p-4 rounded-lg">Please enter a URL.</div>`;
-        return;
-    }
-
-    const cacheKey = `stolen_ideas_${url}`;
+    const isHtmlMode = document.getElementById('steal-html-container').style.display !== 'none';
+    
+    let url;
+    let textPromise;
 
     stealBtn.disabled = true;
-    stealBtn.innerHTML = 'Scraping...';
     resultsArea.innerHTML = `<div class="flex justify-center items-center py-10"><div class="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-500"></div></div>`;
 
+    if (isHtmlMode) {
+        url = sourceUrlInput.value.trim();
+        const rawHtml = htmlInput.value.trim();
+        if (!url || !rawHtml) {
+            resultsArea.innerHTML = `<div class="bg-red-100 dark:bg-red-900/50 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 p-4 rounded-lg">Please provide both the original URL and the raw HTML content.</div>`;
+            stealBtn.disabled = false;
+            return;
+        }
+        stealBtn.innerHTML = 'Parsing HTML...';
+        // The "scraping" is just local parsing, so it's instant. We wrap it in a promise to maintain a consistent code structure.
+        textPromise = Promise.resolve(extractTextFromHtml(rawHtml));
+    } else {
+        url = urlInput.value.trim();
+        if (!url) {
+            resultsArea.innerHTML = `<div class="bg-red-100 dark:bg-red-900/50 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 p-4 rounded-lg">Please enter a URL.</div>`;
+            stealBtn.disabled = false;
+            return;
+        }
+        stealBtn.innerHTML = 'Scraping...';
+        textPromise = scrapeUrl(url);
+    }
+    
+    const cacheKey = `stolen_ideas_${url}`;
+
     try {
-        const text = await scrapeUrl(url);
+        const text = await textPromise;
+        if (!text) {
+             throw new Error("Could not extract any text from the provided source.");
+        }
         stealBtn.innerHTML = 'Analyzing...';
 
         const provider = document.getElementById('steal-ai-provider-select').value;
@@ -146,6 +205,7 @@ async function handleSteal() {
 
     } catch (error) {
         resultsArea.innerHTML = `<div class="bg-red-100 dark:bg-red-900/50 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 p-4 rounded-lg">Error: ${error.message}</div>`;
+        updateStealButtonState(false); // An error means it wasn't cached successfully
     } finally {
         stealBtn.disabled = false;
     }
@@ -183,7 +243,11 @@ function populateStealSelectors() {
         return `<option value="${key}">${providerName}</option>`;
     }).join('');
 
-    providerSelect.value = 'groq';
+    // Try to default to groq, if not available, use the first in the list
+    if (freeProviders['groq']) {
+        providerSelect.value = 'groq';
+    }
+
     updateStealModelDropdown();
 
     providerSelect.addEventListener('change', updateStealModelDropdown);
@@ -191,15 +255,40 @@ function populateStealSelectors() {
 
 export function initStealTab() {
     const stealContainer = document.getElementById('steal-content');
+    if (!stealContainer) return;
     renderInitialUI(stealContainer);
     
     populateStealSelectors();
+    
+    const urlContainer = document.getElementById('steal-url-container');
+    const htmlContainer = document.getElementById('steal-html-container');
+    const toggleHtmlLink = document.getElementById('toggle-html-input');
+    const toggleUrlLink = document.getElementById('toggle-url-input');
 
     const stealUrlInput = document.getElementById('steal-url-input');
+    const sourceUrlInput = document.getElementById('steal-source-url-input');
+
+    toggleHtmlLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        urlContainer.classList.add('hidden');
+        htmlContainer.classList.remove('hidden');
+        handleUrlInput(); // Check for cache based on the (possibly empty) source URL field
+    });
+    
+    toggleUrlLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        htmlContainer.classList.add('hidden');
+        urlContainer.classList.remove('hidden');
+        handleUrlInput(); // Check for cache based on the URL field
+    });
     
     document.getElementById('steal-btn').addEventListener('click', handleSteal);
+    
     stealUrlInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') handleSteal();
     });
+    
+    // Check cache as user types in either URL field
     stealUrlInput.addEventListener('input', handleUrlInput);
+    sourceUrlInput.addEventListener('input', handleUrlInput);
 }
