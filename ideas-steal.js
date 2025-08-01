@@ -1,4 +1,4 @@
-// ideas-steal.js v2.02 add favorite
+// ideas-steal.js v2.02 add favorite +slight fix
 import { scrapeUrl, getAiAnalysis } from './ideas-api.js';
 import { extractAndParseJson } from './ideas.js';
 import { createStealIdeasPrompt } from './ideas-prompts.js';
@@ -106,7 +106,9 @@ function handleUrlInput() {
 
     const htmlCacheKey = `stolen_html_${url}`;
     const cachedHtml = localStorage.getItem(htmlCacheKey);
-    if (cachedHtml && !htmlContainer.classList.contains('hidden')) {
+    const isHtmlMode = !htmlContainer.classList.contains('hidden');
+
+    if (cachedHtml && !isHtmlMode) {
         console.log(`Found cached HTML for [${url}]. Populating and switching view.`);
         htmlInput.value = cachedHtml;
         sourceUrlInput.value = url;
