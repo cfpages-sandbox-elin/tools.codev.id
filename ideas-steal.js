@@ -1,4 +1,4 @@
-// ideas-steal.js v2.04 re-steal-html with PARALLEL chunk processing
+// ideas-steal.js v2.05 re-steal-html with PARALLEL processing, provider SELECTION, and GRACEFUL failure
 import { scrapeUrl, getAiAnalysis } from './ideas-api.js';
 import { extractAndParseJson } from './ideas.js';
 import { createStealIdeasPrompt } from './ideas-prompts.js';
@@ -49,10 +49,10 @@ function renderInitialUI(container) {
             </div>
 
             <div class="mt-4 p-4 bg-gray-50 dark:bg-slate-800/50 rounded-lg border dark:border-slate-700">
-                <h3 class="text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Select AI Providers</h3>
-                <p class="text-xs text-gray-500 dark:text-slate-400 mb-2">Analysis will be run in parallel across all available free providers.</p>
-                <div id="steal-provider-list" class="text-xs text-gray-600 dark:text-slate-300">
-                    <!-- Provider list will be populated by JS -->
+                <h3 class="text-sm font-medium text-gray-700 dark:text-slate-300">Select AI Providers</h3>
+                <p class="text-xs text-gray-500 dark:text-slate-400 mb-2">Work will be distributed among the selected providers.</p>
+                <div id="steal-provider-checkboxes" class="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 mt-2">
+                    <!-- Checkboxes will be rendered here by JS -->
                 </div>
             </div>
 
@@ -85,8 +85,7 @@ function handleUrlInput() {
     const urlInput = document.getElementById('steal-url-input');
     const sourceUrlInput = document.getElementById('steal-source-url-input');
     const resultsArea = document.getElementById('steal-results-area');
-    
-    const isHtmlMode = document.getElementById('steal-html-container').style.display !== 'none';
+    const isHtmlMode = !document.getElementById('steal-html-container').classList.contains('hidden');
     const url = isHtmlMode ? sourceUrlInput.value.trim() : urlInput.value.trim();
 
     if (!url) {
@@ -136,6 +135,7 @@ function extractTextFromHtml(htmlString) {
     return doc.body.innerText || doc.body.textContent || "";
 }
 
+// --- THIS IS THE MAINLY UPDATED FUNCTION ---
 async function handleSteal() {
     const resultsArea = document.getElementById('steal-results-area');
     const stealBtn = document.getElementById('steal-btn');
@@ -177,57 +177,60 @@ async function handleSteal() {
         const fullText = await textPromise;
         if (!fullText) throw new Error("Could not extract any text from the source.");
 
-        // --- PARALLEL LOGIC START ---
-        
-        // 1. Get all available free providers and a representative model from each.
-        const { allAiProviders } = getState();
-        const freeProviders = Object.entries(allAiProviders)
-            .map(([key, providerData]) => {
-                const freeModel = providerData.models.find(m => isFree(m, key));
-                return freeModel ? { providerKey: key, modelId: freeModel.id, providerName: freeModel.provider } : null;
-            })
-            .filter(Boolean); // Remove nulls where no free model was found
+        // 1. Get the list of providers SELECTED by the user.
+        const selectedCheckboxes = document.querySelectorAll('#steal-provider-checkboxes input[type="checkbox"]:checked');
+        const selectedProviderKeys = Array.from(selectedCheckboxes).map(cb => cb.value);
 
-        if (freeProviders.length === 0) {
-            throw new Error("No free AI providers available for parallel processing. Please configure providers.");
+        if (selectedProviderKeys.length === 0) {
+            throw new Error("No AI providers selected. Please check at least one provider to run the analysis.");
         }
-        console.log(`Found ${freeProviders.length} free providers for parallel work:`, freeProviders.map(p=>p.providerName));
 
-        // 2. Create text chunks.
+        const { allAiProviders } = getState();
+        const availableProviders = selectedProviderKeys.map(key => {
+            const providerData = allAiProviders[key];
+            const freeModel = providerData.models.find(m => isFree(m, key));
+            return freeModel ? { providerKey: key, modelId: freeModel.id, providerName: freeModel.provider } : null;
+        }).filter(Boolean);
+
+        if (availableProviders.length === 0) {
+            throw new Error("None of the selected providers have a valid free model available.");
+        }
+        
         const chunkSize = 14000;
         const textChunks = [];
         for (let i = 0; i < fullText.length; i += chunkSize) {
             textChunks.push(fullText.substring(i, i + chunkSize));
         }
 
-        stealBtn.innerHTML = `Analyzing ${textChunks.length} chunks across ${freeProviders.length} providers...`;
+        stealBtn.innerHTML = `Analyzing ${textChunks.length} chunks across ${availableProviders.length} providers...`;
         
-        // 3. Create an array of promises, distributing chunks across providers.
         const analysisPromises = textChunks.map((chunk, index) => {
-            const provider = freeProviders[index % freeProviders.length]; // Round-robin assignment
+            const provider = availableProviders[index % availableProviders.length];
+            console.log(`Assigning chunk ${index + 1} to ${provider.providerName}`);
             const prompt = createStealIdeasPrompt(chunk);
-            console.log(`Assigning chunk ${index + 1} to ${provider.providerName} (${provider.modelId})`);
             return getAiAnalysis(prompt, provider.providerKey, provider.modelId);
         });
 
-        // 4. Execute all promises in parallel.
-        const results = await Promise.all(analysisPromises);
+        // 2. Execute all promises and wait for them ALL to settle (succeed or fail).
+        const settledResults = await Promise.allSettled(analysisPromises);
         
-        // 5. Collect all ideas from the results.
         let allIdeas = [];
-        results.forEach((result, index) => {
-            if (!result.success) {
-                console.warn(`Chunk ${index + 1} failed to analyze. Error: ${result.error}`);
-                // Continue processing other successful chunks.
-                return;
-            }
-            const ideasFromChunk = extractAndParseJson(result.text);
-            if (ideasFromChunk && ideasFromChunk.length > 0) {
-                allIdeas.push(...ideasFromChunk);
+        settledResults.forEach((result, index) => {
+            if (result.status === 'fulfilled') {
+                const analysisResult = result.value;
+                if (analysisResult.success) {
+                    const ideasFromChunk = extractAndParseJson(analysisResult.text);
+                    if (ideasFromChunk && ideasFromChunk.length > 0) {
+                        allIdeas.push(...ideasFromChunk);
+                    }
+                } else {
+                     console.warn(`Chunk ${index + 1} analysis failed (API returned error):`, analysisResult.error);
+                }
+            } else {
+                // 3. Log errors from rejected promises but DON'T stop execution.
+                console.error(`Chunk ${index + 1} request rejected (likely network or config error):`, result.reason);
             }
         });
-
-        // --- PARALLEL LOGIC END ---
 
         const uniqueIdeas = Array.from(new Map(allIdeas.map(idea => [idea.title, idea])).values());
 
@@ -241,7 +244,7 @@ async function handleSteal() {
         if (uniqueIdeas.length > 0) {
             resultsArea.innerHTML = renderIdeasListUI(uniqueIdeas);
         } else {
-            resultsArea.innerHTML = `<p class="text-center text-gray-500 dark:text-slate-400">The AI couldn't find any specific business ideas. Try another source!</p>`;
+            resultsArea.innerHTML = `<p class="text-center text-gray-500 dark:text-slate-400">Analysis complete, but no business ideas were found. This may happen if some providers failed.</p>`;
         }
         
         updateStealButtonState(true);
@@ -254,25 +257,30 @@ async function handleSteal() {
     }
 }
 
-function populateProviderList() {
-    const providerListDiv = document.getElementById('steal-provider-list');
+function populateProviderCheckboxes() {
+    const container = document.getElementById('steal-provider-checkboxes');
     const { allAiProviders } = getState();
 
-    if (!providerListDiv || !allAiProviders) return;
+    if (!container || !allAiProviders) return;
 
-    const freeProviders = Object.values(allAiProviders)
-        .map(providerData => {
-            const freeModel = providerData.models.find(m => isFree(m, providerData.key));
-            return freeModel ? freeModel.provider : null;
+    const freeProviders = Object.entries(allAiProviders)
+        .map(([key, providerData]) => {
+            const freeModel = providerData.models.find(m => isFree(m, key));
+            return freeModel ? { key, name: freeModel.provider } : null;
         })
         .filter(Boolean);
-    
-    const uniqueProviderNames = [...new Set(freeProviders)];
+    const uniqueProviders = [...new Map(freeProviders.map(item => [item.name, item])).values()];
 
-    if (uniqueProviderNames.length > 0) {
-        providerListDiv.innerHTML = `Active Providers: <span class="font-semibold">${uniqueProviderNames.join(', ')}</span>`;
+    if (uniqueProviders.length > 0) {
+        container.innerHTML = uniqueProviders.map(provider => `
+            <div class="flex items-center">
+                <input id="provider-cb-${provider.key}" name="provider" type="checkbox" value="${provider.key}" checked
+                       class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:bg-slate-600 dark:border-slate-500">
+                <label for="provider-cb-${provider.key}" class="ml-2 block text-sm text-gray-900 dark:text-slate-300">${provider.name}</label>
+            </div>
+        `).join('');
     } else {
-        providerListDiv.innerHTML = `<span class="text-red-500 font-semibold">No free providers found. Please add API keys.</span>`;
+        container.innerHTML = `<p class="text-sm text-red-500 col-span-full">No free providers found. Please add API keys for providers like Groq, OpenRouter, etc.</p>`;
     }
 }
 
@@ -282,7 +290,7 @@ export function initStealTab() {
     if (!stealContainer) return;
     renderInitialUI(stealContainer);
     
-    populateProviderList();
+    populateProviderCheckboxes();
     
     const urlContainer = document.getElementById('steal-url-container');
     const htmlContainer = document.getElementById('steal-html-container');
@@ -308,10 +316,7 @@ export function initStealTab() {
     
     document.getElementById('steal-btn').addEventListener('click', handleSteal);
     
-    stealUrlInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') handleSteal();
-    });
-    
+    stealUrlInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSteal(); });
     stealUrlInput.addEventListener('input', handleUrlInput);
     sourceUrlInput.addEventListener('input', handleUrlInput);
 }
