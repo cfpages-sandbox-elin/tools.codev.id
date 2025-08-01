@@ -1,4 +1,4 @@
-// ideas-steal.js v2.02 grouping
+// ideas-steal.js v2.02 remove slider
 import { scrapeUrl, getAiAnalysis } from './ideas-api.js';
 import { extractAndParseJson } from './ideas.js';
 import { createStealIdeasPrompt } from './ideas-prompts.js';
@@ -287,7 +287,7 @@ async function handleDeduplicateClick(event) {
     const url = button.dataset.sourceUrl;
     if (!url) return;
 
-    const threshold = parseFloat(document.getElementById('dedupe-threshold-slider').value);
+    const threshold = parseFloat(document.getElementById('dedupe-threshold-input').value);
 
     button.disabled = true;
     button.textContent = 'Working...';
@@ -296,21 +296,28 @@ async function handleDeduplicateClick(event) {
     const groupsCacheKey = `stolen_groups_v2_${url}`;
     const favoritesCacheKey = `stolen_favorites_${url}`;
 
+    // Load the flat list of ideas and the favorites
     const ideasFromCache = JSON.parse(localStorage.getItem(ideasCacheKey) || '[]');
     const favorites = JSON.parse(localStorage.getItem(favoritesCacheKey) || '[]');
 
+    // 1. Run deduplication using the selected threshold
     const cleanIdeas = deduplicateIdeas(ideasFromCache, favorites, threshold);
     const numRemoved = ideasFromCache.length - cleanIdeas.length;
 
+    // 2. Save the newly cleaned flat list back to the cache
     localStorage.setItem(ideasCacheKey, JSON.stringify(cleanIdeas));
     
+    // 3. Re-group the now-cleaner list of ideas
     const newGroups = groupIdeasByTheme(cleanIdeas);
 
+    // 4. Save the new group structure to the cache, overwriting the old one
     localStorage.setItem(groupsCacheKey, JSON.stringify(newGroups));
 
+    // 5. Re-render the entire results area with the updated groups
     const resultsArea = document.getElementById('steal-results-area');
     resultsArea.innerHTML = renderIdeasListUI(newGroups, url, favorites, threshold);
     
+    // 6. Provide clear visual feedback on the new button after the re-render
     const newButton = resultsArea.querySelector('.deduplicate-btn');
     if (newButton) {
         newButton.disabled = true;
@@ -475,6 +482,8 @@ export function initStealTab() {
     renderInitialUI(stealContainer);
     
     populateProviderCheckboxes();
+
+    const resultsArea = document.getElementById('steal-results-area');
     
     const urlContainer = document.getElementById('steal-url-container');
     const htmlContainer = document.getElementById('steal-html-container');
@@ -484,23 +493,13 @@ export function initStealTab() {
     const stealUrlInput = document.getElementById('steal-url-input');
     const sourceUrlInput = document.getElementById('steal-source-url-input');
     const htmlInput = document.getElementById('steal-html-input');
-    const resultsArea = document.getElementById('steal-results-area');
 
-    toggleHtmlLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        urlContainer.classList.add('hidden');
-        htmlContainer.classList.remove('hidden');
-        handleUrlInput();
-    });
-    
-    toggleUrlLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        htmlContainer.classList.add('hidden');
-        urlContainer.classList.remove('hidden');
-        handleUrlInput();
-    });
+    toggleHtmlLink.addEventListener('click', (e) => { e.preventDefault(); urlContainer.classList.add('hidden'); htmlContainer.classList.remove('hidden'); handleUrlInput(); });
+    toggleUrlLink.addEventListener('click', (e) => { e.preventDefault(); htmlContainer.classList.add('hidden'); urlContainer.classList.remove('hidden'); handleUrlInput(); });
     
     document.getElementById('steal-btn').addEventListener('click', handleSteal);
+    stealUrlInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSteal(); });
+    
     resultsArea.addEventListener('click', (e) => {
         if (e.target.closest('.favorite-btn')) {
             handleFavoriteClick(e);
@@ -508,8 +507,6 @@ export function initStealTab() {
             handleDeduplicateClick(e);
         }
     });
-    
-    stealUrlInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSteal(); });
 
     stealUrlInput.addEventListener('input', handleUrlInput);
     sourceUrlInput.addEventListener('input', handleUrlInput);
@@ -518,9 +515,7 @@ export function initStealTab() {
         const url = sourceUrlInput.value.trim();
         const html = htmlInput.value.trim();
         if (url && html) {
-            const htmlCacheKey = `stolen_html_${url}`;
-            localStorage.setItem(htmlCacheKey, html);
-            console.log(`Saved raw HTML for [${url}] on paste.`);
+            localStorage.setItem(`stolen_html_${url}`, html);
         }
     });
 }

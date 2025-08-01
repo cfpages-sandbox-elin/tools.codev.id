@@ -1,4 +1,4 @@
-// ideas-ui.js v2.02 grouping
+// ideas-ui.js v2.02 remove slider
 import { getState } from './ideas-state.js';
 
 const elements = {};
@@ -421,7 +421,18 @@ export function renderIdeasListUI(groupedIdeas, sourceUrl = '', favoriteTitles =
     const allIdeas = Object.values(groupedIdeas).flat();
     if (allIdeas.length === 0) return '';
     
-    const favoriteCount = favoriteTitles.filter(title => allIdeas.some(idea => idea.title === title)).length;
+    const favoriteIdeas = [];
+    const nonFavoriteIdeas = [];
+    allIdeas.forEach(idea => {
+        if (favoriteTitles.includes(idea.title)) {
+            favoriteIdeas.push(idea);
+        } else {
+            nonFavoriteIdeas.push(idea);
+        }
+    });
+    const nonFavoriteGroups = groupIdeasByTheme(nonFavoriteIdeas);
+
+    const favoriteCount = favoriteIdeas.length;
     let headerHtml = '';
 
     if (sourceUrl) {
@@ -440,9 +451,10 @@ export function renderIdeasListUI(groupedIdeas, sourceUrl = '', favoriteTitles =
         </div>
         <div class="mb-8 p-4 bg-gray-100 dark:bg-slate-900/50 rounded-lg flex flex-col sm:flex-row justify-center items-center gap-4">
             <div class="flex items-center gap-3">
-                <label for="dedupe-threshold-slider" class="text-sm font-medium text-gray-700 dark:text-slate-300">Dedupe Threshold:</label>
-                <input id="dedupe-threshold-slider" type="range" min="0.5" max="0.95" step="0.05" value="${dedupeThreshold}" class="w-32 cursor-pointer">
-                <span id="dedupe-threshold-value" class="text-sm font-semibold text-indigo-600 dark:text-sky-400 w-10 text-center">${Number(dedupeThreshold).toFixed(2)}</span>
+                <label for="dedupe-threshold-input" class="text-sm font-medium text-gray-700 dark:text-slate-300">Dedupe Threshold:</label>
+                <!-- REPLACED SLIDER WITH NUMBER INPUT -->
+                <input id="dedupe-threshold-input" type="number" min="0.5" max="0.95" step="0.05" value="${dedupeThreshold.toFixed(2)}" 
+                       class="w-24 rounded-md border-gray-300 bg-white dark:border-slate-600 dark:bg-slate-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
             </div>
             <button class="deduplicate-btn text-sm bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-700 dark:text-slate-200 font-semibold py-2 px-4 rounded-md transition-colors"
                     data-source-url="${sourceUrl}">
@@ -456,12 +468,15 @@ export function renderIdeasListUI(groupedIdeas, sourceUrl = '', favoriteTitles =
         const isFavorite = favoriteTitles.includes(idea.title);
         const starClass = isFavorite ? 'text-yellow-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200';
         const cardBorderClass = isFavorite ? 'border-yellow-400' : 'border-purple-500';
+        const labelBgClass = isFavorite ? 'bg-yellow-200 dark:bg-yellow-900/60' : 'bg-purple-100 dark:bg-purple-900/50';
+        const labelTextClass = isFavorite ? 'text-yellow-800 dark:text-yellow-200' : 'text-purple-800 dark:text-purple-300';
+        const analyzeBtnClass = isFavorite ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-purple-600 hover:bg-purple-700';
 
         return `
         <div class="bg-white dark:bg-slate-800 p-5 rounded-lg shadow-md border-l-4 ${cardBorderClass} transition-all duration-300">
             <div class="flex justify-between items-start gap-4">
                 <div>
-                    <span class="text-xs font-semibold uppercase px-2 py-1 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300">Stolen Idea</span>
+                    <span class="text-xs font-semibold uppercase px-2 py-1 rounded-full ${labelBgClass} ${labelTextClass}">Stolen Idea</span>
                     <h3 class="text-xl font-bold mt-2 text-gray-900 dark:text-white">${idea.title}</h3>
                 </div>
                 <button class="favorite-btn p-1 rounded-full flex-shrink-0" data-idea-title="${encodeURIComponent(idea.title)}">
@@ -469,20 +484,35 @@ export function renderIdeasListUI(groupedIdeas, sourceUrl = '', favoriteTitles =
                 </button>
             </div>
             <p class="text-gray-600 dark:text-slate-300 mt-2">${idea.description}</p>
-            <button class="deep-analyze-btn mt-2 text-xs bg-purple-600 hover:bg-purple-700 text-white font-semibold py-1 px-3 rounded-md" data-idea='${JSON.stringify(idea)}'>Deep Analyze 🔬</button>
+            <button class="deep-analyze-btn mt-2 text-xs text-white font-semibold py-1 px-3 rounded-md ${analyzeBtnClass}" data-idea='${JSON.stringify(idea)}'>Deep Analyze 🔬</button>
         </div>
         `;
     };
 
     let groupsHtml = '';
-    const sortedGroupLabels = Object.keys(groupedIdeas).sort((a, b) => {
+
+    if (favoriteIdeas.length > 0) {
+        groupsHtml += `
+            <details class="group-container bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg" open>
+                <summary class="list-none cursor-pointer font-bold text-xl text-yellow-600 dark:text-yellow-400 flex justify-between items-center">
+                    <span>★ Favorites <span class="text-sm font-normal text-gray-500 dark:text-slate-400">(${favoriteIdeas.length} ideas)</span></span>
+                    <span class="text-gray-400 text-2xl transition-transform duration-300 transform group-open:rotate-180">▼</span>
+                </summary>
+                <div class="mt-4 space-y-4">
+                    ${favoriteIdeas.map(renderIdeaCard).join('')}
+                </div>
+            </details>
+        `;
+    }
+
+    const sortedGroupLabels = Object.keys(nonFavoriteGroups).sort((a, b) => {
         if (a === 'Ungrouped') return 1;
         if (b === 'Ungrouped') return -1;
-        return groupedIdeas[b].length - groupedIdeas[a].length;
+        return nonFavoriteGroups[b].length - nonFavoriteGroups[a].length;
     });
 
     for (const groupLabel of sortedGroupLabels) {
-        const ideasInGroup = groupedIdeas[groupLabel];
+        const ideasInGroup = nonFavoriteGroups[groupLabel];
         if (ideasInGroup.length === 0) continue;
 
         const groupContent = ideasInGroup.map(renderIdeaCard).join('');
