@@ -1,4 +1,4 @@
-// ideas-steal.js v2.02 remove slider
+// ideas-steal.js v2.02 remove slider +fix
 import { scrapeUrl, getAiAnalysis } from './ideas-api.js';
 import { extractAndParseJson } from './ideas.js';
 import { createStealIdeasPrompt } from './ideas-prompts.js';
@@ -255,25 +255,24 @@ function handleUrlInput() {
 
     const cachedGroupsJSON = localStorage.getItem(groupsCacheKey);
     const cachedFavorites = JSON.parse(localStorage.getItem(favoritesCacheKey) || '[]');
+    const resultsArea = document.getElementById('steal-results-area');
 
-    let groupsToRender = null;
-    let dedupeThreshold = 0.60; // A sensible default
-
+    let allIdeas = [];
     if (cachedGroupsJSON) {
-        groupsToRender = JSON.parse(cachedGroupsJSON);
+        allIdeas = Object.values(JSON.parse(cachedGroupsJSON)).flat();
     } else {
         const cachedIdeasJSON = localStorage.getItem(ideasCacheKey);
-        if (cachedIdeasJSON) {
-            console.log("Found old data, creating groups and upgrading cache...");
-            const ideas = JSON.parse(cachedIdeasJSON);
-            groupsToRender = groupIdeasByTheme(ideas);
-            localStorage.setItem(groupsCacheKey, JSON.stringify(groupsToRender));
-        }
+        if (cachedIdeasJSON) allIdeas = JSON.parse(cachedIdeasJSON);
     }
+    
+    if (allIdeas.length > 0) {
+        const favoriteIdeas = allIdeas.filter(idea => cachedFavorites.includes(idea.title));
+        const nonFavoriteIdeas = allIdeas.filter(idea => !cachedFavorites.includes(idea.title));
+        const nonFavoriteGroups = groupIdeasByTheme(nonFavoriteIdeas);
+        const dataForRenderer = { favoriteIdeas, nonFavoriteGroups };
 
-    if (groupsToRender) {
         updateStealButtonState(true);
-        resultsArea.innerHTML = renderIdeasListUI(groupsToRender, url, cachedFavorites, dedupeThreshold);
+        resultsArea.innerHTML = renderIdeasListUI(dataForRenderer, url, cachedFavorites, 0.60);
     } else {
         updateStealButtonState(false);
         resultsArea.innerHTML = '';
@@ -300,24 +299,22 @@ async function handleDeduplicateClick(event) {
     const ideasFromCache = JSON.parse(localStorage.getItem(ideasCacheKey) || '[]');
     const favorites = JSON.parse(localStorage.getItem(favoritesCacheKey) || '[]');
 
-    // 1. Run deduplication using the selected threshold
     const cleanIdeas = deduplicateIdeas(ideasFromCache, favorites, threshold);
-    const numRemoved = ideasFromCache.length - cleanIdeas.length;
+    
+    const favoriteIdeas = cleanIdeas.filter(idea => favorites.includes(idea.title));
+    const nonFavoriteIdeas = cleanIdeas.filter(idea => !favorites.includes(idea.title));
+    const nonFavoriteGroups = groupIdeasByTheme(nonFavoriteIdeas);
+    const dataForRenderer = { favoriteIdeas, nonFavoriteGroups };
 
-    // 2. Save the newly cleaned flat list back to the cache
+    const allGroupedData = { ...nonFavoriteGroups };
+    if (favoriteIdeas.length > 0) {
+        allGroupedData['★ Favorites'] = favoriteIdeas;
+    }
     localStorage.setItem(ideasCacheKey, JSON.stringify(cleanIdeas));
+    localStorage.setItem(groupsCacheKey, JSON.stringify(allGroupedData));
+    resultsArea.innerHTML = renderIdeasListUI(dataForRenderer, url, favorites, threshold);
     
-    // 3. Re-group the now-cleaner list of ideas
-    const newGroups = groupIdeasByTheme(cleanIdeas);
-
-    // 4. Save the new group structure to the cache, overwriting the old one
-    localStorage.setItem(groupsCacheKey, JSON.stringify(newGroups));
-
-    // 5. Re-render the entire results area with the updated groups
-    const resultsArea = document.getElementById('steal-results-area');
-    resultsArea.innerHTML = renderIdeasListUI(newGroups, url, favorites, threshold);
-    
-    // 6. Provide clear visual feedback on the new button after the re-render
+    // Provide clear visual feedback on the new button after the re-render
     const newButton = resultsArea.querySelector('.deduplicate-btn');
     if (newButton) {
         newButton.disabled = true;
@@ -408,7 +405,20 @@ async function handleSteal() {
             localStorage.setItem(`stolen_html_${url}`, rawHtmlForCaching);
         }
         const existingFavorites = JSON.parse(localStorage.getItem(favoritesCacheKey) || '[]');
-        resultsArea.innerHTML = renderIdeasListUI(groupedIdeas, url, existingFavorites, 0.60);
+        const favoriteIdeas = uniqueIdeas.filter(idea => existingFavorites.includes(idea.title));
+        const nonFavoriteIdeas = uniqueIdeas.filter(idea => !existingFavorites.includes(idea.title));
+        const nonFavoriteGroups = groupIdeasByTheme(nonFavoriteIdeas);
+        const dataForRenderer = { favoriteIdeas, nonFavoriteGroups };
+
+        const allGroupedData = { ...nonFavoriteGroups };
+        if (favoriteIdeas.length > 0) {
+            allGroupedData['★ Favorites'] = favoriteIdeas;
+        }
+        
+        localStorage.setItem(`stolen_ideas_${url}`, JSON.stringify(uniqueIdeas)); 
+        localStorage.setItem(`stolen_groups_v2_${url}`, JSON.stringify(allGroupedData)); 
+
+        resultsArea.innerHTML = renderIdeasListUI(dataForRenderer, url, existingFavorites, 0.60);
         updateStealButtonState(true);
 
     } catch (error) {

@@ -1,4 +1,4 @@
-// ideas-ui.js v2.02 remove slider
+// ideas-ui.js v2.02 remove slider +fix
 import { getState } from './ideas-state.js';
 
 const elements = {};
@@ -417,26 +417,17 @@ export function updateMoreIdeasModelDropdown() {
     modelSelect.innerHTML = freeModels.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
 }
 
-export function renderIdeasListUI(groupedIdeas, sourceUrl = '', favoriteTitles = [], dedupeThreshold = 0.60) {
-    const allIdeas = Object.values(groupedIdeas).flat();
-    if (allIdeas.length === 0) return '';
+export function renderIdeasListUI(data, sourceUrl = '', favoriteTitles = [], dedupeThreshold = 0.60) {
+    const { favoriteIdeas, nonFavoriteGroups } = data;
+    const allIdeasCount = favoriteIdeas.length + Object.values(nonFavoriteGroups).flat().length;
     
-    const favoriteIdeas = [];
-    const nonFavoriteIdeas = [];
-    allIdeas.forEach(idea => {
-        if (favoriteTitles.includes(idea.title)) {
-            favoriteIdeas.push(idea);
-        } else {
-            nonFavoriteIdeas.push(idea);
-        }
-    });
-    const nonFavoriteGroups = groupIdeasByTheme(nonFavoriteIdeas);
-
+    if (allIdeasCount === 0) return '';
+    
     const favoriteCount = favoriteIdeas.length;
     let headerHtml = '';
 
     if (sourceUrl) {
-        const ideaText = allIdeas.length === 1 ? 'idea' : 'ideas';
+        const ideaText = allIdeasCount === 1 ? 'idea' : 'ideas';
         const favoriteText = favoriteCount > 0
             ? `<span class="font-bold text-yellow-400">${favoriteCount} ★</span> favorited.`
             : '';
@@ -444,7 +435,7 @@ export function renderIdeasListUI(groupedIdeas, sourceUrl = '', favoriteTitles =
         headerHtml = `
         <div class="mb-6 text-center text-lg text-gray-700 dark:text-slate-300">
             <p>
-                🎉 <span class="font-bold text-indigo-500 dark:text-sky-400">${allIdeas.length}</span> ${ideaText} stolen from<br>
+                🎉 <span class="font-bold text-indigo-500 dark:text-sky-400">${allIdeasCount}</span> ${ideaText} stolen from<br>
                 <span class="font-semibold break-all">${sourceUrl}</span>!<br>
                 ${favoriteText}
             </p>
@@ -452,7 +443,6 @@ export function renderIdeasListUI(groupedIdeas, sourceUrl = '', favoriteTitles =
         <div class="mb-8 p-4 bg-gray-100 dark:bg-slate-900/50 rounded-lg flex flex-col sm:flex-row justify-center items-center gap-4">
             <div class="flex items-center gap-3">
                 <label for="dedupe-threshold-input" class="text-sm font-medium text-gray-700 dark:text-slate-300">Dedupe Threshold:</label>
-                <!-- REPLACED SLIDER WITH NUMBER INPUT -->
                 <input id="dedupe-threshold-input" type="number" min="0.5" max="0.95" step="0.05" value="${dedupeThreshold.toFixed(2)}" 
                        class="w-24 rounded-md border-gray-300 bg-white dark:border-slate-600 dark:bg-slate-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
             </div>
@@ -514,10 +504,8 @@ export function renderIdeasListUI(groupedIdeas, sourceUrl = '', favoriteTitles =
     for (const groupLabel of sortedGroupLabels) {
         const ideasInGroup = nonFavoriteGroups[groupLabel];
         if (ideasInGroup.length === 0) continue;
-
         const groupContent = ideasInGroup.map(renderIdeaCard).join('');
         const isOpen = groupLabel !== 'Ungrouped';
-
         groupsHtml += `
             <details class="group-container bg-gray-50 dark:bg-slate-800/50 p-4 rounded-lg" ${isOpen ? 'open' : ''}>
                 <summary class="list-none cursor-pointer font-bold text-xl text-indigo-700 dark:text-sky-400 flex justify-between items-center">
