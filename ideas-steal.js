@@ -1,4 +1,4 @@
-// ideas-steal.js v2.01 re-steal-html
+// ideas-steal.js v2.02 re-steal-html with chunking
 import { scrapeUrl, getAiAnalysis } from './ideas-api.js';
 import { extractAndParseJson } from './ideas.js';
 import { createStealIdeasPrompt } from './ideas-prompts.js';
@@ -95,7 +95,6 @@ function handleUrlInput() {
     const sourceUrlInput = document.getElementById('steal-source-url-input');
     const resultsArea = document.getElementById('steal-results-area');
     
-    // Use the URL from whichever input is currently visible and being used
     const isHtmlMode = document.getElementById('steal-html-container').style.display !== 'none';
     const url = isHtmlMode ? sourceUrlInput.value.trim() : urlInput.value.trim();
 
@@ -132,7 +131,7 @@ function handleUrlInput() {
 function extractTextFromHtml(htmlString) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlString, 'text/html');
-    return doc.body.textContent || "";
+    return doc.body.innerText || doc.body.textContent || "";
 }
 
 async function handleSteal() {
@@ -160,7 +159,6 @@ async function handleSteal() {
             return;
         }
         stealBtn.innerHTML = 'Parsing HTML...';
-        // The "scraping" is just local parsing, so it's instant. We wrap it in a promise to maintain a consistent code structure.
         textPromise = Promise.resolve(extractTextFromHtml(rawHtml));
     } else {
         url = urlInput.value.trim();
@@ -176,27 +174,47 @@ async function handleSteal() {
     const cacheKey = `stolen_ideas_${url}`;
 
     try {
-        const text = await textPromise;
-        if (!text) {
+        const fullText = await textPromise;
+        if (!fullText) {
              throw new Error("Could not extract any text from the provided source.");
         }
-        stealBtn.innerHTML = 'Analyzing...';
 
         const provider = document.getElementById('steal-ai-provider-select').value;
         const model = document.getElementById('steal-ai-model-select').value;
         
-        const prompt = createStealIdeasPrompt(text);
-        const result = await getAiAnalysis(prompt, provider, model);
+        // --- CHUNKING LOGIC ---
+        const chunkSize = 14000; // Characters per chunk, a safe number for most models
+        const textChunks = [];
+        for (let i = 0; i < fullText.length; i += chunkSize) {
+            textChunks.push(fullText.substring(i, i + chunkSize));
+        }
 
-        if (!result.success) throw new Error(result.error);
+        let allIdeas = [];
+        let chunksProcessed = 0;
+
+        for (const chunk of textChunks) {
+            chunksProcessed++;
+            stealBtn.innerHTML = `Analyzing chunk ${chunksProcessed}/${textChunks.length}...`;
+            
+            const prompt = createStealIdeasPrompt(chunk);
+            const result = await getAiAnalysis(prompt, provider, model);
+
+            if (!result.success) throw new Error(`Analysis failed on chunk ${chunksProcessed}: ${result.error}`);
+            
+            const ideasFromChunk = extractAndParseJson(result.text);
+            if (ideasFromChunk && ideasFromChunk.length > 0) {
+                 allIdeas.push(...ideasFromChunk);
+            }
+        }
         
-        const ideas = extractAndParseJson(result.text);
+        // Remove duplicate ideas that might span across chunks
+        const uniqueIdeas = Array.from(new Map(allIdeas.map(idea => [idea.title, idea])).values());
 
-        localStorage.setItem(cacheKey, JSON.stringify(ideas));
-        console.log(`Saved/Overwrote stolen ideas for [${url}] in cache.`);
+        localStorage.setItem(cacheKey, JSON.stringify(uniqueIdeas));
+        console.log(`Saved/Overwrote ${uniqueIdeas.length} stolen ideas for [${url}] in cache.`);
 
-        if (ideas.length > 0) {
-            resultsArea.innerHTML = renderIdeasListUI(ideas);
+        if (uniqueIdeas.length > 0) {
+            resultsArea.innerHTML = renderIdeasListUI(uniqueIdeas);
         } else {
             resultsArea.innerHTML = `<p class="text-center text-gray-500 dark:text-slate-400">The AI couldn't find any specific business ideas on that page. Try another one!</p>`;
         }
@@ -205,7 +223,7 @@ async function handleSteal() {
 
     } catch (error) {
         resultsArea.innerHTML = `<div class="bg-red-100 dark:bg-red-900/50 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 p-4 rounded-lg">Error: ${error.message}</div>`;
-        updateStealButtonState(false); // An error means it wasn't cached successfully
+        updateStealButtonState(false);
     } finally {
         stealBtn.disabled = false;
     }
@@ -243,7 +261,6 @@ function populateStealSelectors() {
         return `<option value="${key}">${providerName}</option>`;
     }).join('');
 
-    // Try to default to groq, if not available, use the first in the list
     if (freeProviders['groq']) {
         providerSelect.value = 'groq';
     }
@@ -272,14 +289,14 @@ export function initStealTab() {
         e.preventDefault();
         urlContainer.classList.add('hidden');
         htmlContainer.classList.remove('hidden');
-        handleUrlInput(); // Check for cache based on the (possibly empty) source URL field
+        handleUrlInput();
     });
     
     toggleUrlLink.addEventListener('click', (e) => {
         e.preventDefault();
         htmlContainer.classList.add('hidden');
         urlContainer.classList.remove('hidden');
-        handleUrlInput(); // Check for cache based on the URL field
+        handleUrlInput();
     });
     
     document.getElementById('steal-btn').addEventListener('click', handleSteal);
@@ -288,7 +305,6 @@ export function initStealTab() {
         if (e.key === 'Enter') handleSteal();
     });
     
-    // Check cache as user types in either URL field
     stealUrlInput.addEventListener('input', handleUrlInput);
     sourceUrlInput.addEventListener('input', handleUrlInput);
 }
