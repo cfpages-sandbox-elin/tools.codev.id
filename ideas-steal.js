@@ -1,4 +1,4 @@
-// ideas-steal.js v2.02 add favorite +slight fix +healing
+// ideas-steal.js v2.02 protect favorite +slight fix +healing
 import { scrapeUrl, getAiAnalysis } from './ideas-api.js';
 import { extractAndParseJson } from './ideas.js';
 import { createStealIdeasPrompt } from './ideas-prompts.js';
@@ -22,7 +22,7 @@ function normalizeTitle(str) {
     return str.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
 }
 
-function deduplicateIdeas(ideas) {
+function deduplicateIdeas(ideas, favoriteTitles = []) {
     if (!ideas || ideas.length === 0) return [];
 
     const uniqueIdeas = [];
@@ -34,7 +34,6 @@ function deduplicateIdeas(ideas) {
         for (let i = 0; i < uniqueIdeas.length; i++) {
             const existingIdea = uniqueIdeas[i];
             const normalizedExistingTitle = normalizeTitle(existingIdea.title);
-
             if (normalizedCurrentTitle.includes(normalizedExistingTitle) || normalizedExistingTitle.includes(normalizedCurrentTitle)) {
                 duplicateIndex = i;
                 break;
@@ -43,14 +42,19 @@ function deduplicateIdeas(ideas) {
 
         if (duplicateIndex !== -1) {
             const existingIdea = uniqueIdeas[duplicateIndex];
-            
-            const currentDescLength = currentIdea.description?.length || 0;
-            const existingDescLength = existingIdea.description?.length || 0;
+            const isCurrentFavorite = favoriteTitles.includes(currentIdea.title);
+            const isExistingFavorite = favoriteTitles.includes(existingIdea.title);
 
-            if (currentDescLength > existingDescLength) {
+            if (isCurrentFavorite && !isExistingFavorite) {
                 uniqueIdeas[duplicateIndex] = currentIdea;
-            } else if (currentDescLength === existingDescLength) {
-                if (currentIdea.title.length > existingIdea.title.length) {
+            } else if (!isCurrentFavorite && isExistingFavorite) {
+            } else {
+                const currentDescLength = currentIdea.description?.length || 0;
+                const existingDescLength = existingIdea.description?.length || 0;
+
+                if (currentDescLength > existingDescLength) {
+                    uniqueIdeas[duplicateIndex] = currentIdea;
+                } else if (currentDescLength === existingDescLength && currentIdea.title.length > existingIdea.title.length) {
                     uniqueIdeas[duplicateIndex] = currentIdea;
                 }
             }
@@ -171,7 +175,7 @@ function handleUrlInput() {
         try {
             const ideasFromCache = JSON.parse(cachedIdeasJSON);
             
-            const cleanIdeas = deduplicateIdeas(ideasFromCache);
+            const cleanIdeas = deduplicateIdeas(ideasFromCache, cachedFavorites);
 
             if (cleanIdeas.length < ideasFromCache.length) {
                 console.log(`Self-healing: Cleaned ${ideasFromCache.length - cleanIdeas.length} duplicates from cache for ${url}`);
@@ -285,12 +289,13 @@ async function handleSteal() {
                 console.error(`Chunk ${index + 1} analysis failed:`, result.reason || result.value.error);
             }
         });
-
         console.log(`Found ${allIdeas.length} raw ideas. Deduplicating...`);
-        const uniqueIdeas = deduplicateIdeas(allIdeas);
-        console.log(`Deduplicated down to ${uniqueIdeas.length} unique ideas.`);
 
         const existingFavorites = JSON.parse(localStorage.getItem(favoritesCacheKey) || '[]');
+        console.log(`Found ${allIdeas.length} raw ideas. Deduplicating...`);
+
+        const uniqueIdeas = deduplicateIdeas(allIdeas, existingFavorites);
+        console.log(`Deduplicated down to ${uniqueIdeas.length} unique ideas.`);
         
         localStorage.setItem(ideasCacheKey, JSON.stringify(uniqueIdeas));
         console.log(`Saved/Overwrote ${uniqueIdeas.length} stolen ideas for [${url}] in cache.`);
