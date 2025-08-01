@@ -1,4 +1,4 @@
-// ideas-ui.js v2.02 manual dedupe better layout
+// ideas-ui.js v2.02 grouping
 import { getState } from './ideas-state.js';
 
 const elements = {};
@@ -417,43 +417,42 @@ export function updateMoreIdeasModelDropdown() {
     modelSelect.innerHTML = freeModels.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
 }
 
-export function renderIdeasListUI(ideas, sourceUrl = '', favoriteTitles = []) {
-    if (!ideas || ideas.length === 0) return '';
+export function renderIdeasListUI(groupedIdeas, sourceUrl = '', favoriteTitles = [], dedupeThreshold = 0.60) {
+    const allIdeas = Object.values(groupedIdeas).flat();
+    if (allIdeas.length === 0) return '';
+    
+    const favoriteCount = favoriteTitles.filter(title => allIdeas.some(idea => idea.title === title)).length;
+    let headerHtml = '';
 
-    // Sort ideas: favorites first, then alphabetically by title
-    ideas.sort((a, b) => {
-        const aIsFavorite = favoriteTitles.includes(a.title);
-        const bIsFavorite = favoriteTitles.includes(b.title);
-        if (aIsFavorite && !bIsFavorite) return -1;
-        if (!aIsFavorite && bIsFavorite) return 1;
-        return a.title.localeCompare(b.title);
-    });
-
-    const favoriteCount = favoriteTitles.filter(title => ideas.some(idea => idea.title === title)).length;
-    let counterHtml = '';
     if (sourceUrl) {
-        const ideaText = ideas.length === 1 ? 'idea' : 'ideas';
-        const favoriteText = favoriteCount > 0 
-            ? ` <span class="font-bold text-yellow-400">${favoriteCount} ★</span> favorited.` 
+        const ideaText = allIdeas.length === 1 ? 'idea' : 'ideas';
+        const favoriteText = favoriteCount > 0
+            ? `<span class="font-bold text-yellow-400">${favoriteCount} ★</span> favorited.`
             : '';
-        
-        const deduplicateButtonHtml = `
-            <button class="deduplicate-btn ml-4 text-sm bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-700 dark:text-slate-200 font-semibold py-1 px-3 rounded-md transition-colors"
+
+        headerHtml = `
+        <div class="mb-6 text-center text-lg text-gray-700 dark:text-slate-300">
+            <p>
+                🎉 <span class="font-bold text-indigo-500 dark:text-sky-400">${allIdeas.length}</span> ${ideaText} stolen from<br>
+                <span class="font-semibold break-all">${sourceUrl}</span>!<br>
+                ${favoriteText}
+            </p>
+        </div>
+        <div class="mb-8 p-4 bg-gray-100 dark:bg-slate-900/50 rounded-lg flex flex-col sm:flex-row justify-center items-center gap-4">
+            <div class="flex items-center gap-3">
+                <label for="dedupe-threshold-slider" class="text-sm font-medium text-gray-700 dark:text-slate-300">Dedupe Threshold:</label>
+                <input id="dedupe-threshold-slider" type="range" min="0.5" max="0.95" step="0.05" value="${dedupeThreshold}" class="w-32 cursor-pointer">
+                <span id="dedupe-threshold-value" class="text-sm font-semibold text-indigo-600 dark:text-sky-400 w-10 text-center">${Number(dedupeThreshold).toFixed(2)}</span>
+            </div>
+            <button class="deduplicate-btn text-sm bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-700 dark:text-slate-200 font-semibold py-2 px-4 rounded-md transition-colors"
                     data-source-url="${sourceUrl}">
                 Deduplicate 🧹
             </button>
+        </div>
         `;
-
-        counterHtml = `
-            <div class="mb-6 text-center text-lg text-gray-700 dark:text-slate-300 flex justify-center items-center">
-                <p>
-                    🎉 <span class="font-bold text-indigo-500 dark:text-sky-400">${ideas.length}</span> ${ideaText} stolen from<br><span class="font-semibold break-all">${sourceUrl}</span>!<br>${favoriteText}
-                </p>
-                ${deduplicateButtonHtml}
-            </div>`;
     }
 
-    const ideasHtml = ideas.map(idea => {
+    const renderIdeaCard = (idea) => {
         const isFavorite = favoriteTitles.includes(idea.title);
         const starClass = isFavorite ? 'text-yellow-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200';
         const cardBorderClass = isFavorite ? 'border-yellow-400' : 'border-purple-500';
@@ -472,10 +471,37 @@ export function renderIdeasListUI(ideas, sourceUrl = '', favoriteTitles = []) {
             <p class="text-gray-600 dark:text-slate-300 mt-2">${idea.description}</p>
             <button class="deep-analyze-btn mt-2 text-xs bg-purple-600 hover:bg-purple-700 text-white font-semibold py-1 px-3 rounded-md" data-idea='${JSON.stringify(idea)}'>Deep Analyze 🔬</button>
         </div>
-    `;
-    }).join('');
+        `;
+    };
 
-    return counterHtml + ideasHtml;
+    let groupsHtml = '';
+    const sortedGroupLabels = Object.keys(groupedIdeas).sort((a, b) => {
+        if (a === 'Ungrouped') return 1;
+        if (b === 'Ungrouped') return -1;
+        return groupedIdeas[b].length - groupedIdeas[a].length;
+    });
+
+    for (const groupLabel of sortedGroupLabels) {
+        const ideasInGroup = groupedIdeas[groupLabel];
+        if (ideasInGroup.length === 0) continue;
+
+        const groupContent = ideasInGroup.map(renderIdeaCard).join('');
+        const isOpen = groupLabel !== 'Ungrouped';
+
+        groupsHtml += `
+            <details class="group-container bg-gray-50 dark:bg-slate-800/50 p-4 rounded-lg" ${isOpen ? 'open' : ''}>
+                <summary class="list-none cursor-pointer font-bold text-xl text-indigo-700 dark:text-sky-400 flex justify-between items-center">
+                    <span>${groupLabel} <span class="text-sm font-normal text-gray-500 dark:text-slate-400">(${ideasInGroup.length} ideas)</span></span>
+                    <span class="text-gray-400 text-2xl transition-transform duration-300 transform group-open:rotate-180">▼</span>
+                </summary>
+                <div class="mt-4 space-y-4">
+                    ${groupContent}
+                </div>
+            </details>
+        `;
+    }
+
+    return headerHtml + `<div class="space-y-6">${groupsHtml}</div>`;
 }
 
 function renderTutorialUI(guide) {

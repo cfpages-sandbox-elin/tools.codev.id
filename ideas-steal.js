@@ -1,4 +1,4 @@
-// ideas-steal.js v2.02 better dedupe logic +decrease threshold
+// ideas-steal.js v2.02 grouping
 import { scrapeUrl, getAiAnalysis } from './ideas-api.js';
 import { extractAndParseJson } from './ideas.js';
 import { createStealIdeasPrompt } from './ideas-prompts.js';
@@ -62,11 +62,10 @@ function calculateSimilarity(s1, s2) {
     }
 }
 
-function deduplicateIdeas(ideas, favoriteTitles = []) {
+function deduplicateIdeas(ideas, favoriteTitles = [], threshold = 0.60) {
     if (!ideas || ideas.length === 0) return [];
 
-    const SIMILARITY_THRESHOLD = 0.60; 
-
+    const SIMILARITY_THRESHOLD = threshold;
     const uniqueIdeas = [];
 
     ideas.forEach(currentIdea => {
@@ -93,7 +92,6 @@ function deduplicateIdeas(ideas, favoriteTitles = []) {
             } else {
                 const currentDescLength = currentIdea.description?.length || 0;
                 const existingDescLength = existingIdea.description?.length || 0;
-
                 if (currentDescLength > existingDescLength) {
                     uniqueIdeas[duplicateIndex] = currentIdea;
                 } else if (currentDescLength === existingDescLength && currentIdea.title.length > existingIdea.title.length) {
@@ -106,6 +104,51 @@ function deduplicateIdeas(ideas, favoriteTitles = []) {
     });
 
     return uniqueIdeas;
+}
+
+function groupIdeasByTheme(ideas) {
+    if (!ideas || ideas.length === 0) return { Ungrouped: [] };
+
+    const GROUPING_THRESHOLD = 0.45;
+    const TITLE_WEIGHT = 0.55;
+    const DESC_WEIGHT = 0.45;
+
+    const groups = {};
+
+    ideas.forEach(idea => {
+        let bestGroupLabel = null;
+        let maxSimilarity = 0;
+
+        for (const groupLabel in groups) {
+            const representativeIdea = groups[groupLabel][0]; // Compare against the first idea in each group
+
+            const titleSim = calculateSimilarity(normalizeTitle(idea.title), normalizeTitle(representativeIdea.title));
+            const descSim = calculateSimilarity(idea.description || '', representativeIdea.description || '');
+            const combinedSim = (titleSim * TITLE_WEIGHT) + (descSim * DESC_WEIGHT);
+
+            if (combinedSim > maxSimilarity) {
+                maxSimilarity = combinedSim;
+                bestGroupLabel = groupLabel;
+            }
+        }
+
+        if (maxSimilarity > GROUPING_THRESHOLD && bestGroupLabel) {
+            groups[bestGroupLabel].push(idea);
+        } else {
+            groups[idea.title] = [idea];
+        }
+    });
+
+    const finalGroups = { Ungrouped: [] };
+    for (const label in groups) {
+        if (groups[label].length > 1) {
+            finalGroups[label] = groups[label];
+        } else {
+            finalGroups.Ungrouped.push(...groups[label]);
+        }
+    }
+    
+    return finalGroups;
 }
 
 function renderInitialUI(container) {
@@ -186,9 +229,8 @@ function handleUrlInput() {
     const sourceUrlInput = document.getElementById('steal-source-url-input');
     const urlContainer = document.getElementById('steal-url-container');
     const htmlContainer = document.getElementById('steal-html-container');
-    
-    const url = getCurrentStealUrl();
 
+    const url = getCurrentStealUrl();
     if (!url) {
         resultsArea.innerHTML = '';
         updateStealButtonState(false);
@@ -207,29 +249,34 @@ function handleUrlInput() {
         htmlContainer.classList.remove('hidden');
     }
 
+    const groupsCacheKey = `stolen_groups_v2_${url}`;
     const ideasCacheKey = `stolen_ideas_${url}`;
     const favoritesCacheKey = `stolen_favorites_${url}`;
-    const cachedIdeasJSON = localStorage.getItem(ideasCacheKey); // Just get the raw JSON
+
+    const cachedGroupsJSON = localStorage.getItem(groupsCacheKey);
     const cachedFavorites = JSON.parse(localStorage.getItem(favoritesCacheKey) || '[]');
 
-    if (cachedIdeasJSON) {
-        updateStealButtonState(true);
-        try {
-            const ideasFromCache = JSON.parse(cachedIdeasJSON);
-            const resultsArea = document.getElementById('steal-results-area');
-            if (ideasFromCache.length > 0) {
-                resultsArea.innerHTML = renderIdeasListUI(ideasFromCache, url, cachedFavorites);
-            } else {
-                resultsArea.innerHTML = `<p class="text-center text-gray-500 dark:text-slate-400">Previously analyzed, but no ideas were found.</p>`;
-            }
-        } catch (e) {
-            console.error("Failed to parse cached stolen ideas:", e);
-            localStorage.removeItem(ideasCacheKey);
-            updateStealButtonState(false);
+    let groupsToRender = null;
+    let dedupeThreshold = 0.60; // A sensible default
+
+    if (cachedGroupsJSON) {
+        groupsToRender = JSON.parse(cachedGroupsJSON);
+    } else {
+        const cachedIdeasJSON = localStorage.getItem(ideasCacheKey);
+        if (cachedIdeasJSON) {
+            console.log("Found old data, creating groups and upgrading cache...");
+            const ideas = JSON.parse(cachedIdeasJSON);
+            groupsToRender = groupIdeasByTheme(ideas);
+            localStorage.setItem(groupsCacheKey, JSON.stringify(groupsToRender));
         }
+    }
+
+    if (groupsToRender) {
+        updateStealButtonState(true);
+        resultsArea.innerHTML = renderIdeasListUI(groupsToRender, url, cachedFavorites, dedupeThreshold);
     } else {
         updateStealButtonState(false);
-        document.getElementById('steal-results-area').innerHTML = '';
+        resultsArea.innerHTML = '';
     }
 }
 
@@ -240,26 +287,30 @@ async function handleDeduplicateClick(event) {
     const url = button.dataset.sourceUrl;
     if (!url) return;
 
+    const threshold = parseFloat(document.getElementById('dedupe-threshold-slider').value);
+
     button.disabled = true;
     button.textContent = 'Working...';
 
     const ideasCacheKey = `stolen_ideas_${url}`;
+    const groupsCacheKey = `stolen_groups_v2_${url}`;
     const favoritesCacheKey = `stolen_favorites_${url}`;
 
     const ideasFromCache = JSON.parse(localStorage.getItem(ideasCacheKey) || '[]');
     const favorites = JSON.parse(localStorage.getItem(favoritesCacheKey) || '[]');
 
-    const cleanIdeas = deduplicateIdeas(ideasFromCache, favorites);
+    const cleanIdeas = deduplicateIdeas(ideasFromCache, favorites, threshold);
     const numRemoved = ideasFromCache.length - cleanIdeas.length;
 
-    // Save the cleaned list back to the cache
     localStorage.setItem(ideasCacheKey, JSON.stringify(cleanIdeas));
-
-    // Re-render the entire results area with the new data
-    const resultsArea = document.getElementById('steal-results-area');
-    resultsArea.innerHTML = renderIdeasListUI(cleanIdeas, url, favorites);
     
-    // Provide feedback on the new button after re-render
+    const newGroups = groupIdeasByTheme(cleanIdeas);
+
+    localStorage.setItem(groupsCacheKey, JSON.stringify(newGroups));
+
+    const resultsArea = document.getElementById('steal-results-area');
+    resultsArea.innerHTML = renderIdeasListUI(newGroups, url, favorites, threshold);
+    
     const newButton = resultsArea.querySelector('.deduplicate-btn');
     if (newButton) {
         newButton.disabled = true;
@@ -284,13 +335,10 @@ function extractTextFromHtml(htmlString) {
 async function handleSteal() {
     const resultsArea = document.getElementById('steal-results-area');
     const stealBtn = document.getElementById('steal-btn');
-    const htmlInput = document.getElementById('steal-html-input');
-    const sourceUrlInput = document.getElementById('steal-source-url-input');
     const urlInput = document.getElementById('steal-url-input');
 
     const isHtmlMode = !document.getElementById('steal-html-container').classList.contains('hidden');
-    
-    let url;
+    const url = isHtmlMode ? document.getElementById('steal-source-url-input').value.trim() : urlInput.value.trim();
     let textPromise;
     let rawHtmlForCaching = '';
 
@@ -298,8 +346,7 @@ async function handleSteal() {
     resultsArea.innerHTML = `<div class="flex justify-center items-center py-10"><div class="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-500"></div></div>`;
 
     if (isHtmlMode) {
-        url = sourceUrlInput.value.trim();
-        rawHtmlForCaching = htmlInput.value.trim();
+        rawHtmlForCaching = document.getElementById('steal-html-input').value.trim();
         if (!url || !rawHtmlForCaching) {
             resultsArea.innerHTML = `<div class="bg-red-100 dark:bg-red-900/50 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 p-4 rounded-lg">Please provide both the original URL and the raw HTML.</div>`;
             stealBtn.disabled = false; return;
@@ -307,7 +354,6 @@ async function handleSteal() {
         stealBtn.innerHTML = 'Parsing HTML...';
         textPromise = Promise.resolve(extractTextFromHtml(rawHtmlForCaching));
     } else {
-        url = urlInput.value.trim();
         if (!url) {
             resultsArea.innerHTML = `<div class="bg-red-100 dark:bg-red-900/50 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 p-4 rounded-lg">Please enter a URL.</div>`;
             stealBtn.disabled = false; return;
@@ -315,78 +361,47 @@ async function handleSteal() {
         stealBtn.innerHTML = 'Scraping...';
         textPromise = scrapeUrl(url);
     }
-    
+
     const ideasCacheKey = `stolen_ideas_${url}`;
+    const groupsCacheKey = `stolen_groups_v2_${url}`;
     const favoritesCacheKey = `stolen_favorites_${url}`;
 
     try {
         const fullText = await textPromise;
         if (!fullText) throw new Error("Could not extract any text from the source.");
 
-        const selectedCheckboxes = document.querySelectorAll('#steal-provider-checkboxes input[type="checkbox"]:checked');
-        const selectedProviderKeys = Array.from(selectedCheckboxes).map(cb => cb.value);
-
-        if (selectedProviderKeys.length === 0) {
-            throw new Error("No AI providers selected. Please check at least one provider to run the analysis.");
-        }
-
+        const selectedProviderKeys = Array.from(document.querySelectorAll('#steal-provider-checkboxes input:checked')).map(cb => cb.value);
+        if (selectedProviderKeys.length === 0) throw new Error("No AI providers selected.");
         const { allAiProviders } = getState();
         const availableProviders = selectedProviderKeys.map(key => {
-            const providerData = allAiProviders[key];
-            const freeModel = providerData.models.find(m => isFree(m, key));
+            const freeModel = allAiProviders[key]?.models.find(m => isFree(m, key));
             return freeModel ? { providerKey: key, modelId: freeModel.id, providerName: freeModel.provider } : null;
         }).filter(Boolean);
-
-        if (availableProviders.length === 0) {
+        if (availableProviders.length === 0) 
             throw new Error("None of the selected providers have a valid free model available.");
-        }
-        
-        const chunkSize = 14000;
         const textChunks = [];
-        for (let i = 0; i < fullText.length; i += chunkSize) {
-            textChunks.push(fullText.substring(i, i + chunkSize));
-        }
-
-        stealBtn.innerHTML = `Analyzing ${textChunks.length} chunks across ${availableProviders.length} providers...`;
-        
-        const analysisPromises = textChunks.map((chunk, index) => {
-            const provider = availableProviders[index % availableProviders.length];
-            const prompt = createStealIdeasPrompt(chunk);
-            return getAiAnalysis(prompt, provider.providerKey, provider.modelId);
-        });
-
+        for (let i = 0; i < fullText.length; i += 14000) textChunks.push(fullText.substring(i, i + 14000));
+        const analysisPromises = textChunks.map((chunk, index) => getAiAnalysis(createStealIdeasPrompt(chunk), availableProviders[index % availableProviders.length].providerKey, availableProviders[index % availableProviders.length].modelId));
         const settledResults = await Promise.allSettled(analysisPromises);
         
         let allIdeas = [];
-        settledResults.forEach((result, index) => {
+        settledResults.forEach(result => {
             if (result.status === 'fulfilled' && result.value.success) {
                 const ideasFromChunk = extractAndParseJson(result.value.text);
-                if (ideasFromChunk && ideasFromChunk.length > 0) allIdeas.push(...ideasFromChunk);
-            } else {
-                console.error(`Chunk ${index + 1} analysis failed:`, result.reason || result.value.error);
+                if (ideasFromChunk.length > 0) allIdeas.push(...ideasFromChunk);
             }
         });
-        console.log(`Found ${allIdeas.length} raw ideas. Deduplicating...`);
 
-        const existingFavorites = JSON.parse(localStorage.getItem(favoritesCacheKey) || '[]');
-        console.log(`Found ${allIdeas.length} raw ideas. Deduplicating...`);
-
-        const uniqueIdeas = deduplicateIdeas(allIdeas, existingFavorites);
-        console.log(`Deduplicated down to ${uniqueIdeas.length} unique ideas.`);
-        
+        const uniqueIdeas = deduplicateIdeas(allIdeas, [], 0.60);
+        const groupedIdeas = groupIdeasByTheme(uniqueIdeas);
         localStorage.setItem(ideasCacheKey, JSON.stringify(uniqueIdeas));
-        console.log(`Saved/Overwrote ${uniqueIdeas.length} stolen ideas for [${url}] in cache.`);
+        localStorage.setItem(groupsCacheKey, JSON.stringify(groupedIdeas));
+
         if (isHtmlMode && rawHtmlForCaching) {
             localStorage.setItem(`stolen_html_${url}`, rawHtmlForCaching);
-            console.log(`Saved raw HTML for [${url}] in cache.`);
         }
-
-        if (uniqueIdeas.length > 0) {
-            resultsArea.innerHTML = renderIdeasListUI(uniqueIdeas, url, existingFavorites);
-        } else {
-            resultsArea.innerHTML = `<p class="text-center text-gray-500 dark:text-slate-400">Analysis complete, but no business ideas were found. This may happen if some providers failed.</p>`;
-        }
-        
+        const existingFavorites = JSON.parse(localStorage.getItem(favoritesCacheKey) || '[]');
+        resultsArea.innerHTML = renderIdeasListUI(groupedIdeas, url, existingFavorites, 0.60);
         updateStealButtonState(true);
 
     } catch (error) {
