@@ -1,4 +1,4 @@
-// ideas.js v2.00 so deep
+// ideas.js v2.01 better json parser
 import { initPlanTab } from './ideas-plan.js';
 import { initStealTab } from './ideas-steal.js';
 import { initDeepAnalysis } from './ideas-deep.js';
@@ -109,42 +109,48 @@ async function handleFetchTranscript() {
 }
 
 export function extractAndParseJson(text) {
-    // Find the first opening curly brace or square bracket
-    const firstBrace = text.indexOf('{');
-    const firstBracket = text.indexOf('[');
-    
-    let startIndex = -1;
-
-    // Determine the actual start index. If one isn't found, use the other.
-    // If both are found, use the one that appears first.
-    if (firstBrace === -1) {
-        startIndex = firstBracket;
-    } else if (firstBracket === -1) {
-        startIndex = firstBrace;
-    } else {
-        startIndex = Math.min(firstBrace, firstBracket);
+    if (!text || typeof text !== 'string') {
+        console.warn("extractAndParseJson received a non-string or empty input.");
+        return [];
     }
-
-    // Find the last closing curly brace or square bracket
-    const lastBrace = text.lastIndexOf('}');
-    const lastBracket = text.lastIndexOf(']');
-    
-    // The end index is simply the one that appears latest in the string
-    const endIndex = Math.max(lastBrace, lastBracket);
-
-    if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
-        throw new Error("Could not find a valid JSON object or array structure in the AI's response.");
-    }
-
-    // Extract the substring that is most likely the JSON content
-    const jsonString = text.substring(startIndex, endIndex + 1);
 
     try {
-        // Attempt to parse this potentially "dirty" JSON string
+        // Find the start of a JSON object '{' or array '['
+        const firstBracket = text.indexOf('[');
+        const firstBrace = text.indexOf('{');
+        
+        let startIndex = -1;
+
+        if (firstBracket === -1 && firstBrace === -1) {
+            // No JSON structure found at all
+            console.warn("No JSON start character '[' or '{' found in the response.");
+            return [];
+        }
+
+        if (firstBracket === -1) startIndex = firstBrace;
+        else if (firstBrace === -1) startIndex = firstBracket;
+        else startIndex = Math.min(firstBracket, firstBrace);
+
+        // Find the end of the JSON object '}' or array ']'
+        const lastBracket = text.lastIndexOf(']');
+        const lastBrace = text.lastIndexOf('}');
+        const endIndex = Math.max(lastBracket, lastBrace);
+
+        if (startIndex === -1 || endIndex === -1) {
+             console.warn("Could not find a valid JSON start/end pair.");
+             return [];
+        }
+
+        // Slice the string to get only the potential JSON part
+        const jsonString = text.substring(startIndex, endIndex + 1);
+
+        // Try to parse the extracted string
         return JSON.parse(jsonString);
     } catch (error) {
-        // If parsing fails, throw a more informative error for debugging
-        throw new Error(`Failed to parse the extracted JSON. Error: ${error.message}. Raw JSON string: ${jsonString}`);
+        console.error("Failed to parse the extracted JSON. Error:", error.message);
+        // Log the problematic text for debugging, but truncate it to keep the console clean
+        console.error("Raw text (truncated):", text.substring(0, 500)); 
+        return []; // Return an empty array on failure instead of throwing an error
     }
 }
 
