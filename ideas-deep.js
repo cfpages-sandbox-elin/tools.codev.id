@@ -1,4 +1,4 @@
-// ideas-deep.js (Complete, Corrected Version) regen button
+// ideas-deep.js no card + regen button
 import { getAiAnalysis } from './ideas-api.js';
 import { createAdvancedAnalysisPrompt } from './ideas-prompts.js';
 
@@ -203,7 +203,7 @@ export function initDeepAnalysis(idea) {
         <h3 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">Analysis Dashboard</h3>
         <div id="deep-analysis-summary-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">${analysisModules.map(renderModuleSummary).join('')}</div>
         <h3 class="text-2xl font-bold text-gray-800 dark:text-white mb-4">Detailed Breakdown</h3>
-        <div id="deep-analysis-cards-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-6">${analysisModules.map(renderModuleDetailCard).join('')}</div>
+        <div id="deep-analysis-cards-grid" class="grid grid-cols-1 lg:grid-cols-1 gap-6">${analysisModules.map(renderModuleDetailCard).join('')}</div>
     `;
 
     container.addEventListener('click', async (e) => {
