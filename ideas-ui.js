@@ -1,4 +1,4 @@
-// ideas-ui.js v2.03 card
+// ideas-ui.js v2.03 better card
 import { getState } from './ideas-state.js';
 
 const elements = {};
@@ -474,7 +474,7 @@ export function renderIdeasListUI(data, sourceUrl = '', favoriteTitles = [], ded
                         <svg class="w-6 h-6 ${starClass} transition-colors" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
                     </button>
                 </div>
-                <p class="text-gray-600 dark:text-slate-300 mt-2">${idea.description}</p>
+                <p class="text-gray-600 dark:text-slate-300 mt-2 text-sm">${idea.description}</p>
             </div>
             <div class="mt-4">
                 <button class="deep-analyze-btn text-xs text-white font-semibold py-1 px-3 rounded-md ${analyzeBtnClass}" data-idea='${JSON.stringify(idea)}'>Deep Analyze 🔬</button>
@@ -490,7 +490,7 @@ export function renderIdeasListUI(data, sourceUrl = '', favoriteTitles = [], ded
             <details class="group-container bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg" open>
                 <summary class="list-none cursor-pointer font-bold text-xl text-yellow-600 dark:text-yellow-400 flex justify-between items-center">
                     <span>★ Favorites <span class="text-sm font-normal text-gray-500 dark:text-slate-400">(${favoriteIdeas.length} ideas)</span></span>
-                    <span class="text-gray-400 text-2xl transition-transform duration-300 transform group-open:rotate-180">▼</span>
+                    <span class="text-yellow-600 text-base transition-transform duration-300 transform group-open:rotate-180">▼</span>
                 </summary>
                 <div class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     ${favoriteIdeas.map(renderIdeaCard).join('')}
@@ -513,7 +513,7 @@ export function renderIdeasListUI(data, sourceUrl = '', favoriteTitles = [], ded
             <details class="group-container bg-gray-50 dark:bg-slate-800/50 p-4 rounded-lg" ${isOpen ? 'open' : ''}>
                 <summary class="list-none cursor-pointer font-bold text-xl text-indigo-700 dark:text-sky-400 flex justify-between items-center">
                     <span>${groupLabel} <span class="text-sm font-normal text-gray-500 dark:text-slate-400">(${ideasInGroup.length} ideas)</span></span>
-                    <span class="text-gray-400 text-xl transition-transform duration-300 transform group-open:rotate-180">▼</span>
+                    <span class="text-gray-400 text-base transition-transform duration-300 transform group-open:rotate-180">▼</span>
                 </summary>
                 <div class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     ${ideasInGroup.map(renderIdeaCard).join('')}
