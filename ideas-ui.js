@@ -1,4 +1,4 @@
-// ideas-ui.js v2.02 manual dedupe
+// ideas-ui.js v2.02 manual dedupe better layout
 import { getState } from './ideas-state.js';
 
 const elements = {};
@@ -447,7 +447,7 @@ export function renderIdeasListUI(ideas, sourceUrl = '', favoriteTitles = []) {
         counterHtml = `
             <div class="mb-6 text-center text-lg text-gray-700 dark:text-slate-300 flex justify-center items-center">
                 <p>
-                    🎉 <span class="font-bold text-indigo-500 dark:text-sky-400">${ideas.length}</span> ${ideaText} stolen from <span class="font-semibold break-all">${sourceUrl}</span>!<br>${favoriteText}
+                    🎉 <span class="font-bold text-indigo-500 dark:text-sky-400">${ideas.length}</span> ${ideaText} stolen from<br><span class="font-semibold break-all">${sourceUrl}</span>!<br>${favoriteText}
                 </p>
                 ${deduplicateButtonHtml}
             </div>`;

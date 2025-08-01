@@ -1,4 +1,4 @@
-// ideas-steal.js v2.02 manual dedupe
+// ideas-steal.js v2.02 better dedupe logic
 import { scrapeUrl, getAiAnalysis } from './ideas-api.js';
 import { extractAndParseJson } from './ideas.js';
 import { createStealIdeasPrompt } from './ideas-prompts.js';
@@ -22,8 +22,50 @@ function normalizeTitle(str) {
     return str.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
 }
 
+function calculateSimilarity(s1, s2) {
+    let longer = s1;
+    let shorter = s2;
+    if (s1.length < s2.length) {
+        longer = s2;
+        shorter = s1;
+    }
+    const longerLength = longer.length;
+    if (longerLength === 0) {
+        return 1.0;
+    }
+    const distance = (longer.length - levenstein(longer, shorter)) / parseFloat(longerLength);
+    return distance;
+
+    function levenstein(s1, s2) {
+        const costs = [];
+        for (let i = 0; i <= s1.length; i++) {
+            let lastValue = i;
+            for (let j = 0; j <= s2.length; j++) {
+                if (i === 0) {
+                    costs[j] = j;
+                } else {
+                    if (j > 0) {
+                        let newValue = costs[j - 1];
+                        if (s1.charAt(i - 1) !== s2.charAt(j - 1)) {
+                            newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
+                        }
+                        costs[j - 1] = lastValue;
+                        lastValue = newValue;
+                    }
+                }
+            }
+            if (i > 0) {
+                costs[s2.length] = lastValue;
+            }
+        }
+        return costs[s2.length];
+    }
+}
+
 function deduplicateIdeas(ideas, favoriteTitles = []) {
     if (!ideas || ideas.length === 0) return [];
+
+    const SIMILARITY_THRESHOLD = 0.75; 
 
     const uniqueIdeas = [];
 
@@ -34,7 +76,7 @@ function deduplicateIdeas(ideas, favoriteTitles = []) {
         for (let i = 0; i < uniqueIdeas.length; i++) {
             const existingIdea = uniqueIdeas[i];
             const normalizedExistingTitle = normalizeTitle(existingIdea.title);
-            if (normalizedCurrentTitle.includes(normalizedExistingTitle) || normalizedExistingTitle.includes(normalizedCurrentTitle)) {
+            if (calculateSimilarity(normalizedCurrentTitle, normalizedExistingTitle) > SIMILARITY_THRESHOLD) {
                 duplicateIndex = i;
                 break;
             }
