@@ -1,4 +1,4 @@
-// ideas-steal.js v2.02 add favorite +slight fix
+// ideas-steal.js v2.02 add favorite +slight fix +healing
 import { scrapeUrl, getAiAnalysis } from './ideas-api.js';
 import { extractAndParseJson } from './ideas.js';
 import { createStealIdeasPrompt } from './ideas-prompts.js';
@@ -15,6 +15,51 @@ function isFree(model, providerKey) {
     const hasFreeTierInNotes = model.rateLimits?.notes?.toLowerCase().includes('free tier');
     if (hasFreeTierInNotes) return true;
     return false;
+}
+
+function normalizeTitle(str) {
+    if (!str) return '';
+    return str.toLowerCase().replace(/[^a-z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
+}
+
+function deduplicateIdeas(ideas) {
+    if (!ideas || ideas.length === 0) return [];
+
+    const uniqueIdeas = [];
+
+    ideas.forEach(currentIdea => {
+        const normalizedCurrentTitle = normalizeTitle(currentIdea.title);
+        let duplicateIndex = -1;
+
+        for (let i = 0; i < uniqueIdeas.length; i++) {
+            const existingIdea = uniqueIdeas[i];
+            const normalizedExistingTitle = normalizeTitle(existingIdea.title);
+
+            if (normalizedCurrentTitle.includes(normalizedExistingTitle) || normalizedExistingTitle.includes(normalizedCurrentTitle)) {
+                duplicateIndex = i;
+                break;
+            }
+        }
+
+        if (duplicateIndex !== -1) {
+            const existingIdea = uniqueIdeas[duplicateIndex];
+            
+            const currentDescLength = currentIdea.description?.length || 0;
+            const existingDescLength = existingIdea.description?.length || 0;
+
+            if (currentDescLength > existingDescLength) {
+                uniqueIdeas[duplicateIndex] = currentIdea;
+            } else if (currentDescLength === existingDescLength) {
+                if (currentIdea.title.length > existingIdea.title.length) {
+                    uniqueIdeas[duplicateIndex] = currentIdea;
+                }
+            }
+        } else {
+            uniqueIdeas.push(currentIdea);
+        }
+    });
+
+    return uniqueIdeas;
 }
 
 function renderInitialUI(container) {
@@ -118,15 +163,23 @@ function handleUrlInput() {
 
     const ideasCacheKey = `stolen_ideas_${url}`;
     const favoritesCacheKey = `stolen_favorites_${url}`;
-    const cachedIdeas = localStorage.getItem(ideasCacheKey);
+    const cachedIdeasJSON = localStorage.getItem(ideasCacheKey);
     const cachedFavorites = JSON.parse(localStorage.getItem(favoritesCacheKey) || '[]');
 
-    if (cachedIdeas) {
+    if (cachedIdeasJSON) {
         updateStealButtonState(true);
         try {
-            const ideas = JSON.parse(cachedIdeas);
-            if (ideas.length > 0) {
-                resultsArea.innerHTML = renderIdeasListUI(ideas, url, cachedFavorites);
+            const ideasFromCache = JSON.parse(cachedIdeasJSON);
+            
+            const cleanIdeas = deduplicateIdeas(ideasFromCache);
+
+            if (cleanIdeas.length < ideasFromCache.length) {
+                console.log(`Self-healing: Cleaned ${ideasFromCache.length - cleanIdeas.length} duplicates from cache for ${url}`);
+                localStorage.setItem(ideasCacheKey, JSON.stringify(cleanIdeas));
+            }
+            
+            if (cleanIdeas.length > 0) {
+                resultsArea.innerHTML = renderIdeasListUI(cleanIdeas, url, cachedFavorites);
             } else {
                 resultsArea.innerHTML = `<p class="text-center text-gray-500 dark:text-slate-400">Previously analyzed, but no ideas were found.</p>`;
             }
@@ -217,7 +270,6 @@ async function handleSteal() {
         
         const analysisPromises = textChunks.map((chunk, index) => {
             const provider = availableProviders[index % availableProviders.length];
-            console.log(`Assigning chunk ${index + 1} to ${provider.providerName}`);
             const prompt = createStealIdeasPrompt(chunk);
             return getAiAnalysis(prompt, provider.providerKey, provider.modelId);
         });
@@ -234,12 +286,17 @@ async function handleSteal() {
             }
         });
 
-        const uniqueIdeas = Array.from(new Map(allIdeas.map(idea => [idea.title, idea])).values());
+        console.log(`Found ${allIdeas.length} raw ideas. Deduplicating...`);
+        const uniqueIdeas = deduplicateIdeas(allIdeas);
+        console.log(`Deduplicated down to ${uniqueIdeas.length} unique ideas.`);
+
         const existingFavorites = JSON.parse(localStorage.getItem(favoritesCacheKey) || '[]');
         
         localStorage.setItem(ideasCacheKey, JSON.stringify(uniqueIdeas));
+        console.log(`Saved/Overwrote ${uniqueIdeas.length} stolen ideas for [${url}] in cache.`);
         if (isHtmlMode && rawHtmlForCaching) {
             localStorage.setItem(`stolen_html_${url}`, rawHtmlForCaching);
+            console.log(`Saved raw HTML for [${url}] in cache.`);
         }
 
         if (uniqueIdeas.length > 0) {
