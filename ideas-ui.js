@@ -1,4 +1,4 @@
-// ideas-ui.js v2.00 fix
+// ideas-ui.js v2.02 separate brainstorm
 import { getState } from './ideas-state.js';
 
 const elements = {};
@@ -243,10 +243,8 @@ export function renderAnalysisUI(analysis) {
     const reanalyzeContainer = document.getElementById('reanalyze-controls-container');
     if (!analysisContainer || !reanalyzeContainer) return;
     
-    // Make the re-analyze container visible, as it's hidden by default
     reanalyzeContainer.classList.remove('hidden');
 
-    // Build and inject the re-analyze controls into its dedicated container
     reanalyzeContainer.innerHTML = `
         <h3 class="text-lg font-semibold text-gray-800 dark:text-slate-100 mb-3">Analysis Controls ⚙️</h3>
         <p class="text-xs text-gray-500 dark:text-slate-400 mb-2">Use these controls to re-generate the entire analysis below.</p>
@@ -262,7 +260,6 @@ export function renderAnalysisUI(analysis) {
     if (analysis.summary) {
         finalHtml += `<div id="summary-container">${renderSummaryUI(analysis.summary, getState().currentVideoId)}</div>`;
     }
-
     if (analysis.guide) {
         finalHtml += renderTutorialUI(analysis.guide);
     }
@@ -270,7 +267,7 @@ export function renderAnalysisUI(analysis) {
         finalHtml += renderPodcastUI(analysis.podcastDetails);
     }
     if (analysis.insights) {
-        finalHtml += renderIdeasListUI(analysis.insights);
+        finalHtml += renderBrainstormIdeasListUI(analysis.insights);
     }
     
     if (!analysis.summary && !analysis.guide && !analysis.podcastDetails && !analysis.insights) {
@@ -278,8 +275,60 @@ export function renderAnalysisUI(analysis) {
     }
 
     analysisContainer.innerHTML = finalHtml;
+    populateAiSelectors();
+}
 
-    populateAiSelectors(); 
+export function renderBrainstormIdeasListUI(insights) {
+    if (!insights || insights.length === 0) return '<p>No insights were generated.</p>';
+    
+    const insightsByCategory = insights.reduce((acc, insight) => {
+        const category = insight.category || 'Uncategorized';
+        if (!acc[category]) acc[category] = [];
+        acc[category].push(insight);
+        return acc;
+    }, {});
+    
+    const categoryDetails = {
+        "Product Idea": { title: "Product Ideas 💡", icon: "💡" },
+        "Marketing Strategy": { title: "Marketing Strategies 📈", icon: "📈" },
+        "Business Process": { title: "Business Processes & Systems ⚙️", icon: "⚙️" },
+        "Core Principle": { title: "Core Principles & Concepts 🧠", icon: "🧠" },
+        "Tool/Resource": { title: "Tools & Resources 🛠️", icon: "🛠️" },
+        "Uncategorized": { title: "Other Insights", icon: "" },
+    };
+
+    return Object.keys(insightsByCategory).map(category => {
+        const details = categoryDetails[category] || { title: category, icon: "" };
+        
+        const listItems = insightsByCategory[category].map(item => `
+            <li class="p-4 bg-gray-100 dark:bg-slate-800 rounded-lg shadow-sm">
+                <h3 class="font-semibold text-md text-gray-800 dark:text-slate-200">${item.title}</h3>
+                <p class="mt-1 text-sm text-gray-600 dark:text-slate-400">${item.description}</p>
+                ${(category === 'Product Idea') ? `<button class="deep-analyze-btn mt-2 text-xs bg-purple-600 hover:bg-purple-700 text-white font-semibold py-1 px-3 rounded-md" data-idea='${JSON.stringify(item)}'>Deep Analyze 🔬</button>` : ''}
+            </li>
+        `).join('');
+
+        const moreIdeasControls = category === 'Product Idea' ? `
+            <div class="mt-6 border-t border-gray-200 dark:border-slate-700 pt-4">
+                <h4 class="font-semibold text-gray-700 dark:text-slate-300 mb-3">Generate More Ideas</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                     <div><select id="more-ideas-provider-select" class="block w-full text-sm rounded-md border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm"></select></div>
+                    <div><select id="more-ideas-model-select" class="block w-full text-sm rounded-md border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm"></select></div>
+                </div>
+                <div class="text-right">
+                    <button id="generate-more-ideas-btn" class="text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md">Generate ✨</button>
+                </div>
+            </div>
+        ` : '';
+
+        return `
+            <div class="bg-white dark:bg-slate-800/50 p-5 rounded-lg shadow-md">
+                <h2 class="text-2xl font-semibold text-indigo-500 dark:text-sky-300 mb-4">${details.title}</h2>
+                <ul class="space-y-4">${listItems}</ul>
+                ${moreIdeasControls}
+            </div>
+        `;
+    }).join('');
 }
 
 function renderSummaryUI(summary, videoId) {
@@ -368,79 +417,27 @@ export function updateMoreIdeasModelDropdown() {
     modelSelect.innerHTML = freeModels.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
 }
 
-export function renderIdeasListUI(insights) {
-    if (!insights || insights.length === 0) return '<p>No insights were generated.</p>';
-    
-    const insightsByCategory = insights.reduce((acc, insight) => {
-        const category = insight.category || 'Uncategorized';
-        if (!acc[category]) {
-            acc[category] = [];
-        }
-        acc[category].push(insight);
-        return acc;
-    }, {});
-    
-    const categoryDetails = {
-        "Product Idea": { title: "Product Ideas 💡", icon: "💡" },
-        "Marketing Strategy": { title: "Marketing Strategies 📈", icon: "📈" },
-        "Business Process": { title: "Business Processes & Systems ⚙️", icon: "⚙️" },
-        "Core Principle": { title: "Core Principles & Concepts 🧠", icon: "🧠" },
-        "Tool/Resource": { title: "Tools & Resources 🛠️", icon: "🛠️" },
-        "Uncategorized": { title: "Other Insights", icon: "" },
-        "Stolen Idea": { title: "Stolen Ideas 🕵️", icon: "🕵️" }
-    };
+export function renderIdeasListUI(ideas, sourceUrl = '') {
+    if (!ideas || ideas.length === 0) return '';
 
-    return Object.keys(insightsByCategory).map(category => {
-        const details = categoryDetails[category] || { title: category, icon: "" };
-        
-        const listItems = insightsByCategory[category].map((item, index) => {
-            const ideaData = JSON.stringify(item); // Stringify the whole item
-            
-            const deepAnalysisButton = category === 'Product Idea' || category === 'Stolen Idea' ? `
-                <button 
-                    class="deep-analyze-btn mt-2 text-xs bg-purple-600 hover:bg-purple-700 text-white font-semibold py-1 px-3 rounded-md transition-colors"
-                    data-idea='${ideaData}'>
-                    Deep Analyze 🔬
-                </button>
-            ` : '';
+    let counterHtml = '';
+    if (sourceUrl) {
+        const ideaText = ideas.length === 1 ? 'idea' : 'ideas';
+        counterHtml = `<div class="mb-6 text-center text-lg text-gray-700 dark:text-slate-300"><p>🎉 <span class="font-bold text-indigo-500 dark:text-sky-400">${ideas.length}</span> ${ideaText} stolen from <span class="font-semibold break-all">${sourceUrl}</span>!</p></div>`;
+    }
 
-            return `
-            <li class="p-4 bg-gray-100 dark:bg-slate-800 rounded-lg shadow-sm">
-                <h3 class="font-semibold text-md text-gray-800 dark:text-slate-200">${item.title}</h3>
-                <p class="mt-1 text-sm text-gray-600 dark:text-slate-400">${item.description}</p>
-                ${deepAnalysisButton}
-            </li>
-        `}).join('');
-
-        const moreIdeasControls = category === 'Product Idea' ? `
-            <div class="mt-6 border-t border-gray-200 dark:border-slate-700 pt-4">
-                <h4 class="font-semibold text-gray-700 dark:text-slate-300 mb-3">Generate More Ideas</h4>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                     <div>
-                        <label for="more-ideas-provider-select" class="sr-only">Provider</label>
-                        <select id="more-ideas-provider-select" class="block w-full text-sm rounded-md border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></select>
-                    </div>
-                    <div>
-                        <label for="more-ideas-model-select" class="sr-only">Model</label>
-                        <select id="more-ideas-model-select" class="block w-full text-sm rounded-md border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></select>
-                    </div>
-                </div>
-                <div class="text-right">
-                    <button id="generate-more-ideas-btn" class="text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-md transition-colors dark:bg-sky-600 dark:hover:bg-sky-700">
-                        Generate with Selected Model ✨
-                    </button>
-                </div>
+    const ideasHtml = ideas.map(idea => `
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-lg shadow-md border-l-4 border-purple-500">
+            <div>
+                <span class="text-xs font-semibold uppercase px-2 py-1 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300">Stolen Idea</span>
+                <h3 class="text-xl font-bold mt-2 text-gray-900 dark:text-white">${idea.title}</h3>
             </div>
-        ` : '';
+            <p class="text-gray-600 dark:text-slate-300 mt-2">${idea.description}</p>
+            <button class="deep-analyze-btn mt-2 text-xs bg-purple-600 hover:bg-purple-700 text-white font-semibold py-1 px-3 rounded-md" data-idea='${JSON.stringify(idea)}'>Deep Analyze 🔬</button>
+        </div>
+    `).join('');
 
-        return `
-            <div class="bg-white dark:bg-slate-800/50 p-5 rounded-lg shadow-md">
-                <h2 class="text-2xl font-semibold text-indigo-500 dark:text-sky-300 mb-4">${details.title}</h2>
-                <ul class="space-y-4">${listItems}</ul>
-                ${moreIdeasControls}
-            </div>
-        `;
-    }).join('');
+    return counterHtml + ideasHtml;
 }
 
 function renderTutorialUI(guide) {
