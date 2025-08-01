@@ -1,4 +1,4 @@
-// ideas-steal.js v2.02 re-steal-html with chunking
+// ideas-steal.js v2.03 re-steal-html with HTML caching
 import { scrapeUrl, getAiAnalysis } from './ideas-api.js';
 import { extractAndParseJson } from './ideas.js';
 import { createStealIdeasPrompt } from './ideas-prompts.js';
@@ -23,7 +23,6 @@ function renderInitialUI(container) {
             <h2 class="text-2xl font-semibold mb-4 text-indigo-500 dark:text-sky-300">Steal Ideas From a URL 🕵️</h2>
             <p class="text-gray-600 dark:text-slate-300 mb-4">Enter any article, landing page, or paste its raw HTML. We'll use AI to find hidden business ideas.</p>
             
-            <!-- URL Input Container -->
             <div id="steal-url-container">
                 <div class="flex flex-col sm:flex-row gap-3">
                     <input type="text" id="steal-url-input" class="flex-grow bg-gray-50 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-md p-3 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" placeholder="e.g., https://www.example.com/article">
@@ -33,7 +32,6 @@ function renderInitialUI(container) {
                 </div>
             </div>
 
-            <!-- Raw HTML Input Container (hidden by default) -->
             <div id="steal-html-container" class="hidden">
                  <div class="space-y-3">
                     <div>
@@ -104,8 +102,25 @@ function handleUrlInput() {
         return;
     }
 
-    const cacheKey = `stolen_ideas_${url}`;
-    const cachedIdeas = localStorage.getItem(cacheKey);
+    // --- NEW: Check for cached HTML first ---
+    const htmlCacheKey = `stolen_html_${url}`;
+    const cachedHtml = localStorage.getItem(htmlCacheKey);
+    if (cachedHtml && !isHtmlMode) { // Only auto-switch if not already in HTML mode
+        console.log(`Found cached HTML for [${url}]. Populating and switching view.`);
+        const htmlInput = document.getElementById('steal-html-input');
+        const urlContainer = document.getElementById('steal-url-container');
+        const htmlContainer = document.getElementById('steal-html-container');
+        
+        htmlInput.value = cachedHtml;
+        sourceUrlInput.value = url; // Ensure the correct URL is in the visible input
+        
+        urlContainer.classList.add('hidden');
+        htmlContainer.classList.remove('hidden');
+    }
+    // --- END NEW ---
+
+    const ideasCacheKey = `stolen_ideas_${url}`;
+    const cachedIdeas = localStorage.getItem(ideasCacheKey);
 
     if (cachedIdeas) {
         updateStealButtonState(true);
@@ -115,11 +130,11 @@ function handleUrlInput() {
                 console.log(`Loading stolen ideas for [${url}] from cache.`);
                 resultsArea.innerHTML = renderIdeasListUI(ideas);
             } else {
-                resultsArea.innerHTML = `<p class="text-center text-gray-500 dark:text-slate-400">Previously analyzed, but no ideas were found for this content.</p>`;
+                resultsArea.innerHTML = `<p class="text-center text-gray-500 dark:text-slate-400">Previously analyzed, but no ideas were found.</p>`;
             }
         } catch (e) {
             console.error("Failed to parse cached stolen ideas:", e);
-            localStorage.removeItem(cacheKey);
+            localStorage.removeItem(ideasCacheKey);
             updateStealButtonState(false);
         }
     } else {
@@ -146,20 +161,21 @@ async function handleSteal() {
     
     let url;
     let textPromise;
+    let rawHtmlForCaching = '';
 
     stealBtn.disabled = true;
     resultsArea.innerHTML = `<div class="flex justify-center items-center py-10"><div class="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-500"></div></div>`;
 
     if (isHtmlMode) {
         url = sourceUrlInput.value.trim();
-        const rawHtml = htmlInput.value.trim();
-        if (!url || !rawHtml) {
+        rawHtmlForCaching = htmlInput.value.trim();
+        if (!url || !rawHtmlForCaching) {
             resultsArea.innerHTML = `<div class="bg-red-100 dark:bg-red-900/50 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 p-4 rounded-lg">Please provide both the original URL and the raw HTML content.</div>`;
             stealBtn.disabled = false;
             return;
         }
         stealBtn.innerHTML = 'Parsing HTML...';
-        textPromise = Promise.resolve(extractTextFromHtml(rawHtml));
+        textPromise = Promise.resolve(extractTextFromHtml(rawHtmlForCaching));
     } else {
         url = urlInput.value.trim();
         if (!url) {
@@ -171,7 +187,7 @@ async function handleSteal() {
         textPromise = scrapeUrl(url);
     }
     
-    const cacheKey = `stolen_ideas_${url}`;
+    const ideasCacheKey = `stolen_ideas_${url}`;
 
     try {
         const fullText = await textPromise;
@@ -182,8 +198,7 @@ async function handleSteal() {
         const provider = document.getElementById('steal-ai-provider-select').value;
         const model = document.getElementById('steal-ai-model-select').value;
         
-        // --- CHUNKING LOGIC ---
-        const chunkSize = 14000; // Characters per chunk, a safe number for most models
+        const chunkSize = 14000;
         const textChunks = [];
         for (let i = 0; i < fullText.length; i += chunkSize) {
             textChunks.push(fullText.substring(i, i + chunkSize));
@@ -207,16 +222,20 @@ async function handleSteal() {
             }
         }
         
-        // Remove duplicate ideas that might span across chunks
         const uniqueIdeas = Array.from(new Map(allIdeas.map(idea => [idea.title, idea])).values());
 
-        localStorage.setItem(cacheKey, JSON.stringify(uniqueIdeas));
+        localStorage.setItem(ideasCacheKey, JSON.stringify(uniqueIdeas));
         console.log(`Saved/Overwrote ${uniqueIdeas.length} stolen ideas for [${url}] in cache.`);
+        if (isHtmlMode && rawHtmlForCaching) {
+            const htmlCacheKey = `stolen_html_${url}`;
+            localStorage.setItem(htmlCacheKey, rawHtmlForCaching);
+            console.log(`Saved raw HTML for [${url}] in cache.`);
+        }
 
         if (uniqueIdeas.length > 0) {
             resultsArea.innerHTML = renderIdeasListUI(uniqueIdeas);
         } else {
-            resultsArea.innerHTML = `<p class="text-center text-gray-500 dark:text-slate-400">The AI couldn't find any specific business ideas on that page. Try another one!</p>`;
+            resultsArea.innerHTML = `<p class="text-center text-gray-500 dark:text-slate-400">The AI couldn't find any specific business ideas. Try another source!</p>`;
         }
         
         updateStealButtonState(true);
