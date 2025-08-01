@@ -1,4 +1,4 @@
-// ideas-ui.js v2.02 separate brainstorm
+// ideas-ui.js v2.02 sort favorite
 import { getState } from './ideas-state.js';
 
 const elements = {};
@@ -417,25 +417,49 @@ export function updateMoreIdeasModelDropdown() {
     modelSelect.innerHTML = freeModels.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
 }
 
-export function renderIdeasListUI(ideas, sourceUrl = '') {
+export function renderIdeasListUI(ideas, sourceUrl = '', favoriteTitles = []) {
     if (!ideas || ideas.length === 0) return '';
 
+    // Sort ideas: favorites first, then alphabetically by title
+    ideas.sort((a, b) => {
+        const aIsFavorite = favoriteTitles.includes(a.title);
+        const bIsFavorite = favoriteTitles.includes(b.title);
+        if (aIsFavorite && !bIsFavorite) return -1;
+        if (!aIsFavorite && bIsFavorite) return 1;
+        return a.title.localeCompare(b.title);
+    });
+
+    const favoriteCount = favoriteTitles.filter(title => ideas.some(idea => idea.title === title)).length;
     let counterHtml = '';
     if (sourceUrl) {
         const ideaText = ideas.length === 1 ? 'idea' : 'ideas';
-        counterHtml = `<div class="mb-6 text-center text-lg text-gray-700 dark:text-slate-300"><p>🎉 <span class="font-bold text-indigo-500 dark:text-sky-400">${ideas.length}</span> ${ideaText} stolen from <span class="font-semibold break-all">${sourceUrl}</span>!</p></div>`;
+        const favoriteText = favoriteCount > 0 
+            ? ` <span class="font-bold text-yellow-400">${favoriteCount} ★</span> favorited.` 
+            : '';
+        counterHtml = `<div class="mb-6 text-center text-lg text-gray-700 dark:text-slate-300"><p>🎉 <span class="font-bold text-indigo-500 dark:text-sky-400">${ideas.length}</span> ${ideaText} stolen from <span class="font-semibold break-all">${sourceUrl}</span>!${favoriteText}</p></div>`;
     }
 
-    const ideasHtml = ideas.map(idea => `
-        <div class="bg-white dark:bg-slate-800 p-5 rounded-lg shadow-md border-l-4 border-purple-500">
-            <div>
-                <span class="text-xs font-semibold uppercase px-2 py-1 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300">Stolen Idea</span>
-                <h3 class="text-xl font-bold mt-2 text-gray-900 dark:text-white">${idea.title}</h3>
+    const ideasHtml = ideas.map(idea => {
+        const isFavorite = favoriteTitles.includes(idea.title);
+        const starClass = isFavorite ? 'text-yellow-400' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200';
+        const cardBorderClass = isFavorite ? 'border-yellow-400' : 'border-purple-500';
+
+        return `
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-lg shadow-md border-l-4 ${cardBorderClass} transition-all duration-300">
+            <div class="flex justify-between items-start gap-4">
+                <div>
+                    <span class="text-xs font-semibold uppercase px-2 py-1 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300">Stolen Idea</span>
+                    <h3 class="text-xl font-bold mt-2 text-gray-900 dark:text-white">${idea.title}</h3>
+                </div>
+                <button class="favorite-btn p-1 rounded-full flex-shrink-0" data-idea-title="${encodeURIComponent(idea.title)}">
+                    <svg class="w-6 h-6 ${starClass} transition-colors" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                </button>
             </div>
             <p class="text-gray-600 dark:text-slate-300 mt-2">${idea.description}</p>
             <button class="deep-analyze-btn mt-2 text-xs bg-purple-600 hover:bg-purple-700 text-white font-semibold py-1 px-3 rounded-md" data-idea='${JSON.stringify(idea)}'>Deep Analyze 🔬</button>
         </div>
-    `).join('');
+    `;
+    }).join('');
 
     return counterHtml + ideasHtml;
 }

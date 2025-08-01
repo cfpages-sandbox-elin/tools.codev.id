@@ -1,4 +1,4 @@
-// ideas-steal.js v2.02 fix save rawhtml
+// ideas-steal.js v2.02 add favorite
 import { scrapeUrl, getAiAnalysis } from './ideas-api.js';
 import { extractAndParseJson } from './ideas.js';
 import { createStealIdeasPrompt } from './ideas-prompts.js';
@@ -81,17 +81,22 @@ function updateStealButtonState(isCached) {
     }
 }
 
+function getCurrentStealUrl() {
+    const isHtmlMode = !document.getElementById('steal-html-container').classList.contains('hidden');
+    const url = isHtmlMode 
+        ? document.getElementById('steal-source-url-input').value.trim() 
+        : document.getElementById('steal-url-input').value.trim();
+    return url;
+}
+
 function handleUrlInput() {
-    const urlInput = document.getElementById('steal-url-input');
-    const sourceUrlInput = document.getElementById('steal-source-url-input');
     const resultsArea = document.getElementById('steal-results-area');
     const htmlInput = document.getElementById('steal-html-input');
+    const sourceUrlInput = document.getElementById('steal-source-url-input');
     const urlContainer = document.getElementById('steal-url-container');
     const htmlContainer = document.getElementById('steal-html-container');
     
-    // Determine the active URL from whichever input is visible and has focus/content.
-    const isHtmlMode = !htmlContainer.classList.contains('hidden');
-    const url = isHtmlMode ? sourceUrlInput.value.trim() : urlInput.value.trim();
+    const url = getCurrentStealUrl();
 
     if (!url) {
         resultsArea.innerHTML = '';
@@ -101,7 +106,7 @@ function handleUrlInput() {
 
     const htmlCacheKey = `stolen_html_${url}`;
     const cachedHtml = localStorage.getItem(htmlCacheKey);
-    if (cachedHtml && !isHtmlMode) {
+    if (cachedHtml && !htmlContainer.classList.contains('hidden')) {
         console.log(`Found cached HTML for [${url}]. Populating and switching view.`);
         htmlInput.value = cachedHtml;
         sourceUrlInput.value = url;
@@ -110,14 +115,16 @@ function handleUrlInput() {
     }
 
     const ideasCacheKey = `stolen_ideas_${url}`;
+    const favoritesCacheKey = `stolen_favorites_${url}`;
     const cachedIdeas = localStorage.getItem(ideasCacheKey);
+    const cachedFavorites = JSON.parse(localStorage.getItem(favoritesCacheKey) || '[]');
 
     if (cachedIdeas) {
         updateStealButtonState(true);
         try {
             const ideas = JSON.parse(cachedIdeas);
             if (ideas.length > 0) {
-                resultsArea.innerHTML = renderIdeasListUI(ideas, url);
+                resultsArea.innerHTML = renderIdeasListUI(ideas, url, cachedFavorites);
             } else {
                 resultsArea.innerHTML = `<p class="text-center text-gray-500 dark:text-slate-400">Previously analyzed, but no ideas were found.</p>`;
             }
@@ -138,7 +145,6 @@ function extractTextFromHtml(htmlString) {
     return doc.body.innerText || doc.body.textContent || "";
 }
 
-// --- THIS IS THE MAINLY UPDATED FUNCTION ---
 async function handleSteal() {
     const resultsArea = document.getElementById('steal-results-area');
     const stealBtn = document.getElementById('steal-btn');
@@ -175,12 +181,12 @@ async function handleSteal() {
     }
     
     const ideasCacheKey = `stolen_ideas_${url}`;
+    const favoritesCacheKey = `stolen_favorites_${url}`;
 
     try {
         const fullText = await textPromise;
         if (!fullText) throw new Error("Could not extract any text from the source.");
 
-        // 1. Get the list of providers SELECTED by the user.
         const selectedCheckboxes = document.querySelectorAll('#steal-provider-checkboxes input[type="checkbox"]:checked');
         const selectedProviderKeys = Array.from(selectedCheckboxes).map(cb => cb.value);
 
@@ -214,38 +220,28 @@ async function handleSteal() {
             return getAiAnalysis(prompt, provider.providerKey, provider.modelId);
         });
 
-        // 2. Execute all promises and wait for them ALL to settle (succeed or fail).
         const settledResults = await Promise.allSettled(analysisPromises);
         
         let allIdeas = [];
         settledResults.forEach((result, index) => {
-            if (result.status === 'fulfilled') {
-                const analysisResult = result.value;
-                if (analysisResult.success) {
-                    const ideasFromChunk = extractAndParseJson(analysisResult.text);
-                    if (ideasFromChunk && ideasFromChunk.length > 0) {
-                        allIdeas.push(...ideasFromChunk);
-                    }
-                } else {
-                     console.warn(`Chunk ${index + 1} analysis failed (API returned error):`, analysisResult.error);
-                }
+            if (result.status === 'fulfilled' && result.value.success) {
+                const ideasFromChunk = extractAndParseJson(result.value.text);
+                if (ideasFromChunk && ideasFromChunk.length > 0) allIdeas.push(...ideasFromChunk);
             } else {
-                // 3. Log errors from rejected promises but DON'T stop execution.
-                console.error(`Chunk ${index + 1} request rejected (likely network or config error):`, result.reason);
+                console.error(`Chunk ${index + 1} analysis failed:`, result.reason || result.value.error);
             }
         });
 
         const uniqueIdeas = Array.from(new Map(allIdeas.map(idea => [idea.title, idea])).values());
-
+        const existingFavorites = JSON.parse(localStorage.getItem(favoritesCacheKey) || '[]');
+        
         localStorage.setItem(ideasCacheKey, JSON.stringify(uniqueIdeas));
-        console.log(`Saved/Overwrote ${uniqueIdeas.length} stolen ideas for [${url}] in cache.`);
         if (isHtmlMode && rawHtmlForCaching) {
             localStorage.setItem(`stolen_html_${url}`, rawHtmlForCaching);
-            console.log(`Saved raw HTML for [${url}] in cache.`);
         }
 
         if (uniqueIdeas.length > 0) {
-            resultsArea.innerHTML = renderIdeasListUI(uniqueIdeas);
+            resultsArea.innerHTML = renderIdeasListUI(uniqueIdeas, url, existingFavorites);
         } else {
             resultsArea.innerHTML = `<p class="text-center text-gray-500 dark:text-slate-400">Analysis complete, but no business ideas were found. This may happen if some providers failed.</p>`;
         }
@@ -259,6 +255,35 @@ async function handleSteal() {
         stealBtn.disabled = false;
     }
 }
+
+function handleFavoriteClick(event) {
+    const favoriteButton = event.target.closest('.favorite-btn');
+    if (!favoriteButton) return;
+
+    const url = getCurrentStealUrl();
+    if (!url) return;
+
+    const ideaTitle = decodeURIComponent(favoriteButton.dataset.ideaTitle);
+    const favoritesCacheKey = `stolen_favorites_${url}`;
+    
+    let favorites = JSON.parse(localStorage.getItem(favoritesCacheKey) || '[]');
+    
+    const ideaIndex = favorites.indexOf(ideaTitle);
+    
+    if (ideaIndex > -1) {
+        favorites.splice(ideaIndex, 1);
+    } else {
+        favorites.push(ideaTitle);
+    }
+
+    localStorage.setItem(favoritesCacheKey, JSON.stringify(favorites));
+
+    const ideasCacheKey = `stolen_ideas_${url}`;
+    const ideas = JSON.parse(localStorage.getItem(ideasCacheKey) || '[]');
+    const resultsArea = document.getElementById('steal-results-area');
+    resultsArea.innerHTML = renderIdeasListUI(ideas, url, favorites);
+}
+
 
 function populateProviderCheckboxes() {
     const container = document.getElementById('steal-provider-checkboxes');
@@ -303,6 +328,7 @@ export function initStealTab() {
     const stealUrlInput = document.getElementById('steal-url-input');
     const sourceUrlInput = document.getElementById('steal-source-url-input');
     const htmlInput = document.getElementById('steal-html-input');
+    const resultsArea = document.getElementById('steal-results-area');
 
     toggleHtmlLink.addEventListener('click', (e) => {
         e.preventDefault();
@@ -319,6 +345,7 @@ export function initStealTab() {
     });
     
     document.getElementById('steal-btn').addEventListener('click', handleSteal);
+    resultsArea.addEventListener('click', handleFavoriteClick);
     
     stealUrlInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSteal(); });
 
