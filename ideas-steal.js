@@ -1,4 +1,4 @@
-// ideas-steal.js v2.03 re-steal-html with HTML caching
+// ideas-steal.js v2.04 re-steal-html with PARALLEL chunk processing
 import { scrapeUrl, getAiAnalysis } from './ideas-api.js';
 import { extractAndParseJson } from './ideas.js';
 import { createStealIdeasPrompt } from './ideas-prompts.js';
@@ -49,16 +49,10 @@ function renderInitialUI(container) {
             </div>
 
             <div class="mt-4 p-4 bg-gray-50 dark:bg-slate-800/50 rounded-lg border dark:border-slate-700">
-                <h3 class="text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Select an AI Model</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                        <label for="steal-ai-provider-select" class="sr-only">Provider</label>
-                        <select id="steal-ai-provider-select" class="block w-full text-sm rounded-md border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></select>
-                    </div>
-                    <div>
-                        <label for="steal-ai-model-select" class="sr-only">Model</label>
-                        <select id="steal-ai-model-select" class="block w-full text-sm rounded-md border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></select>
-                    </div>
+                <h3 class="text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">Select AI Providers</h3>
+                <p class="text-xs text-gray-500 dark:text-slate-400 mb-2">Analysis will be run in parallel across all available free providers.</p>
+                <div id="steal-provider-list" class="text-xs text-gray-600 dark:text-slate-300">
+                    <!-- Provider list will be populated by JS -->
                 </div>
             </div>
 
@@ -87,7 +81,6 @@ function updateStealButtonState(isCached) {
     }
 }
 
-
 function handleUrlInput() {
     const urlInput = document.getElementById('steal-url-input');
     const sourceUrlInput = document.getElementById('steal-source-url-input');
@@ -102,22 +95,17 @@ function handleUrlInput() {
         return;
     }
 
-    // --- NEW: Check for cached HTML first ---
     const htmlCacheKey = `stolen_html_${url}`;
     const cachedHtml = localStorage.getItem(htmlCacheKey);
-    if (cachedHtml && !isHtmlMode) { // Only auto-switch if not already in HTML mode
-        console.log(`Found cached HTML for [${url}]. Populating and switching view.`);
+    if (cachedHtml && !isHtmlMode) {
         const htmlInput = document.getElementById('steal-html-input');
         const urlContainer = document.getElementById('steal-url-container');
         const htmlContainer = document.getElementById('steal-html-container');
-        
         htmlInput.value = cachedHtml;
-        sourceUrlInput.value = url; // Ensure the correct URL is in the visible input
-        
+        sourceUrlInput.value = url;
         urlContainer.classList.add('hidden');
         htmlContainer.classList.remove('hidden');
     }
-    // --- END NEW ---
 
     const ideasCacheKey = `stolen_ideas_${url}`;
     const cachedIdeas = localStorage.getItem(ideasCacheKey);
@@ -127,7 +115,6 @@ function handleUrlInput() {
         try {
             const ideas = JSON.parse(cachedIdeas);
             if (ideas.length > 0) {
-                console.log(`Loading stolen ideas for [${url}] from cache.`);
                 resultsArea.innerHTML = renderIdeasListUI(ideas);
             } else {
                 resultsArea.innerHTML = `<p class="text-center text-gray-500 dark:text-slate-400">Previously analyzed, but no ideas were found.</p>`;
@@ -152,12 +139,11 @@ function extractTextFromHtml(htmlString) {
 async function handleSteal() {
     const resultsArea = document.getElementById('steal-results-area');
     const stealBtn = document.getElementById('steal-btn');
-    
-    const urlInput = document.getElementById('steal-url-input');
     const htmlInput = document.getElementById('steal-html-input');
     const sourceUrlInput = document.getElementById('steal-source-url-input');
+    const urlInput = document.getElementById('steal-url-input');
 
-    const isHtmlMode = document.getElementById('steal-html-container').style.display !== 'none';
+    const isHtmlMode = !document.getElementById('steal-html-container').classList.contains('hidden');
     
     let url;
     let textPromise;
@@ -170,9 +156,8 @@ async function handleSteal() {
         url = sourceUrlInput.value.trim();
         rawHtmlForCaching = htmlInput.value.trim();
         if (!url || !rawHtmlForCaching) {
-            resultsArea.innerHTML = `<div class="bg-red-100 dark:bg-red-900/50 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 p-4 rounded-lg">Please provide both the original URL and the raw HTML content.</div>`;
-            stealBtn.disabled = false;
-            return;
+            resultsArea.innerHTML = `<div class="bg-red-100 dark:bg-red-900/50 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 p-4 rounded-lg">Please provide both the original URL and the raw HTML.</div>`;
+            stealBtn.disabled = false; return;
         }
         stealBtn.innerHTML = 'Parsing HTML...';
         textPromise = Promise.resolve(extractTextFromHtml(rawHtmlForCaching));
@@ -180,8 +165,7 @@ async function handleSteal() {
         url = urlInput.value.trim();
         if (!url) {
             resultsArea.innerHTML = `<div class="bg-red-100 dark:bg-red-900/50 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 p-4 rounded-lg">Please enter a URL.</div>`;
-            stealBtn.disabled = false;
-            return;
+            stealBtn.disabled = false; return;
         }
         stealBtn.innerHTML = 'Scraping...';
         textPromise = scrapeUrl(url);
@@ -191,44 +175,66 @@ async function handleSteal() {
 
     try {
         const fullText = await textPromise;
-        if (!fullText) {
-             throw new Error("Could not extract any text from the provided source.");
-        }
+        if (!fullText) throw new Error("Could not extract any text from the source.");
 
-        const provider = document.getElementById('steal-ai-provider-select').value;
-        const model = document.getElementById('steal-ai-model-select').value;
+        // --- PARALLEL LOGIC START ---
         
+        // 1. Get all available free providers and a representative model from each.
+        const { allAiProviders } = getState();
+        const freeProviders = Object.entries(allAiProviders)
+            .map(([key, providerData]) => {
+                const freeModel = providerData.models.find(m => isFree(m, key));
+                return freeModel ? { providerKey: key, modelId: freeModel.id, providerName: freeModel.provider } : null;
+            })
+            .filter(Boolean); // Remove nulls where no free model was found
+
+        if (freeProviders.length === 0) {
+            throw new Error("No free AI providers available for parallel processing. Please configure providers.");
+        }
+        console.log(`Found ${freeProviders.length} free providers for parallel work:`, freeProviders.map(p=>p.providerName));
+
+        // 2. Create text chunks.
         const chunkSize = 14000;
         const textChunks = [];
         for (let i = 0; i < fullText.length; i += chunkSize) {
             textChunks.push(fullText.substring(i, i + chunkSize));
         }
 
-        let allIdeas = [];
-        let chunksProcessed = 0;
-
-        for (const chunk of textChunks) {
-            chunksProcessed++;
-            stealBtn.innerHTML = `Analyzing chunk ${chunksProcessed}/${textChunks.length}...`;
-            
+        stealBtn.innerHTML = `Analyzing ${textChunks.length} chunks across ${freeProviders.length} providers...`;
+        
+        // 3. Create an array of promises, distributing chunks across providers.
+        const analysisPromises = textChunks.map((chunk, index) => {
+            const provider = freeProviders[index % freeProviders.length]; // Round-robin assignment
             const prompt = createStealIdeasPrompt(chunk);
-            const result = await getAiAnalysis(prompt, provider, model);
+            console.log(`Assigning chunk ${index + 1} to ${provider.providerName} (${provider.modelId})`);
+            return getAiAnalysis(prompt, provider.providerKey, provider.modelId);
+        });
 
-            if (!result.success) throw new Error(`Analysis failed on chunk ${chunksProcessed}: ${result.error}`);
-            
+        // 4. Execute all promises in parallel.
+        const results = await Promise.all(analysisPromises);
+        
+        // 5. Collect all ideas from the results.
+        let allIdeas = [];
+        results.forEach((result, index) => {
+            if (!result.success) {
+                console.warn(`Chunk ${index + 1} failed to analyze. Error: ${result.error}`);
+                // Continue processing other successful chunks.
+                return;
+            }
             const ideasFromChunk = extractAndParseJson(result.text);
             if (ideasFromChunk && ideasFromChunk.length > 0) {
-                 allIdeas.push(...ideasFromChunk);
+                allIdeas.push(...ideasFromChunk);
             }
-        }
-        
+        });
+
+        // --- PARALLEL LOGIC END ---
+
         const uniqueIdeas = Array.from(new Map(allIdeas.map(idea => [idea.title, idea])).values());
 
         localStorage.setItem(ideasCacheKey, JSON.stringify(uniqueIdeas));
         console.log(`Saved/Overwrote ${uniqueIdeas.length} stolen ideas for [${url}] in cache.`);
         if (isHtmlMode && rawHtmlForCaching) {
-            const htmlCacheKey = `stolen_html_${url}`;
-            localStorage.setItem(htmlCacheKey, rawHtmlForCaching);
+            localStorage.setItem(`stolen_html_${url}`, rawHtmlForCaching);
             console.log(`Saved raw HTML for [${url}] in cache.`);
         }
 
@@ -248,53 +254,35 @@ async function handleSteal() {
     }
 }
 
-function updateStealModelDropdown() {
-    const providerSelect = document.getElementById('steal-ai-provider-select');
-    const modelSelect = document.getElementById('steal-ai-model-select');
+function populateProviderList() {
+    const providerListDiv = document.getElementById('steal-provider-list');
     const { allAiProviders } = getState();
 
-    if (!providerSelect || !modelSelect || !allAiProviders) return;
+    if (!providerListDiv || !allAiProviders) return;
 
-    const selectedProviderKey = providerSelect.value;
-    const providerData = allAiProviders[selectedProviderKey];
+    const freeProviders = Object.values(allAiProviders)
+        .map(providerData => {
+            const freeModel = providerData.models.find(m => isFree(m, providerData.key));
+            return freeModel ? freeModel.provider : null;
+        })
+        .filter(Boolean);
     
-    const freeModels = providerData ? providerData.models.filter(model => isFree(model, selectedProviderKey)) : [];
-    modelSelect.innerHTML = freeModels.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+    const uniqueProviderNames = [...new Set(freeProviders)];
+
+    if (uniqueProviderNames.length > 0) {
+        providerListDiv.innerHTML = `Active Providers: <span class="font-semibold">${uniqueProviderNames.join(', ')}</span>`;
+    } else {
+        providerListDiv.innerHTML = `<span class="text-red-500 font-semibold">No free providers found. Please add API keys.</span>`;
+    }
 }
 
-function populateStealSelectors() {
-    const providerSelect = document.getElementById('steal-ai-provider-select');
-    const { allAiProviders } = getState();
-
-    if (!providerSelect || !allAiProviders) return;
-
-    const freeProviders = {};
-    for (const key in allAiProviders) {
-        if (allAiProviders[key].models.some(model => isFree(model, key))) {
-            freeProviders[key] = allAiProviders[key];
-        }
-    }
-    
-    providerSelect.innerHTML = Object.keys(freeProviders).map(key => {
-        const providerName = freeProviders[key].models[0].provider;
-        return `<option value="${key}">${providerName}</option>`;
-    }).join('');
-
-    if (freeProviders['groq']) {
-        providerSelect.value = 'groq';
-    }
-
-    updateStealModelDropdown();
-
-    providerSelect.addEventListener('change', updateStealModelDropdown);
-}
 
 export function initStealTab() {
     const stealContainer = document.getElementById('steal-content');
     if (!stealContainer) return;
     renderInitialUI(stealContainer);
     
-    populateStealSelectors();
+    populateProviderList();
     
     const urlContainer = document.getElementById('steal-url-container');
     const htmlContainer = document.getElementById('steal-html-container');
