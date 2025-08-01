@@ -1,4 +1,4 @@
-// ideas-steal.js v2.02 better dedupe logic
+// ideas-steal.js v2.02 better dedupe logic +decrease threshold
 import { scrapeUrl, getAiAnalysis } from './ideas-api.js';
 import { extractAndParseJson } from './ideas.js';
 import { createStealIdeasPrompt } from './ideas-prompts.js';
@@ -65,7 +65,7 @@ function calculateSimilarity(s1, s2) {
 function deduplicateIdeas(ideas, favoriteTitles = []) {
     if (!ideas || ideas.length === 0) return [];
 
-    const SIMILARITY_THRESHOLD = 0.75; 
+    const SIMILARITY_THRESHOLD = 0.60; 
 
     const uniqueIdeas = [];
 
