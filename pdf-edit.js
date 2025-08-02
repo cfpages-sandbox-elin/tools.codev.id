@@ -1,4 +1,4 @@
-// file pdf-edit.js add image +fix
+// file pdf-edit.js better filename
 document.addEventListener('DOMContentLoaded', () => {
     const { PDFDocument, rgb, StandardFonts } = PDFLib;
 
@@ -27,9 +27,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let overlayCanvases = [];
     let textEdits = [];
     let imageEdits = [];
+    let uploadedFileName = '';
     let previousTool = 'brush';
     let isDrawing = false;
-    let activeTool = 'brush'; // 'brush', 'text', 'eraser', 'eyedropper'
+    let activeTool = 'brush';
     let brushColor = '#ef4444';
     let brushSize = 5;
     let lastPos = { x: 0, y: 0 };
@@ -70,6 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleFileSelect(e) {
         const file = e.target.files[0];
         if (!file) return;
+        uploadedFileName = file.name;
 
         showStatus('loading', 'Reading and rendering PDF...');
         previewContainer.innerHTML = '';
@@ -401,7 +403,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const link = document.createElement('a');
             link.href = url;
-            link.download = `edited-document.pdf`;
+            const originalFileName = uploadedFileName.replace(/\.pdf$/i, '');
+            link.download = `${originalFileName}-edited.pdf`;
             link.textContent = 'Download Edited PDF';
             link.className = 'text-green-600 font-bold underline';
             statusDiv.innerHTML = '';
