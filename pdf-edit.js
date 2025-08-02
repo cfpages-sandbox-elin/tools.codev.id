@@ -1,4 +1,4 @@
-// file pdf-edit.js better filename
+// file pdf-edit.js show toolbar
 document.addEventListener('DOMContentLoaded', () => {
     const { PDFDocument, rgb, StandardFonts } = PDFLib;
 
@@ -17,6 +17,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveButton = document.getElementById('edit-save-button');
     const eyedropperTool = document.getElementById('edit-tool-eyedropper');
     const fontSelect = document.getElementById('edit-font-select');
+
+    function setToolbarState(enabled) {
+        const controls = [
+            brushTool, textTool, imageUploadInput, eyedropperTool, eraserTool,
+            fontSelect, colorPicker, sizeSlider, saveButton
+        ];
+        controls.forEach(control => {
+            if (control) control.disabled = !enabled;
+        });
+
+        // Visually update the label for the image input
+        const imageLabel = document.querySelector('label[for="edit-image-upload"]');
+        if (imageLabel) {
+            imageLabel.classList.toggle('opacity-50', !enabled);
+            imageLabel.classList.toggle('cursor-not-allowed', !enabled);
+        }
+    }
     
     // UI elements
     const statusDiv = document.getElementById('edit-status');
@@ -48,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sizeLabel.textContent = brushSize;
     });
     saveButton.addEventListener('click', savePdf);
-
+    setToolbarState(false);
 
     function setActiveTool(tool) {
         if (tool === 'eyedropper' && activeTool !== 'eyedropper') {
@@ -72,6 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const file = e.target.files[0];
         if (!file) return;
         uploadedFileName = file.name;
+        setToolbarState(false);
 
         showStatus('loading', 'Reading and rendering PDF...');
         previewContainer.innerHTML = '';
@@ -79,7 +97,6 @@ document.addEventListener('DOMContentLoaded', () => {
         overlayCanvases = [];
         textEdits = [];
         imageEdits = [];
-        toolbar.classList.add('hidden');
 
         try {
             uploadedPdfBuffer = await file.arrayBuffer();
@@ -88,8 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
             for (let i = 1; i <= pdfjsDoc.numPages; i++) {
                 await renderPage(pdfjsDoc, i);
             }
-
-            toolbar.classList.remove('hidden');
+            setToolbarState(true);
             showStatus('success', 'PDF loaded. Ready to edit.');
 
         } catch (err) {
