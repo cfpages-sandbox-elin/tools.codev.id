@@ -1,54 +1,48 @@
-// File: sier-visual.js fixed auto caption
+// File: sier-visual.js auto cap&numb
 // Bertindak sebagai controller utama aplikasi.
 // Menginisialisasi, mengelola event, dan memanggil semua modul render.
 
-function applyAutoCaptions() {
-    const chartPrefix = 'Gambar';
+function applyAutomaticCaptionsAndNumbering() {
     const tablePrefix = 'Tabel';
+    const allDataTables = document.querySelectorAll('table:has(thead)');
+    const allHeadings = document.querySelectorAll('h2, h3, h4, h5');
+    let tableCounter = 1;
 
-    // Proses untuk Grafik, Diagram, dan Visualisasi lainnya
-    const visualElements = document.querySelectorAll('.auto-caption-chart');
-    visualElements.forEach((el, index) => {
-        // Hapus caption lama untuk mencegah duplikasi saat re-render
-        const existingCaption = el.querySelector('figcaption.auto-caption');
-        if (existingCaption) {
-            existingCaption.remove();
-        }
-
-        const captionText = el.dataset.caption || 'Visualisasi Data'; // Teks default
-        const number = index + 1;
-
-        const figcaption = document.createElement('figcaption');
-        figcaption.className = 'auto-caption text-center text-sm text-gray-600 mt-3 italic';
-        figcaption.innerHTML = `<strong>${chartPrefix} ${number}:</strong> ${captionText}`;
-        
-        // Pastikan elemen pembungkus adalah <figure>
-        if (el.tagName.toLowerCase() === 'figure') {
-            el.appendChild(figcaption);
-        }
-    });
-
-    // Proses untuk Tabel
-    const tableElements = document.querySelectorAll('.auto-caption-table');
-    tableElements.forEach((table, index) => {
-        // Hapus caption lama
+    allDataTables.forEach(table => {
         const existingCaption = table.querySelector('caption.auto-caption');
         if (existingCaption) {
             existingCaption.remove();
         }
 
-        const captionText = table.dataset.caption || 'Tabel Data'; // Teks default
-        const number = index + 1;
+        let bestHeadingText = 'Data Tabel';
+        let lastFoundHeading = null;
+
+        allHeadings.forEach(heading => {
+            if (heading.compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING) {
+                lastFoundHeading = heading;
+            }
+        });
+
+        if (lastFoundHeading) {
+            bestHeadingText = lastFoundHeading.textContent.trim();
+        }
 
         const caption = table.createCaption();
         caption.className = 'auto-caption text-left text-sm text-gray-700 p-2 bg-gray-50 font-semibold';
-        caption.innerHTML = `<strong>${tablePrefix} ${number}:</strong> ${captionText}`;
-        // Pindahkan caption ke atas tabel
+        caption.innerHTML = `<strong>${tablePrefix} ${tableCounter}:</strong> ${bestHeadingText}`;
+
         if (table.firstChild) {
             table.insertBefore(caption, table.firstChild);
         }
+
+        tableCounter++;
     });
-    console.log(`[applyAutoCaptions] ${visualElements.length} visual dan ${tableElements.length} tabel telah diberi caption.`);
+
+    // --- Bagian 2: Penomoran Otomatis untuk Chart/Visual (Bisa ditambahkan di sini nanti) ---
+    // Logika untuk chart akan sama, tetapi menargetkan <figure> atau elemen lain
+    // dan menggunakan prefix 'Gambar'. Untuk saat ini, kita fokus pada tabel sesuai permintaan.
+
+    console.log(`[AutoCaption] Selesai. ${tableCounter - 1} tabel telah diberi caption secara otomatis.`);
 }
 
 
@@ -162,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (path && !isNaN(value)) {
                 sierMath.setValueByPath(projectConfig, path, value);
                 updateAllVisuals();
-                applyAutoCaptions();
+                applyAutomaticCaptionsAndNumbering();
             }
         };
 
@@ -212,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Urutan Inisialisasi Aplikasi yang Benar ---
     updateAllVisuals();
-    applyAutoCaptions();
+    applyAutomaticCaptionsAndNumbering();
     setupEventListeners();
     generateTableOfContents();
     setTimeout(checkRenderStatus, 500); // Jalankan pengecekan status setelah render selesai
