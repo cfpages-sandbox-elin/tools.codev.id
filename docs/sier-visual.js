@@ -1,4 +1,4 @@
-// File: sier-visual.js auto caption table / visual data
+// File: sier-visual.js fixed auto caption
 // Bertindak sebagai controller utama aplikasi.
 // Menginisialisasi, mengelola event, dan memanggil semua modul render.
 
@@ -50,6 +50,7 @@ function applyAutoCaptions() {
     });
     console.log(`[applyAutoCaptions] ${visualElements.length} visual dan ${tableElements.length} tabel telah diberi caption.`);
 }
+
 
 function generateTableOfContents() {
     const tocContainer = document.getElementById('toc-nav-list');
@@ -160,7 +161,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (path && !isNaN(value)) {
                 sierMath.setValueByPath(projectConfig, path, value);
-                updateAllVisuals(); // Panggil pembaruan global
+                updateAllVisuals();
+                applyAutoCaptions();
             }
         };
 
