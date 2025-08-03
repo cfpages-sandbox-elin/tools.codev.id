@@ -1,48 +1,84 @@
-// File: sier-visual.js auto cap&numb
+// File: sier-visual.js chart auto caption / number
 // Bertindak sebagai controller utama aplikasi.
 // Menginisialisasi, mengelola event, dan memanggil semua modul render.
 
 function applyAutomaticCaptionsAndNumbering() {
-    const tablePrefix = 'Tabel';
-    const allDataTables = document.querySelectorAll('table:has(thead)');
     const allHeadings = document.querySelectorAll('h2, h3, h4, h5');
-    let tableCounter = 1;
 
-    allDataTables.forEach(table => {
+    // --- Bagian 1: Penomoran Otomatis untuk Tabel ---
+    const tablePrefix = 'Tabel';
+    const allDataTables = Array.from(document.querySelectorAll('table:has(thead)'))
+        .sort((a, b) => a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1);
+    
+    allDataTables.forEach((table, index) => {
         const existingCaption = table.querySelector('caption.auto-caption');
-        if (existingCaption) {
-            existingCaption.remove();
-        }
+        if (existingCaption) existingCaption.remove();
 
         let bestHeadingText = 'Data Tabel';
         let lastFoundHeading = null;
-
         allHeadings.forEach(heading => {
             if (heading.compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING) {
                 lastFoundHeading = heading;
             }
         });
-
         if (lastFoundHeading) {
-            bestHeadingText = lastFoundHeading.textContent.trim();
+            bestHeadingText = lastFoundHeading.textContent.trim().replace(/^\d+\.\s*/, '');
         }
 
         const caption = table.createCaption();
         caption.className = 'auto-caption text-left text-sm text-gray-700 p-2 bg-gray-50 font-semibold';
-        caption.innerHTML = `<strong>${tablePrefix} ${tableCounter}:</strong> ${bestHeadingText}`;
-
-        if (table.firstChild) {
-            table.insertBefore(caption, table.firstChild);
-        }
-
-        tableCounter++;
+        caption.innerHTML = `<strong>${tablePrefix} ${index + 1}:</strong> ${bestHeadingText}`;
+        if (table.firstChild) table.insertBefore(caption, table.firstChild);
     });
 
-    // --- Bagian 2: Penomoran Otomatis untuk Chart/Visual (Bisa ditambahkan di sini nanti) ---
-    // Logika untuk chart akan sama, tetapi menargetkan <figure> atau elemen lain
-    // dan menggunakan prefix 'Gambar'. Untuk saat ini, kita fokus pada tabel sesuai permintaan.
+    // --- Bagian 2: Penomoran Otomatis untuk Chart/Visual ---
+    const visualPrefix = 'Gambar';
+    const visualSelectors = [
+        'div:has(> canvas)',                // Semua container chart dari Chart.js
+        '#site-layout-container',           // Diagram Denah Proyek
+        '#padel-conversion-vis',            // Diagram Konversi Futsal ke Padel
+        '#meeting-point-concept-vis',       // Diagram Konsep Meeting Point
+        '#coworking-map-container',          // Peta Posisi Kompetitif
+        '#multiplierEffectDiagram'          // Diagram Multiplier Effect
+    ];
 
-    console.log(`[AutoCaption] Selesai. ${tableCounter - 1} tabel telah diberi caption secara otomatis.`);
+    const allVisualElements = Array.from(document.querySelectorAll(visualSelectors.join(', ')))
+        .sort((a, b) => a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1);
+
+    allVisualElements.forEach((element, index) => {
+        // Cek apakah elemen sudah dibungkus <figure> oleh script ini sebelumnya
+        let figureWrapper = element.parentElement.tagName === 'FIGURE' && element.parentElement.classList.contains('auto-caption-wrapper')
+            ? element.parentElement
+            : null;
+
+        if (!figureWrapper) {
+            figureWrapper = document.createElement('figure');
+            figureWrapper.className = 'auto-caption-wrapper';
+            element.parentNode.insertBefore(figureWrapper, element);
+            figureWrapper.appendChild(element);
+        }
+
+        const existingCaption = figureWrapper.querySelector('figcaption.auto-caption');
+        if (existingCaption) existingCaption.remove();
+
+        let bestHeadingText = 'Visualisasi Data';
+        let lastFoundHeading = null;
+        allHeadings.forEach(heading => {
+            if (heading.compareDocumentPosition(figureWrapper) & Node.DOCUMENT_POSITION_FOLLOWING) {
+                lastFoundHeading = heading;
+            }
+        });
+        if (lastFoundHeading) {
+            bestHeadingText = lastFoundHeading.textContent.trim().replace(/^\d+\.\s*/, '');
+        }
+        
+        const figcaption = document.createElement('figcaption');
+        figcaption.className = 'auto-caption text-center text-sm text-gray-600 mt-3 italic';
+        figcaption.innerHTML = `<strong>${visualPrefix} ${index + 1}:</strong> ${bestHeadingText}`;
+        figureWrapper.appendChild(figcaption);
+    });
+
+    console.log(`[AutoCaption] Selesai. ${allDataTables.length} tabel dan ${allVisualElements.length} visual telah diberi caption.`);
 }
 
 
