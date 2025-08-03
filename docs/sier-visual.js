@@ -1,6 +1,55 @@
-// File: sier-visual.js
+// File: sier-visual.js auto caption table / visual data
 // Bertindak sebagai controller utama aplikasi.
 // Menginisialisasi, mengelola event, dan memanggil semua modul render.
+
+function applyAutoCaptions() {
+    const chartPrefix = 'Gambar';
+    const tablePrefix = 'Tabel';
+
+    // Proses untuk Grafik, Diagram, dan Visualisasi lainnya
+    const visualElements = document.querySelectorAll('.auto-caption-chart');
+    visualElements.forEach((el, index) => {
+        // Hapus caption lama untuk mencegah duplikasi saat re-render
+        const existingCaption = el.querySelector('figcaption.auto-caption');
+        if (existingCaption) {
+            existingCaption.remove();
+        }
+
+        const captionText = el.dataset.caption || 'Visualisasi Data'; // Teks default
+        const number = index + 1;
+
+        const figcaption = document.createElement('figcaption');
+        figcaption.className = 'auto-caption text-center text-sm text-gray-600 mt-3 italic';
+        figcaption.innerHTML = `<strong>${chartPrefix} ${number}:</strong> ${captionText}`;
+        
+        // Pastikan elemen pembungkus adalah <figure>
+        if (el.tagName.toLowerCase() === 'figure') {
+            el.appendChild(figcaption);
+        }
+    });
+
+    // Proses untuk Tabel
+    const tableElements = document.querySelectorAll('.auto-caption-table');
+    tableElements.forEach((table, index) => {
+        // Hapus caption lama
+        const existingCaption = table.querySelector('caption.auto-caption');
+        if (existingCaption) {
+            existingCaption.remove();
+        }
+
+        const captionText = table.dataset.caption || 'Tabel Data'; // Teks default
+        const number = index + 1;
+
+        const caption = table.createCaption();
+        caption.className = 'auto-caption text-left text-sm text-gray-700 p-2 bg-gray-50 font-semibold';
+        caption.innerHTML = `<strong>${tablePrefix} ${number}:</strong> ${captionText}`;
+        // Pindahkan caption ke atas tabel
+        if (table.firstChild) {
+            table.insertBefore(caption, table.firstChild);
+        }
+    });
+    console.log(`[applyAutoCaptions] ${visualElements.length} visual dan ${tableElements.length} tabel telah diberi caption.`);
+}
 
 function generateTableOfContents() {
     const tocContainer = document.getElementById('toc-nav-list');
@@ -161,6 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Urutan Inisialisasi Aplikasi yang Benar ---
     updateAllVisuals();
+    applyAutoCaptions();
     setupEventListeners();
     generateTableOfContents();
     setTimeout(checkRenderStatus, 500); // Jalankan pengecekan status setelah render selesai
