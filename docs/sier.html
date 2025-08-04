@@ -2063,7 +2063,7 @@
 
         <section id="sec-financial-analysis">
             <h2 class="text-3xl font-bold mb-8 text-gray-800 border-b-4 border-amber-500 pb-3 mt-16">7. Analisis Finansial</h2>
-        
+
             <!-- Section Asumsi Model Finansial -->
             <div id="financial-assumptions" class="mt-12">
                 <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-amber-500 pl-4">Asumsi Utama Model Finansial</h2>
@@ -2077,6 +2077,50 @@
                         <!-- Konten asumsi akan diisi oleh JavaScript -->
                         <p class="text-center text-gray-400 italic">Memuat asumsi...</p>
                     </div>
+                </div>
+            </div>
+
+            <!-- Skenario Proyek -->
+            <div id="scenario-selector-container" class="mb-8">
+                <div class="bg-white p-4 rounded-lg shadow-md border-l-4 border-indigo-500">
+                    <label for="scenario-selector" class="block text-lg font-bold text-gray-800 mb-2">Pilih Skenario Proyek untuk Dianalisis:</label>
+                    <select id="scenario-selector" class="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base">
+                        <option value="dr_padel4_mp" selected>Skenario 1: Driving Range + Padel (4) + Meeting Point</option>
+                        <option value="padel4_mp">Skenario 2: Padel (4) + Meeting Point SAJA</option>
+                        <option value="padel2_mp">Skenario 3: Padel (2) + Meeting Point SAJA</option>
+                    </select>
+                    <p class="text-xs text-gray-500 mt-2">Pilihan Anda akan secara otomatis memperbarui semua tabel dan metrik kelayakan di bawah ini.</p>
+                </div>
+            </div>
+
+            <div id="financial-model-output" class="mt-12">
+                <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-teal-600 pl-4">Ringkasan & Proyeksi Finansial</h2>
+                <div class="bg-white p-6 rounded-lg shadow-md mb-8 space-y-10">
+                    
+                    <!-- Placeholder untuk Metrik Kelayakan -->
+                    <div>
+                        <h3 class="text-xl font-semibold mb-4 text-gray-700">Metrik Kelayakan Investasi</h3>
+                        <!-- KONTEN METRIK AKAN DI-RENDER DI SINI OLEH JS -->
+                    </div>
+
+                    <!-- Placeholder untuk Rincian Depresiasi -->
+                    <div id="depreciation-details-container">
+                        <h3 class="text-xl font-semibold mb-3 text-gray-700">Rincian Perhitungan Depresiasi Aset</h3>
+                        <!-- TABEL DEPRESIASI AKAN DI-RENDER DI SINI OLEH JS -->
+                    </div>
+
+                    <!-- Placeholder untuk Laba Rugi -->
+                    <div>
+                        <h3 class="text-xl font-semibold mb-4 text-gray-700">Proyeksi Laporan Laba Rugi (10 Tahun)</h3>
+                        <!-- TABEL LABA RUGI AKAN DI-RENDER DI SINI OLEH JS -->
+                    </div>
+
+                    <!-- Placeholder untuk Arus Kas -->
+                    <div>
+                        <h3 class="text-xl font-semibold mb-4 text-gray-700">Proyeksi Laporan Arus Kas (10 Tahun)</h3>
+                        <!-- TABEL ARUS KAS AKAN DI-RENDER DI SINI OLEH JS -->
+                    </div>
+
                 </div>
             </div>
 
@@ -2741,7 +2785,9 @@
     <script src="sier-helpers.js"></script>
     <script src="sier-translate.js"></script>
     <script src="sier-editable.js"></script>
-    <script src="sier-math.js"></script>
+    <script src="sier-math-market.js"></script>
+    <script src="sier-math-survey.js"></script>
+    <script src="sier-math-finance.js"></script>
     <script src="sier-chart.js"></script>
     <script src="sier-visual-demography.js"></script>
     <script src="sier-visual-market.js"></script>

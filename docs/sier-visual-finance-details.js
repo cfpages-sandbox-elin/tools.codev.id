@@ -1,174 +1,74 @@
 // File: sier-visual-finance-details.js
-// Bertanggung jawab untuk merender SEMUA rincian finansial (OpEx, CapEx, Analisis).
+// VERSI 3.0 LENGKAP - Menampilkan detail per unit bisnis & rincian asumsi input.
 
 const sierVisualFinanceDetails = {
-    _createPnlTable(pnlData) {
-        if (!pnlData) return '<p class="text-red-500">Data P&L tidak tersedia.</p>';
-        return `<table class="w-full text-sm">
-            <thead class="bg-gray-50"><tr class="text-left"><th class="px-4 py-2 w-4/5">Deskripsi</th><th class="px-4 py-2 text-right">Nilai (Tahun Pertama)</th></tr></thead>
-            <tbody class="divide-y">
-                <tr><td class="px-4 py-2">Pendapatan (Revenue)</td><td class="px-4 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(pnlData.annualRevenue))}</td></tr>
-                <tr><td class="px-4 py-2">Harga Pokok Penjualan (COGS)</td><td class="px-4 py-2 text-right font-mono">(${sierHelpers.formatNumber(Math.round(pnlData.annualCogs))})</td></tr>
-                <tr class="font-semibold"><td class="px-4 py-2">Laba Kotor (Gross Profit)</td><td class="px-4 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(pnlData.grossProfit))}</td></tr>
-                <tr><td class="px-4 py-2">Biaya Operasional (OpEx)</td><td class="px-4 py-2 text-right font-mono">(${sierHelpers.formatNumber(Math.round(pnlData.annualOpex))})</td></tr>
-                <tr class="font-semibold"><td class="px-4 py-2">EBITDA</td><td class="px-4 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(pnlData.ebitda))}</td></tr>
-                <tr><td class="px-4 py-2">Depresiasi & Amortisasi</td><td class="px-4 py-2 text-right font-mono">(${sierHelpers.formatNumber(Math.round(pnlData.annualDepreciation))})</td></tr>
-                <tr class="font-semibold"><td class="px-4 py-2">Laba Sebelum Pajak (EBT)</td><td class="px-4 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(pnlData.ebt))}</td></tr>
-                <tr><td class="px-4 py-2">Pajak Penghasilan (${(projectConfig.assumptions.tax_rate_profit * 100)}%)</td><td class="px-4 py-2 text-right font-mono">(${sierHelpers.formatNumber(Math.round(pnlData.tax))})</td></tr>
-                <tr class="bg-teal-100 font-bold text-teal-800"><td class="px-4 py-3 text-base">Laba Bersih (Net Profit)</td><td class="px-4 py-3 text-base font-mono">${sierHelpers.formatNumber(Math.round(pnlData.netProfit))}</td></tr>
-            </tbody>
-        </table>`;
-    },
 
-    _createRevenueBreakdownSection(unitName) {
-        const unit = projectConfig[unitName];
-        if (!unit) return '';
+    /**
+     * Merender kartu ringkasan untuk setiap unit bisnis yang aktif dalam skenario.
+     * @param {object} individualResults - Bagian 'individual' dari model finansial.
+     * @returns {string} String HTML yang berisi kartu-kartu ringkasan.
+     */
+    _renderUnitSummaries(individualResults) {
+        let html = '';
+        const titles = {
+            dr: 'Driving Range',
+            padel4: 'Padel (4 Lapangan)',
+            padel2: 'Padel (2 Lapangan)',
+            mp: 'Meeting Point',
+            shared: 'Fasilitas Umum',
+            digital: 'Sistem Digital'
+        };
 
-        const o = unit.operational_assumptions;
-        const m = unit.revenue.main_revenue;
-        const a = unit.revenue.ancillary_revenue;
-        const formatRp = (num) => sierHelpers.formatNumber(Math.round(num));
+        for (const key in individualResults) {
+            const unit = individualResults[key];
+            const initialCapex = unit.capexSchedule[0];
+            // Hitung rata-rata dari tahun 1-10, abaikan tahun 0
+            const avgAnnualRevenue = unit.revenue.length > 1 ? unit.revenue.slice(1).reduce((a, b) => a + b, 0) / 10 : 0;
+            const avgAnnualOpex = unit.opex.length > 1 ? unit.opex.slice(1).reduce((a, b) => a + b, 0) / 10 : 0;
+            const avgAnnualProfitContribution = avgAnnualRevenue - avgAnnualOpex;
 
-        let tableRows = '';
-        let totalMonthlyRevenue = 0;
-        let totalMonthlySessions = 0; // Untuk F&B
+            // Jangan render kartu untuk unit tanpa revenue/opex (misal: digital)
+            if (initialCapex === 0 && avgAnnualRevenue === 0) continue;
 
-        if (unitName === 'drivingRange') {
-            const maxSessionsPerBay = o.operational_hours_per_day / (o.avg_session_duration_minutes / 60);
-            
-            // Hari Kerja
-            const sessionsPerBayWD = m.occupancy_rate_per_day.weekday;
-            const occupancyRateWD = sessionsPerBayWD / maxSessionsPerBay;
-            const totalSessionsWD = m.bays * sessionsPerBayWD;
-            const revPerDayWD = totalSessionsWD * m.price_per_100_balls;
-            const revPerMonthWD = revPerDayWD * o.workdays_in_month;
-            totalMonthlySessions += totalSessionsWD * o.workdays_in_month;
-
-            tableRows += `
-                <tr class="hover:bg-gray-50">
-                    <td class="p-2">Pendapatan Hari Kerja</td>
-                    <td class="p-2 text-xs text-gray-500">(${m.bays} bay × ${maxSessionsPerBay.toFixed(1)} sesi/bay) × <strong>${(occupancyRateWD * 100).toFixed(1)}%</strong> okupansi</td>
-                    <td class="p-2 text-right font-mono">${formatRp(revPerDayWD)}</td>
-                    <td class="p-2 text-right font-mono">${formatRp(revPerMonthWD)}</td>
-                </tr>`;
-
-            // Akhir Pekan
-            const sessionsPerBayWE = m.occupancy_rate_per_day.weekend;
-            const occupancyRateWE = sessionsPerBayWE / maxSessionsPerBay;
-            const totalSessionsWE = m.bays * sessionsPerBayWE;
-            const revPerDayWE = totalSessionsWE * m.price_per_100_balls;
-            const revPerMonthWE = revPerDayWE * o.weekend_days_in_month;
-            totalMonthlySessions += totalSessionsWE * o.weekend_days_in_month;
-            
-            tableRows += `
-                <tr class="hover:bg-gray-50">
-                    <td class="p-2">Pendapatan Akhir Pekan</td>
-                    <td class="p-2 text-xs text-gray-500">(${m.bays} bay × ${maxSessionsPerBay.toFixed(1)} sesi/bay) × <strong>${(occupancyRateWE * 100).toFixed(1)}%</strong> okupansi</td>
-                    <td class="p-2 text-right font-mono">${formatRp(revPerDayWE)}</td>
-                    <td class="p-2 text-right font-mono">${formatRp(revPerMonthWE)}</td>
-                </tr>`;
-
-            totalMonthlyRevenue = revPerMonthWD + revPerMonthWE;
-
-        } else if (unitName === 'padel') {
-            const numCourts = m.courts;
-
-            // Weekday Off-Peak
-            const maxHoursWDO = numCourts * m.hours_distribution_per_day.offpeak;
-            const actualHoursWDO = maxHoursWDO * m.occupancy_rate.weekday_offpeak;
-            const revPerDayWDO = actualHoursWDO * m.price_per_hour.weekday_offpeak;
-            const revPerMonthWDO = revPerDayWDO * o.workdays_in_month;
-            totalMonthlySessions += actualHoursWDO * o.workdays_in_month;
-            tableRows += `
-                <tr class="hover:bg-gray-50">
-                    <td class="p-2">Sewa Hr Kerja (Off-Peak)</td>
-                    <td class="p-2 text-xs text-gray-500">(${numCourts} lpgn × ${m.hours_distribution_per_day.offpeak} jam) × <strong>${(m.occupancy_rate.weekday_offpeak * 100).toFixed(0)}%</strong> okupansi</td>
-                    <td class="p-2 text-right font-mono">${formatRp(revPerDayWDO)}</td>
-                    <td class="p-2 text-right font-mono">${formatRp(revPerMonthWDO)}</td>
-                </tr>`;
-
-            // Weekday Peak
-            const maxHoursWDP = numCourts * m.hours_distribution_per_day.peak;
-            const actualHoursWDP = maxHoursWDP * m.occupancy_rate.weekday_peak;
-            const revPerDayWDP = actualHoursWDP * m.price_per_hour.weekday_peak;
-            const revPerMonthWDP = revPerDayWDP * o.workdays_in_month;
-            totalMonthlySessions += actualHoursWDP * o.workdays_in_month;
-            tableRows += `
-                <tr class="hover:bg-gray-50">
-                    <td class="p-2">Sewa Hr Kerja (Peak)</td>
-                    <td class="p-2 text-xs text-gray-500">(${numCourts} lpgn × ${m.hours_distribution_per_day.peak} jam) × <strong>${(m.occupancy_rate.weekday_peak * 100).toFixed(0)}%</strong> okupansi</td>
-                    <td class="p-2 text-right font-mono">${formatRp(revPerDayWDP)}</td>
-                    <td class="p-2 text-right font-mono">${formatRp(revPerMonthWDP)}</td>
-                </tr>`;
-
-            // Weekend
-            const maxHoursWE = numCourts * o.operational_hours_per_day;
-            const actualHoursWE = maxHoursWE * m.occupancy_rate.weekend;
-            const revPerDayWE = actualHoursWE * m.price_per_hour.weekend;
-            const revPerMonthWE = revPerDayWE * o.weekend_days_in_month;
-            totalMonthlySessions += actualHoursWE * o.weekend_days_in_month;
-            tableRows += `
-                <tr class="hover:bg-gray-50">
-                    <td class="p-2">Sewa Akhir Pekan</td>
-                    <td class="p-2 text-xs text-gray-500">(${numCourts} lpgn × ${o.operational_hours_per_day} jam) × <strong>${(m.occupancy_rate.weekend * 100).toFixed(0)}%</strong> okupansi</td>
-                    <td class="p-2 text-right font-mono">${formatRp(revPerDayWE)}</td>
-                    <td class="p-2 text-right font-mono">${formatRp(revPerMonthWE)}</td>
-                </tr>`;
-            
-            totalMonthlyRevenue = revPerMonthWDO + revPerMonthWDP + revPerMonthWE;
+            html += `
+                <div class="bg-white p-4 rounded-lg shadow-md border-l-4 border-gray-400">
+                    <h4 class="text-lg font-bold text-gray-800">${titles[key] || key}</h4>
+                    <table class="w-full text-sm mt-2">
+                        <tbody>
+                            <tr><td class="py-1">Investasi Awal (CapEx)</td><td class="py-1 text-right font-mono font-semibold">Rp ${sierHelpers.formatNumber(Math.round(initialCapex))}</td></tr>
+                            ${avgAnnualRevenue > 0 ? `
+                            <tr><td class="py-1">Rata-rata Pendapatan/Tahun</td><td class="py-1 text-right font-mono">Rp ${sierHelpers.formatNumber(Math.round(avgAnnualRevenue))}</td></tr>
+                            <tr><td class="py-1">Rata-rata Biaya/Tahun</td><td class="py-1 text-right font-mono">(${sierHelpers.formatNumber(Math.round(avgAnnualOpex))})</td></tr>
+                            <tr class="font-bold border-t"><td class="py-1">Kontribusi Laba Kotor Rata-rata</td><td class="py-1 text-right font-mono text-green-700">Rp ${sierHelpers.formatNumber(Math.round(avgAnnualProfitContribution))}</td></tr>
+                            ` : ''}
+                        </tbody>
+                    </table>
+                </div>
+            `;
         }
 
-        // Ancillary Revenue (berlaku untuk keduanya)
-        const fnb_rev_month = totalMonthlySessions * a.fnb_avg_spend;
-        const pro_shop_rev_month = a.pro_shop_sales;
-        totalMonthlyRevenue += fnb_rev_month + pro_shop_rev_month;
-        
-        const unitLabel = (unitName === 'drivingRange') ? 'sesi' : 'jam';
-        tableRows += `
-            <tr class="hover:bg-gray-50 bg-gray-50">
-                <td class="p-2">Penjualan F&B</td>
-                <td class="p-2 text-xs text-gray-500">~${formatRp(totalMonthlySessions)} ${unitLabel}/bulan × Rp ${formatRp(a.fnb_avg_spend)}</td>
-                <td class="p-2 text-right font-mono">${formatRp(fnb_rev_month / 30)}</td>
-                <td class="p-2 text-right font-mono">${formatRp(fnb_rev_month)}</td>
-            </tr>
-            <tr class="hover:bg-gray-50 bg-gray-50">
-                <td class="p-2">Penjualan Pro Shop</td>
-                <td class="p-2 text-xs text-gray-500">Estimasi bulanan</td>
-                <td class="p-2 text-right font-mono">${formatRp(pro_shop_rev_month / 30)}</td>
-                <td class="p-2 text-right font-mono">${formatRp(pro_shop_rev_month)}</td>
-            </tr>`;
-        
-        return `<div class="mb-8 pb-6 border-b"><h3 class="text-xl font-semibold mb-3 text-gray-800">Proyeksi Rincian Pendapatan</h3><div class="overflow-x-auto border rounded-lg"><table class="w-full text-sm"><thead class="bg-gray-100 text-xs uppercase"><tr><th class="p-2 text-left">Sumber Pendapatan</th><th class="p-2 text-left">Detail Perhitungan (Kapasitas × Okupansi)</th><th class="p-2 text-right">Per Hari (Avg)</th><th class="p-2 text-right">Per Bulan</th></tr></thead><tbody class="divide-y">${tableRows}</tbody><tfoot class="bg-gray-200 font-bold"><tr><td class="p-2" colspan="2">Total Estimasi Pendapatan</td><td class="p-2 text-right font-mono">${formatRp(totalMonthlyRevenue / 30)}</td><td class="p-2 text-right font-mono">${formatRp(totalMonthlyRevenue)}</td></tr></tfoot></table></div></div>`;
+        return `
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-gray-500 pl-4">Ringkasan per Komponen Proyek</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">${html}</div>
+        `;
     },
 
-    _createBEPSection(analysisData) {
-        if (!analysisData || !analysisData.bepAnalysis) return '';
-        const { bepAnalysis } = analysisData;
-        const totalVariableCost = Object.values(bepAnalysis.variableCostBreakdown).reduce((sum, val) => sum + val, 0);
-        return `<div class="bg-gray-50 p-4 rounded-lg border"><h4 class="font-semibold text-gray-800 mb-2">A. Analisis Titik Impas Operasional (BEP)</h4><p class="text-sm text-gray-600 mb-3">Target penjualan minimum agar tidak rugi secara operasional (laba = 0), dihitung dengan membagi Biaya Tetap dengan Margin Kontribusi (Harga Jual - Biaya Variabel).</p><div class="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-4"><div><h5 class="font-medium text-gray-700 mb-1">Biaya Tetap Bulanan</h5><table class="w-full text-xs">${Object.entries(bepAnalysis.fixedCostBreakdown).map(([key, value]) => `<tr><td class="py-1 pr-2">${key}</td><td class="py-1 text-right font-mono">Rp ${sierHelpers.formatNumber(Math.round(value))}</td></tr>`).join('')}<tfoot class="border-t-2"><tr class="font-semibold"><td class="py-1 pr-2">Total Biaya Tetap</td><td class="py-1 text-right font-mono">Rp ${sierHelpers.formatNumber(Math.round(bepAnalysis.totalFixedCostMonthly))}</td></tr></tfoot></table></div><div><h5 class="font-medium text-gray-700 mb-1">Biaya Variabel per ${bepAnalysis.unitLabel}</h5><table class="w-full text-xs">${Object.entries(bepAnalysis.variableCostBreakdown).map(([key, value]) => `<tr><td class="py-1 pr-2">${key}</td><td class="py-1 text-right font-mono">Rp ${sierHelpers.formatNumber(Math.round(value))}</td></tr>`).join('')}<tfoot class="border-t-2"><tr class="font-semibold"><td class="py-1 pr-2">Total Biaya Variabel</td><td class="py-1 text-right font-mono">Rp ${sierHelpers.formatNumber(Math.round(totalVariableCost))}</td></tr></tfoot></table></div><div class="lg:col-span-2 mt-4 bg-white p-3 rounded-md shadow-sm text-center"><p class="text-sm font-semibold text-gray-700">Target Break-Even Point Bulanan</p><p class="text-4xl font-bold text-blue-700 mt-1">${sierHelpers.formatNumber(Math.ceil(bepAnalysis.bepInUnitsMonthly))}</p><p class="text-sm text-gray-500">${bepAnalysis.unitLabel}</p><p class="text-xs text-gray-500 mt-2">(Rata-rata ~${Math.ceil(bepAnalysis.bepInUnitsDaily)} ${bepAnalysis.unitLabel} / hari untuk mencapai BEP)</p></div></div></div>`;
-    },
-
-    _createProfitabilitySection(analysisData) {
-        if (!analysisData || !analysisData.profitabilityAnalysis) return '';
-        const { profitabilityAnalysis } = analysisData;
-        return `<div class="bg-gray-50 p-4 rounded-lg border"><h4 class="font-semibold text-gray-800 mb-2">B. Analisis Profitabilitas & Target Balik Modal (Payback)</h4><p class="text-sm text-gray-600 mb-3">Proyeksi profitabilitas berdasarkan asumsi okupansi saat ini untuk mengukur waktu balik modal.</p><table class="w-full text-sm"><tbody class="divide-y"><tr><td class="py-2 text-gray-600">Total Investasi Awal (CapEx)</td><td class="py-2 text-right font-mono font-bold">Rp ${sierHelpers.formatNumber(Math.round(profitabilityAnalysis.totalCapex))}</td></tr><tr><td class="py-2 text-gray-600">Proyeksi Pendapatan Tahunan</td><td class="py-2 text-right font-mono">Rp ${sierHelpers.formatNumber(Math.round(profitabilityAnalysis.annualRevenue))}</td></tr><tr class="text-green-700"><td class="py-2 font-semibold">Proyeksi Laba Bersih Tahunan</td><td class="py-2 text-right font-mono font-bold">Rp ${sierHelpers.formatNumber(Math.round(profitabilityAnalysis.annualNetProfit))}</td></tr><tr class="text-green-700"><td class="py-2 font-semibold">Proyeksi Arus Kas Bersih Tahunan</td><td class="py-2 text-right font-mono font-bold">Rp ${sierHelpers.formatNumber(Math.round(profitabilityAnalysis.annualCashFlow))}</td></tr></tbody><tfoot class="border-t-2"><tr class="font-bold text-lg text-green-600"><td class="py-2">Estimasi Waktu Balik Modal</td><td class="py-2 text-right font-mono">${profitabilityAnalysis.paybackPeriod.toFixed(2)} Tahun</td></tr></tfoot></table></div>`;
-    },
-
-    _createScenarioSection(analysisData) {
-        if (!analysisData || !analysisData.scenarioAnalysis) return '';
-        const { scenarioAnalysis } = analysisData;
-        const mods = projectConfig.assumptions.scenario_modifiers;
-        const formatPayback = (years) => years === Infinity ? '> 15 Thn' : `${years.toFixed(2)} Thn`;
-        return `<div class="bg-gray-50 p-4 rounded-lg border"><h4 class="font-semibold text-gray-800 mb-2">C. Analisis Skenario</h4><p class="text-sm text-gray-600 mb-3">Mengukur dampak perubahan pendapatan terhadap profitabilitas dan waktu balik modal.</p><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4"><div class="bg-red-50 p-3 rounded-md border border-red-200 text-center"><p class="font-bold text-red-800">Pesimis</p><p class="text-xs text-red-600">(${(mods.pessimistic_revenue * 100 - 100).toFixed(0)}% Revenue)</p><hr class="my-2"><p class="text-sm text-gray-600">Laba Bersih/Thn</p><p class="font-semibold text-lg ${scenarioAnalysis.pessimistic.netProfit < 0 ? 'text-red-600' : 'text-gray-800'}">Rp ${sierHelpers.formatNumber(Math.round(scenarioAnalysis.pessimistic.netProfit))}</p><p class="text-sm text-gray-600 mt-2">Balik Modal</p><p class="font-semibold text-lg text-red-600">${formatPayback(scenarioAnalysis.pessimistic.payback)}</p></div><div class="bg-blue-50 p-3 rounded-md border border-blue-200 text-center ring-2 ring-blue-500"><p class="font-bold text-blue-800">Realisitis (Basis)</p><p class="text-xs text-blue-600">(Target Awal)</p><hr class="my-2"><p class="text-sm text-gray-600">Laba Bersih/Thn</p><p class="font-semibold text-lg text-gray-800">Rp ${sierHelpers.formatNumber(Math.round(scenarioAnalysis.realistic.netProfit))}</p><p class="text-sm text-gray-600 mt-2">Balik Modal</p><p class="font-semibold text-lg text-blue-600">${formatPayback(scenarioAnalysis.realistic.payback)}</p></div><div class="bg-green-50 p-3 rounded-md border border-green-200 text-center"><p class="font-bold text-green-800">Optimis</p><p class="text-xs text-green-600">(+${(mods.optimistic_revenue * 100 - 100).toFixed(0)}% Revenue)</p><hr class="my-2"><p class="text-sm text-gray-600">Laba Bersih/Thn</p><p class="font-semibold text-lg text-gray-800">Rp ${sierHelpers.formatNumber(Math.round(scenarioAnalysis.optimistic.netProfit))}</p><p class="text-sm text-gray-600 mt-2">Balik Modal</p><p class="font-semibold text-lg text-green-600">${formatPayback(scenarioAnalysis.optimistic.payback)}</p></div></div></div>`;
-    },
-
-    _renderOpexDetailsVisuals() {
+    /**
+     * Merender tabel rincian Biaya Operasional (OpEx) bulanan untuk unit bisnis yang relevan.
+     * @param {object} model - Objek model finansial lengkap.
+     */
+    _renderOpexDetailsVisuals(model) {
         const container = document.getElementById('opex-details-container');
         if (!container) return;
-        const createUnitOpexTable = (unitName) => {
+
+        const scenarioKey = model.scenario;
+        let tablesHtml = [];
+
+        const createUnitOpexTable = (unitName, title, scenarioKey = null) => {
             const unitConfig = projectConfig[unitName];
-            if (!unitConfig || !unitConfig.opexMonthly) return '<p>Data OpEx tidak ditemukan.</p>';
-            const opexData = unitConfig.opexMonthly;
+            const opexData = scenarioKey ? unitConfig.scenarios[scenarioKey].opexMonthly : unitConfig.opexMonthly;
+            if (!opexData) return ''; // Lewati jika tidak ada data opex
+
             let grandTotalOpex = 0;
             const staffData = opexData.salaries_wages;
             let staffTableRows = '', totalStaffCost = 0;
@@ -176,22 +76,104 @@ const sierVisualFinanceDetails = {
                 const roleData = staffData[role];
                 const totalRoleCost = roleData.count * roleData.salary;
                 totalStaffCost += totalRoleCost;
-                staffTableRows += `<tr><td class="px-3 py-2">${sierTranslate.translate(role)}</td><td class="px-3 py-2 text-center">${sierEditable.createEditableNumber(roleData.count, `${unitName}.opexMonthly.salaries_wages.${role}.count`)}</td><td class="px-3 py-2 text-right">${sierEditable.createEditableNumber(roleData.salary, `${unitName}.opexMonthly.salaries_wages.${role}.salary`, {format: 'currency'})}</td><td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(totalRoleCost))}</td></tr>`;
+                staffTableRows += `<tr><td class="px-3 py-2">${sierTranslate.translate(role)}</td><td class="px-3 py-2 text-center">${roleData.count}</td><td class="px-3 py-2 text-right">${sierHelpers.formatNumber(roleData.salary)}</td><td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(totalRoleCost))}</td></tr>`;
             }
             grandTotalOpex += totalStaffCost;
-            const staffTableHtml = `<h4 class="font-semibold text-gray-800 mb-2">1. Gaji & Upah (SDM)</h4><div class="overflow-x-auto border rounded-lg"><table class="w-full text-sm"><thead class="bg-gray-100 text-xs uppercase"><tr><th class="p-2 text-left">Posisi</th><th class="p-2 text-center">Jumlah Staf</th><th class="p-2 text-right">Gaji/Orang (Rp)</th><th class="p-2 text-right">Total Biaya (Rp)</th></tr></thead><tbody class="divide-y">${staffTableRows}</tbody><tfoot class="font-bold bg-gray-100"><tr><td colspan="3" class="p-2 text-right">Subtotal Biaya SDM</td><td class="p-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(totalStaffCost))}</td></tr></tfoot></table></div>`;
+            const staffTableHtml = `<h4 class="font-semibold text-gray-800 mb-2">1. Gaji & Upah (SDM)</h4><div class="overflow-x-auto border rounded-lg"><table class="w-full text-sm"><thead class="bg-gray-100 text-xs uppercase"><tr><th class="p-2 text-left">Posisi</th><th class="p-2 text-center">Jumlah</th><th class="p-2 text-right">Gaji/Bulan</th><th class="p-2 text-right">Total</th></tr></thead><tbody class="divide-y">${staffTableRows}</tbody><tfoot class="font-bold bg-gray-100"><tr><td colspan="3" class="p-2 text-right">Subtotal</td><td class="p-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(totalStaffCost))}</td></tr></tfoot></table></div>`;
+
             const utilData = opexData.utilities;
             let totalUtilCost = (utilData.electricity_kwh_price * utilData.electricity_kwh_usage) + utilData.water_etc;
             grandTotalOpex += totalUtilCost;
-            const utilTableHtml = `<h4 class="font-semibold text-gray-800 mt-6 mb-2">2. Utilitas</h4><div class="overflow-x-auto border rounded-lg"><table class="w-full text-sm"><thead class="bg-gray-100 text-xs uppercase"><tr><th class="p-2 text-left">Komponen</th><th class="p-2 text-right">Asumsi</th><th class="p-2 text-right">Total Biaya (Rp)</th></tr></thead><tbody class="divide-y"><tr><td class="p-2">Listrik</td><td class="p-2 text-right">${sierEditable.createEditableNumber(utilData.electricity_kwh_usage, `${unitName}.opexMonthly.utilities.electricity_kwh_usage`)} kWh @ ${sierEditable.createEditableNumber(utilData.electricity_kwh_price, `${unitName}.opexMonthly.utilities.electricity_kwh_price`, {format: 'currency'})}</td><td class="p-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(utilData.electricity_kwh_price * utilData.electricity_kwh_usage))}</td></tr><tr><td class="p-2">Air & Lainnya</td><td class="p-2 text-right">Lump Sum</td><td class="p-2 text-right font-mono">${sierEditable.createEditableNumber(utilData.water_etc, `${unitName}.opexMonthly.utilities.water_etc`, {format: 'currency'})}</td></tr></tbody><tfoot class="font-bold bg-gray-100"><tr><td colspan="2" class="p-2 text-right">Subtotal Biaya Utilitas</td><td class="p-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(totalUtilCost))}</td></tr></tfoot></table></div>`;
+            const utilTableHtml = `<h4 class="font-semibold text-gray-800 mt-6 mb-2">2. Utilitas</h4><div class="overflow-x-auto border rounded-lg"><table class="w-full text-sm"><thead class="bg-gray-100 text-xs uppercase"><tr><th class="p-2 text-left">Komponen</th><th class="p-2 text-right">Asumsi</th><th class="p-2 text-right">Total</th></tr></thead><tbody class="divide-y"><tr><td class="p-2">Listrik</td><td class="p-2 text-right">${utilData.electricity_kwh_usage} kWh @ ...</td><td class="p-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(utilData.electricity_kwh_price * utilData.electricity_kwh_usage))}</td></tr><tr><td class="p-2">Air & Lainnya</td><td class="p-2 text-right">Lump Sum</td><td class="p-2 text-right font-mono">${sierHelpers.formatNumber(utilData.water_etc)}</td></tr></tbody><tfoot class="font-bold bg-gray-100"><tr><td colspan="2" class="p-2 text-right">Subtotal</td><td class="p-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(totalUtilCost))}</td></tr></tfoot></table></div>`;
+
             const otherDataKeys = ['marketing_promotion', 'maintenance_repair', 'other_operational'];
             let otherTableRows = '', totalOtherCost = 0;
-            otherDataKeys.forEach(key => { const cost = opexData[key]; if (cost !== undefined) { totalOtherCost += cost; otherTableRows += `<tr><td class="p-2">${sierTranslate.translate(key)}</td><td class="p-2 text-right font-mono">${sierEditable.createEditableNumber(cost, `${unitName}.opexMonthly.${key}`, {format: 'currency'})}</td></tr>`; } });
+            otherDataKeys.forEach(key => { const cost = opexData[key]; if (cost !== undefined) { totalOtherCost += cost; otherTableRows += `<tr><td class="p-2">${sierTranslate.translate(key)}</td><td class="p-2 text-right font-mono">${sierHelpers.formatNumber(cost)}</td></tr>`; } });
             grandTotalOpex += totalOtherCost;
-            const otherTableHtml = `<h4 class="font-semibold text-gray-800 mt-6 mb-2">3. Biaya Operasional Lainnya</h4><div class="overflow-x-auto border rounded-lg"><table class="w-full text-sm"><thead class="bg-gray-100 text-xs uppercase"><tr><th class="p-2 text-left">Kategori Biaya</th><th class="p-2 text-right">Estimasi Biaya Bulanan (Rp)</th></tr></thead><tbody class="divide-y">${otherTableRows}</tbody><tfoot class="font-bold bg-gray-100"><tr><td class="p-2 text-right">Subtotal Biaya Lainnya</td><td class="p-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(totalOtherCost))}</td></tr></tfoot></table></div>`;
-            return `<div class="bg-white p-6 rounded-lg shadow-md">${staffTableHtml}${utilTableHtml}${otherTableHtml}<div class="mt-6 bg-gray-200 text-gray-800 font-bold p-3 rounded-lg flex justify-between items-center text-lg"><span>Total Estimasi Biaya Operasional Bulanan</span><span class="font-mono">Rp ${sierHelpers.formatNumber(Math.round(grandTotalOpex))}</span></div></div>`;
+            const otherTableHtml = `<h4 class="font-semibold text-gray-800 mt-6 mb-2">3. Biaya Operasional Lainnya</h4><div class="overflow-x-auto border rounded-lg"><table class="w-full text-sm"><thead class="bg-gray-100 text-xs uppercase"><tr><th class="p-2 text-left">Kategori</th><th class="p-2 text-right">Biaya/Bulan</th></tr></thead><tbody class="divide-y">${otherTableRows}</tbody><tfoot class="font-bold bg-gray-100"><tr><td class="p-2 text-right">Subtotal</td><td class="p-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(totalOtherCost))}</td></tr></tfoot></table></div>`;
+
+            return `<div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-bold mb-4 text-center">${title}</h3>
+                        ${staffTableHtml}${utilTableHtml}${otherTableHtml}
+                        <div class="mt-6 bg-gray-200 text-gray-800 font-bold p-3 rounded-lg flex justify-between items-center text-lg">
+                            <span>Total OpEx Bulanan (Basis)</span>
+                            <span class="font-mono">Rp ${sierHelpers.formatNumber(Math.round(grandTotalOpex))}</span>
+                        </div>
+                    </div>`;
         };
-        container.innerHTML = `<h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-amber-500 pl-4">Rincian Estimasi Biaya Operasional (OpEx) Bulanan</h2><div class="grid grid-cols-1 lg:grid-cols-2 gap-8"><div><h3 class="text-xl font-bold mb-4 text-center text-blue-700">Driving Range</h3>${createUnitOpexTable('drivingRange')}</div><div><h3 class="text-xl font-bold mb-4 text-center text-purple-700">Padel</h3>${createUnitOpexTable('padel')}</div></div>`;
+        
+        // Logika Kondisional: Tampilkan tabel OpEx hanya untuk unit yang ada di skenario
+        if (scenarioKey.includes('dr')) tablesHtml.push(createUnitOpexTable('drivingRange', 'Driving Range'));
+        if (scenarioKey.includes('padel4')) tablesHtml.push(createUnitOpexTable('padel', 'Padel (4 Lapangan)', 'four_courts_combined'));
+        if (scenarioKey.includes('padel2')) tablesHtml.push(createUnitOpexTable('padel', 'Padel (2 Lapangan)', 'two_courts_futsal_renovation'));
+        if (scenarioKey.includes('mp')) tablesHtml.push(createUnitOpexTable('meetingPoint', 'Meeting Point'));
+
+        if (tablesHtml.length > 0) {
+             container.innerHTML = `
+                <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-amber-500 pl-4">Rincian Estimasi Biaya Operasional (OpEx) Bulanan</h2>
+                <div class="grid grid-cols-1 ${tablesHtml.length > 1 ? 'lg:grid-cols-2' : ''} gap-8">${tablesHtml.join('')}</div>`;
+        } else {
+            container.innerHTML = '';
+        }
+    },
+
+    _renderAssumptionsVisuals() {
+        const container = document.getElementById('assumptions-container');
+        if (!container) return;
+
+        const { assumptions } = projectConfig;
+
+        const createItemHtml = (label, value, path, description = '', isPercent = false) => {
+            const contentHtml = sierEditable.createEditableNumber(value, path, { format: isPercent ? 'percent' : '' });
+            return `<div class="grid grid-cols-1 md:grid-cols-2 items-center gap-x-4 gap-y-1 py-4 border-b last:border-b-0">
+                        <div>
+                            <h4 class="font-semibold text-gray-800">${label}</h4>
+                            ${description ? `<p class="text-xs text-gray-500 mt-1">${description}</p>` : ''}
+                        </div>
+                        <div class="md:text-right">${contentHtml}</div>
+                    </div>`;
+        };
+        
+        const financingHtml = Object.keys(assumptions.financing).map(key => {
+            return createItemHtml(
+                sierTranslate.translate(key),
+                assumptions.financing[key],
+                `assumptions.financing.${key}`,
+                '', true
+            );
+        }).join('');
+
+        const escalationHtml = Object.keys(assumptions.escalation).map(key => {
+            const isRate = key.includes('rate');
+            return createItemHtml(
+                sierTranslate.translate(key),
+                assumptions.escalation[key],
+                `assumptions.escalation.${key}`,
+                '', isRate
+            );
+        }).join('');
+
+        container.innerHTML = `
+            <div class="space-y-6">
+                <!-- Asumsi Umum -->
+                <div class="bg-gray-50 p-4 rounded-lg border">
+                    <h3 class="font-bold text-lg text-gray-700 mb-2">Asumsi Umum & Pajak</h3>
+                    ${createItemHtml('Pajak Penghasilan Badan', assumptions.tax_rate_profit, 'assumptions.tax_rate_profit', 'Tarif pajak yang dikenakan pada laba sebelum pajak (EBT).', true)}
+                    ${createItemHtml('Tingkat Diskonto (WACC)', assumptions.discount_rate_wacc, 'assumptions.discount_rate_wacc', 'Digunakan untuk menghitung NPV, merepresentasikan biaya modal.', true)}
+                    ${createItemHtml('Dana Kontingensi', assumptions.contingency_rate, 'assumptions.contingency_rate', 'Alokasi dana darurat sebagai persentase dari total CapEx.', true)}
+                </div>
+                <!-- Asumsi Pendanaan -->
+                <div class="bg-gray-50 p-4 rounded-lg border">
+                    <h3 class="font-bold text-lg text-gray-700 mb-2">Asumsi Pendanaan (Financing)</h3>
+                    ${financingHtml}
+                </div>
+                <!-- Asumsi Eskalasi -->
+                <div class="bg-gray-50 p-4 rounded-lg border">
+                    <h3 class="font-bold text-lg text-gray-700 mb-2">Asumsi Peningkatan (Eskalasi)</h3>
+                    ${escalationHtml}
+                </div>
+            </div>
+        `;
     },
 
     _renderDrCapexDetailsVisuals() {
@@ -245,7 +227,6 @@ const sierVisualFinanceDetails = {
             if (capexConfig.demolition_and_construction) processCategory(capexConfig.demolition_and_construction, 'demolition_and_construction');
             if (capexConfig.sport_courts_equipment) {
                  addCategoryRow('sport_courts_equipment');
-                 // ... logika untuk sport_courts_equipment tetap sama ...
                 let perCourtTotal = sierMath._calculateTotal(capexConfig.sport_courts_equipment.per_court_costs);
                 let allCourtsTotal = perCourtTotal * numCourts;
                 let inventoryTotal = sierMath._calculateTotal(capexConfig.sport_courts_equipment.initial_inventory);
@@ -352,133 +333,48 @@ const sierVisualFinanceDetails = {
             </div>`;
     },
 
-    _createRevenueBreakdownSectionMeetingPoint() {
-        const unit = projectConfig.meetingPoint;
-        const o = unit.operational_assumptions;
-        const opDays = o.workdays_in_month + o.weekend_days_in_month;
-        const formatRp = (num) => sierHelpers.formatNumber(Math.round(num));
-        let totalMonthlyRevenue = 0;
-        let tableRows = '';
+    _renderInputAssumptionDetails(model) {
+        const scenarioKey = model.scenario;
+        const clearContainer = (id) => { const el = document.getElementById(id); if (el) el.innerHTML = ''; };
 
-        // Rooms
-        let roomsMonthlyRev = 0;
-        for (const key in unit.revenue.meeting_rooms) {
-            const room = unit.revenue.meeting_rooms[key];
-            const monthlyRev = room.count * room.price_per_hour * room.occupancy_rate * 10 * o.workdays_in_month;
-            roomsMonthlyRev += monthlyRev;
-            tableRows += `<tr><td class="p-2 pl-4">- ${sierTranslate.translate(key)}</td><td class="p-2 text-xs text-gray-500">${room.count} unit @ ${(room.occupancy_rate * 100).toFixed(0)}% okupansi</td><td class="p-2 text-right font-mono">${formatRp(monthlyRev)}</td></tr>`;
+        // Bersihkan semua kontainer detail sebelum merender yang baru
+        clearContainer('opex-details-container');
+        clearContainer('driving-range-capex-details-container');
+        clearContainer('padel-capex-details-container');
+        clearContainer('shared-capex-details-container');
+        clearContainer('meeting-point-capex-details-container');
+
+        // Panggil renderer yang relevan
+        this._renderOpexDetailsVisuals(model); // OpEx
+        
+        // CapEx
+        if (scenarioKey.includes('dr')) this._renderDrCapexDetailsVisuals();
+        if (scenarioKey.includes('padel')) this._renderPadelCapexDetailsVisuals();
+        if (scenarioKey.includes('mp')) this._renderMeetingPointCapexDetailsVisuals();
+        if (scenarioKey !== 'padel2_mp') this._renderSharedCapexVisuals(); // Asumsi fasilitas bersama hanya untuk skenario besar
+    },
+
+    render(model) {
+        // 1. Render Ringkasan Performa per Unit Bisnis
+        const unitSummariesHtml = this._renderUnitSummaries(model.individual);
+        const assumptionsContainer = document.getElementById('financial-assumptions');
+        if (assumptionsContainer) {
+            let summaryDiv = document.getElementById('unit-summaries-section');
+            if (!summaryDiv) {
+                summaryDiv = document.createElement('div');
+                summaryDiv.id = 'unit-summaries-section';
+                assumptionsContainer.parentNode.insertBefore(summaryDiv, assumptionsContainer);
+            }
+            summaryDiv.innerHTML = unitSummariesHtml;
         }
-        totalMonthlyRevenue += roomsMonthlyRev;
 
-        // Coworking
-        const coworking = unit.revenue.coworking.daily_pass_seats;
-        const coworkingRev = coworking.count * coworking.price_per_day * coworking.occupancy_rate * opDays;
-        totalMonthlyRevenue += coworkingRev;
-        tableRows += `<tr><td class="p-2">Coworking (Daily Pass)</td><td class="p-2 text-xs text-gray-500">${coworking.count} kursi @ ${(coworking.occupancy_rate * 100).toFixed(0)}% okupansi</td><td class="p-2 text-right font-mono">${formatRp(coworkingRev)}</td></tr>`;
-        
-        // Virtual Office
-        const vo = unit.revenue.virtual_office;
-        const voRev = vo.packages.count * vo.packages.avg_price_per_month;
-        totalMonthlyRevenue += voRev;
-        tableRows += `<tr><td class="p-2">Virtual Office</td><td class="p-2 text-xs text-gray-500">${vo.packages.count} paket terjual</td><td class="p-2 text-right font-mono">${formatRp(voRev)}</td></tr>`;
+        // 2. Render Tabel Asumsi Finansial Utama
+        this._renderAssumptionsVisuals();
 
-        // Ancillary
-        const fnbRev = unit.revenue.ancillary.fnb_lounge_sales_monthly;
-        totalMonthlyRevenue += fnbRev;
-        tableRows += `<tr><td class="p-2">Penjualan F&B Lounge</td><td class="p-2 text-xs text-gray-500">Estimasi bulanan</td><td class="p-2 text-right font-mono">${formatRp(fnbRev)}</td></tr>`;
-        
-        const parking = unit.revenue.ancillary.parking_revenue;
-        const parkingRev = parking.spots * parking.avg_rate_per_day * parking.occupancy_rate * opDays;
-        totalMonthlyRevenue += parkingRev;
-        tableRows += `<tr><td class="p-2">Pendapatan Parkir</td><td class="p-2 text-xs text-gray-500">${parking.spots} spot @ ${(parking.occupancy_rate * 100).toFixed(0)}% okupansi</td><td class="p-2 text-right font-mono">${formatRp(parkingRev)}</td></tr>`;
+        // 3. Render Semua Rincian Asumsi Input Biaya (OpEx dan CapEx)
+        this._renderInputAssumptionDetails(model);
 
-        return `<div class="mb-8 pb-6 border-b"><h3 class="text-xl font-semibold mb-3 text-gray-800">Proyeksi Rincian Pendapatan</h3><div class="overflow-x-auto border rounded-lg"><table class="w-full text-sm"><thead class="bg-gray-100 text-xs uppercase"><tr><th class="p-2 text-left">Sumber Pendapatan</th><th class="p-2 text-left">Detail Perhitungan</th><th class="p-2 text-right">Per Bulan</th></tr></thead><tbody class="divide-y">${tableRows}</tbody><tfoot class="bg-gray-200 font-bold"><tr><td class="p-2" colspan="2">Total Estimasi Pendapatan</td><td class="p-2 text-right font-mono">${formatRp(totalMonthlyRevenue)}</td></tr></tfoot></table></div></div>`;
-    },
-
-    _renderUnitFinancialDetail(unitName) {
-        const config = {
-            drivingRange: { containerId: 'driving-range-financial-analysis', title: 'Analisis Finansial Detail: Driving Range', borderColor: 'border-blue-500' },
-            padel: { containerId: 'padel-financial-analysis', title: 'Analisis Finansial Detail: Padel', borderColor: 'border-purple-600' }
-        };
-        const { containerId, title, borderColor } = config[unitName];
-        const container = document.getElementById(containerId);
-        if (!container) return;
-        
-        const unitCalculations = sierMath._getUnitCalculations(unitName);
-        const strategicAnalysis = sierMath.getStrategicAnalysis(unitName);
-        
-        // Panggil fungsi yang sudah di-refactor
-        const revenueHtml = this._createRevenueBreakdownSection(unitName);
-        
-        const pnlTableHtml = this._createPnlTable(unitCalculations.pnl);
-        const bepHtml = this._createBEPSection(strategicAnalysis);
-        const profitabilityHtml = this._createProfitabilitySection(strategicAnalysis);
-        const scenarioHtml = this._createScenarioSection(strategicAnalysis);
-
-        container.innerHTML = `
-            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 ${borderColor} pl-4">${title}</h2>
-            <div class="bg-white p-6 rounded-lg shadow-md mb-8 space-y-8">
-                ${revenueHtml}
-                <h3 class="text-xl font-semibold mb-3 text-gray-800">Proyeksi Laba Rugi (P&L)</h3>
-                <div class="overflow-x-auto border rounded-lg">${pnlTableHtml}</div>
-                <div class="mt-8 space-y-6">
-                    ${bepHtml}
-                    ${profitabilityHtml}
-                    ${scenarioHtml}
-                </div>
-            </div>`;
-    },
-
-    _renderUnitFinancialDetailMeetingPoint() {
-        const container = document.getElementById('meeting-point-financial-analysis');
-        if (!container) return;
-
-        const strategicAnalysis = sierMath.getStrategicAnalysisMeetingPoint();
-        const unitCalculations = sierMath._getMeetingPointCalculations(); // Get realistic data
-
-        const revenueHtml = this._createRevenueBreakdownSectionMeetingPoint();
-        const pnlTableHtml = this._createPnlTable(unitCalculations.pnl);
-        const profitabilityHtml = this._createProfitabilitySection(strategicAnalysis);
-        const scenarioHtml = this._createScenarioSection(strategicAnalysis);
-
-        // BEP Section khusus untuk Meeting Point (berbasis Rupiah)
-        const bepHtml = `<div class="bg-gray-50 p-4 rounded-lg border">
-            <h4 class="font-semibold text-gray-800 mb-2">A. Analisis Titik Impas Operasional (BEP)</h4>
-            <p class="text-sm text-gray-600 mb-3">Target pendapatan minimum untuk menutupi semua biaya tetap (operasional & depresiasi).</p>
-            <div class="text-center bg-white p-3 rounded-md shadow-sm">
-                 <p class="text-sm font-semibold text-gray-700">Target Pendapatan Tahunan untuk BEP</p>
-                 <p class="text-4xl font-bold text-cyan-700 mt-1">Rp ${sierHelpers.formatNumber(Math.round(strategicAnalysis.bepAnalysis.bepInRevenue))}</p>
-                 <p class="text-xs text-gray-500 mt-2">(~Rp ${sierHelpers.formatNumber(Math.round(strategicAnalysis.bepAnalysis.bepInRevenue/12))} / bulan)</p>
-            </div>
-        </div>`;
-        
-        container.innerHTML = `
-            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-cyan-600 pl-4">Analisis Finansial Detail: Meeting Point</h2>
-            <div class="bg-white p-6 rounded-lg shadow-md mb-8 space-y-8">
-                ${revenueHtml}
-                <h3 class="text-xl font-semibold mb-3 text-gray-800">Proyeksi Laba Rugi (P&L)</h3>
-                <div class="overflow-x-auto border rounded-lg">${pnlTableHtml}</div>
-                <div class="mt-8 space-y-6">
-                    ${bepHtml}
-                    ${profitabilityHtml}
-                    ${scenarioHtml}
-                </div>
-            </div>`;
-    },
-
-    /**
-     * Fungsi render orkestrator untuk file ini.
-     */
-    render() {
-        this._renderOpexDetailsVisuals();
-        this._renderDrCapexDetailsVisuals();
-        this._renderPadelCapexDetailsVisuals();
-        this._renderSharedCapexVisuals();
-        this._renderUnitFinancialDetail('drivingRange');
-        this._renderUnitFinancialDetail('padel');
-        this._renderMeetingPointCapexDetailsVisuals();
-        this._renderUnitFinancialDetailMeetingPoint();
-        console.log("[sier-visual-finance-details] SEMUA detail finansial (OpEx, CapEx, Analisis) telah dirender.");
+        console.log("[sier-visual-finance-details] Rincian per unit dan semua asumsi input telah dirender.");
     }
 };
 

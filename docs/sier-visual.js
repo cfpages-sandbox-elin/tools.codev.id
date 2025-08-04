@@ -1,11 +1,13 @@
-// File: sier-visual.js chart auto caption / number
-// Bertindak sebagai controller utama aplikasi.
-// Menginisialisasi, mengelola event, dan memanggil semua modul render.
+// File: sier-visual.js
+// VERSI 3.1 FINAL - Bertindak sebagai controller utama aplikasi.
 
+/**
+ * Memberikan penomoran dan caption otomatis untuk semua tabel dan visualisasi (chart/diagram).
+ */
 function applyAutomaticCaptionsAndNumbering() {
     const allHeadings = document.querySelectorAll('h2, h3, h4, h5');
 
-    // --- Bagian 1: Penomoran Otomatis untuk Tabel ---
+    // Penomoran Otomatis untuk Tabel
     const tablePrefix = 'Tabel';
     const allDataTables = Array.from(document.querySelectorAll('table:has(thead)'))
         .sort((a, b) => a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1);
@@ -31,25 +33,14 @@ function applyAutomaticCaptionsAndNumbering() {
         if (table.firstChild) table.insertBefore(caption, table.firstChild);
     });
 
-    // --- Bagian 2: Penomoran Otomatis untuk Chart/Visual ---
+    // Penomoran Otomatis untuk Chart/Visual
     const visualPrefix = 'Gambar';
-    const visualSelectors = [
-        'div:has(> canvas)',                // Semua container chart dari Chart.js
-        '#site-layout-container',           // Diagram Denah Proyek
-        '#padel-conversion-vis',            // Diagram Konversi Futsal ke Padel
-        '#meeting-point-concept-vis',       // Diagram Konsep Meeting Point
-        '#coworking-map-container',          // Peta Posisi Kompetitif
-        '#multiplierEffectDiagram'          // Diagram Multiplier Effect
-    ];
-
+    const visualSelectors = [ 'div:has(> canvas)', '#site-layout-container', '#padel-conversion-vis', '#meeting-point-concept-vis', '#coworking-map-container', '#multiplierEffectDiagram' ];
     const allVisualElements = Array.from(document.querySelectorAll(visualSelectors.join(', ')))
         .sort((a, b) => a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1);
 
     allVisualElements.forEach((element, index) => {
-        // Cek apakah elemen sudah dibungkus <figure> oleh script ini sebelumnya
-        let figureWrapper = element.parentElement.tagName === 'FIGURE' && element.parentElement.classList.contains('auto-caption-wrapper')
-            ? element.parentElement
-            : null;
+        let figureWrapper = element.parentElement.tagName === 'FIGURE' && element.parentElement.classList.contains('auto-caption-wrapper') ? element.parentElement : null;
 
         if (!figureWrapper) {
             figureWrapper = document.createElement('figure');
@@ -81,13 +72,15 @@ function applyAutomaticCaptionsAndNumbering() {
     console.log(`[AutoCaption] Selesai. ${allDataTables.length} tabel dan ${allVisualElements.length} visual telah diberi caption.`);
 }
 
-
+/**
+ * Membuat daftar isi (Table of Contents) secara dinamis untuk navigasi di sisi kanan.
+ */
 function generateTableOfContents() {
     const tocContainer = document.getElementById('toc-nav-list');
     const mainContent = document.querySelector('.container.mx-auto');
     if (!tocContainer || !mainContent) return;
 
-    tocContainer.innerHTML = ''; // Kosongkan navigasi sebelum membuat yang baru
+    tocContainer.innerHTML = '';
     const headings = mainContent.querySelectorAll('h2');
 
     headings.forEach(h2 => {
@@ -96,7 +89,6 @@ function generateTableOfContents() {
             const listItem = document.createElement('li');
             const link = document.createElement('a');
             link.href = `#${section.id}`;
-            // Ambil teks dari h2, buang nomor di depan jika ada (misal "1. ")
             link.textContent = h2.textContent.replace(/^\d+\.\s*/, '');
             link.className = 'block text-sm text-gray-600 hover:text-blue-600 hover:font-semibold transition-all py-1';
             listItem.appendChild(link);
@@ -105,31 +97,27 @@ function generateTableOfContents() {
     });
 }
 
+/**
+ * Mengubah sintaks Markdown sederhana (seperti **bold** dan *italic*) menjadi tag HTML.
+ */
 function processMarkdownFormatting() {
     console.log("Memulai proses format Markdown ke HTML...");
     const container = document.querySelector('.container.mx-auto');
     if (!container) return;
-
     const elementsToProcess = container.querySelectorAll('p, li, td, th, h3, h4, h5, dd, blockquote');
-
-    const rules = [
-        { regex: /\*\*(.*?)\*\*/g, replacement: '<strong>$1</strong>' },
-        { regex: /\*(.*?)\*/g, replacement: '<em>$1</em>' },
-        { regex: /~~(.*?)~~/g, replacement: '<del>$1</del>' },
-        { regex: /`(.*?)`/g, replacement: '<code>$1</code>' }
-    ];
-
+    const rules = [ { regex: /\*\*(.*?)\*\*/g, replacement: '<strong>$1</strong>' }, { regex: /\*(.*?)\*/g, replacement: '<em>$1</em>' } ];
     elementsToProcess.forEach(el => {
-        if (el.children.length > 0) return;
-        let content = el.innerHTML;
-        rules.forEach(rule => {
-            content = content.replace(rule.regex, rule.replacement);
-        });
-        el.innerHTML = content;
+        if (el.children.length === 0) {
+            let content = el.innerHTML;
+            rules.forEach(rule => { content = content.replace(rule.regex, rule.replacement); });
+            el.innerHTML = content;
+        }
     });
-    console.log(`Format Markdown selesai diproses pada ${elementsToProcess.length} elemen.`);
 }
 
+/**
+ * Melakukan pengecekan di console untuk memastikan komponen-komponen utama berhasil dirender.
+ */
 function checkRenderStatus() {
     console.group("===== STATUS RENDER HALAMAN =====");
     const logCheck = (description, checkPassed) => {
@@ -137,14 +125,10 @@ function checkRenderStatus() {
         const color = checkPassed ? 'color: green;' : 'color: red; font-weight: bold;';
         console.log(`%c${status}%c - ${description}`, color, 'color: black;');
     };
-    logCheck('Update Kartu Ringkasan (Total Penduduk)', document.getElementById('totalPenduduk') && document.getElementById('totalPenduduk').innerText !== '0');
-    logCheck('Render Chart Komposisi Ring', document.getElementById('ringChart') && typeof Chart.getChart('ringChart') !== 'undefined');
-    logCheck('Render Chart Distribusi Usia', document.getElementById('ageDistributionChart') && typeof Chart.getChart('ageDistributionChart') !== 'undefined');
-    logCheck('Render Tabel Data Populasi Mentah', document.getElementById('dataTableBody') && document.getElementById('dataTableBody').children.length > 0);
-    logCheck('Render Tabel Estimasi Pendapatan', document.getElementById('incomeTableBody') && document.getElementById('incomeTableBody').children.length > 0);
+    logCheck('Update Kartu Ringkasan Demografi', document.getElementById('totalPenduduk') && document.getElementById('totalPenduduk').innerText !== '0');
     logCheck('Render Chart Analisis Survei', document.getElementById('surveyChartsContainer') && document.getElementById('surveyChartsContainer').children.length > 0);
-    logCheck('Render Analisis Tematik Masukan Kualitatif', document.getElementById('themedFeedbackContainer') && document.getElementById('themedFeedbackContainer').children.length > 0);
-    logCheck('Render Rincian OpEx', document.getElementById('opex-details-container') && document.getElementById('opex-details-container').children.length > 0);
+    logCheck('Render Model Finansial (Output)', document.getElementById('financial-model-output') && !document.getElementById('financial-model-output').innerText.includes('Memuat'));
+    logCheck('Render Rincian Biaya (Details)', document.getElementById('opex-details-container') && document.getElementById('opex-details-container').children.length > 0);
     console.groupEnd();
 }
 
@@ -152,29 +136,50 @@ function checkRenderStatus() {
 document.addEventListener('DOMContentLoaded', () => {
 
     /**
-     * Fungsi MASTER yang memanggil semua modul render.
+     * Fungsi utama untuk merender ulang seluruh bagian finansial berdasarkan skenario.
+     * @param {string} scenarioKey - Kunci skenario yang dipilih (misal: 'dr_padel4_mp').
      */
-    function updateAllVisuals() {
-        console.log("Memperbarui semua modul visual...");
+    function renderFinancials(scenarioKey) {
+        if (!scenarioKey) {
+            console.error("Skenario tidak valid!");
+            return;
+        }
+        console.log(`[Controller] Meminta render untuk skenario: ${scenarioKey}`);
+        
+        // 1. Bangun model finansial lengkap menggunakan `sierMathFinance`.
+        const model = sierMathFinance.buildFinancialModelForScenario(scenarioKey);
 
-        sierHelpers.tryToRender(sierVisualDemography.render.bind(sierVisualDemography));
-        sierHelpers.tryToRender(sierVisualMarket.render.bind(sierVisualMarket));
-        sierHelpers.tryToRender(sierVisualSurvey.render.bind(sierVisualSurvey));
-        sierHelpers.tryToRender(sierVisualFinanceDetails.render.bind(sierVisualFinanceDetails));
-        sierHelpers.tryToRender(sierVisualFinanceSummary.render.bind(sierVisualFinanceSummary));
+        // 2. Kirim data yang relevan ke masing-masing visualizer.
+        sierHelpers.tryToRender(() => sierVisualFinanceSummary.render(model.combined));
+        sierHelpers.tryToRender(() => sierVisualFinanceDetails.render(model));
+        
+        // 3. Update penomoran otomatis karena tabel dan gambar baru telah dibuat.
+        applyAutomaticCaptionsAndNumbering();
+    }
+    
+    /**
+     * Fungsi yang memanggil semua modul render non-finansial.
+     */
+    function updateNonFinancialVisuals() {
+        console.log("[Controller] Memperbarui modul visual non-finansial...");
+        
+        // Menggunakan objek kalkulasi yang sudah dipecah
+        sierHelpers.tryToRender(() => sierVisualDemography.render(sierMathMarket));
+        sierHelpers.tryToRender(() => sierVisualMarket.render(sierMathMarket));
+        sierHelpers.tryToRender(() => sierVisualSurvey.render(sierMathSurvey, sierMathMarket));
+
+        // Modul lain yang tidak bergantung pada data dinamis
         sierHelpers.tryToRender(sierVisualTechnical.render.bind(sierVisualTechnical));
         sierHelpers.tryToRender(sierVisualTechnicalDiagrams.renderAll.bind(sierVisualTechnicalDiagrams));
         sierHelpers.tryToRender(sierVisualDigital.render.bind(sierVisualDigital));
         sierHelpers.tryToRender(sierVisualMaintenance.render.bind(sierVisualMaintenance));
-        sierHelpers.tryToRender(sierVisualStrategy.render.bind(sierVisualStrategy));
         sierHelpers.tryToRender(sierVisualImpact.render.bind(sierVisualImpact));
         sierHelpers.tryToRender(sierVisualMeetingPoint.renderAll.bind(sierVisualMeetingPoint));
         sierHelpers.tryToRender(sierChart.renderAllCharts.bind(sierChart));
 
-        // Panggil pemrosesan markdown setelah semua visual diperbarui
         processMarkdownFormatting();
     }
-
+    
     /**
      * Menyiapkan semua event listener global untuk interaktivitas.
      */
@@ -190,9 +195,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (path && !isNaN(value)) {
-                sierMath.setValueByPath(projectConfig, path, value);
-                updateAllVisuals();
-                applyAutomaticCaptionsAndNumbering();
+                sierMathFinance.setValueByPath(projectConfig, path, value);
+                renderFinancials(document.getElementById('scenario-selector').value);
             }
         };
 
@@ -232,18 +236,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (e.key === 'Escape') {
                     e.preventDefault();
                     const path = e.target.dataset.path;
-                    let originalValue = sierMath.getValueByPath(projectConfig, path);
+                    let originalValue = sierMathFinance.getValueByPath(projectConfig, path);
                     e.target.value = originalValue;
                     e.target.blur();
                 }
             }
         });
+
+        const scenarioSelector = document.getElementById('scenario-selector');
+        if (scenarioSelector) {
+            scenarioSelector.addEventListener('change', (e) => {
+                renderFinancials(e.target.value);
+            });
+        }
     }
 
-    // --- Urutan Inisialisasi Aplikasi yang Benar ---
-    updateAllVisuals();
-    applyAutomaticCaptionsAndNumbering();
+    // --- URUTAN INISIALISASI APLIKASI ---
+    // 1. Render semua bagian yang tidak bergantung pada skenario finansial
+    updateNonFinancialVisuals();
+    
+    // 2. Siapkan semua event listener
     setupEventListeners();
+
+    // 3. Buat Daftar Isi
     generateTableOfContents();
-    setTimeout(checkRenderStatus, 500); // Jalankan pengecekan status setelah render selesai
+    
+    // 4. Render bagian finansial untuk pertama kali berdasarkan skenario default
+    const initialScenario = document.getElementById('scenario-selector').value;
+    renderFinancials(initialScenario);
+    
+    // 5. Jalankan pengecekan status setelah jeda singkat
+    setTimeout(checkRenderStatus, 1000);
 });
