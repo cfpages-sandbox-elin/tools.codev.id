@@ -92,19 +92,19 @@ const sierVisualSurvey = {
             if (el) el.innerText = text;
         };
 
-        updateText('sampleSize10', `${sierHelpers.formatNumber(sierMath.slovin(summary.totalPopulation, 0.10))} Responden`);
-        updateText('sampleSize5', `${sierHelpers.formatNumber(sierMath.slovin(summary.totalPopulation, 0.05))} Responden`);
-        updateText('sampleSize3', `${sierHelpers.formatNumber(sierMath.slovin(summary.totalPopulation, 0.03))} Responden`);
+        updateText('sampleSize10', `${sierHelpers.formatNumber(sierMathSurvey.slovin(summary.totalPopulation, 0.10))} Responden`);
+        updateText('sampleSize5', `${sierHelpers.formatNumber(sierMathSurvey.slovin(summary.totalPopulation, 0.05))} Responden`);
+        updateText('sampleSize3', `${sierHelpers.formatNumber(sierMathSurvey.slovin(summary.totalPopulation, 0.03))} Responden`);
         
         updateText('totalPopRing1', `(Total Populasi N = ${sierHelpers.formatNumber(summary.totalRing1)})`);
-        updateText('sampleSizeRing1_10', sierHelpers.formatNumber(sierMath.slovin(summary.totalRing1, 0.10)));
-        updateText('sampleSizeRing1_5', sierHelpers.formatNumber(sierMath.slovin(summary.totalRing1, 0.05)));
-        updateText('sampleSizeRing1_3', sierHelpers.formatNumber(sierMath.slovin(summary.totalRing1, 0.03)));
+        updateText('sampleSizeRing1_10', sierHelpers.formatNumber(sierMathSurvey.slovin(summary.totalRing1, 0.10)));
+        updateText('sampleSizeRing1_5', sierHelpers.formatNumber(sierMathSurvey.slovin(summary.totalRing1, 0.05)));
+        updateText('sampleSizeRing1_3', sierHelpers.formatNumber(sierMathSurvey.slovin(summary.totalRing1, 0.03)));
 
         updateText('totalPopRing2', `(Total Populasi N = ${sierHelpers.formatNumber(summary.totalRing2)})`);
-        updateText('sampleSizeRing2_10', sierHelpers.formatNumber(sierMath.slovin(summary.totalRing2, 0.10)));
-        updateText('sampleSizeRing2_5', sierHelpers.formatNumber(sierMath.slovin(summary.totalRing2, 0.05)));
-        updateText('sampleSizeRing2_3', sierHelpers.formatNumber(sierMath.slovin(summary.totalRing2, 0.03)));
+        updateText('sampleSizeRing2_10', sierHelpers.formatNumber(sierMathSurvey.slovin(summary.totalRing2, 0.10)));
+        updateText('sampleSizeRing2_5', sierHelpers.formatNumber(sierMathSurvey.slovin(summary.totalRing2, 0.05)));
+        updateText('sampleSizeRing2_3', sierHelpers.formatNumber(sierMathSurvey.slovin(summary.totalRing2, 0.03)));
     },
 
     render() {

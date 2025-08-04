@@ -375,7 +375,7 @@ const sierMathFinance = {
                 ],
                 subtotal: scenario_b_results.subtotal, contingency: scenario_b_results.contingency, total: scenario_b_results.total
             }
-        },
+        };
     },
 
     _getUnitCalculations(unitName, padelScenarioKey = 'four_courts_combined') {
