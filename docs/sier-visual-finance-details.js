@@ -57,11 +57,10 @@ const sierVisualFinanceDetails = {
      * Merender tabel rincian Biaya Operasional (OpEx) bulanan untuk unit bisnis yang relevan.
      * @param {object} model - Objek model finansial lengkap.
      */
-    _renderOpexDetailsVisuals(model) {
+    _renderOpexDetailsVisuals(model, scenarioKey) {
         const container = document.getElementById('opex-details-container');
         if (!container) return;
 
-        const scenarioKey = model.scenario;
         let tablesHtml = [];
 
         const createUnitOpexTable = (unitName, title, scenarioKey = null) => {
@@ -333,8 +332,7 @@ const sierVisualFinanceDetails = {
             </div>`;
     },
 
-    _renderInputAssumptionDetails(model) {
-        const scenarioKey = model.scenario;
+    _renderInputAssumptionDetails(model, scenarioKey) {
         const clearContainer = (id) => { const el = document.getElementById(id); if (el) el.innerHTML = ''; };
 
         // Bersihkan semua kontainer detail sebelum merender yang baru
@@ -345,7 +343,7 @@ const sierVisualFinanceDetails = {
         clearContainer('meeting-point-capex-details-container');
 
         // Panggil renderer yang relevan
-        this._renderOpexDetailsVisuals(model); // OpEx
+        this._renderOpexDetailsVisuals(model, scenarioKey); // OpEx
         
         // CapEx
         if (scenarioKey.includes('dr')) this._renderDrCapexDetailsVisuals();
@@ -354,7 +352,7 @@ const sierVisualFinanceDetails = {
         if (scenarioKey !== 'padel2_mp') this._renderSharedCapexVisuals(); // Asumsi fasilitas bersama hanya untuk skenario besar
     },
 
-    render(model) {
+    render(model, scenarioKey) {
         // 1. Render Ringkasan Performa per Unit Bisnis
         const unitSummariesHtml = this._renderUnitSummaries(model.individual);
         const assumptionsContainer = document.getElementById('financial-assumptions');
@@ -372,7 +370,7 @@ const sierVisualFinanceDetails = {
         this._renderAssumptionsVisuals();
 
         // 3. Render Semua Rincian Asumsi Input Biaya (OpEx dan CapEx)
-        this._renderInputAssumptionDetails(model);
+        this._renderInputAssumptionDetails(model, scenarioKey);
 
         console.log("[sier-visual-finance-details] Rincian per unit dan semua asumsi input telah dirender.");
     }

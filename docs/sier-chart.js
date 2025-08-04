@@ -53,7 +53,7 @@ const sierChart = {
      * Merender semua chart di bagian demografi utama.
      */
     _renderDemographyCharts() {
-        const summary = sierMath.getDemographySummary();
+        const summary = sierMathMarket.getDemographySummary();
         if (!summary || !summary.totalPopulation) return;
 
         this.createChart('ringChart', { type: 'doughnut', data: { labels: ['Ring 1', 'Ring 2'], datasets: [{ data: [summary.totalRing1, summary.totalRing2], backgroundColor: ['#10B981', '#F59E0B'] }] } });
@@ -66,7 +66,7 @@ const sierChart = {
      * Merender semua chart di bagian analisis demografi detail.
      */
     _renderDetailedDemographyCharts() {
-        const data = sierMath.getDetailedDemography();
+        const data = sierMathMarket.getDetailedDemography();
         if (!data) return;
 
         this.createChart('ageDistributionByRingChart', { type: 'bar', data: { labels: data.ageLabels, datasets: [{ label: 'Ring 1', data: Object.values(data.byRing1), backgroundColor: 'rgba(22, 163, 74, 0.7)' }, { label: 'Ring 2', data: Object.values(data.byRing2), backgroundColor: 'rgba(245, 158, 11, 0.7)' }] } });
@@ -91,7 +91,7 @@ const sierChart = {
      * Merender semua chart di bagian analisis pendapatan dan pasar.
      */
     _renderIncomeAndMarketCharts() {
-        const data = sierMath.getIncomeAndMarketSummary();
+        const data = sierMathMarket.getIncomeAndMarketSummary();
         if (!data) return;
         
         const { kecamatanNames, byIncomeKecamatan, marketData, totalTargetByAge } = data;
@@ -122,7 +122,7 @@ const sierChart = {
      * Merender semua chart di bagian analisis survei.
      */
     _renderSurveyCharts() {
-        const data = sierMath.getSurveyAnalysis();
+        const data = sierMathSurvey.getSurveyAnalysis();
         if (!data || !data.hasData) return;
         
         const { aggregated, choiceVsAge, correlation, themeColors } = data;

@@ -3,7 +3,7 @@
 
 const sierVisualDemography = {
     _renderVisuals() {
-        const summary = sierMath.getDemographySummary();
+        const summary = sierMathMarket.getDemographySummary();
         if (!summary || !summary.totalPopulation) return;
 
         document.getElementById('totalPenduduk').innerText = sierHelpers.formatNumber(summary.totalPopulation);

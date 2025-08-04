@@ -131,7 +131,7 @@ const sierVisualFinanceSummary = {
         if (!outputContainer) return;
 
         console.log(`[Finance Visual] Merender model untuk skenario: ${selectedScenario}`);
-        const model = sierMathFinance.generateFullFinancialModel(selectedScenario);
+        const model = sierMathFinance.buildFinancialModelForScenario(selectedScenario);
 
         // 1. Render Metrik Kelayakan
         const metricsHtml = this._createFeasibilityMetricsCard(model.feasibilityMetrics);

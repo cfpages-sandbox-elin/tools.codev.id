@@ -11,12 +11,12 @@ const sierVisualImpact = {
         if (!tableBody) return;
 
         // Ambil data dari kalkulasi finansial
-        const summary = sierMath.getFinancialSummary();
-        const { drivingRange: dr, padel, combined } = summary;
+        const model = sierMathFinance.buildFinancialModelForScenario('dr_padel4_mp'); // Gunakan skenario terlengkap sebagai basis
+        const { combined } = model;
 
-        const totalCapex = combined.capex.total;
-        const totalAnnualOpex = combined.pnl.annualOpex;
-        const totalAnnualTax = combined.pnl.tax;
+        const totalCapex = combined.capexSchedule[0]; // Capex ada di tahun ke-0
+        const totalAnnualOpex = combined.opex[1]; // Opex tahun pertama
+        const totalAnnualTax = combined.incomeStatement.tax[1]; // Pajak tahun pertama
 
         // Hitung total staf
         const drStaff = Object.values(projectConfig.drivingRange.opexMonthly.salaries_wages).reduce((sum, role) => sum + role.count, 0);

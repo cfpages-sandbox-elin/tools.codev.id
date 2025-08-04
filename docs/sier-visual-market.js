@@ -3,7 +3,7 @@
 
 const sierVisualMarket = {
     _renderVisuals() {
-        const summary = sierMath.getIncomeAndMarketSummary();
+        const summary = sierMathMarket.getIncomeAndMarketSummary();
         if (!summary) return;
 
         const { estimatedIncomeData, marketData, kecamatanNames } = summary;

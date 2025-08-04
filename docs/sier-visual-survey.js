@@ -84,7 +84,7 @@ const sierVisualSurvey = {
     },
 
     _renderSampleCalculations() {
-        const summary = sierMath.getDemographySummary();
+        const summary = sierMathMarket.getDemographySummary();
         if (!summary || !summary.totalPopulation) return;
 
         const updateText = (id, text) => {
@@ -108,7 +108,7 @@ const sierVisualSurvey = {
     },
 
     render() {
-        const summary = sierMath.getSurveyAnalysis();
+        const summary = sierMathSurvey.getSurveyAnalysis();
 
         this._renderVisuals(summary);
         this._renderSampleCalculations();

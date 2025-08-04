@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 2. Kirim data yang relevan ke masing-masing visualizer.
         sierHelpers.tryToRender(() => sierVisualFinanceSummary.render(model.combined));
-        sierHelpers.tryToRender(() => sierVisualFinanceDetails.render(model));
+        sierHelpers.tryToRender(() => sierVisualFinanceDetails.render(model, scenarioKey)); 
         
         // 3. Update penomoran otomatis karena tabel dan gambar baru telah dibuat.
         applyAutomaticCaptionsAndNumbering();
