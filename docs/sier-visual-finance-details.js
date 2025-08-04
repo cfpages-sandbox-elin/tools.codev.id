@@ -242,19 +242,16 @@ const sierVisualFinanceDetails = {
             return `<div class="mb-12"><h3 class="text-xl font-semibold mb-2 text-gray-800">${capexConfig.title}</h3><p class="text-gray-600 mb-4 text-sm">${capexConfig.notes}</p><div class="overflow-x-auto border rounded-lg"><table class="w-full text-sm"><thead class="bg-gray-200 text-xs uppercase"><tr><th class="p-2 text-left w-1/2">Komponen Biaya</th><th class="p-2 text-left w-1/4">Detail Perhitungan</th><th class="p-2 text-right w-1/4">Estimasi Biaya (Rp)</th></tr></thead>${tableBodyHtml}<tfoot class="font-bold"><tr class="bg-gray-200"><td class="p-3 text-right" colspan="2">Subtotal Biaya</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(subtotal))}</td></tr><tr class="bg-yellow-200"><td class="p-3 text-right" colspan="2">Kontingensi (${(projectConfig.assumptions.contingency_rate * 100)}%)</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(contingency))}</td></tr><tr class="bg-purple-600 text-white text-lg"><td class="p-3 text-right" colspan="2">Total Estimasi Investasi</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(finalTotal))}</td></tr></tfoot></table></div></div>`;
         };
 
-        const scenarioA_Html = createScenarioTable(projectConfig.padel.capex_scenario_a);
-        const scenarioB_Html = createScenarioTable(projectConfig.padel.capex_scenario_b);
-        const scenarioC_Html = createScenarioTable(projectConfig.padel.capex_scenario_c);
-
+        const scenarioTwoCourtsHtml = createScenarioTable(projectConfig.padel.scenarios.two_courts_futsal_renovation);
+        const scenarioFourCourtsHtml = createScenarioTable(projectConfig.padel.scenarios.four_courts_combined);
 
         container.innerHTML = `
             <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-purple-600 pl-4">Rincian Estimasi Biaya Investasi (CapEx): Padel</h2>
             <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-                ${scenarioA_Html}
-                ${scenarioB_Html}
-                ${scenarioC_Html}
-                 <div class="p-4 bg-purple-50 border-l-4 border-purple-400 text-sm text-purple-800">
-                    <strong>Rekomendasi:</strong> <strong>Skenario B (Renovasi Futsal)</strong> adalah yang tercepat dan termurah untuk validasi pasar. <strong>Skenario C (Bangun Ulang Koperasi)</strong> memberikan keseimbangan antara biaya dan kualitas bangunan yang ideal. <strong>Skenario A (4 Lapangan)</strong> adalah target ekspansi jangka panjang jika permintaan terbukti sangat tinggi.
+                ${scenarioTwoCourtsHtml}
+                ${scenarioFourCourtsHtml}
+                <div class="p-4 bg-purple-50 border-l-4 border-purple-400 text-sm text-purple-800">
+                    <strong>Rekomendasi:</strong> <strong>Skenario 1 (2 Lapangan Renovasi)</strong> adalah yang tercepat dan termurah untuk validasi pasar. <strong>Skenario 2 (4 Lapangan Kombinasi)</strong> adalah target ekspansi jangka panjang jika permintaan terbukti sangat tinggi.
                 </div>
             </div>`;
     },
