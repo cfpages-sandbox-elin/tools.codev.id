@@ -178,10 +178,10 @@ const sierVisualFinanceDetails = {
     _renderDrCapexDetailsVisuals() {
         const container = document.getElementById('driving-range-capex-details-container');
         if (!container) return;
-        const results = sierMath._calculateDrCapex();
+        const results = sierMathFinance._calculateDrCapex();
         if (!results) return;
         const { equipment_detail, scenario_a, scenario_b } = results;
-        const createRow = (item) => `<tr><td class="p-2">${item.category}</td><td class="p-2">${item.component}</td><td class="p-2 text-xs text-gray-500">${item.calculation}</td><td class="p-2 text-right font-mono">${sierEditable.createEditableNumber(sierMath.getValueByPath(projectConfig, item.path), item.path, {format: 'currency'})}</td></tr>`;
+        const createRow = (item) => `<tr><td class="p-2">${item.category}</td><td class="p-2">${item.component}</td><td class="p-2 text-xs text-gray-500">${item.calculation}</td><td class="p-2 text-right font-mono">${sierEditable.createEditableNumber(sierMathFinance.getValueByPath(projectConfig, item.path), item.path, {format: 'currency'})}</td></tr>`;
         const equipmentTable = `<h3 class="text-xl font-semibold mb-3 text-gray-800">Rincian Biaya Peralatan & Jaring Pengaman</h3><div class="overflow-x-auto border rounded-lg mb-8"><table class="w-full text-sm"><thead class="bg-gray-100 text-xs uppercase"><tr><th class="p-2 text-left">Kategori</th><th class="p-2 text-left">Komponen</th><th class="p-2 text-left">Detail</th><th class="p-2 text-right">Biaya Satuan (Rp)</th></tr></thead><tbody class="divide-y">${equipment_detail.htmlRows.map(createRow).join('')}</tbody></table></div>`;
         const scenarioTableHtml = (data, title, description) => {
             if(!data) return '';

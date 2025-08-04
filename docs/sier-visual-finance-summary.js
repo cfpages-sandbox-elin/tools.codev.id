@@ -126,12 +126,11 @@ const sierVisualFinanceSummary = {
      * Fungsi render utama yang dipanggil oleh controller.
      * @param {string} selectedScenario - Kunci skenario yang dipilih dari UI.
      */
-    render(selectedScenario) {
+    render(model) {
         const outputContainer = document.getElementById('financial-model-output');
         if (!outputContainer) return;
 
         console.log(`[Finance Visual] Merender model untuk skenario: ${selectedScenario}`);
-        const model = sierMathFinance.buildFinancialModelForScenario(selectedScenario);
 
         // 1. Render Metrik Kelayakan
         const metricsHtml = this._createFeasibilityMetricsCard(model.feasibilityMetrics);

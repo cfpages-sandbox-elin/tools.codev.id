@@ -20,8 +20,9 @@ const sierVisualImpact = {
 
         // Hitung total staf
         const drStaff = Object.values(projectConfig.drivingRange.opexMonthly.salaries_wages).reduce((sum, role) => sum + role.count, 0);
-        const padelStaff = Object.values(projectConfig.padel.opexMonthly.salaries_wages).reduce((sum, role) => sum + role.count, 0);
-        const totalStaff = drStaff + padelStaff;
+        const padelStaff = Object.values(projectConfig.padel.scenarios.four_courts_combined.opexMonthly.salaries_wages).reduce((sum, role) => sum + role.count, 0);
+        const meetingPointStaff = Object.values(projectConfig.meetingPoint.opexMonthly.salaries_wages).reduce((sum, role) => sum + role.count, 0);
+        const totalStaff = drStaff + padelStaff + meetingPointStaff;
 
         const formatRp = (num) => `~Rp ${sierHelpers.toBillion(num)}`;
 
