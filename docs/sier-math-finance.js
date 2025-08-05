@@ -1,4 +1,4 @@
-// File: sier-math-finance.js fix pisah parkir
+// File: sier-math-finance.js update pdf terbaru
 const sierMathFinance = {
     getValueByPath(obj, path) {
         return path.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj);
@@ -415,10 +415,31 @@ const sierMathFinance = {
 
     _calculateTotal(dataObject) {
         if (typeof dataObject !== 'object' || dataObject === null) return 0;
+
         return Object.values(dataObject).reduce((sum, value) => {
-            if (typeof value === 'number') return sum + value;
+            if (typeof value === 'number') {
+                return sum + value;
+            }
             if (typeof value === 'object' && value !== null) {
-                return sum + (value.count * value.salary || value.quantity * value.unit_cost || value.lump_sum || (value.area_m2 * value.cost_per_m2) || this._calculateTotal(value));
+                // Cek berbagai pola struktur data yang mungkin
+                if (value.count && value.salary) { // Untuk Gaji
+                    return sum + (value.count * value.salary);
+                } 
+                else if (value.quantity && value.unit_cost) { // Untuk Item Kuantitas
+                    return sum + (value.quantity * value.unit_cost);
+                } 
+                else if (value.area_m2 && value.cost_per_m2) { // Untuk Item Area
+                    return sum + (value.area_m2 * value.cost_per_m2);
+                }
+                else if (value.toilet_unit && value.area_m2_per_toilet && value.cost_per_m2) {
+                    return sum + (value.toilet_unit * value.area_m2_per_toilet * value.cost_per_m2);
+                }
+                else if (value.lump_sum) { // Untuk Lump Sum
+                    return sum + value.lump_sum;
+                }
+                else { // Jika tidak ada pola yang cocok, coba hitung di level yang lebih dalam
+                    return sum + this._calculateTotal(value);
+                }
             }
             return sum;
         }, 0);

@@ -1,4 +1,4 @@
-// File: sier-variables.js pisah parkir
+// File: sier-variables.js update pdf terbaru
 const projectConfig = {};
 
 projectConfig.site_parameters = {
@@ -11,6 +11,11 @@ projectConfig.site_parameters = {
     padel: {
         total_available_area_m2: 1157,
         area_per_court_m2: 260,
+        demolition_area_koperasi_m2: 293
+    },
+    shared_facilities: {
+        parking_spots: 13,
+        access_road_area_m2: 90
     }
 };
 
@@ -156,6 +161,9 @@ projectConfig.assumptions = {
 };
 
 projectConfig.drivingRange = {
+    scenarios: {
+        include_lake_roof_net: true // Ubah ke 'false' untuk skenario tanpa jaring
+    },
     operational_assumptions: { 
         workdays_in_month: 22, 
         weekend_days_in_month: 8, 
@@ -218,6 +226,29 @@ projectConfig.drivingRange = {
             get field_width_m() { return this.total_perimeter_m - (this.field_length_m * 2); },
             netting: { cost_per_m2: 150000, },
             poles: { spacing_m: 20, height_distribution: { far_side_m: 12, left_right_side_m: 8 }, foundation_cost_per_pole: 25000000, }
+            lake_roof_netting: {
+                area_m2: 235 * 85,
+                cost_per_m2: 125000
+            }
+        },
+        plumbing_and_sanitary: {
+            unit_costs: {
+                toilet_bowl: 3500000,
+                urinal: 2500000,
+                sink: 2000000
+            },
+            male_toilet: {
+                toilets: 4,
+                urinals: 4,
+                sinks: 4
+            },
+            female_toilet: {
+                toilets: 4,
+                sinks: 7
+            }
+        },
+        bay_furniture: {
+            cost_per_bay: 4500000
         },
         mep_systems: {
             hvac_system: { cost_per_m2_hvac: 750000, },
@@ -370,10 +401,18 @@ projectConfig.padel = {
                     interior_finishing_painting: { area_m2: 500, cost_per_m2: 200000 }
                 },
                 component_koperasi_new_build: {
-                    building_demolition: { lump_sum: 50000000 },
                     land_preparation_and_foundation: { area_m2: 600, cost_per_m2: 400000 },
                     building_structure_2_courts: { area_m2: 600, cost_per_m2: 2000000 },
                     interior_and_facade: { lump_sum: 250000000 }
+                    building_demolition: { 
+                        area_m2: projectConfig.site_parameters.padel.demolition_area_koperasi_m2, 
+                        cost_per_m2: 250000
+                    },
+                    plumbing_and_sanitary: {
+                        toilet_unit: 4,
+                        area_m2: 3.2, // (4 unit toilet x (1.6m x 2.0m))
+                        cost_per_m2: 7812500
+                    }
                 },
                 sport_courts_equipment: {
                     per_court_costs: {
@@ -440,6 +479,19 @@ projectConfig.shared_facilities_capex = {
 };
 
 projectConfig.meetingPoint = {
+    unit_costs: {
+        chair: 1200000,
+        table_2pax: 1800000,
+        table_4pax: 2500000,
+        sofa: 7500000,
+        coffee_table: 2000000,
+        meeting_pod: 35000000,
+        vip_partition: 15000000,
+        vip_table: 8000000,
+        vip_chair: 2500000,
+        kitchen_equipment_lump_sum: 75000000,
+        toilet_unit_lump_sum: 30000000
+    },
     operational_assumptions: {
         workdays_in_month: 22,
         weekend_days_in_month: 8,
@@ -478,37 +530,77 @@ projectConfig.meetingPoint = {
         maintenance_repair: 5000000,
         other_operational: 7000000
     },
-    capex_scenario_a: {
-        title: "Skenario A: Renovasi Gedung Arsip",
-        notes: "Memanfaatkan struktur gedung eksisting untuk efisiensi biaya, dengan fokus pada perombakan total interior dan fasad.",
-        renovation_costs: {
-            structural_reinforcement: { lump_sum: 150000000 },
-            interior_works_pods: { area_m2: 500, cost_per_m2: 2500000 },
-            mep_upgrade_hvac: { area_m2: 500, cost_per_m2: 750000 },
-            facade_modernization: { lump_sum: 200000000 }
-        },
-        equipment_and_furniture: {
-            furniture_lounge_coworking: { lump_sum: 300000000 },
-            av_equipment_meeting_rooms: { lump_sum: 150000000 },
-            cafe_bar_equipment: { lump_sum: 100000000 }
-        },
-        pre_operational: { permits_and_consulting: 40000000 }
-    },
-    capex_scenario_b: {
-        title: "Skenario B: Bangun Ulang dari Nol",
-        notes: "Mendmolisi gedung eksisting untuk membangun 'Business Hub' yang ikonik dan didesain sesuai konsep ideal.",
-        demolition_and_construction: {
-            building_demolition: { lump_sum: 80000000 },
-            foundation_and_structure: { area_m2: 500, cost_per_m2: 3000000 },
-            architecture_facade: { area_m2: 500, cost_per_m2: 2000000 },
-            interior_works_pods: { area_m2: 500, cost_per_m2: 3000000 },
-        },
-        equipment_and_furniture: { // Sama dengan skenario renovasi
-            furniture_lounge_coworking: { lump_sum: 300000000 },
-            av_equipment_meeting_rooms: { lump_sum: 150000000 },
-            cafe_bar_equipment: { lump_sum: 100000000 }
-        },
-        pre_operational: { permits_and_consulting: 75000000 }
+    capex_scenarios: {
+        construction_scenarios: {
+            renovate: {
+                title: "Metode 1: Renovasi Gedung Arsip",
+                base_costs: {
+                    permits_and_consulting: 40000000,
+                    structural_reinforcement: { lump_sum: 150000000 },
+                    mep_upgrade_hvac: { area_m2: 109, cost_per_m2: 750000 },
+                    facade_modernization: { lump_sum: 200000000 }
+                }
+            },
+            rebuild: {
+                title: "Metode 2: Bongkar & Bangun Ulang",
+                base_costs: {
+                    permits_and_consulting: 75000000,
+                    building_demolition: { 
+                        area_m2: 109,
+                        cost_per_m2: 250000
+                    },
+                    foundation_and_structure: { area_m2: 109, cost_per_m2: 3000000 },
+                    architecture_facade: { area_m2: 109, cost_per_m2: 2000000 }
+                }
+            }
+        },        
+        concept_scenarios: {
+            concept_1_pods: {
+                title: "Konsep 1: Business Lounge dengan Meeting Pods (Alternatif 01)",
+                items: {
+                    chairs: 20,
+                    tables_4pax: 4,
+                    tables_2pax: 2,
+                    sofas: 2,
+                    coffee_tables: 1,
+                    meeting_pods: 4,
+                    vip_rooms: 0,
+                    kitchen: 1,
+                    toilet: 1
+                }
+            },
+            concept_2_open: {
+                title: "Konsep 2: Open Space & Coworking (Alternatif 02)",
+                items: {
+                    chairs: 28,
+                    tables_4pax: 6,
+                    tables_2pax: 2,
+                    sofas: 0,
+                    coffee_tables: 0,
+                    meeting_pods: 0,
+                    vip_rooms: 0,
+                    kitchen: 1,
+                    toilet: 1
+                }
+            },
+            concept_3_vip: {
+                title: "Konsep 3: Area Meeting dengan Ruang VIP (Alternatif 03)",
+                items: {
+                    chairs: 16,
+                    tables_4pax: 3,
+                    tables_2pax: 2,
+                    sofas: 0,
+                    coffee_tables: 0,
+                    meeting_pods: 0,
+                    vip_rooms: 3,
+                    vip_partitions: 3, // Dihitung terpisah dari renovasi
+                    vip_tables: 3,
+                    vip_chairs: 12,
+                    kitchen: 1,
+                    toilet: 1
+                }
+            }
+        }
     }
 };
 
@@ -516,7 +608,7 @@ projectConfig.shared_revenue = {
     title: "Pendapatan Bersama (Shared)",
     notes: "Pendapatan yang dihasilkan dari fasilitas umum yang digunakan oleh semua pengunjung.",
     parking_revenue: {
-        spots: 50,
+        spots: 13,
         avg_rate_per_day: 6000,
         occupancy_rate: 0.50,
         workdays_in_month: 22,
