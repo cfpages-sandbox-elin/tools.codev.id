@@ -1,4 +1,4 @@
-// File: sier-math-finance.js add sensitivity + fix error 3
+// File: sier-math-finance.js add sensitivity + fix error 4
 const sierMathFinance = {
     getValueByPath(obj, path) {
         return path.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj);
@@ -63,74 +63,6 @@ const sierMathFinance = {
             }
         }
         return { details, totalAnnualDepreciation };
-    },
-
-    buildFinancialModelForScenario(scenarioKey) {
-        // === LANGKAH 1: TENTUKAN KOMPONEN AKTIF BERDASARKAN SKENARIO ===
-        let components = [];
-        if (scenarioKey.includes('dr')) components.push('dr');
-        if (scenarioKey.includes('padel4')) components.push('padel4');
-        if (scenarioKey.includes('padel2')) components.push('padel2');
-        if (scenarioKey.includes('mp')) components.push('mp');
-        // Fasilitas bersama & digital ditambahkan jika ada proyek fisik
-        if (components.length > 0) {
-            components.push('shared');
-            components.push('digital');
-        }
-
-        const projectionYears = 10;
-        let individualResults = {};
-        let totalCapex = 0;
-
-        // === LANGKAH 2: HITUNG PROYEKSI DASAR (CAPEX, REVENUE, OPEX, DEPRESIASI) UNTUK TIAP UNIT SECARA TERPISAH ===
-        components.forEach(compKey => {
-            const unitFinancials = this._getFinancialsForComponent(compKey, projectionYears);
-            individualResults[compKey] = unitFinancials;
-            
-            // Akumulasikan total investasi awal untuk perhitungan pinjaman
-            totalCapex += unitFinancials.capexSchedule[0];
-        });
-
-        // === LANGKAH 3: HITUNG BIAYA BERSAMA (PINJAMAN & BUNGA) BERDASARKAN TOTAL INVESTASI ===
-        const financing = this._calculateLoanAmortization(totalCapex, projectConfig.assumptions.financing, projectionYears);
-
-        // === LANGKAH 4: FINALKAN LAPORAN LABA RUGI UNTUK TIAP UNIT DENGAN MENGALOKASIKAN BIAYA BERSAMA ===
-        Object.keys(individualResults).forEach(key => {
-            const unit = individualResults[key];
-            const unitCapex = unit.capexSchedule[0];
-            // Tentukan porsi unit ini dari total investasi untuk alokasi bunga
-            const interestAllocationRatio = totalCapex > 0 ? (unitCapex / totalCapex) : 0;
-            
-            // Inisialisasi struktur P&L lengkap untuk unit ini
-            unit.pnl = {
-                revenue: unit.revenue,
-                opex: unit.opex,
-                ebitda: Array(projectionYears + 1).fill(0),
-                depreciation: unit.depreciation,
-                ebit: Array(projectionYears + 1).fill(0),
-                interest: Array(projectionYears + 1).fill(0),
-                ebt: Array(projectionYears + 1).fill(0),
-                tax: Array(projectionYears + 1).fill(0),
-                netIncome: Array(projectionYears + 1).fill(0)
-            };
-            
-            // Hitung P&L tahun per tahun untuk unit ini
-            for (let year = 1; year <= projectionYears; year++) {
-                unit.pnl.ebitda[year] = unit.revenue[year] - unit.opex[year];
-                unit.pnl.ebit[year] = unit.pnl.ebitda[year] - unit.pnl.depreciation[year];
-                // Alokasikan bunga berdasarkan porsi investasi
-                unit.pnl.interest[year] = financing.interestPayments[year] * interestAllocationRatio;
-                unit.pnl.ebt[year] = unit.pnl.ebit[year] - unit.pnl.interest[year];
-                unit.pnl.tax[year] = unit.pnl.ebt[year] > 0 ? unit.pnl.ebt[year] * projectConfig.assumptions.tax_rate_profit : 0;
-                unit.pnl.netIncome[year] = unit.pnl.ebt[year] - unit.pnl.tax[year];
-            }
-        });
-
-        // === LANGKAH 5: BUAT MODEL GABUNGAN DENGAN MENJUMLAHKAN SEMUA HASIL INDIVIDUAL YANG SUDAH FINAL ===
-        let combined = this._createCombinedModel(individualResults, financing, projectionYears);
-        
-        // === LANGKAH 6: KEMBALIKAN HASIL LENGKAP (INDIVIDUAL DAN GABUNGAN) ===
-        return { individual: individualResults, combined: combined };
     },
 
     _getFinancialsForComponent(compKey, years) {
@@ -226,6 +158,74 @@ const sierMathFinance = {
     },
 
     buildFinancialModelForScenario(scenarioKey) {
+        // === LANGKAH 1: TENTUKAN KOMPONEN AKTIF BERDASARKAN SKENARIO ===
+        let components = [];
+        if (scenarioKey.includes('dr')) components.push('dr');
+        if (scenarioKey.includes('padel4')) components.push('padel4');
+        if (scenarioKey.includes('padel2')) components.push('padel2');
+        if (scenarioKey.includes('mp')) components.push('mp');
+        // Fasilitas bersama & digital ditambahkan jika ada proyek fisik
+        if (components.length > 0) {
+            components.push('shared');
+            components.push('digital');
+        }
+
+        const projectionYears = 10;
+        let individualResults = {};
+        let totalCapex = 0;
+
+        // === LANGKAH 2: HITUNG PROYEKSI DASAR (CAPEX, REVENUE, OPEX, DEPRESIASI) UNTUK TIAP UNIT SECARA TERPISAH ===
+        components.forEach(compKey => {
+            const unitFinancials = this._getFinancialsForComponent(compKey, projectionYears);
+            individualResults[compKey] = unitFinancials;
+            
+            // Akumulasikan total investasi awal untuk perhitungan pinjaman
+            totalCapex += unitFinancials.capexSchedule[0];
+        });
+
+        // === LANGKAH 3: HITUNG BIAYA BERSAMA (PINJAMAN & BUNGA) BERDASARKAN TOTAL INVESTASI ===
+        const financing = this._calculateLoanAmortization(totalCapex, projectConfig.assumptions.financing, projectionYears);
+
+        // === LANGKAH 4: FINALKAN LAPORAN LABA RUGI UNTUK TIAP UNIT DENGAN MENGALOKASIKAN BIAYA BERSAMA ===
+        Object.keys(individualResults).forEach(key => {
+            const unit = individualResults[key];
+            const unitCapex = unit.capexSchedule[0];
+            // Tentukan porsi unit ini dari total investasi untuk alokasi bunga
+            const interestAllocationRatio = totalCapex > 0 ? (unitCapex / totalCapex) : 0;
+            
+            // Inisialisasi struktur P&L lengkap untuk unit ini
+            unit.pnl = {
+                revenue: unit.revenue,
+                opex: unit.opex,
+                ebitda: Array(projectionYears + 1).fill(0),
+                depreciation: unit.depreciation,
+                ebit: Array(projectionYears + 1).fill(0),
+                interest: Array(projectionYears + 1).fill(0),
+                ebt: Array(projectionYears + 1).fill(0),
+                tax: Array(projectionYears + 1).fill(0),
+                netIncome: Array(projectionYears + 1).fill(0)
+            };
+            
+            // Hitung P&L tahun per tahun untuk unit ini
+            for (let year = 1; year <= projectionYears; year++) {
+                unit.pnl.ebitda[year] = unit.revenue[year] - unit.opex[year];
+                unit.pnl.ebit[year] = unit.pnl.ebitda[year] - unit.pnl.depreciation[year];
+                // Alokasikan bunga berdasarkan porsi investasi
+                unit.pnl.interest[year] = financing.interestPayments[year] * interestAllocationRatio;
+                unit.pnl.ebt[year] = unit.pnl.ebit[year] - unit.pnl.interest[year];
+                unit.pnl.tax[year] = unit.pnl.ebt[year] > 0 ? unit.pnl.ebt[year] * projectConfig.assumptions.tax_rate_profit : 0;
+                unit.pnl.netIncome[year] = unit.pnl.ebt[year] - unit.pnl.tax[year];
+            }
+        });
+
+        // === LANGKAH 5: BUAT MODEL GABUNGAN DENGAN MENJUMLAHKAN SEMUA HASIL INDIVIDUAL YANG SUDAH FINAL ===
+        let combined = this._createCombinedModel(individualResults, financing, projectionYears);
+        
+        // === LANGKAH 6: KEMBALIKAN HASIL LENGKAP (INDIVIDUAL DAN GABUNGAN) ===
+        return { individual: individualResults, combined: combined };
+    },
+
+    buildFinancialModelForScenario(scenarioKey) {
         let components = [];
         if (scenarioKey.includes('dr')) components.push('dr');
         if (scenarioKey.includes('padel4')) components.push('padel4');
@@ -284,6 +284,40 @@ const sierMathFinance = {
         return { individual: individualResults, combined: combined };
     },
 
+    _buildIncomeStatement({ revenue, opex, depreciation, interest, projectionYears }) {
+        let pnl = { ebit: [], ebt: [], tax: [], netIncome: [] };
+        const taxRate = projectConfig.assumptions.tax_rate_profit;
+        for (let year = 1; year <= projectionYears; year++) {
+            const ebit = revenue[year] - opex[year] - depreciation[year];
+            const ebt = ebit - interest[year];
+            const tax = ebt > 0 ? ebt * taxRate : 0;
+            const netIncome = ebt - tax;
+            pnl.ebit.push(ebit); pnl.ebt.push(ebt); pnl.tax.push(tax); pnl.netIncome.push(netIncome);
+        }
+        for (const key in pnl) { pnl[key].unshift(0); }
+        return pnl;
+    },
+
+    _buildCashFlowStatement({ incomeStatement, depreciation, capexSchedule, financing, projectionYears }) {
+        let cfs = { cfo: [0], cfi: [0], cff: [0], netCashFlow: [0], cumulativeCashFlow: [0] };
+        const equity = capexSchedule[0] * projectConfig.assumptions.financing.equity_portion;
+        cfs.cfi[0] = -capexSchedule[0];
+        cfs.cff[0] = financing.loanAmount;
+        cfs.netCashFlow[0] = -equity;
+        cfs.cumulativeCashFlow[0] = cfs.netCashFlow[0];
+
+        for (let year = 1; year <= projectionYears; year++) {
+            const cfo = incomeStatement.netIncome[year] + depreciation[year];
+            const cfi = -capexSchedule[year];
+            const cff = -financing.principalPayments[year];
+            const netCf = cfo + cfi + cff;
+            cfs.cfo.push(cfo); cfs.cfi.push(cfi); cfs.cff.push(financing.principalPayments[year]);
+            cfs.netCashFlow.push(netCf);
+            cfs.cumulativeCashFlow.push(cfs.cumulativeCashFlow[year - 1] + netCf);
+        }
+        return cfs;
+    },
+
     _createCombinedModel(individualResults, financing, projectionYears) {
         let combined = {
             capexSchedule: Array(projectionYears + 1).fill(0),
@@ -337,54 +371,29 @@ const sierMathFinance = {
         return { loanAmount, annualPayment, interestPayments, principalPayments };
     },
 
-    _calculateMultiYearDepreciation(capexSchedule, years) {
+    _calculateMultiYearDepreciation(capexSchedule, years, capexBreakdown) {
         let projectedDepreciation = Array(years + 1).fill(0);
-        const lifespan = 10;
-        const initialDepreciation = capexSchedule[0] / lifespan;
-        for (let year = 1; year <= Math.min(years, lifespan); year++) {
-            projectedDepreciation[year] += initialDepreciation;
+        const depRates = projectConfig.assumptions.depreciation_years;
+
+        // Hitung depresiasi dari investasi awal (Tahun 0)
+        let initialAnnualDepreciation = 0;
+        for (const category in capexBreakdown) {
+            if (capexBreakdown[category] > 0) {
+                const lifespan = depRates[category] || 10; // Default 10 tahun
+                initialAnnualDepreciation += capexBreakdown[category] / lifespan;
+            }
         }
+        for (let year = 1; year <= years; year++) {
+            projectedDepreciation[year] += initialAnnualDepreciation;
+        }
+
         if (capexSchedule[5] > 0) {
-            const recondDepreciation = capexSchedule[5] / lifespan;
+            const recondDepreciation = capexSchedule[5] / 10; // Asumsi masa manfaat 10 tahun untuk rekondisi
             for (let year = 6; year <= years; year++) {
                 projectedDepreciation[year] += recondDepreciation;
             }
         }
         return projectedDepreciation;
-    },
-
-    _buildIncomeStatement({ revenue, opex, depreciation, interest, projectionYears }) {
-        let pnl = { ebit: [], ebt: [], tax: [], netIncome: [] };
-        const taxRate = projectConfig.assumptions.tax_rate_profit;
-        for (let year = 1; year <= projectionYears; year++) {
-            const ebit = revenue[year] - opex[year] - depreciation[year];
-            const ebt = ebit - interest[year];
-            const tax = ebt > 0 ? ebt * taxRate : 0;
-            const netIncome = ebt - tax;
-            pnl.ebit.push(ebit); pnl.ebt.push(ebt); pnl.tax.push(tax); pnl.netIncome.push(netIncome);
-        }
-        for (const key in pnl) { pnl[key].unshift(0); }
-        return pnl;
-    },
-
-    _buildCashFlowStatement({ incomeStatement, depreciation, capexSchedule, financing, projectionYears }) {
-        let cfs = { cfo: [0], cfi: [0], cff: [0], netCashFlow: [0], cumulativeCashFlow: [0] };
-        const equity = capexSchedule[0] * projectConfig.assumptions.financing.equity_portion;
-        cfs.cfi[0] = -capexSchedule[0];
-        cfs.cff[0] = financing.loanAmount;
-        cfs.netCashFlow[0] = -equity;
-        cfs.cumulativeCashFlow[0] = cfs.netCashFlow[0];
-
-        for (let year = 1; year <= projectionYears; year++) {
-            const cfo = incomeStatement.netIncome[year] + depreciation[year];
-            const cfi = -capexSchedule[year];
-            const cff = -financing.principalPayments[year];
-            const netCf = cfo + cfi + cff;
-            cfs.cfo.push(cfo); cfs.cfi.push(cfi); cfs.cff.push(financing.principalPayments[year]);
-            cfs.netCashFlow.push(netCf);
-            cfs.cumulativeCashFlow.push(cfs.cumulativeCashFlow[year - 1] + netCf);
-        }
-        return cfs;
     },
 
     _calculateFeasibilityMetrics(netCashFlows, wacc) {
@@ -421,31 +430,15 @@ const sierMathFinance = {
 
     _calculateTotal(dataObject) {
         if (typeof dataObject !== 'object' || dataObject === null) return 0;
-
         return Object.values(dataObject).reduce((sum, value) => {
-            if (typeof value === 'number') {
-                return sum + value;
-            }
+            if (typeof value === 'number') return sum + value;
             if (typeof value === 'object' && value !== null) {
-                // Cek berbagai pola struktur data yang mungkin
-                if (value.count && value.salary) { // Untuk Gaji
-                    return sum + (value.count * value.salary);
-                } 
-                else if (value.quantity && value.unit_cost) { // Untuk Item Kuantitas
-                    return sum + (value.quantity * value.unit_cost);
-                } 
-                else if (value.area_m2 && value.cost_per_m2) { // Untuk Item Area
-                    return sum + (value.area_m2 * value.cost_per_m2);
-                }
-                else if (value.toilet_unit && value.area_m2_per_toilet && value.cost_per_m2) {
-                    return sum + (value.toilet_unit * value.area_m2_per_toilet * value.cost_per_m2);
-                }
-                else if (value.lump_sum) { // Untuk Lump Sum
-                    return sum + value.lump_sum;
-                }
-                else { // Jika tidak ada pola yang cocok, coba hitung di level yang lebih dalam
-                    return sum + this._calculateTotal(value);
-                }
+                if (value.count && value.salary) return sum + (value.count * value.salary);
+                if (value.quantity && value.unit_cost) return sum + (value.quantity * value.unit_cost);
+                if (value.area_m2 && value.cost_per_m2) return sum + (value.area_m2 * value.cost_per_m2);
+                if (value.toilet_unit && value.area_m2_per_toilet && value.cost_per_m2) return sum + (value.toilet_unit * value.area_m2_per_toilet * value.cost_per_m2);
+                if (value.lump_sum) return sum + value.lump_sum;
+                return sum + this._calculateTotal(value);
             }
             return sum;
         }, 0);
@@ -665,68 +658,46 @@ const sierMathFinance = {
     },
 
     runSensitivityAnalysis(baseModel) {
+        // PERBAIKAN: Mengambil parameter dari dalam 'assumptions'
         const sensitivityParams = projectConfig.assumptions.sensitivity_analysis;
         if (!sensitivityParams) {
             console.warn("Konfigurasi sensitivity_analysis tidak ditemukan. Analisis sensitivitas dilewati.");
-            return {}; // Kembalikan objek kosong jika tidak ada konfigurasi
+            return {};
         }
 
         let results = {};
 
-        const runFor = (modelData, isCombined = true) => {
-            const analysisResult = {
-                revenue: { npv: {}, irr: {} },
-                investment: { npv: {}, irr: {} }
-            };
-
-            // 1. Sensitivitas terhadap Pendapatan
-            sensitivityParams.revenue_steps.forEach(revStep => {
-                let tempModel = JSON.parse(JSON.stringify(modelData));
-                tempModel.revenue = tempModel.revenue.map(r => r * revStep);
-                
-                const pnl = this._buildIncomeStatement({ ...tempModel, interest: modelData.financing.interestPayments, projectionYears: 10 });
-                const cf = this._buildCashFlowStatement({ incomeStatement: pnl, depreciation: tempModel.depreciation, capexSchedule: tempModel.capexSchedule, financing: modelData.financing, projectionYears: 10 });
-                const metrics = this._calculateFeasibilityMetrics(cf.netCashFlow, projectConfig.assumptions.discount_rate_wacc);
-
-                analysisResult.revenue.npv[revStep] = metrics.npv;
-                analysisResult.revenue.irr[revStep] = metrics.irr;
-            });
+        const runFor = (modelData) => {
+            const analysisResult = { revenue: {}, investment: {} };
+            const { revenue_steps, investment_steps } = sensitivityParams;
             
-            // 2. Sensitivitas terhadap Investasi (CapEx)
-            sensitivityParams.investment_steps.forEach(invStep => {
-                let tempModel = JSON.parse(JSON.stringify(modelData));
-                tempModel.capexSchedule[0] *= invStep;
-                
-                const newFinancing = this._calculateLoanAmortization(tempModel.capexSchedule[0], projectConfig.assumptions.financing, 10);
-                
-                const pnl = this._buildIncomeStatement({ ...tempModel, interest: newFinancing.interestPayments, projectionYears: 10 });
-                const cf = this._buildCashFlowStatement({ incomeStatement: pnl, depreciation: tempModel.depreciation, capexSchedule: tempModel.capexSchedule, financing: newFinancing, projectionYears: 10 });
-                const metrics = this._calculateFeasibilityMetrics(cf.netCashFlow, projectConfig.assumptions.discount_rate_wacc);
+            // Inisialisasi matriks hasil
+            investment_steps.forEach(invStep => {
+                analysisResult.investment[invStep] = { npv: 0, irr: 0 };
+                analysisResult.revenue[invStep] = {};
+                revenue_steps.forEach(revStep => {
+                    analysisResult.revenue[invStep][revStep] = { npv: 0, irr: 0 };
+                });
+            });
 
-                analysisResult.investment.npv[invStep] = metrics.npv;
-                analysisResult.investment.irr[invStep] = metrics.irr;
+            // Loop melalui setiap kombinasi perubahan investasi dan pendapatan
+            investment_steps.forEach(invStep => {
+                revenue_steps.forEach(revStep => {
+                    let tempModel = JSON.parse(JSON.stringify(modelData));
+                    tempModel.capexSchedule[0] *= invStep;
+                    tempModel.revenue = tempModel.revenue.map(r => r * revStep);
+                    
+                    const newFinancing = this._calculateLoanAmortization(tempModel.capexSchedule[0], projectConfig.assumptions.financing, 10);
+                    const pnl = this._buildIncomeStatement({ ...tempModel, interest: newFinancing.interestPayments, projectionYears: 10 });
+                    const cf = this._buildCashFlowStatement({ incomeStatement: pnl, depreciation: tempModel.depreciation, capexSchedule: tempModel.capexSchedule, financing: newFinancing, projectionYears: 10 });
+                    const metrics = this._calculateFeasibilityMetrics(cf.netCashFlow, projectConfig.assumptions.discount_rate_wacc);
+
+                    analysisResult.revenue[invStep][revStep] = { npv: metrics.npv, irr: metrics.irr };
+                });
             });
 
             return analysisResult;
         };
-
-        // Jalankan untuk model gabungan
-        if (baseModel.combined) {
-            results.combined = runFor(baseModel.combined);
-        }
-
-        // Jalankan untuk setiap unit individual
-        Object.keys(baseModel.individual).forEach(key => {
-            if(baseModel.individual[key].pnl) {
-                const individualModelData = {
-                    ...baseModel.individual[key],
-                    financing: baseModel.combined.financing
-                };
-                results[key] = runFor(individualModelData, false);
-            }
-        });
-
-        return results;
     }
 };
 
