@@ -126,12 +126,24 @@ projectConfig.assumptions = {
         equipment: 5,
         interior: 7,
     },
-    // BARU: Asumsi Finansial dari Sheet
-    financing: {
-        equity_portion: 0.40,
-        loan_portion: 0.60,
-        interest_rate: 0.12,
-        loan_period_years: 5,
+    financing_scenarios: {
+        full_equity: {
+            title: "100% Modal Sendiri (SIER)",
+            equity_portion: 1.0,
+            loan_portion: 0.0,
+            interest_rate: 0,
+            loan_period_years: 5,
+        },
+        debt_and_equity: {
+            title: "60% Hutang & 40% Modal",
+            equity_portion: 0.40,
+            loan_portion: 0.60,
+            interest_rate: 0.12,
+            loan_period_years: 5,
+        }
+    },
+    get financing() {
+        return this.financing_scenarios.full_equity;
     },
     // BARU: Asumsi Eskalasi dari Sheet
     escalation: {

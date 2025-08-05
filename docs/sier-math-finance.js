@@ -2,22 +2,10 @@
 // VERSI 3.0 LENGKAP - Arsitektur Modular Berbasis Skenario
 
 const sierMathFinance = {
-    /**
-     * Helper untuk mengambil nilai dari objek bersarang menggunakan path string.
-     * @param {object} obj - Objek sumber.
-     * @param {string} path - Path ke nilai (misal: 'drivingRange.revenue.bays').
-     * @returns {*} Nilai yang ditemukan atau undefined.
-     */
     getValueByPath(obj, path) {
         return path.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj);
     },
 
-    /**
-     * Helper untuk menetapkan nilai ke objek bersarang menggunakan path string.
-     * @param {object} obj - Objek target.
-     * @param {string} path - Path ke nilai.
-     * @param {*} value - Nilai yang akan ditetapkan.
-     */
     setValueByPath(obj, path, value) {
         const keys = path.split('.');
         const lastKey = keys.pop();
@@ -25,11 +13,59 @@ const sierMathFinance = {
         target[lastKey] = value;
     },
 
-    /**
-     * FUNGSI MASTER: Membangun model finansial dengan merakit modul-modul yang relevan.
-     * @param {string} scenarioKey - Kunci skenario (misal: 'dr_padel4_mp').
-     * @returns {object} - Objek berisi hasil `individual` per unit dan hasil `combined`.
-     */
+    _getDepreciationDetailsForScenario(components) {
+        const depRates = projectConfig.assumptions.depreciation_years;
+        let combinedCapex = {
+            civil_construction: 0, building: 0, equipment: 0, interior: 0,
+            digital_systems: 0, shared_facilities: 0, other: 0
+        };
+
+        components.forEach(compKey => {
+            const capex = this._getFinancialsForComponent(compKey, 1).capexSchedule[0];
+            // Alokasikan capex ke kategori yang sesuai
+            if (compKey === 'dr') {
+                const drDetails = this._calculateDrCapex().scenario_b;
+                combinedCapex.civil_construction += drDetails.htmlRows.find(r => r.label.includes('Tiang Pancang')).value;
+                combinedCapex.building += drDetails.htmlRows.find(r => r.label.includes('Bangunan')).value;
+                combinedCapex.equipment += drDetails.htmlRows.find(r => r.label.includes('Peralatan')).value;
+            } else if (compKey.includes('padel')) {
+                const padelCapexConf = projectConfig.padel.scenarios[compKey === 'padel4' ? 'four_courts_combined' : 'two_courts_futsal_renovation'].capex;
+                combinedCapex.building += this._calculateTotal(padelCapexConf.component_koperasi_new_build || {}) + this._calculateTotal(padelCapexConf.component_futsal_renovation || {});
+                combinedCapex.equipment += this._calculateTotal(padelCapexConf.sport_courts_equipment || {});
+                combinedCapex.other += this._calculateTotal(padelCapexConf.pre_operational || {});
+            } else if (compKey === 'mp') {
+                 const mpCapexConf = projectConfig.meetingPoint.capex_scenario_a;
+                 combinedCapex.building += this._calculateTotal(mpCapexConf.renovation_costs || {});
+                 combinedCapex.equipment += this._calculateTotal(mpCapexConf.equipment_and_furniture || {});
+                 combinedCapex.other += this._calculateTotal(mpCapexConf.pre_operational || {});
+            } else if (compKey === 'digital') {
+                combinedCapex.digital_systems += capex;
+            } else if (compKey === 'shared') {
+                combinedCapex.shared_facilities += capex;
+            }
+        });
+
+        let details = [];
+        let totalAnnualDepreciation = 0;
+
+        for (const category in combinedCapex) {
+            if (combinedCapex[category] > 0) {
+                const lifespan = depRates[category] || 10; // Default 10 tahun jika tidak ada
+                const annualDepreciation = combinedCapex[category] / lifespan;
+                totalAnnualDepreciation += annualDepreciation;
+                
+                details.push({
+                    category: sierTranslate.translate(category),
+                    capexValue: combinedCapex[category],
+                    lifespan: lifespan,
+                    lifespanPath: `assumptions.depreciation_years.${category}`,
+                    annualDepreciation: annualDepreciation
+                });
+            }
+        }
+        return { details, totalAnnualDepreciation };
+    },
+
     buildFinancialModelForScenario(scenarioKey) {
         let components = [];
         if (scenarioKey.includes('dr')) components.push('dr');
@@ -68,6 +104,7 @@ const sierMathFinance = {
         const financing = this._calculateLoanAmortization(initialInvestment, projectConfig.assumptions.financing, projectionYears);
         
         const depreciation = this._calculateMultiYearDepreciation(combined.capexSchedule, projectionYears);
+        const depreciationDetails = this._getDepreciationDetailsForScenario(components);
 
         const incomeStatement = this._buildIncomeStatement({ ...combined, depreciation, interest: financing.interestPayments, projectionYears });
         const cashFlowStatement = this._buildCashFlowStatement({ incomeStatement, depreciation, capexSchedule: combined.capexSchedule, financing, projectionYears });
@@ -78,13 +115,11 @@ const sierMathFinance = {
         combined.incomeStatement = incomeStatement;
         combined.cashFlowStatement = cashFlowStatement;
         combined.feasibilityMetrics = feasibilityMetrics;
+        combined.depreciationDetails = depreciationDetails;
 
         return { individual: individualResults, combined: combined };
     },
 
-    /**
-     * Kalkulator individual untuk setiap komponen/modul bisnis.
-     */
     _getFinancialsForComponent(compKey, years) {
         let capexSchedule = Array(years + 1).fill(0);
         let revenue = Array(years + 1).fill(0);

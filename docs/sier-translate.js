@@ -129,18 +129,28 @@ const sierTranslate = {
         'foundation_works': 'Pekerjaan Pondasi',
         'main_structure': 'Struktur Utama Bangunan',
         'finishing_lounge_etc': 'Finishing, Lounge, dll'
+        // tambahan
+        'financing_scenarios': 'Skenario Pendanaan',
+        'full_equity': '100% Modal Sendiri',
+        'debt_and_equity': 'Kombinasi Hutang & Modal',
+        'equity_portion': 'Porsi Modal Sendiri (Equity)',
+        'loan_portion': 'Porsi Pinjaman (Hutang)',
+        'interest_rate': 'Suku Bunga Pinjaman',
+        'loan_period_years': 'Tenor Pinjaman (Tahun)',
+        
+        'escalation': 'Asumsi Peningkatan (Eskalasi)',
+        'tariff_increase_rate': 'Tingkat Kenaikan Tarif',
+        'tariff_increase_every_x_years': 'Kenaikan Tarif Setiap (Tahun)',
+        'salary_increase_rate': 'Tingkat Kenaikan Gaji Tahunan',
+        
+        'digital_systems': 'Sistem & Teknologi Digital',
+        'shared_facilities': 'Fasilitas Umum Bersama'
     },
 
-    /**
-     * Menerjemahkan kunci teknis menjadi label yang mudah dibaca.
-     * @param {string} key - Kunci yang akan diterjemahkan (mis. 'tax_rate_profit').
-     * @returns {string} - Label yang sudah diterjemahkan (mis. 'Tarif Pajak Penghasilan').
-     */
     translate(key) {
         if (this.keyTranslations[key]) {
             return this.keyTranslations[key];
         }
-        // Fallback: jika tidak ditemukan, format kunci secara otomatis.
         return key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
 };

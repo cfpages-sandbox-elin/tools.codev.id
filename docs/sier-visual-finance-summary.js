@@ -44,9 +44,9 @@ const sierVisualFinanceSummary = {
      * @returns {string} - String HTML untuk tabel depresiasi.
      */
     _createDepreciationDetailsTable(model) {
-        const data = model.depreciationDetails;
+        const data = model.combined.depreciationDetails; 
         if (!data || !data.details || data.details.length === 0) {
-            return '<p>Detail depresiasi tidak tersedia untuk skenario ini.</p>';
+            return '<p class="text-gray-500 italic">Detail depresiasi tidak tersedia untuk skenario ini.</p>';
         }
 
         const tableRows = data.details.map(item => `
