@@ -1,13 +1,7 @@
-// File: sier-visual-finance-details.js
+// File: sier-visual-finance-details.js tambah operasional assumption
 // VERSI 3.0 LENGKAP - Menampilkan detail per unit bisnis & rincian asumsi input.
 
 const sierVisualFinanceDetails = {
-
-    /**
-     * Merender kartu ringkasan untuk setiap unit bisnis yang aktif dalam skenario.
-     * @param {object} individualResults - Bagian 'individual' dari model finansial.
-     * @returns {string} String HTML yang berisi kartu-kartu ringkasan.
-     */
     _renderUnitSummaries(individualResults) {
         let html = '';
         const titles = {
@@ -53,10 +47,6 @@ const sierVisualFinanceDetails = {
         `;
     },
 
-    /**
-     * Merender tabel rincian Biaya Operasional (OpEx) bulanan untuk unit bisnis yang relevan.
-     * @param {object} model - Objek model finansial lengkap.
-     */
     _renderOpexDetailsVisuals(model, scenarioKey) {
         const container = document.getElementById('opex-details-container');
         if (!container) return;
@@ -116,7 +106,52 @@ const sierVisualFinanceDetails = {
         }
     },
 
-    _renderAssumptionsVisuals() {
+    _createOperationalAssumptionsCard(config, title, basePath, colorClass = 'gray') {
+        let rowsHtml = '';
+        const opAssumptions = config.operational_assumptions || {};
+        const revAssumptions = config.revenue || {};
+
+        const processObject = (obj, pathPrefix, level = 0) => {
+            let html = '';
+            for (const key in obj) {
+                const value = obj[key];
+                const fullPath = `${pathPrefix}.${key}`;
+                const label = sierTranslate.translate(key);
+                
+                if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                    // Render sebagai sub-header jika objek bersarang
+                    html += `<tr><td colspan="2" class="pt-3 pb-1 font-semibold text-${colorClass}-700">${label}</td></tr>`;
+                    html += processObject(value, fullPath, level + 1);
+                } else if (typeof value === 'number') {
+                    // Render sebagai baris biasa yang bisa diedit
+                    const isPercent = key.includes('_rate') || key.includes('_portion');
+                    html += `
+                        <tr>
+                            <td class="py-1 pl-4 text-gray-600">${label}</td>
+                            <td class="py-1 text-right">
+                                ${sierEditable.createEditableNumber(value, fullPath, { format: isPercent ? 'percent' : '' })}
+                            </td>
+                        </tr>
+                    `;
+                }
+            }
+            return html;
+        };
+
+        rowsHtml += processObject(opAssumptions, `${basePath}.operational_assumptions`);
+        rowsHtml += processObject(revAssumptions, `${basePath}.revenue`);
+
+        return `
+            <div class="bg-${colorClass}-50 p-4 rounded-lg border border-${colorClass}-200">
+                <h4 class="font-bold text-lg text-${colorClass}-800 mb-2">${title}</h4>
+                <table class="w-full text-sm">
+                    <tbody class="divide-y divide-${colorClass}-200">${rowsHtml}</tbody>
+                </table>
+            </div>
+        `;
+    },
+
+    _renderAssumptionsVisuals(scenarioKey) {
         const container = document.getElementById('assumptions-container');
         if (!container) return;
 
@@ -152,27 +187,44 @@ const sierVisualFinanceDetails = {
             );
         }).join('');
 
-        container.innerHTML = `
+        const globalAssumptionsHtml = `
             <div class="space-y-6">
-                <!-- Asumsi Umum -->
                 <div class="bg-gray-50 p-4 rounded-lg border">
                     <h3 class="font-bold text-lg text-gray-700 mb-2">Asumsi Umum & Pajak</h3>
-                    ${createItemHtml('Pajak Penghasilan Badan', assumptions.tax_rate_profit, 'assumptions.tax_rate_profit', 'Tarif pajak yang dikenakan pada laba sebelum pajak (EBT).', true)}
-                    ${createItemHtml('Tingkat Diskonto (WACC)', assumptions.discount_rate_wacc, 'assumptions.discount_rate_wacc', 'Digunakan untuk menghitung NPV, merepresentasikan biaya modal.', true)}
-                    ${createItemHtml('Dana Kontingensi', assumptions.contingency_rate, 'assumptions.contingency_rate', 'Alokasi dana darurat sebagai persentase dari total CapEx.', true)}
+                    ${createItemHtml('Pajak Penghasilan Badan', assumptions.tax_rate_profit, 'assumptions.tax_rate_profit', '', true)}
+                    ${createItemHtml('Tingkat Diskonto (WACC)', assumptions.discount_rate_wacc, 'assumptions.discount_rate_wacc', '', true)}
+                    ${createItemHtml('Dana Kontingensi', assumptions.contingency_rate, 'assumptions.contingency_rate', '', true)}
                 </div>
-                <!-- Asumsi Pendanaan -->
                 <div class="bg-gray-50 p-4 rounded-lg border">
-                    <h3 class="font-bold text-lg text-gray-700 mb-2">Asumsi Pendanaan (Financing)</h3>
-                    ${financingHtml}
+                    <h3 class="font-bold text-lg text-gray-700 mb-2">Asumsi Pendanaan</h3>
+                    <!-- Konten ini akan otomatis diperbarui oleh dropdown -->
+                    <p class="text-center p-4 text-gray-500 italic">Pilih skenario pendanaan dari dropdown di atas.</p>
                 </div>
-                <!-- Asumsi Eskalasi -->
                 <div class="bg-gray-50 p-4 rounded-lg border">
                     <h3 class="font-bold text-lg text-gray-700 mb-2">Asumsi Peningkatan (Eskalasi)</h3>
                     ${escalationHtml}
                 </div>
-            </div>
-        `;
+            </div>`;
+
+        // --- 2. Render Asumsi Operasional (DINAMIS SESUAI SKENARIO) ---
+        let operationalAssumptionsHtml = '<h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-amber-500 pl-4 mt-12">Asumsi Operasional (Sesuai Skenario Proyek)</h2><div class="grid grid-cols-1 lg:grid-cols-2 gap-6">';
+        
+        if (scenarioKey.includes('dr')) {
+            operationalAssumptionsHtml += this._createOperationalAssumptionsCard(projectConfig.drivingRange, 'Driving Range', 'drivingRange', 'blue');
+        }
+        if (scenarioKey.includes('padel4')) {
+            operationalAssumptionsHtml += this._createOperationalAssumptionsCard(projectConfig.padel.scenarios.four_courts_combined, 'Padel (4 Lapangan)', 'padel.scenarios.four_courts_combined', 'purple');
+        }
+        if (scenarioKey.includes('padel2')) {
+             operationalAssumptionsHtml += this._createOperationalAssumptionsCard(projectConfig.padel.scenarios.two_courts_futsal_renovation, 'Padel (2 Lapangan)', 'padel.scenarios.two_courts_futsal_renovation', 'purple');
+        }
+        if (scenarioKey.includes('mp')) {
+            operationalAssumptionsHtml += this._createOperationalAssumptionsCard(projectConfig.meetingPoint, 'Meeting Point', 'meetingPoint', 'cyan');
+        }
+        operationalAssumptionsHtml += '</div>';
+
+        // Gabungkan semuanya
+        container.innerHTML = globalAssumptionsHtml + operationalAssumptionsHtml;
     },
 
     _renderDrCapexDetailsVisuals() {
@@ -338,26 +390,20 @@ const sierVisualFinanceDetails = {
 
     _renderInputAssumptionDetails(model, scenarioKey) {
         const clearContainer = (id) => { const el = document.getElementById(id); if (el) el.innerHTML = ''; };
-
-        // Bersihkan semua kontainer detail sebelum merender yang baru
         clearContainer('opex-details-container');
         clearContainer('driving-range-capex-details-container');
         clearContainer('padel-capex-details-container');
         clearContainer('shared-capex-details-container');
         clearContainer('meeting-point-capex-details-container');
 
-        // Panggil renderer yang relevan
-        this._renderOpexDetailsVisuals(model, scenarioKey); // OpEx
-        
-        // CapEx
+        this._renderOpexDetailsVisuals(model, scenarioKey);
         if (scenarioKey.includes('dr')) this._renderDrCapexDetailsVisuals();
         if (scenarioKey.includes('padel')) this._renderPadelCapexDetailsVisuals();
         if (scenarioKey.includes('mp')) this._renderMeetingPointCapexDetailsVisuals();
-        if (scenarioKey !== 'padel2_mp') this._renderSharedCapexVisuals(); // Asumsi fasilitas bersama hanya untuk skenario besar
+        if (scenarioKey !== 'padel2_mp') this._renderSharedCapexVisuals();
     },
 
     render(model, scenarioKey) {
-        // 1. Render Ringkasan Performa per Unit Bisnis
         const unitSummariesHtml = this._renderUnitSummaries(model.individual);
         const assumptionsContainer = document.getElementById('financial-assumptions');
         if (assumptionsContainer) {
@@ -370,12 +416,8 @@ const sierVisualFinanceDetails = {
             summaryDiv.innerHTML = unitSummariesHtml;
         }
 
-        // 2. Render Tabel Asumsi Finansial Utama
-        this._renderAssumptionsVisuals();
-
-        // 3. Render Semua Rincian Asumsi Input Biaya (OpEx dan CapEx)
+        this._renderAssumptionsVisuals(scenarioKey);
         this._renderInputAssumptionDetails(model, scenarioKey);
-
         console.log("[sier-visual-finance-details] Rincian per unit dan semua asumsi input telah dirender.");
     }
 };
