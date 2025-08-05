@@ -1,4 +1,4 @@
-// File: sier-math-finance.js update pdf terbaru
+// File: sier-math-finance.js add sensitivity
 const sierMathFinance = {
     getValueByPath(obj, path) {
         return path.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj);
@@ -158,13 +158,15 @@ const sierMathFinance = {
 
         // --- PENGUMPULAN DATA DASAR ---
         switch (true) {
-            case compKey === 'dr':
-                const drCapexDetails = this._calculateDrCapex().scenario_b;
+            case compKey.includes('dr'):
+                const drCapexDetails = this._calculateDrCapex();
                 capexSchedule[0] = drCapexDetails.total;
-                capexBreakdown.civil_construction += drCapexDetails.htmlRows.find(r => r.label.includes('Tiang Pancang')).value;
-                capexBreakdown.building += drCapexDetails.htmlRows.find(r => r.label.includes('Bangunan')).value;
-                capexBreakdown.equipment += drCapexDetails.htmlRows.find(r => r.label.includes('Peralatan')).value;
-                capexBreakdown.other += drCapexDetails.subtotal - capexBreakdown.civil_construction - capexBreakdown.building - capexBreakdown.equipment;
+                const drBreakdown = drCapexDetails.breakdown;
+                capexBreakdown.civil_construction += drBreakdown.civil_construction;
+                capexBreakdown.building += drBreakdown.building;
+                capexBreakdown.equipment += drBreakdown.equipment_and_tech + drBreakdown.furniture_and_interior;
+                capexBreakdown.other += drBreakdown.other;
+                
                 baseAnnualRevenue = this._getUnitCalculations('drivingRange').pnl.annualRevenue;
                 baseOpex = extractOpex(projectConfig.drivingRange.opexMonthly);
                 break;
@@ -448,107 +450,156 @@ const sierMathFinance = {
     _calculateDrCapex() {
         const a = projectConfig.drivingRange.capex_assumptions;
         const global = projectConfig.assumptions;
-        const createRow = (category, component, calc, val, path) => ({ category, component, calculation: calc, value: val, path });
+        const rev = projectConfig.drivingRange.revenue.main_revenue;
+        const drScenarios = projectConfig.drivingRange.scenarios;
 
-        const net = a.safety_net;
-        const poles_far = Math.ceil(net.field_width_m / net.poles.spacing_m);
-        const poles_sides = Math.ceil(net.field_length_m / net.poles.spacing_m) * 2;
-        const total_poles = poles_far + poles_sides;
-        const pole_foundation_cost = total_poles * net.poles.foundation_cost_per_pole;
-        const area_far = net.field_width_m * net.poles.height_distribution.far_side_m;
-        const area_sides = net.field_length_m * net.poles.height_distribution.left_right_side_m * 2;
-        const total_net_area = area_far + area_sides;
-        const netting_material_cost = total_net_area * net.netting.cost_per_m2;
-        const totalSafetyNetCost = pole_foundation_cost + netting_material_cost;
+        // --- 1. Hitung setiap komponen biaya secara terpisah ---
 
+        // a. Peralatan Inti (Bay & Bola)
         const eq = a.equipment;
-        const total_bays = projectConfig.drivingRange.revenue.main_revenue.bays;
+        const total_bays = rev.bays;
         const premium_bays_count = Math.round(total_bays * eq.premium_bays.percentage_of_total);
         const normal_bays_count = total_bays - premium_bays_count;
-        const eqCosts = {
-            ball_tracker: premium_bays_count * eq.premium_bays.cost_per_bay_ball_tracker,
-            dispenser: premium_bays_count * eq.premium_bays.cost_per_bay_dispenser,
-            normal_bay_equip: normal_bays_count * eq.normal_bays.bay_equipment_cost_per_set,
-            balls: eq.floating_balls_count * eq.floating_balls_cost_per_ball,
-            management: eq.ball_management_system_lump_sum,
-        };
-        const totalEquipmentCost = Object.values(eqCosts).reduce((s, v) => s + v, 0);
-        
-        const equipment_detail_rows = [
-            createRow('Teknologi', 'Sistem Ball-Tracking (Premium)', `${premium_bays_count} bay @ ...`, eqCosts.ball_tracker, 'drivingRange.capex_assumptions.equipment.premium_bays.cost_per_bay_ball_tracker'),
-            createRow('Teknologi', 'Sistem Dispenser Bola (Premium)', `${premium_bays_count} bay @ ...`, eqCosts.dispenser, 'drivingRange.capex_assumptions.equipment.premium_bays.cost_per_bay_dispenser'),
-            createRow('Operasional', 'Peralatan Bay Standar (Normal)', `${normal_bays_count} set @ ...`, eqCosts.normal_bay_equip, 'drivingRange.capex_assumptions.equipment.normal_bays.bay_equipment_cost_per_set'),
-            createRow('Operasional', 'Inventaris Bola Apung', `${eq.floating_balls_count} buah @ ...`, eqCosts.balls, 'drivingRange.capex_assumptions.equipment.floating_balls_count'),
-            createRow('Operasional', 'Sistem Manajemen Bola', 'Lump Sum', eqCosts.management, 'drivingRange.capex_assumptions.equipment.ball_management_system_lump_sum'),
-            createRow('Keamanan', 'Pondasi Tiang Jaring', `${total_poles} tiang @ ...`, pole_foundation_cost, 'drivingRange.capex_assumptions.safety_net.poles.foundation_cost_per_pole'),
-            createRow('Keamanan', 'Material & Pemasangan Jaring', `${sierHelpers.formatNumber(Math.round(total_net_area))} m² @ ...`, netting_material_cost, 'drivingRange.capex_assumptions.safety_net.netting.cost_per_m2'),
-        ];
-        
+        const totalEquipmentCost = (premium_bays_count * eq.premium_bays.cost_per_bay_ball_tracker) +
+                                (premium_bays_count * eq.premium_bays.cost_per_bay_dispenser) +
+                                (normal_bays_count * eq.normal_bays.bay_equipment_cost_per_set) +
+                                (eq.floating_balls_count * eq.floating_balls_cost_per_ball) +
+                                eq.ball_management_system_lump_sum;
+
+        // b. Jaring Pengaman (Perimeter + Atap Opsional)
+        const net = a.safety_net;
+        const totalPerimeterNetCost = (Math.ceil(net.field_width_m / net.poles.spacing_m) * net.poles.foundation_cost_per_pole) + // Sisi jauh
+                                    (Math.ceil(net.field_length_m / net.poles.spacing_m) * 2 * net.poles.foundation_cost_per_pole) + // Dua sisi panjang
+                                    ((net.field_width_m * net.poles.height_distribution.far_side_m) * net.netting.cost_per_m2) + // Net sisi jauh
+                                    ((net.field_length_m * net.poles.height_distribution.left_right_side_m * 2) * net.netting.cost_per_m2); // Net dua sisi
+        let lakeRoofNetCost = 0;
+        if (drScenarios.include_lake_roof_net) {
+            lakeRoofNetCost = net.lake_roof_netting.area_m2 * net.lake_roof_netting.cost_per_m2;
+        }
+        const totalSafetyNetCost = totalPerimeterNetCost + lakeRoofNetCost;
+
+        // c. Furnitur, Sanitasi, dan Bangunan
+        const totalBayFurnitureCost = total_bays * a.bay_furniture.cost_per_bay;
+        const sanitary = a.plumbing_and_sanitary;
+        const costs = sanitary.unit_costs;
+        const totalSanitaryCost = (sanitary.male_toilet.toilets * costs.toilet_bowl) + (sanitary.male_toilet.urinals * costs.urinal) + (sanitary.male_toilet.sinks * costs.sink) + (sanitary.female_toilet.toilets * costs.toilet_bowl) + (sanitary.female_toilet.sinks * costs.sink);
         const bld = a.building;
         const totalBuildingCost = (bld.dr_bays_area_m2 * bld.dr_bays_cost_per_m2) + (bld.cafe_area_m2 * bld.cafe_cost_per_m2) + (bld.lockers_mushola_area_m2 * bld.lockers_mushola_cost_per_m2);
-        
+
+        // --- 2. Fungsi Helper untuk agregasi ---
         const calculateScenarioCosts = (foundationCosts) => {
             const mep = a.mep_systems;
-            const hvac_cost = bld.cafe_area_m2 * mep.hvac_system.cost_per_m2_hvac;
-            const plumbing_cost = mep.plumbing_system.lump_sum_cost;
-            
-            const physical_cost_base = foundationCosts + totalBuildingCost + totalEquipmentCost + totalSafetyNetCost;
-            
-            const electrical_cost = physical_cost_base * mep.electrical_system.rate_of_physical_cost;
-            const total_mep_cost = hvac_cost + plumbing_cost + electrical_cost;
+            const total_mep_cost = (bld.cafe_area_m2 * mep.hvac_system.cost_per_m2_hvac) +
+                                (mep.plumbing_system.lump_sum_cost + totalSanitaryCost);
 
-            const total_physical_cost = physical_cost_base + total_mep_cost;
+            const physical_cost_base = foundationCosts + totalBuildingCost + totalEquipmentCost + totalSafetyNetCost + totalBayFurnitureCost;
+            const electrical_cost = physical_cost_base * mep.electrical_system.rate_of_physical_cost;
+            const total_physical_cost = physical_cost_base + total_mep_cost + electrical_cost;
             const permit_cost = total_physical_cost * a.other_costs.permit_design_rate_of_physical_cost;
-            
             const subtotal = total_physical_cost + permit_cost;
             const contingency = subtotal * global.contingency_rate;
 
             return {
-                mep_costs: { hvac_cost, plumbing_cost, electrical_cost },
-                permit_cost,
-                subtotal,
-                contingency,
-                total: subtotal + contingency
+                total: subtotal + contingency,
+                // RINCIAN BREAKDOWN YANG JAUH LEBIH DETAIL
+                breakdown: {
+                    civil_construction: foundationCosts + totalSafetyNetCost, // Jaring adalah struktur sipil
+                    building: totalBuildingCost,
+                    equipment_and_tech: totalEquipmentCost, // HANYA peralatan inti
+                    furniture_and_interior: totalBayFurnitureCost,
+                    other: total_mep_cost + electrical_cost + permit_cost + contingency
+                }
             };
         };
 
-        const rec = a.reclamation;
-        const scenario_a_foundation_cost = (rec.area_m2 * rec.lake_depth_m * rec.cost_per_m3) + (rec.sheet_pile_perimeter_m * rec.cost_per_m_sheet_pile);
-        const scenario_a_results = calculateScenarioCosts(scenario_a_foundation_cost);
-
+        // --- 3. Hitung Skenario Konstruksi ---
         const pil = a.piling;
         const scenario_b_foundation_cost = (pil.points_count * pil.length_per_point_m * pil.cost_per_m_mini_pile) + pil.lump_sum_pile_cap;
         const scenario_b_results = calculateScenarioCosts(scenario_b_foundation_cost);
-
+        
+        // Kita hanya mengembalikan skenario B (Tiang Pancang) yang lebih realistis
         return {
-            equipment_detail: { htmlRows: equipment_detail_rows, total: totalEquipmentCost + totalSafetyNetCost },
-            scenario_a: {
-                description: 'Skenario ini melibatkan pengurukan sebagian danau untuk menciptakan daratan baru sebagai landasan konstruksi. Ini bersifat permanen dan memiliki dampak lingkungan yang signifikan.',
-                htmlRows: [
-                    {label: 'Pekerjaan Pengurukan & Sheet Pile', calculation: 'Estimasi Biaya Fondasi Reklamasi', value: scenario_a_foundation_cost},
-                    {label: 'Total Pekerjaan Bangunan', calculation: 'Estimasi Biaya Struktur Bangunan', value: totalBuildingCost},
-                    {label: 'Total Peralatan & Jaring', calculation: 'Ref. Tabel Peralatan', value: totalEquipmentCost + totalSafetyNetCost},
-                    {label: 'Sistem HVAC (AC)', calculation: `${bld.cafe_area_m2} m² @ ...`, value: scenario_a_results.mep_costs.hvac_cost, path: 'drivingRange.capex_assumptions.mep_systems.hvac_system.cost_per_m2_hvac'},
-                    {label: 'Sistem Plumbing', calculation: `Lump Sum`, value: scenario_a_results.mep_costs.plumbing_cost, path: 'drivingRange.capex_assumptions.mep_systems.plumbing_system.lump_sum_cost'},
-                    {label: 'Sistem Elektrikal', calculation: `${a.mep_systems.electrical_system.rate_of_physical_cost * 100}% dari biaya fisik dasar`, value: scenario_a_results.mep_costs.electrical_cost, path: 'drivingRange.capex_assumptions.mep_systems.electrical_system.rate_of_physical_cost'},
-                    {label: 'Izin, Desain & Pengawasan', calculation: `${a.other_costs.permit_design_rate_of_physical_cost * 100}% dari biaya fisik`, value: scenario_a_results.permit_cost, path: 'drivingRange.capex_assumptions.other_costs.permit_design_rate_of_physical_cost'},
-                ],
-                subtotal: scenario_a_results.subtotal, contingency: scenario_a_results.contingency, total: scenario_a_results.total
-            },
-            scenario_b: {
-                description: 'Skenario ini tidak menguruk danau, melainkan membangun struktur di atasnya dengan menggunakan pondasi tiang pancang. Skenario ini lebih ramah lingkungan.',
-                htmlRows: [
-                    {label: 'Pekerjaan Tiang Pancang & Pile Cap', calculation: 'Estimasi Biaya Fondasi Pancang', value: scenario_b_foundation_cost},
-                    {label: 'Total Pekerjaan Bangunan', calculation: 'Estimasi Biaya Struktur Bangunan', value: totalBuildingCost},
-                    {label: 'Total Peralatan & Jaring', calculation: 'Ref. Tabel Peralatan', value: totalEquipmentCost + totalSafetyNetCost},
-                    {label: 'Sistem HVAC (AC)', calculation: `${bld.cafe_area_m2} m² @ ...`, value: scenario_b_results.mep_costs.hvac_cost, path: 'drivingRange.capex_assumptions.mep_systems.hvac_system.cost_per_m2_hvac'},
-                    {label: 'Sistem Plumbing', calculation: `Lump Sum`, value: scenario_b_results.mep_costs.plumbing_cost, path: 'drivingRange.capex_assumptions.mep_systems.plumbing_system.lump_sum_cost'},
-                    {label: 'Sistem Elektrikal', calculation: `${a.mep_systems.electrical_system.rate_of_physical_cost * 100}% dari biaya fisik dasar`, value: scenario_b_results.mep_costs.electrical_cost, path: 'drivingRange.capex_assumptions.mep_systems.electrical_system.rate_of_physical_cost'},
-                    {label: 'Izin, Desain & Pengawasan', calculation: `${a.other_costs.permit_design_rate_of_physical_cost * 100}% dari biaya fisik`, value: scenario_b_results.permit_cost, path: 'drivingRange.capex_assumptions.other_costs.permit_design_rate_of_physical_cost'},
-                ],
-                subtotal: scenario_b_results.subtotal, contingency: scenario_b_results.contingency, total: scenario_b_results.total
-            }
+            total: scenario_b_results.total,
+            breakdown: scenario_b_results.breakdown
         };
+    },
+
+    _calculatePadelCapex(scenarioKey) {
+        const scenario = projectConfig.padel.scenarios[scenarioKey];
+        if (!scenario || !scenario.capex) {
+            console.warn(`Padel scenario config for '${scenarioKey}' not found or invalid.`);
+            return 0; // Mengembalikan 0 jika konfigurasi tidak valid
+        }
+
+        const capex = scenario.capex;
+        let grandTotal = 0;
+
+        // 1. Biaya Pra-operasional
+        grandTotal += this._calculateTotal(capex.pre_operational || {});
+
+        // 2. Komponen Renovasi Futsal (Hanya relevan untuk four_courts_combined)
+        if (capex.component_futsal_renovation) {
+            grandTotal += this._calculateTotal(capex.component_futsal_renovation);
+        }
+
+        // 3. Komponen Pembangunan Baru Koperasi (Hanya relevan untuk four_courts_combined)
+        if (capex.component_koperasi_new_build) {
+            const buildData = capex.component_koperasi_new_build;
+            grandTotal += this._calculateTotal(buildData.land_preparation_and_foundation || {});
+            grandTotal += this._calculateTotal(buildData.building_structure_2_courts || {});
+            grandTotal += this._calculateTotal(buildData.interior_and_facade || {});
+            grandTotal += this._calculateTotal(buildData.building_demolition || {});
+            
+            // Perhitungan khusus untuk plumbing_and_sanitary
+            if (buildData.plumbing_and_sanitary) {
+                const ps = buildData.plumbing_and_sanitary;
+                grandTotal += (ps.toilet_unit * ps.area_m2_per_toilet * ps.cost_per_m2);
+            }
+        }
+
+        // 4. Peralatan Lapangan Olahraga & Inventaris Awal
+        if (capex.sport_courts_equipment) {
+            const numCourts = scenario.num_courts; // Ambil num_courts dari skenario aktif
+            const equipment = capex.sport_courts_equipment;
+
+            // Biaya per lapangan
+            if (equipment.per_court_costs) {
+                grandTotal += this._calculateTotal(equipment.per_court_costs) * numCourts;
+            }
+
+            // Inventaris awal
+            if (equipment.initial_inventory) {
+                grandTotal += this._calculateTotal(equipment.initial_inventory);
+            }
+        }
+
+        // Catatan: Kontingensi akan ditambahkan di fungsi pemanggil `_getFinancialsForComponent`
+        // atau `buildFinancialModelForScenario` untuk konsistensi.
+        return grandTotal;
+    },
+
+    _calculateMeetingPointCapex(constructionScenario, conceptScenario) {
+        // PERBAIKAN: Fungsi ini sekarang menggabungkan biaya konstruksi dan konsep
+        const unitCosts = projectConfig.meetingPoint.unit_costs;
+        let total = 0;
+
+        // 1. Tambahkan biaya dasar konstruksi
+        const constructionData = projectConfig.meetingPoint.construction_scenarios[constructionScenario].base_costs;
+        total += this._calculateTotal(constructionData);
+
+        // 2. Tambahkan biaya furnitur & interior dari konsep
+        const conceptData = projectConfig.meetingPoint.concept_scenarios[conceptScenario].items;
+        for(const item in conceptData) {
+            const count = conceptData[item];
+            if (count > 0) {
+                if(item.includes('chair')) total += count * (unitCosts.vip_chair && item.includes('vip') ? unitCosts.vip_chair : unitCosts.chair);
+                else if(item.includes('table')) total += count * (item.includes('4pax') ? unitCosts.table_4pax : unitCosts.table_2pax);
+                else if(item === 'kitchen') total += unitCosts.kitchen_equipment_lump_sum;
+                else if(item === 'toilet') total += unitCosts.toilet_unit_lump_sum;
+                // dan seterusnya untuk semua item
+            }
+        }
+        return total;
     },
 
     _getUnitCalculations(unitName, padelScenarioKey = 'four_courts_combined') {
@@ -591,7 +642,68 @@ const sierMathFinance = {
         }
         const monthlyRevenueTotal = monthlyRevenueMain + fnbRevenueMonthly + (a.pro_shop_sales || 0);
         return { pnl: { annualRevenue: monthlyRevenueTotal * 12 } };
+    },
+
+    runSensitivityAnalysis(baseModel) {
+        const sensitivityParams = projectConfig.sensitivity_analysis;
+        let results = {};
+
+        const runFor = (modelData, isCombined = true) => {
+            const analysisResult = {
+                revenue: { npv: {}, irr: {} },
+                investment: { npv: {}, irr: {} }
+            };
+
+            // 1. Sensitivitas terhadap Pendapatan
+            sensitivityParams.revenue_steps.forEach(revStep => {
+                let tempModel = JSON.parse(JSON.stringify(modelData)); // Deep copy
+                tempModel.revenue = tempModel.revenue.map(r => r * revStep);
+                
+                const pnl = this._buildIncomeStatement({ ...tempModel, interest: modelData.financing.interestPayments, projectionYears: 10 });
+                const cf = this._buildCashFlowStatement({ incomeStatement: pnl, depreciation: tempModel.depreciation, capexSchedule: tempModel.capexSchedule, financing: modelData.financing, projectionYears: 10 });
+                const metrics = this._calculateFeasibilityMetrics(cf.netCashFlow, projectConfig.assumptions.discount_rate_wacc);
+
+                analysisResult.revenue.npv[revStep] = metrics.npv;
+                analysisResult.revenue.irr[revStep] = metrics.irr;
+            });
+            
+            // 2. Sensitivitas terhadap Investasi (CapEx)
+            sensitivityParams.investment_steps.forEach(invStep => {
+                let tempModel = JSON.parse(JSON.stringify(modelData));
+                tempModel.capexSchedule[0] *= invStep;
+                
+                // Recalculate financing based on new investment cost
+                const newFinancing = this._calculateLoanAmortization(tempModel.capexSchedule[0], projectConfig.assumptions.financing, 10);
+                
+                const pnl = this._buildIncomeStatement({ ...tempModel, interest: newFinancing.interestPayments, projectionYears: 10 });
+                const cf = this._buildCashFlowStatement({ incomeStatement: pnl, depreciation: tempModel.depreciation, capexSchedule: tempModel.capexSchedule, financing: newFinancing, projectionYears: 10 });
+                const metrics = this._calculateFeasibilityMetrics(cf.netCashFlow, projectConfig.assumptions.discount_rate_wacc);
+
+                analysisResult.investment.npv[invStep] = metrics.npv;
+                analysisResult.investment.irr[invStep] = metrics.irr;
+            });
+
+            return analysisResult;
+        };
+
+        // Jalankan untuk model gabungan
+        results.combined = runFor(baseModel.combined);
+
+        // Jalankan untuk setiap unit individual
+        Object.keys(baseModel.individual).forEach(key => {
+            if(baseModel.individual[key].pnl) { // Hanya untuk unit yang punya P&L
+                 // Buat model data individual yang lengkap
+                 const individualModelData = {
+                     ...baseModel.individual[key],
+                     financing: baseModel.combined.financing // Gunakan financing gabungan
+                 };
+                 results[key] = runFor(individualModelData, false);
+            }
+        });
+
+        return results;
     }
 };
+
 
 window.sierMathFinance = sierMathFinance;

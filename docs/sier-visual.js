@@ -1,6 +1,4 @@
-// File: sier-visual. renderall
-// VERSI 3.1 FINAL - Bertindak sebagai controller utama aplikasi.
-
+// File: sier-visual. add sensitivity
 function applyAutomaticCaptionsAndNumbering() {
     const allHeadings = document.querySelectorAll('h2, h3, h4, h5');
 
@@ -158,6 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 2. HITUNG MODEL FINANSIAL LENGKAP SEKALI SAJA
         const model = sierMathFinance.buildFinancialModelForScenario(projectScenarioKey);
+        const sensitivityData = sierMathFinance.runSensitivityAnalysis(model);
 
         // 3. Render semua modul visual dengan MENGIRIMKAN data yang sudah dihitung
         
@@ -176,6 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sierHelpers.tryToRender(() => sierVisualImpact.render(model)); // Kirim model ke sini
         sierHelpers.tryToRender(() => sierVisualFinanceSummary.render(model));
         sierHelpers.tryToRender(() => sierVisualFinanceDetails.render(model, projectScenarioKey));
+        sierHelpers.tryToRender(() => sierVisualSensitivity.render(sensitivityData));
         
         // 4. Lakukan post-processing
         processMarkdownFormatting();

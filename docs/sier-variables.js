@@ -1,4 +1,4 @@
-// File: sier-variables.js update pdf terbaru
+// File: sier-variables.js add sensitivity
 const projectConfig = {};
 
 projectConfig.site_parameters = {
@@ -146,23 +146,26 @@ projectConfig.assumptions = {
     get financing() {
         return this.financing_scenarios.full_equity;
     },
-    // BARU: Asumsi Eskalasi dari Sheet
     escalation: {
         tariff_increase_rate: 0.05,
         tariff_increase_every_x_years: 2,
-        salary_increase_rate: 0.065, // Kenaikan Gaji per tahun
+        salary_increase_rate: 0.065,
     },
     scenario_modifiers: {
         pessimistic_revenue: 0.85,
         optimistic_revenue: 1.15,
         pessimistic_opex: 1.05,
         optimistic_opex: 0.98
-    }
+    },
+    sensitivity_analysis: {
+        revenue_steps: [0.8, 0.9, 1.0, 1.1, 1.2, 1.3],
+        investment_steps: [0.8, 0.9, 1.0, 1.1, 1.2]
+    },
 };
 
 projectConfig.drivingRange = {
     scenarios: {
-        include_lake_roof_net: true // Ubah ke 'false' untuk skenario tanpa jaring
+        include_lake_roof_net: false // Ubah ke 'false' untuk skenario tanpa jaring
     },
     operational_assumptions: { 
         workdays_in_month: 22, 
