@@ -1,4 +1,4 @@
-// File: sier-variables.js add sensitivity lupa koma 2
+// File: sier-variables.js add sensitivity lupa koma 3
 const projectConfig = {};
 
 projectConfig.site_parameters = {
@@ -126,22 +126,12 @@ projectConfig.assumptions = {
         civil_construction: 15,
         equipment: 5,
         interior: 7,
+        digital_systems: 5,
+        shared_facilities: 20
     },
     financing_scenarios: {
-        full_equity: {
-            title: "100% Modal Sendiri (SIER)",
-            equity_portion: 1.0,
-            loan_portion: 0.0,
-            interest_rate: 0,
-            loan_period_years: 5,
-        },
-        debt_and_equity: {
-            title: "60% Hutang & 40% Modal",
-            equity_portion: 0.40,
-            loan_portion: 0.60,
-            interest_rate: 0.12,
-            loan_period_years: 5,
-        }
+        full_equity: { title: "100% Modal Sendiri (SIER)", equity_portion: 1.0, loan_portion: 0.0, interest_rate: 0, loan_period_years: 5 },
+        debt_and_equity: { title: "60% Hutang & 40% Modal", equity_portion: 0.40, loan_portion: 0.60, interest_rate: 0.12, loan_period_years: 5 }
     },
     get financing() {
         return this.financing_scenarios.full_equity;
@@ -149,7 +139,7 @@ projectConfig.assumptions = {
     escalation: {
         tariff_increase_rate: 0.05,
         tariff_increase_every_x_years: 2,
-        salary_increase_rate: 0.065,
+        salary_increase_rate: 0.065
     },
     scenario_modifiers: {
         pessimistic_revenue: 0.85,
@@ -157,10 +147,11 @@ projectConfig.assumptions = {
         pessimistic_opex: 1.05,
         optimistic_opex: 0.98
     },
+    // BAGIAN BARU YANG DITAMBAHKAN DI SINI
     sensitivity_analysis: {
         revenue_steps: [0.8, 0.9, 1.0, 1.1, 1.2, 1.3],
         investment_steps: [0.8, 0.9, 1.0, 1.1, 1.2]
-    },
+    }
 };
 
 projectConfig.drivingRange = {

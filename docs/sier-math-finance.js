@@ -1,4 +1,4 @@
-// File: sier-math-finance.js add sensitivity + fix error 2
+// File: sier-math-finance.js add sensitivity + fix error 3
 const sierMathFinance = {
     getValueByPath(obj, path) {
         return path.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj);
@@ -665,7 +665,12 @@ const sierMathFinance = {
     },
 
     runSensitivityAnalysis(baseModel) {
-        const sensitivityParams = projectConfig.sensitivity_analysis;
+        const sensitivityParams = projectConfig.assumptions.sensitivity_analysis;
+        if (!sensitivityParams) {
+            console.warn("Konfigurasi sensitivity_analysis tidak ditemukan. Analisis sensitivitas dilewati.");
+            return {}; // Kembalikan objek kosong jika tidak ada konfigurasi
+        }
+
         let results = {};
 
         const runFor = (modelData, isCombined = true) => {
@@ -676,7 +681,7 @@ const sierMathFinance = {
 
             // 1. Sensitivitas terhadap Pendapatan
             sensitivityParams.revenue_steps.forEach(revStep => {
-                let tempModel = JSON.parse(JSON.stringify(modelData)); // Deep copy
+                let tempModel = JSON.parse(JSON.stringify(modelData));
                 tempModel.revenue = tempModel.revenue.map(r => r * revStep);
                 
                 const pnl = this._buildIncomeStatement({ ...tempModel, interest: modelData.financing.interestPayments, projectionYears: 10 });
@@ -692,7 +697,6 @@ const sierMathFinance = {
                 let tempModel = JSON.parse(JSON.stringify(modelData));
                 tempModel.capexSchedule[0] *= invStep;
                 
-                // Recalculate financing based on new investment cost
                 const newFinancing = this._calculateLoanAmortization(tempModel.capexSchedule[0], projectConfig.assumptions.financing, 10);
                 
                 const pnl = this._buildIncomeStatement({ ...tempModel, interest: newFinancing.interestPayments, projectionYears: 10 });
@@ -707,17 +711,18 @@ const sierMathFinance = {
         };
 
         // Jalankan untuk model gabungan
-        results.combined = runFor(baseModel.combined);
+        if (baseModel.combined) {
+            results.combined = runFor(baseModel.combined);
+        }
 
         // Jalankan untuk setiap unit individual
         Object.keys(baseModel.individual).forEach(key => {
-            if(baseModel.individual[key].pnl) { // Hanya untuk unit yang punya P&L
-                 // Buat model data individual yang lengkap
-                 const individualModelData = {
-                     ...baseModel.individual[key],
-                     financing: baseModel.combined.financing // Gunakan financing gabungan
-                 };
-                 results[key] = runFor(individualModelData, false);
+            if(baseModel.individual[key].pnl) {
+                const individualModelData = {
+                    ...baseModel.individual[key],
+                    financing: baseModel.combined.financing
+                };
+                results[key] = runFor(individualModelData, false);
             }
         });
 
