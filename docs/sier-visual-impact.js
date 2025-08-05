@@ -2,23 +2,17 @@
 // BARU: Bertanggung jawab untuk merender bagian Analisis Dampak Ekonomi & Sosial.
 
 const sierVisualImpact = {
-
-    /**
-     * Membuat tabel dampak ekonomi & sosial.
-     */
-    _renderImpactTable() {
+    _renderImpactTable(model) {
         const tableBody = document.getElementById('economicImpactTableBody');
         if (!tableBody) return;
 
         // Ambil data dari kalkulasi finansial
-        const model = sierMathFinance.buildFinancialModelForScenario('dr_padel4_mp'); // Gunakan skenario terlengkap sebagai basis
         const { combined } = model;
 
-        const totalCapex = combined.capexSchedule[0]; // Capex ada di tahun ke-0
-        const totalAnnualOpex = combined.opex[1]; // Opex tahun pertama
-        const totalAnnualTax = combined.incomeStatement.tax[1]; // Pajak tahun pertama
+        const totalCapex = combined.capexSchedule[0];
+        const totalAnnualOpex = combined.opex[1];
+        const totalAnnualTax = combined.incomeStatement.tax[1];
 
-        // Hitung total staf
         const drStaff = Object.values(projectConfig.drivingRange.opexMonthly.salaries_wages).reduce((sum, role) => sum + role.count, 0);
         const padelStaff = Object.values(projectConfig.padel.scenarios.four_courts_combined.opexMonthly.salaries_wages).reduce((sum, role) => sum + role.count, 0);
         const meetingPointStaff = Object.values(projectConfig.meetingPoint.opexMonthly.salaries_wages).reduce((sum, role) => sum + role.count, 0);
@@ -27,16 +21,13 @@ const sierVisualImpact = {
         const formatRp = (num) => `~Rp ${sierHelpers.toBillion(num)}`;
 
         const impactData = [
-            // Dampak Langsung
             { category: 'direct', item: 'Penciptaan Lapangan Kerja Langsung', desc: 'Pembukaan lowongan kerja untuk posisi manajerial, operasional, pelatih, hingga staf pendukung.', contribution: `~${totalStaff} orang` },
             { category: 'direct', item: 'Belanja Modal (CapEx)', desc: 'Menstimulasi sektor konstruksi, pemasok material bangunan, dan penyedia teknologi selama masa pembangunan.', contribution: formatRp(totalCapex) },
             { category: 'direct', item: 'Belanja Operasional (OpEx)', desc: 'Menciptakan permintaan berkelanjutan untuk pemasok F&B, jasa kebersihan, keamanan, dan pemeliharaan.', contribution: `${formatRp(totalAnnualOpex)} / tahun` },
             { category: 'direct', item: 'Kontribusi Pajak', desc: 'Menyumbang pendapatan negara melalui Pajak Penghasilan Badan dan pajak-pajak lainnya.', contribution: `${formatRp(totalAnnualTax)} / tahun` },
-            // Dampak Tidak Langsung
             { category: 'indirect', item: 'Multiplier Effect pada Pemasok', desc: 'Meningkatkan pendapatan bagi pemasok lokal (sayur, daging, minuman) dan penyedia jasa (laundry, teknisi).', contribution: 'Mendorong pertumbuhan UKM sekitar.' },
             { category: 'indirect', item: 'Peningkatan Okupansi & Belanja', desc: 'Potensi menarik pengunjung dari luar kota untuk event/turnamen, yang akan berbelanja di hotel dan restoran sekitar.', contribution: 'Mendukung sektor pariwisata & horeka.' },
             { category: 'indirect', item: 'Peningkatan Nilai Properti', desc: 'Kehadiran fasilitas rekreasi premium dapat meningkatkan daya tarik dan nilai properti di kawasan sekitarnya.', contribution: 'Meningkatkan aset kawasan.' },
-            // Dampak Sosial
             { category: 'social', item: 'Penyediaan Ruang Publik (Third Place)', desc: 'Menjadi pusat interaksi sosial dan pembentukan komunitas yang sehat bagi pekerja kawasan dan masyarakat umum.', contribution: 'Meningkatkan kualitas hidup.' },
             { category: 'social', item: 'Promosi Gaya Hidup Sehat', desc: 'Mendorong masyarakat untuk aktif berolahraga, baik golf maupun padel, yang sedang menjadi tren positif.', contribution: 'Meningkatkan kesehatan masyarakat.' },
             { category: 'social', item: 'Peningkatan Citra Kawasan SIER', desc: 'Mengubah persepsi SIER dari sekadar kawasan industri menjadi kawasan yang terintegrasi, modern, dan nyaman untuk bekerja & rekreasi.', contribution: 'Meningkatkan daya saing kawasan.' }
@@ -59,9 +50,6 @@ const sierVisualImpact = {
         tableBody.innerHTML = html;
     },
 
-    /**
-     * Membuat diagram SVG untuk multiplier effect.
-     */
     _renderMultiplierDiagram() {
         const container = document.getElementById('multiplierEffectDiagram');
         if (!container) return;
@@ -108,11 +96,8 @@ const sierVisualImpact = {
         `;
     },
 
-    /**
-     * Fungsi render utama untuk modul ini.
-     */
-    render() {
-        this._renderImpactTable();
+    render(model) {
+        this._renderImpactTable(model);
         this._renderMultiplierDiagram();
         console.log("[sier-visual-impact] Analisis Dampak Ekonomi & Sosial: Berhasil dirender.");
     }

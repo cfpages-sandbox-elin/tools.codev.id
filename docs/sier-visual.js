@@ -1,4 +1,4 @@
-// File: sier-visual.js
+// File: sier-visual. renderall
 // VERSI 3.1 FINAL - Bertindak sebagai controller utama aplikasi.
 
 function applyAutomaticCaptionsAndNumbering() {
@@ -143,7 +143,7 @@ function checkRenderStatus() {
 
 
 document.addEventListener('DOMContentLoaded', () => {
-    function renderFinancials() {
+    function renderAll() {
         const projectScenarioKey = document.getElementById('scenario-selector').value;
         const financingScenarioKey = document.getElementById('financing-scenario-selector').value;
 
@@ -152,36 +152,34 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // 1. Perbarui konfigurasi aktif berdasarkan pilihan UI
         projectConfig.assumptions.financing = projectConfig.assumptions.financing_scenarios[financingScenarioKey];
-
         console.log(`[Controller] Merender ulang. Proyek: ${projectScenarioKey}, Pendanaan: ${financingScenarioKey}`);
-        
+
+        // 2. HITUNG MODEL FINANSIAL LENGKAP SEKALI SAJA
         const model = sierMathFinance.buildFinancialModelForScenario(projectScenarioKey);
 
+        // 3. Render semua modul visual dengan MENGIRIMKAN data yang sudah dihitung
+        
+        // Modul non-finansial yang tidak butuh data model
+        sierHelpers.tryToRender(() => sierVisualDemography.render());
+        sierHelpers.tryToRender(() => sierVisualMarket.render());
+        sierHelpers.tryToRender(() => sierVisualSurvey.render());
+        sierHelpers.tryToRender(() => sierVisualTechnical.render());
+        sierHelpers.tryToRender(() => sierVisualTechnicalDiagrams.renderAll());
+        sierHelpers.tryToRender(() => sierVisualDigital.render());
+        sierHelpers.tryToRender(() => sierVisualMaintenance.render());
+        sierHelpers.tryToRender(() => sierVisualMeetingPoint.renderAll());
+        sierHelpers.tryToRender(() => sierChart.renderAllCharts());
+
+        // Modul yang BUTUH data model
+        sierHelpers.tryToRender(() => sierVisualImpact.render(model)); // Kirim model ke sini
         sierHelpers.tryToRender(() => sierVisualFinanceSummary.render(model));
-        sierHelpers.tryToRender(() => sierVisualFinanceDetails.render(model, projectScenarioKey)); 
+        sierHelpers.tryToRender(() => sierVisualFinanceDetails.render(model, projectScenarioKey));
         
-        applyAutomaticCaptionsAndNumbering();
-    }
-
-    function updateNonFinancialVisuals() {
-        console.log("[Controller] Memperbarui modul visual non-finansial...");
-        
-        // Menggunakan objek kalkulasi yang sudah dipecah
-        sierHelpers.tryToRender(() => sierVisualDemography.render(sierMathMarket));
-        sierHelpers.tryToRender(() => sierVisualMarket.render(sierMathMarket));
-        sierHelpers.tryToRender(() => sierVisualSurvey.render(sierMathSurvey, sierMathMarket));
-
-        // Modul lain yang tidak bergantung pada data dinamis
-        sierHelpers.tryToRender(sierVisualTechnical.render.bind(sierVisualTechnical));
-        sierHelpers.tryToRender(sierVisualTechnicalDiagrams.renderAll.bind(sierVisualTechnicalDiagrams));
-        sierHelpers.tryToRender(sierVisualDigital.render.bind(sierVisualDigital));
-        sierHelpers.tryToRender(sierVisualMaintenance.render.bind(sierVisualMaintenance));
-        sierHelpers.tryToRender(sierVisualImpact.render.bind(sierVisualImpact));
-        sierHelpers.tryToRender(sierVisualMeetingPoint.renderAll.bind(sierVisualMeetingPoint));
-        sierHelpers.tryToRender(sierChart.renderAllCharts.bind(sierChart));
-
+        // 4. Lakukan post-processing
         processMarkdownFormatting();
+        applyAutomaticCaptionsAndNumbering();
     }
 
     function setupEventListeners() {
@@ -246,22 +244,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const projectSelector = document.getElementById('scenario-selector');
         if (projectSelector) {
-            projectSelector.addEventListener('change', renderFinancials);
+            projectSelector.addEventListener('change', renderAll);
         }
         
-        // EVENT LISTENER BARU UNTUK DROPDOWN PENDANAAN
         const financingSelector = document.getElementById('financing-scenario-selector');
         if (financingSelector) {
-            financingSelector.addEventListener('change', renderFinancials);
+            financingSelector.addEventListener('change', renderAll);
         }
     }
 
     // --- URUTAN INISIALISASI APLIKASI ---
-    updateNonFinancialVisuals();
     populateFinancingSelector();
     setupEventListeners();
     generateTableOfContents();
-    const initialScenario = document.getElementById('scenario-selector').value;
-    renderFinancials();
+    renderAll();
     setTimeout(checkRenderStatus, 1000);
 });
