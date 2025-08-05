@@ -1,4 +1,4 @@
-// File: sier-math-finance.js add sensitivity + fix error
+// File: sier-math-finance.js add sensitivity + fix error 2
 const sierMathFinance = {
     getValueByPath(obj, path) {
         return path.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj);
@@ -170,11 +170,11 @@ const sierMathFinance = {
                 baseAnnualRevenue = this._getUnitCalculations('drivingRange').pnl.annualRevenue;
                 baseOpex = extractOpex(projectConfig.drivingRange.opexMonthly);
                 break;
+
             case compKey.includes('padel'):
                 const padelScenarioKey = getPadelScenarioKey();
                 const padelScenario = projectConfig.padel.scenarios[padelScenarioKey];
                 capexSchedule[0] = this._calculateTotal(padelScenario.capex) * (1 + projectConfig.assumptions.contingency_rate);
-                // Rincian CapEx Padel
                 const padelCapexConf = padelScenario.capex;
                 capexBreakdown.building += this._calculateTotal(padelCapexConf.component_koperasi_new_build || {}) + this._calculateTotal(padelCapexConf.component_futsal_renovation || {});
                 capexBreakdown.equipment += this._calculateTotal(padelCapexConf.sport_courts_equipment || {});
@@ -182,20 +182,23 @@ const sierMathFinance = {
                 baseAnnualRevenue = this._getUnitCalculations('padel', padelScenarioKey).pnl.annualRevenue;
                 baseOpex = extractOpex(padelScenario.opexMonthly);
                 break;
+
             case compKey === 'mp':
                 const baseMpCapex = this._calculateMeetingPointCapex('renovate', 'concept_1_pods');
                 capexSchedule[0] = baseMpCapex * (1 + projectConfig.assumptions.contingency_rate);
-                const constructionCosts = this._calculateTotal(projectConfig.meetingPoint.construction_scenarios.renovate.base_costs);
+                const constructionCosts = this._calculateTotal(projectConfig.meetingPoint.capex_scenarios.construction_scenarios.renovate.base_costs);
                 const conceptCosts = baseMpCapex - constructionCosts;
                 capexBreakdown.building += constructionCosts;
                 capexBreakdown.equipment += conceptCosts;
                 baseAnnualRevenue = this._calculateTotal(projectConfig.meetingPoint.revenue) * 12;
                 baseOpex = extractOpex(projectConfig.meetingPoint.opexMonthly);
                 break;
+
             case compKey === 'shared':
                 capexSchedule[0] = this._calculateTotal(projectConfig.shared_facilities_capex) * (1 + projectConfig.assumptions.contingency_rate);
                 capexBreakdown.shared_facilities = capexSchedule[0];
                 break;
+
             case compKey === 'digital':
                  capexSchedule[0] = this._calculateTotal(projectConfig.digital_capex) * (1 + projectConfig.assumptions.contingency_rate);
                  capexBreakdown.digital_systems = capexSchedule[0];
@@ -581,7 +584,7 @@ const sierMathFinance = {
 
     _calculateMeetingPointCapex(constructionScenarioKey = 'renovate', conceptScenarioKey = 'concept_1_pods') {
         const mpConfig = projectConfig.meetingPoint;
-        if (!mpConfig || !mpConfig.construction_scenarios[constructionScenarioKey] || !mpConfig.concept_scenarios[conceptScenarioKey]) {
+        if (!mpConfig || !mpConfig.capex_scenarios.construction_scenarios[constructionScenarioKey] || !mpConfig.capex_scenarios.concept_scenarios[conceptScenarioKey]) {
             console.warn("Meeting Point config is missing or invalid for the selected scenarios.");
             return 0;
         }
@@ -590,11 +593,11 @@ const sierMathFinance = {
         let totalCapex = 0;
 
         // 1. Hitung biaya dari skenario konstruksi yang dipilih
-        const constructionData = mpConfig.construction_scenarios[constructionScenarioKey].base_costs;
+        const constructionData = mpConfig.capex_scenarios.construction_scenarios[constructionScenarioKey].base_costs;
         totalCapex += this._calculateTotal(constructionData);
 
         // 2. Hitung biaya dari skenario konsep interior yang dipilih
-        const conceptData = mpConfig.concept_scenarios[conceptScenarioKey].items;
+        const conceptData = mpConfig.capex_scenarios.concept_scenarios[conceptScenarioKey].items;
         const conceptCostMap = {
             chairs: unitCosts.chair,
             tables_2pax: unitCosts.table_2pax,
@@ -616,7 +619,6 @@ const sierMathFinance = {
             }
         }
         
-        // Kontingensi akan ditambahkan oleh fungsi pemanggil
         return totalCapex;
     },
 
