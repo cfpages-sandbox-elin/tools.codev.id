@@ -1,4 +1,4 @@
-// File: sier-math-finance.js add sensitivity + fix error 4
+// File: sier-math-finance.js munculkan sensitivity
 const sierMathFinance = {
     getValueByPath(obj, path) {
         return path.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj);
@@ -524,22 +524,19 @@ const sierMathFinance = {
     _calculatePadelCapex(scenarioKey) {
         const scenario = projectConfig.padel.scenarios[scenarioKey];
         if (!scenario || !scenario.capex) {
-            console.warn(`Padel scenario config for '${scenarioKey}' not found or invalid.`);
-            return 0; // Mengembalikan 0 jika konfigurasi tidak valid
+            console.warn(`Konfigurasi skenario Padel untuk '${scenarioKey}' tidak ditemukan.`);
+            return 0;
         }
 
         const capex = scenario.capex;
         let grandTotal = 0;
 
-        // 1. Biaya Pra-operasional
         grandTotal += this._calculateTotal(capex.pre_operational || {});
 
-        // 2. Komponen Renovasi Futsal (Hanya relevan untuk four_courts_combined)
         if (capex.component_futsal_renovation) {
             grandTotal += this._calculateTotal(capex.component_futsal_renovation);
         }
 
-        // 3. Komponen Pembangunan Baru Koperasi (Hanya relevan untuk four_courts_combined)
         if (capex.component_koperasi_new_build) {
             const buildData = capex.component_koperasi_new_build;
             grandTotal += this._calculateTotal(buildData.land_preparation_and_foundation || {});
@@ -547,31 +544,24 @@ const sierMathFinance = {
             grandTotal += this._calculateTotal(buildData.interior_and_facade || {});
             grandTotal += this._calculateTotal(buildData.building_demolition || {});
             
-            // Perhitungan khusus untuk plumbing_and_sanitary
+            // PERBAIKAN LOGIKA DI SINI
             if (buildData.plumbing_and_sanitary) {
                 const ps = buildData.plumbing_and_sanitary;
-                grandTotal += (ps.toilet_unit * ps.area_m2_per_toilet * ps.cost_per_m2);
+                grandTotal += (ps.toilet_unit * ps.area_m2 * ps.cost_per_m2);
             }
         }
 
-        // 4. Peralatan Lapangan Olahraga & Inventaris Awal
         if (capex.sport_courts_equipment) {
-            const numCourts = scenario.num_courts; // Ambil num_courts dari skenario aktif
+            const numCourts = scenario.num_courts;
             const equipment = capex.sport_courts_equipment;
-
-            // Biaya per lapangan
             if (equipment.per_court_costs) {
                 grandTotal += this._calculateTotal(equipment.per_court_costs) * numCourts;
             }
-
-            // Inventaris awal
             if (equipment.initial_inventory) {
                 grandTotal += this._calculateTotal(equipment.initial_inventory);
             }
         }
 
-        // Catatan: Kontingensi akan ditambahkan di fungsi pemanggil `_getFinancialsForComponent`
-        // atau `buildFinancialModelForScenario` untuk konsistensi.
         return grandTotal;
     },
 
@@ -658,47 +648,66 @@ const sierMathFinance = {
     },
 
     runSensitivityAnalysis(baseModel) {
-        // PERBAIKAN: Mengambil parameter dari dalam 'assumptions'
         const sensitivityParams = projectConfig.assumptions.sensitivity_analysis;
         if (!sensitivityParams) {
-            console.warn("Konfigurasi sensitivity_analysis tidak ditemukan. Analisis sensitivitas dilewati.");
+            console.warn("Konfigurasi sensitivity_analysis tidak ditemukan.");
             return {};
         }
 
         let results = {};
 
-        const runFor = (modelData) => {
-            const analysisResult = { revenue: {}, investment: {} };
+        // Helper untuk menjalankan analisis pada satu set data model (bisa gabungan atau individual)
+        const runForComponent = (componentModelData) => {
             const { revenue_steps, investment_steps } = sensitivityParams;
-            
-            // Inisialisasi matriks hasil
-            investment_steps.forEach(invStep => {
-                analysisResult.investment[invStep] = { npv: 0, irr: 0 };
-                analysisResult.revenue[invStep] = {};
-                revenue_steps.forEach(revStep => {
-                    analysisResult.revenue[invStep][revStep] = { npv: 0, irr: 0 };
-                });
-            });
+            let npvMatrix = {};
+            let irrMatrix = {};
 
-            // Loop melalui setiap kombinasi perubahan investasi dan pendapatan
             investment_steps.forEach(invStep => {
+                npvMatrix[invStep] = {};
+                irrMatrix[invStep] = {};
                 revenue_steps.forEach(revStep => {
-                    let tempModel = JSON.parse(JSON.stringify(modelData));
-                    tempModel.capexSchedule[0] *= invStep;
-                    tempModel.revenue = tempModel.revenue.map(r => r * revStep);
+                    // Buat salinan data agar tidak mengubah model asli
+                    let tempModel = JSON.parse(JSON.stringify(componentModelData));
                     
+                    // Terapkan faktor sensitivitas pada investasi dan pendapatan
+                    tempModel.capexSchedule = tempModel.capexSchedule.map(c => c * invStep);
+                    tempModel.revenue = tempModel.revenue.map(r => r * revStep);
+
+                    // Kalkulasi ulang seluruh rantai finansial dengan data sementara
                     const newFinancing = this._calculateLoanAmortization(tempModel.capexSchedule[0], projectConfig.assumptions.financing, 10);
                     const pnl = this._buildIncomeStatement({ ...tempModel, interest: newFinancing.interestPayments, projectionYears: 10 });
                     const cf = this._buildCashFlowStatement({ incomeStatement: pnl, depreciation: tempModel.depreciation, capexSchedule: tempModel.capexSchedule, financing: newFinancing, projectionYears: 10 });
                     const metrics = this._calculateFeasibilityMetrics(cf.netCashFlow, projectConfig.assumptions.discount_rate_wacc);
 
-                    analysisResult.revenue[invStep][revStep] = { npv: metrics.npv, irr: metrics.irr };
+                    // Simpan hasil (NPV dan IRR) ke dalam matriks
+                    npvMatrix[invStep][revStep] = metrics.npv;
+                    irrMatrix[invStep][revStep] = metrics.irr;
                 });
             });
-
-            return analysisResult;
+            return { npv: npvMatrix, irr: irrMatrix };
         };
-    }
+
+        // Jalankan analisis untuk model gabungan
+        if (baseModel.combined) {
+            results.combined = runForComponent(baseModel.combined);
+        }
+        
+        // Jalankan analisis untuk setiap unit bisnis individual
+        for (const key in baseModel.individual) {
+            // Hanya proses unit yang memiliki pendapatan
+            if (baseModel.individual[key].revenue.some(r => r > 0)) {
+                const individualData = {
+                    capexSchedule: baseModel.individual[key].capexSchedule,
+                    revenue: baseModel.individual[key].revenue,
+                    opex: baseModel.individual[key].opex,
+                    depreciation: baseModel.individual[key].depreciation,
+                };
+                results[key] = runForComponent(individualData);
+            }
+        }
+
+        return results;
+    },
 };
 
 

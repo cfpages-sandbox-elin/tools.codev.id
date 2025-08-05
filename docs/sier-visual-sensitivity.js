@@ -1,9 +1,9 @@
-// File: sier-visual-sensitivity.js (File Baru)
+// File: sier-visual-sensitivity.js munculkan sensitivity
 const sierVisualSensitivity = {
 
     _createSensitivityTable(data, title, isIrr = false) {
         if (!data) return '';
-        const params = projectConfig.sensitivity_analysis;
+        const params = projectConfig.assumptions.sensitivity_analysis;
 
         const formatValue = (val) => {
             if (isIrr) return sierHelpers.formatPercent(val, 2);
@@ -20,9 +20,8 @@ const sierVisualSensitivity = {
         params.investment_steps.forEach(invStep => {
             bodyHtml += `<tr><td class="p-2 border text-center font-bold bg-blue-100">${sierHelpers.formatPercent(invStep, 0)}</td>`;
             params.revenue_steps.forEach(revStep => {
-                const irrValue = data.investment.irr[invStep] * revStep; // Simplified interaction
-                const npvValue = data.investment.npv[invStep] + data.revenue.npv[revStep] - data.revenue.npv[1.0]; // Simplified
-                const value = isIrr ? irrValue : npvValue;
+                // PERBAIKAN UTAMA: Langsung baca dari matriks data
+                const value = data[invStep] && data[invStep][revStep] !== undefined ? data[invStep][revStep] : (isIrr ? 0 : -1);
 
                 let bgColor = 'bg-white';
                 if (isIrr) {
@@ -42,7 +41,7 @@ const sierVisualSensitivity = {
         return `
             <div class="mb-12">
                 <h3 class="text-xl font-semibold mb-3 text-gray-700">${title}</h3>
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto border rounded-lg">
                     <table class="w-full text-sm border-collapse">
                         <thead>
                             <tr><th class="p-1" colspan="${params.revenue_steps.length + 1}">Perubahan Pendapatan</th></tr>
@@ -51,6 +50,7 @@ const sierVisualSensitivity = {
                         <tbody>${bodyHtml}</tbody>
                     </table>
                 </div>
+                ${!isIrr ? '<p class="text-xs text-gray-500 mt-1 text-right">*Dalam Juta Rupiah</p>' : ''}
             </div>
         `;
     },

@@ -1,4 +1,4 @@
-// File: sier-variables.js add sensitivity lupa koma 3
+// File: sier-variables.js munculkan sensitivity
 const projectConfig = {};
 
 projectConfig.site_parameters = {
@@ -147,7 +147,6 @@ projectConfig.assumptions = {
         pessimistic_opex: 1.05,
         optimistic_opex: 0.98
     },
-    // BAGIAN BARU YANG DITAMBAHKAN DI SINI
     sensitivity_analysis: {
         revenue_steps: [0.8, 0.9, 1.0, 1.1, 1.2, 1.3],
         investment_steps: [0.8, 0.9, 1.0, 1.1, 1.2]
