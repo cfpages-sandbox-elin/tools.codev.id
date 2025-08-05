@@ -1,4 +1,4 @@
-// File: sier-visual-finance-details.js fix error 1
+// File: sier-visual-finance-details.js fix error 2
 const sierVisualFinanceDetails = {
     _renderUnitSummaries(individualResults) {
         let html = '';
@@ -357,48 +357,148 @@ const sierVisualFinanceDetails = {
     },
 
     _renderMeetingPointCapexDetailsVisuals() {
-        const container = document.getElementById('meeting-point-capex-details-container'); // Anda perlu membuat div ini di HTML
+        const container = document.getElementById('meeting-point-capex-details-container');
         if (!container) return;
-        
-        const createScenarioTable = (capexConfig) => {
-            // (Fungsi helper createScenarioTable mirip dengan yang di Padel bisa dibuat di sini)
-            let tableBodyHtml = '';
-            let grandTotal = 0;
-            
-            const processCategory = (categoryData, categoryName) => {
-                tableBodyHtml += `<tbody class="bg-gray-50"><td colspan="3" class="p-3 font-bold text-gray-800">${sierTranslate.translate(categoryName)}</td></tbody><tbody class="divide-y">`;
-                for (const key in categoryData) {
-                    const item = categoryData[key];
-                    const itemTotal = item.lump_sum ? item.lump_sum : (item.area_m2 * item.cost_per_m2);
-                    const detail = item.lump_sum ? 'Lump Sum' : `${item.area_m2} m² @ Rp ${sierHelpers.formatNumber(item.cost_per_m2)}`;
-                    grandTotal += itemTotal;
-                    tableBodyHtml += `<tr><td class="px-3 py-2 text-gray-600 pl-8">${sierTranslate.translate(key)}</td><td class="px-3 py-2 text-gray-500 text-xs">${detail}</td><td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(itemTotal))}</td></tr>`;
-                }
-                tableBodyHtml += `</tbody>`;
+
+        const mpConfig = projectConfig.meetingPoint;
+        const unitCosts = mpConfig.unit_costs;
+
+        // Helper untuk membuat tabel rincian untuk SATU skenario konsep
+        const createConceptTable = (scenarioKey) => {
+            const scenario = mpConfig.capex_scenarios.concept_scenarios[scenarioKey];
+            if (!scenario) return '';
+
+            const items = scenario.items;
+            let subtotal = 0;
+            const costMap = {
+                chairs: unitCosts.chair, tables_2pax: unitCosts.table_2pax, tables_4pax: unitCosts.table_4pax,
+                sofas: unitCosts.sofa, coffee_tables: unitCosts.coffee_table, meeting_pods: unitCosts.meeting_pod,
+                vip_partitions: unitCosts.vip_partition, vip_tables: unitCosts.vip_table, vip_chairs: unitCosts.vip_chair,
+                kitchen: unitCosts.kitchen_equipment_lump_sum, toilet: unitCosts.toilet_unit_lump_sum
             };
 
-            for(const category in capexConfig) {
-                if(typeof capexConfig[category] === 'object' && category !== 'title' && category !== 'notes') {
-                    processCategory(capexConfig[category], category);
+            let rowsHtml = '';
+            for (const key in items) {
+                const count = items[key];
+                if (count > 0 && costMap[key]) {
+                    const cost = count * costMap[key];
+                    subtotal += cost;
+                    rowsHtml += `
+                        <tr>
+                            <td class="px-3 py-2 text-gray-600 pl-8">${sierHelpers.safeTranslate(key)}</td>
+                            <td class="px-3 py-2 text-center">${count}</td>
+                            <td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(costMap[key])}</td>
+                            <td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(cost)}</td>
+                        </tr>
+                    `;
                 }
             }
+            return `
+                <div class="mb-8">
+                    <h4 class="font-semibold text-lg text-gray-800 mb-2">${scenario.title}</h4>
+                    <div class="overflow-x-auto border rounded-lg">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-100 text-xs uppercase">
+                                <tr>
+                                    <th class="p-2 text-left">Komponen Interior/Furnitur</th>
+                                    <th class="p-2 text-center">Jumlah</th>
+                                    <th class="p-2 text-right">Biaya Satuan (Rp)</th>
+                                    <th class="p-2 text-right">Subtotal (Rp)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y">${rowsHtml}</tbody>
+                            <tfoot class="font-bold bg-gray-200">
+                                <tr>
+                                    <td colspan="3" class="p-2 text-right">Total Biaya Konsep Interior</td>
+                                    <td class="p-2 text-right font-mono">${sierHelpers.formatNumber(subtotal)}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            `;
+        };
+        const createConstructionTable = (scenarioKey) => {
+            const scenario = mpConfig.capex_scenarios.construction_scenarios[scenarioKey];
+            if (!scenario) return '';
 
-            const subtotal = grandTotal;
-            const contingency = subtotal * projectConfig.assumptions.contingency_rate;
-            const finalTotal = subtotal + contingency;
+            const baseCosts = scenario.base_costs;
+            let subtotal = 0;
+            let rowsHtml = '';
 
-            return `<div class="mb-12"><h3 class="text-xl font-semibold mb-2 text-gray-800">${capexConfig.title}</h3><p class="text-gray-600 mb-4 text-sm">${capexConfig.notes}</p><div class="overflow-x-auto border rounded-lg"><table class="w-full text-sm"><thead class="bg-gray-200 text-xs uppercase"><tr><th class="p-2 text-left w-1/2">Komponen Biaya</th><th class="p-2 text-left w-1/4">Detail Perhitungan</th><th class="p-2 text-right w-1/4">Estimasi Biaya (Rp)</th></tr></thead>${tableBodyHtml}<tfoot class="font-bold"><tr class="bg-gray-200"><td class="p-3 text-right" colspan="2">Subtotal Biaya</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(subtotal))}</td></tr><tr class="bg-yellow-200"><td class="p-3 text-right" colspan="2">Kontingensi (${(projectConfig.assumptions.contingency_rate * 100)}%)</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(contingency))}</td></tr><tr class="bg-cyan-600 text-white text-lg"><td class="p-3 text-right" colspan="2">Total Estimasi Investasi</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(finalTotal))}</td></tr></tfoot></table></div></div>`;
-        }
+            for (const key in baseCosts) {
+                const item = baseCosts[key];
+                const label = sierHelpers.safeTranslate(key);
+                let itemTotal = 0;
+                let detailHtml = '';
 
-        const scenarioA_Html = createScenarioTable(projectConfig.meetingPoint.capex_scenario_a);
-        const scenarioB_Html = createScenarioTable(projectConfig.meetingPoint.capex_scenario_b);
+                if (typeof item === 'number') {
+                    itemTotal = item;
+                    detailHtml = 'Lump Sum';
+                } else if (item.lump_sum) {
+                    itemTotal = item.lump_sum;
+                    detailHtml = 'Lump Sum';
+                } else if (item.area_m2 && item.cost_per_m2) {
+                    itemTotal = item.area_m2 * item.cost_per_m2;
+                    detailHtml = `${item.area_m2} m² @ Rp ${sierHelpers.formatNumber(item.cost_per_m2)}`;
+                }
+                subtotal += itemTotal;
+                rowsHtml += `
+                    <tr>
+                        <td class="px-3 py-2 text-gray-600">${label}</td>
+                        <td class="px-3 py-2 text-gray-500 text-xs">${detailHtml}</td>
+                        <td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(itemTotal)}</td>
+                    </tr>
+                `;
+            }
+
+            return `
+                <div class="mb-8">
+                    <h4 class="font-semibold text-lg text-gray-800 mb-2">${scenario.title}</h4>
+                    <div class="overflow-x-auto border rounded-lg">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-100 text-xs uppercase">
+                                <tr>
+                                    <th class="p-2 text-left">Komponen Biaya Konstruksi</th>
+                                    <th class="p-2 text-left">Detail</th>
+                                    <th class="p-2 text-right">Subtotal (Rp)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y">${rowsHtml}</tbody>
+                            <tfoot class="font-bold bg-gray-200">
+                                <tr>
+                                    <td colspan="2" class="p-2 text-right">Total Biaya Dasar Konstruksi</td>
+                                    <td class="p-2 text-right font-mono">${sierHelpers.formatNumber(subtotal)}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            `;
+        };
+
+        const constructionRenovateHtml = createConstructionTable('renovate');
+        const constructionRebuildHtml = createConstructionTable('rebuild');
+
+        const concept1Html = createConceptTable('concept_1_pods');
+        const concept2Html = createConceptTable('concept_2_open');
+        const concept3Html = createConceptTable('concept_3_vip');
 
         container.innerHTML = `
             <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-cyan-600 pl-4">Rincian Estimasi Biaya Investasi (CapEx): Meeting Point</h2>
             <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-                ${scenarioA_Html}
-                ${scenarioB_Html}
-            </div>`;
+                <p class="text-gray-600 mb-6">Total biaya dihitung dengan menggabungkan satu <strong>Metode Konstruksi</strong> (biaya dasar) dengan satu <strong>Konsep Desain</strong> (biaya interior).</p>
+                
+                <h3 class="text-xl font-bold mb-4 text-gray-700 border-b pb-2">Langkah 1: Pilih Biaya Dasar Konstruksi</h3>
+                ${constructionRenovateHtml}
+                ${constructionRebuildHtml}
+                
+                <h3 class="text-xl font-bold mb-4 text-gray-700 border-b pb-2 mt-12">Langkah 2: Tambahkan Biaya Konsep Interior</h3>
+                ${concept1Html}
+                ${concept2Html}
+                ${concept3Html}
+            </div>
+        `;
     },
 
     _renderInputAssumptionDetails(model, scenarioKey) {
