@@ -1,9 +1,6 @@
 // File: sier-visual.js
 // VERSI 3.1 FINAL - Bertindak sebagai controller utama aplikasi.
 
-/**
- * Memberikan penomoran dan caption otomatis untuk semua tabel dan visualisasi (chart/diagram).
- */
 function applyAutomaticCaptionsAndNumbering() {
     const allHeadings = document.querySelectorAll('h2, h3, h4, h5');
 
@@ -72,9 +69,6 @@ function applyAutomaticCaptionsAndNumbering() {
     console.log(`[AutoCaption] Selesai. ${allDataTables.length} tabel dan ${allVisualElements.length} visual telah diberi caption.`);
 }
 
-/**
- * Membuat daftar isi (Table of Contents) secara dinamis untuk navigasi di sisi kanan.
- */
 function generateTableOfContents() {
     const tocContainer = document.getElementById('toc-nav-list');
     const mainContent = document.querySelector('.container.mx-auto');
@@ -97,9 +91,6 @@ function generateTableOfContents() {
     });
 }
 
-/**
- * Mengubah sintaks Markdown sederhana (seperti **bold** dan *italic*) menjadi tag HTML.
- */
 function processMarkdownFormatting() {
     console.log("Memulai proses format Markdown ke HTML...");
     const container = document.querySelector('.container.mx-auto');
@@ -115,9 +106,27 @@ function processMarkdownFormatting() {
     });
 }
 
-/**
- * Melakukan pengecekan di console untuk memastikan komponen-komponen utama berhasil dirender.
- */
+function populateFinancingSelector() {
+    const selector = document.getElementById('financing-scenario-selector');
+    const scenarios = projectConfig.assumptions.financing_scenarios;
+    const currentScenarioKey = Object.keys(scenarios).find(key => 
+        scenarios[key].title === projectConfig.assumptions.financing.title
+    );
+
+    if (!selector || !scenarios) return;
+    selector.innerHTML = ''; // Kosongkan opsi default
+
+    for (const key in scenarios) {
+        const option = document.createElement('option');
+        option.value = key;
+        option.textContent = scenarios[key].title;
+        if (key === currentScenarioKey) {
+            option.selected = true;
+        }
+        selector.appendChild(option);
+    }
+}
+
 function checkRenderStatus() {
     console.group("===== STATUS RENDER HALAMAN =====");
     const logCheck = (description, checkPassed) => {
@@ -134,32 +143,27 @@ function checkRenderStatus() {
 
 
 document.addEventListener('DOMContentLoaded', () => {
+    function renderFinancials() {
+        const projectScenarioKey = document.getElementById('scenario-selector').value;
+        const financingScenarioKey = document.getElementById('financing-scenario-selector').value;
 
-    /**
-     * Fungsi utama untuk merender ulang seluruh bagian finansial berdasarkan skenario.
-     * @param {string} scenarioKey - Kunci skenario yang dipilih (misal: 'dr_padel4_mp').
-     */
-    function renderFinancials(scenarioKey) {
-        if (!scenarioKey) {
+        if (!projectScenarioKey || !financingScenarioKey) {
             console.error("Skenario tidak valid!");
             return;
         }
-        console.log(`[Controller] Meminta render untuk skenario: ${scenarioKey}`);
-        
-        // 1. Bangun model finansial lengkap menggunakan `sierMathFinance`.
-        const model = sierMathFinance.buildFinancialModelForScenario(scenarioKey);
 
-        // 2. Kirim data yang relevan ke masing-masing visualizer.
-        sierHelpers.tryToRender(() => sierVisualFinanceSummary.render(model.combined));
-        sierHelpers.tryToRender(() => sierVisualFinanceDetails.render(model, scenarioKey)); 
+        projectConfig.assumptions.financing = projectConfig.assumptions.financing_scenarios[financingScenarioKey];
+
+        console.log(`[Controller] Merender ulang. Proyek: ${projectScenarioKey}, Pendanaan: ${financingScenarioKey}`);
         
-        // 3. Update penomoran otomatis karena tabel dan gambar baru telah dibuat.
+        const model = sierMathFinance.buildFinancialModelForScenario(projectScenarioKey);
+
+        sierHelpers.tryToRender(() => sierVisualFinanceSummary.render(model));
+        sierHelpers.tryToRender(() => sierVisualFinanceDetails.render(model, projectScenarioKey)); 
+        
         applyAutomaticCaptionsAndNumbering();
     }
-    
-    /**
-     * Fungsi yang memanggil semua modul render non-finansial.
-     */
+
     function updateNonFinancialVisuals() {
         console.log("[Controller] Memperbarui modul visual non-finansial...");
         
@@ -179,10 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         processMarkdownFormatting();
     }
-    
-    /**
-     * Menyiapkan semua event listener global untuk interaktivitas.
-     */
+
     function setupEventListeners() {
         const mainContainer = document.body;
 
@@ -243,28 +244,24 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        const scenarioSelector = document.getElementById('scenario-selector');
-        if (scenarioSelector) {
-            scenarioSelector.addEventListener('change', (e) => {
-                renderFinancials(e.target.value);
-            });
+        const projectSelector = document.getElementById('scenario-selector');
+        if (projectSelector) {
+            projectSelector.addEventListener('change', renderFinancials);
+        }
+        
+        // EVENT LISTENER BARU UNTUK DROPDOWN PENDANAAN
+        const financingSelector = document.getElementById('financing-scenario-selector');
+        if (financingSelector) {
+            financingSelector.addEventListener('change', renderFinancials);
         }
     }
 
     // --- URUTAN INISIALISASI APLIKASI ---
-    // 1. Render semua bagian yang tidak bergantung pada skenario finansial
     updateNonFinancialVisuals();
-    
-    // 2. Siapkan semua event listener
+    populateFinancingSelector();
     setupEventListeners();
-
-    // 3. Buat Daftar Isi
     generateTableOfContents();
-    
-    // 4. Render bagian finansial untuk pertama kali berdasarkan skenario default
     const initialScenario = document.getElementById('scenario-selector').value;
-    renderFinancials(initialScenario);
-    
-    // 5. Jalankan pengecekan status setelah jeda singkat
+    renderFinancials();
     setTimeout(checkRenderStatus, 1000);
 });
