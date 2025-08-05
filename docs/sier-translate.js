@@ -1,6 +1,4 @@
-// File: sier-translate.js
-// VERSI DIPERBARUI - Syntax Error Diperbaiki
-
+// File: sier-translate.js pisah parkir
 const sierTranslate = {
     keyTranslations: {
         'tax_rate_profit': 'Tarif Pajak Penghasilan',
@@ -139,7 +137,19 @@ const sierTranslate = {
         'salary_increase_rate': 'Tingkat Kenaikan Gaji Tahunan',
         
         'digital_systems': 'Sistem & Teknologi Digital',
-        'shared_facilities': 'Fasilitas Umum Bersama'
+        'shared_facilities': 'Fasilitas Umum Bersama',
+        'virtual_office': 'Virtual Office',
+        'packages': 'Paket',
+        'avg_price_per_month': 'Harga Rata-rata / Bulan',
+        'ancillary': 'Tambahan (Ancillary)',
+        'fnb_lounge_sales_monthly': 'Penjualan F&B Lounge / Bulan',
+        'parking_revenue': 'Pendapatan Parkir',
+        'spots': 'Jumlah Spot Parkir',
+        'avg_rate_per_day': 'Tarif Rata-rata / Hari',
+        'occupancy_rate': 'Tingkat Okupansi',
+        'equipment_rental': 'Sewa Peralatan',
+        'expected_renters_percentage': 'Persentase Penyewa',
+        'price_per_rental': 'Harga / Sewa'
     },
 
     translate(key) {

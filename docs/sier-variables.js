@@ -1,4 +1,4 @@
-// File: sier-variables.js fix kan padel
+// File: sier-variables.js pisah parkir
 const projectConfig = {};
 
 projectConfig.site_parameters = {
@@ -6,7 +6,7 @@ projectConfig.site_parameters = {
         building_length_m: 98,
         field_length_m: 235,
         bay_width_m: 3.5,
-        levels: 2,
+        levels: 1,
     },
     padel: {
         total_available_area_m2: 1157,
@@ -171,24 +171,21 @@ projectConfig.drivingRange = {
     revenue: {
         main_revenue: {
             bays: Math.floor(projectConfig.site_parameters.driving_range.building_length_m / projectConfig.site_parameters.driving_range.bay_width_m) * projectConfig.site_parameters.driving_range.levels,
-            // BARU: Struktur harga bola lebih detail
             price_per_ball: {
                 weekday_50: 75000,
                 weekday_100: 100000,
                 weekend_50: 80000,
                 weekend_100: 130000,
             },
-            // Note: Untuk simplifikasi, model math saat ini bisa menggunakan rata-rata atau salah satu harga ini.
-            price_per_100_balls: 130000, // Variabel lama bisa dipertahankan untuk kompatibilitas
+            price_per_100_balls: 130000,
             occupancy_rate_per_day: { weekday: 2.0, weekend: 5.0 }
         },
         ancillary_revenue: { 
             fnb_avg_spend: 35000, 
             pro_shop_sales: 15000000,
-            // BARU: Pendapatan sewa stik dan membership
             stick_rental: {
-                individual: 50000, // per jam
-                full_set: 200000, // per jam
+                individual: 50000,
+                full_set: 200000,
             },
             membership: {
                 annual_fee: 1000000,
@@ -461,12 +458,7 @@ projectConfig.meetingPoint = {
             packages: { count: 50, avg_price_per_month: 350000 }
         },
         ancillary: {
-            fnb_lounge_sales_monthly: 30000000,
-            parking_revenue: {
-                spots: 50,
-                avg_rate_per_day: 15000,
-                occupancy_rate: 0.50
-            }
+            fnb_lounge_sales_monthly: 30000000
         }
     },
     opexMonthly: {
@@ -517,5 +509,17 @@ projectConfig.meetingPoint = {
             cafe_bar_equipment: { lump_sum: 100000000 }
         },
         pre_operational: { permits_and_consulting: 75000000 }
+    }
+};
+
+projectConfig.shared_revenue = {
+    title: "Pendapatan Bersama (Shared)",
+    notes: "Pendapatan yang dihasilkan dari fasilitas umum yang digunakan oleh semua pengunjung.",
+    parking_revenue: {
+        spots: 50,
+        avg_rate_per_day: 6000,
+        occupancy_rate: 0.50,
+        workdays_in_month: 22,
+        weekend_days_in_month: 8
     }
 };

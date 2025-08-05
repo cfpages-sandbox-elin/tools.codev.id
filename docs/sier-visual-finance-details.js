@@ -1,4 +1,4 @@
-// File: sier-visual-finance-details.js fix padel
+// File: sier-visual-finance-details.js pisah parkir
 const sierVisualFinanceDetails = {
     _renderUnitSummaries(individualResults) {
         let html = '';
@@ -106,47 +106,32 @@ const sierVisualFinanceDetails = {
 
     _createOperationalAssumptionsCard(config, title, basePath, colorClass = 'gray') {
         let rowsHtml = '';
-        const opAssumptions = config.operational_assumptions || {};
-        const revAssumptions = config.revenue || {};
-
-        const processObject = (obj, pathPrefix, level = 0) => {
+        
+        const processObject = (obj, pathPrefix) => {
             let html = '';
             for (const key in obj) {
                 const value = obj[key];
                 const fullPath = `${pathPrefix}.${key}`;
-                const label = sierTranslate.translate(key);
+                const label = sierHelpers.safeTranslate(key);
                 
                 if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-                    // Render sebagai sub-header jika objek bersarang
                     html += `<tr><td colspan="2" class="pt-3 pb-1 font-semibold text-${colorClass}-700">${label}</td></tr>`;
-                    html += processObject(value, fullPath, level + 1);
+                    html += processObject(value, fullPath);
                 } else if (typeof value === 'number') {
-                    // Render sebagai baris biasa yang bisa diedit
-                    const isPercent = key.includes('_rate') || key.includes('_portion');
-                    html += `
-                        <tr>
-                            <td class="py-1 pl-4 text-gray-600">${label}</td>
-                            <td class="py-1 text-right">
-                                ${sierEditable.createEditableNumber(value, fullPath, { format: isPercent ? 'percent' : '' })}
-                            </td>
-                        </tr>
-                    `;
+                    // --- PERBAIKAN BUG PERSENTASE DI SINI ---
+                    // Angka hanya dianggap persen jika mengandung '_rate' ATAU '_portion' DAN nilainya di bawah 1.
+                    const isPercent = (key.includes('_rate') || key.includes('_portion')) && value < 1;
+                    const formatOptions = isPercent ? { format: 'percent' } : (value >= 1000 ? { format: 'currency' } : {});
+
+                    html += `<tr><td class="py-1 pl-4 text-gray-600">${label}</td><td class="py-1 text-right">${sierEditable.createEditableNumber(value, fullPath, formatOptions)}</td></tr>`;
                 }
             }
             return html;
         };
 
-        rowsHtml += processObject(opAssumptions, `${basePath}.operational_assumptions`);
-        rowsHtml += processObject(revAssumptions, `${basePath}.revenue`);
+        rowsHtml += processObject(config, basePath);
 
-        return `
-            <div class="bg-${colorClass}-50 p-4 rounded-lg border border-${colorClass}-200">
-                <h4 class="font-bold text-lg text-${colorClass}-800 mb-2">${title}</h4>
-                <table class="w-full text-sm">
-                    <tbody class="divide-y divide-${colorClass}-200">${rowsHtml}</tbody>
-                </table>
-            </div>
-        `;
+        return `<div class="bg-${colorClass}-50 p-4 rounded-lg border border-${colorClass}-200"><h4 class="font-bold text-lg text-${colorClass}-800 mb-2">${config.title || title}</h4><table class="w-full text-sm"><tbody class="divide-y divide-${colorClass}-200">${rowsHtml}</tbody></table></div>`;
     },
 
     _renderAssumptionsVisuals(scenarioKey) {
@@ -210,8 +195,11 @@ const sierVisualFinanceDetails = {
         if (scenarioKey.includes('mp')) {
             operationalAssumptionsHtml += this._createOperationalAssumptionsCard(projectConfig.meetingPoint, 'Meeting Point', 'meetingPoint', 'cyan');
         }
-        operationalAssumptionsHtml += '</div>';
+        if (projectConfig.shared_revenue) {
+            operationalAssumptionsHtml += this._createOperationalAssumptionsCard(projectConfig.shared_revenue, 'Pendapatan Bersama', 'shared_revenue', 'green');
+        }
 
+        operationalAssumptionsHtml += '</div>';
         container.innerHTML = globalAssumptionsHtml + operationalAssumptionsHtml;
     },
 
