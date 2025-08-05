@@ -1,4 +1,4 @@
-// File: sier-variables.js add sensitivity lupa koma
+// File: sier-variables.js add sensitivity lupa koma 2
 const projectConfig = {};
 
 projectConfig.site_parameters = {
@@ -406,7 +406,7 @@ projectConfig.padel = {
                 component_koperasi_new_build: {
                     land_preparation_and_foundation: { area_m2: 600, cost_per_m2: 400000 },
                     building_structure_2_courts: { area_m2: 600, cost_per_m2: 2000000 },
-                    interior_and_facade: { lump_sum: 250000000 }
+                    interior_and_facade: { lump_sum: 250000000 },
                     building_demolition: { 
                         area_m2: projectConfig.site_parameters.padel.demolition_area_koperasi_m2, 
                         cost_per_m2: 250000
