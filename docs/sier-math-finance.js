@@ -1,4 +1,4 @@
-// File: sier-math-finance.js safe translate
+// File: sier-math-finance.js fix padel
 // VERSI 3.0 LENGKAP - Arsitektur Modular Berbasis Skenario
 
 const sierMathFinance = {
@@ -17,7 +17,6 @@ const sierMathFinance = {
         if (typeof sierTranslate !== 'undefined' && sierTranslate.translate) {
             return sierTranslate.translate(key);
         }
-        // Fallback jika sierTranslate gagal dimuat
         return (key || 'N/A').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     },
 
@@ -425,16 +424,25 @@ const sierMathFinance = {
     _getUnitCalculations(unitName, padelScenarioKey = 'four_courts_combined') {
         const unit = projectConfig[unitName];
         if (!unit) return { pnl: { annualRevenue: 0 } };
-        let numAssets = 0, revenueConf = unit.revenue;
-        if(unitName === 'padel') {
-             numAssets = unit.scenarios[padelScenarioKey].num_courts;
-        } else {
-             numAssets = unit.revenue.main_revenue.bays;
+
+        let numAssets, revenueConf, o;
+
+        if (unitName === 'padel') {
+            const scenarioConfig = unit.scenarios[padelScenarioKey];
+            if (!scenarioConfig) return { pnl: { annualRevenue: 0 } };
+            numAssets = scenarioConfig.num_courts;
+            revenueConf = scenarioConfig.revenue;
+            o = scenarioConfig.operational_assumptions;
+        } else { // Untuk Driving Range dan unit lainnya
+            numAssets = unit.revenue.main_revenue.bays;
+            revenueConf = unit.revenue;
+            o = unit.operational_assumptions;
         }
-        const o = unit.operational_assumptions;
+
         const m = revenueConf.main_revenue;
         const a = revenueConf.ancillary_revenue;
         let monthlyRevenueMain = 0, fnbRevenueMonthly = 0;
+
         if (unitName === 'drivingRange') {
             const sessions_wd = numAssets * m.occupancy_rate_per_day.weekday;
             const sessions_we = numAssets * m.occupancy_rate_per_day.weekend;

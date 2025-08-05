@@ -1,8 +1,4 @@
-// File: sier-variables.js terbaru pol
-// VERSI DIPERBARUI - Berdasarkan Analisis Sheet
-// Perubahan ditandai dengan komentar // BARU
-
-// Objek konfigurasi utama yang menampung semua asumsi proyek.
+// File: sier-variables.js fix kan padel
 const projectConfig = {};
 
 projectConfig.site_parameters = {
@@ -236,107 +232,181 @@ projectConfig.drivingRange = {
 };
 
 projectConfig.padel = {
-    operational_assumptions: { 
-        workdays_in_month: 22, 
-        weekend_days_in_month: 8, 
-        operational_hours_per_day: 15, // Sesuai sheet: 6 AM - 9 PM
-        cogs_rate_fnb: 0.30,
-        downtime_per_hour_minutes: 10,
-        variable_costs_per_hour: { court_lights_kw: 4.5, ball_replacement_cost_per_hour: 5000, cleaning_supplies: 2500 }
-    },
-    revenue: {
-        main_revenue: {
-            price_per_hour: { 
-                weekday_offpeak: 250000, // Sheet hanya menyebut "Weekday", kita asumsikan ini untuk off-peak
-                weekday_peak: 350000,    // Menambahkan tarif peak untuk model yang lebih dinamis
-                weekend: 350000          // Sesuai sheet
-            },
-            occupancy_rate: { weekday_offpeak: 0.30, weekday_peak: 0.85, weekend: 0.90 },
-            hours_distribution_per_day: { offpeak: 9, peak: 6 } // Distribusi jam dalam 15 jam operasional
-        },
-        ancillary_revenue: { 
-            fnb_avg_spend: 50000, 
-            pro_shop_sales: 20000000,
-            equipment_rental: {
-                expected_renters_percentage: 0.90,
-                price_per_rental: 50000,
-            }
-        }
-    },
     scenarios: {
         two_courts_futsal_renovation: {
             title: "Skenario 1: 2 Lapangan (Renovasi Futsal)",
             description: "Memanfaatkan struktur bangunan eksisting lapangan futsal untuk efisiensi biaya dan kecepatan implementasi. Fokus pada validasi pasar awal.",
             num_courts: 2,
+            operational_assumptions: {
+                workdays_in_month: 22,
+                weekend_days_in_month: 8,
+                operational_hours_per_day: 15,
+                cogs_rate_fnb: 0.30,
+                downtime_per_hour_minutes: 10,
+                variable_costs_per_hour: {
+                    court_lights_kw: 4.5,
+                    ball_replacement_cost_per_hour: 5000,
+                    cleaning_supplies: 2500
+                }
+            },
+            revenue: {
+                main_revenue: {
+                    price_per_hour: {
+                        weekday_offpeak: 250000,
+                        weekday_peak: 350000,
+                        weekend: 350000
+                    },
+                    occupancy_rate: {
+                        weekday_offpeak: 0.30,
+                        weekday_peak: 0.85,
+                        weekend: 0.90
+                    },
+                    hours_distribution_per_day: {
+                        offpeak: 9,
+                        peak: 6
+                    }
+                },
+                ancillary_revenue: {
+                    fnb_avg_spend: 50000,
+                    pro_shop_sales: 10000000,
+                    equipment_rental: {
+                        expected_renters_percentage: 0.90,
+                        price_per_rental: 50000
+                    }
+                }
+            },
             capex: {
                 title: "Estimasi Biaya Investasi - Skenario 2 Lapangan",
-                pre_operational: { permits_and_consulting: 25000000, initial_marketing: 30000000 },
+                pre_operational: {
+                    permits_and_consulting: 25000000,
+                    initial_marketing: 30000000
+                },
                 renovation_futsal: {
                     minor_demolition_and_clearing: { lump_sum: 15000000 },
-                    toilet_demolition_and_relocation: { lump_sum: 20000000 }, 
+                    toilet_demolition_and_relocation: { lump_sum: 20000000 },
                     floor_repair_and_leveling: { area_m2: 500, cost_per_m2: 150000 },
                     interior_finishing_painting: { area_m2: 500, cost_per_m2: 200000 }
                 },
                 sport_courts_equipment: {
-                    per_court_costs: { steel_structure: 95000000, tempered_glass_12mm: 140000000, artificial_turf_carpet: 55000000, lighting_system_8_lamps: 30000000, net_and_posts: 7500000 },
-                    initial_inventory: { rental_rackets: { quantity: 10, unit_cost: 1000000 }, ball_tubes: { quantity: 25, unit_cost: 120000 } }
+                    per_court_costs: {
+                        steel_structure: 95000000,
+                        tempered_glass_12mm: 140000000,
+                        artificial_turf_carpet: 55000000,
+                        lighting_system_8_lamps: 30000000,
+                        net_and_posts: 7500000
+                    },
+                    initial_inventory: {
+                        rental_rackets: { quantity: 10, unit_cost: 1000000 },
+                        ball_tubes: { quantity: 25, unit_cost: 120000 }
+                    }
                 }
             },
             opexMonthly: {
-                salaries_wages: { 
-                    manager: { count: 1, salary: 10000000 }, 
-                    supervisor: { count: 1, salary: 6500000 }, 
-                    admin_cashier: { count: 2, salary: 5000000 }, 
-                    cleaning_security: { count: 2, salary: 4000000 } 
-                }, 
-                utilities: { electricity_kwh_price: 1700, electricity_kwh_usage: 9000, water_etc: 3000000 }, 
-                marketing_promotion: 10000000, 
-                maintenance_repair: 5000000, 
-                other_operational: 6000000 
+                salaries_wages: {
+                    manager: { count: 1, salary: 10000000 },
+                    supervisor: { count: 1, salary: 6500000 },
+                    admin_cashier: { count: 2, salary: 5000000 },
+                    cleaning_security: { count: 2, salary: 4000000 }
+                },
+                utilities: {
+                    electricity_kwh_price: 1700,
+                    electricity_kwh_usage: 9000,
+                    water_etc: 3000000
+                },
+                marketing_promotion: 10000000,
+                maintenance_repair: 5000000,
+                other_operational: 6000000
             }
         },
         four_courts_combined: {
             title: "Skenario 2: 4 Lapangan (Kombinasi Renovasi & Bangun Baru)",
-            description: "Skenario ekspansi penuh yang menggabungkan renovasi lapangan futsal (2 lapangan) dengan demolisi gedung koperasi untuk membangun 2 lapangan baru.",
+            description: "Skenario ekspansi penuh yang menggabungkan renovasi dan pembangunan baru.",
             num_courts: 4,
+            operational_assumptions: {
+                workdays_in_month: 22,
+                weekend_days_in_month: 8,
+                operational_hours_per_day: 15,
+                cogs_rate_fnb: 0.30,
+                downtime_per_hour_minutes: 10,
+                variable_costs_per_hour: {
+                    court_lights_kw: 4.5,
+                    ball_replacement_cost_per_hour: 5000,
+                    cleaning_supplies: 2500
+                }
+            },
+            revenue: {
+                main_revenue: {
+                    price_per_hour: {
+                        weekday_offpeak: 250000,
+                        weekday_peak: 350000,
+                        weekend: 350000
+                    },
+                    occupancy_rate: {
+                        weekday_offpeak: 0.30,
+                        weekday_peak: 0.85,
+                        weekend: 0.90
+                    },
+                    hours_distribution_per_day: {
+                        offpeak: 9,
+                        peak: 6
+                    }
+                },
+                ancillary_revenue: {
+                    fnb_avg_spend: 50000,
+                    pro_shop_sales: 20000000,
+                    equipment_rental: {
+                        expected_renters_percentage: 0.90,
+                        price_per_rental: 50000
+                    }
+                }
+            },
             capex: {
                 title: "Estimasi Biaya Investasi - Skenario 4 Lapangan",
-                pre_operational: { permits_and_consulting: 40000000, initial_marketing: 45000000 },
-                
-                // Komponen 1: Biaya dari renovasi futsal (sama seperti skenario 2 lapangan)
+                pre_operational: {
+                    permits_and_consulting: 40000000,
+                    initial_marketing: 45000000
+                },
                 component_futsal_renovation: {
                     minor_demolition_and_clearing: { lump_sum: 15000000 },
-                    toilet_demolition_and_relocation: { lump_sum: 20000000 }, 
+                    toilet_demolition_and_relocation: { lump_sum: 20000000 },
                     floor_repair_and_leveling: { area_m2: 500, cost_per_m2: 150000 },
                     interior_finishing_painting: { area_m2: 500, cost_per_m2: 200000 }
                 },
-
-                // Komponen 2: Biaya dari pembangunan baru di lahan koperasi
                 component_koperasi_new_build: {
                     building_demolition: { lump_sum: 50000000 },
                     land_preparation_and_foundation: { area_m2: 600, cost_per_m2: 400000 },
                     building_structure_2_courts: { area_m2: 600, cost_per_m2: 2000000 },
                     interior_and_facade: { lump_sum: 250000000 }
                 },
-                
-                // Peralatan dihitung untuk 4 lapangan total
                 sport_courts_equipment: {
-                    per_court_costs: { steel_structure: 95000000, tempered_glass_12mm: 140000000, artificial_turf_carpet: 55000000, lighting_system_8_lamps: 30000000, net_and_posts: 7500000 },
-                    initial_inventory: { rental_rackets: { quantity: 20, unit_cost: 1000000 }, ball_tubes: { quantity: 50, unit_cost: 120000 } }
+                    per_court_costs: {
+                        steel_structure: 95000000,
+                        tempered_glass_12mm: 140000000,
+                        artificial_turf_carpet: 55000000,
+                        lighting_system_8_lamps: 30000000,
+                        net_and_posts: 7500000
+                    },
+                    initial_inventory: {
+                        rental_rackets: { quantity: 20, unit_cost: 1000000 },
+                        ball_tubes: { quantity: 50, unit_cost: 120000 }
+                    }
                 }
             },
-            // Biaya Operasional untuk 4 lapangan akan lebih tinggi
-            opexMonthly: { 
-                salaries_wages: { 
-                    manager: { count: 1, salary: 10000000 }, 
-                    supervisor: { count: 2, salary: 6500000 }, 
-                    admin_cashier: { count: 4, salary: 5000000 }, // Tambahan admin/kasir
-                    cleaning_security: { count: 4, salary: 4000000 } // Tambahan CS/Security
-                }, 
-                utilities: { electricity_kwh_price: 1700, electricity_kwh_usage: 18000, water_etc: 5000000 }, 
-                marketing_promotion: 15000000, 
-                maintenance_repair: 10000000, 
-                other_operational: 8000000 
+            opexMonthly: {
+                salaries_wages: {
+                    manager: { count: 1, salary: 10000000 },
+                    supervisor: { count: 2, salary: 6500000 },
+                    admin_cashier: { count: 4, salary: 5000000 },
+                    cleaning_security: { count: 4, salary: 4000000 }
+                },
+                utilities: {
+                    electricity_kwh_price: 1700,
+                    electricity_kwh_usage: 18000,
+                    water_etc: 5000000
+                },
+                marketing_promotion: 15000000,
+                maintenance_repair: 10000000,
+                other_operational: 8000000
             }
         }
     }

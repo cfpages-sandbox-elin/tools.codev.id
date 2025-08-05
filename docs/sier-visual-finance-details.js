@@ -1,6 +1,4 @@
-// File: sier-visual-finance-details.js tambah operasional assumption
-// VERSI 3.0 LENGKAP - Menampilkan detail per unit bisnis & rincian asumsi input.
-
+// File: sier-visual-finance-details.js fix padel
 const sierVisualFinanceDetails = {
     _renderUnitSummaries(individualResults) {
         let html = '';
@@ -159,32 +157,24 @@ const sierVisualFinanceDetails = {
 
         const createItemHtml = (label, value, path, description = '', isPercent = false) => {
             const contentHtml = sierEditable.createEditableNumber(value, path, { format: isPercent ? 'percent' : '' });
-            return `<div class="grid grid-cols-1 md:grid-cols-2 items-center gap-x-4 gap-y-1 py-4 border-b last:border-b-0">
-                        <div>
-                            <h4 class="font-semibold text-gray-800">${label}</h4>
-                            ${description ? `<p class="text-xs text-gray-500 mt-1">${description}</p>` : ''}
-                        </div>
-                        <div class="md:text-right">${contentHtml}</div>
-                    </div>`;
+            return `<div class="grid grid-cols-1 md:grid-cols-2 items-center gap-x-4 gap-y-1 py-2 border-b last:border-b-0"><div class="flex flex-col"><span>${label}</span>${description ? `<em class="text-xs text-gray-400">${description}</em>` : ''}</div><div class="md:text-right">${contentHtml}</div></div>`;
         };
         
         const financingHtml = Object.keys(assumptions.financing).map(key => {
+            if (key === 'title') return ''; // Jangan tampilkan judul
+            const isRateOrPortion = key.includes('rate') || key.includes('portion');
             return createItemHtml(
                 sierTranslate.translate(key),
                 assumptions.financing[key],
                 `assumptions.financing.${key}`,
-                '', true
+                '',
+                isRateOrPortion
             );
         }).join('');
 
         const escalationHtml = Object.keys(assumptions.escalation).map(key => {
             const isRate = key.includes('rate');
-            return createItemHtml(
-                sierTranslate.translate(key),
-                assumptions.escalation[key],
-                `assumptions.escalation.${key}`,
-                '', isRate
-            );
+            return createItemHtml(sierTranslate.translate(key), assumptions.escalation[key], `assumptions.escalation.${key}`, '', isRate);
         }).join('');
 
         const globalAssumptionsHtml = `
@@ -197,8 +187,8 @@ const sierVisualFinanceDetails = {
                 </div>
                 <div class="bg-gray-50 p-4 rounded-lg border">
                     <h3 class="font-bold text-lg text-gray-700 mb-2">Asumsi Pendanaan</h3>
-                    <!-- Konten ini akan otomatis diperbarui oleh dropdown -->
-                    <p class="text-center p-4 text-gray-500 italic">Pilih skenario pendanaan dari dropdown di atas.</p>
+                    <!-- GANTI PLACEHOLDER DENGAN KONTEN DINAMIS -->
+                    ${financingHtml}
                 </div>
                 <div class="bg-gray-50 p-4 rounded-lg border">
                     <h3 class="font-bold text-lg text-gray-700 mb-2">Asumsi Peningkatan (Eskalasi)</h3>
@@ -206,7 +196,6 @@ const sierVisualFinanceDetails = {
                 </div>
             </div>`;
 
-        // --- 2. Render Asumsi Operasional (DINAMIS SESUAI SKENARIO) ---
         let operationalAssumptionsHtml = '<h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-amber-500 pl-4 mt-12">Asumsi Operasional (Sesuai Skenario Proyek)</h2><div class="grid grid-cols-1 lg:grid-cols-2 gap-6">';
         
         if (scenarioKey.includes('dr')) {
@@ -216,14 +205,13 @@ const sierVisualFinanceDetails = {
             operationalAssumptionsHtml += this._createOperationalAssumptionsCard(projectConfig.padel.scenarios.four_courts_combined, 'Padel (4 Lapangan)', 'padel.scenarios.four_courts_combined', 'purple');
         }
         if (scenarioKey.includes('padel2')) {
-             operationalAssumptionsHtml += this._createOperationalAssumptionsCard(projectConfig.padel.scenarios.two_courts_futsal_renovation, 'Padel (2 Lapangan)', 'padel.scenarios.two_courts_futsal_renovation', 'purple');
+            operationalAssumptionsHtml += this._createOperationalAssumptionsCard(projectConfig.padel.scenarios.two_courts_futsal_renovation, 'Padel (2 Lapangan)', 'padel.scenarios.two_courts_futsal_renovation', 'purple');
         }
         if (scenarioKey.includes('mp')) {
             operationalAssumptionsHtml += this._createOperationalAssumptionsCard(projectConfig.meetingPoint, 'Meeting Point', 'meetingPoint', 'cyan');
         }
         operationalAssumptionsHtml += '</div>';
 
-        // Gabungkan semuanya
         container.innerHTML = globalAssumptionsHtml + operationalAssumptionsHtml;
     },
 
