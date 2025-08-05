@@ -52,7 +52,7 @@ const sierVisualTechnical = {
                         <p class="font-semibold text-gray-700">Kapasitas Fasilitas</p>
                         <p class="text-sm text-gray-600 mt-2">
                             - <strong>Driving Range:</strong> Menghasilkan <strong>${baysPerLevel} bay per lantai</strong>, dengan total <strong>${total_bays} bay</strong>.<br>
-                            - <strong>Padel:</strong> Menghasilkan total <strong>${padelConfig.revenue.main_revenue.courts} lapangan</strong> Padel Indoor.
+                            - <strong>Padel:</strong> Menghasilkan total <strong>${projectConfig.padel.scenarios.four_courts_combined.num_courts} lapangan</strong> Padel Indoor.
                         </p>
                     </div>
                      <!-- Tipe Bay -->
