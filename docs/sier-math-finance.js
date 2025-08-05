@@ -1,4 +1,4 @@
-// File: sier-math-finance.js sensitivity tidak 0
+// File: sier-math-finance.js sensitivity tidak 0 2
 const sierMathFinance = {
     getValueByPath(obj, path) {
         return path.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj);
@@ -105,6 +105,7 @@ const sierMathFinance = {
 
             case compKey.includes('padel'):
                 const padelScenarioKey = getPadelScenarioKey();
+                const padelScenario = projectConfig.padel.scenarios[padelScenarioKey];
                 const padelBaseCapex = this._calculatePadelCapex(padelScenarioKey);
                 capexSchedule[0] = padelBaseCapex * (1 + projectConfig.assumptions.contingency_rate);
                 const padelCapexConf = padelScenario.capex;
