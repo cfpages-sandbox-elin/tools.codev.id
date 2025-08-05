@@ -1,4 +1,4 @@
-// File: sier-math-finance.js munculkan sensitivity
+// File: sier-math-finance.js sensitivity tidak 0
 const sierMathFinance = {
     getValueByPath(obj, path) {
         return path.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj);
@@ -105,8 +105,8 @@ const sierMathFinance = {
 
             case compKey.includes('padel'):
                 const padelScenarioKey = getPadelScenarioKey();
-                const padelScenario = projectConfig.padel.scenarios[padelScenarioKey];
-                capexSchedule[0] = this._calculateTotal(padelScenario.capex) * (1 + projectConfig.assumptions.contingency_rate);
+                const padelBaseCapex = this._calculatePadelCapex(padelScenarioKey);
+                capexSchedule[0] = padelBaseCapex * (1 + projectConfig.assumptions.contingency_rate);
                 const padelCapexConf = padelScenario.capex;
                 capexBreakdown.building += this._calculateTotal(padelCapexConf.component_koperasi_new_build || {}) + this._calculateTotal(padelCapexConf.component_futsal_renovation || {});
                 capexBreakdown.equipment += this._calculateTotal(padelCapexConf.sport_courts_equipment || {});
@@ -649,62 +649,42 @@ const sierMathFinance = {
 
     runSensitivityAnalysis(baseModel) {
         const sensitivityParams = projectConfig.assumptions.sensitivity_analysis;
-        if (!sensitivityParams) {
-            console.warn("Konfigurasi sensitivity_analysis tidak ditemukan.");
+        if (!sensitivityParams || !baseModel || !baseModel.combined) {
+            console.warn("Parameter sensitivitas atau model gabungan tidak ditemukan.");
             return {};
         }
 
-        let results = {};
-
-        // Helper untuk menjalankan analisis pada satu set data model (bisa gabungan atau individual)
-        const runForComponent = (componentModelData) => {
-            const { revenue_steps, investment_steps } = sensitivityParams;
-            let npvMatrix = {};
-            let irrMatrix = {};
-
-            investment_steps.forEach(invStep => {
-                npvMatrix[invStep] = {};
-                irrMatrix[invStep] = {};
-                revenue_steps.forEach(revStep => {
-                    // Buat salinan data agar tidak mengubah model asli
-                    let tempModel = JSON.parse(JSON.stringify(componentModelData));
-                    
-                    // Terapkan faktor sensitivitas pada investasi dan pendapatan
-                    tempModel.capexSchedule = tempModel.capexSchedule.map(c => c * invStep);
-                    tempModel.revenue = tempModel.revenue.map(r => r * revStep);
-
-                    // Kalkulasi ulang seluruh rantai finansial dengan data sementara
-                    const newFinancing = this._calculateLoanAmortization(tempModel.capexSchedule[0], projectConfig.assumptions.financing, 10);
-                    const pnl = this._buildIncomeStatement({ ...tempModel, interest: newFinancing.interestPayments, projectionYears: 10 });
-                    const cf = this._buildCashFlowStatement({ incomeStatement: pnl, depreciation: tempModel.depreciation, capexSchedule: tempModel.capexSchedule, financing: newFinancing, projectionYears: 10 });
-                    const metrics = this._calculateFeasibilityMetrics(cf.netCashFlow, projectConfig.assumptions.discount_rate_wacc);
-
-                    // Simpan hasil (NPV dan IRR) ke dalam matriks
-                    npvMatrix[invStep][revStep] = metrics.npv;
-                    irrMatrix[invStep][revStep] = metrics.irr;
-                });
-            });
-            return { npv: npvMatrix, irr: irrMatrix };
-        };
-
-        // Jalankan analisis untuk model gabungan
-        if (baseModel.combined) {
-            results.combined = runForComponent(baseModel.combined);
-        }
-        
-        // Jalankan analisis untuk setiap unit bisnis individual
-        for (const key in baseModel.individual) {
-            // Hanya proses unit yang memiliki pendapatan
-            if (baseModel.individual[key].revenue.some(r => r > 0)) {
-                const individualData = {
-                    capexSchedule: baseModel.individual[key].capexSchedule,
-                    revenue: baseModel.individual[key].revenue,
-                    opex: baseModel.individual[key].opex,
-                    depreciation: baseModel.individual[key].depreciation,
-                };
-                results[key] = runForComponent(individualData);
+        const { revenue_steps, investment_steps } = sensitivityParams;
+        let results = {
+            combined: {
+                npv: {},
+                irr: {}
             }
-        }
+        };
+        const modelData = baseModel.combined;
+
+        investment_steps.forEach(invStep => {
+            results.combined.npv[invStep] = {};
+            results.combined.irr[invStep] = {};
+
+            revenue_steps.forEach(revStep => {
+                let tempModel = JSON.parse(JSON.stringify(modelData));
+                
+                // Terapkan faktor sensitivitas
+                tempModel.capexSchedule = tempModel.capexSchedule.map(c => c * invStep);
+                tempModel.revenue = tempModel.revenue.map(r => r * revStep);
+                tempModel.depreciation = tempModel.depreciation.map(d => d * invStep);
+
+                // Kalkulasi ulang seluruh rantai finansial dengan data sementara
+                const newFinancing = this._calculateLoanAmortization(tempModel.capexSchedule[0], projectConfig.assumptions.financing, 10);
+                const pnl = this._buildIncomeStatement({ ...tempModel, interest: newFinancing.interestPayments, projectionYears: 10 });
+                const cf = this._buildCashFlowStatement({ incomeStatement: pnl, depreciation: tempModel.depreciation, capexSchedule: tempModel.capexSchedule, financing: newFinancing, projectionYears: 10 });
+                const metrics = this._calculateFeasibilityMetrics(cf.netCashFlow, projectConfig.assumptions.discount_rate_wacc);
+
+                results.combined.npv[invStep][revStep] = metrics.npv;
+                results.combined.irr[invStep][revStep] = metrics.irr;
+            });
+        });
 
         return results;
     },
