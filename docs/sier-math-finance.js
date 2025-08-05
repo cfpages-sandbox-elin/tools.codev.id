@@ -1,4 +1,4 @@
-// File: sier-math-finance.js add sensitivity
+// File: sier-math-finance.js add sensitivity + fix error
 const sierMathFinance = {
     getValueByPath(obj, path) {
         return path.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj);
@@ -158,7 +158,7 @@ const sierMathFinance = {
 
         // --- PENGUMPULAN DATA DASAR ---
         switch (true) {
-            case compKey.includes('dr'):
+            case compKey === 'dr':
                 const drCapexDetails = this._calculateDrCapex();
                 capexSchedule[0] = drCapexDetails.total;
                 const drBreakdown = drCapexDetails.breakdown;
@@ -183,11 +183,12 @@ const sierMathFinance = {
                 baseOpex = extractOpex(padelScenario.opexMonthly);
                 break;
             case compKey === 'mp':
-                capexSchedule[0] = this._calculateTotal(projectConfig.meetingPoint.capex_scenario_a) * (1 + projectConfig.assumptions.contingency_rate);
-                const mpCapexConf = projectConfig.meetingPoint.capex_scenario_a;
-                capexBreakdown.building += this._calculateTotal(mpCapexConf.renovation_costs || {});
-                capexBreakdown.equipment += this._calculateTotal(mpCapexConf.equipment_and_furniture || {});
-                capexBreakdown.other += this._calculateTotal(mpCapexConf.pre_operational || {});
+                const baseMpCapex = this._calculateMeetingPointCapex('renovate', 'concept_1_pods');
+                capexSchedule[0] = baseMpCapex * (1 + projectConfig.assumptions.contingency_rate);
+                const constructionCosts = this._calculateTotal(projectConfig.meetingPoint.construction_scenarios.renovate.base_costs);
+                const conceptCosts = baseMpCapex - constructionCosts;
+                capexBreakdown.building += constructionCosts;
+                capexBreakdown.equipment += conceptCosts;
                 baseAnnualRevenue = this._calculateTotal(projectConfig.meetingPoint.revenue) * 12;
                 baseOpex = extractOpex(projectConfig.meetingPoint.opexMonthly);
                 break;
@@ -578,28 +579,45 @@ const sierMathFinance = {
         return grandTotal;
     },
 
-    _calculateMeetingPointCapex(constructionScenario, conceptScenario) {
-        // PERBAIKAN: Fungsi ini sekarang menggabungkan biaya konstruksi dan konsep
-        const unitCosts = projectConfig.meetingPoint.unit_costs;
-        let total = 0;
+    _calculateMeetingPointCapex(constructionScenarioKey = 'renovate', conceptScenarioKey = 'concept_1_pods') {
+        const mpConfig = projectConfig.meetingPoint;
+        if (!mpConfig || !mpConfig.construction_scenarios[constructionScenarioKey] || !mpConfig.concept_scenarios[conceptScenarioKey]) {
+            console.warn("Meeting Point config is missing or invalid for the selected scenarios.");
+            return 0;
+        }
 
-        // 1. Tambahkan biaya dasar konstruksi
-        const constructionData = projectConfig.meetingPoint.construction_scenarios[constructionScenario].base_costs;
-        total += this._calculateTotal(constructionData);
+        const unitCosts = mpConfig.unit_costs;
+        let totalCapex = 0;
 
-        // 2. Tambahkan biaya furnitur & interior dari konsep
-        const conceptData = projectConfig.meetingPoint.concept_scenarios[conceptScenario].items;
-        for(const item in conceptData) {
-            const count = conceptData[item];
-            if (count > 0) {
-                if(item.includes('chair')) total += count * (unitCosts.vip_chair && item.includes('vip') ? unitCosts.vip_chair : unitCosts.chair);
-                else if(item.includes('table')) total += count * (item.includes('4pax') ? unitCosts.table_4pax : unitCosts.table_2pax);
-                else if(item === 'kitchen') total += unitCosts.kitchen_equipment_lump_sum;
-                else if(item === 'toilet') total += unitCosts.toilet_unit_lump_sum;
-                // dan seterusnya untuk semua item
+        // 1. Hitung biaya dari skenario konstruksi yang dipilih
+        const constructionData = mpConfig.construction_scenarios[constructionScenarioKey].base_costs;
+        totalCapex += this._calculateTotal(constructionData);
+
+        // 2. Hitung biaya dari skenario konsep interior yang dipilih
+        const conceptData = mpConfig.concept_scenarios[conceptScenarioKey].items;
+        const conceptCostMap = {
+            chairs: unitCosts.chair,
+            tables_2pax: unitCosts.table_2pax,
+            tables_4pax: unitCosts.table_4pax,
+            sofas: unitCosts.sofa,
+            coffee_tables: unitCosts.coffee_table,
+            meeting_pods: unitCosts.meeting_pod,
+            vip_partitions: unitCosts.vip_partition,
+            vip_tables: unitCosts.vip_table,
+            vip_chairs: unitCosts.vip_chair,
+            kitchen: unitCosts.kitchen_equipment_lump_sum,
+            toilet: unitCosts.toilet_unit_lump_sum
+        };
+
+        for (const itemKey in conceptData) {
+            const count = conceptData[itemKey];
+            if (count > 0 && conceptCostMap[itemKey]) {
+                totalCapex += count * conceptCostMap[itemKey];
             }
         }
-        return total;
+        
+        // Kontingensi akan ditambahkan oleh fungsi pemanggil
+        return totalCapex;
     },
 
     _getUnitCalculations(unitName, padelScenarioKey = 'four_courts_combined') {
