@@ -1,4 +1,4 @@
-// File: sier-visual-finance-details.js pisah parkir
+// File: sier-visual-finance-details.js fix error 1
 const sierVisualFinanceDetails = {
     _renderUnitSummaries(individualResults) {
         let html = '';
@@ -206,18 +206,55 @@ const sierVisualFinanceDetails = {
     _renderDrCapexDetailsVisuals() {
         const container = document.getElementById('driving-range-capex-details-container');
         if (!container) return;
+
         const results = sierMathFinance._calculateDrCapex();
-        if (!results) return;
-        const { equipment_detail, scenario_a, scenario_b } = results;
-        const createRow = (item) => `<tr><td class="p-2">${item.category}</td><td class="p-2">${item.component}</td><td class="p-2 text-xs text-gray-500">${item.calculation}</td><td class="p-2 text-right font-mono">${sierEditable.createEditableNumber(sierMathFinance.getValueByPath(projectConfig, item.path), item.path, {format: 'currency'})}</td></tr>`;
-        const equipmentTable = `<h3 class="text-xl font-semibold mb-3 text-gray-800">Rincian Biaya Peralatan & Jaring Pengaman</h3><div class="overflow-x-auto border rounded-lg mb-8"><table class="w-full text-sm"><thead class="bg-gray-100 text-xs uppercase"><tr><th class="p-2 text-left">Kategori</th><th class="p-2 text-left">Komponen</th><th class="p-2 text-left">Detail</th><th class="p-2 text-right">Biaya Satuan (Rp)</th></tr></thead><tbody class="divide-y">${equipment_detail.htmlRows.map(createRow).join('')}</tbody></table></div>`;
-        const scenarioTableHtml = (data, title, description) => {
-            if(!data) return '';
-            const contingencyRate = projectConfig.assumptions.contingency_rate;
-            let rowsHtml = data.htmlRows.map(row => `<tr><td class="p-3">${row.label}</td><td class="p-3 text-gray-500 text-xs">${row.calculation}</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(row.value))}</td></tr>`).join('');
-            return `<div class="mb-10"><h3 class="text-xl font-semibold mb-3 text-gray-800">${title}</h3><p class="text-gray-600 mb-4 text-sm">${description}</p><div class="overflow-x-auto border rounded-lg"><table class="w-full text-sm"><thead class="bg-gray-100 text-xs uppercase"><tr><th class="p-2 text-left">Komponen Biaya</th><th class="p-2 text-left">Perhitungan</th><th class="p-2 text-right">Estimasi Biaya (Rp)</th></tr></thead><tbody class="divide-y">${rowsHtml}<tr class="bg-gray-200 font-bold"><td class="p-3" colspan="2">Subtotal Biaya Fisik & Lainnya</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(data.subtotal))}</td></tr><tr class="bg-yellow-200 font-bold"><td class="p-3" colspan="2">Kontingensi (${sierEditable.createEditableNumber(contingencyRate, 'assumptions.contingency_rate', {format: 'percent'})})</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(data.contingency))}</td></tr><tr class="bg-blue-600 text-white font-bold text-lg"><td class="p-3" colspan="2">Total Estimasi Investasi (Skenario Ini)</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(data.total))}</td></tr></tbody></table></div></div>`;
-        };
-        container.innerHTML = `<h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-blue-500 pl-4">Rincian Estimasi Biaya Investasi (CapEx): Driving Range</h2><div class="bg-white p-6 rounded-lg shadow-md mb-8">${equipmentTable}${scenarioTableHtml(scenario_a, 'Skenario A: Konstruksi dengan Reklamasi', 'Melibatkan pengurukan danau untuk menciptakan daratan baru. Dampak lingkungan signifikan, biaya material tinggi.')}${scenarioTableHtml(scenario_b, 'Skenario B: Konstruksi Apung dengan Tiang Pancang', 'Membangun di atas danau menggunakan pondasi tiang pancang. Lebih ramah lingkungan, namun memerlukan keahlian konstruksi spesifik.')}<div class="p-4 bg-blue-50 border-l-4 border-blue-400 text-sm text-blue-800"><strong>Catatan:</strong> Model finansial utama menggunakan <strong>Skenario B (Tiang Pancang)</strong> sebagai basis perhitungan karena dianggap lebih realistis dan ramah lingkungan.</div></div>`;
+        if (!results || !results.breakdown) {
+            container.innerHTML = '<p>Gagal memuat rincian CapEx Driving Range.</p>';
+            return;
+        }
+
+        const { breakdown, total } = results;
+
+        // LOGIKA BARU: Membuat baris tabel dari objek 'breakdown'
+        let rowsHtml = '';
+        for (const key in breakdown) {
+            const value = breakdown[key];
+            if (value > 0) {
+                const label = sierHelpers.safeTranslate(key.replace('_and_tech', '').replace('furniture_and_', ''));
+                rowsHtml += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="p-3">${label}</td>
+                        <td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(value))}</td>
+                    </tr>
+                `;
+            }
+        }
+
+        container.innerHTML = `
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-blue-500 pl-4">Rincian Estimasi Biaya Investasi (CapEx): Driving Range</h2>
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <p class="text-gray-600 mb-4 text-sm">Tabel ini merinci total biaya investasi untuk Driving Range dengan skenario konstruksi Tiang Pancang (lebih realistis) dan jaring atap terpasang.</p>
+                <div class="overflow-x-auto border rounded-lg">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-100 text-xs uppercase">
+                            <tr>
+                                <th class="p-2 text-left">Komponen Biaya</th>
+                                <th class="p-2 text-right">Estimasi Biaya (Rp)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y">
+                            ${rowsHtml}
+                        </tbody>
+                        <tfoot class="font-bold">
+                            <tr class="bg-blue-600 text-white text-lg">
+                                <td class="p-3 text-right">Total Estimasi Investasi (Termasuk Kontingensi)</td>
+                                <td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(total))}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        `;
     },
 
     _renderPadelCapexDetailsVisuals() {
