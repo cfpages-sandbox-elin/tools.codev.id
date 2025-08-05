@@ -155,5 +155,4 @@ const sierTranslate = {
     }
 };
 
-// Lampirkan ke window object agar bisa diakses file lain
 window.sierTranslate = sierTranslate;
