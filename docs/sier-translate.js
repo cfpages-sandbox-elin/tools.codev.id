@@ -1,4 +1,4 @@
-// File: sier-translate.js pisah parkir
+// File: sier-translate.js tambah lagi
 const sierTranslate = {
     keyTranslations: {
         'tax_rate_profit': 'Tarif Pajak Penghasilan',
@@ -120,9 +120,7 @@ const sierTranslate = {
         'land_preparation': 'Persiapan Lahan',
         'foundation_works': 'Pekerjaan Pondasi',
         'main_structure': 'Struktur Utama Bangunan',
-        'finishing_lounge_etc': 'Finishing, Lounge, dll', // INI KOMA YANG HILANG
-        
-        // --- TAMBAHAN BARU ---
+        'finishing_lounge_etc': 'Finishing, Lounge, dll',
         'financing_scenarios': 'Skenario Pendanaan',
         'full_equity': '100% Modal Sendiri',
         'debt_and_equity': 'Kombinasi Hutang & Modal',
@@ -130,12 +128,10 @@ const sierTranslate = {
         'loan_portion': 'Porsi Pinjaman (Hutang)',
         'interest_rate': 'Suku Bunga Pinjaman',
         'loan_period_years': 'Tenor Pinjaman (Tahun)',
-        
         'escalation': 'Asumsi Peningkatan (Eskalasi)',
         'tariff_increase_rate': 'Tingkat Kenaikan Tarif',
         'tariff_increase_every_x_years': 'Kenaikan Tarif Setiap (Tahun)',
         'salary_increase_rate': 'Tingkat Kenaikan Gaji Tahunan',
-        
         'digital_systems': 'Sistem & Teknologi Digital',
         'shared_facilities': 'Fasilitas Umum Bersama',
         'virtual_office': 'Virtual Office',
@@ -149,7 +145,25 @@ const sierTranslate = {
         'occupancy_rate': 'Tingkat Okupansi',
         'equipment_rental': 'Sewa Peralatan',
         'expected_renters_percentage': 'Persentase Penyewa',
-        'price_per_rental': 'Harga / Sewa'
+        'price_per_rental': 'Harga / Sewa',
+        'capex_scenario_a': 'Skenario CapEx A: Renovasi',
+        'capex_scenario_b': 'Skenario CapEx B: Bangun Ulang',
+        'renovation_costs': 'Biaya Renovasi',
+        'structural_reinforcement': 'Perkuatan Struktural',
+        'lump_sum': 'Biaya Borongan (Lump Sum)',
+        'interior_works_pods': 'Pekerjaan Interior & Pods',
+        'cost_per_m2': 'Biaya per m²',
+        'mep_upgrade_hvac': 'Peningkatan MEP & HVAC',
+        'facade_modernization': 'Modernisasi Fasad',
+        'equipment_and_furniture': 'Peralatan & Furnitur',
+        'furniture_lounge_coworking': 'Furnitur Lounge & Coworking',
+        'av_equipment_meeting_rooms': 'Peralatan AV Ruang Rapat',
+        'cafe_bar_equipment': 'Peralatan Kafe & Bar',
+        'permits_and_consulting': 'Izin & Konsultan',
+        'demolition_and_construction': 'Pembongkaran & Konstruksi',
+        'building_demolition': 'Pembongkaran Gedung',
+        'foundation_and_structure': 'Pondasi & Struktur',
+        'architecture_facade': 'Arsitektur & Fasad'
     },
 
     translate(key) {
