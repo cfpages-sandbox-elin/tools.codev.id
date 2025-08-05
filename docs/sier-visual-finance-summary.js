@@ -1,4 +1,4 @@
-// File: sier-visual-finance-summary.js (Versi Lengkap dengan Rincian)
+// File: sier-visual-finance-summary.js tambah data summary
 const sierVisualFinanceSummary = {
     _createFeasibilityMetricsCard(metrics) {
         if (!metrics) return '<p>Gagal memuat metrik.</p>';
@@ -18,23 +18,12 @@ const sierVisualFinanceSummary = {
 
     _createDetailedDepreciationTable(model) {
         const { individual } = model;
-        const categories = {
-            'dr': 'Driving Range',
-            'padel4': 'Padel (4)',
-            'padel2': 'Padel (2)',
-            'mp': 'Meeting Point',
-            'shared': 'Fasilitas Umum',
-            'digital': 'Sistem Digital'
-        };
+        const categories = { 'dr': 'Driving Range', 'padel4': 'Padel (4)', 'padel2': 'Padel (2)', 'mp': 'Meeting Point', 'shared': 'Fasilitas Umum', 'digital': 'Sistem Digital' };
         const assetTypes = ['civil_construction', 'building', 'equipment', 'digital_systems', 'shared_facilities', 'other'];
-
         let tableHeaderHtml = '<tr><th class="p-2 text-left">Kategori Aset</th>';
         const activeUnitKeys = Object.keys(individual).filter(key => categories[key]);
-        activeUnitKeys.forEach(key => {
-            tableHeaderHtml += `<th class="p-2 text-right">${categories[key]}</th>`;
-        });
+        activeUnitKeys.forEach(key => { tableHeaderHtml += `<th class="p-2 text-right">${categories[key]}</th>`; });
         tableHeaderHtml += '<th class="p-2 text-right font-bold bg-gray-200">Total Nilai Aset</th></tr>';
-
         const tableBodyHtml = assetTypes.map(cat => {
             let rowHtml = `<tr><td class="p-2">${sierHelpers.safeTranslate(cat)}</td>`;
             let rowTotal = 0;
@@ -43,12 +32,47 @@ const sierVisualFinanceSummary = {
                 rowTotal += value;
                 rowHtml += `<td class="p-2 text-right font-mono text-xs">${value > 0 ? sierHelpers.formatNumber(Math.round(value)) : '-'}</td>`;
             });
-            if (rowTotal === 0) return ''; // Jangan render baris jika semua nilainya nol
+            if (rowTotal === 0) return '';
             rowHtml += `<td class="p-2 text-right font-mono font-bold bg-gray-50">${sierHelpers.formatNumber(Math.round(rowTotal))}</td></tr>`;
             return rowHtml;
         }).join('');
-
         return `<div class="overflow-x-auto border rounded-lg"><table class="w-full text-sm"><thead class="bg-gray-100 text-xs uppercase">${tableHeaderHtml}</thead><tbody class="divide-y">${tableBodyHtml}</tbody></table></div>`;
+    },
+
+    _createFinancialHighlightsTable(model) {
+        const { combined } = model;
+        const avg = (arr) => arr.slice(1).reduce((a, b) => a + b, 0) / (arr.length - 1);
+
+        const data = [
+            { label: "Pendapatan", year1: combined.revenue[1], average: avg(combined.revenue) },
+            { label: "Biaya Operasional (OpEx)", year1: combined.opex[1], average: avg(combined.opex), isNegative: true },
+            { label: "EBITDA", year1: combined.revenue[1] - combined.opex[1], average: avg(combined.revenue) - avg(combined.opex), isBold: true },
+            { label: "Laba Bersih", year1: combined.incomeStatement.netIncome[1], average: avg(combined.incomeStatement.netIncome) },
+            { label: "Arus Kas Bersih (dari Operasi)", year1: combined.cashFlowStatement.cfo[1], average: avg(combined.cashFlowStatement.cfo) }
+        ];
+
+        const rowsHtml = data.map(d => `
+            <tr class="${d.isBold ? 'font-bold bg-gray-100' : 'bg-white'} border-b">
+                <td class="px-4 py-3">${d.label}</td>
+                <td class="px-4 py-3 text-right font-mono ${d.isNegative ? 'text-red-600' : ''}">${d.isNegative ? '(' : ''}${sierHelpers.formatNumber(Math.round(d.year1))}${d.isNegative ? ')' : ''}</td>
+                <td class="px-4 py-3 text-right font-mono ${d.isNegative ? 'text-red-600' : ''}">${d.isNegative ? '(' : ''}${sierHelpers.formatNumber(Math.round(d.average))}${d.isNegative ? ')' : ''}</td>
+            </tr>
+        `).join('');
+
+        return `
+            <div class="overflow-x-auto border rounded-lg">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-200 text-xs uppercase">
+                        <tr>
+                            <th class="p-2 text-left">Indikator Kunci</th>
+                            <th class="p-2 text-right">Proyeksi Tahun Pertama</th>
+                            <th class="p-2 text-right">Rata-rata per Tahun (10 Thn)</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rowsHtml}</tbody>
+                </table>
+            </div>
+        `;
     },
 
     _createDetailedBreakdownTable(title, model, dataKey) {
