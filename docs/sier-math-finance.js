@@ -1,4 +1,4 @@
-// File: sier-math-finance.js versi detil
+// File: sier-math-finance.js fix translate lagi
 const sierMathFinance = {
     getValueByPath(obj, path) {
         return path.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj);
@@ -9,13 +9,6 @@ const sierMathFinance = {
         const lastKey = keys.pop();
         const target = keys.reduce((o, k) => o[k] = o[k] || {}, obj);
         target[lastKey] = value;
-    },
-
-    _safeTranslate(key) {
-        if (typeof sierTranslate !== 'undefined' && sierTranslate.translate) {
-            return sierTranslate.translate(key);
-        }
-        return (key || 'N/A').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     },
 
     _getDepreciationDetailsForScenario(components) {
@@ -61,7 +54,7 @@ const sierMathFinance = {
                 
                 details.push({
                     // GUNAKAN FUNGSI AMAN YANG BARU
-                    category: this._safeTranslate(category), 
+                    category: sierHelpers.safeTranslate(category),
                     capexValue: combinedCapex[category],
                     lifespan: lifespan,
                     lifespanPath: `assumptions.depreciation_years.${category}`,

@@ -1,12 +1,5 @@
-// File: sier-helpers.js
-// Berisi fungsi-fungsi utilitas umum (helpers) yang digunakan di seluruh proyek.
-
+// File: sier-helpers.js fix translate lagi
 const sierHelpers = {
-    /**
-     * Memformat angka menjadi format ribuan dengan titik.
-     * @param {number} num - Angka yang akan diformat.
-     * @returns {string} - Angka dalam format string (mis. 1.234.567).
-     */
     formatNumber(num) {
         if (num === null || num === undefined || isNaN(num)) return '0';
         return num.toString().replace(/\b(\d+)(\.\d+)?\b/g, (match, p1, p2) => {
@@ -14,20 +7,24 @@ const sierHelpers = {
         });
     },
 
-    /**
-     * Mengonversi angka besar menjadi format Miliar.
-     * @param {number} num - Angka yang akan dikonversi.
-     * @returns {string} - Angka dalam format string Miliar (mis. '1.23 M').
-     */
+    formatPercent(num, decimals = 1) {
+        if (num === null || num === undefined || isNaN(num)) return '0.0%';
+        return (num * 100).toFixed(decimals) + '%';
+    },
+
     toBillion(num) {
         if (isNaN(num)) return '0 M';
         return (num / 1000000000).toFixed(2) + ' M';
     },
 
-    /**
-     * Menjalankan fungsi rendering dengan penanganan error.
-     * @param {function} fn - Fungsi render yang akan dijalankan.
-     */
+    safeTranslate(key) {
+        if (typeof sierTranslate !== 'undefined' && sierTranslate.translate) {
+            return sierTranslate.translate(key);
+        }
+        // Fallback jika sierTranslate gagal dimuat
+        return (key || 'N/A').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    },
+
     tryToRender(fn) {
         try {
             if (typeof fn === 'function') fn();

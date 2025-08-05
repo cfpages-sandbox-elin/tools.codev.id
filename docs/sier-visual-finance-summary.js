@@ -1,4 +1,4 @@
-// File: sier-visual-finance-summary.js versi detil
+// File: sier-visual-finance-summary.js fix translate lagi
 const sierVisualFinanceSummary = {
 
     _createFeasibilityMetricsCard(metrics) {
@@ -22,18 +22,18 @@ const sierVisualFinanceSummary = {
     _createDetailedDepreciationTable(model) {
         const { individual } = model;
         const categories = ['civil_construction', 'building', 'equipment', 'digital_systems', 'shared_facilities', 'other'];
-        let totals = {};
-        categories.forEach(c => totals[c] = 0);
 
         let tableHeaderHtml = '<tr><th class="p-2 text-left">Kategori Aset</th>';
         const unitKeys = Object.keys(individual);
         unitKeys.forEach(key => {
-            tableHeaderHtml += `<th class="p-2 text-right">${individual[key].title || key.toUpperCase()}</th>`;
+            const scenario = individual[key];
+            const title = (scenario.scenarios && scenario.scenarios[key]) ? scenario.scenarios[key].title : (scenario.title || key.toUpperCase());
+            tableHeaderHtml += `<th class="p-2 text-right">${title}</th>`;
         });
         tableHeaderHtml += '<th class="p-2 text-right font-bold bg-gray-200">Total Nilai Aset</th></tr>';
 
         const tableBodyHtml = categories.map(cat => {
-            let rowHtml = `<tr><td class="p-2">${this._safeTranslate(cat)}</td>`;
+            let rowHtml = `<tr><td class="p-2">${sierHelpers.safeTranslate(cat)}</td>`;
             let rowTotal = 0;
             unitKeys.forEach(key => {
                 const value = individual[key].capexBreakdown[cat] || 0;
@@ -56,10 +56,11 @@ const sierVisualFinanceSummary = {
         headerHtml += '</tr>';
 
         let bodyHtml = '';
-        const unitKeys = Object.keys(individual).filter(k => individual[k].pnl); // Hanya unit dengan PnL
+        const unitKeys = Object.keys(individual).filter(k => individual[k].pnl);
         unitKeys.forEach(key => {
             const unit = individual[key];
-            bodyHtml += `<tr class="hover:bg-yellow-50"><td class="p-2 sticky left-0 bg-white z-10 font-semibold">${unit.title || key.toUpperCase()}</td>`;
+            const title = unit.title || key.toUpperCase();
+            bodyHtml += `<tr class="hover:bg-yellow-50"><td class="p-2 sticky left-0 bg-white z-10 font-semibold">${title}</td>`;
             for (let i = 1; i <= years; i++) {
                 const value = unit.pnl[dataKey][i];
                 bodyHtml += `<td class="p-2 text-right font-mono text-xs">${sierHelpers.formatNumber(Math.round(value / 1000))}</td>`;
@@ -67,7 +68,6 @@ const sierVisualFinanceSummary = {
             bodyHtml += `</tr>`;
         });
 
-        // Total Row
         bodyHtml += `<tr class="font-bold bg-gray-200"><td class="p-2 sticky left-0 bg-gray-200 z-10">Total Gabungan</td>`;
         for (let i = 1; i <= years; i++) {
             let yearTotal = 0;
@@ -76,18 +76,7 @@ const sierVisualFinanceSummary = {
         }
         bodyHtml += `</tr>`;
 
-        return `
-            <div>
-                <h3 class="text-xl font-semibold mb-3 text-gray-700">${title}</h3>
-                <div class="overflow-x-auto border rounded-lg">
-                    <table class="w-full text-sm whitespace-nowrap">
-                        <thead class="bg-gray-100 text-xs uppercase">${headerHtml}</thead>
-                        <tbody class="divide-y">${bodyHtml}</tbody>
-                    </table>
-                </div>
-                <p class="text-right text-xs text-gray-500 mt-1">*Semua angka dalam ribuan Rupiah (Rp '000)</p>
-            </div>
-        `;
+        return `<div><h3 class="text-xl font-semibold mb-3 text-gray-700">${title}</h3><div class="overflow-x-auto border rounded-lg"><table class="w-full text-sm whitespace-nowrap"><thead class="bg-gray-100 text-xs uppercase">${headerHtml}</thead><tbody class="divide-y">${bodyHtml}</tbody></table></div><p class="text-right text-xs text-gray-500 mt-1">*Semua angka dalam ribuan Rupiah (Rp '000)</p></div>`;
     },
 
     _createProjectionTable(headers, dataRows, years) {
@@ -108,7 +97,7 @@ const sierVisualFinanceSummary = {
             
             for (let j = 0; j <= years; j++) {
                 const value = dataRows[i][j];
-                const displayValue = (value === 0 && j > 0 && !headers[i].match(/kumulatif/i)) ? '-' : sierHelpers.formatNumber(Math.round(value / 1000));
+                const displayValue = (value === 0 && j > 0 && !headers[i].match(/kumulatif|bunga/i)) ? '-' : sierHelpers.formatNumber(Math.round(value / 1000));
                 
                 let content = displayValue;
                 if (isNegativeConvention && value > 0) {
