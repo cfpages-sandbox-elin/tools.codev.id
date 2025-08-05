@@ -196,10 +196,16 @@ const sierVisualFinanceDetails = {
         const container = document.getElementById('padel-capex-details-container');
         if (!container) return;
 
-        const capexData = scenarioConfig.capex;
+        // DEFINISIKAN FUNGSI HELPER DI DALAM SCOPE INI
+        const createScenarioTable = (scenarioConfig) => {
+            if (!scenarioConfig || !scenarioConfig.capex) {
+                return '<p>Data konfigurasi skenario Padel tidak valid.</p>';
+            }
+
+            const capexData = scenarioConfig.capex; // Ambil data CapEx yang benar
             let tableBodyHtml = '';
             let grandTotal = 0;
-            const numCourts = scenarioConfig.num_courts;
+            const numCourts = scenarioConfig.num_courts; // Ambil num_courts dari level yang benar
 
             const processCategory = (categoryData, categoryName) => {
                 tableBodyHtml += `<tbody class="bg-gray-50"><td colspan="3" class="p-3 font-bold text-gray-800">${sierTranslate.translate(categoryName)}</td></tbody><tbody class="divide-y">`;
@@ -218,9 +224,8 @@ const sierVisualFinanceDetails = {
                 tableBodyHtml += `</tbody>`;
             };
 
-            // Iterasi melalui data capex yang benar, bukan seluruh objek skenario
-            for(const category in capexData) {
-                if(typeof capexData[category] === 'object' && category !== 'title' && category !== 'notes') {
+            for (const category in capexData) {
+                if (typeof capexData[category] === 'object' && category !== 'title' && category !== 'notes') {
                     if (category === 'sport_courts_equipment') {
                         tableBodyHtml += `<tbody class="bg-gray-50"><td colspan="3" class="p-3 font-bold text-gray-800">${sierTranslate.translate(category)}</td></tbody><tbody class="divide-y">`;
                         let perCourtTotal = sierMathFinance._calculateTotal(capexData.sport_courts_equipment.per_court_costs);
@@ -232,10 +237,10 @@ const sierVisualFinanceDetails = {
                         tableBodyHtml += `</tbody>`;
                     } else {
                         processCategory(capexData[category], category);
-                        }
+                    }
                 }
             }
-            
+
             const subtotal = grandTotal;
             const contingency = subtotal * projectConfig.assumptions.contingency_rate;
             const finalTotal = subtotal + contingency;
@@ -243,6 +248,7 @@ const sierVisualFinanceDetails = {
             return `<div class="mb-12"><h3 class="text-xl font-semibold mb-2 text-gray-800">${scenarioConfig.title}</h3><p class="text-gray-600 mb-4 text-sm">${scenarioConfig.description}</p><div class="overflow-x-auto border rounded-lg"><table class="w-full text-sm"><thead class="bg-gray-200 text-xs uppercase"><tr><th class="p-2 text-left w-1/2">Komponen Biaya</th><th class="p-2 text-left w-1/4">Detail Perhitungan</th><th class="p-2 text-right w-1/4">Estimasi Biaya (Rp)</th></tr></thead>${tableBodyHtml}<tfoot class="font-bold"><tr class="bg-gray-200"><td class="p-3 text-right" colspan="2">Subtotal Biaya</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(subtotal))}</td></tr><tr class="bg-yellow-200"><td class="p-3 text-right" colspan="2">Kontingensi (${(projectConfig.assumptions.contingency_rate * 100)}%)</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(contingency))}</td></tr><tr class="bg-purple-600 text-white text-lg"><td class="p-3 text-right" colspan="2">Total Estimasi Investasi</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(finalTotal))}</td></tr></tfoot></table></div></div>`;
         };
 
+        // PANGGIL FUNGSI HELPER YANG SUDAH DIDEFINISIKAN DI ATAS
         const scenarioTwoCourtsHtml = createScenarioTable(projectConfig.padel.scenarios.two_courts_futsal_renovation);
         const scenarioFourCourtsHtml = createScenarioTable(projectConfig.padel.scenarios.four_courts_combined);
 
