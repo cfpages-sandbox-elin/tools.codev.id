@@ -1,4 +1,4 @@
-// File: sier-visual-finance-summary.js tambah data summary
+// File: sier-visual-finance-summary.js tambah data summary + tampil
 const sierVisualFinanceSummary = {
     _createFeasibilityMetricsCard(metrics) {
         if (!metrics) return '<p>Gagal memuat metrik.</p>';
@@ -148,46 +148,38 @@ const sierVisualFinanceSummary = {
 
         const { combined } = model;
         
-        // --- RENDER KONTEN UNTUK BAGIAN PROYEKSI & RINCIAN ---
-        const revenueHtml = this._createDetailedBreakdownTable('Rincian Pendapatan per Unit Bisnis', model, 'revenue');
-        const opexHtml = this._createDetailedBreakdownTable('Rincian Biaya Operasional (OpEx) per Unit Bisnis', model, 'opex');
-        const pnlTableHtml = this._createProjectionTable(["Pendapatan", "Biaya Operasional (OpEx)", "Penyusutan", "EBIT", "Biaya Bunga", "Laba Sebelum Pajak (EBT)", "Pajak", "Laba Bersih"], [ combined.revenue, combined.opex, combined.depreciation, combined.incomeStatement.ebit, combined.financing.interestPayments, combined.incomeStatement.ebt, combined.incomeStatement.tax, combined.incomeStatement.netIncome ], 10);
-        const cfTableHtml = this._createProjectionTable(["Laba Bersih", "+ Penyusutan", "Arus Kas dari Operasi (CFO)", "Investasi (CFI)", "- Pembayaran Pokok Pinjaman", "+ Penerimaan Pinjaman", "Arus Kas dari Pendanaan (CFF)", "Arus Kas Bersih", "Arus Kas Kumulatif"], [ combined.incomeStatement.netIncome, combined.depreciation, combined.cashFlowStatement.cfo, combined.cashFlowStatement.cfi, combined.financing.principalPayments, [combined.financing.loanAmount, ...Array(10).fill(0)], combined.cashFlowStatement.cff, combined.cashFlowStatement.netCashFlow, combined.cashFlowStatement.cumulativeCashFlow ], 10);
+        // KOSONGKAN CONTAINER PROYEKSI KARENA SEMUA AKAN PINDAH KE SUMMARY
+        projectionContainer.innerHTML = '';
+        projectionContainer.style.display = 'none'; // Sembunyikan div yang tidak terpakai
 
-        projectionContainer.innerHTML = `
-            <div class="bg-white p-6 rounded-lg shadow-md mb-8 space-y-12">
-                ${revenueHtml}
-                ${opexHtml}
-                <div>
-                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Proyeksi Laporan Laba Rugi (Gabungan)</h3>
-                    ${pnlTableHtml}
-                </div>
-                <div>
-                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Proyeksi Laporan Arus Kas (Gabungan)</h3>
-                    ${cfTableHtml}
-                </div>
-            </div>
-        `;
-
-        // --- RENDER KONTEN UNTUK BAGIAN RINGKASAN & KELAYAKAN ---
+        // RENDER SEMUA KONTEN KE DALAM SUMMARY CONTAINER
         const metricsHtml = this._createFeasibilityMetricsCard(combined.feasibilityMetrics);
         const depreciationHtml = this._createDetailedDepreciationTable(model);
-        const sensitivityPlaceholderHtml = '<div id="sensitivity-analysis-container"><!-- Konten analisis sensitivitas akan dirender di sini oleh skrip lain --></div>';
+        const highlightsHtml = this._createFinancialHighlightsTable(model); // Panggil fungsi baru
+        const sensitivityPlaceholderHtml = '<div id="sensitivity-analysis-container"><!-- Konten analisis sensitivitas --></div>';
 
         summaryContainer.innerHTML = `
-            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-teal-600 pl-4">Analisis Keuangan & Kelayakan Investasi Proyek</h2>
-            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-                <div class="p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 mb-6 text-sm">
-                    <strong>Disclaimer:</strong> Analisis ini adalah model proyeksi berdasarkan serangkaian asumsi yang wajar...
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-amber-500 pl-4">Analisis Keuangan & Kelayakan Investasi Proyek</h2>
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8 space-y-12">
+                <div class="p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 text-sm">
+                    <strong>Disclaimer:</strong> Analisis ini adalah model proyeksi...
                 </div>
-                <div class="mb-8 pb-6 border-b">
-                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Ringkasan Alokasi Biaya Investasi (CapEx)</h3>
+
+                <div>
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">1. Ringkasan Alokasi Biaya Investasi (CapEx)</h3>
                     ${depreciationHtml}
                 </div>
-                <div id="investment-feasibility" class="mb-8 pb-6 border-b">
-                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Metrik Kelayakan Investasi (Proyek Gabungan)</h3>
+                
+                <div>
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">2. Ringkasan Kinerja Keuangan (Proyeksi Gabungan)</h3>
+                    ${highlightsHtml}
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">3. Metrik Kelayakan Investasi (Proyek Gabungan)</h3>
                     ${metricsHtml}
                 </div>
+
                 ${sensitivityPlaceholderHtml}
             </div>
         `;
