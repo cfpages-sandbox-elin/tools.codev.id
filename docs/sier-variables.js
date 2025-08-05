@@ -1,4 +1,4 @@
-// File: sier-variables.js add sensitivity
+// File: sier-variables.js add sensitivity lupa koma
 const projectConfig = {};
 
 projectConfig.site_parameters = {
@@ -228,7 +228,7 @@ projectConfig.drivingRange = {
             field_length_m: projectConfig.site_parameters.driving_range.field_length_m, 
             get field_width_m() { return this.total_perimeter_m - (this.field_length_m * 2); },
             netting: { cost_per_m2: 150000, },
-            poles: { spacing_m: 20, height_distribution: { far_side_m: 12, left_right_side_m: 8 }, foundation_cost_per_pole: 25000000, }
+            poles: { spacing_m: 20, height_distribution: { far_side_m: 12, left_right_side_m: 8 }, foundation_cost_per_pole: 25000000, },
             lake_roof_netting: {
                 area_m2: 235 * 85,
                 cost_per_m2: 125000
