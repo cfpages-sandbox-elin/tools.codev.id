@@ -1,6 +1,4 @@
-// File: sier-math-finance.js fix padel
-// VERSI 3.0 LENGKAP - Arsitektur Modular Berbasis Skenario
-
+// File: sier-math-finance.js versi detil
 const sierMathFinance = {
     getValueByPath(obj, path) {
         return path.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj);
@@ -132,6 +130,7 @@ const sierMathFinance = {
         let capexSchedule = Array(years + 1).fill(0);
         let revenue = Array(years + 1).fill(0);
         let opex = Array(years + 1).fill(0);
+        let capexBreakdown = { civil_construction: 0, building: 0, equipment: 0, interior: 0, digital_systems: 0, shared_facilities: 0, other: 0 };
         const esc = projectConfig.assumptions.escalation;
 
         let baseAnnualRevenue = 0;
@@ -144,51 +143,154 @@ const sierMathFinance = {
             return { salaries: salaries * 12, other: other * 12 };
         };
 
-        switch (compKey) {
-            case 'dr':
-                capexSchedule[0] = this._calculateDrCapex().scenario_b.total;
+        const getPadelScenarioKey = () => {
+             if (compKey.includes('padel4')) return 'four_courts_combined';
+             if (compKey.includes('padel2')) return 'two_courts_futsal_renovation';
+             return null;
+        }
+
+        // --- PENGUMPULAN DATA DASAR ---
+        switch (true) {
+            case compKey === 'dr':
+                const drCapexDetails = this._calculateDrCapex().scenario_b;
+                capexSchedule[0] = drCapexDetails.total;
+                capexBreakdown.civil_construction += drCapexDetails.htmlRows.find(r => r.label.includes('Tiang Pancang')).value;
+                capexBreakdown.building += drCapexDetails.htmlRows.find(r => r.label.includes('Bangunan')).value;
+                capexBreakdown.equipment += drCapexDetails.htmlRows.find(r => r.label.includes('Peralatan')).value;
+                capexBreakdown.other += drCapexDetails.subtotal - capexBreakdown.civil_construction - capexBreakdown.building - capexBreakdown.equipment;
                 baseAnnualRevenue = this._getUnitCalculations('drivingRange').pnl.annualRevenue;
                 baseOpex = extractOpex(projectConfig.drivingRange.opexMonthly);
                 break;
-            case 'padel4':
-                capexSchedule[0] = this._calculateTotal(projectConfig.padel.scenarios.four_courts_combined.capex);
-                baseAnnualRevenue = this._getUnitCalculations('padel', 'four_courts_combined').pnl.annualRevenue;
-                baseOpex = extractOpex(projectConfig.padel.scenarios.four_courts_combined.opexMonthly);
+            case compKey.includes('padel'):
+                const padelScenarioKey = getPadelScenarioKey();
+                const padelScenario = projectConfig.padel.scenarios[padelScenarioKey];
+                capexSchedule[0] = this._calculateTotal(padelScenario.capex) * (1 + projectConfig.assumptions.contingency_rate);
+                // Rincian CapEx Padel
+                const padelCapexConf = padelScenario.capex;
+                capexBreakdown.building += this._calculateTotal(padelCapexConf.component_koperasi_new_build || {}) + this._calculateTotal(padelCapexConf.component_futsal_renovation || {});
+                capexBreakdown.equipment += this._calculateTotal(padelCapexConf.sport_courts_equipment || {});
+                capexBreakdown.other += this._calculateTotal(padelCapexConf.pre_operational || {});
+                baseAnnualRevenue = this._getUnitCalculations('padel', padelScenarioKey).pnl.annualRevenue;
+                baseOpex = extractOpex(padelScenario.opexMonthly);
                 break;
-            case 'padel2':
-                capexSchedule[0] = this._calculateTotal(projectConfig.padel.scenarios.two_courts_futsal_renovation.capex);
-                baseAnnualRevenue = this._getUnitCalculations('padel', 'two_courts_futsal_renovation').pnl.annualRevenue;
-                baseOpex = extractOpex(projectConfig.padel.scenarios.two_courts_futsal_renovation.opexMonthly);
-                break;
-            case 'mp':
-                capexSchedule[0] = this._calculateTotal(projectConfig.meetingPoint.capex_scenario_a);
+            case compKey === 'mp':
+                capexSchedule[0] = this._calculateTotal(projectConfig.meetingPoint.capex_scenario_a) * (1 + projectConfig.assumptions.contingency_rate);
+                const mpCapexConf = projectConfig.meetingPoint.capex_scenario_a;
+                capexBreakdown.building += this._calculateTotal(mpCapexConf.renovation_costs || {});
+                capexBreakdown.equipment += this._calculateTotal(mpCapexConf.equipment_and_furniture || {});
+                capexBreakdown.other += this._calculateTotal(mpCapexConf.pre_operational || {});
                 baseAnnualRevenue = this._calculateTotal(projectConfig.meetingPoint.revenue) * 12;
                 baseOpex = extractOpex(projectConfig.meetingPoint.opexMonthly);
                 break;
-            case 'shared':
-                capexSchedule[0] = this._calculateTotal(projectConfig.shared_facilities_capex);
+            case compKey === 'shared':
+                capexSchedule[0] = this._calculateTotal(projectConfig.shared_facilities_capex) * (1 + projectConfig.assumptions.contingency_rate);
+                capexBreakdown.shared_facilities = capexSchedule[0];
                 break;
-            case 'digital':
-                 capexSchedule[0] = this._calculateTotal(projectConfig.digital_capex);
+            case compKey === 'digital':
+                 capexSchedule[0] = this._calculateTotal(projectConfig.digital_capex) * (1 + projectConfig.assumptions.contingency_rate);
+                 capexBreakdown.digital_systems = capexSchedule[0];
                 break;
         }
         
-        // Proyeksi Multi-Tahun untuk komponen ini
+        // --- PROYEKSI MULTI-TAHUN PER KOMPONEN ---
         for (let year = 1; year <= years; year++) {
             const tariffFactor = Math.pow(1 + esc.tariff_increase_rate, Math.floor((year - 1) / esc.tariff_increase_every_x_years));
             revenue[year] = baseAnnualRevenue * tariffFactor;
-
             const salaryFactor = Math.pow(1 + esc.salary_increase_rate, year - 1);
-            const otherFactor = Math.pow(1 + 0.021, year - 1); // Inflasi umum dari sheet
+            const otherFactor = Math.pow(1 + 0.021, year - 1);
             opex[year] = (baseOpex.salaries * salaryFactor) + (baseOpex.other * otherFactor);
         }
         
-        // Tambahkan rekondisi jika relevan
-        if (compKey === 'padel4' || compKey === 'padel2' || compKey === 'mp') {
+        // Rekondisi untuk beberapa aset
+        if (compKey.includes('padel') || compKey === 'mp') {
              capexSchedule[5] += capexSchedule[0] * 0.40;
         }
 
-        return { capexSchedule, revenue, opex };
+        // Kalkulasi depresiasi untuk komponen ini saja
+        const depreciation = this._calculateMultiYearDepreciation(capexSchedule, years, capexBreakdown);
+        
+        return { capexSchedule, capexBreakdown, revenue, opex, depreciation };
+    },
+
+    buildFinancialModelForScenario(scenarioKey) {
+        let components = [];
+        if (scenarioKey.includes('dr')) components.push('dr');
+        if (scenarioKey.includes('padel4')) components.push('padel4');
+        if (scenarioKey.includes('padel2')) components.push('padel2');
+        if (scenarioKey.includes('mp')) components.push('mp');
+        if (components.length > 0) {
+            components.push('shared');
+            components.push('digital');
+        }
+
+        const projectionYears = 10;
+        let individualResults = {};
+        let totalCapex = 0;
+
+        // 1. Hitung finansial untuk setiap komponen secara terpisah
+        components.forEach(compKey => {
+            const unitFinancials = this._getFinancialsForComponent(compKey, projectionYears);
+            individualResults[compKey] = unitFinancials;
+            totalCapex += unitFinancials.capexSchedule[0];
+        });
+
+        // 2. Hitung biaya bersama (bunga)
+        const financing = this._calculateLoanAmortization(totalCapex, projectConfig.assumptions.financing, projectionYears);
+
+        // 3. Proyeksikan Laba Rugi per unit dengan alokasi bunga
+        Object.keys(individualResults).forEach(key => {
+            const unit = individualResults[key];
+            const unitCapex = unit.capexSchedule[0];
+            const interestAllocationRatio = totalCapex > 0 ? (unitCapex / totalCapex) : 0;
+            
+            unit.pnl = {
+                revenue: unit.revenue,
+                opex: unit.opex,
+                ebitda: Array(projectionYears + 1).fill(0),
+                depreciation: unit.depreciation,
+                ebit: Array(projectionYears + 1).fill(0),
+                interest: Array(projectionYears + 1).fill(0),
+                ebt: Array(projectionYears + 1).fill(0),
+                tax: Array(projectionYears + 1).fill(0),
+                netIncome: Array(projectionYears + 1).fill(0)
+            };
+
+            for (let year = 1; year <= projectionYears; year++) {
+                unit.pnl.ebitda[year] = unit.revenue[year] - unit.opex[year];
+                unit.pnl.ebit[year] = unit.pnl.ebitda[year] - unit.pnl.depreciation[year];
+                unit.pnl.interest[year] = financing.interestPayments[year] * interestAllocationRatio;
+                unit.pnl.ebt[year] = unit.pnl.ebit[year] - unit.pnl.interest[year];
+                unit.pnl.tax[year] = unit.pnl.ebt[year] > 0 ? unit.pnl.ebt[year] * projectConfig.assumptions.tax_rate_profit : 0;
+                unit.pnl.netIncome[year] = unit.pnl.ebt[year] - unit.pnl.tax[year];
+            }
+        });
+
+        // 4. Buat model gabungan dengan menjumlahkan hasil individual
+        let combined = this._createCombinedModel(individualResults, financing, projectionYears);
+        
+        return { individual: individualResults, combined: combined };
+    },
+
+    _createCombinedModel(individualResults, financing, projectionYears) {
+        let combined = {
+            capexSchedule: Array(projectionYears + 1).fill(0),
+            revenue: Array(projectionYears + 1).fill(0),
+            opex: Array(projectionYears + 1).fill(0),
+            depreciation: Array(projectionYears + 1).fill(0),
+        };
+        for(const key in individualResults) {
+            const unit = individualResults[key];
+            for(let i=0; i<=projectionYears; i++) {
+                combined.capexSchedule[i] += unit.capexSchedule[i];
+                combined.revenue[i] += unit.revenue[i];
+                combined.opex[i] += unit.opex[i];
+                combined.depreciation[i] += unit.depreciation[i];
+            }
+        }
+        const incomeStatement = this._buildIncomeStatement({ ...combined, interest: financing.interestPayments, projectionYears });
+        const cashFlowStatement = this._buildCashFlowStatement({ incomeStatement, depreciation: combined.depreciation, capexSchedule: combined.capexSchedule, financing, projectionYears });
+        const feasibilityMetrics = this._calculateFeasibilityMetrics(cashFlowStatement.netCashFlow, projectConfig.assumptions.discount_rate_wacc);
+        return { ...combined, financing, incomeStatement, cashFlowStatement, feasibilityMetrics };
     },
 
     _calculateLoanAmortization(totalInvestment, finConfig, years) {
