@@ -1,10 +1,7 @@
-// File: sier-visual-finance-summary.js fix translate lagi
+// File: sier-visual-finance-summary.js (Versi Lengkap dengan Rincian)
 const sierVisualFinanceSummary = {
-
     _createFeasibilityMetricsCard(metrics) {
-        if (!metrics) {
-            return '<div class="text-center text-red-500">Gagal memuat metrik kelayakan.</div>';
-        }
+        if (!metrics) return '<p>Gagal memuat metrik.</p>';
         const { paybackPeriod, discountedPaybackPeriod, npv, irr, profitabilityIndex } = metrics;
         const formatYears = (val) => val === Infinity ? '> 10 Thn' : val.toFixed(2) + ' Thn';
         
@@ -21,25 +18,32 @@ const sierVisualFinanceSummary = {
 
     _createDetailedDepreciationTable(model) {
         const { individual } = model;
-        const categories = ['civil_construction', 'building', 'equipment', 'digital_systems', 'shared_facilities', 'other'];
+        const categories = {
+            'dr': 'Driving Range',
+            'padel4': 'Padel (4)',
+            'padel2': 'Padel (2)',
+            'mp': 'Meeting Point',
+            'shared': 'Fasilitas Umum',
+            'digital': 'Sistem Digital'
+        };
+        const assetTypes = ['civil_construction', 'building', 'equipment', 'digital_systems', 'shared_facilities', 'other'];
 
         let tableHeaderHtml = '<tr><th class="p-2 text-left">Kategori Aset</th>';
-        const unitKeys = Object.keys(individual);
-        unitKeys.forEach(key => {
-            const scenario = individual[key];
-            const title = (scenario.scenarios && scenario.scenarios[key]) ? scenario.scenarios[key].title : (scenario.title || key.toUpperCase());
-            tableHeaderHtml += `<th class="p-2 text-right">${title}</th>`;
+        const activeUnitKeys = Object.keys(individual).filter(key => categories[key]);
+        activeUnitKeys.forEach(key => {
+            tableHeaderHtml += `<th class="p-2 text-right">${categories[key]}</th>`;
         });
         tableHeaderHtml += '<th class="p-2 text-right font-bold bg-gray-200">Total Nilai Aset</th></tr>';
 
-        const tableBodyHtml = categories.map(cat => {
+        const tableBodyHtml = assetTypes.map(cat => {
             let rowHtml = `<tr><td class="p-2">${sierHelpers.safeTranslate(cat)}</td>`;
             let rowTotal = 0;
-            unitKeys.forEach(key => {
+            activeUnitKeys.forEach(key => {
                 const value = individual[key].capexBreakdown[cat] || 0;
                 rowTotal += value;
                 rowHtml += `<td class="p-2 text-right font-mono text-xs">${value > 0 ? sierHelpers.formatNumber(Math.round(value)) : '-'}</td>`;
             });
+            if (rowTotal === 0) return ''; // Jangan render baris jika semua nilainya nol
             rowHtml += `<td class="p-2 text-right font-mono font-bold bg-gray-50">${sierHelpers.formatNumber(Math.round(rowTotal))}</td></tr>`;
             return rowHtml;
         }).join('');
@@ -50,16 +54,17 @@ const sierVisualFinanceSummary = {
     _createDetailedBreakdownTable(title, model, dataKey) {
         const { individual } = model;
         const years = 10;
+        const unitTitles = { 'dr': 'Driving Range', 'padel4': 'Padel (4)', 'padel2': 'Padel (2)', 'mp': 'Meeting Point', 'shared': 'Fasilitas Umum', 'digital': 'Sistem Digital' };
         
         let headerHtml = '<tr><th class="p-2 text-left sticky left-0 bg-gray-100 z-10">Unit Bisnis</th>';
         for (let i = 1; i <= years; i++) { headerHtml += `<th class="p-2 text-center min-w-[100px]">Tahun ${i}</th>`; }
         headerHtml += '</tr>';
 
         let bodyHtml = '';
-        const unitKeys = Object.keys(individual).filter(k => individual[k].pnl);
+        const unitKeys = Object.keys(individual).filter(k => individual[k].pnl && individual[k].revenue.some(val => val > 0)); // Hanya tampilkan unit dengan pendapatan
         unitKeys.forEach(key => {
             const unit = individual[key];
-            const title = unit.title || key.toUpperCase();
+            const title = unitTitles[key] || key.toUpperCase();
             bodyHtml += `<tr class="hover:bg-yellow-50"><td class="p-2 sticky left-0 bg-white z-10 font-semibold">${title}</td>`;
             for (let i = 1; i <= years; i++) {
                 const value = unit.pnl[dataKey][i];
@@ -98,12 +103,8 @@ const sierVisualFinanceSummary = {
             for (let j = 0; j <= years; j++) {
                 const value = dataRows[i][j];
                 const displayValue = (value === 0 && j > 0 && !headers[i].match(/kumulatif|bunga/i)) ? '-' : sierHelpers.formatNumber(Math.round(value / 1000));
-                
                 let content = displayValue;
-                if (isNegativeConvention && value > 0) {
-                    content = `(${displayValue})`;
-                }
-
+                if (isNegativeConvention && value > 0) content = `(${displayValue})`;
                 tbody += `<td class="p-2 text-right font-mono text-xs ${value < 0 ? 'text-red-600' : ''}">${content}</td>`;
             }
             tbody += '</tr>';
@@ -113,37 +114,59 @@ const sierVisualFinanceSummary = {
     },
 
     render(model) {
-        const outputContainer = document.getElementById('financial-model-output');
-        if (!outputContainer || !model || !model.combined) return;
+        const projectionContainer = document.getElementById('financial-model-output');
+        const summaryContainer = document.getElementById('financial-analysis-summary');
 
-        console.log(`[Finance Visual] Merender output finansial dengan rincian per unit.`);
+        if (!projectionContainer || !summaryContainer || !model || !model.combined) {
+            console.error("Satu atau lebih container finansial atau data model tidak ditemukan.");
+            return;
+        }
+
         const { combined } = model;
         
-        const metricsHtml = this._createFeasibilityMetricsCard(combined.feasibilityMetrics);
-        const depreciationHtml = this._createDetailedDepreciationTable(model);
+        // --- RENDER KONTEN UNTUK BAGIAN PROYEKSI & RINCIAN ---
         const revenueHtml = this._createDetailedBreakdownTable('Rincian Pendapatan per Unit Bisnis', model, 'revenue');
         const opexHtml = this._createDetailedBreakdownTable('Rincian Biaya Operasional (OpEx) per Unit Bisnis', model, 'opex');
-        const ebitdaHtml = this._createDetailedBreakdownTable('Kontribusi Laba Operasional (EBITDA) per Unit Bisnis', model, 'ebitda');
+        const pnlTableHtml = this._createProjectionTable(["Pendapatan", "Biaya Operasional (OpEx)", "Penyusutan", "EBIT", "Biaya Bunga", "Laba Sebelum Pajak (EBT)", "Pajak", "Laba Bersih"], [ combined.revenue, combined.opex, combined.depreciation, combined.incomeStatement.ebit, combined.financing.interestPayments, combined.incomeStatement.ebt, combined.incomeStatement.tax, combined.incomeStatement.netIncome ], 10);
+        const cfTableHtml = this._createProjectionTable(["Laba Bersih", "+ Penyusutan", "Arus Kas dari Operasi (CFO)", "Investasi (CFI)", "- Pembayaran Pokok Pinjaman", "+ Penerimaan Pinjaman", "Arus Kas dari Pendanaan (CFF)", "Arus Kas Bersih", "Arus Kas Kumulatif"], [ combined.incomeStatement.netIncome, combined.depreciation, combined.cashFlowStatement.cfo, combined.cashFlowStatement.cfi, combined.financing.principalPayments, [combined.financing.loanAmount, ...Array(10).fill(0)], combined.cashFlowStatement.cff, combined.cashFlowStatement.netCashFlow, combined.cashFlowStatement.cumulativeCashFlow ], 10);
 
-        const pnlHeaders = ["Pendapatan", "Biaya Operasional (OpEx)", "Penyusutan", "EBIT", "Biaya Bunga", "Laba Sebelum Pajak (EBT)", "Pajak", "Laba Bersih"];
-        const pnlData = [ combined.revenue, combined.opex, combined.depreciation, combined.incomeStatement.ebit, combined.financing.interestPayments, combined.incomeStatement.ebt, combined.incomeStatement.tax, combined.incomeStatement.netIncome ];
-        const pnlTableHtml = this._createProjectionTable(pnlHeaders, pnlData, 10);
-        
-        const cfHeaders = ["Laba Bersih", "+ Penyusutan", "Arus Kas dari Operasi (CFO)", "Investasi (CFI)", "- Pembayaran Pokok Pinjaman", "+ Penerimaan Pinjaman", "Arus Kas dari Pendanaan (CFF)", "Arus Kas Bersih", "Arus Kas Kumulatif"];
-        const cfData = [ combined.incomeStatement.netIncome, combined.depreciation, combined.cashFlowStatement.cfo, combined.cashFlowStatement.cfi, combined.financing.principalPayments, [combined.financing.loanAmount, ...Array(10).fill(0)], combined.cashFlowStatement.cff, combined.cashFlowStatement.netCashFlow, combined.cashFlowStatement.cumulativeCashFlow ];
-        const cfTableHtml = this._createProjectionTable(cfHeaders, cfData, 10);
-        
-        outputContainer.innerHTML = `
-            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-teal-600 pl-4">Ringkasan & Proyeksi Finansial</h2>
+        projectionContainer.innerHTML = `
             <div class="bg-white p-6 rounded-lg shadow-md mb-8 space-y-12">
-                <div><h3 class="text-xl font-semibold mb-4 text-gray-700">Metrik Kelayakan Investasi (Proyek Gabungan)</h3>${metricsHtml}</div>
-                <div><h3 class="text-xl font-semibold mb-3 text-gray-700">Rincian Alokasi Biaya Investasi (CapEx) per Unit</h3>${depreciationHtml}</div>
                 ${revenueHtml}
                 ${opexHtml}
-                ${ebitdaHtml}
-                <div><h3 class="text-xl font-semibold mb-4 text-gray-700">Proyeksi Laporan Laba Rugi (Gabungan)</h3>${pnlTableHtml}</div>
-                <div><h3 class="text-xl font-semibold mb-4 text-gray-700">Proyeksi Laporan Arus Kas (Gabungan)</h3>${cfTableHtml}</div>
-            </div>`;
+                <div>
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Proyeksi Laporan Laba Rugi (Gabungan)</h3>
+                    ${pnlTableHtml}
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Proyeksi Laporan Arus Kas (Gabungan)</h3>
+                    ${cfTableHtml}
+                </div>
+            </div>
+        `;
+
+        // --- RENDER KONTEN UNTUK BAGIAN RINGKASAN & KELAYAKAN ---
+        const metricsHtml = this._createFeasibilityMetricsCard(combined.feasibilityMetrics);
+        const depreciationHtml = this._createDetailedDepreciationTable(model);
+        const sensitivityPlaceholderHtml = '<div id="sensitivity-analysis-container"><!-- Konten analisis sensitivitas akan dirender di sini oleh skrip lain --></div>';
+
+        summaryContainer.innerHTML = `
+            <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-teal-600 pl-4">Analisis Keuangan & Kelayakan Investasi Proyek</h2>
+            <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+                <div class="p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 mb-6 text-sm">
+                    <strong>Disclaimer:</strong> Analisis ini adalah model proyeksi berdasarkan serangkaian asumsi yang wajar...
+                </div>
+                <div class="mb-8 pb-6 border-b">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Ringkasan Alokasi Biaya Investasi (CapEx)</h3>
+                    ${depreciationHtml}
+                </div>
+                <div id="investment-feasibility" class="mb-8 pb-6 border-b">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Metrik Kelayakan Investasi (Proyek Gabungan)</h3>
+                    ${metricsHtml}
+                </div>
+                ${sensitivityPlaceholderHtml}
+            </div>
+        `;
     }
 };
 
