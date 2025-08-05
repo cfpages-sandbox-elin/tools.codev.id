@@ -1,4 +1,4 @@
-// File: sier-math-finance.js
+// File: sier-math-finance.js safe translate
 // VERSI 3.0 LENGKAP - Arsitektur Modular Berbasis Skenario
 
 const sierMathFinance = {
@@ -13,6 +13,14 @@ const sierMathFinance = {
         target[lastKey] = value;
     },
 
+    _safeTranslate(key) {
+        if (typeof sierTranslate !== 'undefined' && sierTranslate.translate) {
+            return sierTranslate.translate(key);
+        }
+        // Fallback jika sierTranslate gagal dimuat
+        return (key || 'N/A').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    },
+
     _getDepreciationDetailsForScenario(components) {
         const depRates = projectConfig.assumptions.depreciation_years;
         let combinedCapex = {
@@ -22,14 +30,14 @@ const sierMathFinance = {
 
         components.forEach(compKey => {
             const capex = this._getFinancialsForComponent(compKey, 1).capexSchedule[0];
-            // Alokasikan capex ke kategori yang sesuai
             if (compKey === 'dr') {
                 const drDetails = this._calculateDrCapex().scenario_b;
                 combinedCapex.civil_construction += drDetails.htmlRows.find(r => r.label.includes('Tiang Pancang')).value;
                 combinedCapex.building += drDetails.htmlRows.find(r => r.label.includes('Bangunan')).value;
                 combinedCapex.equipment += drDetails.htmlRows.find(r => r.label.includes('Peralatan')).value;
             } else if (compKey.includes('padel')) {
-                const padelCapexConf = projectConfig.padel.scenarios[compKey === 'padel4' ? 'four_courts_combined' : 'two_courts_futsal_renovation'].capex;
+                const scenarioKey = compKey === 'padel4' ? 'four_courts_combined' : 'two_courts_futsal_renovation';
+                const padelCapexConf = projectConfig.padel.scenarios[scenarioKey].capex;
                 combinedCapex.building += this._calculateTotal(padelCapexConf.component_koperasi_new_build || {}) + this._calculateTotal(padelCapexConf.component_futsal_renovation || {});
                 combinedCapex.equipment += this._calculateTotal(padelCapexConf.sport_courts_equipment || {});
                 combinedCapex.other += this._calculateTotal(padelCapexConf.pre_operational || {});
@@ -50,12 +58,13 @@ const sierMathFinance = {
 
         for (const category in combinedCapex) {
             if (combinedCapex[category] > 0) {
-                const lifespan = depRates[category] || 10; // Default 10 tahun jika tidak ada
+                const lifespan = depRates[category] || 10;
                 const annualDepreciation = combinedCapex[category] / lifespan;
                 totalAnnualDepreciation += annualDepreciation;
                 
                 details.push({
-                    category: sierTranslate.translate(category),
+                    // GUNAKAN FUNGSI AMAN YANG BARU
+                    category: this._safeTranslate(category), 
                     capexValue: combinedCapex[category],
                     lifespan: lifespan,
                     lifespanPath: `assumptions.depreciation_years.${category}`,
