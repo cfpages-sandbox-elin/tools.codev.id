@@ -1,9 +1,7 @@
 // File: sier-translate.js
-// Berisi kamus dan logika untuk menerjemahkan kunci variabel internal
-// menjadi label yang mudah dibaca oleh pengguna.
+// VERSI DIPERBARUI - Syntax Error Diperbaiki
 
 const sierTranslate = {
-    // Kamus utama untuk terjemahan
     keyTranslations: {
         'tax_rate_profit': 'Tarif Pajak Penghasilan',
         'discount_rate_wacc': 'Tingkat Diskonto (WACC)',
@@ -12,7 +10,6 @@ const sierTranslate = {
         'weekend_days_in_month': 'Hari Libur / Bulan',
         'operational_hours_per_day': 'Jam Operasional / Hari',
         'cogs_rate_fnb': 'HPP (COGS) F&B',
-        // CapEx
         'reclamation': 'Reklamasi',
         'piling': 'Pondasi Pancang',
         'building': 'Konstruksi Bangunan',
@@ -43,7 +40,6 @@ const sierTranslate = {
         'safety_net_cost_per_m2': 'Harga Jaring/m²',
         'mep_rate_of_building_cost': 'Rate MEP dari Biaya Bangunan',
         'permit_design_rate_of_physical_cost': 'Rate Izin & Desain dari Biaya Fisik',
-        // Opex
         'salaries_wages': 'Gaji & Upah',
         'manager': 'Manajer',
         'supervisor': 'Supervisor',
@@ -58,7 +54,6 @@ const sierTranslate = {
         'maintenance_repair': 'Perawatan & Perbaikan',
         'rent_land': 'Sewa Lahan',
         'other_operational': 'Biaya Operasional Lainnya',
-        // Revenue
         'main_revenue': 'Pendapatan Utama (Sewa)',
         'bays': 'Jumlah Bay',
         'price_per_100_balls': 'Harga / 100 Bola',
@@ -69,7 +64,6 @@ const sierTranslate = {
         'ancillary_revenue': 'Pendapatan Tambahan',
         'fnb_avg_spend': 'Belanja F&B Rata-rata',
         'pro_shop_sales': 'Penjualan Pro Shop (Estimasi)',
-        // Common
         'weekday': 'Hari Kerja',
         'weekend': 'Akhir Pekan',
         'weekday_offpeak': 'Hr Kerja (Sepi)',
@@ -128,8 +122,9 @@ const sierTranslate = {
         'land_preparation': 'Persiapan Lahan',
         'foundation_works': 'Pekerjaan Pondasi',
         'main_structure': 'Struktur Utama Bangunan',
-        'finishing_lounge_etc': 'Finishing, Lounge, dll'
-        // tambahan
+        'finishing_lounge_etc': 'Finishing, Lounge, dll', // INI KOMA YANG HILANG
+        
+        // --- TAMBAHAN BARU ---
         'financing_scenarios': 'Skenario Pendanaan',
         'full_equity': '100% Modal Sendiri',
         'debt_and_equity': 'Kombinasi Hutang & Modal',
@@ -148,9 +143,10 @@ const sierTranslate = {
     },
 
     translate(key) {
-        if (this.keyTranslations[key]) {
+        if (this.keyTranslations && this.keyTranslations[key]) {
             return this.keyTranslations[key];
         }
+        // Fallback: jika tidak ditemukan, format kunci secara otomatis.
         return key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
 };
