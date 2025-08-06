@@ -1,4 +1,4 @@
-// File: sier-visual-finance-details.js bikin komplit skenario
+// File: sier-visual-finance-details.js ganti scenariokey ke scenarioconfig
 const sierVisualFinanceDetails = {
     _renderUnitSummaries(individualResults) {
         let html = '';
@@ -45,7 +45,7 @@ const sierVisualFinanceDetails = {
         `;
     },
 
-    _renderOpexDetailsVisuals(model, scenarioKey) {
+    _renderOpexDetailsVisuals(model, scenarioConfig) {
         const container = document.getElementById('opex-details-container');
         if (!container) return;
         let tablesHtml = [];
@@ -88,10 +88,11 @@ const sierVisualFinanceDetails = {
         };
         
         // Logika Kondisional: Tampilkan tabel OpEx hanya untuk unit yang ada di skenario
-        if (scenarioKey.includes('dr')) tablesHtml.push(createUnitOpexTable('drivingRange', 'Driving Range'));
-        if (scenarioKey.includes('padel4')) tablesHtml.push(createUnitOpexTable('padel', 'Padel (4 Lapangan)', 'four_courts_combined'));
-        if (scenarioKey.includes('padel2')) tablesHtml.push(createUnitOpexTable('padel', 'Padel (2 Lapangan)', 'two_courts_futsal_renovation'));
-        if (scenarioKey.includes('mp')) tablesHtml.push(createUnitOpexTable('meetingPoint', 'Meeting Point'));
+        if (scenarioConfig.dr && scenarioConfig.dr !== 'none') tablesHtml.push(createUnitOpexTable('drivingRange', 'Driving Range'));
+        if (scenarioConfig.padel === '4courts') tablesHtml.push(createUnitOpexTable('padel', 'Padel (4 Lapangan)', 'four_courts_combined'));
+        if (scenarioConfig.padel === '2courts') tablesHtml.push(createUnitOpexTable('padel', 'Padel (2 Lapangan)', 'two_courts_futsal_renovation'));
+        if (scenarioConfig.mp && scenarioConfig.mp !== 'none') tablesHtml.push(createUnitOpexTable('meetingPoint', 'Meeting Point'));
+
         if (tablesHtml.length > 0) {
             container.innerHTML = `
                 <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-amber-500 pl-4">Rincian Estimasi Biaya Operasional (OpEx) Bulanan</h2>
@@ -134,7 +135,7 @@ const sierVisualFinanceDetails = {
         return `<div class="bg-${colorClass}-50 p-4 rounded-lg border border-${colorClass}-200"><h4 class="font-bold text-lg text-${colorClass}-800 mb-2">${config.title || title}</h4><table class="w-full text-sm"><tbody class="divide-y divide-${colorClass}-200">${rowsHtml}</tbody></table></div>`;
     },
 
-    _renderAssumptionsVisuals(scenarioKey) {
+    _renderAssumptionsVisuals(scenarioConfig) {
         const container = document.getElementById('assumptions-container');
         if (!container) return;
 
@@ -183,16 +184,16 @@ const sierVisualFinanceDetails = {
 
         let operationalAssumptionsHtml = '<h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-amber-500 pl-4 mt-12">Asumsi Operasional (Sesuai Skenario Proyek)</h2><div class="grid grid-cols-1 lg:grid-cols-2 gap-6">';
         
-        if (scenarioKey.includes('dr')) {
+        if (scenarioConfig.dr && scenarioConfig.dr !== 'none') {
             operationalAssumptionsHtml += this._createOperationalAssumptionsCard(projectConfig.drivingRange, 'Driving Range', 'drivingRange', 'blue');
         }
-        if (scenarioKey.includes('padel4')) {
+        if (scenarioConfig.padel === '4courts') {
             operationalAssumptionsHtml += this._createOperationalAssumptionsCard(projectConfig.padel.scenarios.four_courts_combined, 'Padel (4 Lapangan)', 'padel.scenarios.four_courts_combined', 'purple');
         }
-        if (scenarioKey.includes('padel2')) {
+        if (scenarioConfig.padel === '2courts') {
             operationalAssumptionsHtml += this._createOperationalAssumptionsCard(projectConfig.padel.scenarios.two_courts_futsal_renovation, 'Padel (2 Lapangan)', 'padel.scenarios.two_courts_futsal_renovation', 'purple');
         }
-        if (scenarioKey.includes('mp')) {
+        if (scenarioConfig.mp && scenarioConfig.mp !== 'none') {
             operationalAssumptionsHtml += this._createOperationalAssumptionsCard(projectConfig.meetingPoint, 'Meeting Point', 'meetingPoint', 'cyan');
         }
         if (projectConfig.shared_revenue) {
@@ -737,8 +738,7 @@ const sierVisualFinanceDetails = {
         updateTotal();
     },
 
-
-    _renderInputAssumptionDetails(model, scenarioKey) {
+    _renderInputAssumptionDetails(model, scenarioConfig) {
         const clearContainer = (id) => { const el = document.getElementById(id); if (el) el.innerHTML = ''; };
         clearContainer('opex-details-container');
         clearContainer('driving-range-capex-details-container');
@@ -746,13 +746,14 @@ const sierVisualFinanceDetails = {
         clearContainer('shared-capex-details-container');
         clearContainer('meeting-point-capex-details-container');
 
-        this._renderOpexDetailsVisuals(model, scenarioKey);
-        if (scenarioKey.includes('dr')) this._renderDrCapexDetailsVisuals();
-        if (scenarioKey.includes('padel')) this._renderPadelCapexDetailsVisuals(scenarioKey);
-        if (scenarioKey.includes('mp')) this._renderMeetingPointCapexDetailsVisuals();
+        this._renderOpexDetailsVisuals(model, scenarioConfig);
+        if (scenarioConfig.dr && scenarioConfig.dr !== 'none') this._renderDrCapexDetailsVisuals();
+        if (scenarioConfig.padel) this._renderPadelCapexDetailsVisuals(scenarioConfig);
+        if (scenarioConfig.mp && scenarioConfig.mp !== 'none') this._renderMeetingPointCapexDetailsVisuals();
     },
 
-    render(model, scenarioKey) {
+    // --- FUNGSI UTAMA YANG DIPERBAIKI ---
+    render(model, scenarioConfig) {
         const unitSummariesHtml = this._renderUnitSummaries(model.individual);
         const assumptionsContainer = document.getElementById('financial-assumptions');
         if (assumptionsContainer) {
@@ -765,8 +766,8 @@ const sierVisualFinanceDetails = {
             summaryDiv.innerHTML = unitSummariesHtml;
         }
 
-        this._renderAssumptionsVisuals(scenarioKey);
-        this._renderInputAssumptionDetails(model, scenarioKey);
+        this._renderAssumptionsVisuals(scenarioConfig);
+        this._renderInputAssumptionDetails(model, scenarioConfig);
         console.log("[sier-visual-finance-details] Rincian per unit dan semua asumsi input telah dirender.");
     }
 };
