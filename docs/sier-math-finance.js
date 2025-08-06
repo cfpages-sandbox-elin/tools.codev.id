@@ -1,4 +1,4 @@
-// File: sier-math-finance.js (edan gila)
+// File: sier-math-finance.js (edan gila hadoh)
 const sierMathFinance = {
     getValueByPath(obj, path) {
         return path.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj);
@@ -390,7 +390,7 @@ const sierMathFinance = {
 
         const calculateScenarioCosts = (foundationCosts) => {
             const mep = a.mep_systems;
-            const physical_cost_base = foundationCosts + totalBuildingCost + totalEquipmentCost + totalSafetyNetCost + totalBayFurnitureCost;
+            const physical_cost_base = foundationCosts + totalBuildingCost + totalEquipmentCost + totalSafetyNetCost + totalBayFurnitureCost + totalSanitaryCost;
             const electrical_cost = physical_cost_base * mep.electrical_system.rate_of_physical_cost;
             const total_physical_cost = physical_cost_base + mep.plumbing_system.lump_sum_cost + electrical_cost;
             const permit_cost = total_physical_cost * a.other_costs.permit_design_rate_of_physical_cost;
