@@ -1,4 +1,4 @@
-// File: sier-visual-finance-details.js better padel capex
+// File: sier-visual-finance-details.js better padel capex detil pol
 const sierVisualFinanceDetails = {
     _renderUnitSummaries(individualResults) {
         let html = '';
@@ -367,14 +367,71 @@ const sierVisualFinanceDetails = {
             { label: 'Interior & Fasad Baru', detail: 'Lump Sum', cost: newBuild.interior_and_facade?.lump_sum }
         ]);
         
+        // Seksi 3: Peralatan Lapangan & Inventaris (Dibuat Manual untuk Rincian)
+        let section3Html = `<tbody class="bg-gray-100"><td colspan="3" class="p-3 font-bold text-gray-800">3. Peralatan Lapangan & Inventaris</td></tbody>`;
+        let section3Subtotal = 0;
+
+        // Bagian 3.1: Rincian Biaya per 1 Lapangan
         const eq = capex.sport_courts_equipment;
+        const perCourtCosts = eq.per_court_costs;
+        let singleCourtSubtotal = 0;
+        
+        for (const key in perCourtCosts) {
+            const cost = perCourtCosts[key] || 0;
+            singleCourtSubtotal += cost;
+            section3Html += `
+                <tr class="hover:bg-gray-50">
+                    <td class="px-3 py-2 pl-12 text-gray-800">${sierTranslate.translate(key)}</td>
+                    <td class="px-3 py-2 text-gray-600 text-xs">Biaya per 1 Lapangan</td>
+                    <td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(cost))}</td>
+                </tr>`;
+        }
+
+        // Tambahkan baris Subtotal per 1 Lapangan
+        section3Html += `
+            <tr class="font-semibold bg-gray-50">
+                <td class="px-3 py-2 text-right" colspan="2">Subtotal Biaya per 1 Lapangan</td>
+                <td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(singleCourtSubtotal))}</td>
+            </tr>`;
+
+        // Bagian 3.2: Total Biaya untuk Semua Lapangan & Inventaris
         const numCourts = scenarioConfig.num_courts;
-        const courtCost = sierMathFinance._calculateTotal(eq.per_court_costs);
-        tableBodyHtml += createSection('3. Peralatan Lapangan & Inventaris', [
-            { label: 'Total Biaya Struktur Lapangan', detail: `${numCourts} lapangan × Rp ${sierHelpers.formatNumber(courtCost)}`, cost: numCourts * courtCost },
-            { label: 'Raket Sewa', detail: `${eq.initial_inventory.rental_rackets.quantity} buah`, cost: eq.initial_inventory.rental_rackets.quantity * eq.initial_inventory.rental_rackets.unit_cost },
-            { label: 'Tabung Bola', detail: `${eq.initial_inventory.ball_tubes.quantity} buah`, cost: eq.initial_inventory.ball_tubes.quantity * eq.initial_inventory.ball_tubes.unit_cost }
-        ]);
+        const totalCourtCost = singleCourtSubtotal * numCourts;
+        section3Subtotal += totalCourtCost;
+        section3Html += `
+            <tr class="font-bold bg-white">
+                <td class="px-3 py-2 pl-8">Total Biaya Struktur (${numCourts} Lapangan)</td>
+                <td class="px-3 py-2 text-gray-600 text-xs">${numCourts} lapangan × Rp ${sierHelpers.formatNumber(Math.round(singleCourtSubtotal))}</td>
+                <td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(totalCourtCost))}</td>
+            </tr>`;
+
+        const rentalCost = (eq.initial_inventory.rental_rackets.quantity * eq.initial_inventory.rental_rackets.unit_cost) || 0;
+        section3Subtotal += rentalCost;
+        section3Html += `
+            <tr class="bg-white hover:bg-gray-50">
+                <td class="px-3 py-2 pl-8">Inventaris: Raket Sewa</td>
+                <td class="px-3 py-2 text-gray-600 text-xs">${eq.initial_inventory.rental_rackets.quantity} buah</td>
+                <td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(rentalCost))}</td>
+            </tr>`;
+
+        const ballCost = (eq.initial_inventory.ball_tubes.quantity * eq.initial_inventory.ball_tubes.unit_cost) || 0;
+        section3Subtotal += ballCost;
+        section3Html += `
+            <tr class="bg-white hover:bg-gray-50">
+                <td class="px-3 py-2 pl-8">Inventaris: Tabung Bola</td>
+                <td class="px-3 py-2 text-gray-600 text-xs">${eq.initial_inventory.ball_tubes.quantity} buah</td>
+                <td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(ballCost))}</td>
+            </tr>`;
+        
+        // Tambahkan baris Subtotal untuk seluruh Seksi 3
+        section3Html += `
+            <tr class="font-semibold bg-gray-200">
+                <td class="px-3 py-2 text-right" colspan="2">Subtotal Peralatan Lapangan & Inventaris</td>
+                <td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(section3Subtotal))}</td>
+            </tr>`;
+        
+        tableBodyHtml += section3Html;
+        grandSubtotal += section3Subtotal;
 
         const contingency = grandSubtotal * projectConfig.assumptions.contingency_rate;
         const grandTotal = grandSubtotal + contingency;
