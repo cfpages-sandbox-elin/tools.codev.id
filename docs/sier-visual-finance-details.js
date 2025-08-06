@@ -1,4 +1,4 @@
-// File: sier-visual-finance-details.js ganti scenarioConfig ke scenarioconfig2
+// File: sier-visual-finance-details.js ganti scenariokey ke scenarioconfig3
 const sierVisualFinanceDetails = {
     _renderUnitSummaries(individualResults) {
         let html = '';
@@ -312,8 +312,8 @@ const sierVisualFinanceDetails = {
         const container = document.getElementById('padel-capex-details-container');
         if (!container) return;
 
-        const padelscenarioConfig = scenarioConfig.includes('padel4') ? 'four_courts_combined' : 'two_courts_futsal_renovation';
-        const scenarioConfig = projectConfig.padel.scenarios[padelscenarioConfig];
+        const padelScenarioKey = scenarioConfig.includes('padel4') ? 'four_courts_combined' : 'two_courts_futsal_renovation';
+        const scenarioConfig = projectConfig.padel.scenarios[padelScenarioKey];
         if (!scenarioConfig) return;
 
         let tableBodyHtml = '';
