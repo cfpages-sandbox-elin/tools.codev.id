@@ -1,4 +1,4 @@
-// File: sier-visual-finance-details.js mp detil pol
+// File: sier-visual-finance-details.js mp detil pol + fix loop
 const sierVisualFinanceDetails = {
     _renderUnitSummaries(individualResults) {
         let html = '';
@@ -218,33 +218,22 @@ const sierVisualFinanceDetails = {
         const createSection = (title, items) => {
             let sectionHtml = `<tbody class="bg-gray-100"><td colspan="3" class="p-3 font-bold text-gray-800">${title}</td></tbody>`;
             let sectionSubtotal = 0;
-
             items.forEach(item => {
-                // PERBAIKAN KECANGGIHAN: Gunakan '|| 0' untuk memastikan 'cost' selalu berupa angka.
                 const itemCost = item.cost || 0;
-                sectionSubtotal += itemCost;
-                sectionHtml += `
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-3 py-2 pl-8">${item.label}</td>
-                        <td class="px-3 py-2 text-gray-600 text-xs">${item.detail}</td>
-                        <td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(itemCost))}</td>
-                    </tr>
-                `;
+                if (itemCost > 0) {
+                    sectionSubtotal += itemCost;
+                    sectionHtml += `<tr class="hover:bg-gray-50"><td class="px-3 py-2 pl-8">${item.label}</td><td class="px-3 py-2 text-gray-600 text-xs">${item.detail}</td><td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(itemCost))}</td></tr>`;
+                }
             });
-
-            sectionHtml += `
-                <tr class="font-semibold bg-gray-200">
-                    <td class="px-3 py-2 text-right" colspan="2">Subtotal ${title}</td>
-                    <td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(sectionSubtotal))}</td>
-                </tr>
-            `;
-            
-            // PERBAIKAN KECANGGIHAN: Pastikan subtotal juga valid sebelum ditambahkan ke total utama.
-            grandSubtotal += sectionSubtotal || 0;
-            return sectionHtml;
+            if (sectionSubtotal > 0) {
+                sectionHtml += `<tr class="font-semibold bg-gray-200"><td class="px-3 py-2 text-right" colspan="2">Subtotal ${title}</td><td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(sectionSubtotal))}</td></tr>`;
+                grandSubtotal += sectionSubtotal;
+                return sectionHtml;
+            }
+            return '';
         };
 
-        // --- Definisikan item untuk setiap seksi ---
+        // --- Definisikan dan render setiap seksi secara berurutan ---
 
         const pil = a.piling;
         tableBodyHtml += createSection('1. Pekerjaan Sipil & Pondasi', [
@@ -287,8 +276,8 @@ const sierVisualFinanceDetails = {
         const mep = a.mep_systems;
         const electricalCost = grandSubtotal * mep.electrical_system.rate_of_physical_cost;
         const permitCost = grandSubtotal * a.other_costs.permit_design_rate_of_physical_cost;
+        
         tableBodyHtml += createSection('6. Sistem MEP & Biaya Lain-lain', [
-            // Baris HVAC dihapus dari sini
             { label: 'Sistem Plumbing', detail: 'Lump Sum', cost: mep.plumbing_system.lump_sum_cost },
             { label: 'Sistem Elektrikal', detail: `${(mep.electrical_system.rate_of_physical_cost * 100)}% dari Subtotal Fisik`, cost: electricalCost },
             { label: 'Izin & Konsultan Desain', detail: `${(a.other_costs.permit_design_rate_of_physical_cost * 100)}% dari Subtotal Fisik`, cost: permitCost }
@@ -555,65 +544,63 @@ const sierVisualFinanceDetails = {
             let subtotal = 0;
             let rowsHtml = '';
 
+            // Loop ini sekarang akan berjalan sampai selesai untuk SEMUA item
             for (const key in baseCosts) {
                 const item = baseCosts[key];
                 const label = sierHelpers.safeTranslate(key);
             
-            // Cek jika item adalah kategori dengan rincian (memiliki properti 'items')
-            if (item && typeof item === 'object' && item.items) {
-                let categoryTotal = 0;
-                // Tambahkan baris header untuk kategori ini
-                rowsHtml += `<tr class="bg-gray-50 font-semibold"><td class="px-3 py-2" colspan="3">${item.title || label}</td></tr>`;
-                
-                // Loop melalui setiap sub-item di dalam rincian
-                for (const subKey in item.items) {
-                    const subItem = item.items[subKey];
-                    const subLabel = sierHelpers.safeTranslate(subKey);
+                if (item && typeof item === 'object' && item.items) {
+                    let categoryTotal = 0;
+                    rowsHtml += `<tr class="bg-gray-50 font-semibold"><td class="px-3 py-2" colspan="3">${item.title || label}</td></tr>`;
+                    
+                    for (const subKey in item.items) {
+                        const subItem = item.items[subKey];
+                        const subLabel = sierHelpers.safeTranslate(subKey);
+                        let itemTotal = 0;
+                        let detailHtml = '';
+
+                        if (subItem.lump_sum) {
+                            itemTotal = subItem.lump_sum;
+                            detailHtml = 'Lump Sum';
+                        } else if (subItem.area_m2 && subItem.cost_per_m2) {
+                            itemTotal = subItem.area_m2 * subItem.cost_per_m2;
+                            detailHtml = `${subItem.area_m2} m² @ Rp ${sierHelpers.formatNumber(subItem.cost_per_m2)}`;
+                        }
+                        
+                        categoryTotal += itemTotal;
+                        rowsHtml += `
+                            <tr>
+                                <td class="px-3 py-2 text-gray-600 pl-8">${subLabel}</td>
+                                <td class="px-3 py-2 text-gray-500 text-xs">${detailHtml}</td>
+                                <td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(itemTotal)}</td>
+                            </tr>
+                        `;
+                    }
+                    subtotal += categoryTotal;
+                } 
+                else {
                     let itemTotal = 0;
                     let detailHtml = '';
-
-                    if (subItem.lump_sum) {
-                        itemTotal = subItem.lump_sum;
+                    if (typeof item === 'number') {
+                        itemTotal = item;
                         detailHtml = 'Lump Sum';
-                    } else if (subItem.area_m2 && subItem.cost_per_m2) {
-                        itemTotal = subItem.area_m2 * subItem.cost_per_m2;
-                        detailHtml = `${subItem.area_m2} m² @ Rp ${sierHelpers.formatNumber(subItem.cost_per_m2)}`;
+                    } else if (item.lump_sum) {
+                        itemTotal = item.lump_sum;
+                        detailHtml = 'Lump Sum';
+                    } else if (item.area_m2 && item.cost_per_m2) {
+                        itemTotal = item.area_m2 * item.cost_per_m2;
+                        detailHtml = `${item.area_m2} m² @ Rp ${sierHelpers.formatNumber(item.cost_per_m2)}`;
                     }
-                    
-                    categoryTotal += itemTotal;
+                    subtotal += itemTotal;
                     rowsHtml += `
                         <tr>
-                            <td class="px-3 py-2 text-gray-600 pl-8">${subLabel}</td>
+                            <td class="px-3 py-2 text-gray-600">${label}</td>
                             <td class="px-3 py-2 text-gray-500 text-xs">${detailHtml}</td>
                             <td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(itemTotal)}</td>
                         </tr>
                     `;
                 }
-                subtotal += categoryTotal;
-            } 
-            // Jika item adalah biaya tunggal (bukan kategori)
-            else {
-                let itemTotal = 0;
-                let detailHtml = '';
-                if (typeof item === 'number') {
-                    itemTotal = item;
-                    detailHtml = 'Lump Sum';
-                } else if (item.lump_sum) {
-                    itemTotal = item.lump_sum;
-                    detailHtml = 'Lump Sum';
-                } else if (item.area_m2 && item.cost_per_m2) {
-                    itemTotal = item.area_m2 * item.cost_per_m2;
-                    detailHtml = `${item.area_m2} m² @ Rp ${sierHelpers.formatNumber(item.cost_per_m2)}`;
-                }
-                subtotal += itemTotal;
-                rowsHtml += `
-                    <tr>
-                        <td class="px-3 py-2 text-gray-600">${label}</td>
-                        <td class="px-3 py-2 text-gray-500 text-xs">${detailHtml}</td>
-                        <td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(itemTotal)}</td>
-                    </tr>
-                `;
-            }
+            } // <-- LOOP BERAKHIR DI SINI
 
             return `
                 <div class="mb-8">
