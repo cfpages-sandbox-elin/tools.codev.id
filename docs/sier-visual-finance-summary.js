@@ -1,5 +1,50 @@
-// File: sier-visual-finance-summary.js pecah sier-math-finance.js
+// File: sier-visual-finance-summary.js pecah sier-math-finance.js dan sier-visual-finance-details.js
 const sierVisualFinanceSummary = {
+    _renderUnitSummaries(individualResults) {
+        let html = '';
+        const titles = {
+            dr: 'Driving Range',
+            padel4: 'Padel (4 Lapangan)',
+            padel2: 'Padel (2 Lapangan)',
+            mp: 'Meeting Point',
+            shared: 'Fasilitas Umum',
+            digital: 'Sistem Digital'
+        };
+
+        for (const key in individualResults) {
+            const unit = individualResults[key];
+            const initialCapex = unit.capexSchedule[0];
+            if (initialCapex === 0 && (unit.revenue.every(r => r === 0))) continue; // Skip jika tidak ada data
+
+            const avgAnnualRevenue = unit.revenue.length > 1 ? unit.revenue.slice(1).reduce((a, b) => a + b, 0) / 10 : 0;
+            const avgAnnualOpex = unit.opex.length > 1 ? unit.opex.slice(1).reduce((a, b) => a + b, 0) / 10 : 0;
+            const avgAnnualProfitContribution = avgAnnualRevenue - avgAnnualOpex;
+
+            html += `
+                <div class="bg-white p-4 rounded-lg shadow-md border-l-4 border-gray-400">
+                    <h4 class="text-lg font-bold text-gray-800">${titles[key] || key}</h4>
+                    <table class="w-full text-sm mt-2">
+                        <tbody>
+                            <tr><td class="py-1">Investasi Awal (CapEx)</td><td class="py-1 text-right font-mono font-semibold">Rp ${sierHelpers.formatNumber(Math.round(initialCapex))}</td></tr>
+                            ${avgAnnualRevenue > 0 ? `
+                            <tr><td class="py-1">Rata-rata Pendapatan/Tahun</td><td class="py-1 text-right font-mono">Rp ${sierHelpers.formatNumber(Math.round(avgAnnualRevenue))}</td></tr>
+                            <tr><td class="py-1">Rata-rata Biaya/Tahun</td><td class="py-1 text-right font-mono">(${sierHelpers.formatNumber(Math.round(avgAnnualOpex))})</td></tr>
+                            <tr class="font-bold border-t"><td class="py-1">Kontribusi Laba Kotor Rata-rata</td><td class="py-1 text-right font-mono text-green-700">Rp ${sierHelpers.formatNumber(Math.round(avgAnnualProfitContribution))}</td></tr>
+                            ` : ''}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        const container = document.getElementById('unit-summaries-section');
+        if (container) {
+            container.innerHTML = `
+                <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-gray-500 pl-4">Ringkasan per Komponen Proyek</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">${html}</div>`;
+        }
+    },
+
     _createFeasibilityMetricsCard(metrics) {
         if (!metrics) return '<p>Gagal memuat metrik.</p>';
         const { paybackPeriod, discountedPaybackPeriod, npv, irr, profitabilityIndex } = metrics;
@@ -129,6 +174,7 @@ const sierVisualFinanceSummary = {
         }
 
         projectionContainer.style.display = 'block'; // Pastikan div ini terlihat
+        this._renderUnitSummaries(model.individual);
         const { combined } = model;
         
         // --- RENDER KONTEN UNTUK BAGIAN PROYEKSI & RINCIAN DETAIL ---

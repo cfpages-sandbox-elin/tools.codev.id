@@ -1,4 +1,4 @@
-// File: sier-visual.js pecah sier-math-finance.js
+// File: sier-visual.js pecah sier-math-finance.js dan sier-visual-finance-details.js
 function applyAutomaticCaptionsAndNumbering() {
     const allHeadings = document.querySelectorAll('h2, h3, h4, h5');
 
@@ -166,7 +166,8 @@ document.addEventListener('DOMContentLoaded', () => {
         sierHelpers.tryToRender(() => sierChart.renderAllCharts(scenarioConfig));
         sierHelpers.tryToRender(() => sierVisualImpact.render(model));
         sierHelpers.tryToRender(() => sierVisualFinanceSummary.render(model));
-        sierHelpers.tryToRender(() => sierVisualFinanceDetails.render(model, scenarioConfig));
+        sierHelpers.tryToRender(() => sierVisualFinanceAssumptions.render(scenarioConfig));
+        sierHelpers.tryToRender(() => sierVisualFinanceBreakdowns.render(model, scenarioConfig));
         sierHelpers.tryToRender(() => sierVisualSensitivity.render(sensitivityData));
         
         // Proses akhir
