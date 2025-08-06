@@ -1,4 +1,4 @@
-// File: sier-visual-finance-details.js hitungan lebih betul
+// File: sier-visual-finance-details.js dr koreksi total + hapus shared
 const sierVisualFinanceDetails = {
     _renderUnitSummaries(individualResults) {
         let html = '';
@@ -253,14 +253,14 @@ const sierVisualFinanceDetails = {
 
         // 2. Konstruksi Bangunan
         const bld = a.building;
-        const derivedBayWidth = (bld.dr_bays_area_m2 / site.building_length_m).toFixed(1);
-        const bayConstructionCost = bld.dr_bays_area_m2 * bld.dr_bays_cost_per_m2;
-        const cafeConstructionCost = bld.cafe_area_m2 * bld.cafe_cost_per_m2;
-        const lockersConstructionCost = bld.lockers_mushola_area_m2 * bld.lockers_mushola_cost_per_m2;
+        const bayLength = bld.dr_bays_length_m;
+        const bayWidth = bld.dr_bays_width_m;
+        const bayArea = bayLength * bayWidth;
+        const bayCostPerM2 = bld.dr_bays_cost_per_m2;
+        const bayConstructionCost = bayArea * bayCostPerM2;
         tableBodyHtml += createSection('2. Konstruksi Bangunan', [
-            { label: 'Struktur Bay Driving Range', detail: `(${site.building_length_m}m × ${derivedBayWidth}m) = ${bld.dr_bays_area_m2} m² × Rp ${sierHelpers.formatNumber(bld.dr_bays_cost_per_m2)}/m²`, cost: bayConstructionCost },
-            { label: 'Struktur Kafe & Lounge', detail: `${bld.cafe_area_m2} m² × Rp ${sierHelpers.formatNumber(bld.cafe_cost_per_m2)}/m²`, cost: cafeConstructionCost },
-            { label: 'Struktur Loker & Mushola', detail: `${bld.lockers_mushola_area_m2} m² × Rp ${sierHelpers.formatNumber(bld.lockers_mushola_cost_per_m2)}/m²`, cost: lockersConstructionCost }
+            { label: 'Struktur Bay Driving Range', detail: `(${bayLength}m × ${bayWidth}m) = ${bayArea} m² × Rp ${sierHelpers.formatNumber(bayCostPerM2)}/m²`, cost: bayConstructionCost }
+            // Item untuk 'Struktur Area Loker' telah dihapus
         ]);
         
         // 3. Peralatan & Teknologi Inti
@@ -603,7 +603,6 @@ const sierVisualFinanceDetails = {
         if (scenarioKey.includes('dr')) this._renderDrCapexDetailsVisuals();
         if (scenarioKey.includes('padel')) this._renderPadelCapexDetailsVisuals(scenarioKey);
         if (scenarioKey.includes('mp')) this._renderMeetingPointCapexDetailsVisuals();
-        if (scenarioKey !== 'padel2_mp') this._renderSharedCapexVisuals();
     },
 
     render(model, scenarioKey) {

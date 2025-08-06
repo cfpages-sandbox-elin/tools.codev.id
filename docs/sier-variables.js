@@ -1,4 +1,4 @@
-// File: sier-variables.js munculkan sensitivity
+// File: sier-variables.js dr koreksi total + hapus shared
 const projectConfig = {};
 
 projectConfig.site_parameters = {
@@ -199,12 +199,9 @@ projectConfig.drivingRange = {
         reclamation: { area_m2: 1000, lake_depth_m: 4.0, cost_per_m3: 350000, sheet_pile_perimeter_m: 140, cost_per_m_sheet_pile: 2500000 },
         piling: { points_count: 80, length_per_point_m: 16, cost_per_m_mini_pile: 275000, lump_sum_pile_cap: 250000000 },
         building: {
-            dr_bays_area_m2: 4361,
-            dr_bays_cost_per_m2: 2500000,
-            cafe_area_m2: 267,
-            cafe_cost_per_m2: 5000000,
-            lockers_mushola_area_m2: 150,
-            lockers_mushola_cost_per_m2: 3500000
+            dr_bays_length_m: 85,
+            dr_bays_width_m: 12,
+            dr_bays_cost_per_m2: 2500000
         },
         equipment: {
             premium_bays: { percentage_of_total: 0.4, cost_per_bay_ball_tracker: 120000000, cost_per_bay_dispenser: 25000000, },
@@ -437,36 +434,6 @@ projectConfig.padel = {
                 maintenance_repair: 10000000,
                 other_operational: 8000000
             }
-        }
-    }
-};
-
-projectConfig.shared_facilities_capex = {
-    title: "Biaya Investasi Fasilitas Umum (Shared)",
-    notes: "Biaya ini digunakan bersama oleh Driving Range dan Padel, dan dialokasikan sebagai biaya proyek umum. Ini adalah fasilitas yang berdiri sendiri terpisah dari bangunan utama DR dan Padel.",
-    cafe: {
-        title: "Kafe & Titik Pertemuan (267 m²)",
-        area_m2: 267,
-        items: {
-            construction: { description: "Konstruksi & Finishing Interior", quantity: 267, unit: "m²", unit_cost: 4000000 },
-            kitchen_equipment: { description: "Peralatan Dapur & Bar Profesional", lump_sum: 150000000 },
-            furniture: { description: "Furnitur (Meja, Kursi, Sofa)", lump_sum: 80000000 }
-        }
-    },
-    parking_area: {
-        title: "Area Parkir (607.5 m²)",
-        area_m2: 607.5,
-        items: {
-            paving: { description: "Perkerasan (Paving Block/Aspal)", quantity: 607.5, unit: "m²", unit_cost: 250000 },
-            lighting: { description: "Tiang Lampu & Instalasi Penerangan", quantity: 10, unit: "titik", unit_cost: 5000000 },
-            marking: { description: "Pengecatan Marka Parkir", lump_sum: 10000000 }
-        }
-    },
-    road_access: {
-        title: "Akses Jalan (217.5 m²)",
-        area_m2: 217.5,
-        items: {
-            paving: { description: "Perkerasan Jalan Akses", quantity: 217.5, unit: "m²", unit_cost: 300000 }
         }
     }
 };
