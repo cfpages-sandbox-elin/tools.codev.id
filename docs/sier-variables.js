@@ -1,4 +1,4 @@
-// File: sier-variables.js mp detil pol 2
+// File: sier-variables.js padel komplit
 const projectConfig = {};
 
 projectConfig.site_parameters = {
@@ -293,24 +293,29 @@ projectConfig.padel = {
                 }
             },
             capex: {
-                title: "Estimasi Biaya Investasi - Skenario 2 Lapangan",
+                title: "Estimasi Biaya Investasi - Skenario 2 Lapangan (Renovasi)",
                 pre_operational: {
                     permits_and_consulting: 25000000,
-                    initial_marketing: 30000000
+                    initial_marketing: 30000000,
+                    mobilization: 5000000,
+                    construction_overhead: 5000000,
+                    general_labor_tools: 3500000
                 },
                 renovation_futsal: {
                     minor_demolition_and_clearing: { lump_sum: 15000000 },
-                    toilet_demolition_and_relocation: { lump_sum: 20000000 },
-                    floor_repair_and_leveling: { area_m2: 500, cost_per_m2: 150000 },
-                    interior_finishing_painting: { area_m2: 500, cost_per_m2: 200000 }
+                    floor_repair_and_leveling: { area_m2: 400, cost_per_m2: 250000 },
+                    industrial_fans: { quantity: 2, unit_cost: 2000000 },
+                    toilet_demolition_and_relocation: { lump_sum: 20000000 }
                 },
                 sport_courts_equipment: {
                     per_court_costs: {
-                        steel_structure: 95000000,
-                        tempered_glass_12mm: 140000000,
-                        artificial_turf_carpet: 55000000,
-                        lighting_system_8_lamps: 30000000,
-                        net_and_posts: 7500000
+                        civil_works_concrete: { area_m2: 200, cost_per_m2: 450000 },
+                        steel_structure: { quantity: 12, unit_cost: 4500000 },
+                        tempered_glass_10mm: { area_m2: 84, cost_per_m2: 1800000 },
+                        synthetic_turf: { area_m2: 200, cost_per_m2: 380000 },
+                        silica_sand_infill: { quantity: 1000, unit_cost: 2000 },
+                        lighting_and_electrical: { lump_sum: 39400000 }, // Gabungan Tiang, Lampu, Panel
+                        net_and_gate: { lump_sum: 13000000 } // Gabungan Net dan Pintu
                     },
                     initial_inventory: {
                         rental_rackets: { quantity: 10, unit_cost: 1000000 },
@@ -381,35 +386,36 @@ projectConfig.padel = {
                 title: "Estimasi Biaya Investasi - Skenario 4 Lapangan",
                 pre_operational: {
                     permits_and_consulting: 40000000,
-                    initial_marketing: 45000000
+                    initial_marketing: 45000000,
+                    mobilization: 5000000,
+                    construction_overhead: 5000000,
+                    general_labor_tools: 3500000
                 },
                 component_futsal_renovation: {
                     minor_demolition_and_clearing: { lump_sum: 15000000 },
-                    toilet_demolition_and_relocation: { lump_sum: 20000000 },
-                    floor_repair_and_leveling: { area_m2: 500, cost_per_m2: 150000 },
-                    interior_finishing_painting: { area_m2: 500, cost_per_m2: 200000 }
+                    floor_repair_and_leveling: { area_m2: 400, cost_per_m2: 250000 },
+                    toilet_demolition_and_relocation: { lump_sum: 20000000 } // <-- TAMBAHKAN KEMBALI BARIS INI
                 },
                 component_koperasi_new_build: {
-                    land_preparation_and_foundation: { area_m2: 600, cost_per_m2: 400000 },
-                    building_structure_2_courts: { area_m2: 600, cost_per_m2: 2000000 },
-                    interior_and_facade: { lump_sum: 250000000 },
-                    building_demolition: { 
-                        area_m2: projectConfig.site_parameters.padel.demolition_area_koperasi_m2, 
-                        cost_per_m2: 250000
-                    },
-                    plumbing_and_sanitary: {
+                    building_demolition: { area_m2: projectConfig.site_parameters.padel.demolition_area_koperasi_m2, cost_per_m2: 250000 },
+                    land_preparation_and_foundation: { area_m2: 400, cost_per_m2: 400000 },
+                    building_structure_2_courts: { area_m2: 400, cost_per_m2: 2000000 },
+                    industrial_fans: { quantity: 4, unit_cost: 2000000 },
+                    plumbing_and_sanitary: { // <-- TAMBAHKAN OBJEK INI
                         toilet_unit: 4,
-                        area_m2: 3.2, // (4 unit toilet x (1.6m x 2.0m))
+                        area_m2_per_toilet: 3.2,
                         cost_per_m2: 7812500
                     }
                 },
                 sport_courts_equipment: {
                     per_court_costs: {
-                        steel_structure: 95000000,
-                        tempered_glass_12mm: 140000000,
-                        artificial_turf_carpet: 55000000,
-                        lighting_system_8_lamps: 30000000,
-                        net_and_posts: 7500000
+                        civil_works_concrete: { area_m2: 200, cost_per_m2: 450000 },
+                        steel_structure: { quantity: 12, unit_cost: 4500000 },
+                        tempered_glass_10mm: { area_m2: 84, cost_per_m2: 1800000 },
+                        synthetic_turf: { area_m2: 200, cost_per_m2: 380000 },
+                        silica_sand_infill: { quantity: 1000, unit_cost: 2000 },
+                        lighting_and_electrical: { lump_sum: 39400000 }, // Gabungan Tiang, Lampu, Panel
+                        net_and_gate: { lump_sum: 13000000 } // Gabungan Net dan Pintu
                     },
                     initial_inventory: {
                         rental_rackets: { quantity: 20, unit_cost: 1000000 },

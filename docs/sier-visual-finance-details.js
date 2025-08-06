@@ -1,4 +1,4 @@
-// File: sier-visual-finance-details.js mp detil pol + fix loop
+// File: sier-visual-finance-details.js padel komplit
 const sierVisualFinanceDetails = {
     _renderUnitSummaries(individualResults) {
         let html = '';
@@ -338,61 +338,64 @@ const sierVisualFinanceDetails = {
 
         const capex = scenarioConfig.capex;
         
-        tableBodyHtml += createSection('1. Biaya Pra-Operasional', [
+        tableBodyHtml += createSection('1. Biaya Pra-Operasional & Umum', [
             { label: 'Izin & Konsultan', detail: 'Lump Sum', cost: capex.pre_operational.permits_and_consulting },
-            { label: 'Pemasaran Awal', detail: 'Lump Sum', cost: capex.pre_operational.initial_marketing }
+            { label: 'Pemasaran Awal', detail: 'Lump Sum', cost: capex.pre_operational.initial_marketing },
+            { label: 'Mobilisasi Alat & Tim', detail: 'Lump Sum', cost: capex.pre_operational.mobilization },
+            { label: 'Biaya Umum Proyek', detail: 'Lump Sum', cost: capex.pre_operational.construction_overhead },
+            { label: 'Tenaga Kerja & Alat Bantu Umum', detail: 'Lump Sum', cost: capex.pre_operational.general_labor_tools }
         ]);
 
         const renovation = capex.component_futsal_renovation || {};
         const newBuild = capex.component_koperasi_new_build || {};
+        const sanitaryNew = newBuild.plumbing_and_sanitary || {};
         tableBodyHtml += createSection('2. Pekerjaan Konstruksi & Sipil', [
-            { label: 'Pembongkaran Minor (Area Futsal)', detail: 'Lump Sum', cost: renovation.minor_demolition_and_clearing?.lump_sum },
-            { label: 'Relokasi Toilet (Area Futsal)', detail: 'Lump Sum', cost: renovation.toilet_demolition_and_relocation?.lump_sum },
-            { label: 'Perbaikan & Leveling Lantai', detail: `${renovation.floor_repair_and_leveling?.area_m2} m²`, cost: renovation.floor_repair_and_leveling?.area_m2 * renovation.floor_repair_and_leveling?.cost_per_m2 },
-            { label: 'Finishing Interior (Pengecatan)', detail: `${renovation.interior_finishing_painting?.area_m2} m²`, cost: renovation.interior_finishing_painting?.area_m2 * renovation.interior_finishing_painting?.cost_per_m2 },
-            { label: 'Pembongkaran Gedung Koperasi', detail: `${newBuild.building_demolition?.area_m2} m²`, cost: newBuild.building_demolition?.area_m2 * newBuild.building_demolition?.cost_per_m2 },
-            { label: 'Persiapan Lahan & Pondasi Baru', detail: `${newBuild.land_preparation_and_foundation?.area_m2} m²`, cost: newBuild.land_preparation_and_foundation?.area_m2 * newBuild.land_preparation_and_foundation?.cost_per_m2 },
-            { label: 'Struktur Bangunan Baru', detail: `${newBuild.building_structure_2_courts?.area_m2} m²`, cost: newBuild.building_structure_2_courts?.area_m2 * newBuild.building_structure_2_courts?.cost_per_m2 },
-            { label: 'Interior & Fasad Baru', detail: 'Lump Sum', cost: newBuild.interior_and_facade?.lump_sum }
+            { label: 'Pembongkaran & Pembersihan Lahan', detail: 'Lump Sum', cost: renovation.minor_demolition_and_clearing?.lump_sum },
+            { label: 'Relokasi Toilet (Area Renovasi)', detail: 'Lump Sum', cost: renovation.toilet_demolition_and_relocation?.lump_sum }, // <-- BARIS BARU
+            { label: 'Perbaikan & Leveling Lantai (Renovasi)', detail: `${renovation.floor_repair_and_leveling?.area_m2 || 0} m²`, cost: (renovation.floor_repair_and_leveling?.area_m2 || 0) * (renovation.floor_repair_and_leveling?.cost_per_m2 || 0) },
+            { label: 'Kipas Industri / Exhaust', detail: `${renovation.industrial_fans?.quantity || newBuild.industrial_fans?.quantity || 0} unit`, cost: (renovation.industrial_fans?.quantity || newBuild.industrial_fans?.quantity || 0) * (renovation.industrial_fans?.unit_cost || 0)},
+            { label: 'Pembongkaran Gedung Koperasi', detail: `${newBuild.building_demolition?.area_m2 || 0} m²`, cost: (newBuild.building_demolition?.area_m2 || 0) * (newBuild.building_demolition?.cost_per_m2 || 0) },
+            { label: 'Pondasi Bangunan Baru', detail: `${newBuild.land_preparation_and_foundation?.area_m2 || 0} m²`, cost: (newBuild.land_preparation_and_foundation?.area_m2 || 0) * (newBuild.land_preparation_and_foundation?.cost_per_m2 || 0) },
+            { label: 'Struktur Bangunan Baru', detail: `${newBuild.building_structure_2_courts?.area_m2 || 0} m²`, cost: (newBuild.building_structure_2_courts?.area_m2 || 0) * (newBuild.building_structure_2_courts?.cost_per_m2 || 0) },
+            { label: 'Pembangunan Toilet Baru', detail: `${sanitaryNew.toilet_unit || 0} unit`, cost: (sanitaryNew.toilet_unit || 0) * (sanitaryNew.area_m2_per_toilet || 0) * (sanitaryNew.cost_per_m2 || 0)} // <-- BARIS BARU
         ]);
         
-        // Seksi 3: Peralatan Lapangan & Inventaris (Dibuat Manual untuk Rincian)
         let section3Html = `<tbody class="bg-gray-100"><td colspan="3" class="p-3 font-bold text-gray-800">3. Peralatan Lapangan & Inventaris</td></tbody>`;
         let section3Subtotal = 0;
-
-        // Bagian 3.1: Rincian Biaya per 1 Lapangan
         const eq = capex.sport_courts_equipment;
         const perCourtCosts = eq.per_court_costs;
         let singleCourtSubtotal = 0;
         
-        for (const key in perCourtCosts) {
-            const cost = perCourtCosts[key] || 0;
+        // Kalkulasi dan render rincian per 1 lapangan
+        const perCourtItems = [
+            { key: 'civil_works_concrete', label: 'Lantai Beton Finishing Halus' },
+            { key: 'steel_structure', label: 'Struktur Baja Frame' },
+            { key: 'tempered_glass_10mm', label: 'Kaca Tempered 10mm + Pasang' },
+            { key: 'synthetic_turf', label: 'Rumput Sintetis (UV Protected)' },
+            { key: 'silica_sand_infill', label: 'Infill Pasir Silika Premium' },
+            { key: 'lighting_and_electrical', label: 'Sistem Lampu & Panel Listrik' },
+            { key: 'net_and_gate', label: 'Net Padel & Pintu Akses' }
+        ];
+
+        perCourtItems.forEach(item => {
+            const costData = perCourtCosts[item.key];
+            if (!costData) return;
+            let cost = 0;
+            let detail = 'Lump Sum';
+            if (costData.lump_sum) { cost = costData.lump_sum; }
+            else if (costData.area_m2) { cost = costData.area_m2 * costData.cost_per_m2; detail = `${costData.area_m2} m² @ ${sierHelpers.formatNumber(costData.cost_per_m2)}`; }
+            else if (costData.quantity) { cost = costData.quantity * costData.unit_cost; detail = `${costData.quantity} unit @ ${sierHelpers.formatNumber(costData.unit_cost)}`; }
+            
             singleCourtSubtotal += cost;
-            section3Html += `
-                <tr class="hover:bg-gray-50">
-                    <td class="px-3 py-2 pl-12 text-gray-800">${sierTranslate.translate(key)}</td>
-                    <td class="px-3 py-2 text-gray-600 text-xs">Biaya per 1 Lapangan</td>
-                    <td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(cost))}</td>
-                </tr>`;
-        }
+            section3Html += `<tr class="hover:bg-gray-50"><td class="px-3 py-2 pl-12 text-gray-800">${item.label}</td><td class="px-3 py-2 text-gray-600 text-xs">${detail}</td><td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(cost))}</td></tr>`;
+        });
 
-        // Tambahkan baris Subtotal per 1 Lapangan
-        section3Html += `
-            <tr class="font-semibold bg-gray-50">
-                <td class="px-3 py-2 text-right" colspan="2">Subtotal Biaya per 1 Lapangan</td>
-                <td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(singleCourtSubtotal))}</td>
-            </tr>`;
-
-        // Bagian 3.2: Total Biaya untuk Semua Lapangan & Inventaris
+        section3Html += `<tr class="font-semibold bg-gray-50"><td class="px-3 py-2 text-right" colspan="2">Subtotal Biaya per 1 Lapangan</td><td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(singleCourtSubtotal))}</td></tr>`;
+        
         const numCourts = scenarioConfig.num_courts;
         const totalCourtCost = singleCourtSubtotal * numCourts;
         section3Subtotal += totalCourtCost;
-        section3Html += `
-            <tr class="font-bold bg-white">
-                <td class="px-3 py-2 pl-8">Total Biaya Struktur (${numCourts} Lapangan)</td>
-                <td class="px-3 py-2 text-gray-600 text-xs">${numCourts} lapangan × Rp ${sierHelpers.formatNumber(Math.round(singleCourtSubtotal))}</td>
-                <td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(totalCourtCost))}</td>
-            </tr>`;
+        section3Html += `<tr class="font-bold bg-white"><td class="px-3 py-2 pl-8">Total Biaya Struktur (${numCourts} Lapangan)</td><td class="px-3 py-2 text-gray-600 text-xs">${numCourts} lapangan × Rp ${sierHelpers.formatNumber(Math.round(singleCourtSubtotal))}</td><td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(totalCourtCost))}</td></tr>`;
 
         const rentalCost = (eq.initial_inventory.rental_rackets.quantity * eq.initial_inventory.rental_rackets.unit_cost) || 0;
         section3Subtotal += rentalCost;

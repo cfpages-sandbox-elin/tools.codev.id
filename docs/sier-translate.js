@@ -1,4 +1,4 @@
-// File: sier-translate.js urut terkategori
+// File: sier-translate.js padel komplit
 const sierTranslate = {
     keyTranslations: {
         // --- Finansial & Operasional Umum ---
@@ -86,6 +86,17 @@ const sierTranslate = {
         'net_and_posts': 'Net & Tiang',
         'steel_structure': 'Struktur Baja',
         'tempered_glass_12mm': 'Kaca Tempered 12mm',
+        'construction_overhead': 'Biaya Umum Proyek',
+        'general_labor_tools': 'Tenaga Kerja & Alat Bantu Umum',
+        'mobilization': 'Mobilisasi Alat & Tim',
+        'net_and_gate': 'Net Padel & Pintu Akses',
+        'lighting_and_electrical': 'Sistem Lampu & Panel Listrik',
+        'silica_sand_infill': 'Infill Pasir Silika Premium',
+        'synthetic_turf': 'Rumput Sintetis (UV Protected)',
+        'tempered_glass_10mm': 'Kaca Tempered 10mm + Pasang',
+        'industrial_fans': 'Kipas Industri / Exhaust',
+        'plumbing_and_sanitary': 'Pekerjaan Plumbing & Sanitasi',
+        'toilet_demolition_and_relocation': 'Pembongkaran & Relokasi Toilet',
 
         // --- Rincian Meeting Point ---
         // Renovasi
