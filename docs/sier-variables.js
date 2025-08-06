@@ -1,4 +1,4 @@
-// File: sier-variables.js mp detil pol
+// File: sier-variables.js mp detil pol 2
 const projectConfig = {};
 
 projectConfig.site_parameters = {
@@ -518,12 +518,25 @@ projectConfig.meetingPoint = {
                 title: "Metode 2: Bongkar & Bangun Ulang",
                 base_costs: {
                     permits_and_consulting: 75000000,
-                    building_demolition: { 
-                        area_m2: 109,
-                        cost_per_m2: 250000
+                    building_demolition: { area_m2: 109, cost_per_m2: 250000 },
+                    foundation_and_structure: {
+                        title: 'Pekerjaan Pondasi & Struktur',
+                        items: {
+                            foundation_works: { area_m2: 109, cost_per_m2: 700000 },
+                            column_beam_structure: { area_m2: 109, cost_per_m2: 1200000 },
+                            floor_slab_works: { area_m2: 109, cost_per_m2: 600000 },
+                            roof_structure: { area_m2: 109, cost_per_m2: 500000 }
+                        }
                     },
-                    foundation_and_structure: { area_m2: 109, cost_per_m2: 3000000 },
-                    architecture_facade: { area_m2: 109, cost_per_m2: 2000000 }
+                    architecture_facade: {
+                        title: 'Pekerjaan Arsitektur & Fasad',
+                        items: {
+                            wall_works: { area_m2: 109, cost_per_m2: 400000 },
+                            facade_finishing: { area_m2: 109, cost_per_m2: 750000 },
+                            doors_windows_frames: { area_m2: 109, cost_per_m2: 350000 },
+                            interior_finishes: { area_m2: 109, cost_per_m2: 500000 }
+                        }
+                    }
                 }
             }
         },        
