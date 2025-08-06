@@ -1,4 +1,4 @@
-// File: sier-visual.js bikin kartu assumption
+// File: sier-visual.js pecah sier-math-finance.js
 function applyAutomaticCaptionsAndNumbering() {
     const allHeadings = document.querySelectorAll('h2, h3, h4, h5');
 
@@ -151,8 +151,8 @@ document.addEventListener('DOMContentLoaded', () => {
         projectConfig.assumptions.financing = projectConfig.assumptions.financing_scenarios[financingKey];
 
         // Hitung ulang semua model finansial
-        const model = sierMathFinance.buildFinancialModelForScenario(scenarioConfig);
-        const sensitivityData = sierMathFinance.runSensitivityAnalysis(model);
+        const model = sierMathModeler.buildFinancialModelForScenario(scenarioConfig);
+        const sensitivityData = sierMathAnalyzer.runSensitivityAnalysis(model, projectConfig.assumptions.financing);
 
         // Render semua modul visual
         sierHelpers.tryToRender(() => sierVisualDemography.render());

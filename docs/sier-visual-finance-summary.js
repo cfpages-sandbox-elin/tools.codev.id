@@ -1,4 +1,4 @@
-// File: sier-visual-finance-summary.js (Versi Final & Lengkap)
+// File: sier-visual-finance-summary.js pecah sier-math-finance.js
 const sierVisualFinanceSummary = {
     _createFeasibilityMetricsCard(metrics) {
         if (!metrics) return '<p>Gagal memuat metrik.</p>';
@@ -17,26 +17,35 @@ const sierVisualFinanceSummary = {
     },
 
     _createDetailedDepreciationTable(model) {
-        const { individual } = model;
-        const categories = { 'dr': 'Driving Range', 'padel4': 'Padel (4)', 'padel2': 'Padel (2)', 'mp': 'Meeting Point', 'shared': 'Fasilitas Umum', 'digital': 'Sistem Digital' };
-        const assetTypes = ['civil_construction', 'building', 'equipment', 'digital_systems', 'shared_facilities', 'other'];
-        let tableHeaderHtml = '<tr><th class="p-2 text-left">Kategori Aset</th>';
-        const activeUnitKeys = Object.keys(individual).filter(key => categories[key]);
-        activeUnitKeys.forEach(key => { tableHeaderHtml += `<th class="p-2 text-right">${categories[key]}</th>`; });
-        tableHeaderHtml += '<th class="p-2 text-right font-bold bg-gray-200">Total Nilai Aset</th></tr>';
-        const tableBodyHtml = assetTypes.map(cat => {
-            let rowHtml = `<tr><td class="p-2">${sierHelpers.safeTranslate(cat)}</td>`;
+        const depreciationDetails = sierMathAnalyzer.getDepreciationDetailsForScenario(model);
+        if (!depreciationDetails || depreciationDetails.length === 0) return '';
+        
+        const categories = Array.from(new Set(depreciationDetails.map(d => d.category)));
+        const units = Object.keys(model.individual).filter(key => model.individual[key].capexSchedule[0] > 0);
+        
+        let headerHtml = '<tr><th class="p-2 text-left">Kategori Aset</th>';
+        units.forEach(unitKey => {
+            const titles = {dr: 'DR', padel4: 'Padel (4)', padel2: 'Padel (2)', mp: 'MP', digital: 'Digital'};
+            headerHtml += `<th class="p-2 text-right">${titles[unitKey] || unitKey}</th>`;
+        });
+        headerHtml += '<th class="p-2 text-right font-bold bg-gray-200">Total Nilai Aset</th></tr>';
+
+        let bodyHtml = '';
+        categories.forEach(cat => {
+            let rowHtml = `<tr><td class="p-2">${cat}</td>`;
             let rowTotal = 0;
-            activeUnitKeys.forEach(key => {
-                const value = individual[key].capexBreakdown[cat] || 0;
+            units.forEach(unitKey => {
+                const breakdown = model.individual[unitKey].capexBreakdown;
+                const categoryKey = Object.keys(projectConfig.assumptions.depreciation_years).find(key => sierHelpers.safeTranslate(key) === cat);
+                const value = breakdown[categoryKey] || 0;
                 rowTotal += value;
                 rowHtml += `<td class="p-2 text-right font-mono text-xs">${value > 0 ? sierHelpers.formatNumber(Math.round(value)) : '-'}</td>`;
             });
-            if (rowTotal === 0) return '';
             rowHtml += `<td class="p-2 text-right font-mono font-bold bg-gray-50">${sierHelpers.formatNumber(Math.round(rowTotal))}</td></tr>`;
-            return rowHtml;
-        }).join('');
-        return `<div class="overflow-x-auto border rounded-lg"><table class="w-full text-sm"><thead class="bg-gray-100 text-xs uppercase">${tableHeaderHtml}</thead><tbody class="divide-y">${tableBodyHtml}</tbody></table></div>`;
+            bodyHtml += rowHtml;
+        });
+
+        return `<div class="overflow-x-auto border rounded-lg"><table class="w-full text-sm"><thead class="bg-gray-100 text-xs uppercase">${headerHtml}</thead><tbody class="divide-y">${bodyHtml}</tbody></table></div>`;
     },
 
     _createFinancialHighlightsTable(model) {
