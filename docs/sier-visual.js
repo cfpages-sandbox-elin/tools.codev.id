@@ -1,4 +1,4 @@
-// File: sier-visual. bikin komplit skenario fix1
+// File: sier-visual. bikin komplit skenario fix2
 function applyAutomaticCaptionsAndNumbering() {
     const allHeadings = document.querySelectorAll('h2, h3, h4, h5');
 
@@ -193,6 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (path && !isNaN(value)) {
                 sierMathFinance.setValueByPath(projectConfig, path, value);
                 renderFinancials(document.getElementById('scenario-selector').value);
+                renderAll();
             }
         };
 
@@ -209,8 +210,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const inputField = container.querySelector('.value-input');
                 if (inputField) {
                     inputField.classList.remove('hidden');
+                    let currentValue = parseFloat(inputField.dataset.originalValue);
                     if (inputField.dataset.format === 'percent') {
-                        inputField.value = parseFloat(inputField.value) * 100;
+                        inputField.value = (currentValue * 100).toFixed(1);
+                    } else {
+                        inputField.value = sierHelpers.formatNumber(currentValue);
                     }
                     inputField.focus();
                     inputField.select();
@@ -231,23 +235,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     e.target.blur();
                 } else if (e.key === 'Escape') {
                     e.preventDefault();
-                    const path = e.target.dataset.path;
-                    let originalValue = sierMathFinance.getValueByPath(projectConfig, path);
-                    e.target.value = originalValue;
-                    e.target.blur();
+                    const container = e.target.closest('.group');
+                    if (container) {
+                        const display = container.querySelector('.value-display');
+                        if (display) display.classList.remove('hidden');
+                        const editIcon = container.querySelector('.edit-icon');
+                        if (editIcon) editIcon.classList.remove('hidden');
+                        e.target.classList.add('hidden');
+                    }
                 }
             }
         });
-
-        const projectSelector = document.getElementById('scenario-selector');
-        if (projectSelector) {
-            projectSelector.addEventListener('change', renderAll);
-        }
-        
-        const financingSelector = document.getElementById('financing-scenario-selector');
-        if (financingSelector) {
-            financingSelector.addEventListener('change', renderAll);
-        }
     }
 
     // --- URUTAN INISIALISASI APLIKASI ---
