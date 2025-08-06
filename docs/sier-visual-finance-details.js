@@ -1,4 +1,4 @@
-// File: sier-visual-finance-details.js ganti scenariokey ke scenarioconfig
+// File: sier-visual-finance-details.js ganti scenarioConfig ke scenarioconfig2
 const sierVisualFinanceDetails = {
     _renderUnitSummaries(individualResults) {
         let html = '';
@@ -49,9 +49,9 @@ const sierVisualFinanceDetails = {
         const container = document.getElementById('opex-details-container');
         if (!container) return;
         let tablesHtml = [];
-        const createUnitOpexTable = (unitName, title, scenarioKey = null) => {
+        const createUnitOpexTable = (unitName, title, scenarioConfig = null) => {
             const unitConfig = projectConfig[unitName];
-            const opexData = scenarioKey ? unitConfig.scenarios[scenarioKey].opexMonthly : unitConfig.opexMonthly;
+            const opexData = scenarioConfig ? unitConfig.scenarios[scenarioConfig].opexMonthly : unitConfig.opexMonthly;
             if (!opexData) return ''; // Lewati jika tidak ada data opex
 
             let grandTotalOpex = 0;
@@ -308,12 +308,12 @@ const sierVisualFinanceDetails = {
         `;
     },
 
-    _renderPadelCapexDetailsVisuals(scenarioKey) {
+    _renderPadelCapexDetailsVisuals(scenarioConfig) {
         const container = document.getElementById('padel-capex-details-container');
         if (!container) return;
 
-        const padelScenarioKey = scenarioKey.includes('padel4') ? 'four_courts_combined' : 'two_courts_futsal_renovation';
-        const scenarioConfig = projectConfig.padel.scenarios[padelScenarioKey];
+        const padelscenarioConfig = scenarioConfig.includes('padel4') ? 'four_courts_combined' : 'two_courts_futsal_renovation';
+        const scenarioConfig = projectConfig.padel.scenarios[padelscenarioConfig];
         if (!scenarioConfig) return;
 
         let tableBodyHtml = '';
@@ -520,7 +520,7 @@ const sierVisualFinanceDetails = {
         container.innerHTML = `<h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-emerald-600 pl-4">Rincian Estimasi Biaya Investasi (CapEx): Fasilitas Umum</h2><div class="bg-white p-6 rounded-lg shadow-md mb-8"><p class="text-gray-600 mb-6">${sharedCapex.notes}</p><div class="overflow-x-auto border rounded-lg"><table class="w-full text-sm"><thead class="bg-gray-200 text-xs uppercase"><tr><th class="p-2 text-left w-2/5">Komponen Biaya</th><th class="p-2 text-left w-2/5">Detail Perhitungan</th><th class="p-2 text-right w-1/5">Biaya (Rp)</th></tr></thead>${tableBodyHtml}<tfoot class="font-bold"><tr class="bg-gray-200"><td class="p-3 text-right" colspan="2">Subtotal</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(grandTotal))}</td></tr><tr class="bg-yellow-200"><td class="p-3 text-right" colspan="2">Kontingensi (${(projectConfig.assumptions.contingency_rate * 100)}%)</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(contingency))}</td></tr><tr class="bg-emerald-600 text-white text-lg"><td class="p-3 text-right" colspan="2">Total Estimasi Investasi</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(finalTotal))}</td></tr></tfoot></table></div></div>`;
     },
 
-    _renderMeetingPointCapexDetailsVisuals(scenarioKey) {
+    _renderMeetingPointCapexDetailsVisuals(scenarioConfig) {
         const container = document.getElementById('meeting-point-capex-details-container');
         if (!container) return;
 
@@ -528,8 +528,8 @@ const sierVisualFinanceDetails = {
         const unitCosts = mpConfig.unit_costs;
 
         // Helper untuk membuat tabel rincian untuk SATU skenario konsep
-        const createConceptTable = (scenarioKey) => {
-            const scenario = mpConfig.capex_scenarios.concept_scenarios[scenarioKey];
+        const createConceptTable = (scenarioConfig) => {
+            const scenario = mpConfig.capex_scenarios.concept_scenarios[scenarioConfig];
             if (!scenario) return '';
 
             const items = scenario.items;
@@ -582,8 +582,8 @@ const sierVisualFinanceDetails = {
                 </div>
             `;
         };
-        const createConstructionTable = (scenarioKey) => {
-            const scenario = mpConfig.capex_scenarios.construction_scenarios[scenarioKey];
+        const createConstructionTable = (scenarioConfig) => {
+            const scenario = mpConfig.capex_scenarios.construction_scenarios[scenarioConfig];
             if (!scenario) return '';
 
             const baseCosts = scenario.base_costs;
