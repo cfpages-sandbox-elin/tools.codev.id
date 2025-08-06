@@ -1,4 +1,4 @@
-// File: sier-visual-finance-details.js dr capex detil
+// File: sier-visual-finance-details.js hitungan lebih betul
 const sierVisualFinanceDetails = {
     _renderUnitSummaries(individualResults) {
         let html = '';
@@ -207,102 +207,117 @@ const sierVisualFinanceDetails = {
         const container = document.getElementById('driving-range-capex-details-container');
         if (!container) return;
 
-        // --- 1. Ambil semua asumsi dasar dari projectConfig ---
         const a = projectConfig.drivingRange.capex_assumptions;
         const site = projectConfig.site_parameters.driving_range;
         const global = projectConfig.assumptions;
         const total_bays = Math.floor(site.building_length_m / site.bay_width_m) * site.levels;
 
         let tableBodyHtml = '';
-        let physicalCostSubtotal = 0;
+        let grandSubtotal = 0;
 
-        // --- 2. Fungsi Helper untuk membuat baris tabel ---
-        const createRow = (label, detail, cost, isSubtotal = false, isHeader = false) => {
-            if (isHeader) {
-                return `<tbody class="bg-gray-100"><td colspan="3" class="p-3 font-bold text-gray-800">${label}</td></tbody>`;
-            }
-            physicalCostSubtotal += isSubtotal ? 0 : cost;
-            return `
-                <tr class="${isSubtotal ? 'font-semibold bg-gray-50' : 'hover:bg-gray-50'}">
-                    <td class="px-3 py-2 pl-8">${label}</td>
-                    <td class="px-3 py-2 text-gray-600 text-xs">${detail}</td>
-                    <td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(cost))}</td>
+        // --- Helper baru untuk membuat satu seksi penuh dengan subtotalnya ---
+        const createSection = (title, items) => {
+            let sectionHtml = `<tbody class="bg-gray-100"><td colspan="3" class="p-3 font-bold text-gray-800">${title}</td></tbody>`;
+            let sectionSubtotal = 0;
+
+            items.forEach(item => {
+                sectionSubtotal += item.cost;
+                sectionHtml += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-3 py-2 pl-8">${item.label}</td>
+                        <td class="px-3 py-2 text-gray-600 text-xs">${item.detail}</td>
+                        <td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(item.cost))}</td>
+                    </tr>
+                `;
+            });
+
+            sectionHtml += `
+                <tr class="font-semibold bg-gray-200">
+                    <td class="px-3 py-2 text-right" colspan="2">Subtotal ${title}</td>
+                    <td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(sectionSubtotal))}</td>
                 </tr>
             `;
+            
+            grandSubtotal += sectionSubtotal;
+            return sectionHtml;
         };
 
-        // --- 3. Bangun setiap bagian tabel secara terperinci ---
+        // --- Definisikan item untuk setiap seksi ---
 
-        // BAGIAN 1: PEKERJAAN SIPIL & PONDASI
-        tableBodyHtml += createRow('1. Pekerjaan Sipil & Pondasi', '', 0, false, true);
+        // 1. Pekerjaan Sipil & Pondasi
         const pil = a.piling;
         const pilingCost = (pil.points_count * pil.length_per_point_m * pil.cost_per_m_mini_pile) + pil.lump_sum_pile_cap;
-        tableBodyHtml += createRow('Pondasi Tiang Pancang', `${pil.points_count} titik × ${pil.length_per_point_m}m @ Rp ${sierHelpers.formatNumber(pil.cost_per_m_mini_pile)}/m + Pile Cap`, pilingCost);
-        
-        // BAGIAN 2: KONSTRUKSI BANGUNAN
-        tableBodyHtml += createRow('2. Konstruksi Bangunan', '', 0, false, true);
-        const bld = a.building;
-        const bayConstructionCost = bld.dr_bays_area_m2 * bld.dr_bays_cost_per_m2;
-        tableBodyHtml += createRow('Konstruksi Bay Driving Range', `${bld.dr_bays_area_m2} m² × Rp ${sierHelpers.formatNumber(bld.dr_bays_cost_per_m2)}/m²`, bayConstructionCost);
-        const cafeConstructionCost = bld.cafe_area_m2 * bld.cafe_cost_per_m2;
-        tableBodyHtml += createRow('Konstruksi Kafe & Lounge', `${bld.cafe_area_m2} m² × Rp ${sierHelpers.formatNumber(bld.cafe_cost_per_m2)}/m²`, cafeConstructionCost);
-        const lockersConstructionCost = bld.lockers_mushola_area_m2 * bld.lockers_mushola_cost_per_m2;
-        tableBodyHtml += createRow('Konstruksi Loker & Mushola', `${bld.lockers_mushola_area_m2} m² × Rp ${sierHelpers.formatNumber(bld.lockers_mushola_cost_per_m2)}/m²`, lockersConstructionCost);
+        tableBodyHtml += createSection('1. Pekerjaan Sipil & Pondasi', [
+            { label: 'Pondasi Tiang Pancang', detail: `${pil.points_count} titik × ${pil.length_per_point_m}m @ Rp ${sierHelpers.formatNumber(pil.cost_per_m_mini_pile)}/m + Pile Cap`, cost: pilingCost }
+        ]);
 
-        // BAGIAN 3: PERALATAN & TEKNOLOGI INTI
-        tableBodyHtml += createRow('3. Peralatan & Teknologi Inti', '', 0, false, true);
+        // 2. Konstruksi Bangunan
+        const bld = a.building;
+        const derivedBayWidth = (bld.dr_bays_area_m2 / site.building_length_m).toFixed(1);
+        const bayConstructionCost = bld.dr_bays_area_m2 * bld.dr_bays_cost_per_m2;
+        const cafeConstructionCost = bld.cafe_area_m2 * bld.cafe_cost_per_m2;
+        const lockersConstructionCost = bld.lockers_mushola_area_m2 * bld.lockers_mushola_cost_per_m2;
+        tableBodyHtml += createSection('2. Konstruksi Bangunan', [
+            { label: 'Struktur Bay Driving Range', detail: `(${site.building_length_m}m × ${derivedBayWidth}m) = ${bld.dr_bays_area_m2} m² × Rp ${sierHelpers.formatNumber(bld.dr_bays_cost_per_m2)}/m²`, cost: bayConstructionCost },
+            { label: 'Struktur Kafe & Lounge', detail: `${bld.cafe_area_m2} m² × Rp ${sierHelpers.formatNumber(bld.cafe_cost_per_m2)}/m²`, cost: cafeConstructionCost },
+            { label: 'Struktur Loker & Mushola', detail: `${bld.lockers_mushola_area_m2} m² × Rp ${sierHelpers.formatNumber(bld.lockers_mushola_cost_per_m2)}/m²`, cost: lockersConstructionCost }
+        ]);
+        
+        // 3. Peralatan & Teknologi Inti
         const eq = a.equipment;
         const premium_bays_count = Math.round(total_bays * eq.premium_bays.percentage_of_total);
         const normal_bays_count = total_bays - premium_bays_count;
         const ballTrackerCost = premium_bays_count * eq.premium_bays.cost_per_bay_ball_tracker;
-        tableBodyHtml += createRow('Sistem Ball Tracker', `${premium_bays_count} bay × Rp ${sierHelpers.formatNumber(eq.premium_bays.cost_per_bay_ball_tracker)}/bay`, ballTrackerCost);
         const dispenserCost = premium_bays_count * eq.premium_bays.cost_per_bay_dispenser;
-        tableBodyHtml += createRow('Dispenser Bola Otomatis', `${premium_bays_count} bay × Rp ${sierHelpers.formatNumber(eq.premium_bays.cost_per_bay_dispenser)}/bay`, dispenserCost);
         const normalBayEquipCost = normal_bays_count * eq.normal_bays.bay_equipment_cost_per_set;
-        tableBodyHtml += createRow('Peralatan Bay Normal', `${normal_bays_count} bay × Rp ${sierHelpers.formatNumber(eq.normal_bays.bay_equipment_cost_per_set)}/set`, normalBayEquipCost);
         const ballsCost = eq.floating_balls_count * eq.floating_balls_cost_per_ball;
-        tableBodyHtml += createRow('Bola Apung (Floating Balls)', `${eq.floating_balls_count} buah × Rp ${sierHelpers.formatNumber(eq.floating_balls_cost_per_ball)}/bola`, ballsCost);
-        tableBodyHtml += createRow('Sistem Manajemen Bola', 'Lump Sum', eq.ball_management_system_lump_sum);
+        tableBodyHtml += createSection('3. Peralatan & Teknologi Inti', [
+            { label: 'Sistem Ball Tracker', detail: `${premium_bays_count} bay × Rp ${sierHelpers.formatNumber(eq.premium_bays.cost_per_bay_ball_tracker)}/bay`, cost: ballTrackerCost },
+            { label: 'Dispenser Bola Otomatis', detail: `${premium_bays_count} bay × Rp ${sierHelpers.formatNumber(eq.premium_bays.cost_per_bay_dispenser)}/bay`, cost: dispenserCost },
+            { label: 'Peralatan Bay Normal', detail: `${normal_bays_count} bay × Rp ${sierHelpers.formatNumber(eq.normal_bays.bay_equipment_cost_per_set)}/set`, cost: normalBayEquipCost },
+            { label: 'Bola Apung (Floating Balls)', detail: `${sierHelpers.formatNumber(eq.floating_balls_count)} buah × Rp ${sierHelpers.formatNumber(eq.floating_balls_cost_per_ball)}/bola`, cost: ballsCost },
+            { label: 'Sistem Manajemen Bola', detail: 'Lump Sum', cost: eq.ball_management_system_lump_sum }
+        ]);
 
-        // BAGIAN 4: JARING PENGAMAN
-        tableBodyHtml += createRow('4. Jaring Pengaman (Safety Net)', '', 0, false, true);
+        // 4. Jaring Pengaman
         const net = a.safety_net;
         const polesCount = Math.ceil(net.total_perimeter_m / net.poles.spacing_m);
         const polesFoundationCost = polesCount * net.poles.foundation_cost_per_pole;
-        tableBodyHtml += createRow('Pondasi & Tiang Penyangga', `${polesCount} tiang × Rp ${sierHelpers.formatNumber(net.poles.foundation_cost_per_pole)}/tiang`, polesFoundationCost);
         const netArea = (site.field_length_m * net.poles.height_distribution.left_right_side_m * 2) + (net.field_width_m * net.poles.height_distribution.far_side_m);
         const nettingCost = netArea * net.netting.cost_per_m2;
-        tableBodyHtml += createRow('Material Jaring', `Estimasi ${netArea} m² × Rp ${sierHelpers.formatNumber(net.netting.cost_per_m2)}/m²`, nettingCost);
-
-        // BAGIAN 5: INTERIOR, FURNITUR & SANITASI
-        tableBodyHtml += createRow('5. Interior, Furnitur & Sanitasi', '', 0, false, true);
+        tableBodyHtml += createSection('4. Jaring Pengaman (Safety Net)', [
+            { label: 'Pondasi & Tiang Penyangga', detail: `${polesCount} tiang × Rp ${sierHelpers.formatNumber(net.poles.foundation_cost_per_pole)}/tiang`, cost: polesFoundationCost },
+            { label: 'Material Jaring', detail: `Estimasi ${sierHelpers.formatNumber(netArea)} m² × Rp ${sierHelpers.formatNumber(net.netting.cost_per_m2)}/m²`, cost: nettingCost }
+        ]);
+        
+        // 5. Interior, Furnitur & Sanitasi
         const furnitureCost = total_bays * a.bay_furniture.cost_per_bay;
-        tableBodyHtml += createRow('Furnitur Bay', `${total_bays} bay × Rp ${sierHelpers.formatNumber(a.bay_furniture.cost_per_bay)}/bay`, furnitureCost);
         const san = a.plumbing_and_sanitary;
         const sanCost = (san.male_toilet.toilets + san.female_toilet.toilets) * san.unit_costs.toilet_bowl + san.male_toilet.urinals * san.unit_costs.urinal + (san.male_toilet.sinks + san.female_toilet.sinks) * san.unit_costs.sink;
-        tableBodyHtml += createRow('Unit Sanitasi (Toilet, Wastafel)', 'Jumlah unit × harga satuan', sanCost);
+        tableBodyHtml += createSection('5. Interior, Furnitur & Sanitasi', [
+            { label: 'Furnitur Bay', detail: `${total_bays} bay × Rp ${sierHelpers.formatNumber(a.bay_furniture.cost_per_bay)}/bay`, cost: furnitureCost },
+            { label: 'Unit Sanitasi (Toilet, Wastafel)', detail: 'Jumlah unit × harga satuan', cost: sanCost }
+        ]);
         
-        // HITUNG SUBTOTAL SEBELUM MEP & LAIN-LAIN
-        tableBodyHtml += createRow('Subtotal Biaya Fisik & Peralatan', '', physicalCostSubtotal, true);
-
-        // BAGIAN 6: MEP, Izin, & Desain
-        tableBodyHtml += createRow('6. Sistem MEP & Biaya Lain-lain', '', 0, false, true);
+        // 6. Sistem MEP & Biaya Lain-lain
+        // Biaya ini dihitung berdasarkan total dari subtotal sebelumnya, jadi kita hitung di luar helper
         const mep = a.mep_systems;
         const hvacCost = bld.cafe_area_m2 * mep.hvac_system.cost_per_m2_hvac;
-        tableBodyHtml += createRow('Sistem HVAC (AC)', `${bld.cafe_area_m2} m² × Rp ${sierHelpers.formatNumber(mep.hvac_system.cost_per_m2_hvac)}/m²`, hvacCost);
         const plumbingCost = mep.plumbing_system.lump_sum_cost;
-        tableBodyHtml += createRow('Sistem Plumbing', 'Lump Sum', plumbingCost);
-        const electricalCost = physicalCostSubtotal * mep.electrical_system.rate_of_physical_cost;
-        tableBodyHtml += createRow('Sistem Elektrikal', `${(mep.electrical_system.rate_of_physical_cost * 100)}% dari Biaya Fisik`, electricalCost);
-        const permitCost = physicalCostSubtotal * a.other_costs.permit_design_rate_of_physical_cost;
-        tableBodyHtml += createRow('Izin & Konsultan Desain', `${(a.other_costs.permit_design_rate_of_physical_cost * 100)}% dari Biaya Fisik`, permitCost);
+        const electricalCost = grandSubtotal * mep.electrical_system.rate_of_physical_cost;
+        const permitCost = grandSubtotal * a.other_costs.permit_design_rate_of_physical_cost;
+        tableBodyHtml += createSection('6. Sistem MEP & Biaya Lain-lain', [
+            { label: 'Sistem HVAC (AC)', detail: `${bld.cafe_area_m2} m² × Rp ${sierHelpers.formatNumber(mep.hvac_system.cost_per_m2_hvac)}/m²`, cost: hvacCost },
+            { label: 'Sistem Plumbing', detail: 'Lump Sum', cost: plumbingCost },
+            { label: 'Sistem Elektrikal', detail: `${(mep.electrical_system.rate_of_physical_cost * 100)}% dari Subtotal Fisik`, cost: electricalCost },
+            { label: 'Izin & Konsultan Desain', detail: `${(a.other_costs.permit_design_rate_of_physical_cost * 100)}% dari Subtotal Fisik`, cost: permitCost }
+        ]);
 
-        // --- 4. Hitung Total Akhir ---
-        const subtotal = physicalCostSubtotal + hvacCost + plumbingCost + electricalCost + permitCost;
-        const contingency = subtotal * global.contingency_rate;
-        const grandTotal = subtotal + contingency;
+        // --- Hitung Total Akhir ---
+        const contingency = grandSubtotal * global.contingency_rate;
+        const grandTotal = grandSubtotal + contingency;
 
-        // --- 5. Render HTML ke Container ---
+        // --- Render HTML ke Container ---
         container.innerHTML = `
             <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-blue-500 pl-4">Rincian Estimasi Biaya Investasi (CapEx): Driving Range</h2>
             <div class="bg-white p-6 rounded-lg shadow-md mb-8">
@@ -316,13 +331,11 @@ const sierVisualFinanceDetails = {
                                 <th class="p-2 text-right w-1/6">Estimasi Biaya (Rp)</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y">
-                            ${tableBodyHtml}
-                        </tbody>
+                        <tbody class="divide-y">${tableBodyHtml}</tbody>
                         <tfoot class="font-bold">
-                            <tr class="bg-gray-200">
-                                <td class="p-3 text-right" colspan="2">Subtotal Biaya</td>
-                                <td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(subtotal))}</td>
+                            <tr class="bg-gray-300">
+                                <td class="p-3 text-right" colspan="2">Total Subtotal Biaya</td>
+                                <td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(grandSubtotal))}</td>
                             </tr>
                             <tr class="bg-yellow-200">
                                 <td class="p-3 text-right" colspan="2">Kontingensi (${(global.contingency_rate * 100)}%)</td>
