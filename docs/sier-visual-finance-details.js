@@ -1,4 +1,4 @@
-// File: sier-visual-finance-details.js fix error 2
+// File: sier-visual-finance-details.js BIAR MUNCUL KABEH
 const sierVisualFinanceDetails = {
     _renderUnitSummaries(individualResults) {
         let html = '';
@@ -257,21 +257,17 @@ const sierVisualFinanceDetails = {
         `;
     },
 
-    _renderPadelCapexDetailsVisuals() {
+    _renderPadelCapexDetailsVisuals(scenarioKey) {
         const container = document.getElementById('padel-capex-details-container');
         if (!container) return;
 
-        // DEFINISIKAN FUNGSI HELPER DI DALAM SCOPE INI
+        // Fungsi helper untuk membuat tabel tetap sama
         const createScenarioTable = (scenarioConfig) => {
-            if (!scenarioConfig || !scenarioConfig.capex) {
-                return '<p>Data konfigurasi skenario Padel tidak valid.</p>';
-            }
-
-            const capexData = scenarioConfig.capex; // Ambil data CapEx yang benar
+            if (!scenarioConfig || !scenarioConfig.capex) return '<p>Data tidak valid.</p>';
+            const capexData = scenarioConfig.capex;
             let tableBodyHtml = '';
             let grandTotal = 0;
-            const numCourts = scenarioConfig.num_courts; // Ambil num_courts dari level yang benar
-
+            const numCourts = scenarioConfig.num_courts;
             const processCategory = (categoryData, categoryName) => {
                 tableBodyHtml += `<tbody class="bg-gray-50"><td colspan="3" class="p-3 font-bold text-gray-800">${sierTranslate.translate(categoryName)}</td></tbody><tbody class="divide-y">`;
                 for (const key in categoryData) {
@@ -288,7 +284,6 @@ const sierVisualFinanceDetails = {
                 }
                 tableBodyHtml += `</tbody>`;
             };
-
             for (const category in capexData) {
                 if (typeof capexData[category] === 'object' && category !== 'title' && category !== 'notes') {
                     if (category === 'sport_courts_equipment') {
@@ -305,26 +300,26 @@ const sierVisualFinanceDetails = {
                     }
                 }
             }
-
             const subtotal = grandTotal;
             const contingency = subtotal * projectConfig.assumptions.contingency_rate;
             const finalTotal = subtotal + contingency;
-
             return `<div class="mb-12"><h3 class="text-xl font-semibold mb-2 text-gray-800">${scenarioConfig.title}</h3><p class="text-gray-600 mb-4 text-sm">${scenarioConfig.description}</p><div class="overflow-x-auto border rounded-lg"><table class="w-full text-sm"><thead class="bg-gray-200 text-xs uppercase"><tr><th class="p-2 text-left w-1/2">Komponen Biaya</th><th class="p-2 text-left w-1/4">Detail Perhitungan</th><th class="p-2 text-right w-1/4">Estimasi Biaya (Rp)</th></tr></thead>${tableBodyHtml}<tfoot class="font-bold"><tr class="bg-gray-200"><td class="p-3 text-right" colspan="2">Subtotal Biaya</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(subtotal))}</td></tr><tr class="bg-yellow-200"><td class="p-3 text-right" colspan="2">Kontingensi (${(projectConfig.assumptions.contingency_rate * 100)}%)</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(contingency))}</td></tr><tr class="bg-purple-600 text-white text-lg"><td class="p-3 text-right" colspan="2">Total Estimasi Investasi</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(finalTotal))}</td></tr></tfoot></table></div></div>`;
         };
 
-        // PANGGIL FUNGSI HELPER YANG SUDAH DIDEFINISIKAN DI ATAS
-        const scenarioTwoCourtsHtml = createScenarioTable(projectConfig.padel.scenarios.two_courts_futsal_renovation);
-        const scenarioFourCourtsHtml = createScenarioTable(projectConfig.padel.scenarios.four_courts_combined);
+        // --- AWAL PERUBAHAN LOGIKA ---
+        let capexDetailsHtml = '';
+        // Cek skenario mana yang aktif dan panggil helper yang sesuai
+        if (scenarioKey.includes('padel2')) {
+            capexDetailsHtml = createScenarioTable(projectConfig.padel.scenarios.two_courts_futsal_renovation);
+        } else if (scenarioKey.includes('padel4')) {
+            capexDetailsHtml = createScenarioTable(projectConfig.padel.scenarios.four_courts_combined);
+        }
+        // --- AKHIR PERUBAHAN LOGIKA ---
 
         container.innerHTML = `
             <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-purple-600 pl-4">Rincian Estimasi Biaya Investasi (CapEx): Padel</h2>
             <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-                ${scenarioTwoCourtsHtml}
-                ${scenarioFourCourtsHtml}
-                <div class="p-4 bg-purple-50 border-l-4 border-purple-400 text-sm text-purple-800">
-                    <strong>Rekomendasi:</strong> <strong>Skenario 1 (2 Lapangan Renovasi)</strong> adalah yang tercepat dan termurah untuk validasi pasar. <strong>Skenario 2 (4 Lapangan Kombinasi)</strong> adalah target ekspansi jangka panjang jika permintaan terbukti sangat tinggi.
-                </div>
+                ${capexDetailsHtml}
             </div>`;
     },
 
@@ -511,7 +506,7 @@ const sierVisualFinanceDetails = {
 
         this._renderOpexDetailsVisuals(model, scenarioKey);
         if (scenarioKey.includes('dr')) this._renderDrCapexDetailsVisuals();
-        if (scenarioKey.includes('padel')) this._renderPadelCapexDetailsVisuals();
+        if (scenarioKey.includes('padel')) this._renderPadelCapexDetailsVisuals(scenarioKey);
         if (scenarioKey.includes('mp')) this._renderMeetingPointCapexDetailsVisuals();
         if (scenarioKey !== 'padel2_mp') this._renderSharedCapexVisuals();
     },
