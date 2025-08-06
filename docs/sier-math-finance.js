@@ -1,4 +1,4 @@
-// File: sier-math-finance.js sensitivity tidak 0 2
+// File: sier-math-finance.js fix error total mep cost
 const sierMathFinance = {
     getValueByPath(obj, path) {
         return path.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj);
@@ -487,8 +487,7 @@ const sierMathFinance = {
         // --- 2. Fungsi Helper untuk agregasi ---
         const calculateScenarioCosts = (foundationCosts) => {
             const mep = a.mep_systems;
-            const total_mep_cost = (bld.cafe_area_m2 * mep.hvac_system.cost_per_m2_hvac) +
-                                (mep.plumbing_system.lump_sum_cost + totalSanitaryCost);
+            const total_mep_cost = mep.plumbing_system.lump_sum_cost;
 
             const physical_cost_base = foundationCosts + totalBuildingCost + totalEquipmentCost + totalSafetyNetCost + totalBayFurnitureCost;
             const electrical_cost = physical_cost_base * mep.electrical_system.rate_of_physical_cost;
