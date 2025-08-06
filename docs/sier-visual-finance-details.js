@@ -1,4 +1,4 @@
-// File: sier-visual-finance-details.js padel komplit
+// File: sier-visual-finance-details.js padel komplit pol 1
 const sierVisualFinanceDetails = {
     _renderUnitSummaries(individualResults) {
         let html = '';
@@ -350,14 +350,46 @@ const sierVisualFinanceDetails = {
         const newBuild = capex.component_koperasi_new_build || {};
         const sanitaryNew = newBuild.plumbing_and_sanitary || {};
         tableBodyHtml += createSection('2. Pekerjaan Konstruksi & Sipil', [
-            { label: 'Pembongkaran & Pembersihan Lahan', detail: 'Lump Sum', cost: renovation.minor_demolition_and_clearing?.lump_sum },
-            { label: 'Relokasi Toilet (Area Renovasi)', detail: 'Lump Sum', cost: renovation.toilet_demolition_and_relocation?.lump_sum }, // <-- BARIS BARU
-            { label: 'Perbaikan & Leveling Lantai (Renovasi)', detail: `${renovation.floor_repair_and_leveling?.area_m2 || 0} m²`, cost: (renovation.floor_repair_and_leveling?.area_m2 || 0) * (renovation.floor_repair_and_leveling?.cost_per_m2 || 0) },
-            { label: 'Kipas Industri / Exhaust', detail: `${renovation.industrial_fans?.quantity || newBuild.industrial_fans?.quantity || 0} unit`, cost: (renovation.industrial_fans?.quantity || newBuild.industrial_fans?.quantity || 0) * (renovation.industrial_fans?.unit_cost || 0)},
-            { label: 'Pembongkaran Gedung Koperasi', detail: `${newBuild.building_demolition?.area_m2 || 0} m²`, cost: (newBuild.building_demolition?.area_m2 || 0) * (newBuild.building_demolition?.cost_per_m2 || 0) },
-            { label: 'Pondasi Bangunan Baru', detail: `${newBuild.land_preparation_and_foundation?.area_m2 || 0} m²`, cost: (newBuild.land_preparation_and_foundation?.area_m2 || 0) * (newBuild.land_preparation_and_foundation?.cost_per_m2 || 0) },
-            { label: 'Struktur Bangunan Baru', detail: `${newBuild.building_structure_2_courts?.area_m2 || 0} m²`, cost: (newBuild.building_structure_2_courts?.area_m2 || 0) * (newBuild.building_structure_2_courts?.cost_per_m2 || 0) },
-            { label: 'Pembangunan Toilet Baru', detail: `${sanitaryNew.toilet_unit || 0} unit`, cost: (sanitaryNew.toilet_unit || 0) * (sanitaryNew.area_m2_per_toilet || 0) * (sanitaryNew.cost_per_m2 || 0)} // <-- BARIS BARU
+            { 
+                label: 'Pembongkaran & Pembersihan Lahan', 
+                detail: 'Lump Sum', 
+                cost: renovation.minor_demolition_and_clearing?.lump_sum 
+            },
+            { 
+                label: 'Renovasi Toilet', 
+                detail: 'Lump Sum', 
+                cost: renovation.toilet_demolition_and_relocation?.lump_sum 
+            },
+            { 
+                label: 'Perbaikan & Leveling Lantai (Renovasi)', 
+                detail: `${renovation.floor_repair_and_leveling?.area_m2 || 0} m² @ Rp ${sierHelpers.formatNumber(renovation.floor_repair_and_leveling?.cost_per_m2 || 0)}`, 
+                cost: (renovation.floor_repair_and_leveling?.area_m2 || 0) * (renovation.floor_repair_and_leveling?.cost_per_m2 || 0) 
+            },
+            { 
+                label: 'Kipas Industri / Exhaust', 
+                detail: `${renovation.industrial_fans?.quantity || newBuild.industrial_fans?.quantity || 0} unit @ Rp ${sierHelpers.formatNumber(renovation.industrial_fans?.unit_cost || newBuild.industrial_fans?.unit_cost || 0)}`, 
+                cost: (renovation.industrial_fans?.quantity || newBuild.industrial_fans?.quantity || 0) * (renovation.industrial_fans?.unit_cost || 0)
+            },
+            { 
+                label: 'Pembongkaran Gedung Koperasi', 
+                detail: `${newBuild.building_demolition?.area_m2 || 0} m² @ Rp ${sierHelpers.formatNumber(newBuild.building_demolition?.cost_per_m2 || 0)}`, 
+                cost: (newBuild.building_demolition?.area_m2 || 0) * (newBuild.building_demolition?.cost_per_m2 || 0) 
+            },
+            { 
+                label: 'Pondasi Bangunan Baru', 
+                detail: `${newBuild.land_preparation_and_foundation?.area_m2 || 0} m² @ Rp ${sierHelpers.formatNumber(newBuild.land_preparation_and_foundation?.cost_per_m2 || 0)}`, 
+                cost: (newBuild.land_preparation_and_foundation?.area_m2 || 0) * (newBuild.land_preparation_and_foundation?.cost_per_m2 || 0) 
+            },
+            { 
+                label: 'Struktur Bangunan Baru', 
+                detail: `${newBuild.building_structure_2_courts?.area_m2 || 0} m² @ Rp ${sierHelpers.formatNumber(newBuild.building_structure_2_courts?.cost_per_m2 || 0)}`, 
+                cost: (newBuild.building_structure_2_courts?.area_m2 || 0) * (newBuild.building_structure_2_courts?.cost_per_m2 || 0) 
+            },
+            { 
+                label: 'Pembangunan Toilet Baru', 
+                detail: `${sanitaryNew.toilet_unit || 0} unit × ${sanitaryNew.area_m2_per_toilet || 0} m²/unit @ Rp ${sierHelpers.formatNumber(sanitaryNew.cost_per_m2 || 0)}`, 
+                cost: (sanitaryNew.toilet_unit || 0) * (sanitaryNew.area_m2_per_toilet || 0) * (sanitaryNew.cost_per_m2 || 0)
+            }
         ]);
         
         let section3Html = `<tbody class="bg-gray-100"><td colspan="3" class="p-3 font-bold text-gray-800">3. Peralatan Lapangan & Inventaris</td></tbody>`;
