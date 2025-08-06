@@ -1,4 +1,4 @@
-// File: sier-visual-finance-details.js padel komplit pol 1
+// File: sier-visual-finance-details.js padel komplit detil per pekerjaan
 const sierVisualFinanceDetails = {
     _renderUnitSummaries(individualResults) {
         let html = '';
@@ -346,51 +346,61 @@ const sierVisualFinanceDetails = {
             { label: 'Tenaga Kerja & Alat Bantu Umum', detail: 'Lump Sum', cost: capex.pre_operational.general_labor_tools }
         ]);
 
+        let section2Html = `<tbody class="bg-gray-100"><td colspan="3" class="p-3 font-bold text-gray-800">2. Pekerjaan Konstruksi & Sipil</td></tbody>`;
+        let section2GrandSubtotal = 0;
+
+        // Hanya render bagian ini jika ada data renovasi
         const renovation = capex.component_futsal_renovation || {};
+        if (Object.keys(renovation).length > 0) {
+            let renovationSubtotal = 0;
+            section2Html += `<tr class="bg-gray-50 font-semibold"><td class="px-3 py-2 pl-8" colspan="3">2.1 Pekerjaan Renovasi (Area Futsal)</td></tr>`;
+            
+            const renovationItems = [
+                { label: 'Pembongkaran & Pembersihan Lahan', detail: 'Lump Sum', cost: renovation.minor_demolition_and_clearing?.lump_sum },
+                { label: 'Renovasi Toilet', detail: 'Lump Sum', cost: renovation.toilet_demolition_and_relocation?.lump_sum },
+                { label: 'Perbaikan & Leveling Lantai', detail: `${renovation.floor_repair_and_leveling?.area_m2 || 0} m² @ Rp ${sierHelpers.formatNumber(renovation.floor_repair_and_leveling?.cost_per_m2 || 0)}`, cost: (renovation.floor_repair_and_leveling?.area_m2 || 0) * (renovation.floor_repair_and_leveling?.cost_per_m2 || 0) },
+                { label: 'Kipas Industri / Exhaust', detail: `${renovation.industrial_fans?.quantity || 0} unit @ Rp ${sierHelpers.formatNumber(renovation.industrial_fans?.unit_cost || 0)}`, cost: (renovation.industrial_fans?.quantity || 0) * (renovation.industrial_fans?.unit_cost || 0) }
+            ];
+
+            renovationItems.forEach(item => {
+                if (item.cost) {
+                    renovationSubtotal += item.cost;
+                    section2Html += `<tr class="hover:bg-gray-50"><td class="px-3 py-2 pl-12">${item.label}</td><td class="px-3 py-2 text-gray-500 text-xs">${item.detail}</td><td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(item.cost))}</td></tr>`;
+                }
+            });
+            section2Html += `<tr class="font-semibold bg-gray-100"><td class="px-3 py-2 text-right" colspan="2">Subtotal Renovasi</td><td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(renovationSubtotal))}</td></tr>`;
+            section2GrandSubtotal += renovationSubtotal;
+        }
+
+        // Hanya render bagian ini jika ada data bangun baru (untuk skenario 4 lapangan)
         const newBuild = capex.component_koperasi_new_build || {};
-        const sanitaryNew = newBuild.plumbing_and_sanitary || {};
-        tableBodyHtml += createSection('2. Pekerjaan Konstruksi & Sipil', [
-            { 
-                label: 'Pembongkaran & Pembersihan Lahan', 
-                detail: 'Lump Sum', 
-                cost: renovation.minor_demolition_and_clearing?.lump_sum 
-            },
-            { 
-                label: 'Renovasi Toilet', 
-                detail: 'Lump Sum', 
-                cost: renovation.toilet_demolition_and_relocation?.lump_sum 
-            },
-            { 
-                label: 'Perbaikan & Leveling Lantai (Renovasi)', 
-                detail: `${renovation.floor_repair_and_leveling?.area_m2 || 0} m² @ Rp ${sierHelpers.formatNumber(renovation.floor_repair_and_leveling?.cost_per_m2 || 0)}`, 
-                cost: (renovation.floor_repair_and_leveling?.area_m2 || 0) * (renovation.floor_repair_and_leveling?.cost_per_m2 || 0) 
-            },
-            { 
-                label: 'Kipas Industri / Exhaust', 
-                detail: `${renovation.industrial_fans?.quantity || newBuild.industrial_fans?.quantity || 0} unit @ Rp ${sierHelpers.formatNumber(renovation.industrial_fans?.unit_cost || newBuild.industrial_fans?.unit_cost || 0)}`, 
-                cost: (renovation.industrial_fans?.quantity || newBuild.industrial_fans?.quantity || 0) * (renovation.industrial_fans?.unit_cost || 0)
-            },
-            { 
-                label: 'Pembongkaran Gedung Koperasi', 
-                detail: `${newBuild.building_demolition?.area_m2 || 0} m² @ Rp ${sierHelpers.formatNumber(newBuild.building_demolition?.cost_per_m2 || 0)}`, 
-                cost: (newBuild.building_demolition?.area_m2 || 0) * (newBuild.building_demolition?.cost_per_m2 || 0) 
-            },
-            { 
-                label: 'Pondasi Bangunan Baru', 
-                detail: `${newBuild.land_preparation_and_foundation?.area_m2 || 0} m² @ Rp ${sierHelpers.formatNumber(newBuild.land_preparation_and_foundation?.cost_per_m2 || 0)}`, 
-                cost: (newBuild.land_preparation_and_foundation?.area_m2 || 0) * (newBuild.land_preparation_and_foundation?.cost_per_m2 || 0) 
-            },
-            { 
-                label: 'Struktur Bangunan Baru', 
-                detail: `${newBuild.building_structure_2_courts?.area_m2 || 0} m² @ Rp ${sierHelpers.formatNumber(newBuild.building_structure_2_courts?.cost_per_m2 || 0)}`, 
-                cost: (newBuild.building_structure_2_courts?.area_m2 || 0) * (newBuild.building_structure_2_courts?.cost_per_m2 || 0) 
-            },
-            { 
-                label: 'Pembangunan Toilet Baru', 
-                detail: `${sanitaryNew.toilet_unit || 0} unit × ${sanitaryNew.area_m2_per_toilet || 0} m²/unit @ Rp ${sierHelpers.formatNumber(sanitaryNew.cost_per_m2 || 0)}`, 
-                cost: (sanitaryNew.toilet_unit || 0) * (sanitaryNew.area_m2_per_toilet || 0) * (sanitaryNew.cost_per_m2 || 0)
-            }
-        ]);
+        if (Object.keys(newBuild).length > 0) {
+            let newBuildSubtotal = 0;
+            section2Html += `<tr class="bg-gray-50 font-semibold"><td class="px-3 py-2 pl-8" colspan="3">2.2 Pekerjaan Bangun Baru (Area Koperasi)</td></tr>`;
+            
+            const sanitaryNew = newBuild.plumbing_and_sanitary || {};
+            const newBuildItems = [
+                { label: 'Pembongkaran Gedung Koperasi', detail: `${newBuild.building_demolition?.area_m2 || 0} m² @ Rp ${sierHelpers.formatNumber(newBuild.building_demolition?.cost_per_m2 || 0)}`, cost: (newBuild.building_demolition?.area_m2 || 0) * (newBuild.building_demolition?.cost_per_m2 || 0) },
+                { label: 'Pondasi Bangunan Baru', detail: `${newBuild.land_preparation_and_foundation?.area_m2 || 0} m² @ Rp ${sierHelpers.formatNumber(newBuild.land_preparation_and_foundation?.cost_per_m2 || 0)}`, cost: (newBuild.land_preparation_and_foundation?.area_m2 || 0) * (newBuild.land_preparation_and_foundation?.cost_per_m2 || 0) },
+                { label: 'Struktur Bangunan Baru', detail: `${newBuild.building_structure_2_courts?.area_m2 || 0} m² @ Rp ${sierHelpers.formatNumber(newBuild.building_structure_2_courts?.cost_per_m2 || 0)}`, cost: (newBuild.building_structure_2_courts?.area_m2 || 0) * (newBuild.building_structure_2_courts?.cost_per_m2 || 0) },
+                { label: 'Pembangunan Toilet Baru', detail: `${sanitaryNew.toilet_unit || 0} unit`, cost: (sanitaryNew.toilet_unit || 0) * (sanitaryNew.area_m2_per_toilet || 0) * (sanitaryNew.cost_per_m2 || 0)},
+                { label: 'Kipas Industri / Exhaust', detail: `${newBuild.industrial_fans?.quantity || 0} unit @ Rp ${sierHelpers.formatNumber(newBuild.industrial_fans?.unit_cost || 0)}`, cost: (newBuild.industrial_fans?.quantity || 0) * (newBuild.industrial_fans?.unit_cost || 0) }
+            ];
+
+            newBuildItems.forEach(item => {
+                if (item.cost) {
+                    newBuildSubtotal += item.cost;
+                    section2Html += `<tr class="hover:bg-gray-50"><td class="px-3 py-2 pl-12">${item.label}</td><td class="px-3 py-2 text-gray-500 text-xs">${item.detail}</td><td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(item.cost))}</td></tr>`;
+                }
+            });
+            section2Html += `<tr class="font-semibold bg-gray-100"><td class="px-3 py-2 text-right" colspan="2">Subtotal Bangun Baru</td><td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(newBuildSubtotal))}</td></tr>`;
+            section2GrandSubtotal += newBuildSubtotal;
+        }
+        
+        section2Html += `<tr class="font-semibold bg-gray-200"><td class="px-3 py-2 text-right" colspan="2">Subtotal Pekerjaan Konstruksi & Sipil</td><td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(section2GrandSubtotal))}</td></tr>`;
+        
+        tableBodyHtml += section2Html;
+        grandSubtotal += section2GrandSubtotal;
         
         let section3Html = `<tbody class="bg-gray-100"><td colspan="3" class="p-3 font-bold text-gray-800">3. Peralatan Lapangan & Inventaris</td></tbody>`;
         let section3Subtotal = 0;
