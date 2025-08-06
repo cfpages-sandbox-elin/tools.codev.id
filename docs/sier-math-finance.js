@@ -1,4 +1,4 @@
-// File: sier-math-finance.js bikin komplit skenario fix3
+// File: sier-math-finance.js bikin komplit skenario fix4 hapus kegoblokan
 const sierMathFinance = {
     getValueByPath(obj, path) {
         return path.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj);
@@ -208,65 +208,6 @@ const sierMathFinance = {
         });
 
         let combined = this._createCombinedModel(individualResults, financing, projectionYears);
-        return { individual: individualResults, combined: combined };
-    },
-
-    buildFinancialModelForScenario(scenarioKey) {
-        let components = [];
-        if (scenarioKey.includes('dr')) components.push('dr');
-        if (scenarioKey.includes('padel4')) components.push('padel4');
-        if (scenarioKey.includes('padel2')) components.push('padel2');
-        if (scenarioKey.includes('mp')) components.push('mp');
-        if (components.length > 0) {
-            components.push('shared');
-            components.push('digital');
-        }
-
-        const projectionYears = 10;
-        let individualResults = {};
-        let totalCapex = 0;
-
-        // 1. Hitung finansial untuk setiap komponen secara terpisah
-        components.forEach(compKey => {
-            const unitFinancials = this._getFinancialsForComponent(compKey, projectionYears);
-            individualResults[compKey] = unitFinancials;
-            totalCapex += unitFinancials.capexSchedule[0];
-        });
-
-        // 2. Hitung biaya bersama (bunga)
-        const financing = this._calculateLoanAmortization(totalCapex, projectConfig.assumptions.financing, projectionYears);
-
-        // 3. Proyeksikan Laba Rugi per unit dengan alokasi bunga
-        Object.keys(individualResults).forEach(key => {
-            const unit = individualResults[key];
-            const unitCapex = unit.capexSchedule[0];
-            const interestAllocationRatio = totalCapex > 0 ? (unitCapex / totalCapex) : 0;
-            
-            unit.pnl = {
-                revenue: unit.revenue,
-                opex: unit.opex,
-                ebitda: Array(projectionYears + 1).fill(0),
-                depreciation: unit.depreciation,
-                ebit: Array(projectionYears + 1).fill(0),
-                interest: Array(projectionYears + 1).fill(0),
-                ebt: Array(projectionYears + 1).fill(0),
-                tax: Array(projectionYears + 1).fill(0),
-                netIncome: Array(projectionYears + 1).fill(0)
-            };
-
-            for (let year = 1; year <= projectionYears; year++) {
-                unit.pnl.ebitda[year] = unit.revenue[year] - unit.opex[year];
-                unit.pnl.ebit[year] = unit.pnl.ebitda[year] - unit.pnl.depreciation[year];
-                unit.pnl.interest[year] = financing.interestPayments[year] * interestAllocationRatio;
-                unit.pnl.ebt[year] = unit.pnl.ebit[year] - unit.pnl.interest[year];
-                unit.pnl.tax[year] = unit.pnl.ebt[year] > 0 ? unit.pnl.ebt[year] * projectConfig.assumptions.tax_rate_profit : 0;
-                unit.pnl.netIncome[year] = unit.pnl.ebt[year] - unit.pnl.tax[year];
-            }
-        });
-
-        // 4. Buat model gabungan dengan menjumlahkan hasil individual
-        let combined = this._createCombinedModel(individualResults, financing, projectionYears);
-        
         return { individual: individualResults, combined: combined };
     },
 
