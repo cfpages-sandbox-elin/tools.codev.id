@@ -1,4 +1,4 @@
-// File: sier-variables.js bikin padel larang
+// File: sier-variables.js bikin mp larang
 const projectConfig = {};
 
 projectConfig.site_parameters = {
@@ -500,22 +500,22 @@ projectConfig.meetingPoint = {
             renovate: {
                 title: "Metode 1: Renovasi Gedung Arsip",
                 base_costs: {
-                    permits_and_consulting: 40000000,
+                    permits_and_consulting: 80000000,
                     structural_reinforcement: {
                         title: 'Perkuatan Struktural',
                         items: {
-                            foundation_strengthening: { area_m2: 109, cost_per_m2: 500000 },
-                            column_beam_works: { area_m2: 109, cost_per_m2: 600000 },
-                            roof_structure_upgrade: { area_m2: 109, cost_per_m2: 275000 }
+                            foundation_strengthening: { area_m2: 109, cost_per_m2: 1000000 },
+                            column_beam_works: { area_m2: 109, cost_per_m2: 1200000 },
+                            roof_structure_upgrade: { area_m2: 109, cost_per_m2: 550000 }
                         }
                     },
                     mep_upgrade_hvac: { area_m2: 109, cost_per_m2: 750000 },
                     facade_modernization: {
                         title: 'Modernisasi Fasad',
                         items: {
-                            cladding_system_installation: { area_m2: 109, cost_per_m2: 1250000 },
-                            signage_branding: { lump_sum: 40000000 },
-                            architectural_lighting: { lump_sum: 25000000 }
+                            cladding_system_installation: { area_m2: 109, cost_per_m2: 2500000 },
+                            signage_branding: { lump_sum: 80000000 },
+                            architectural_lighting: { lump_sum: 50000000 }
                         }
                     }
                 }
@@ -523,24 +523,24 @@ projectConfig.meetingPoint = {
             rebuild: {
                 title: "Metode 2: Bongkar & Bangun Ulang",
                 base_costs: {
-                    permits_and_consulting: 75000000,
+                    permits_and_consulting: 150000000,
                     building_demolition: { area_m2: 109, cost_per_m2: 250000 },
                     foundation_and_structure: {
                         title: 'Pekerjaan Pondasi & Struktur',
                         items: {
-                            foundation_works: { area_m2: 109, cost_per_m2: 700000 },
-                            column_beam_structure: { area_m2: 109, cost_per_m2: 1200000 },
-                            floor_slab_works: { area_m2: 109, cost_per_m2: 600000 },
-                            roof_structure: { area_m2: 109, cost_per_m2: 500000 }
+                            foundation_works: { area_m2: 109, cost_per_m2: 1400000 },
+                            column_beam_structure: { area_m2: 109, cost_per_m2: 2400000 },
+                            floor_slab_works: { area_m2: 109, cost_per_m2: 1200000 },
+                            roof_structure: { area_m2: 109, cost_per_m2: 1000000 }
                         }
                     },
                     architecture_facade: {
                         title: 'Pekerjaan Arsitektur & Fasad',
                         items: {
-                            wall_works: { area_m2: 109, cost_per_m2: 400000 },
-                            facade_finishing: { area_m2: 109, cost_per_m2: 750000 },
-                            doors_windows_frames: { area_m2: 109, cost_per_m2: 350000 },
-                            interior_finishes: { area_m2: 109, cost_per_m2: 500000 }
+                            wall_works: { area_m2: 109, cost_per_m2: 800000 },
+                            facade_finishing: { area_m2: 109, cost_per_m2: 1500000 },
+                            doors_windows_frames: { area_m2: 109, cost_per_m2: 700000 },
+                            interior_finishes: { area_m2: 109, cost_per_m2: 1000000 }
                         }
                     }
                 }
