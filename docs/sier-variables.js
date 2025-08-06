@@ -1,4 +1,4 @@
-// File: sier-variables.js dr koreksi total + hapus shared
+// File: sier-variables.js dr dr hapus hvac
 const projectConfig = {};
 
 projectConfig.site_parameters = {
@@ -241,7 +241,6 @@ projectConfig.drivingRange = {
             cost_per_bay: 4500000
         },
         mep_systems: {
-            hvac_system: { cost_per_m2_hvac: 750000, },
             electrical_system: { rate_of_physical_cost: 0.15, },
             plumbing_system: { lump_sum_cost: 150000000, }
         },
