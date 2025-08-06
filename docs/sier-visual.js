@@ -1,4 +1,4 @@
-// File: sier-visual. add sensitivity
+// File: sier-visual. bikin komplit skenario
 function applyAutomaticCaptionsAndNumbering() {
     const allHeadings = document.querySelectorAll('h2, h3, h4, h5');
 
@@ -89,6 +89,27 @@ function generateTableOfContents() {
     });
 }
 
+function getActiveScenarioConfig() {
+    return {
+        dr: document.getElementById('dr-scenario-selector').value,
+        padel: document.getElementById('padel-scenario-selector').value,
+        mp: document.getElementById('mp-scenario-selector').value
+    };
+}
+
+function populateFinancingSelector() {
+    const selector = document.getElementById('financing-scenario-selector');
+    const scenarios = projectConfig.assumptions.financing_scenarios;
+    if (!selector || !scenarios) return;
+    selector.innerHTML = '';
+    for (const key in scenarios) {
+        const option = document.createElement('option');
+        option.value = key;
+        option.textContent = scenarios[key].title;
+        selector.appendChild(option);
+    }
+}
+
 function processMarkdownFormatting() {
     console.log("Memulai proses format Markdown ke HTML...");
     const container = document.querySelector('.container.mx-auto');
@@ -102,27 +123,6 @@ function processMarkdownFormatting() {
             el.innerHTML = content;
         }
     });
-}
-
-function populateFinancingSelector() {
-    const selector = document.getElementById('financing-scenario-selector');
-    const scenarios = projectConfig.assumptions.financing_scenarios;
-    const currentScenarioKey = Object.keys(scenarios).find(key => 
-        scenarios[key].title === projectConfig.assumptions.financing.title
-    );
-
-    if (!selector || !scenarios) return;
-    selector.innerHTML = ''; // Kosongkan opsi default
-
-    for (const key in scenarios) {
-        const option = document.createElement('option');
-        option.value = key;
-        option.textContent = scenarios[key].title;
-        if (key === currentScenarioKey) {
-            option.selected = true;
-        }
-        selector.appendChild(option);
-    }
 }
 
 function checkRenderStatus() {
@@ -142,48 +142,43 @@ function checkRenderStatus() {
 
 document.addEventListener('DOMContentLoaded', () => {
     function renderAll() {
-        const projectScenarioKey = document.getElementById('scenario-selector').value;
-        const financingScenarioKey = document.getElementById('financing-scenario-selector').value;
+        const scenarioConfig = getActiveScenarioConfig();
+        const financingKey = document.getElementById('financing-scenario-selector').value;
 
-        if (!projectScenarioKey || !financingScenarioKey) {
-            console.error("Skenario tidak valid!");
-            return;
-        }
+        console.log(`[Controller] Merender ulang. Skenario:`, scenarioConfig, `Pendanaan: ${financingKey}`);
+        
+        // Perbarui konfigurasi aktif berdasarkan pilihan UI
+        projectConfig.assumptions.financing = projectConfig.assumptions.financing_scenarios[financingKey];
 
-        // 1. Perbarui konfigurasi aktif berdasarkan pilihan UI
-        projectConfig.assumptions.financing = projectConfig.assumptions.financing_scenarios[financingScenarioKey];
-        console.log(`[Controller] Merender ulang. Proyek: ${projectScenarioKey}, Pendanaan: ${financingScenarioKey}`);
-
-        // 2. HITUNG MODEL FINANSIAL LENGKAP SEKALI SAJA
-        const model = sierMathFinance.buildFinancialModelForScenario(projectScenarioKey);
+        // Hitung ulang semua model finansial
+        const model = sierMathFinance.buildFinancialModelForScenario(scenarioConfig);
         const sensitivityData = sierMathFinance.runSensitivityAnalysis(model);
 
-        // 3. Render semua modul visual dengan MENGIRIMKAN data yang sudah dihitung
-        
-        // Modul non-finansial yang tidak butuh data model
+        // Render semua modul visual
         sierHelpers.tryToRender(() => sierVisualDemography.render());
         sierHelpers.tryToRender(() => sierVisualMarket.render());
         sierHelpers.tryToRender(() => sierVisualSurvey.render());
-        sierHelpers.tryToRender(() => sierVisualTechnical.render());
+        sierHelpers.tryToRender(() => sierVisualTechnical.render(scenarioConfig));
         sierHelpers.tryToRender(() => sierVisualTechnicalDiagrams.renderAll());
         sierHelpers.tryToRender(() => sierVisualDigital.render());
         sierHelpers.tryToRender(() => sierVisualMaintenance.render());
         sierHelpers.tryToRender(() => sierVisualMeetingPoint.renderAll());
-        sierHelpers.tryToRender(() => sierChart.renderAllCharts());
-
-        // Modul yang BUTUH data model
-        sierHelpers.tryToRender(() => sierVisualImpact.render(model)); // Kirim model ke sini
+        sierHelpers.tryToRender(() => sierChart.renderAllCharts(scenarioConfig));
+        sierHelpers.tryToRender(() => sierVisualImpact.render(model));
         sierHelpers.tryToRender(() => sierVisualFinanceSummary.render(model));
-        sierHelpers.tryToRender(() => sierVisualFinanceDetails.render(model, projectScenarioKey));
+        sierHelpers.tryToRender(() => sierVisualFinanceDetails.render(model, scenarioConfig));
         sierHelpers.tryToRender(() => sierVisualSensitivity.render(sensitivityData));
         
-        // 4. Lakukan post-processing
+        // Proses akhir
         processMarkdownFormatting();
         applyAutomaticCaptionsAndNumbering();
     }
 
     function setupEventListeners() {
-        const mainContainer = document.body;
+        document.getElementById('dr-scenario-selector').addEventListener('change', renderAll);
+        document.getElementById('padel-scenario-selector').addEventListener('change', renderAll);
+        document.getElementById('mp-scenario-selector').addEventListener('change', renderAll);
+        document.getElementById('financing-scenario-selector').addEventListener('change', renderAll);
 
         const handleInputFinish = (inputField) => {
             const path = inputField.dataset.path;

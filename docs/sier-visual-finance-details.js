@@ -1,4 +1,4 @@
-// File: sier-visual-finance-details.js padel komplit detil per pekerjaan
+// File: sier-visual-finance-details.js bikin komplit skenario
 const sierVisualFinanceDetails = {
     _renderUnitSummaries(individualResults) {
         let html = '';
@@ -519,7 +519,7 @@ const sierVisualFinanceDetails = {
         container.innerHTML = `<h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-emerald-600 pl-4">Rincian Estimasi Biaya Investasi (CapEx): Fasilitas Umum</h2><div class="bg-white p-6 rounded-lg shadow-md mb-8"><p class="text-gray-600 mb-6">${sharedCapex.notes}</p><div class="overflow-x-auto border rounded-lg"><table class="w-full text-sm"><thead class="bg-gray-200 text-xs uppercase"><tr><th class="p-2 text-left w-2/5">Komponen Biaya</th><th class="p-2 text-left w-2/5">Detail Perhitungan</th><th class="p-2 text-right w-1/5">Biaya (Rp)</th></tr></thead>${tableBodyHtml}<tfoot class="font-bold"><tr class="bg-gray-200"><td class="p-3 text-right" colspan="2">Subtotal</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(grandTotal))}</td></tr><tr class="bg-yellow-200"><td class="p-3 text-right" colspan="2">Kontingensi (${(projectConfig.assumptions.contingency_rate * 100)}%)</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(contingency))}</td></tr><tr class="bg-emerald-600 text-white text-lg"><td class="p-3 text-right" colspan="2">Total Estimasi Investasi</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(finalTotal))}</td></tr></tfoot></table></div></div>`;
     },
 
-    _renderMeetingPointCapexDetailsVisuals() {
+    _renderMeetingPointCapexDetailsVisuals(scenarioKey) {
         const container = document.getElementById('meeting-point-capex-details-container');
         if (!container) return;
 
@@ -674,7 +674,6 @@ const sierVisualFinanceDetails = {
 
         const constructionRenovateHtml = createConstructionTable('renovate');
         const constructionRebuildHtml = createConstructionTable('rebuild');
-
         const concept1Html = createConceptTable('concept_1_pods');
         const concept2Html = createConceptTable('concept_2_open');
         const concept3Html = createConceptTable('concept_3_vip');
@@ -682,19 +681,62 @@ const sierVisualFinanceDetails = {
         container.innerHTML = `
             <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-cyan-600 pl-4">Rincian Estimasi Biaya Investasi (CapEx): Meeting Point</h2>
             <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-                <p class="text-gray-600 mb-6">Total biaya dihitung dengan menggabungkan satu <strong>Metode Konstruksi</strong> (biaya dasar) dengan satu <strong>Konsep Desain</strong> (biaya interior).</p>
+                <h3 class="text-xl font-bold mb-4 text-gray-700 border-b pb-2">Langkah 1: Rincian Biaya Dasar Konstruksi</h3>
+                ${constructionRenovateHtml} ${constructionRebuildHtml}
+                <h3 class="text-xl font-bold mb-4 text-gray-700 border-b pb-2 mt-12">Langkah 2: Rincian Biaya Konsep Interior</h3>
+                ${concept1Html} ${concept2Html} ${concept3Html}
                 
-                <h3 class="text-xl font-bold mb-4 text-gray-700 border-b pb-2">Langkah 1: Pilih Biaya Dasar Konstruksi</h3>
-                ${constructionRenovateHtml}
-                ${constructionRebuildHtml}
-                
-                <h3 class="text-xl font-bold mb-4 text-gray-700 border-b pb-2 mt-12">Langkah 2: Tambahkan Biaya Konsep Interior</h3>
-                ${concept1Html}
-                ${concept2Html}
-                ${concept3Html}
+                <!-- AWAL BAGIAN BARU: KALKULATOR TOTAL BIAYA -->
+                <div id="mp-interactive-calculator" class="mt-12 pt-8 border-t-4 border-double">
+                    <h3 class="text-xl font-bold mb-4 text-gray-700">Langkah 3: Hitung Total Biaya Investasi Meeting Point</h3>
+                    <div class="bg-gray-50 p-6 rounded-lg border grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+                        <!-- Selector Metode Konstruksi -->
+                        <div>
+                            <label for="mp-construction-method" class="block text-sm font-medium text-gray-700">Pilih Metode Konstruksi:</label>
+                            <select id="mp-construction-method" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+                                <option value="renovate">Metode 1: Renovasi Gedung Arsip</option>
+                                <option value="rebuild">Metode 2: Bongkar & Bangun Ulang</option>
+                            </select>
+                        </div>
+                        <!-- Selector Konsep Interior -->
+                        <div>
+                            <label for="mp-concept-choice" class="block text-sm font-medium text-gray-700">Pilih Konsep Interior:</label>
+                            <select id="mp-concept-choice" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
+                                <option value="concept_1_pods">Konsep 1: Business Lounge & Pods</option>
+                                <option value="concept_2_open">Konsep 2: Open Space & Coworking</option>
+                                <option value="concept_3_vip">Konsep 3: Area Meeting dengan Ruang VIP</option>
+                            </select>
+                        </div>
+                        <!-- Total Biaya -->
+                        <div class="text-center md:text-right">
+                            <p class="text-sm font-medium text-gray-700">Total Estimasi Investasi (termasuk kontingensi):</p>
+                            <p id="mp-capex-total" class="text-3xl font-bold text-cyan-700 mt-1">Rp 0</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- AKHIR BAGIAN BARU -->
             </div>
         `;
+
+        // --- Logika Interaktif untuk Kalkulator ---
+        const updateTotal = () => {
+            const constructionKey = document.getElementById('mp-construction-method').value;
+            const conceptKey = document.getElementById('mp-concept-choice').value;
+            const totalDisplay = document.getElementById('mp-capex-total');
+
+            const baseCost = sierMathFinance._calculateMeetingPointCapex(constructionKey, conceptKey);
+            const totalWithContingency = baseCost * (1 + projectConfig.assumptions.contingency_rate);
+            
+            totalDisplay.innerText = `Rp ${sierHelpers.formatNumber(Math.round(totalWithContingency))}`;
+        };
+
+        document.getElementById('mp-construction-method').addEventListener('change', updateTotal);
+        document.getElementById('mp-concept-choice').addEventListener('change', updateTotal);
+
+        // Panggil sekali untuk inisialisasi
+        updateTotal();
     },
+
 
     _renderInputAssumptionDetails(model, scenarioKey) {
         const clearContainer = (id) => { const el = document.getElementById(id); if (el) el.innerHTML = ''; };

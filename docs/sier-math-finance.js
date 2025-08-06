@@ -1,4 +1,4 @@
-// File: sier-math-finance.js fix error total mep cost
+// File: sier-math-finance.js bikin komplit skenario
 const sierMathFinance = {
     getValueByPath(obj, path) {
         return path.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj);
@@ -158,16 +158,21 @@ const sierMathFinance = {
         return { capexSchedule, capexBreakdown, revenue, opex, depreciation };
     },
 
-    buildFinancialModelForScenario(scenarioKey) {
-        // === LANGKAH 1: TENTUKAN KOMPONEN AKTIF BERDASARKAN SKENARIO ===
+    buildFinancialModelForScenario(scenarioConfig) {
         let components = [];
-        if (scenarioKey.includes('dr')) components.push('dr');
-        if (scenarioKey.includes('padel4')) components.push('padel4');
-        if (scenarioKey.includes('padel2')) components.push('padel2');
-        if (scenarioKey.includes('mp')) components.push('mp');
-        // Fasilitas bersama & digital ditambahkan jika ada proyek fisik
+        if (scenarioConfig.dr && scenarioConfig.dr !== 'none') {
+            components.push('dr');
+        }
+        if (scenarioConfig.padel === '4courts') {
+            components.push('padel4');
+        } else if (scenarioConfig.padel === '2courts') {
+            components.push('padel2');
+        }
+        if (scenarioConfig.mp && scenarioConfig.mp !== 'none') {
+            components.push('mp');
+        }
+        
         if (components.length > 0) {
-            components.push('shared');
             components.push('digital');
         }
 
