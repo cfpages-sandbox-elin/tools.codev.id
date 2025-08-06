@@ -1,16 +1,5 @@
-// File: sier-math-finance.js bikin komplit skenario fix4 hapus kegoblokan
+// File: sier-math-finance.js bikin kartu assumption
 const sierMathFinance = {
-    getValueByPath(obj, path) {
-        return path.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj);
-    },
-
-    setValueByPath(obj, path, value) {
-        const keys = path.split('.');
-        const lastKey = keys.pop();
-        const target = keys.reduce((o, k) => o[k] = o[k] || {}, obj);
-        target[lastKey] = value;
-    },
-
     _getDepreciationDetailsForScenario(components) {
         const depRates = projectConfig.assumptions.depreciation_years;
         let combinedCapex = {
@@ -28,14 +17,14 @@ const sierMathFinance = {
             } else if (compKey.includes('padel')) {
                 const scenarioKey = compKey === 'padel4' ? 'four_courts_combined' : 'two_courts_futsal_renovation';
                 const padelCapexConf = projectConfig.padel.scenarios[scenarioKey].capex;
-                combinedCapex.building += this._calculateTotal(padelCapexConf.component_koperasi_new_build || {}) + this._calculateTotal(padelCapexConf.component_futsal_renovation || {});
-                combinedCapex.equipment += this._calculateTotal(padelCapexConf.sport_courts_equipment || {});
-                combinedCapex.other += this._calculateTotal(padelCapexConf.pre_operational || {});
+                combinedCapex.building += sierHelpers.calculateTotal(padelCapexConf.component_koperasi_new_build || {}) + sierHelpers.calculateTotal(padelCapexConf.component_futsal_renovation || {});
+                combinedCapex.equipment += sierHelpers.calculateTotal(padelCapexConf.sport_courts_equipment || {});
+                combinedCapex.other += sierHelpers.calculateTotal(padelCapexConf.pre_operational || {});
             } else if (compKey === 'mp') {
                  const mpCapexConf = projectConfig.meetingPoint.capex_scenario_a;
-                 combinedCapex.building += this._calculateTotal(mpCapexConf.renovation_costs || {});
-                 combinedCapex.equipment += this._calculateTotal(mpCapexConf.equipment_and_furniture || {});
-                 combinedCapex.other += this._calculateTotal(mpCapexConf.pre_operational || {});
+                 combinedCapex.building += sierHelpers.calculateTotal(mpCapexConf.renovation_costs || {});
+                 combinedCapex.equipment += sierHelpers.calculateTotal(mpCapexConf.equipment_and_furniture || {});
+                 combinedCapex.other += sierHelpers.calculateTotal(mpCapexConf.pre_operational || {});
             } else if (compKey === 'digital') {
                 combinedCapex.digital_systems += capex;
             } else if (compKey === 'shared') {
@@ -75,9 +64,9 @@ const sierMathFinance = {
         let baseOpex = { salaries: 0, other: 0 };
         const extractOpex = (opexConfig) => {
             if (!opexConfig) return { salaries: 0, other: 0 };
-            let salaries = this._calculateTotal(opexConfig.salaries_wages || {});
+            let salaries = sierHelpers.calculateTotal(opexConfig.salaries_wages || {});
             let other = 0;
-            for (const key in opexConfig) { if (key !== 'salaries_wages') other += this._calculateTotal(opexConfig[key]); }
+            for (const key in opexConfig) { if (key !== 'salaries_wages') other += sierHelpers.calculateTotal(opexConfig[key]); }
             return { salaries: salaries * 12, other: other * 12 };
         };
         const getPadelScenarioKey = () => {
@@ -104,9 +93,9 @@ const sierMathFinance = {
                 const padelBaseCapex = this._calculatePadelCapex(padelScenarioKey);
                 capexSchedule[0] = padelBaseCapex * (1 + projectConfig.assumptions.contingency_rate);
                 const padelCapexConf = padelScenario.capex;
-                capexBreakdown.building += this._calculateTotal(padelCapexConf.component_koperasi_new_build || {}) + this._calculateTotal(padelCapexConf.component_futsal_renovation || {});
-                capexBreakdown.equipment += this._calculateTotal(padelCapexConf.sport_courts_equipment || {});
-                capexBreakdown.other += this._calculateTotal(padelCapexConf.pre_operational || {});
+                capexBreakdown.building += sierHelpers.calculateTotal(padelCapexConf.component_koperasi_new_build || {}) + sierHelpers.calculateTotal(padelCapexConf.component_futsal_renovation || {});
+                capexBreakdown.equipment += sierHelpers.calculateTotal(padelCapexConf.sport_courts_equipment || {});
+                capexBreakdown.other += sierHelpers.calculateTotal(padelCapexConf.pre_operational || {});
                 baseAnnualRevenue = this._getUnitCalculations('padel', padelScenarioKey).pnl.annualRevenue;
                 baseOpex = extractOpex(padelScenario.opexMonthly);
                 break;
@@ -117,15 +106,15 @@ const sierMathFinance = {
                 const conceptKey = parts.join('_'); // Menggabungkan sisanya menjadi 'concept_1_pods', dst.
                 const baseMpCapex = this._calculateMeetingPointCapex(constructionKey, conceptKey);
                 capexSchedule[0] = baseMpCapex * (1 + projectConfig.assumptions.contingency_rate);
-                const constructionCosts = this._calculateTotal(projectConfig.meetingPoint.capex_scenarios.construction_scenarios[constructionKey].base_costs);
+                const constructionCosts = sierHelpers.calculateTotal(projectConfig.meetingPoint.capex_scenarios.construction_scenarios[constructionKey].base_costs);
                 const conceptCosts = baseMpCapex - constructionCosts;
                 capexBreakdown.building += constructionCosts;
                 capexBreakdown.equipment += conceptCosts;
-                baseAnnualRevenue = this._calculateTotal(projectConfig.meetingPoint.revenue) * 12;
+                baseAnnualRevenue = sierHelpers.calculateTotal(projectConfig.meetingPoint.revenue) * 12;
                 baseOpex = extractOpex(projectConfig.meetingPoint.opexMonthly);
                 break;
             case compKey === 'digital':
-                capexSchedule[0] = this._calculateTotal(projectConfig.digital_capex) * (1 + projectConfig.assumptions.contingency_rate);
+                capexSchedule[0] = sierHelpers.calculateTotal(projectConfig.digital_capex) * (1 + projectConfig.assumptions.contingency_rate);
                 capexBreakdown.digital_systems = capexSchedule[0];
                 break;
         }
@@ -355,22 +344,6 @@ const sierMathFinance = {
         return { paybackPeriod, discountedPaybackPeriod, npv, irr, profitabilityIndex };
     },
 
-    _calculateTotal(dataObject) {
-        if (typeof dataObject !== 'object' || dataObject === null) return 0;
-        return Object.values(dataObject).reduce((sum, value) => {
-            if (typeof value === 'number') return sum + value;
-            if (typeof value === 'object' && value !== null) {
-                if (value.count && value.salary) return sum + (value.count * value.salary);
-                if (value.quantity && value.unit_cost) return sum + (value.quantity * value.unit_cost);
-                if (value.area_m2 && value.cost_per_m2) return sum + (value.area_m2 * value.cost_per_m2);
-                if (value.toilet_unit && value.area_m2_per_toilet && value.cost_per_m2) return sum + (value.toilet_unit * value.area_m2_per_toilet * value.cost_per_m2);
-                if (value.lump_sum) return sum + value.lump_sum;
-                return sum + this._calculateTotal(value);
-            }
-            return sum;
-        }, 0);
-    },
-
     _calculateDrCapex() {
         const a = projectConfig.drivingRange.capex_assumptions;
         const global = projectConfig.assumptions;
@@ -457,18 +430,18 @@ const sierMathFinance = {
         const capex = scenario.capex;
         let grandTotal = 0;
 
-        grandTotal += this._calculateTotal(capex.pre_operational || {});
+        grandTotal += sierHelpers.calculateTotal(capex.pre_operational || {});
 
         if (capex.component_futsal_renovation) {
-            grandTotal += this._calculateTotal(capex.component_futsal_renovation);
+            grandTotal += sierHelpers.calculateTotal(capex.component_futsal_renovation);
         }
 
         if (capex.component_koperasi_new_build) {
             const buildData = capex.component_koperasi_new_build;
-            grandTotal += this._calculateTotal(buildData.land_preparation_and_foundation || {});
-            grandTotal += this._calculateTotal(buildData.building_structure_2_courts || {});
-            grandTotal += this._calculateTotal(buildData.interior_and_facade || {});
-            grandTotal += this._calculateTotal(buildData.building_demolition || {});
+            grandTotal += sierHelpers.calculateTotal(buildData.land_preparation_and_foundation || {});
+            grandTotal += sierHelpers.calculateTotal(buildData.building_structure_2_courts || {});
+            grandTotal += sierHelpers.calculateTotal(buildData.interior_and_facade || {});
+            grandTotal += sierHelpers.calculateTotal(buildData.building_demolition || {});
             
             // PERBAIKAN LOGIKA DI SINI
             if (buildData.plumbing_and_sanitary) {
@@ -481,10 +454,10 @@ const sierMathFinance = {
             const numCourts = scenario.num_courts;
             const equipment = capex.sport_courts_equipment;
             if (equipment.per_court_costs) {
-                grandTotal += this._calculateTotal(equipment.per_court_costs) * numCourts;
+                grandTotal += sierHelpers.calculateTotal(equipment.per_court_costs) * numCourts;
             }
             if (equipment.initial_inventory) {
-                grandTotal += this._calculateTotal(equipment.initial_inventory);
+                grandTotal += sierHelpers.calculateTotal(equipment.initial_inventory);
             }
         }
 
@@ -503,7 +476,7 @@ const sierMathFinance = {
 
         // 1. Hitung biaya dari skenario konstruksi yang dipilih
         const constructionData = mpConfig.capex_scenarios.construction_scenarios[constructionScenarioKey].base_costs;
-        totalCapex += this._calculateTotal(constructionData);
+        totalCapex += sierHelpers.calculateTotal(constructionData);
 
         // 2. Hitung biaya dari skenario konsep interior yang dipilih
         const conceptData = mpConfig.capex_scenarios.concept_scenarios[conceptScenarioKey].items;

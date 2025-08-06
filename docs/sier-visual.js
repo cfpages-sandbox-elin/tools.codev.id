@@ -1,4 +1,4 @@
-// File: sier-visual. bikin komplit skenario fix2
+// File: sier-visual.js bikin kartu assumption
 function applyAutomaticCaptionsAndNumbering() {
     const allHeadings = document.querySelectorAll('h2, h3, h4, h5');
 
@@ -191,8 +191,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (path && !isNaN(value)) {
-                sierMathFinance.setValueByPath(projectConfig, path, value);
-                renderFinancials(document.getElementById('scenario-selector').value);
+                // DIUBAH: Memanggil helper dari sierHelpers, bukan sierMathFinance
+                sierHelpers.setValueByPath(projectConfig, path, value);
+                // Fungsi renderFinancials tidak ada, renderAll() sudah mencakup semuanya.
                 renderAll();
             }
         };

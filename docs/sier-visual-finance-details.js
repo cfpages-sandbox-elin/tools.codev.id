@@ -1,4 +1,4 @@
-// File: sier-visual-finance-details.js mbulet scenarioconfig3
+// File: sier-visual-finance-details.js bikin kartu assumption
 const sierVisualFinanceDetails = {
     _renderUnitSummaries(individualResults) {
         let html = '';
@@ -14,12 +14,10 @@ const sierVisualFinanceDetails = {
         for (const key in individualResults) {
             const unit = individualResults[key];
             const initialCapex = unit.capexSchedule[0];
-            // Hitung rata-rata dari tahun 1-10, abaikan tahun 0
             const avgAnnualRevenue = unit.revenue.length > 1 ? unit.revenue.slice(1).reduce((a, b) => a + b, 0) / 10 : 0;
             const avgAnnualOpex = unit.opex.length > 1 ? unit.opex.slice(1).reduce((a, b) => a + b, 0) / 10 : 0;
             const avgAnnualProfitContribution = avgAnnualRevenue - avgAnnualOpex;
 
-            // Jangan render kartu untuk unit tanpa revenue/opex (misal: digital)
             if (initialCapex === 0 && avgAnnualRevenue === 0) continue;
 
             html += `
@@ -87,7 +85,6 @@ const sierVisualFinanceDetails = {
                     </div>`;
         };
         
-        // Logika Kondisional: Tampilkan tabel OpEx hanya untuk unit yang ada di skenario
         if (scenarioConfig.dr && scenarioConfig.dr !== 'none') tablesHtml.push(createUnitOpexTable('drivingRange', 'Driving Range'));
         if (scenarioConfig.padel === '4courts') tablesHtml.push(createUnitOpexTable('padel', 'Padel (4 Lapangan)', 'four_courts_combined'));
         if (scenarioConfig.padel === '2courts') tablesHtml.push(createUnitOpexTable('padel', 'Padel (2 Lapangan)', 'two_courts_futsal_renovation'));
@@ -141,65 +138,62 @@ const sierVisualFinanceDetails = {
 
         const { assumptions } = projectConfig;
 
-        const createItemHtml = (label, value, path, description = '', isPercent = false) => {
+        const createItemHtml = (label, value, path) => {
+            const isPercent = (path.includes('_rate') || path.includes('_portion')) && value <= 1;
             const contentHtml = sierEditable.createEditableNumber(value, path, { format: isPercent ? 'percent' : '' });
-            return `<div class="grid grid-cols-1 md:grid-cols-2 items-center gap-x-4 gap-y-1 py-2 border-b last:border-b-0"><div class="flex flex-col"><span>${label}</span>${description ? `<em class="text-xs text-gray-400">${description}</em>` : ''}</div><div class="md:text-right">${contentHtml}</div></div>`;
+            return `<div class="flex justify-between items-center py-1.5 border-b last:border-b-0"><span>${label}</span><div>${contentHtml}</div></div>`;
         };
+
+        const financingHtml = Object.keys(assumptions.financing).filter(k => k !== 'title').map(key => createItemHtml(sierTranslate.translate(key), assumptions.financing[key], `assumptions.financing.${key}`)).join('');
+        const escalationHtml = Object.keys(assumptions.escalation).map(key => createItemHtml(sierTranslate.translate(key), assumptions.escalation[key], `assumptions.escalation.${key}`)).join('');
         
-        const financingHtml = Object.keys(assumptions.financing).map(key => {
-            if (key === 'title') return ''; // Jangan tampilkan judul
-            const isRateOrPortion = key.includes('rate') || key.includes('portion');
-            return createItemHtml(
-                sierTranslate.translate(key),
-                assumptions.financing[key],
-                `assumptions.financing.${key}`,
-                '',
-                isRateOrPortion
-            );
-        }).join('');
-
-        const escalationHtml = Object.keys(assumptions.escalation).map(key => {
-            const isRate = key.includes('rate');
-            return createItemHtml(sierTranslate.translate(key), assumptions.escalation[key], `assumptions.escalation.${key}`, '', isRate);
-        }).join('');
-
         const globalAssumptionsHtml = `
-            <div class="space-y-6">
-                <div class="bg-gray-50 p-4 rounded-lg border">
-                    <h3 class="font-bold text-lg text-gray-700 mb-2">Asumsi Umum & Pajak</h3>
-                    ${createItemHtml('Pajak Penghasilan Badan', assumptions.tax_rate_profit, 'assumptions.tax_rate_profit', '', true)}
-                    ${createItemHtml('Tingkat Diskonto (WACC)', assumptions.discount_rate_wacc, 'assumptions.discount_rate_wacc', '', true)}
-                    ${createItemHtml('Dana Kontingensi', assumptions.contingency_rate, 'assumptions.contingency_rate', '', true)}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-gray-50 p-4 rounded-lg border"><h3 class="font-bold text-md text-gray-700 mb-2">Umum & Pajak</h3>
+                    ${createItemHtml('Pajak Penghasilan', assumptions.tax_rate_profit, 'assumptions.tax_rate_profit')}
+                    ${createItemHtml('Tingkat Diskonto (WACC)', assumptions.discount_rate_wacc, 'assumptions.discount_rate_wacc')}
+                    ${createItemHtml('Dana Kontingensi', assumptions.contingency_rate, 'assumptions.contingency_rate')}
                 </div>
-                <div class="bg-gray-50 p-4 rounded-lg border">
-                    <h3 class="font-bold text-lg text-gray-700 mb-2">Asumsi Pendanaan</h3>
-                    <!-- GANTI PLACEHOLDER DENGAN KONTEN DINAMIS -->
-                    ${financingHtml}
-                </div>
-                <div class="bg-gray-50 p-4 rounded-lg border">
-                    <h3 class="font-bold text-lg text-gray-700 mb-2">Asumsi Peningkatan (Eskalasi)</h3>
-                    ${escalationHtml}
-                </div>
+                <div class="bg-gray-50 p-4 rounded-lg border"><h3 class="font-bold text-md text-gray-700 mb-2">Pendanaan (${assumptions.financing.title})</h3>${financingHtml}</div>
+                <div class="bg-gray-50 p-4 rounded-lg border"><h3 class="font-bold text-md text-gray-700 mb-2">Peningkatan (Eskalasi)</h3>${escalationHtml}</div>
             </div>`;
 
-        let operationalAssumptionsHtml = '<h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-amber-500 pl-4 mt-12">Asumsi Operasional (Sesuai Skenario Proyek)</h2><div class="grid grid-cols-1 lg:grid-cols-2 gap-6">';
+        let operationalAssumptionsHtml = '<h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-amber-500 pl-4 mt-12">Rincian Asumsi per Unit Bisnis</h2><div class="space-y-12">';
         
+        // --- Driving Range ---
         if (scenarioConfig.dr && scenarioConfig.dr !== 'none') {
-            operationalAssumptionsHtml += this._createOperationalAssumptionsCard(projectConfig.drivingRange, 'Driving Range', 'drivingRange', 'blue');
-        }
-        if (scenarioConfig.padel === '4courts') {
-            operationalAssumptionsHtml += this._createOperationalAssumptionsCard(projectConfig.padel.scenarios.four_courts_combined, 'Padel (4 Lapangan)', 'padel.scenarios.four_courts_combined', 'purple');
-        }
-        if (scenarioConfig.padel === '2courts') {
-            operationalAssumptionsHtml += this._createOperationalAssumptionsCard(projectConfig.padel.scenarios.two_courts_futsal_renovation, 'Padel (2 Lapangan)', 'padel.scenarios.two_courts_futsal_renovation', 'purple');
-        }
-        if (scenarioConfig.mp && scenarioConfig.mp !== 'none') {
-            operationalAssumptionsHtml += this._createOperationalAssumptionsCard(projectConfig.meetingPoint, 'Meeting Point', 'meetingPoint', 'cyan');
-        }
-        if (projectConfig.shared_revenue) {
-            operationalAssumptionsHtml += this._createOperationalAssumptionsCard(projectConfig.shared_revenue, 'Pendapatan Bersama', 'shared_revenue', 'green');
+            const dr = projectConfig.drivingRange;
+            operationalAssumptionsHtml += `<div><h3 class="text-xl font-bold text-blue-800 mb-4 pb-2 border-b">Asumsi: Driving Range</h3><div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
+                ${this._createAssumptionCard(dr.operational_assumptions, 'Operasional', 'drivingRange.operational_assumptions', 'blue')}
+                ${this._createAssumptionCard(dr.revenue, 'Pendapatan (Revenue)', 'drivingRange.revenue', 'blue')}
+                ${this._createAssumptionCard(dr.opexMonthly, 'Biaya Operasional (OpEx)', 'drivingRange.opexMonthly', 'blue')}
+                ${this._createAssumptionCard(dr.capex_assumptions, 'Biaya Investasi (CapEx)', 'drivingRange.capex_assumptions', 'blue')}
+            </div></div>`;
         }
 
+        // --- Padel ---
+        if (scenarioConfig.padel) {
+            const padelKey = scenarioConfig.padel === '4courts' ? 'four_courts_combined' : 'two_courts_futsal_renovation';
+            const padel = projectConfig.padel.scenarios[padelKey];
+            operationalAssumptionsHtml += `<div><h3 class="text-xl font-bold text-purple-800 mb-4 pb-2 border-b">Asumsi: Padel (${padel.num_courts} Lapangan)</h3><div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
+                ${this._createAssumptionCard(padel.operational_assumptions, 'Operasional', `padel.scenarios.${padelKey}.operational_assumptions`, 'purple')}
+                ${this._createAssumptionCard(padel.revenue, 'Pendapatan (Revenue)', `padel.scenarios.${padelKey}.revenue`, 'purple')}
+                ${this._createAssumptionCard(padel.opexMonthly, 'Biaya Operasional (OpEx)', `padel.scenarios.${padelKey}.opexMonthly`, 'purple')}
+                ${this._createAssumptionCard(padel.capex, 'Biaya Investasi (CapEx)', `padel.scenarios.${padelKey}.capex`, 'purple')}
+            </div></div>`;
+        }
+
+        // --- Meeting Point ---
+        if (scenarioConfig.mp && scenarioConfig.mp !== 'none') {
+            const mp = projectConfig.meetingPoint;
+            operationalAssumptionsHtml += `<div><h3 class="text-xl font-bold text-cyan-800 mb-4 pb-2 border-b">Asumsi: Meeting Point</h3><div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
+                ${this._createAssumptionCard(mp.operational_assumptions, 'Operasional', 'meetingPoint.operational_assumptions', 'cyan')}
+                ${this._createAssumptionCard(mp.revenue, 'Pendapatan (Revenue)', 'meetingPoint.revenue', 'cyan')}
+                ${this._createAssumptionCard(mp.opexMonthly, 'Biaya Operasional (OpEx)', 'meetingPoint.opexMonthly', 'cyan')}
+                ${this._createAssumptionCard(mp.capex_scenarios, 'Biaya Investasi (CapEx)', 'meetingPoint.capex_scenarios', 'cyan')}
+            </div></div>`;
+        }
+        
         operationalAssumptionsHtml += '</div>';
         container.innerHTML = globalAssumptionsHtml + operationalAssumptionsHtml;
     },
@@ -233,8 +227,6 @@ const sierVisualFinanceDetails = {
             }
             return '';
         };
-
-        // --- Definisikan dan render setiap seksi secara berurutan ---
 
         const pil = a.piling;
         tableBodyHtml += createSection('1. Pekerjaan Sipil & Pondasi', [
@@ -409,7 +401,6 @@ const sierVisualFinanceDetails = {
         const perCourtCosts = eq.per_court_costs;
         let singleCourtSubtotal = 0;
         
-        // Kalkulasi dan render rincian per 1 lapangan
         const perCourtItems = [
             { key: 'civil_works_concrete', label: 'Lantai Beton Finishing Halus' },
             { key: 'steel_structure', label: 'Struktur Baja Frame' },
@@ -458,7 +449,6 @@ const sierVisualFinanceDetails = {
                 <td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(ballCost))}</td>
             </tr>`;
         
-        // Tambahkan baris Subtotal untuk seluruh Seksi 3
         section3Html += `
             <tr class="font-semibold bg-gray-200">
                 <td class="px-3 py-2 text-right" colspan="2">Subtotal Peralatan Lapangan & Inventaris</td>
@@ -492,34 +482,6 @@ const sierVisualFinanceDetails = {
         `;
     },
 
-    _renderSharedCapexVisuals() {
-        const container = document.getElementById('shared-capex-details-container');
-        if (!container) return;
-        const sharedCapex = projectConfig.shared_facilities_capex;
-        let tableBodyHtml = '', grandTotal = 0;
-
-        for (const categoryKey in sharedCapex) {
-            const categoryData = sharedCapex[categoryKey];
-            if (typeof categoryData !== 'object' || !categoryData.title) continue;
-
-            let categoryTotal = 0;
-            tableBodyHtml += `<tbody class="bg-gray-50"><td colspan="3" class="p-3 font-bold text-gray-800">${categoryData.title}</td></tbody>`;
-            for (const itemKey in categoryData.items) {
-                const item = categoryData.items[itemKey];
-                let itemTotal = item.lump_sum ? item.lump_sum : item.quantity * item.unit_cost;
-                let detailHtml = item.lump_sum ? 'Lump Sum' : `${item.quantity} ${item.unit} @ Rp ${sierHelpers.formatNumber(item.unit_cost)}`;
-                categoryTotal += itemTotal;
-                tableBodyHtml += `<tr><td class="px-3 py-2 text-gray-600 pl-8">${item.description}</td><td class="px-3 py-2 text-gray-500 text-xs">${detailHtml}</td><td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(itemTotal)}</td></tr>`;
-            }
-            grandTotal += categoryTotal;
-            tableBodyHtml += `<tr class="font-semibold bg-gray-100"><td class="px-3 py-2 text-right" colspan="2">Subtotal ${categoryData.title}</td><td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(categoryTotal)}</td></tr>`;
-        }
-        const contingency = grandTotal * projectConfig.assumptions.contingency_rate;
-        const finalTotal = grandTotal + contingency;
-
-        container.innerHTML = `<h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-emerald-600 pl-4">Rincian Estimasi Biaya Investasi (CapEx): Fasilitas Umum</h2><div class="bg-white p-6 rounded-lg shadow-md mb-8"><p class="text-gray-600 mb-6">${sharedCapex.notes}</p><div class="overflow-x-auto border rounded-lg"><table class="w-full text-sm"><thead class="bg-gray-200 text-xs uppercase"><tr><th class="p-2 text-left w-2/5">Komponen Biaya</th><th class="p-2 text-left w-2/5">Detail Perhitungan</th><th class="p-2 text-right w-1/5">Biaya (Rp)</th></tr></thead>${tableBodyHtml}<tfoot class="font-bold"><tr class="bg-gray-200"><td class="p-3 text-right" colspan="2">Subtotal</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(grandTotal))}</td></tr><tr class="bg-yellow-200"><td class="p-3 text-right" colspan="2">Kontingensi (${(projectConfig.assumptions.contingency_rate * 100)}%)</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(contingency))}</td></tr><tr class="bg-emerald-600 text-white text-lg"><td class="p-3 text-right" colspan="2">Total Estimasi Investasi</td><td class="p-3 text-right font-mono">${sierHelpers.formatNumber(Math.round(finalTotal))}</td></tr></tfoot></table></div></div>`;
-    },
-
     _renderMeetingPointCapexDetailsVisuals(scenarioConfig) {
         const container = document.getElementById('meeting-point-capex-details-container');
         if (!container) return;
@@ -527,7 +489,6 @@ const sierVisualFinanceDetails = {
         const mpConfig = projectConfig.meetingPoint;
         const unitCosts = mpConfig.unit_costs;
 
-        // Helper untuk membuat tabel rincian untuk SATU skenario konsep
         const createConceptTable = (conceptKey) => {
             const scenario = mpConfig.capex_scenarios.concept_scenarios[conceptKey];
             if (!scenario) return '';
@@ -590,7 +551,6 @@ const sierVisualFinanceDetails = {
             let subtotal = 0;
             let rowsHtml = '';
 
-            // Loop ini sekarang akan berjalan sampai selesai untuk SEMUA item
             for (const key in baseCosts) {
                 const item = baseCosts[key];
                 const label = sierHelpers.safeTranslate(key);
@@ -646,7 +606,7 @@ const sierVisualFinanceDetails = {
                         </tr>
                     `;
                 }
-            } // <-- LOOP BERAKHIR DI SINI
+            }
 
             return `
                 <div class="mb-8">
@@ -687,11 +647,9 @@ const sierVisualFinanceDetails = {
                 <h3 class="text-xl font-bold mb-4 text-gray-700 border-b pb-2 mt-12">Langkah 2: Rincian Biaya Konsep Interior</h3>
                 ${concept1Html} ${concept2Html} ${concept3Html}
                 
-                <!-- AWAL BAGIAN BARU: KALKULATOR TOTAL BIAYA -->
                 <div id="mp-interactive-calculator" class="mt-12 pt-8 border-t-4 border-double">
                     <h3 class="text-xl font-bold mb-4 text-gray-700">Langkah 3: Hitung Total Biaya Investasi Meeting Point</h3>
                     <div class="bg-gray-50 p-6 rounded-lg border grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-                        <!-- Selector Metode Konstruksi -->
                         <div>
                             <label for="mp-construction-method" class="block text-sm font-medium text-gray-700">Pilih Metode Konstruksi:</label>
                             <select id="mp-construction-method" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
@@ -699,7 +657,6 @@ const sierVisualFinanceDetails = {
                                 <option value="rebuild">Metode 2: Bongkar & Bangun Ulang</option>
                             </select>
                         </div>
-                        <!-- Selector Konsep Interior -->
                         <div>
                             <label for="mp-concept-choice" class="block text-sm font-medium text-gray-700">Pilih Konsep Interior:</label>
                             <select id="mp-concept-choice" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
@@ -708,18 +665,15 @@ const sierVisualFinanceDetails = {
                                 <option value="concept_3_vip">Konsep 3: Area Meeting dengan Ruang VIP</option>
                             </select>
                         </div>
-                        <!-- Total Biaya -->
                         <div class="text-center md:text-right">
                             <p class="text-sm font-medium text-gray-700">Total Estimasi Investasi (termasuk kontingensi):</p>
                             <p id="mp-capex-total" class="text-3xl font-bold text-cyan-700 mt-1">Rp 0</p>
                         </div>
                     </div>
                 </div>
-                <!-- AKHIR BAGIAN BARU -->
             </div>
         `;
 
-        // --- Logika Interaktif untuk Kalkulator ---
         const updateTotal = () => {
             const constructionKey = document.getElementById('mp-construction-method').value;
             const conceptKey = document.getElementById('mp-concept-choice').value;
@@ -734,7 +688,6 @@ const sierVisualFinanceDetails = {
         document.getElementById('mp-construction-method').addEventListener('change', updateTotal);
         document.getElementById('mp-concept-choice').addEventListener('change', updateTotal);
 
-        // Panggil sekali untuk inisialisasi
         updateTotal();
     },
 
@@ -751,7 +704,6 @@ const sierVisualFinanceDetails = {
         if (scenarioConfig.mp && scenarioConfig.mp !== 'none') this._renderMeetingPointCapexDetailsVisuals();
     },
 
-    // --- FUNGSI UTAMA YANG DIPERBAIKI ---
     render(model, scenarioConfig) {
         const unitSummariesHtml = this._renderUnitSummaries(model.individual);
         const assumptionsContainer = document.getElementById('financial-assumptions');
