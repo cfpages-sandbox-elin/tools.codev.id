@@ -1,5 +1,34 @@
-// File: sier-math-finance.js bikin kartu assumption
+// File: sier-math-finance.js (edan gila)
 const sierMathFinance = {
+    getValueByPath(obj, path) {
+        return path.split('.').reduce((o, k) => (o && o[k] !== undefined) ? o[k] : undefined, obj);
+    },
+
+    setValueByPath(obj, path, value) {
+        const keys = path.split('.');
+        const lastKey = keys.pop();
+        const target = keys.reduce((o, k) => o[k] = o[k] || {}, obj);
+        target[lastKey] = value;
+    },
+    
+    // --- FUNGSI INI TELAH DIPERBAIKI ---
+    _calculateTotal(dataObject) {
+        if (typeof dataObject !== 'object' || dataObject === null) return 0;
+        return Object.values(dataObject).reduce((sum, value) => {
+            if (typeof value === 'number') return sum + value;
+            if (typeof value === 'object' && value !== null) {
+                if (value.count && value.salary) return sum + (value.count * value.salary);
+                if (value.quantity && value.unit_cost) return sum + (value.quantity * value.unit_cost);
+                if (value.area_m2 && value.cost_per_m2) return sum + (value.area_m2 * value.cost_per_m2);
+                if (value.toilet_unit && value.area_m2_per_toilet && value.cost_per_m2) return sum + (value.toilet_unit * value.area_m2_per_toilet * value.cost_per_m2);
+                if (value.lump_sum) return sum + value.lump_sum;
+                // PERBAIKAN: Memanggil fungsi secara eksplisit, bukan menggunakan 'this'
+                return sum + this._calculateTotal(value); 
+            }
+            return sum;
+        }, 0);
+    },
+
     _getDepreciationDetailsForScenario(components) {
         const depRates = projectConfig.assumptions.depreciation_years;
         let combinedCapex = {
@@ -8,27 +37,11 @@ const sierMathFinance = {
         };
 
         components.forEach(compKey => {
-            const capex = this._getFinancialsForComponent(compKey, 1).capexSchedule[0];
-            if (compKey === 'dr') {
-                const drDetails = this._calculateDrCapex().scenario_b;
-                combinedCapex.civil_construction += drDetails.htmlRows.find(r => r.label.includes('Tiang Pancang')).value;
-                combinedCapex.building += drDetails.htmlRows.find(r => r.label.includes('Bangunan')).value;
-                combinedCapex.equipment += drDetails.htmlRows.find(r => r.label.includes('Peralatan')).value;
-            } else if (compKey.includes('padel')) {
-                const scenarioKey = compKey === 'padel4' ? 'four_courts_combined' : 'two_courts_futsal_renovation';
-                const padelCapexConf = projectConfig.padel.scenarios[scenarioKey].capex;
-                combinedCapex.building += sierHelpers.calculateTotal(padelCapexConf.component_koperasi_new_build || {}) + sierHelpers.calculateTotal(padelCapexConf.component_futsal_renovation || {});
-                combinedCapex.equipment += sierHelpers.calculateTotal(padelCapexConf.sport_courts_equipment || {});
-                combinedCapex.other += sierHelpers.calculateTotal(padelCapexConf.pre_operational || {});
-            } else if (compKey === 'mp') {
-                 const mpCapexConf = projectConfig.meetingPoint.capex_scenario_a;
-                 combinedCapex.building += sierHelpers.calculateTotal(mpCapexConf.renovation_costs || {});
-                 combinedCapex.equipment += sierHelpers.calculateTotal(mpCapexConf.equipment_and_furniture || {});
-                 combinedCapex.other += sierHelpers.calculateTotal(mpCapexConf.pre_operational || {});
-            } else if (compKey === 'digital') {
-                combinedCapex.digital_systems += capex;
-            } else if (compKey === 'shared') {
-                combinedCapex.shared_facilities += capex;
+            // Kita tidak bisa hanya mengambil capex[0] karena kita butuh breakdown-nya
+            const unitFinancials = this._getFinancialsForComponent(compKey, 1);
+            const breakdown = unitFinancials.capexBreakdown;
+            for(const key in breakdown){
+                combinedCapex[key] += breakdown[key] || 0;
             }
         });
 
@@ -42,7 +55,6 @@ const sierMathFinance = {
                 totalAnnualDepreciation += annualDepreciation;
                 
                 details.push({
-                    // GUNAKAN FUNGSI AMAN YANG BARU
                     category: sierHelpers.safeTranslate(category),
                     capexValue: combinedCapex[category],
                     lifespan: lifespan,
@@ -64,9 +76,9 @@ const sierMathFinance = {
         let baseOpex = { salaries: 0, other: 0 };
         const extractOpex = (opexConfig) => {
             if (!opexConfig) return { salaries: 0, other: 0 };
-            let salaries = sierHelpers.calculateTotal(opexConfig.salaries_wages || {});
+            let salaries = this._calculateTotal(opexConfig.salaries_wages || {});
             let other = 0;
-            for (const key in opexConfig) { if (key !== 'salaries_wages') other += sierHelpers.calculateTotal(opexConfig[key]); }
+            for (const key in opexConfig) { if (key !== 'salaries_wages') other += this._calculateTotal(opexConfig[key]); }
             return { salaries: salaries * 12, other: other * 12 };
         };
         const getPadelScenarioKey = () => {
@@ -93,28 +105,27 @@ const sierMathFinance = {
                 const padelBaseCapex = this._calculatePadelCapex(padelScenarioKey);
                 capexSchedule[0] = padelBaseCapex * (1 + projectConfig.assumptions.contingency_rate);
                 const padelCapexConf = padelScenario.capex;
-                capexBreakdown.building += sierHelpers.calculateTotal(padelCapexConf.component_koperasi_new_build || {}) + sierHelpers.calculateTotal(padelCapexConf.component_futsal_renovation || {});
-                capexBreakdown.equipment += sierHelpers.calculateTotal(padelCapexConf.sport_courts_equipment || {});
-                capexBreakdown.other += sierHelpers.calculateTotal(padelCapexConf.pre_operational || {});
+                capexBreakdown.building += this._calculateTotal(padelCapexConf.component_koperasi_new_build || {}) + this._calculateTotal(padelCapexConf.component_futsal_renovation || {});
+                capexBreakdown.equipment += this._calculateTotal(padelCapexConf.sport_courts_equipment || {});
+                capexBreakdown.other += this._calculateTotal(padelCapexConf.pre_operational || {});
                 baseAnnualRevenue = this._getUnitCalculations('padel', padelScenarioKey).pnl.annualRevenue;
                 baseOpex = extractOpex(padelScenario.opexMonthly);
                 break;
             case compKey === 'mp':
-                // --- Logika Baru untuk Membaca Detail Skenario MP ---
                 const parts = mpScenarioDetail.split('_');
-                const constructionKey = parts.shift(); // Mengambil 'renovate' atau 'rebuild'
-                const conceptKey = parts.join('_'); // Menggabungkan sisanya menjadi 'concept_1_pods', dst.
+                const constructionKey = parts.shift();
+                const conceptKey = parts.join('_');
                 const baseMpCapex = this._calculateMeetingPointCapex(constructionKey, conceptKey);
                 capexSchedule[0] = baseMpCapex * (1 + projectConfig.assumptions.contingency_rate);
-                const constructionCosts = sierHelpers.calculateTotal(projectConfig.meetingPoint.capex_scenarios.construction_scenarios[constructionKey].base_costs);
+                const constructionCosts = this._calculateTotal(projectConfig.meetingPoint.capex_scenarios.construction_scenarios[constructionKey].base_costs);
                 const conceptCosts = baseMpCapex - constructionCosts;
                 capexBreakdown.building += constructionCosts;
                 capexBreakdown.equipment += conceptCosts;
-                baseAnnualRevenue = sierHelpers.calculateTotal(projectConfig.meetingPoint.revenue) * 12;
+                baseAnnualRevenue = this._calculateTotal(projectConfig.meetingPoint.revenue) * 12;
                 baseOpex = extractOpex(projectConfig.meetingPoint.opexMonthly);
                 break;
             case compKey === 'digital':
-                capexSchedule[0] = sierHelpers.calculateTotal(projectConfig.digital_capex) * (1 + projectConfig.assumptions.contingency_rate);
+                capexSchedule[0] = this._calculateTotal(projectConfig.digital_capex) * (1 + projectConfig.assumptions.contingency_rate);
                 capexBreakdown.digital_systems = capexSchedule[0];
                 break;
         }
@@ -123,12 +134,12 @@ const sierMathFinance = {
             const tariffFactor = Math.pow(1 + esc.tariff_increase_rate, Math.floor((year - 1) / esc.tariff_increase_every_x_years));
             revenue[year] = baseAnnualRevenue * tariffFactor;
             const salaryFactor = Math.pow(1 + esc.salary_increase_rate, year - 1);
-            const otherFactor = Math.pow(1 + 0.021, year - 1);
+            const otherFactor = Math.pow(1 + 0.021, year - 1); // Asumsi inflasi umum untuk biaya lain
             opex[year] = (baseOpex.salaries * salaryFactor) + (baseOpex.other * otherFactor);
         }
         
         if (compKey.includes('padel') || compKey === 'mp') {
-            capexSchedule[5] += capexSchedule[0] * 0.40;
+            capexSchedule[5] += capexSchedule[0] * 0.40; // Reinvestasi/Renovasi besar di tahun ke-5
         }
 
         const depreciation = this._calculateMultiYearDepreciation(capexSchedule, years, capexBreakdown);
@@ -227,7 +238,7 @@ const sierMathFinance = {
             const cfi = -capexSchedule[year];
             const cff = -financing.principalPayments[year];
             const netCf = cfo + cfi + cff;
-            cfs.cfo.push(cfo); cfs.cfi.push(cfi); cfs.cff.push(financing.principalPayments[year]);
+            cfs.cfo.push(cfo); cfs.cfi.push(cfi); cfs.cff.push(cff);
             cfs.netCashFlow.push(netCf);
             cfs.cumulativeCashFlow.push(cfs.cumulativeCashFlow[year - 1] + netCf);
         }
@@ -291,11 +302,10 @@ const sierMathFinance = {
         let projectedDepreciation = Array(years + 1).fill(0);
         const depRates = projectConfig.assumptions.depreciation_years;
 
-        // Hitung depresiasi dari investasi awal (Tahun 0)
         let initialAnnualDepreciation = 0;
         for (const category in capexBreakdown) {
             if (capexBreakdown[category] > 0) {
-                const lifespan = depRates[category] || 10; // Default 10 tahun
+                const lifespan = depRates[category] || 10;
                 initialAnnualDepreciation += capexBreakdown[category] / lifespan;
             }
         }
@@ -304,7 +314,7 @@ const sierMathFinance = {
         }
 
         if (capexSchedule[5] > 0) {
-            const recondDepreciation = capexSchedule[5] / 10; // Asumsi masa manfaat 10 tahun untuk rekondisi
+            const recondDepreciation = capexSchedule[5] / 10;
             for (let year = 6; year <= years; year++) {
                 projectedDepreciation[year] += recondDepreciation;
             }
@@ -338,7 +348,7 @@ const sierMathFinance = {
             for (let i = 1; i < netCashFlows.length; i++) { tempNpv += netCashFlows[i] / Math.pow(1 + rate, i); }
             if (tempNpv < 0) { irr = rate > 0 ? rate - 0.001 : 0; break; }
         }
-        if (irr === -1.0) irr = 1.0; // Jika tidak pernah negatif, IRR sangat tinggi
+        if (irr === -1.0) irr = 1.0;
 
         const profitabilityIndex = (npv - netCashFlows[0]) / initialInvestment;
         return { paybackPeriod, discountedPaybackPeriod, npv, irr, profitabilityIndex };
@@ -350,9 +360,6 @@ const sierMathFinance = {
         const rev = projectConfig.drivingRange.revenue.main_revenue;
         const drScenarios = projectConfig.drivingRange.scenarios;
 
-        // --- 1. Hitung setiap komponen biaya secara terpisah ---
-
-        // a. Peralatan Inti (Bay & Bola)
         const eq = a.equipment;
         const total_bays = rev.bays;
         const premium_bays_count = Math.round(total_bays * eq.premium_bays.percentage_of_total);
@@ -363,19 +370,17 @@ const sierMathFinance = {
                                 (eq.floating_balls_count * eq.floating_balls_cost_per_ball) +
                                 eq.ball_management_system_lump_sum;
 
-        // b. Jaring Pengaman (Perimeter + Atap Opsional)
         const net = a.safety_net;
-        const totalPerimeterNetCost = (Math.ceil(net.field_width_m / net.poles.spacing_m) * net.poles.foundation_cost_per_pole) + // Sisi jauh
-                                    (Math.ceil(net.field_length_m / net.poles.spacing_m) * 2 * net.poles.foundation_cost_per_pole) + // Dua sisi panjang
-                                    ((net.field_width_m * net.poles.height_distribution.far_side_m) * net.netting.cost_per_m2) + // Net sisi jauh
-                                    ((net.field_length_m * net.poles.height_distribution.left_right_side_m * 2) * net.netting.cost_per_m2); // Net dua sisi
+        const totalPerimeterNetCost = (Math.ceil(net.field_width_m / net.poles.spacing_m) * net.poles.foundation_cost_per_pole) + 
+                                    (Math.ceil(net.field_length_m / net.poles.spacing_m) * 2 * net.poles.foundation_cost_per_pole) +
+                                    ((net.field_width_m * net.poles.height_distribution.far_side_m) * net.netting.cost_per_m2) +
+                                    ((net.field_length_m * net.poles.height_distribution.left_right_side_m * 2) * net.netting.cost_per_m2);
         let lakeRoofNetCost = 0;
         if (drScenarios.include_lake_roof_net) {
             lakeRoofNetCost = net.lake_roof_netting.area_m2 * net.lake_roof_netting.cost_per_m2;
         }
         const totalSafetyNetCost = totalPerimeterNetCost + lakeRoofNetCost;
 
-        // c. Furnitur, Sanitasi, dan Bangunan
         const totalBayFurnitureCost = total_bays * a.bay_furniture.cost_per_bay;
         const sanitary = a.plumbing_and_sanitary;
         const costs = sanitary.unit_costs;
@@ -383,37 +388,31 @@ const sierMathFinance = {
         const bld = a.building;
         const totalBuildingCost = (bld.dr_bays_area_m2 * bld.dr_bays_cost_per_m2) + (bld.cafe_area_m2 * bld.cafe_cost_per_m2) + (bld.lockers_mushola_area_m2 * bld.lockers_mushola_cost_per_m2);
 
-        // --- 2. Fungsi Helper untuk agregasi ---
         const calculateScenarioCosts = (foundationCosts) => {
             const mep = a.mep_systems;
-            const total_mep_cost = mep.plumbing_system.lump_sum_cost;
-
             const physical_cost_base = foundationCosts + totalBuildingCost + totalEquipmentCost + totalSafetyNetCost + totalBayFurnitureCost;
             const electrical_cost = physical_cost_base * mep.electrical_system.rate_of_physical_cost;
-            const total_physical_cost = physical_cost_base + total_mep_cost + electrical_cost;
+            const total_physical_cost = physical_cost_base + mep.plumbing_system.lump_sum_cost + electrical_cost;
             const permit_cost = total_physical_cost * a.other_costs.permit_design_rate_of_physical_cost;
             const subtotal = total_physical_cost + permit_cost;
             const contingency = subtotal * global.contingency_rate;
 
             return {
                 total: subtotal + contingency,
-                // RINCIAN BREAKDOWN YANG JAUH LEBIH DETAIL
                 breakdown: {
-                    civil_construction: foundationCosts + totalSafetyNetCost, // Jaring adalah struktur sipil
+                    civil_construction: foundationCosts + totalSafetyNetCost,
                     building: totalBuildingCost,
-                    equipment_and_tech: totalEquipmentCost, // HANYA peralatan inti
+                    equipment_and_tech: totalEquipmentCost,
                     furniture_and_interior: totalBayFurnitureCost,
-                    other: total_mep_cost + electrical_cost + permit_cost + contingency
+                    other: mep.plumbing_system.lump_sum_cost + electrical_cost + permit_cost + contingency
                 }
             };
         };
 
-        // --- 3. Hitung Skenario Konstruksi ---
         const pil = a.piling;
         const scenario_b_foundation_cost = (pil.points_count * pil.length_per_point_m * pil.cost_per_m_mini_pile) + pil.lump_sum_pile_cap;
         const scenario_b_results = calculateScenarioCosts(scenario_b_foundation_cost);
         
-        // Kita hanya mengembalikan skenario B (Tiang Pancang) yang lebih realistis
         return {
             total: scenario_b_results.total,
             breakdown: scenario_b_results.breakdown
@@ -422,76 +421,37 @@ const sierMathFinance = {
 
     _calculatePadelCapex(scenarioKey) {
         const scenario = projectConfig.padel.scenarios[scenarioKey];
-        if (!scenario || !scenario.capex) {
-            console.warn(`Konfigurasi skenario Padel untuk '${scenarioKey}' tidak ditemukan.`);
-            return 0;
-        }
-
+        if (!scenario || !scenario.capex) return 0;
         const capex = scenario.capex;
         let grandTotal = 0;
-
-        grandTotal += sierHelpers.calculateTotal(capex.pre_operational || {});
-
-        if (capex.component_futsal_renovation) {
-            grandTotal += sierHelpers.calculateTotal(capex.component_futsal_renovation);
-        }
-
-        if (capex.component_koperasi_new_build) {
-            const buildData = capex.component_koperasi_new_build;
-            grandTotal += sierHelpers.calculateTotal(buildData.land_preparation_and_foundation || {});
-            grandTotal += sierHelpers.calculateTotal(buildData.building_structure_2_courts || {});
-            grandTotal += sierHelpers.calculateTotal(buildData.interior_and_facade || {});
-            grandTotal += sierHelpers.calculateTotal(buildData.building_demolition || {});
-            
-            // PERBAIKAN LOGIKA DI SINI
-            if (buildData.plumbing_and_sanitary) {
-                const ps = buildData.plumbing_and_sanitary;
-                grandTotal += (ps.toilet_unit * ps.area_m2 * ps.cost_per_m2);
-            }
-        }
-
+        grandTotal += this._calculateTotal(capex.pre_operational || {});
+        grandTotal += this._calculateTotal(capex.component_futsal_renovation || {});
+        grandTotal += this._calculateTotal(capex.component_koperasi_new_build || {});
+        
         if (capex.sport_courts_equipment) {
             const numCourts = scenario.num_courts;
-            const equipment = capex.sport_courts_equipment;
-            if (equipment.per_court_costs) {
-                grandTotal += sierHelpers.calculateTotal(equipment.per_court_costs) * numCourts;
-            }
-            if (equipment.initial_inventory) {
-                grandTotal += sierHelpers.calculateTotal(equipment.initial_inventory);
-            }
+            grandTotal += this._calculateTotal(eq.per_court_costs) * numCourts;
+            grandTotal += this._calculateTotal(eq.initial_inventory);
         }
-
         return grandTotal;
     },
 
     _calculateMeetingPointCapex(constructionScenarioKey = 'renovate', conceptScenarioKey = 'concept_1_pods') {
         const mpConfig = projectConfig.meetingPoint;
-        if (!mpConfig || !mpConfig.capex_scenarios.construction_scenarios[constructionScenarioKey] || !mpConfig.capex_scenarios.concept_scenarios[conceptScenarioKey]) {
-            console.warn("Meeting Point config is missing or invalid for the selected scenarios.");
-            return 0;
-        }
+        if (!mpConfig || !mpConfig.capex_scenarios.construction_scenarios[constructionScenarioKey] || !mpConfig.capex_scenarios.concept_scenarios[conceptScenarioKey]) return 0;
 
         const unitCosts = mpConfig.unit_costs;
         let totalCapex = 0;
 
-        // 1. Hitung biaya dari skenario konstruksi yang dipilih
         const constructionData = mpConfig.capex_scenarios.construction_scenarios[constructionScenarioKey].base_costs;
-        totalCapex += sierHelpers.calculateTotal(constructionData);
+        totalCapex += this._calculateTotal(constructionData);
 
-        // 2. Hitung biaya dari skenario konsep interior yang dipilih
         const conceptData = mpConfig.capex_scenarios.concept_scenarios[conceptScenarioKey].items;
         const conceptCostMap = {
-            chairs: unitCosts.chair,
-            tables_2pax: unitCosts.table_2pax,
-            tables_4pax: unitCosts.table_4pax,
-            sofas: unitCosts.sofa,
-            coffee_tables: unitCosts.coffee_table,
-            meeting_pods: unitCosts.meeting_pod,
-            vip_partitions: unitCosts.vip_partition,
-            vip_tables: unitCosts.vip_table,
-            vip_chairs: unitCosts.vip_chair,
-            kitchen: unitCosts.kitchen_equipment_lump_sum,
-            toilet: unitCosts.toilet_unit_lump_sum
+            chairs: unitCosts.chair, table_2pax: unitCosts.table_2pax, tables_4pax: unitCosts.table_4pax,
+            sofas: unitCosts.sofa, coffee_tables: unitCosts.coffee_table, meeting_pods: unitCosts.meeting_pod,
+            vip_partitions: unitCosts.vip_partition, vip_tables: unitCosts.vip_table, vip_chairs: unitCosts.vip_chair,
+            kitchen: unitCosts.kitchen_equipment_lump_sum, toilet: unitCosts.toilet_unit_lump_sum
         };
 
         for (const itemKey in conceptData) {
@@ -516,7 +476,7 @@ const sierMathFinance = {
             numAssets = scenarioConfig.num_courts;
             revenueConf = scenarioConfig.revenue;
             o = scenarioConfig.operational_assumptions;
-        } else { // Untuk Driving Range dan unit lainnya
+        } else {
             numAssets = unit.revenue.main_revenue.bays;
             revenueConf = unit.revenue;
             o = unit.operational_assumptions;
@@ -548,18 +508,10 @@ const sierMathFinance = {
 
     runSensitivityAnalysis(baseModel) {
         const sensitivityParams = projectConfig.assumptions.sensitivity_analysis;
-        if (!sensitivityParams || !baseModel || !baseModel.combined) {
-            console.warn("Parameter sensitivitas atau model gabungan tidak ditemukan.");
-            return {};
-        }
+        if (!sensitivityParams || !baseModel || !baseModel.combined) return {};
 
         const { revenue_steps, investment_steps } = sensitivityParams;
-        let results = {
-            combined: {
-                npv: {},
-                irr: {}
-            }
-        };
+        let results = { combined: { npv: {}, irr: {} } };
         const modelData = baseModel.combined;
 
         investment_steps.forEach(invStep => {
@@ -569,12 +521,10 @@ const sierMathFinance = {
             revenue_steps.forEach(revStep => {
                 let tempModel = JSON.parse(JSON.stringify(modelData));
                 
-                // Terapkan faktor sensitivitas
                 tempModel.capexSchedule = tempModel.capexSchedule.map(c => c * invStep);
                 tempModel.revenue = tempModel.revenue.map(r => r * revStep);
                 tempModel.depreciation = tempModel.depreciation.map(d => d * invStep);
 
-                // Kalkulasi ulang seluruh rantai finansial dengan data sementara
                 const newFinancing = this._calculateLoanAmortization(tempModel.capexSchedule[0], projectConfig.assumptions.financing, 10);
                 const pnl = this._buildIncomeStatement({ ...tempModel, interest: newFinancing.interestPayments, projectionYears: 10 });
                 const cf = this._buildCashFlowStatement({ incomeStatement: pnl, depreciation: tempModel.depreciation, capexSchedule: tempModel.capexSchedule, financing: newFinancing, projectionYears: 10 });
@@ -588,6 +538,5 @@ const sierMathFinance = {
         return results;
     },
 };
-
 
 window.sierMathFinance = sierMathFinance;
