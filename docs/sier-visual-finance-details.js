@@ -1,4 +1,4 @@
-// File: sier-visual-finance-details.js ganti scenariokey ke scenarioconfig3
+// File: sier-visual-finance-details.js mbulet scenarioconfig3
 const sierVisualFinanceDetails = {
     _renderUnitSummaries(individualResults) {
         let html = '';
@@ -49,10 +49,10 @@ const sierVisualFinanceDetails = {
         const container = document.getElementById('opex-details-container');
         if (!container) return;
         let tablesHtml = [];
-        const createUnitOpexTable = (unitName, title, scenarioConfig = null) => {
+        const createUnitOpexTable = (unitName, title, padelScenarioKey = null) => {
             const unitConfig = projectConfig[unitName];
-            const opexData = scenarioConfig ? unitConfig.scenarios[scenarioConfig].opexMonthly : unitConfig.opexMonthly;
-            if (!opexData) return ''; // Lewati jika tidak ada data opex
+            const opexData = padelScenarioKey ? unitConfig.scenarios[padelScenarioKey].opexMonthly : unitConfig.opexMonthly;
+            if (!opexData) return '';
 
             let grandTotalOpex = 0;
             const staffData = opexData.salaries_wages;
@@ -312,9 +312,9 @@ const sierVisualFinanceDetails = {
         const container = document.getElementById('padel-capex-details-container');
         if (!container) return;
 
-        const padelScenarioKey = scenarioConfig.includes('padel4') ? 'four_courts_combined' : 'two_courts_futsal_renovation';
-        const scenarioConfig = projectConfig.padel.scenarios[padelScenarioKey];
-        if (!scenarioConfig) return;
+        const activePadelScenarioKey = scenarioConfig.padel === '4courts' ? 'four_courts_combined' : 'two_courts_futsal_renovation';
+        const activePadelConfig = projectConfig.padel.scenarios[activePadelScenarioKey];
+        if (!activePadelConfig) return;
 
         let tableBodyHtml = '';
         let grandSubtotal = 0;
@@ -337,7 +337,7 @@ const sierVisualFinanceDetails = {
             return ''; // Jangan render seksi jika kosong
         };
 
-        const capex = scenarioConfig.capex;
+        const capex = activePadelConfig.capex;
         
         tableBodyHtml += createSection('1. Biaya Pra-Operasional & Umum', [
             { label: 'Izin & Konsultan', detail: 'Lump Sum', cost: capex.pre_operational.permits_and_consulting },
@@ -435,7 +435,7 @@ const sierVisualFinanceDetails = {
 
         section3Html += `<tr class="font-semibold bg-gray-50"><td class="px-3 py-2 text-right" colspan="2">Subtotal Biaya per 1 Lapangan</td><td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(singleCourtSubtotal))}</td></tr>`;
         
-        const numCourts = scenarioConfig.num_courts;
+        const numCourts = activePadelConfig.num_courts;
         const totalCourtCost = singleCourtSubtotal * numCourts;
         section3Subtotal += totalCourtCost;
         section3Html += `<tr class="font-bold bg-white"><td class="px-3 py-2 pl-8">Total Biaya Struktur (${numCourts} Lapangan)</td><td class="px-3 py-2 text-gray-600 text-xs">${numCourts} lapangan × Rp ${sierHelpers.formatNumber(Math.round(singleCourtSubtotal))}</td><td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(Math.round(totalCourtCost))}</td></tr>`;
@@ -474,7 +474,7 @@ const sierVisualFinanceDetails = {
         container.innerHTML = `
             <h2 class="text-2xl font-semibold mb-6 text-gray-800 border-l-4 border-purple-600 pl-4">Rincian Estimasi Biaya Investasi (CapEx): Padel</h2>
             <div class="bg-white p-6 rounded-lg shadow-md mb-8">
-                ${sierVisualFinanceNarration.getPadelCapexNarration(scenarioConfig.title)}
+                ${sierVisualFinanceNarration.getPadelCapexNarration(activePadelConfig.title)}
                 <div class="overflow-x-auto border rounded-lg">
                     <table class="w-full text-sm">
                         <thead class="bg-gray-200 text-xs uppercase">
@@ -528,8 +528,8 @@ const sierVisualFinanceDetails = {
         const unitCosts = mpConfig.unit_costs;
 
         // Helper untuk membuat tabel rincian untuk SATU skenario konsep
-        const createConceptTable = (scenarioConfig) => {
-            const scenario = mpConfig.capex_scenarios.concept_scenarios[scenarioConfig];
+        const createConceptTable = (conceptKey) => {
+            const scenario = mpConfig.capex_scenarios.concept_scenarios[conceptKey];
             if (!scenario) return '';
 
             const items = scenario.items;
@@ -582,8 +582,8 @@ const sierVisualFinanceDetails = {
                 </div>
             `;
         };
-        const createConstructionTable = (scenarioConfig) => {
-            const scenario = mpConfig.capex_scenarios.construction_scenarios[scenarioConfig];
+        const createConstructionTable = (constructionKey) => {
+            const scenario = mpConfig.capex_scenarios.construction_scenarios[constructionKey];
             if (!scenario) return '';
 
             const baseCosts = scenario.base_costs;
@@ -743,7 +743,6 @@ const sierVisualFinanceDetails = {
         clearContainer('opex-details-container');
         clearContainer('driving-range-capex-details-container');
         clearContainer('padel-capex-details-container');
-        clearContainer('shared-capex-details-container');
         clearContainer('meeting-point-capex-details-container');
 
         this._renderOpexDetailsVisuals(model, scenarioConfig);
@@ -765,11 +764,9 @@ const sierVisualFinanceDetails = {
             }
             summaryDiv.innerHTML = unitSummariesHtml;
         }
-
         this._renderAssumptionsVisuals(scenarioConfig);
         this._renderInputAssumptionDetails(model, scenarioConfig);
         console.log("[sier-visual-finance-details] Rincian per unit dan semua asumsi input telah dirender.");
     }
 };
-
 window.sierVisualFinanceDetails = sierVisualFinanceDetails;
