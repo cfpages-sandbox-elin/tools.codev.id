@@ -1,4 +1,4 @@
-// File: sier-visual-finance-details.js better padel capex detil pol
+// File: sier-visual-finance-details.js mp detil pol
 const sierVisualFinanceDetails = {
     _renderUnitSummaries(individualResults) {
         let html = '';
@@ -558,9 +558,43 @@ const sierVisualFinanceDetails = {
             for (const key in baseCosts) {
                 const item = baseCosts[key];
                 const label = sierHelpers.safeTranslate(key);
+            
+            // Cek jika item adalah kategori dengan rincian (memiliki properti 'items')
+            if (item && typeof item === 'object' && item.items) {
+                let categoryTotal = 0;
+                // Tambahkan baris header untuk kategori ini
+                rowsHtml += `<tr class="bg-gray-50 font-semibold"><td class="px-3 py-2" colspan="3">${item.title || label}</td></tr>`;
+                
+                // Loop melalui setiap sub-item di dalam rincian
+                for (const subKey in item.items) {
+                    const subItem = item.items[subKey];
+                    const subLabel = sierHelpers.safeTranslate(subKey);
+                    let itemTotal = 0;
+                    let detailHtml = '';
+
+                    if (subItem.lump_sum) {
+                        itemTotal = subItem.lump_sum;
+                        detailHtml = 'Lump Sum';
+                    } else if (subItem.area_m2 && subItem.cost_per_m2) {
+                        itemTotal = subItem.area_m2 * subItem.cost_per_m2;
+                        detailHtml = `${subItem.area_m2} m² @ Rp ${sierHelpers.formatNumber(subItem.cost_per_m2)}`;
+                    }
+                    
+                    categoryTotal += itemTotal;
+                    rowsHtml += `
+                        <tr>
+                            <td class="px-3 py-2 text-gray-600 pl-8">${subLabel}</td>
+                            <td class="px-3 py-2 text-gray-500 text-xs">${detailHtml}</td>
+                            <td class="px-3 py-2 text-right font-mono">${sierHelpers.formatNumber(itemTotal)}</td>
+                        </tr>
+                    `;
+                }
+                subtotal += categoryTotal;
+            } 
+            // Jika item adalah biaya tunggal (bukan kategori)
+            else {
                 let itemTotal = 0;
                 let detailHtml = '';
-
                 if (typeof item === 'number') {
                     itemTotal = item;
                     detailHtml = 'Lump Sum';

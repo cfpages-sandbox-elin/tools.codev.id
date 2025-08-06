@@ -1,4 +1,4 @@
-// File: sier-variables.js dr dr hapus hvac
+// File: sier-variables.js mp detil pol
 const projectConfig = {};
 
 projectConfig.site_parameters = {
@@ -495,9 +495,23 @@ projectConfig.meetingPoint = {
                 title: "Metode 1: Renovasi Gedung Arsip",
                 base_costs: {
                     permits_and_consulting: 40000000,
-                    structural_reinforcement: { lump_sum: 150000000 },
+                    structural_reinforcement: {
+                        title: 'Perkuatan Struktural',
+                        items: {
+                            foundation_strengthening: { area_m2: 109, cost_per_m2: 500000 },
+                            column_beam_works: { area_m2: 109, cost_per_m2: 600000 },
+                            roof_structure_upgrade: { area_m2: 109, cost_per_m2: 275000 }
+                        }
+                    },
                     mep_upgrade_hvac: { area_m2: 109, cost_per_m2: 750000 },
-                    facade_modernization: { lump_sum: 200000000 }
+                    facade_modernization: {
+                        title: 'Modernisasi Fasad',
+                        items: {
+                            cladding_system_installation: { area_m2: 109, cost_per_m2: 1250000 },
+                            signage_branding: { lump_sum: 40000000 },
+                            architectural_lighting: { lump_sum: 25000000 }
+                        }
+                    }
                 }
             },
             rebuild: {
