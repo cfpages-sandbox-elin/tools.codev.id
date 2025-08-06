@@ -1,4 +1,4 @@
-// File: sier-variables.js padel komplit
+// File: sier-variables.js bikin padel larang
 const projectConfig = {};
 
 projectConfig.site_parameters = {
@@ -302,10 +302,10 @@ projectConfig.padel = {
                     general_labor_tools: 3500000
                 },
                 renovation_futsal: {
-                    minor_demolition_and_clearing: { lump_sum: 15000000 },
-                    floor_repair_and_leveling: { area_m2: 400, cost_per_m2: 250000 },
-                    industrial_fans: { quantity: 2, unit_cost: 2000000 },
-                    toilet_demolition_and_relocation: { lump_sum: 20000000 }
+                    minor_demolition_and_clearing: { lump_sum: 25000000 },
+                    floor_repair_and_leveling: { area_m2: 400, cost_per_m2: 450000 },
+                    industrial_fans: { quantity: 2, unit_cost: 3000000 },
+                    toilet_demolition_and_relocation: { lump_sum: 30000000 }
                 },
                 sport_courts_equipment: {
                     per_court_costs: {
@@ -392,16 +392,16 @@ projectConfig.padel = {
                     general_labor_tools: 3500000
                 },
                 component_futsal_renovation: {
-                    minor_demolition_and_clearing: { lump_sum: 15000000 },
-                    floor_repair_and_leveling: { area_m2: 400, cost_per_m2: 250000 },
-                    toilet_demolition_and_relocation: { lump_sum: 20000000 } // <-- TAMBAHKAN KEMBALI BARIS INI
+                    minor_demolition_and_clearing: { lump_sum: 25000000 },
+                    floor_repair_and_leveling: { area_m2: 400, cost_per_m2: 450000 },
+                    toilet_demolition_and_relocation: { lump_sum: 30000000 }
                 },
                 component_koperasi_new_build: {
-                    building_demolition: { area_m2: projectConfig.site_parameters.padel.demolition_area_koperasi_m2, cost_per_m2: 250000 },
-                    land_preparation_and_foundation: { area_m2: 400, cost_per_m2: 400000 },
-                    building_structure_2_courts: { area_m2: 400, cost_per_m2: 2000000 },
-                    industrial_fans: { quantity: 4, unit_cost: 2000000 },
-                    plumbing_and_sanitary: { // <-- TAMBAHKAN OBJEK INI
+                    building_demolition: { area_m2: projectConfig.site_parameters.padel.demolition_area_koperasi_m2, cost_per_m2: 550000 },
+                    land_preparation_and_foundation: { area_m2: 400, cost_per_m2: 1000000 },
+                    building_structure_2_courts: { area_m2: 400, cost_per_m2: 5000000 },
+                    industrial_fans: { quantity: 4, unit_cost: 3000000 },
+                    plumbing_and_sanitary: {
                         toilet_unit: 4,
                         area_m2_per_toilet: 3.2,
                         cost_per_m2: 7812500
