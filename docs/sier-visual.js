@@ -1,4 +1,4 @@
-// File: sier-visual. bikin komplit skenario
+// File: sier-visual. bikin komplit skenario fix1
 function applyAutomaticCaptionsAndNumbering() {
     const allHeadings = document.querySelectorAll('h2, h3, h4, h5');
 
@@ -175,6 +175,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function setupEventListeners() {
+        const mainContainer = document.body;
+
         document.getElementById('dr-scenario-selector').addEventListener('change', renderAll);
         document.getElementById('padel-scenario-selector').addEventListener('change', renderAll);
         document.getElementById('mp-scenario-selector').addEventListener('change', renderAll);
