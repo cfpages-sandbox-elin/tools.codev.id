@@ -1,4 +1,4 @@
-// File: sier-math-costing.js
+// File: sier-math-costing.js hihih
 const sierMathCosting = {
 
     // Fungsi _calculateTotal tetap di sini karena sangat erat kaitannya dengan perhitungan biaya
@@ -86,8 +86,14 @@ const sierMathCosting = {
         
         if (capex.sport_courts_equipment) {
             const numCourts = scenario.num_courts;
-            grandTotal += this._calculateTotal(capex.sport_courts_equipment.per_court_costs || {}) * numCourts;
-            grandTotal += this._calculateTotal(capex.sport_courts_equipment.initial_inventory || {});
+            // PERBAIKAN: Gunakan variabel 'equipment' lokal, bukan 'eq'
+            const equipment = capex.sport_courts_equipment; 
+            if (equipment.per_court_costs) {
+                grandTotal += this._calculateTotal(equipment.per_court_costs) * numCourts;
+            }
+            if (equipment.initial_inventory) {
+                grandTotal += this._calculateTotal(equipment.initial_inventory);
+            }
         }
         
         return grandTotal;
