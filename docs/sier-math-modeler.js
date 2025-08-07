@@ -1,4 +1,4 @@
-// File: sier-math-modeler.js dr capex 0 fix
+// File: sier-math-modeler.js dr capex 0 fix 1
 const sierMathModeler = {
 
     _getFinancialsForComponent(compKey, years, mpScenarioDetail = null) {
@@ -14,9 +14,7 @@ const sierMathModeler = {
             if (!opexConfig) return { salaries: 0, other: 0 };
             let salaries = sierMathCosting._calculateTotal(opexConfig.salaries_wages || {});
             let other = 0;
-            for (const key in opexConfig) { 
-                if (key !== 'salaries_wages') other += sierMathCosting._calculateTotal(opexConfig[key]);
-            }
+            for (const key in opexConfig) { if (key !== 'salaries_wages') other += sierMathCosting._calculateTotal(opexConfig[key]); }
             return { salaries: salaries * 12, other: other * 12 };
         };
 
@@ -30,12 +28,14 @@ const sierMathModeler = {
             case compKey === 'dr':
                 const drCapexDetails = sierMathCosting.calculateDrCapex();
                 capexSchedule[0] = drCapexDetails.total;
+                
                 const drBreakdown = drCapexDetails.breakdown;
                 capexBreakdown.civil_construction += drBreakdown.civil_construction || 0;
                 capexBreakdown.building += drBreakdown.building || 0;
                 capexBreakdown.equipment += drBreakdown.equipment || 0;
                 capexBreakdown.interior += drBreakdown.interior || 0;
                 capexBreakdown.other += drBreakdown.other || 0;
+
                 baseAnnualRevenue = sierMathCosting.getUnitRevenue('drivingRange');
                 baseOpex = extractOpex(projectConfig.drivingRange.opexMonthly);
                 break;
@@ -47,9 +47,9 @@ const sierMathModeler = {
                 capexSchedule[0] = padelBaseCapex * (1 + projectConfig.assumptions.contingency_rate);
                 
                 const padelCapexConf = padelScenario.capex;
-                capexBreakdown.building = sierMathCosting._calculateTotal(padelCapexConf.component_koperasi_new_build || {}) + sierMathCosting._calculateTotal(padelCapexConf.component_futsal_renovation || {});
-                capexBreakdown.equipment = sierMathCosting._calculateTotal(padelCapexConf.sport_courts_equipment || {});
-                capexBreakdown.other = sierMathCosting._calculateTotal(padelCapexConf.pre_operational || {});
+                capexBreakdown.building += sierMathCosting._calculateTotal(padelCapexConf.component_koperasi_new_build || {}) + sierMathCosting._calculateTotal(padelCapexConf.component_futsal_renovation || {});
+                capexBreakdown.equipment += sierMathCosting._calculateTotal(padelCapexConf.sport_courts_equipment || {});
+                capexBreakdown.other += sierMathCosting._calculateTotal(padelCapexConf.pre_operational || {});
 
                 baseAnnualRevenue = sierMathCosting.getUnitRevenue('padel', padelScenarioKey);
                 baseOpex = extractOpex(padelScenario.opexMonthly);
@@ -194,7 +194,6 @@ const sierMathModeler = {
         }
         const incomeStatement = this._buildIncomeStatement({ ...combined, interest: financing.interestPayments, projectionYears });
         const cashFlowStatement = this._buildCashFlowStatement({ incomeStatement, depreciation: combined.depreciation, capexSchedule: combined.capexSchedule, financing, projectionYears });
-        // Panggil dari Analyzer
         const feasibilityMetrics = sierMathAnalyzer.calculateFeasibilityMetrics(cashFlowStatement.netCashFlow, projectConfig.assumptions.discount_rate_wacc);
         return { ...combined, financing, incomeStatement, cashFlowStatement, feasibilityMetrics };
     },
