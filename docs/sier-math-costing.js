@@ -1,4 +1,4 @@
-// File: sier-math-costing.js dr capex 0 fix
+// File: sier-math-costing.js major overhaul
 const sierMathCosting = {
     _calculateTotal(dataObject) {
         if (typeof dataObject !== 'object' || dataObject === null) return 0;
@@ -18,57 +18,70 @@ const sierMathCosting = {
 
     calculateDrCapex() {
         const a = projectConfig.drivingRange.capex_assumptions;
+        const site = projectConfig.site_parameters.driving_range;
         const global = projectConfig.assumptions;
-        const rev = projectConfig.drivingRange.revenue.main_revenue;
-        const drScenarios = projectConfig.drivingRange.scenarios;
-        const total_bays = rev.bays;
+        const total_bays = Math.floor(site.building_length_m / site.bay_width_m) * site.levels;
 
+        // Kategori Biaya
+        const breakdown = {
+            civil_construction: 0,
+            building: 0,
+            equipment: 0,
+            interior: 0,
+            other: 0
+        };
+
+        // 1. Pekerjaan Sipil & Pondasi
+        const pil = a.piling;
+        breakdown.civil_construction += (pil.points_count * pil.length_per_point_m * pil.cost_per_m_mini_pile) + pil.lump_sum_pile_cap;
+
+        // 2. Konstruksi Bangunan
+        const bld = a.building;
+        const bayArea = bld.dr_bays_length_m * bld.dr_bays_width_m;
+        breakdown.building += bayArea * bld.dr_bays_cost_per_m2;
+
+        // 3. Peralatan & Teknologi
         const eq = a.equipment;
         const premium_bays_count = Math.round(total_bays * eq.premium_bays.percentage_of_total);
         const normal_bays_count = total_bays - premium_bays_count;
-        const totalEquipmentCost = (premium_bays_count * eq.premium_bays.cost_per_bay_ball_tracker) +
-                                (premium_bays_count * eq.premium_bays.cost_per_bay_dispenser) +
-                                (normal_bays_count * eq.normal_bays.bay_equipment_cost_per_set) +
-                                (eq.floating_balls_count * eq.floating_balls_cost_per_ball) +
-                                eq.ball_management_system_lump_sum;
+        breakdown.equipment += (premium_bays_count * eq.premium_bays.cost_per_bay_ball_tracker);
+        breakdown.equipment += (premium_bays_count * eq.premium_bays.cost_per_bay_dispenser);
+        breakdown.equipment += (normal_bays_count * eq.normal_bays.bay_equipment_cost_per_set);
+        breakdown.equipment += (eq.floating_balls_count * eq.floating_balls_cost_per_ball);
+        breakdown.equipment += eq.ball_management_system_lump_sum;
 
+        // 4. Jaring Pengaman (dianggap bagian Sipil)
         const net = a.safety_net;
-        const totalPerimeterNetCost = (Math.ceil(net.field_width_m / net.poles.spacing_m) * net.poles.foundation_cost_per_pole) + (Math.ceil(net.field_length_m / net.poles.spacing_m) * 2 * net.poles.foundation_cost_per_pole) + ((net.field_width_m * net.poles.height_distribution.far_side_m) * net.netting.cost_per_m2) + ((net.field_length_m * net.poles.height_distribution.left_right_side_m * 2) * net.netting.cost_per_m2);
-        const totalSafetyNetCost = totalPerimeterNetCost + (drScenarios.include_lake_roof_net ? (net.lake_roof_netting.area_m2 * net.lake_roof_netting.cost_per_m2) : 0);
+        const polesCount = Math.ceil(net.total_perimeter_m / net.poles.spacing_m);
+        const netArea = (site.field_length_m * net.poles.height_distribution.left_right_side_m * 2) + (net.field_width_m * net.poles.height_distribution.far_side_m);
+        breakdown.civil_construction += (polesCount * net.poles.foundation_cost_per_pole);
+        breakdown.civil_construction += (netArea * net.netting.cost_per_m2);
 
-        const totalBayFurnitureCost = total_bays * a.bay_furniture.cost_per_bay;
-        const sanitary = a.plumbing_and_sanitary;
-        const costs = sanitary.unit_costs;
-        const totalSanitaryCost = (sanitary.male_toilet.toilets * costs.toilet_bowl) + (sanitary.male_toilet.urinals * costs.urinal) + (sanitary.male_toilet.sinks * costs.sink) + (sanitary.female_toilet.toilets * costs.toilet_bowl) + (sanitary.female_toilet.sinks * costs.sink);
-        const bld = a.building;
-        const totalBuildingCost = (bld.dr_bays_area_m2 * bld.dr_bays_cost_per_m2) + (bld.cafe_area_m2 * bld.cafe_cost_per_m2) + (bld.lockers_mushola_area_m2 * bld.lockers_mushola_cost_per_m2);
+        // 5. Interior & Sanitasi
+        const san = a.plumbing_and_sanitary;
+        breakdown.interior += (total_bays * a.bay_furniture.cost_per_bay);
+        breakdown.interior += sierHelpers.calculateTotal(san); // Menggunakan helper
 
-        const calculateScenarioCosts = (foundationCosts) => {
-            const mep = a.mep_systems;
-            const physical_cost_base = foundationCosts + totalBuildingCost + totalEquipmentCost + totalSafetyNetCost + totalBayFurnitureCost + totalSanitaryCost;
-            const electrical_cost = physical_cost_base * mep.electrical_system.rate_of_physical_cost;
-            const total_physical_cost = physical_cost_base + mep.plumbing_system.lump_sum_cost + electrical_cost;
-            const permit_cost = total_physical_cost * a.other_costs.permit_design_rate_of_physical_cost;
-            const subtotal = total_physical_cost + permit_cost;
-            const contingency = subtotal * global.contingency_rate;
-
-            return {
-                total: subtotal + contingency,
-                breakdown: {
-                    civil_construction: foundationCosts + totalSafetyNetCost,
-                    building: totalBuildingCost,
-                    equipment: totalEquipmentCost,
-                    interior: totalBayFurnitureCost + totalSanitaryCost,
-                    other: mep.plumbing_system.lump_sum_cost + electrical_cost + permit_cost + contingency
-                }
-            };
-        };
-
-        const pil = a.piling;
-        const foundation_cost = (pil.points_count * pil.length_per_point_m * pil.cost_per_m_mini_pile) + pil.lump_sum_pile_cap;
-        const results = calculateScenarioCosts(foundation_cost);
+        // 6. Sistem MEP & Biaya Lainnya (Other)
+        const physicalSubtotal = breakdown.civil_construction + breakdown.building + breakdown.equipment + breakdown.interior;
+        const mep = a.mep_systems;
+        const electricalCost = physicalSubtotal * mep.electrical_system.rate_of_physical_cost;
+        const plumbingCost = mep.plumbing_system.lump_sum_cost;
+        const totalPhysicalAndMEP = physicalSubtotal + electricalCost + plumbingCost;
+        const permitCost = totalPhysicalAndMEP * a.other_costs.permit_design_rate_of_physical_cost;
         
-        return { total: results.total, breakdown: results.breakdown };
+        breakdown.other += electricalCost;
+        breakdown.other += plumbingCost;
+        breakdown.other += permitCost;
+
+        // Hitung total dari breakdown
+        const subtotal = Object.values(breakdown).reduce((sum, val) => sum + val, 0);
+        const contingency = subtotal * global.contingency_rate;
+        breakdown.other += contingency; // Masukkan kontingensi ke 'other'
+        
+        const grandTotal = subtotal + contingency;
+
+        return { total: grandTotal, breakdown: breakdown };
     },
 
     calculatePadelCapex(scenarioKey) {
@@ -98,23 +111,28 @@ const sierMathCosting = {
 
     calculateMeetingPointCapex(constructionScenarioKey, conceptScenarioKey) {
         const mpConfig = projectConfig.meetingPoint;
-        if (!mpConfig || !mpConfig.capex_scenarios.construction_scenarios[constructionScenarioKey] || !mpConfig.capex_scenarios.concept_scenarios[conceptScenarioKey]) return 0;
+        let totalCapex = 0;
 
-        const unitCosts = mpConfig.unit_costs;
-        let totalCapex = this._calculateTotal(mpConfig.capex_scenarios.construction_scenarios[constructionScenarioKey].base_costs);
+        // Hitung biaya konstruksi dasar jika scenarioKey bukan 'none'
+        if (constructionScenarioKey !== 'none' && mpConfig.capex_scenarios.construction_scenarios[constructionScenarioKey]) {
+            totalCapex += this._calculateTotal(mpConfig.capex_scenarios.construction_scenarios[constructionScenarioKey].base_costs);
+        }
         
-        const conceptData = mpConfig.capex_scenarios.concept_scenarios[conceptScenarioKey].items;
-        const conceptCostMap = {
-            chairs: unitCosts.chair, table_2pax: unitCosts.table_2pax, tables_4pax: unitCosts.table_4pax,
-            sofas: unitCosts.sofa, coffee_tables: unitCosts.coffee_table, meeting_pods: unitCosts.meeting_pod,
-            vip_partitions: unitCosts.vip_partition, vip_tables: unitCosts.vip_table, vip_chairs: unitCosts.vip_chair,
-            kitchen: unitCosts.kitchen_equipment_lump_sum, toilet: unitCosts.toilet_unit_lump_sum
-        };
-
-        for (const itemKey in conceptData) {
-            const count = conceptData[itemKey];
-            if (count > 0 && conceptCostMap[itemKey]) {
-                totalCapex += count * conceptCostMap[itemKey];
+        // Hitung biaya konsep jika scenarioKey bukan 'none'
+        if (conceptScenarioKey !== 'none' && mpConfig.capex_scenarios.concept_scenarios[conceptScenarioKey]) {
+            const unitCosts = mpConfig.unit_costs;
+            const conceptData = mpConfig.capex_scenarios.concept_scenarios[conceptScenarioKey].items;
+            const conceptCostMap = {
+                chairs: unitCosts.chair, table_2pax: unitCosts.table_2pax, tables_4pax: unitCosts.table_4pax,
+                sofas: unitCosts.sofa, coffee_tables: unitCosts.coffee_table, meeting_pods: unitCosts.meeting_pod,
+                vip_partitions: unitCosts.vip_partition, vip_tables: unitCosts.vip_table, vip_chairs: unitCosts.vip_chair,
+                kitchen: unitCosts.kitchen_equipment_lump_sum, toilet: unitCosts.toilet_unit_lump_sum
+            };
+            for (const itemKey in conceptData) {
+                const count = conceptData[itemKey];
+                if (count > 0 && conceptCostMap[itemKey]) {
+                    totalCapex += count * conceptCostMap[itemKey];
+                }
             }
         }
         

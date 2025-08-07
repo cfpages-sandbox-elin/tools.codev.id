@@ -1,5 +1,4 @@
-// File: sier-visual-finance-assumptions.js (BARU)
-// Bertanggung jawab untuk merender SEMUA kartu asumsi input yang dapat diedit.
+// File: sier-visual-finance-assumptions.js major overhaul
 
 const sierVisualFinanceAssumptions = {
 
@@ -20,8 +19,14 @@ const sierVisualFinanceAssumptions = {
                     html += `<tr><td colspan="2" class="pt-3 pb-1 font-semibold text-gray-700 text-sm">${label}</td></tr>`;
                     html += processObject(value, fullPath);
                 } else if (typeof value === 'number') {
-                    const isPercent = (key.includes('_rate') || key.includes('_portion')) && value <= 1;
-                    const formatOptions = isPercent ? { format: 'percent' } : {};
+                    // Logika format yang diperbarui
+                    let formatOptions = {};
+                    if ((key.includes('_rate') || key.includes('_portion')) && value <= 1) {
+                        formatOptions.format = 'percent';
+                    } else if (key.toLowerCase().includes('cost') || key.toLowerCase().includes('salary') || key.toLowerCase().includes('price') || key.toLowerCase().includes('lump_sum')) {
+                        formatOptions.format = 'currency';
+                    }
+
                     html += `<tr><td class="py-1.5 pl-4 text-gray-600">${label}</td><td class="py-1.5 text-right">${sierEditable.createEditableNumber(value, fullPath, formatOptions)}</td></tr>`;
                 }
             }
