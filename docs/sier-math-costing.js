@@ -1,7 +1,5 @@
-// File: sier-math-costing.js hihih
+// File: sier-math-costing.js fix lagi
 const sierMathCosting = {
-
-    // Fungsi _calculateTotal tetap di sini karena sangat erat kaitannya dengan perhitungan biaya
     _calculateTotal(dataObject) {
         if (typeof dataObject !== 'object' || dataObject === null) return 0;
         return Object.values(dataObject).reduce((sum, value) => {
@@ -12,7 +10,7 @@ const sierMathCosting = {
                 if (value.area_m2 && value.cost_per_m2) return sum + (value.area_m2 * value.cost_per_m2);
                 if (value.toilet_unit && value.area_m2_per_toilet && value.cost_per_m2) return sum + (value.toilet_unit * value.area_m2_per_toilet * value.cost_per_m2);
                 if (value.lump_sum) return sum + value.lump_sum;
-                return sum + this._calculateTotal(value);
+                return sum + sierMathCosting._calculateTotal(value);
             }
             return sum;
         }, 0);
@@ -86,8 +84,7 @@ const sierMathCosting = {
         
         if (capex.sport_courts_equipment) {
             const numCourts = scenario.num_courts;
-            // PERBAIKAN: Gunakan variabel 'equipment' lokal, bukan 'eq'
-            const equipment = capex.sport_courts_equipment; 
+            const equipment = capex.sport_courts_equipment;
             if (equipment.per_court_costs) {
                 grandTotal += this._calculateTotal(equipment.per_court_costs) * numCourts;
             }
