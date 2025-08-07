@@ -1,4 +1,4 @@
-// File: sier-visual-finance-summary.js pecah sier-math-finance.js dan sier-visual-finance-details.js
+// File: sier-visual-finance-summary.js pecah sier-math-finance.js dan sier-visual-finance-details.js fix1
 const sierVisualFinanceSummary = {
     _renderUnitSummaries(individualResults) {
         let html = '';
@@ -126,7 +126,8 @@ const sierVisualFinanceSummary = {
             const title = unitTitles[key] || key.toUpperCase();
             bodyHtml += `<tr class="hover:bg-yellow-50"><td class="p-2 sticky left-0 bg-white z-10 font-semibold">${title}</td>`;
             for (let i = 1; i <= years; i++) {
-                const value = unit.pnl[dataKey][i];
+                const dataArray = unit[dataKey] || (unit.pnl ? unit.pnl[dataKey] : undefined);
+                const value = dataArray ? dataArray[i] : 0;
                 bodyHtml += `<td class="p-2 text-right font-mono text-xs">${sierHelpers.formatNumber(Math.round(value / 1000))}</td>`;
             }
             bodyHtml += `</tr>`;
@@ -134,7 +135,11 @@ const sierVisualFinanceSummary = {
         bodyHtml += `<tr class="font-bold bg-gray-200"><td class="p-2 sticky left-0 bg-gray-200 z-10">Total Gabungan</td>`;
         for (let i = 1; i <= years; i++) {
             let yearTotal = 0;
-            unitKeys.forEach(key => { yearTotal += individual[key].pnl[dataKey][i]; });
+            unitKeys.forEach(key => {
+                const unit = individual[key];
+                const dataArray = unit[dataKey] || (unit.pnl ? unit.pnl[dataKey] : undefined);
+                yearTotal += dataArray ? dataArray[i] : 0;
+            });
             bodyHtml += `<td class="p-2 text-right font-mono text-xs">${sierHelpers.formatNumber(Math.round(yearTotal / 1000))}</td>`;
         }
         bodyHtml += `</tr>`;
