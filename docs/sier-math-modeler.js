@@ -1,7 +1,4 @@
-// File: sier-math-modeler.js
-// Bertanggung jawab untuk membangun model finansial lengkap (proyeksi 10 tahun),
-// menggabungkan hasil dari sier-math-costing dan menghasilkan output untuk sier-math-analyzer.
-
+// File: sier-math-modeler.js dr capex 0 fix
 const sierMathModeler = {
 
     _getFinancialsForComponent(compKey, years, mpScenarioDetail = null) {
@@ -15,10 +12,11 @@ const sierMathModeler = {
 
         const extractOpex = (opexConfig) => {
             if (!opexConfig) return { salaries: 0, other: 0 };
-            // Gunakan _calculateTotal dari Costing
             let salaries = sierMathCosting._calculateTotal(opexConfig.salaries_wages || {});
             let other = 0;
-            for (const key in opexConfig) { if (key !== 'salaries_wages') other += sierMathCosting._calculateTotal(opexConfig[key]); }
+            for (const key in opexConfig) { 
+                if (key !== 'salaries_wages') other += sierMathCosting._calculateTotal(opexConfig[key]);
+            }
             return { salaries: salaries * 12, other: other * 12 };
         };
 
@@ -32,7 +30,12 @@ const sierMathModeler = {
             case compKey === 'dr':
                 const drCapexDetails = sierMathCosting.calculateDrCapex();
                 capexSchedule[0] = drCapexDetails.total;
-                capexBreakdown = drCapexDetails.breakdown;
+                const drBreakdown = drCapexDetails.breakdown;
+                capexBreakdown.civil_construction += drBreakdown.civil_construction || 0;
+                capexBreakdown.building += drBreakdown.building || 0;
+                capexBreakdown.equipment += drBreakdown.equipment || 0;
+                capexBreakdown.interior += drBreakdown.interior || 0;
+                capexBreakdown.other += drBreakdown.other || 0;
                 baseAnnualRevenue = sierMathCosting.getUnitRevenue('drivingRange');
                 baseOpex = extractOpex(projectConfig.drivingRange.opexMonthly);
                 break;

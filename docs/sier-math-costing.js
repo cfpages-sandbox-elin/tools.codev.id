@@ -1,4 +1,4 @@
-// File: sier-math-costing.js fix lagi
+// File: sier-math-costing.js dr capex 0 fix
 const sierMathCosting = {
     _calculateTotal(dataObject) {
         if (typeof dataObject !== 'object' || dataObject === null) return 0;
@@ -57,8 +57,8 @@ const sierMathCosting = {
                 breakdown: {
                     civil_construction: foundationCosts + totalSafetyNetCost,
                     building: totalBuildingCost,
-                    equipment_and_tech: totalEquipmentCost,
-                    furniture_and_interior: totalBayFurnitureCost + totalSanitaryCost,
+                    equipment: totalEquipmentCost,
+                    interior: totalBayFurnitureCost + totalSanitaryCost,
                     other: mep.plumbing_system.lump_sum_cost + electrical_cost + permit_cost + contingency
                 }
             };
