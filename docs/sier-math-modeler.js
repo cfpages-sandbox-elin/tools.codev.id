@@ -1,11 +1,13 @@
-// File: sier-math-modeler.js dr capex 0 fix 2
+// File: sier-math-modeler.js dr capex 0 fix 3
 const sierMathModeler = {
 
     _getFinancialsForComponent(compKey, years, mpScenarioDetail = null) {
         let capexSchedule = Array(years + 1).fill(0);
         let revenue = Array(years + 1).fill(0);
         let opex = Array(years + 1).fill(0);
-        let capexBreakdown; 
+
+        let capexBreakdown = { civil_construction: 0, building: 0, equipment: 0, interior: 0, digital_systems: 0, shared_facilities: 0, other: 0 };
+
         const esc = projectConfig.assumptions.escalation;
         let baseAnnualRevenue = 0;
         let baseOpex = { salaries: 0, other: 0 };
@@ -29,14 +31,18 @@ const sierMathModeler = {
                 const drCapexDetails = sierMathCosting.calculateDrCapex();
                 capexSchedule[0] = drCapexDetails.total;
                 
-                capexBreakdown = drCapexDetails.breakdown;
+                const drBreakdown = drCapexDetails.breakdown;
+                capexBreakdown.civil_construction += drBreakdown.civil_construction || 0;
+                capexBreakdown.building += drBreakdown.building || 0;
+                capexBreakdown.equipment += drBreakdown.equipment || 0;
+                capexBreakdown.interior += drBreakdown.interior || 0;
+                capexBreakdown.other += drBreakdown.other || 0;
 
                 baseAnnualRevenue = sierMathCosting.getUnitRevenue('drivingRange');
                 baseOpex = extractOpex(projectConfig.drivingRange.opexMonthly);
                 break;
 
             case compKey.includes('padel'):
-                capexBreakdown = { civil_construction: 0, building: 0, equipment: 0, interior: 0, digital_systems: 0, shared_facilities: 0, other: 0 };
                 const padelScenarioKey = getPadelScenarioKey();
                 const padelScenario = projectConfig.padel.scenarios[padelScenarioKey];
                 const padelBaseCapex = sierMathCosting.calculatePadelCapex(padelScenarioKey);
@@ -52,7 +58,6 @@ const sierMathModeler = {
                 break;
             
             case compKey === 'mp':
-                capexBreakdown = { civil_construction: 0, building: 0, equipment: 0, interior: 0, digital_systems: 0, shared_facilities: 0, other: 0 };
                 const parts = mpScenarioDetail.split('_');
                 const constructionKey = parts.shift();
                 const conceptKey = parts.join('_');
@@ -60,17 +65,16 @@ const sierMathModeler = {
                 capexSchedule[0] = baseMpCapex * (1 + projectConfig.assumptions.contingency_rate);
                 
                 const constructionCosts = sierMathCosting._calculateTotal(projectConfig.meetingPoint.capex_scenarios.construction_scenarios[constructionKey].base_costs);
-                capexBreakdown.building = constructionCosts;
-                capexBreakdown.equipment = baseMpCapex - constructionCosts;
+                capexBreakdown.building += constructionCosts;
+                capexBreakdown.equipment += (baseMpCapex - constructionCosts);
 
                 baseAnnualRevenue = sierMathCosting._calculateTotal(projectConfig.meetingPoint.revenue) * 12;
                 baseOpex = extractOpex(projectConfig.meetingPoint.opexMonthly);
                 break;
             
             case compKey === 'digital':
-                capexBreakdown = { civil_construction: 0, building: 0, equipment: 0, interior: 0, digital_systems: 0, shared_facilities: 0, other: 0 };
                 capexSchedule[0] = sierMathCosting._calculateTotal(projectConfig.digital_capex) * (1 + projectConfig.assumptions.contingency_rate);
-                capexBreakdown.digital_systems = capexSchedule[0];
+                capexBreakdown.digital_systems += capexSchedule[0];
                 break;
         }
         
