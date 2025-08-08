@@ -1,3 +1,4 @@
+// print-pages.js
 document.getElementById('printForm').addEventListener('submit', function(event) {
     event.preventDefault();
 
@@ -10,21 +11,25 @@ document.getElementById('printForm').addEventListener('submit', function(event) 
         return;
     }
 
-    let pages = [];
+    let pageRanges = [];
     let currentPage = 1;
-    let print = true;
 
     while (currentPage <= endOfPage) {
-        if (print) {
-            for (let i = 0; i < skipPages && currentPage <= endOfPage; i++) {
-                pages.push(currentPage);
-                currentPage++;
-            }
-        } else {
-            currentPage += skipPages;
+        const startRange = currentPage;
+        let endRange = currentPage + skipPages - 1;
+
+        if (endRange > endOfPage) {
+            endRange = endOfPage;
         }
-        print = !print;
+
+        if (startRange === endRange) {
+            pageRanges.push(`${startRange}`);
+        } else {
+            pageRanges.push(`${startRange}-${endRange}`);
+        }
+
+        currentPage = endRange + skipPages + 1;
     }
 
-    resultDiv.textContent = pages.join(', ');
+    resultDiv.textContent = pageRanges.join(', ');
 });
