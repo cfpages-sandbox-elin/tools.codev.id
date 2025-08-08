@@ -28,6 +28,7 @@
                 <button id="tab-extract" class="tab-button" role="tab" data-tab-key="extract">📑 Extract</button>
                 <button id="tab-delete" class="tab-button" role="tab" data-tab-key="delete">🗑️ Delete</button>
                 <button id="tab-edit" class="tab-button" role="tab" data-tab-key="edit">✏️ Edit</button>
+                <button id="tab-numbering" class="tab-button" role="tab" data-tab-key="numbering">🔢 Numbering</button>
             </nav>
         </div>
 
@@ -179,6 +180,78 @@
                  <div class="text-center text-slate-500">Upload a PDF to begin editing.</div>
             </div>
         </div>
+        
+        <div id="tab-content-numbering" class="hidden">
+            <!-- NUMBERING TOOL UI -->
+            <div class="text-center mb-4">
+                <h2 class="text-2xl font-semibold text-slate-700">PDF Page Numbering</h2>
+                <p class="text-slate-500 mt-1">Easily add page numbers to your PDF document.</p>
+            </div>
+            <div class="border-b pb-6 mb-6 flex flex-col items-center">
+                <label class="block text-sm font-medium text-slate-700 mb-2">1. Upload PDF</label>
+                <input id="numbering-file-upload" type="file" class="text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-yellow-50 file:text-yellow-700 hover:file:bg-yellow-100" accept=".pdf">
+            </div>
+
+            <!-- Options Section -->
+            <div id="numbering-options" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                <div>
+                    <label for="numbering-position" class="block text-sm font-medium text-slate-700">Position</label>
+                    <select id="numbering-position" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md">
+                        <option value="bottom-center" selected>Bottom Center</option>
+                        <option value="bottom-left">Bottom Left</option>
+                        <option value="bottom-right">Bottom Right</option>
+                        <option value="top-center">Top Center</option>
+                        <option value="top-left">Top Left</option>
+                        <option value="top-right">Top Right</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="numbering-style" class="block text-sm font-medium text-slate-700">Style</label>
+                    <select id="numbering-style" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md">
+                        <option value="normal" selected>Normal</option>
+                        <option value="watermark">Big & Centered (Watermark)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="numbering-margin" class="block text-sm font-medium text-slate-700">Margin (pts)</label>
+                    <input type="number" id="numbering-margin" value="36" class="mt-1 block w-full pl-3 pr-3 py-2 border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label for="numbering-size" class="block text-sm font-medium text-slate-700">Font Size (pts)</label>
+                    <input type="number" id="numbering-size" value="12" class="mt-1 block w-full pl-3 pr-3 py-2 border-gray-300 rounded-md">
+                </div>
+                <div>
+                     <label for="numbering-start" class="block text-sm font-medium text-slate-700">Start Numbering at</label>
+                    <input type="number" id="numbering-start" value="1" min="1" class="mt-1 block w-full pl-3 pr-3 py-2 border-gray-300 rounded-md">
+                </div>
+                <div>
+                    <label for="numbering-color" class="block text-sm font-medium text-slate-700">Font Color</label>
+                    <input type="color" id="numbering-color" value="#000000" class="mt-1 w-full h-10 border-gray-300 rounded-md cursor-pointer">
+                </div>
+                <div class="md:col-span-2">
+                    <label for="numbering-range" class="block text-sm font-medium text-slate-700">Pages to Number (e.g., 2-5, 8)</label>
+                    <input type="text" id="numbering-range" placeholder="Leave blank for all pages" class="mt-1 block w-full pl-3 pr-3 py-2 border-gray-300 rounded-md">
+                </div>
+                <div class="flex items-center justify-center">
+                     <div class="flex items-center h-full">
+                        <input id="numbering-skip-cover" type="checkbox" class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                        <label for="numbering-skip-cover" class="ml-2 block text-sm text-slate-900">Skip first page (cover)</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="numbering-action-bar" class="hidden flex items-center justify-center mb-6">
+                <button id="numbering-button" type="button" class="px-8 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">Add Page Numbers</button>
+            </div>
+
+            <div id="numbering-status" class="text-center mb-4 min-h-[2rem]"></div>
+            <div id="numbering-results" class="text-center"></div>
+
+            <div id="numbering-preview-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <!-- Page previews will be rendered here -->
+            </div>
+        </div>
+
 
         <!-- NEW: Hidden input for image uploads -->
         <input type="file" id="edit-image-upload" class="hidden" accept="image/png, image/jpeg">
@@ -225,5 +298,6 @@ document.addEventListener('DOMContentLoaded', () => {
 <script src="pdf-extract.js" defer></script>
 <script src="pdf-delete.js" defer></script>
 <script src="pdf-edit.js" defer></script>
+<script src="pdf-numbering.js" defer></script>
 </body>
 </html>
