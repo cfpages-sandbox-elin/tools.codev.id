@@ -1,9 +1,10 @@
+// print-pages.js update tambah gak ruh
 document.getElementById('printForm').addEventListener('submit', function(event) {
     event.preventDefault();
 
     const startPage = parseInt(document.getElementById('startPage').value);
     const endOfPage = parseInt(document.getElementById('endOfPage').value);
-    const pagesToPrintAndSkip = parseInt(document.getElementById('skipPages').value); // Renamed for clarity
+    const pagesToPrintAndSkip = parseInt(document.getElementById('skipPages').value);
     const resultDiv = document.getElementById('result');
 
     // Validation
@@ -16,31 +17,41 @@ document.getElementById('printForm').addEventListener('submit', function(event) 
         return;
     }
 
-    let pageRanges = [];
+    let resultString = '';
     let currentPage = startPage;
 
-    while (currentPage <= endOfPage) {
-        // Determine the start and end of the current block to be printed
-        const startRange = currentPage;
-        let endRange = startRange + pagesToPrintAndSkip - 1;
-
-        // Ensure the range does not exceed the end of the document
-        if (endRange > endOfPage) {
-            endRange = endOfPage;
+    // --- LOGIC SWITCH ---
+    // If printing 1 or 2 pages per block, use comma-separated numbers for brevity.
+    if (pagesToPrintAndSkip < 3) {
+        let pages = [];
+        while (currentPage <= endOfPage) {
+            // Add the pages to be printed in this block
+            for (let i = 0; i < pagesToPrintAndSkip && currentPage <= endOfPage; i++) {
+                pages.push(currentPage);
+                currentPage++;
+            }
+            // Skip the next block of pages
+            currentPage += pagesToPrintAndSkip;
         }
+        resultString = pages.join(', ');
 
-        // Format the range string
-        if (startRange === endRange) {
-            pageRanges.push(`${startRange}`);
-        } else {
+    } else {
+        // If printing 3 or more pages per block, use range notation (e.g., "1-5").
+        let pageRanges = [];
+        while (currentPage <= endOfPage) {
+            const startRange = currentPage;
+            let endRange = startRange + pagesToPrintAndSkip - 1;
+
+            if (endRange > endOfPage) {
+                endRange = endOfPage;
+            }
+            
             pageRanges.push(`${startRange}-${endRange}`);
+            
+            currentPage = endRange + pagesToPrintAndSkip + 1;
         }
-        
-        // Jump to the start of the *next* block to be printed.
-        // This is done by taking the end of the current printed block (endRange),
-        // and skipping a number of pages equal to pagesToPrintAndSkip.
-        currentPage = endRange + pagesToPrintAndSkip + 1;
+        resultString = pageRanges.join(', ');
     }
 
-    resultDiv.textContent = pageRanges.join(', ');
+    resultDiv.textContent = resultString;
 });
