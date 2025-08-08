@@ -1,10 +1,11 @@
-// print-pages.js update tambah gak ruh
+// print-pages.js update tambah reverse order
 document.getElementById('printForm').addEventListener('submit', function(event) {
     event.preventDefault();
 
     const startPage = parseInt(document.getElementById('startPage').value);
     const endOfPage = parseInt(document.getElementById('endOfPage').value);
     const pagesToPrintAndSkip = parseInt(document.getElementById('skipPages').value);
+    const reverseOrder = document.getElementById('reverseOrder').checked; // Get checkbox state
     const resultDiv = document.getElementById('result');
 
     // Validation
@@ -20,23 +21,25 @@ document.getElementById('printForm').addEventListener('submit', function(event) 
     let resultString = '';
     let currentPage = startPage;
 
-    // --- LOGIC SWITCH ---
-    // If printing 1 or 2 pages per block, use comma-separated numbers for brevity.
+    // Logic for comma-separated numbers (for printing 1 or 2 pages per block)
     if (pagesToPrintAndSkip < 3) {
         let pages = [];
         while (currentPage <= endOfPage) {
-            // Add the pages to be printed in this block
             for (let i = 0; i < pagesToPrintAndSkip && currentPage <= endOfPage; i++) {
                 pages.push(currentPage);
                 currentPage++;
             }
-            // Skip the next block of pages
             currentPage += pagesToPrintAndSkip;
+        }
+
+        // --- REVERSE LOGIC ---
+        if (reverseOrder) {
+            pages.reverse();
         }
         resultString = pages.join(', ');
 
     } else {
-        // If printing 3 or more pages per block, use range notation (e.g., "1-5").
+        // Logic for range notation (for printing 3+ pages per block)
         let pageRanges = [];
         while (currentPage <= endOfPage) {
             const startRange = currentPage;
@@ -49,6 +52,11 @@ document.getElementById('printForm').addEventListener('submit', function(event) 
             pageRanges.push(`${startRange}-${endRange}`);
             
             currentPage = endRange + pagesToPrintAndSkip + 1;
+        }
+
+        // --- REVERSE LOGIC ---
+        if (reverseOrder) {
+            pageRanges.reverse();
         }
         resultString = pageRanges.join(', ');
     }
