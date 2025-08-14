@@ -175,10 +175,95 @@
         #slide12::before { background-image: url('https://picsum.photos/seed/thank-you-blue-background/1280/720.jpg'); }
 
         /* Gaya Navigasi */
-        .nav-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 50px; height: 50px; background-color: rgba(0, 0, 0, 0.3); color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; cursor: pointer; z-index: 10; transition: background-color 0.3s; user-select: none; }
-        .nav-arrow:hover { background-color: rgba(0, 0, 0, 0.6); }
-        #prev-slide { left: 20px; }
-        #next-slide { right: 20px; }
+        .nav-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            background-color: rgba(0, 0, 0, 0.3);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 10; /* Pastikan panah di atas slide */
+            transition: background-color 0.3s;
+            user-select: none; /* Mencegah seleksi teks */
+        }
+        .nav-arrow:hover {
+            background-color: rgba(0, 0, 0, 0.6);
+        }
+        #prev-slide {
+            left: 20px;
+        }
+        #next-slide {
+            right: 20px;
+        }
+        #slide-counter {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.3);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 16px;
+            z-index: 10;
+            user-select: none;
+        }
+
+        #last-slide-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 20;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        #last-slide-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .last-slide-box {
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 30px 40px;
+            border-radius: 12px;
+            text-align: center;
+            color: white;
+        }
+
+        .last-slide-box p {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .last-slide-box button {
+            font-size: 18px;
+            padding: 10px 25px;
+            border-radius: 8px;
+            border: none;
+            background-color: #64b5f6;
+            color: #0a4d8c;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+
+        .last-slide-box button:hover {
+            transform: scale(1.05);
+        }
     </style>
 </head>
 <body>
@@ -187,6 +272,15 @@
         <!-- Panah Navigasi -->
         <div class="nav-arrow" id="prev-slide"><i class="fas fa-chevron-left"></i></div>
         <div class="nav-arrow" id="next-slide"><i class="fas fa-chevron-right"></i></div>
+
+        <div id="slide-counter"></div>
+        <!-- Elemen untuk pesan di slide terakhir -->
+        <div id="last-slide-overlay">
+            <div class="last-slide-box">
+                <p>Anda berada di slide terakhir.</p>
+                <button id="restart-presentation">Mulai Ulang</button>
+            </div>
+        </div>
 
         <!-- Slide 1: Judul -->
         <section id="slide1" class="slide active">
@@ -510,56 +604,97 @@
     <script>
         // JAVASCRIPT TETAP SAMA SEPERTI SEBELUMNYA DAN TIDAK PERLU DIUBAH
         document.addEventListener('DOMContentLoaded', function () {
+            // Deklarasi Elemen
             const slides = document.querySelectorAll('.slide');
             const prevButton = document.getElementById('prev-slide');
             const nextButton = document.getElementById('next-slide');
+            
+            // [VARIABEL BARU]
+            const slideCounter = document.getElementById('slide-counter');
+            const lastSlideOverlay = document.getElementById('last-slide-overlay');
+            const restartButton = document.getElementById('restart-presentation');
             let currentSlide = 0;
+            let totalSlides = slides.length;
 
+            /**
+             * [FUNGSI showSlide DIREVISI]
+             * Fungsi ini sekarang juga mengurus pembaruan nomor slide
+             * dan menonaktifkan panah kanan di slide terakhir.
+             */
             function showSlide(index) {
+                // Sembunyikan pesan slide terakhir jika ada
+                lastSlideOverlay.classList.remove('visible');
+
                 slides.forEach((slide) => {
                     slide.classList.remove('active');
                 });
                 slides[index].classList.add('active');
+
+                // Update teks pada slide counter
+                slideCounter.textContent = `${index + 1} / ${totalSlides}`;
+                
+                // Atur visibilitas panah kanan
+                if (index === totalSlides - 1) {
+                    nextButton.style.opacity = '0.3'; // Buat panah kanan jadi redup
+                    nextButton.style.cursor = 'not-allowed';
+                } else {
+                    nextButton.style.opacity = '1';
+                    nextButton.style.cursor = 'pointer';
+                }
             }
 
+            /**
+             * [FUNGSI nextSlide DIREVISI]
+             * Fungsi ini tidak lagi berputar, tetapi akan menampilkan pesan
+             * jika pengguna mencoba lanjut dari slide terakhir.
+             */
             function nextSlide() {
-                currentSlide = (currentSlide + 1) % slides.length;
-                showSlide(currentSlide);
+                if (currentSlide < totalSlides - 1) {
+                    currentSlide++;
+                    showSlide(currentSlide);
+                } else {
+                    // Tampilkan overlay jika sudah di slide terakhir
+                    lastSlideOverlay.classList.add('visible');
+                    // Sembunyikan otomatis setelah beberapa detik jika tidak ada interaksi
+                    setTimeout(() => {
+                        lastSlideOverlay.classList.remove('visible');
+                    }, 4000);
+                }
             }
 
             function prevSlide() {
-                currentSlide = (currentSlide - 1 + slides.length) % slides.length;
-                showSlide(currentSlide);
+                if (currentSlide > 0) {
+                    currentSlide--;
+                    showSlide(currentSlide);
+                }
             }
-
+            
+            // Event listener untuk tombol restart
+            restartButton.addEventListener('click', () => {
+                currentSlide = 0;
+                showSlide(currentSlide);
+                lastSlideOverlay.classList.remove('visible');
+            });
+            
+            // Fungsi penyesuaian konten (tetap sama)
             function adjustContentToFit(slide) {
                 const contentContainer = slide.querySelector('.content');
                 if (!contentContainer) return;
-
                 const scalableText = contentContainer.querySelectorAll('.title, .subtitle, .toc-text, .section-title, .section-content, .activity-text, .output-title, .output-content, .step-title, .step-description, .factor-text, .legal-title, .legal-content, .scale-label, .contact-text, .deliverable-text, .summary-text, .summary-title, .column-title, .point-text, .program-title, .activity-list-item');
                 const scalablePadding = contentContainer.querySelectorAll('.section, .output-box, .framework-section, .legal-box, .step-card, .header, .content, .summary-box, .program-group');
-
                 let attempts = 0;
                 const maxAttempts = 25; 
-
                 while (contentContainer.scrollHeight > contentContainer.clientHeight && attempts < maxAttempts) {
                     scalableText.forEach(el => {
                         const currentSize = parseFloat(el.style.fontSize || window.getComputedStyle(el).fontSize);
-                        if (currentSize > 10) {
-                            el.style.fontSize = `${currentSize - 1}px`;
-                        }
+                        if (currentSize > 10) { el.style.fontSize = `${currentSize - 1}px`; }
                     });
                     scalablePadding.forEach(el => {
                         const style = window.getComputedStyle(el);
                         const currentPaddingTop = parseFloat(el.style.paddingTop || style.paddingTop);
                         const currentPaddingBottom = parseFloat(el.style.paddingBottom || style.paddingBottom);
-
-                        if (currentPaddingTop > 5) {
-                            el.style.paddingTop = `${currentPaddingTop - 1}px`;
-                        }
-                        if (currentPaddingBottom > 5) {
-                            el.style.paddingBottom = `${currentPaddingBottom - 1}px`;
-                        }
+                        if (currentPaddingTop > 5) { el.style.paddingTop = `${currentPaddingTop - 1}px`; }
+                        if (currentPaddingBottom > 5) { el.style.paddingBottom = `${currentPaddingBottom - 1}px`; }
                     });
                     attempts++;
                 }
@@ -578,7 +713,6 @@
             slides.forEach(slide => {
                 adjustContentToFit(slide);
             });
-
             showSlide(currentSlide);
         });
     </script>
