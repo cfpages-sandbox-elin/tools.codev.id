@@ -617,15 +617,17 @@
             let totalSlides = slides.length;
 
             function parseMarkdown(htmlString) {
+                // Menambahkan flag 's' (dotAll) pada regex agar '.' dapat mencocokkan
+                // karakter baris baru. Ini membuatnya lebih kuat.
+                
                 // 1. Ubah **bold** menjadi <strong>bold</strong>
-                //    Ini dijalankan pertama agar tidak bentrok dengan italic.
-                let processedHtml = htmlString.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                let processedHtml = htmlString.replace(/\*\*(.*?)\*\*/gs, '<strong>$1</strong>');
                 
                 // 2. Ubah _italic_ menjadi <em>italic</em>
-                processedHtml = processedHtml.replace(/_(.*?)_/g, '<em>$1</em>');
+                processedHtml = processedHtml.replace(/_(.*?)_/gs, '<em>$1</em>');
                 
                 // 3. Ubah *italic* menjadi <em>italic</em>
-                processedHtml = processedHtml.replace(/\*(.*?)\*/g, '<em>$1</em>');
+                processedHtml = processedHtml.replace(/\*(.*?)\*/gs, '<em>$1</em>');
                 
                 return processedHtml;
             }
