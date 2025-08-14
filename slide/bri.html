@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Presentasi - Tahapan Pelaksanaan Pekerjaan</title>
+    <title>Presentasi - Penawaran Teknis SROI & IKM</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -16,8 +16,8 @@
         body {
             font-family: 'Roboto', sans-serif;
             color: #fff;
-            overflow: hidden; /* Mencegah scroll pada body */
-            background-color: #333; /* Warna latar belakang di luar slide */
+            overflow: hidden;
+            background-color: #333;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -29,7 +29,7 @@
             position: relative;
             width: 1280px;
             height: 720px;
-            overflow: hidden; /* Menyembunyikan slide yang tidak aktif */
+            overflow: hidden;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
 
@@ -37,20 +37,20 @@
         .slide {
             width: 100%;
             height: 100%;
-            position: absolute; /* Mengatur posisi absolut untuk tumpang tindih */
+            position: absolute;
             top: 0;
             left: 0;
             background: linear-gradient(135deg, #0a4d8c 0%, #1976d2 100%);
             overflow: hidden;
-            opacity: 0; /* Sembunyikan semua slide secara default */
-            visibility: hidden; /* Sembunyikan dari assistive technologies */
+            opacity: 0;
+            visibility: hidden;
             transition: opacity 0.6s ease-in-out, visibility 0.6s ease-in-out;
         }
 
         .slide.active {
-            opacity: 1; /* Tampilkan slide yang aktif */
+            opacity: 1;
             visibility: visible;
-            z-index: 1; /* Bawa slide aktif ke depan */
+            z-index: 1;
         }
 
         .slide::before {
@@ -71,203 +71,114 @@
             display: flex;
             flex-direction: column;
             height: 100%;
-            text-align: center;
+            padding: 60px 100px;
         }
         
-        .decoration {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 10px;
-            background: linear-gradient(90deg, #1976d2 0%, #64b5f6 100%);
-        }
-
-        .accent-circle {
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.05);
-            z-index: 0;
-        }
+        .header { margin-bottom: 40px; text-align: left; }
+        .title { font-size: 42px; font-weight: 700; position: relative; display: inline-block; margin-bottom: 10px; }
+        .title::after { content: ""; position: absolute; bottom: -10px; left: 0; width: 80px; height: 4px; background-color: #64b5f6; }
+        
+        .decoration { position: absolute; bottom: 0; left: 0; width: 100%; height: 10px; background: linear-gradient(90deg, #1976d2 0%, #64b5f6 100%); }
+        .accent-circle { position: absolute; border-radius: 50%; background: rgba(255, 255, 255, 0.05); z-index: 0; }
         .accent-circle-1 { top: -100px; right: -100px; width: 300px; height: 300px; }
         .accent-circle-2 { bottom: -150px; left: -150px; width: 400px; height: 400px; }
-
-        /* Gaya Spesifik per Slide (menggunakan ID untuk targeting) */
+        .main-content { display: flex; flex-grow: 1; gap: 40px; }
+        .left-column, .right-column { flex: 1; display: flex; flex-direction: column; }
+        .section { background-color: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 25px; margin-bottom: 20px; flex-grow: 1; }
+        .section-title { font-size: 24px; font-weight: 600; margin-bottom: 15px; color: #e3f2fd; display: flex; align-items: center; }
+        .section-title i { margin-right: 12px; color: #64b5f6; }
+        .section-content { font-size: 18px; line-height: 1.6; }
 
         /* --- Slide 1: Judul --- */
-        #slide1 .content { justify-content: center; align-items: center; padding: 0 100px; }
+        #slide1 .content { justify-content: center; align-items: center; text-align: center; }
         #slide1 .logo { margin-bottom: 40px; }
         #slide1 .logo i { font-size: 64px; color: #fff; }
-        #slide1 .title { font-size: 48px; font-weight: 700; margin-bottom: 20px; line-height: 1.2; }
-        #slide1 .subtitle { font-size: 28px; font-weight: 500; margin-bottom: 10px; color: #e3f2fd; }
+        #slide1 .title { font-size: 48px; }
+        #slide1 .subtitle { font-size: 28px; font-weight: 500; color: #e3f2fd; }
         #slide1 .date { font-size: 20px; font-weight: 400; margin-top: 30px; color: #bbdefb; }
         #slide1::before { background-image: url('https://picsum.photos/seed/abstract-blue-pattern/1280/720.jpg'); }
 
-        /* --- Slide 2: Daftar Isi --- */
-        #slide2 .content { padding: 60px 100px; text-align: left; }
-        #slide2 .header { margin-bottom: 50px; }
-        #slide2 .title { font-size: 42px; font-weight: 700; position: relative; display: inline-block; margin-bottom: 10px; }
-        #slide2 .title::after { content: ""; position: absolute; bottom: -10px; left: 0; width: 80px; height: 4px; background-color: #64b5f6; }
-        #slide2 .toc-container { flex-grow: 1; display: flex; align-items: center; }
-        #slide2 .toc-list { width: 100%; list-style: none; }
-        #slide2 .toc-item { display: flex; align-items: center; margin-bottom: 30px; transition: transform 0.3s; }
-        #slide2 .toc-item:hover { transform: translateX(10px); }
-        #slide2 .toc-number { width: 50px; height: 50px; background-color: rgba(255, 255, 255, 0.2); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; font-weight: 700; margin-right: 25px; color: #e3f2fd; }
-        #slide2 .toc-text { font-size: 24px; font-weight: 500; }
-        #slide2::before { background-image: url('https://picsum.photos/seed/abstract-blue-pattern/1280/720.jpg'); }
+        /* --- Slide 2: Ringkasan Eksekutif (BARU) --- */
+        #slide2 .summary-container { display: flex; justify-content: space-around; align-items: stretch; flex-grow: 1; gap: 30px; }
+        #slide2 .summary-box { background-color: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 30px; flex: 1; display: flex; flex-direction: column; text-align: left; border-top: 4px solid #64b5f6; }
+        #slide2 .summary-title { font-size: 24px; font-weight: 600; color: #e3f2fd; margin-bottom: 15px; display: flex; align-items: center; }
+        #slide2 .summary-title i { font-size: 28px; margin-right: 15px; }
+        #slide2 .summary-text { font-size: 18px; line-height: 1.6; }
+        #slide2::before { background-image: url('https://picsum.photos/seed/executive-summary/1280/720.jpg'); }
 
-        /* --- Slide 3 & 4: Tahap 1 & 2 (Gaya serupa) --- */
-        #slide3 .content, #slide4 .content { padding: 60px 100px; text-align: left; }
-        #slide3 .header, #slide4 .header { margin-bottom: 40px; }
-        #slide3 .title, #slide4 .title { font-size: 42px; font-weight: 700; position: relative; display: inline-block; margin-bottom: 10px; }
-        #slide3 .title::after, #slide4 .title::after { content: ""; position: absolute; bottom: -10px; left: 0; width: 80px; height: 4px; background-color: #64b5f6; }
-        #slide3 .main-content, #slide4 .main-content { display: flex; flex-grow: 1; gap: 40px; }
-        #slide3 .left-column, #slide4 .left-column, #slide3 .right-column, #slide4 .right-column { flex: 1; display: flex; flex-direction: column; }
-        #slide3 .section, #slide4 .section { background-color: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 25px; margin-bottom: 20px; flex-grow: 1; }
-        #slide3 .section-title, #slide4 .section-title { font-size: 24px; font-weight: 600; margin-bottom: 15px; color: #e3f2fd; display: flex; align-items: center; }
-        #slide3 .section-title i, #slide4 .section-title i { margin-right: 10px; color: #64b5f6; }
-        #slide3 .section-content, #slide4 .section-content { font-size: 18px; line-height: 1.5; }
-        #slide3 .activity-list, #slide4 .activity-list { list-style-type: none; padding-left: 0; }
-        #slide3 .activity-item, #slide4 .activity-item { display: flex; align-items: flex-start; margin-bottom: 15px; }
-        #slide3 .activity-number, #slide4 .activity-number { background-color: #64b5f6; color: #0a4d8c; width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 700; margin-right: 15px; flex-shrink: 0; }
-        #slide3 .activity-text, #slide4 .activity-text { flex-grow: 1; }
-        #slide3 .output-box, #slide4 .output-box { background-color: rgba(100, 181, 246, 0.2); border-left: 4px solid #64b5f6; padding: 20px; border-radius: 0 8px 8px 0; }
-        #slide3 .output-title, #slide4 .output-title { font-size: 22px; font-weight: 600; margin-bottom: 10px; color: #e3f2fd; }
-        #slide3 .output-content, #slide4 .output-content { font-size: 18px; line-height: 1.5; }
-        #slide3::before { background-image: url('https://picsum.photos/seed/abstract-blue-pattern/1280/720.jpg'); }
-        #slide4::before { background-image: url('https://picsum.photos/seed/field-data-collection/1280/720.jpg'); }
-        #slide4 .icon-container { display: flex; justify-content: center; margin-top: 20px; }
-        #slide4 .icon-item { display: flex; flex-direction: column; align-items: center; margin: 0 15px; }
-        #slide4 .icon-item i { font-size: 36px; color: #64b5f6; margin-bottom: 10px; }
-        #slide4 .icon-text { font-size: 14px; text-align: center; }
-        #slide4 .output-list, #slide3 .output-list { margin-top: 10px; margin-left: 20px; padding-left: 0; list-style-position: inside; }
-
-        /* --- Slide 5 & 6: Tahap 3 & 4 --- */
-        #slide5 .content, #slide6 .content { padding: 50px 80px; text-align: left; }
-        #slide5 .header, #slide6 .header { margin-bottom: 30px; }
-        #slide5 .title, #slide6 .title { font-size: 42px; font-weight: 700; position: relative; display: inline-block; margin-bottom: 10px; }
-        #slide5 .title::after, #slide6 .title::after { content: ""; position: absolute; bottom: -10px; left: 0; width: 80px; height: 4px; background-color: #64b5f6; }
-        #slide5 .main-content, #slide6 .main-content { display: flex; flex-grow: 1; gap: 30px; }
-        #slide5 .left-column, #slide6 .left-column, #slide5 .right-column, #slide6 .right-column { flex: 1; display: flex; flex-direction: column; gap: 15px; }
-        #slide5 .section, #slide6 .section { background-color: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 18px; }
-        #slide5 .section-title, #slide6 .section-title { font-size: 22px; font-weight: 600; margin-bottom: 12px; color: #e3f2fd; display: flex; align-items: center; }
-        #slide5 .section-title i, #slide6 .section-title i { margin-right: 10px; color: #64b5f6; }
-        #slide5 .section-content, #slide6 .section-content { font-size: 16px; line-height: 1.4; }
-        #slide5 .activity-list, #slide6 .activity-list { list-style-type: none; padding-left: 0; }
-        #slide5 .activity-item, #slide6 .activity-item { display: flex; align-items: flex-start; margin-bottom: 10px; }
-        #slide5 .activity-number, #slide6 .activity-number { background-color: #64b5f6; color: #0a4d8c; width: 28px; height: 28px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 700; margin-right: 12px; flex-shrink: 0; font-size: 14px; }
-        #slide5 .activity-text, #slide6 .activity-text { flex-grow: 1; font-size: 15px; }
-        #slide5 .output-box, #slide6 .output-box { background-color: rgba(100, 181, 246, 0.2); border-left: 4px solid #64b5f6; padding: 15px; border-radius: 0 8px 8px 0; }
-        #slide5 .output-title, #slide6 .output-title { font-size: 20px; font-weight: 600; margin-bottom: 10px; color: #e3f2fd; }
-        #slide5 .output-content, #slide6 .output-content { font-size: 16px; line-height: 1.4; }
-        #slide5 .output-list, #slide6 .output-list { margin-top: 8px; margin-left: 15px; list-style: none; padding-left: 0; }
-        #slide5 .output-list li, #slide6 .output-list li { margin-bottom: 6px; display: flex; align-items: flex-start; }
-        #slide5 .output-list li i, #slide6 .output-list li i { color: #64b5f6; margin-right: 8px; margin-top: 3px; font-size: 14px; }
-        #slide5 .sroi-steps { display: flex; justify-content: space-between; margin-top: 15px; gap: 10px; }
-        #slide5 .sroi-step { display: flex; flex-direction: column; align-items: center; width: 23%; }
-        #slide5 .step-circle { width: 50px; height: 50px; border-radius: 50%; background-color: #64b5f6; color: #0a4d8c; display: flex; justify-content: center; align-items: center; font-weight: 700; font-size: 18px; margin-bottom: 8px; }
-        #slide5 .step-text { text-align: center; font-size: 13px; line-height: 1.2; }
-        #slide6 .deliverables-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 12px; }
-        #slide6 .deliverable-item { background-color: rgba(255, 255, 255, 0.05); border-radius: 8px; padding: 12px; display: flex; align-items: center; }
-        #slide6 .deliverable-item i { font-size: 20px; color: #64b5f6; margin-right: 12px; }
-        #slide6 .deliverable-text { font-size: 14px; line-height: 1.2; }
-        #slide5::before { background-image: url('https://picsum.photos/seed/data-analysis-charts/1280/720.jpg'); }
-        #slide6::before { background-image: url('https://picsum.photos/seed/reporting-presentation/1280/720.jpg'); }
-
-        /* --- Slide 7: Metode SROI --- */
-        #slide7 .content { padding: 50px 100px; text-align: left; }
-        #slide7 .header { margin-bottom: 30px; }
-        #slide7 .title { font-size: 42px; font-weight: 700; position: relative; display: inline-block; margin-bottom: 10px; }
-        #slide7 .title::after { content: ""; position: absolute; bottom: -10px; left: 0; width: 80px; height: 4px; background-color: #64b5f6; }
-        #slide7 .framework-section { background-color: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
-        #slide7 .section-title { font-size: 24px; font-weight: 600; margin-bottom: 12px; color: #e3f2fd; display: flex; align-items: center; }
-        #slide7 .section-title i { margin-right: 10px; color: #64b5f6; }
-        #slide7 .section-content { font-size: 18px; line-height: 1.5; }
-        #slide7 .steps-container { display: flex; flex-grow: 1; gap: 15px; max-height: 380px; }
-        #slide7 .step-card { flex: 1; background-color: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 15px; display: flex; flex-direction: column; transition: transform 0.3s, background-color 0.3s; height: 100%; }
-        #slide7 .step-card:hover { transform: translateY(-5px); background-color: rgba(255, 255, 255, 0.15); }
-        #slide7 .step-number { width: 40px; height: 40px; background-color: #64b5f6; color: #0a4d8c; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; font-weight: 700; margin-bottom: 10px; }
-        #slide7 .step-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; color: #e3f2fd; line-height: 1.3; }
-        #slide7 .step-description { font-size: 14px; line-height: 1.3; flex-grow: 1; }
-        #slide7 .factors { margin-top: 10px; background-color: rgba(100, 181, 246, 0.1); border-radius: 8px; padding: 8px; }
-        #slide7 .factor-item { display: flex; align-items: flex-start; margin-bottom: 6px; }
-        #slide7 .factor-item i { color: #64b5f6; margin-right: 6px; font-size: 12px; margin-top: 3px; }
-        #slide7 .factor-text { font-size: 12px; line-height: 1.2; }
-        #slide7::before { background-image: url('https://picsum.photos/seed/sroi-methodology/1280/720.jpg'); }
+        /* --- Slide 3: Daftar Isi (DIREVISI) --- */
+        #slide3 .toc-container { flex-grow: 1; display: flex; align-items: center; }
+        #slide3 .toc-list { width: 100%; list-style: none; }
+        #slide3 .toc-item { display: flex; align-items: center; margin-bottom: 25px; transition: transform 0.3s; }
+        #slide3 .toc-item:hover { transform: translateX(10px); }
+        #slide3 .toc-number { width: 45px; height: 45px; background-color: rgba(255, 255, 255, 0.2); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 22px; font-weight: 700; margin-right: 25px; color: #e3f2fd; }
+        #slide3 .toc-text { font-size: 22px; font-weight: 500; }
+        #slide3::before { background-image: url('https://picsum.photos/seed/table-of-contents/1280/720.jpg'); }
         
-        /* --- Slide 8: Metode IKM --- */
-        #slide8 .content { padding: 60px 100px; text-align: left; }
-        #slide8 .header { margin-bottom: 40px; }
-        #slide8 .title { font-size: 42px; font-weight: 700; position: relative; display: inline-block; margin-bottom: 10px; }
-        #slide8 .title::after { content: ""; position: absolute; bottom: -10px; left: 0; width: 80px; height: 4px; background-color: #64b5f6; }
-        #slide8 .main-content { display: flex; flex-grow: 1; gap: 40px; }
-        #slide8 .left-column, #slide8 .right-column { flex: 1; display: flex; flex-direction: column; }
-        #slide8 .section { background-color: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 25px; margin-bottom: 20px; flex-grow: 1; }
-        #slide8 .section-title { font-size: 24px; font-weight: 600; margin-bottom: 15px; color: #e3f2fd; display: flex; align-items: center; }
-        #slide8 .section-title i { margin-right: 10px; color: #64b5f6; }
-        #slide8 .section-content { font-size: 18px; line-height: 1.5; }
-        #slide8 .legal-box { background-color: rgba(100, 181, 246, 0.2); border-left: 4px solid #64b5f6; padding: 20px; border-radius: 0 8px 8px 0; margin-bottom: 20px; }
-        #slide8 .legal-title { font-size: 22px; font-weight: 600; margin-bottom: 10px; color: #e3f2fd; }
-        #slide8 .legal-content { font-size: 18px; line-height: 1.5; }
-        #slide8 .scale-box { display: flex; align-items: center; justify-content: center; margin-top: 20px; }
-        #slide8 .scale-item { display: flex; flex-direction: column; align-items: center; margin: 0 15px; }
-        #slide8 .scale-number { font-size: 32px; font-weight: 700; color: #64b5f6; margin-bottom: 5px; }
-        #slide8 .scale-label { font-size: 16px; text-align: center; }
-        #slide8 .factors-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 10px; }
-        #slide8 .factor-item { background-color: rgba(255, 255, 255, 0.05); border-radius: 8px; padding: 15px; display: flex; align-items: flex-start; transition: transform 0.3s, background-color 0.3s; }
-        #slide8 .factor-item:hover { transform: translateY(-3px); background-color: rgba(255, 255, 255, 0.1); }
-        #slide8 .factor-number { width: 30px; height: 30px; background-color: #64b5f6; color: #0a4d8c; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 700; margin-right: 10px; flex-shrink: 0; }
-        #slide8 .factor-text { font-size: 16px; line-height: 1.3; }
-        #slide8::before { background-image: url('https://picsum.photos/seed/satisfaction-survey-metrics/1280/720.jpg'); }
+        /* --- Gaya Umum Tahapan --- */
+        .activity-list { list-style-type: none; padding-left: 0; }
+        .activity-item { display: flex; align-items: flex-start; margin-bottom: 15px; }
+        .activity-number { background-color: #64b5f6; color: #0a4d8c; width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 700; margin-right: 15px; flex-shrink: 0; }
+        .activity-text { flex-grow: 1; font-size: 17px; }
+        .output-box { background-color: rgba(100, 181, 246, 0.2); border-left: 4px solid #64b5f6; padding: 20px; border-radius: 0 8px 8px 0; }
+        .output-title { font-size: 22px; font-weight: 600; margin-bottom: 10px; color: #e3f2fd; }
+        .output-content { font-size: 18px; line-height: 1.5; }
+        
+        /* --- Slide 4-7: Tahapan --- */
+        #slide4::before { background-image: url('https://picsum.photos/seed/inception-phase/1280/720.jpg'); }
+        #slide5::before { background-image: url('https://picsum.photos/seed/field-data-collection/1280/720.jpg'); }
+        #slide6::before { background-image: url('https://picsum.photos/seed/data-analysis-charts/1280/720.jpg'); }
+        #slide7::before { background-image: url('https://picsum.photos/seed/reporting-presentation/1280/720.jpg'); }
+        
+        /* --- Slide 8: Detail Aktivitas Penilaian (BARU & DIREVISI) --- */
+        #slide8 .program-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; flex-grow: 1; }
+        #slide8 .program-group { background-color: rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 20px; }
+        #slide8 .program-title { font-size: 20px; font-weight: 600; color: #64b5f6; margin-bottom: 15px; border-bottom: 2px solid rgba(100, 181, 246, 0.5); padding-bottom: 10px; }
+        #slide8 .activity-list-item { font-size: 15px; line-height: 1.5; margin-bottom: 8px; }
+        #slide8::before { background-image: url('https://picsum.photos/seed/program-details/1280/720.jpg'); }
+        
+        /* --- Slide 9: Metode SROI --- */
+        #slide9 .framework-section { padding: 20px; margin-bottom: 20px; }
+        #slide9 .steps-container { display: flex; flex-grow: 1; gap: 15px; }
+        #slide9 .step-card { flex: 1; background-color: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 15px; display: flex; flex-direction: column; }
+        #slide9 .step-number { width: 40px; height: 40px; background-color: #64b5f6; color: #0a4d8c; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+        #slide9 .step-title { font-size: 17px; font-weight: 600; margin-bottom: 8px; color: #e3f2fd; }
+        #slide9 .step-description { font-size: 15px; line-height: 1.4; flex-grow: 1; }
+        #slide9::before { background-image: url('https://picsum.photos/seed/sroi-methodology/1280/720.jpg'); }
 
-        /* --- Slide 9: Terima Kasih --- */
-        #slide9 .content { padding: 60px 100px; }
-        #slide9 .header { margin-bottom: 40px; text-align: center; }
-        #slide9 .title { font-size: 56px; font-weight: 700; position: relative; display: inline-block; margin-bottom: 10px; }
-        #slide9 .title::after { content: ""; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); width: 100px; height: 4px; background-color: #64b5f6; }
-        #slide9 .main-content { display: flex; flex-grow: 1; gap: 40px; }
-        #slide9 .left-column, #slide9 .right-column { flex: 1; display: flex; flex-direction: column; }
-        #slide9 .section { background-color: rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 30px; margin-bottom: 20px; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; text-align: left; }
-        #slide9 .section-title { font-size: 28px; font-weight: 600; margin-bottom: 20px; color: #e3f2fd; display: flex; align-items: center; }
-        #slide9 .section-title i { margin-right: 15px; color: #64b5f6; font-size: 32px; }
-        #slide9 .section-content { font-size: 20px; line-height: 1.6; }
-        #slide9 .contact-item { display: flex; align-items: flex-start; margin-bottom: 15px; }
-        #slide9 .contact-icon { color: #64b5f6; margin-right: 15px; font-size: 24px; width: 30px; text-align: center; }
-        #slide9 .contact-text { font-size: 20px; line-height: 1.5; }
-        #slide9 .logo-container { display: flex; justify-content: center; margin-top: 30px; }
-        #slide9 .logo { width: 80px; height: 80px; background-color: rgba(255, 255, 255, 0.1); border-radius: 50%; display: flex; justify-content: center; align-items: center; }
-        #slide9 .logo i { font-size: 40px; color: #64b5f6; }
-        #slide9::before { background-image: url('https://picsum.photos/seed/thank-you-blue-background/1280/720.jpg'); }
+        /* --- Slide 10: Metode IKM --- */
+        #slide10 .factors-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 10px; }
+        #slide10 .factor-item { background-color: rgba(255, 255, 255, 0.05); border-radius: 8px; padding: 15px; display: flex; align-items: center; transition: background-color 0.3s; }
+        #slide10 .factor-item:hover { background-color: rgba(255, 255, 255, 0.15); }
+        #slide10 .factor-number { width: 30px; height: 30px; background-color: #64b5f6; color: #0a4d8c; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 700; margin-right: 15px; flex-shrink: 0; }
+        #slide10 .factor-text { font-size: 16px; line-height: 1.3; }
+        #slide10::before { background-image: url('https://picsum.photos/seed/satisfaction-survey-metrics/1280/720.jpg'); }
+        
+        /* --- Slide 11: Asumsi & Risiko (BARU) --- */
+        #slide11 .column-title { font-size: 24px; font-weight: 600; margin-bottom: 20px; color: #e3f2fd; padding-bottom: 10px; border-bottom: 2px solid #64b5f6; }
+        #slide11 .point-item { display: flex; align-items: flex-start; margin-bottom: 20px; font-size: 17px; line-height: 1.5; }
+        #slide11 .point-item i { font-size: 20px; color: #64b5f6; margin-right: 15px; margin-top: 5px; }
+        #slide11 .point-text strong { color: #bbdefb; }
+        #slide11::before { background-image: url('https://picsum.photos/seed/risk-management/1280/720.jpg'); }
 
+        /* --- Slide 12: Terima Kasih --- */
+        #slide12 .content { text-align: center; }
+        #slide12 .header .title { font-size: 56px; }
+        #slide12 .header .title::after { left: 50%; transform: translateX(-50%); width: 100px; }
+        #slide12 .section { text-align: left; }
+        #slide12 .contact-item { display: flex; align-items: center; margin-bottom: 15px; }
+        #slide12 .contact-icon { color: #64b5f6; font-size: 24px; width: 30px; text-align: center; margin-right: 15px; }
+        #slide12 .contact-text { font-size: 20px; }
+        #slide12 .logo-container { display: flex; justify-content: center; margin-top: 20px; }
+        #slide12 .logo { width: 80px; height: 80px; background-color: rgba(255, 255, 255, 0.1); border-radius: 50%; display: flex; justify-content: center; align-items: center; }
+        #slide12 .logo i { font-size: 40px; color: #64b5f6; }
+        #slide12::before { background-image: url('https://picsum.photos/seed/thank-you-blue-background/1280/720.jpg'); }
 
         /* Gaya Navigasi */
-        .nav-arrow {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 50px;
-            height: 50px;
-            background-color: rgba(0, 0, 0, 0.3);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 24px;
-            cursor: pointer;
-            z-index: 10; /* Pastikan panah di atas slide */
-            transition: background-color 0.3s;
-            user-select: none; /* Mencegah seleksi teks */
-        }
-        .nav-arrow:hover {
-            background-color: rgba(0, 0, 0, 0.6);
-        }
-        #prev-slide {
-            left: 20px;
-        }
-        #next-slide {
-            right: 20px;
-        }
+        .nav-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 50px; height: 50px; background-color: rgba(0, 0, 0, 0.3); color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; cursor: pointer; z-index: 10; transition: background-color 0.3s; user-select: none; }
+        .nav-arrow:hover { background-color: rgba(0, 0, 0, 0.6); }
+        #prev-slide { left: 20px; }
+        #next-slide { right: 20px; }
     </style>
 </head>
 <body>
@@ -279,100 +190,79 @@
 
         <!-- Slide 1: Judul -->
         <section id="slide1" class="slide active">
-            <div class="accent-circle accent-circle-1"></div>
-            <div class="accent-circle accent-circle-2"></div>
             <div class="content">
-                <div class="logo">
-                    <i class="fas fa-chart-line"></i>
-                </div>
+                <div class="logo"><i class="fas fa-chart-line"></i></div>
                 <h1 class="title">Tahapan Pelaksanaan Pekerjaan</h1>
-                <h2 class="subtitle">Penilaian SROI dan IKM Program BRI Peduli</h2>
+                <h2 class="subtitle">Pengadaan Jasa Konsultan Penilaian SROI dan IKM Program BRI Peduli</h2>
                 <div class="date">Juli 2025</div>
             </div>
             <div class="decoration"></div>
         </section>
 
-        <!-- Slide 2: Daftar Isi -->
+        <!-- Slide 2: Ringkasan Eksekutif (BARU) -->
         <section id="slide2" class="slide">
-            <div class="accent-circle accent-circle-1"></div>
-            <div class="accent-circle accent-circle-2"></div>
             <div class="content">
-                <div class="header">
-                    <h1 class="title">Daftar Isi</h1>
+                <div class="header"><h1 class="title">Ringkasan Eksekutif</h1></div>
+                <div class="summary-container">
+                    <div class="summary-box">
+                        <h2 class="summary-title"><i class="fas fa-bullseye"></i>Tantangan & Kebutuhan</h2>
+                        <p class="summary-text">BRI memerlukan penilaian dampak TJSL "BRI Peduli" yang terukur, objektif, dan akuntabel untuk memenuhi mandat Kementerian BUMN (KPI bobot 35%) serta menggeser paradigma dari filantropi menjadi investasi sosial yang strategis.</p>
+                    </div>
+                    <div class="summary-box">
+                        <h2 class="summary-title"><i class="fas fa-cogs"></i>Solusi Strategis</h2>
+                        <p class="summary-text">LPMB FEB UNAIR menawarkan solusi komprehensif melalui penilaian Social Return on Investment (SROI) untuk mengukur dampak finansial dan sosial, serta Indeks Kepuasan Masyarakat (IKM) untuk mengevaluasi kepuasan penerima manfaat.</p>
+                    </div>
+                    <div class="summary-box">
+                        <h2 class="summary-title"><i class="fas fa-star"></i>Nilai Unggul</h2>
+                        <p class="summary-text">Didukung tim ahli multidisiplin (Guru Besar & praktisi SROI), metodologi internasional, dan portofolio yang relevan, kami menjamin hasil yang tidak hanya akurat, namun juga memberikan rekomendasi strategis yang dapat ditindaklanjuti.</p>
+                    </div>
                 </div>
+            </div>
+            <div class="decoration"></div>
+        </section>
+
+        <!-- Slide 3: Daftar Isi (DIREVISI) -->
+        <section id="slide3" class="slide">
+            <div class="content">
+                <div class="header"><h1 class="title">Daftar Isi</h1></div>
                 <div class="toc-container">
                     <ul class="toc-list">
-                        <li class="toc-item">
-                            <div class="toc-number">1</div>
-                            <div class="toc-text">Tahap 1: Persiapan dan Desain Riset (Inception)</div>
-                        </li>
-                        <li class="toc-item">
-                            <div class="toc-number">2</div>
-                            <div class="toc-text">Tahap 2: Pengumpulan Data Lapangan</div>
-                        </li>
-                        <li class="toc-item">
-                            <div class="toc-number">3</div>
-                            <div class="toc-text">Tahap 3: Analisis Data dan Penilaian</div>
-                        </li>
-                        <li class="toc-item">
-                            <div class="toc-number">4</div>
-                            <div class="toc-text">Tahap 4: Pelaporan dan Rekomendasi</div>
-                        </li>
-                        <li class="toc-item">
-                            <div class="toc-number">5</div>
-                            <div class="toc-text">Metode Penilaian SROI</div>
-                        </li>
-                        <li class="toc-item">
-                            <div class="toc-number">6</div>
-                            <div class="toc-text">Metode Penilaian IKM</div>
-                        </li>
+                        <li class="toc-item"><div class="toc-number">1</div><div class="toc-text">Tahapan Pelaksanaan Pekerjaan</div></li>
+                        <li class="toc-item"><div class="toc-number">2</div><div class="toc-text">Detail Aktivitas Penilaian per Program</div></li>
+                        <li class="toc-item"><div class="toc-number">3</div><div class="toc-text">Metode Penilaian (SROI & IKM)</div></li>
+                        <li class="toc-item"><div class="toc-number">4</div><div class="toc-text">Asumsi & Manajemen Risiko</div></li>
+                        <li class="toc-item"><div class="toc-number">5</div><div class="toc-text">Organisasi, Tim Ahli & Jadwal</div></li>
                     </ul>
                 </div>
             </div>
             <div class="decoration"></div>
         </section>
-
-        <!-- Slide 3: Tahap 1 -->
-        <section id="slide3" class="slide">
-            <div class="accent-circle accent-circle-1"></div>
-            <div class="accent-circle accent-circle-2"></div>
+        
+        <!-- Slide 4: Tahap 1 -->
+        <section id="slide4" class="slide">
             <div class="content">
-                <div class="header">
-                    <h1 class="title">Tahap 1: Persiapan dan Desain Riset (Inception)</h1>
-                </div>
+                <div class="header"><h1 class="title">Tahap 1: Persiapan dan Desain Riset (Inception)</h1></div>
                 <div class="main-content">
                     <div class="left-column">
                         <div class="section">
-                            <div class="section-title"><i class="fas fa-info-circle"></i> Deskripsi</div>
-                            <div class="section-content">
-                                Melakukan kick-off meeting dengan tim BRI, studi dokumen program, pengembangan instrumen (kuesioner dan panduan wawancara), dan finalisasi rencana kerja.
-                            </div>
+                            <div class="section-title"><i class="fas fa-info-circle"></i>Deskripsi</div>
+                            <div class="section-content">Melakukan kick-off meeting, studi dokumen, pengembangan instrumen (kuesioner & panduan wawancara), dan finalisasi rencana kerja detail.</div>
                         </div>
                         <div class="section">
-                            <div class="section-title"><i class="fas fa-tasks"></i> Kegiatan Utama</div>
-                            <div class="section-content">
-                                <ul class="activity-list">
-                                    <li class="activity-item"><div class="activity-number">1</div><div class="activity-text">Kick-off meeting dengan tim BRI</div></li>
-                                    <li class="activity-item"><div class="activity-number">2</div><div class="activity-text">Studi dokumen program</div></li>
-                                    <li class="activity-item"><div class="activity-number">3</div><div class="activity-text">Pengembangan instrumen (kuesioner dan panduan wawancara)</div></li>
-                                    <li class="activity-item"><div class="activity-number">4</div><div class="activity-text">Finalisasi rencana kerja</div></li>
-                                </ul>
-                            </div>
+                            <div class="section-title"><i class="fas fa-tasks"></i>Kegiatan Utama</div>
+                            <ul class="activity-list">
+                                <li class="activity-item"><div class="activity-number">1</div><div class="activity-text">Kick-off meeting & validasi program</div></li>
+                                <li class="activity-item"><div class="activity-number">2</div><div class="activity-text">Pengembangan instrumen survei</div></li>
+                                <li class="activity-item"><div class="activity-number">3</div><div class="activity-text">Finalisasi rencana & jadwal kerja</div></li>
+                            </ul>
                         </div>
                     </div>
                     <div class="right-column">
-                        <div class="section">
-                            <div class="section-title"><i class="fas fa-file-alt"></i> Output</div>
+                         <div class="section">
+                            <div class="section-title"><i class="fas fa-file-alt"></i>Output Utama</div>
                             <div class="output-box">
                                 <div class="output-title">Inception Report</div>
-                                <div class="output-content">
-                                    Dokumen awal berisi:
-                                    <ul style="margin-top: 10px; margin-left: 20px;">
-                                        <li>Finalisasi metodologi</li>
-                                        <li>Instrumen survei (kuesioner & panduan wawancara)</li>
-                                        <li>Detail rencana kerja</li>
-                                    </ul>
-                                </div>
+                                <div class="output-content">Dokumen final berisi metodologi, instrumen survei, dan detail rencana kerja yang disetujui bersama.</div>
                             </div>
                         </div>
                     </div>
@@ -380,111 +270,32 @@
             </div>
             <div class="decoration"></div>
         </section>
-
-        <!-- Slide 4: Tahap 2 -->
-        <section id="slide4" class="slide">
-            <div class="accent-circle accent-circle-1"></div>
-            <div class="accent-circle accent-circle-2"></div>
-            <div class="content">
-                <div class="header">
-                    <h1 class="title">Tahap 2: Pengumpulan Data Lapangan</h1>
-                </div>
-                <div class="main-content">
-                    <div class="left-column">
-                        <div class="section">
-                            <div class="section-title"><i class="fas fa-info-circle"></i> Deskripsi</div>
-                            <div class="section-content">
-                                Menyebarkan kuesioner kuantitatif (IKM & SROI filters), melakukan wawancara mendalam kualitatif dengan key informants, serta melakukan observasi dan dokumentasi di seluruh lokasi program.
-                            </div>
-                        </div>
-                        <div class="section">
-                            <div class="section-title"><i class="fas fa-tasks"></i> Kegiatan Utama</div>
-                            <div class="section-content">
-                                <ul class="activity-list">
-                                    <li class="activity-item"><div class="activity-number">1</div><div class="activity-text">Penyebaran kuesioner kuantitatif (IKM & SROI filters)</div></li>
-                                    <li class="activity-item"><div class="activity-number">2</div><div class="activity-text">Wawancara mendalam kualitatif dengan key informants</div></li>
-                                    <li class="activity-item"><div class="activity-number">3</div><div class="activity-text">Observasi lapangan di seluruh lokasi program</div></li>
-                                    <li class="activity-item"><div class="activity-number">4</div><div class="activity-text">Dokumentasi (foto/video) selama proses pengumpulan data</div></li>
-                                </ul>
-                            </div>
-                            <div class="icon-container">
-                                <div class="icon-item"><i class="fas fa-clipboard-list"></i><div class="icon-text">Kuesioner</div></div>
-                                <div class="icon-item"><i class="fas fa-microphone"></i><div class="icon-text">Wawancara</div></div>
-                                <div class="icon-item"><i class="fas fa-eye"></i><div class="icon-text">Observasi</div></div>
-                                <div class="icon-item"><i class="fas fa-camera"></i><div class="icon-text">Dokumentasi</div></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="right-column">
-                        <div class="section">
-                            <div class="section-title"><i class="fas fa-file-alt"></i> Output</div>
-                            <div class="output-box">
-                                <div class="output-title">Data Siap Analisis</div>
-                                <div class="output-content">
-                                    Hasil dari tahap pengumpulan data lapangan:
-                                    <ul class="output-list">
-                                        <li>Data kuesioner terstruktur (IKM & SROI)</li>
-                                        <li>Transkrip wawancara mendalam dengan key informants</li>
-                                        <li>Dokumentasi lapangan (foto/video) dari seluruh lokasi program</li>
-                                        <li>Data mentah siap untuk tahap analisis</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="decoration"></div>
-        </section>
-
-        <!-- Slide 5: Tahap 3 -->
+        
+        <!-- Slide 5: Tahap 2 -->
         <section id="slide5" class="slide">
-            <div class="accent-circle accent-circle-1"></div>
-            <div class="accent-circle accent-circle-2"></div>
             <div class="content">
-                <div class="header">
-                    <h1 class="title">Tahap 3: Analisis Data dan Penilaian</h1>
-                </div>
+                <div class="header"><h1 class="title">Tahap 2: Pengumpulan Data Lapangan</h1></div>
                 <div class="main-content">
                     <div class="left-column">
                         <div class="section">
-                            <div class="section-title"><i class="fas fa-info-circle"></i> Deskripsi</div>
-                            <div class="section-content">Mengolah data kuesioner IKM, melaksanakan 4 tahap utama analisis SROI (Identifikasi, Monetisasi, Menetapkan Dampak, Perhitungan Rasio), dan pemetaan menggunakan Business Model Canvas (BMC) untuk evaluasi.</div>
+                            <div class="section-title"><i class="fas fa-info-circle"></i>Deskripsi</div>
+                            <div class="section-content">Menyebarkan kuesioner kuantitatif, melakukan wawancara mendalam kualitatif, serta observasi dan dokumentasi di seluruh lokasi program terpilih di Jawa.</div>
                         </div>
-                        <div class="section">
-                            <div class="section-title"><i class="fas fa-chart-line"></i> 4 Tahap Analisis SROI</div>
-                            <div class="sroi-steps">
-                                <div class="sroi-step"><div class="step-circle">1</div><div class="step-text">Identifikasi Stakeholder & Pemetaan Outcome</div></div>
-                                <div class="sroi-step"><div class="step-circle">2</div><div class="step-text">Monetisasi & Pengukuran Dampak</div></div>
-                                <div class="sroi-step"><div class="step-circle">3</div><div class="step-text">Menetapkan Dampak (Establishing Impact)</div></div>
-                                <div class="sroi-step"><div class="step-circle">4</div><div class="step-text">Perhitungan Rasio SROI</div></div>
-                            </div>
+                         <div class="section">
+                            <div class="section-title"><i class="fas fa-tools"></i>Metode</div>
+                             <ul class="activity-list">
+                                <li class="activity-item"><div class="activity-number"><i class="fas fa-clipboard-list"></i></div><div class="activity-text">Survei Kuantitatif (IKM & SROI)</div></li>
+                                <li class="activity-item"><div class="activity-number"><i class="fas fa-microphone"></i></div><div class="activity-text">Wawancara Mendalam & FGD</div></li>
+                                <li class="activity-item"><div class="activity-number"><i class="fas fa-eye"></i></div><div class="activity-text">Observasi & Dokumentasi Lapangan</div></li>
+                            </ul>
                         </div>
                     </div>
                     <div class="right-column">
                         <div class="section">
-                            <div class="section-title"><i class="fas fa-tasks"></i> Kegiatan Utama</div>
-                            <div class="section-content">
-                                <ul class="activity-list">
-                                    <li class="activity-item"><div class="activity-number">1</div><div class="activity-text">Pengolahan data kuesioner IKM</div></li>
-                                    <li class="activity-item"><div class="activity-number">2</div><div class="activity-text">Analisis SROI tahap 1: Identifikasi Stakeholder & Pemetaan Outcome</div></li>
-                                    <li class="activity-item"><div class="activity-number">3</div><div class="activity-text">Analisis SROI tahap 2: Monetisasi & Pengukuran Dampak</div></li>
-                                    <li class="activity-item"><div class="activity-number">4</div><div class="activity-text">Analisis SROI tahap 3: Menetapkan Dampak (Establishing Impact)</div></li>
-                                    <li class="activity-item"><div class="activity-number">5</div><div class="activity-text">Analisis SROI tahap 4: Perhitungan Rasio SROI</div></li>
-                                    <li class="activity-item"><div class="activity-number">6</div><div class="activity-text">Pemetaan menggunakan Business Model Canvas (BMC)</div></li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="section">
-                            <div class="section-title"><i class="fas fa-file-alt"></i> Output</div>
+                            <div class="section-title"><i class="fas fa-database"></i>Output Utama</div>
                             <div class="output-box">
-                                <div class="output-title">Hasil Analisis</div>
-                                <ul class="output-list">
-                                    <li><i class="fas fa-check-circle"></i><span>Data IKM terolah dengan skor terkonversi (skala 25-100)</span></li>
-                                    <li><i class="fas fa-check-circle"></i><span>Perhitungan SROI lengkap dengan rasio akhir</span></li>
-                                    <li><i class="fas fa-check-circle"></i><span>Analisis tematik dari wawancara kualitatif</span></li>
-                                    <li><i class="fas fa-check-circle"></i><span>Evaluasi Business Model Canvas (BMC)</span></li>
-                                </ul>
+                                <div class="output-title">Data Primer Siap Analisis</div>
+                                <div class="output-content">Kumpulan data kuesioner terstruktur, transkrip wawancara, dan dokumentasi foto/video dari lapangan.</div>
                             </div>
                         </div>
                     </div>
@@ -492,142 +303,152 @@
             </div>
             <div class="decoration"></div>
         </section>
-
-        <!-- Slide 6: Tahap 4 -->
+        
+        <!-- Slide 6: Tahap 3 -->
         <section id="slide6" class="slide">
-            <div class="accent-circle accent-circle-1"></div>
-            <div class="accent-circle accent-circle-2"></div>
             <div class="content">
-                <div class="header">
-                    <h1 class="title">Tahap 4: Pelaporan dan Rekomendasi</h1>
-                </div>
+                <div class="header"><h1 class="title">Tahap 3: Analisis Data dan Penilaian</h1></div>
                 <div class="main-content">
                     <div class="left-column">
                         <div class="section">
-                            <div class="section-title"><i class="fas fa-info-circle"></i> Deskripsi</div>
-                            <div class="section-content">Menyusun draf laporan, melakukan sesi diskusi dan validasi dengan tim BRI, hingga finalisasi seluruh laporan dan deliverables berdasarkan masukan yang diterima.</div>
+                            <div class="section-title"><i class="fas fa-info-circle"></i>Deskripsi</div>
+                            <div class="section-content">Mengolah data IKM, melaksanakan 4 tahap analisis SROI, analisis tematik kualitatif, dan pemetaan menggunakan Business Model Canvas (BMC).</div>
                         </div>
-                        <div class="section">
-                            <div class="section-title"><i class="fas fa-tasks"></i> Kegiatan Utama</div>
-                            <ul class="activity-list" style="font-size: 16px;">
-                                <li class="activity-item"><div class="activity-number">1</div><div class="activity-text">Penyusunan draf laporan hasil penilaian</div></li>
-                                <li class="activity-item"><div class="activity-number">2</div><div class="activity-text">Sesi diskusi dan validasi dengan tim BRI</div></li>
-                                <li class="activity-item"><div class="activity-number">3</div><div class="activity-text">Revisi laporan berdasarkan masukan</div></li>
-                                <li class="activity-item"><div class="activity-number">4</div><div class="activity-text">Finalisasi seluruh laporan dan deliverables</div></li>
+                         <div class="section">
+                            <div class="section-title"><i class="fas fa-calculator"></i>Proses Analisis</div>
+                             <ul class="activity-list">
+                                <li class="activity-item"><div class="activity-number">1</div><div class="activity-text">Perhitungan skor IKM terkonversi (25-100)</div></li>
+                                <li class="activity-item"><div class="activity-number">2</div><div class="activity-text">Perhitungan rasio SROI (4 tahap)</div></li>
+                                <li class="activity-item"><div class="activity-number">3</div><div class="activity-text">Analisis tematik dari data kualitatif</div></li>
                             </ul>
                         </div>
                     </div>
                     <div class="right-column">
                         <div class="section">
-                            <div class="section-title"><i class="fas fa-file-alt"></i> Output</div>
+                            <div class="section-title"><i class="fas fa-chart-pie"></i>Output Utama</div>
                             <div class="output-box">
-                                <div class="output-title">Deliverables Final</div>
-                                <div class="deliverables-grid">
-                                    <div class="deliverable-item"><i class="fas fa-file-invoice"></i><div class="deliverable-text">Laporan Hasil Penilaian per Program</div></div>
-                                    <div class="deliverable-item"><i class="fas fa-file-contract"></i><div class="deliverable-text">Laporan Akhir Konsolidasi</div></div>
-                                    <div class="deliverable-item"><i class="fas fa-presentation"></i><div class="deliverable-text">Materi Presentasi (Slide Deck)</div></div>
-                                    <div class="deliverable-item"><i class="fas fa-bullhorn"></i><div class="deliverable-text">Dokumen Strategi Komunikasi</div></div>
-                                    <div class="deliverable-item"><i class="fas fa-database"></i><div class="deliverable-text">Seluruh Data Mentah dan Dokumentasi</div></div>
-                                </div>
+                                <div class="output-title">Draf Hasil Analisis</div>
+                                <div class="output-content">Dokumen berisi skor IKM, rasio SROI, temuan kualitatif, dan evaluasi BMC untuk setiap program.</div>
                             </div>
-                        </div>
-                        <div class="section">
-                            <div class="section-title"><i class="fas fa-lightbulb"></i> Nilai Tambah</div>
-                            <ul class="output-list">
-                                <li><i class="fas fa-check-circle"></i><span>Rekomendasi strategis yang actionable untuk peningkatan program</span></li>
-                                <li><i class="fas fa-check-circle"></i><span>Infografis dan konten komunikasi siap pakai</span></li>
-                                <li><i class="fas fa-check-circle"></i><span>Basis data kuat untuk evaluasi program masa depan</span></li>
-                            </ul>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="decoration"></div>
         </section>
-
-        <!-- Slide 7: Metode Penilaian SROI -->
+        
+        <!-- Slide 7: Tahap 4 -->
         <section id="slide7" class="slide">
-            <div class="accent-circle accent-circle-1"></div>
-            <div class="accent-circle accent-circle-2"></div>
             <div class="content">
-                <div class="header">
-                    <h1 class="title">Metode Penilaian SROI</h1>
-                </div>
-                <div class="main-content">
-                    <div class="framework-section">
-                        <div class="section-title"><i class="fas fa-globe"></i> Kerangka Kerja</div>
-                        <div class="section-content">Kerangka kerja SROI yang diakui secara internasional untuk mengukur dampak sosial, ekonomi, dan lingkungan dari program BRI Peduli secara kuantitatif dan objektif.</div>
-                    </div>
-                    <div class="steps-container">
-                        <div class="step-card">
-                            <div class="step-number">1</div>
-                            <div class="step-title">Identifikasi Stakeholder & Pemetaan Outcome</div>
-                            <div class="step-description">Menentukan siapa yang terdampak dan perubahan signifikan (sosial, ekonomi, lingkungan) yang mereka alami akibat program BRI Peduli.</div>
-                        </div>
-                        <div class="step-card">
-                            <div class="step-number">2</div>
-                            <div class="step-title">Monetisasi & Pengukuran Dampak</div>
-                            <div class="step-description">Menetapkan proksi finansial (nilai uang) yang valid dan dapat dipertanggungjawabkan untuk setiap outcome yang teridentifikasi.</div>
-                        </div>
-                        <div class="step-card">
-                            <div class="step-number">3</div>
-                            <div class="step-title">Menetapkan Dampak (Establishing Impact)</div>
-                            <div class="step-description">Melakukan atenuasi nilai dengan memperhitungkan faktor-faktor kunci:</div>
-                            <div class="factors">
-                                <div class="factor-item"><i class="fas fa-circle"></i><div class="factor-text"><strong>Deadweight:</strong> Perubahan yang terjadi tanpa program</div></div>
-                                <div class="factor-item"><i class="fas fa-circle"></i><div class="factor-text"><strong>Attribution:</strong> Kontribusi pihak lain</div></div>
-                                <div class="factor-item"><i class="fas fa-circle"></i><div class="factor-text"><strong>Drop-off:</strong> Penurunan dampak seiring waktu</div></div>
-                            </div>
-                        </div>
-                        <div class="step-card">
-                            <div class="step-number">4</div>
-                            <div class="step-title">Perhitungan Rasio SROI</div>
-                            <div class="step-description">Menghitung Net Present Value (NPV) dari total dampak bersih dan membandingkannya dengan nilai investasi awal untuk mendapatkan rasio akhir.</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="decoration"></div>
-        </section>
-
-        <!-- Slide 8: Metode Penilaian IKM -->
-        <section id="slide8" class="slide">
-            <div class="accent-circle accent-circle-1"></div>
-            <div class="accent-circle accent-circle-2"></div>
-            <div class="content">
-                <div class="header">
-                    <h1 class="title">Metode Penilaian IKM</h1>
-                </div>
+                <div class="header"><h1 class="title">Tahap 4: Pelaporan dan Rekomendasi</h1></div>
                 <div class="main-content">
                     <div class="left-column">
-                        <div class="legal-box">
-                            <div class="legal-title"><i class="fas fa-gavel"></i> Dasar Hukum</div>
-                            <div class="legal-content">PermenPAN-RB No. 14 Tahun 2017 tentang Pedoman Penyusunan dan Penerapan Standar Pelayanan</div>
-                        </div>
                         <div class="section">
-                            <div class="section-title"><i class="fas fa-chart-bar"></i> Skala Penilaian</div>
-                            <div class="section-content">Hasil penilaian akan disajikan dalam skor IKM terkonversi untuk kemudahan interpretasi:</div>
-                            <div class="scale-box">
-                                <div class="scale-item"><div class="scale-number">25</div><div class="scale-label">Sangat Tidak Puas</div></div>
-                                <div class="scale-item"><div class="scale-number">50</div><div class="scale-label">Tidak Puas</div></div>
-                                <div class="scale-item"><div class="scale-number">75</div><div class="scale-label">Cukup<br>Puas</div></div>
-                                <div class="scale-item"><div class="scale-number">100</div><div class="scale-label">Sangat Puas</div></div>
-                            </div>
+                            <div class="section-title"><i class="fas fa-info-circle"></i>Deskripsi</div>
+                            <div class="section-content">Menyusun draf laporan, melakukan sesi diskusi dan validasi, hingga finalisasi seluruh laporan dan deliverables berdasarkan masukan dari tim BRI.</div>
+                        </div>
+                         <div class="section">
+                            <div class="section-title"><i class="fas fa-check-double"></i>Proses Finalisasi</div>
+                            <ul class="activity-list">
+                                <li class="activity-item"><div class="activity-number">1</div><div class="activity-text">Penyusunan Draf Laporan Konsolidasi</div></li>
+                                <li class="activity-item"><div class="activity-number">2</div><div class="activity-text">Sesi Diskusi & Validasi dengan Tim BRI</div></li>
+                                <li class="activity-item"><div class="activity-number">3</div><div class="activity-text">Revisi Final dan Penyerahan</div></li>
+                            </ul>
                         </div>
                     </div>
                     <div class="right-column">
                         <div class="section">
-                            <div class="section-title"><i class="fas fa-list-check"></i> 9 Unsur Pelayanan yang Diukur</div>
+                            <div class="section-title"><i class="fas fa-archive"></i>Deliverables Utama</div>
+                            <div class="output-box">
+                                <div class="output-title">Laporan Akhir & Dokumen Pendukung</div>
+                                <div class="output-content">Termasuk Laporan per Program, Laporan Konsolidasi, Slide Deck, Strategi Komunikasi, dan Seluruh Data Mentah.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="decoration"></div>
+        </section>
+
+        <!-- Slide 8: Detail Aktivitas Penilaian (BARU & DIREVISI) -->
+        <section id="slide8" class="slide">
+            <div class="content">
+                <div class="header"><h1 class="title">Detail Aktivitas Penilaian per Program (Fokus Jawa)</h1></div>
+                <div class="program-container">
+                    <div class="program-group">
+                        <h3 class="program-title">Kelompok 1: Pemberdayaan Ekonomi Kota</h3>
+                        <p class="activity-list-item"><strong>1. Wisata Kya-Kya (Surabaya):</strong> Survei pendapatan pedagang, analisis data pengunjung, IKM pedagang & pengunjung.</p>
+                        <p class="activity-list-item"><strong>2. Pelatihan Disabilitas (Jakarta - Online):</strong> Tracer study alumni, analisis pendapatan, IKM kepuasan peserta.</p>
+                        <p class="activity-list-item"><strong>3. Pelatihan Ekspor (Jakarta - Online):</strong> Analisis kinerja ekspor, survei omzet UMKM, IKM relevansi kurikulum.</p>
+                    </div>
+                    <div class="program-group">
+                        <h3 class="program-title">Kelompok 2: Peningkatan Sarana & Produksi</h3>
+                        <p class="activity-list-item"><strong>4. Sarana Pasar Gentan (Sleman):</strong> Survei pendapatan pedagang, survei kepuasan pembeli (IKM), FGD paguyuban.</p>
+                        <p class="activity-list-item"><strong>5. Alat Membatik (Blitar):</strong> Analisis produktivitas, studi kualitas, survei pendapatan perajin, IKM kelompok.</p>
+                        <p class="activity-list-item"><strong>6. Pengelolaan Kopi (Banyuwangi):</strong> Sama dengan Blitar, fokus pada petani kopi dan rantai pasok.</p>
+                    </div>
+                    <div class="program-group">
+                        <h3 class="program-title">Kelompok 3: Produksi & Kesejahteraan</h3>
+                        <p class="activity-list-item"><strong>7. Produksi Madu (Pangandaran):</strong> Analisis peningkatan produksi, kajian rantai nilai, survei pendapatan kelompok, IKM.</p>
+                        <p class="activity-list-item"><strong>8. Mesin Olah Ubi (Kuningan):</strong> Sama dengan Pangandaran, fokus pada volume produksi tepung ubi dan akses pasar.</p>
+                    </div>
+                     <div class="program-group">
+                        <h3 class="program-title">Metode Umum per Program</h3>
+                        <p class="activity-list-item"><i class="fas fa-check" style="color:#64b5f6; margin-right: 8px;"></i>Identifikasi Stakeholder</p>
+                        <p class="activity-list-item"><i class="fas fa-check" style="color:#64b5f6; margin-right: 8px;"></i>Wawancara Mendalam</p>
+                        <p class="activity-list-item"><i class="fas fa-check" style="color:#64b5f6; margin-right: 8px;"></i>Monetisasi Dampak Spesifik</p>
+                    </div>
+                </div>
+            </div>
+            <div class="decoration"></div>
+        </section>
+
+        <!-- Slide 9: Metode Penilaian SROI -->
+        <section id="slide9" class="slide">
+            <div class="content">
+                <div class="header"><h1 class="title">Metode Penilaian SROI</h1></div>
+                <div class="framework-section section">
+                    <div class="section-title"><i class="fas fa-globe"></i>Kerangka Kerja Internasional</div>
+                    <div class="section-content">Menggunakan kerangka kerja SROI yang diakui secara global untuk mengukur nilai sosial, ekonomi, dan lingkungan yang tidak tercakup dalam laporan keuangan konvensional.</div>
+                </div>
+                <div class="steps-container">
+                    <div class="step-card"><div class="step-number">1</div><h3 class="step-title">Identifikasi Stakeholder & Outcome</h3><p class="step-description">Memetakan siapa yang terdampak dan perubahan signifikan yang mereka alami.</p></div>
+                    <div class="step-card"><div class="step-number">2</div><h3 class="step-title">Monetisasi & Pengukuran</h3><p class="step-description">Memberikan nilai finansial (proksi) yang valid dan dapat dipertanggungjawabkan untuk setiap outcome.</p></div>
+                    <div class="step-card"><div class="step-number">3</div><h3 class="step-title">Menetapkan Dampak</h3><p class="step-description">Melakukan atenuasi nilai dengan memperhitungkan faktor Deadweight, Attribution, dan Drop-off.</p></div>
+                    <div class="step-card"><div class="step-number">4</div><h3 class="step-title">Perhitungan Rasio</h3><p class="step-description">Membandingkan total dampak bersih (NPV) dengan nilai investasi awal untuk mendapatkan rasio akhir SROI.</p></div>
+                </div>
+            </div>
+            <div class="decoration"></div>
+        </section>
+        
+        <!-- Slide 10: Metode Penilaian IKM -->
+        <section id="slide10" class="slide">
+            <div class="content">
+                <div class="header"><h1 class="title">Metode Penilaian IKM</h1></div>
+                <div class="main-content">
+                    <div class="left-column">
+                        <div class="section">
+                            <div class="section-title"><i class="fas fa-gavel"></i>Dasar Hukum</div>
+                            <div class="section-content">Mengacu penuh pada **PermenPAN-RB No. 14 Tahun 2017** sebagai pedoman penyusunan survei kepuasan masyarakat untuk layanan publik.</div>
+                        </div>
+                        <div class="section">
+                            <div class="section-title"><i class="fas fa-chart-bar"></i>Skala Penilaian</div>
+                            <div class="section-content">Hasil disajikan dalam skor IKM terkonversi (skala 25-100) untuk kemudahan interpretasi, dari 'Tidak Puas' hingga 'Sangat Puas'.</div>
+                        </div>
+                    </div>
+                    <div class="right-column">
+                        <div class="section">
+                            <div class="section-title"><i class="fas fa-list-check"></i>9 Unsur Pelayanan yang Diukur</div>
                             <div class="factors-grid">
                                 <div class="factor-item"><div class="factor-number">1</div><div class="factor-text">Persyaratan</div></div>
-                                <div class="factor-item"><div class="factor-number">2</div><div class="factor-text">Sistem, Mekanisme, dan Prosedur</div></div>
+                                <div class="factor-item"><div class="factor-number">2</div><div class="factor-text">Sistem & Prosedur</div></div>
                                 <div class="factor-item"><div class="factor-number">3</div><div class="factor-text">Waktu Penyelesaian</div></div>
                                 <div class="factor-item"><div class="factor-number">4</div><div class="factor-text">Biaya/Tarif</div></div>
-                                <div class="factor-item"><div class="factor-number">5</div><div class="factor-text">Produk Spesifikasi Jenis Pelayanan</div></div>
+                                <div class="factor-item"><div class="factor-number">5</div><div class="factor-text">Produk Pelayanan</div></div>
                                 <div class="factor-item"><div class="factor-number">6</div><div class="factor-text">Kompetensi Pelaksana</div></div>
                                 <div class="factor-item"><div class="factor-number">7</div><div class="factor-text">Perilaku Pelaksana</div></div>
-                                <div class="factor-item"><div class="factor-number">8</div><div class="factor-text">Penanganan Pengaduan, Saran, Masukan</div></div>
-                                <div class="factor-item"><div class="factor-number">9</div><div class="factor-text">Sarana dan Prasarana</div></div>
+                                <div class="factor-item"><div class="factor-number">8</div><div class="factor-text">Penanganan Pengaduan</div></div>
+                                <div class="factor-item"><div class="factor-number">9</div><div class="factor-text">Sarana & Prasarana</div></div>
                             </div>
                         </div>
                     </div>
@@ -636,58 +457,64 @@
             <div class="decoration"></div>
         </section>
 
-        <!-- Slide 9: Terima Kasih -->
-        <section id="slide9" class="slide">
-            <div class="accent-circle accent-circle-1"></div>
-            <div class="accent-circle accent-circle-2"></div>
+        <!-- Slide 11: Asumsi & Risiko (BARU) -->
+        <section id="slide11" class="slide">
             <div class="content">
-                <div class="header">
-                    <h1 class="title">Terima Kasih</h1>
+                <div class="header"><h1 class="title">Asumsi & Manajemen Risiko</h1></div>
+                <div class="main-content">
+                    <div class="left-column section">
+                        <h2 class="column-title">Asumsi & Peran Klien (BRI)</h2>
+                        <div class="point-item"><i class="fas fa-database"></i><p class="point-text"><strong>Ketersediaan Data:</strong> Data historis dan kontak penerima manfaat program tersedia dan dapat diakses.</p></div>
+                        <div class="point-item"><i class="fas fa-user-tie"></i><p class="point-text"><strong>Penunjukan PIC:</strong> Adanya satu Person in Charge (PIC) utama dari pihak BRI untuk fasilitasi koordinasi.</p></div>
+                        <div class="point-item"><i class="fas fa-road"></i><p class="point-text"><strong>Akses Lapangan:</strong> Dukungan dari BRI untuk memfasilitasi akses ke lokasi dan responden selama proses pengumpulan data.</p></div>
+                    </div>
+                    <div class="right-column section">
+                        <h2 class="column-title">Mitigasi Risiko Proyek</h2>
+                        <div class="point-item"><i class="fas fa-file-excel"></i><p class="point-text"><strong>Risiko Keterbatasan Data:</strong> Mitigasi dengan melakukan validasi mendalam pada tahap Inception dan menggunakan metode proksi yang kuat.</p></div>
+                        <div class="point-item"><i class="fas fa-users-slash"></i><p class="point-text"><strong>Risiko Responden Sulit Ditemui:</strong> Mitigasi dengan penjadwalan fleksibel dan koordinasi intensif bersama PIC BRI di lapangan.</p></div>
+                        <div class="point-item"><i class="fas fa-map-signs"></i><p class="point-text"><strong>Risiko Perubahan Lingkup:</strong> Mitigasi melalui komunikasi rutin dan manajemen proyek yang adaptif untuk mengakomodasi perubahan minor.</p></div>
+                    </div>
                 </div>
+            </div>
+            <div class="decoration"></div>
+        </section>
+        
+        <!-- Slide 12: Terima Kasih -->
+        <section id="slide12" class="slide">
+            <div class="content">
+                <div class="header"><h1 class="title">Terima Kasih</h1></div>
                 <div class="main-content">
                     <div class="left-column">
                         <div class="section">
-                            <div class="section-title"><i class="fas fa-check-circle"></i> Kesimpulan</div>
-                            <div class="section-content">Dengan metodologi yang komprehensif dan tim ahli yang kompeten, LPMB FEB UNAIR siap menjadi mitra strategis BRI dalam penilaian dampak program BRI Peduli melalui SROI dan IKM.</div>
+                            <div class="section-title"><i class="fas fa-check-circle"></i>Komitmen Kami</div>
+                            <div class="section-content">Dengan metodologi yang solid, tim ahli yang kompeten, dan pemahaman mendalam, LPMB FEB UNAIR siap menjadi mitra strategis BRI untuk menyukseskan penilaian dampak program BRI Peduli.</div>
                         </div>
                     </div>
                     <div class="right-column">
                         <div class="section">
-                            <div class="section-title"><i class="fas fa-address-card"></i> Kontak LPMB FEB UNAIR</div>
-                            <div class="contact-item">
-                                <div class="contact-icon"><i class="fas fa-building"></i></div>
-                                <div class="contact-text">Laboratorium Pengembangan Manajemen dan Bisnis (LPMB) FEB UNAIR</div>
-                            </div>
-                            <div class="contact-item">
-                                <div class="contact-icon"><i class="fas fa-map-marker-alt"></i></div>
-                                <div class="contact-text">Jl. Dharmawangsa Dalam, Surabaya – 60286</div>
-                            </div>
-                            <div class="contact-item">
-                                <div class="contact-icon"><i class="fas fa-phone"></i></div>
-                                <div class="contact-text">Telp/Fax: (031) 503 8393, 505 4839</div>
-                            </div>
+                            <div class="section-title"><i class="fas fa-address-card"></i>Kontak LPMB FEB UNAIR</div>
+                            <div class="contact-item"><div class="contact-icon"><i class="fas fa-map-marker-alt"></i></div><div class="contact-text">Jl. Dharmawangsa Dalam, Surabaya</div></div>
+                            <div class="contact-item"><div class="contact-icon"><i class="fas fa-phone"></i></div><div class="contact-text">(031) 503 8393, 505 4839</div></div>
+                            <div class="contact-item"><div class="contact-icon"><i class="fas fa-envelope"></i></div><div class="contact-text">lpmb@feb.unair.ac.id</div></div>
                         </div>
                     </div>
                 </div>
-                <div class="logo-container">
-                    <div class="logo">
-                        <i class="fas fa-university"></i>
-                    </div>
+                 <div class="logo-container">
+                    <div class="logo"><i class="fas fa-university"></i></div>
                 </div>
             </div>
             <div class="decoration"></div>
         </section>
-
     </div>
 
     <script>
+        // JAVASCRIPT TETAP SAMA SEPERTI SEBELUMNYA DAN TIDAK PERLU DIUBAH
         document.addEventListener('DOMContentLoaded', function () {
             const slides = document.querySelectorAll('.slide');
             const prevButton = document.getElementById('prev-slide');
             const nextButton = document.getElementById('next-slide');
             let currentSlide = 0;
 
-            // --- FUNGSI NAVIGASI (TETAP SAMA) ---
             function showSlide(index) {
                 slides.forEach((slide) => {
                     slide.classList.remove('active');
@@ -705,45 +532,28 @@
                 showSlide(currentSlide);
             }
 
-            // --- FUNGSI BARU UNTUK PENYESUAIAN KONTEN ---
-            /**
-             * Memeriksa apakah konten sebuah slide meluap (overflow) dan menyesuaikan 
-             * ukuran font serta padding agar pas di layar.
-             * @param {HTMLElement} slide Elemen slide yang akan disesuaikan.
-             */
             function adjustContentToFit(slide) {
                 const contentContainer = slide.querySelector('.content');
                 if (!contentContainer) return;
 
-                // Tentukan elemen mana yang ukuran fontnya bisa dikurangi
-                const scalableText = contentContainer.querySelectorAll('.title, .subtitle, .toc-text, .section-title, .section-content, .activity-text, .output-title, .output-content, .step-title, .step-description, .factor-text, .legal-title, .legal-content, .scale-label, .contact-text, .deliverable-text');
-                
-                // Tentukan elemen mana yang paddingnya bisa dikurangi
-                const scalablePadding = contentContainer.querySelectorAll('.section, .output-box, .framework-section, .legal-box, .step-card, .header, .content');
+                const scalableText = contentContainer.querySelectorAll('.title, .subtitle, .toc-text, .section-title, .section-content, .activity-text, .output-title, .output-content, .step-title, .step-description, .factor-text, .legal-title, .legal-content, .scale-label, .contact-text, .deliverable-text, .summary-text, .summary-title, .column-title, .point-text, .program-title, .activity-list-item');
+                const scalablePadding = contentContainer.querySelectorAll('.section, .output-box, .framework-section, .legal-box, .step-card, .header, .content, .summary-box, .program-group');
 
                 let attempts = 0;
-                const maxAttempts = 25; // Pengaman untuk mencegah loop tak terbatas
+                const maxAttempts = 25; 
 
-                // Terus ulangi selama konten lebih tinggi dari wadahnya
                 while (contentContainer.scrollHeight > contentContainer.clientHeight && attempts < maxAttempts) {
-                    
-                    // Kurangi ukuran font dari semua elemen teks yang bisa disesuaikan
                     scalableText.forEach(el => {
-                        // Ambil ukuran font saat ini dari style inline atau dari CSS
                         const currentSize = parseFloat(el.style.fontSize || window.getComputedStyle(el).fontSize);
-                        // Jangan perkecil font jika sudah terlalu kecil (misal: di bawah 10px)
                         if (currentSize > 10) {
                             el.style.fontSize = `${currentSize - 1}px`;
                         }
                     });
-
-                    // Kurangi padding dari semua elemen yang bisa disesuaikan
                     scalablePadding.forEach(el => {
                         const style = window.getComputedStyle(el);
                         const currentPaddingTop = parseFloat(el.style.paddingTop || style.paddingTop);
                         const currentPaddingBottom = parseFloat(el.style.paddingBottom || style.paddingBottom);
 
-                        // Jangan perkecil padding jika sudah terlalu kecil (misal: di bawah 5px)
                         if (currentPaddingTop > 5) {
                             el.style.paddingTop = `${currentPaddingTop - 1}px`;
                         }
@@ -751,12 +561,10 @@
                             el.style.paddingBottom = `${currentPaddingBottom - 1}px`;
                         }
                     });
-
                     attempts++;
                 }
             }
 
-            // --- EVENT LISTENERS (TETAP SAMA) ---
             nextButton.addEventListener('click', nextSlide);
             prevButton.addEventListener('click', prevSlide);
             document.addEventListener('keydown', function (e) {
@@ -767,13 +575,10 @@
                 }
             });
 
-            // --- EKSEKUSI FUNGSI PENYESUAIAN ---
-            // Jalankan fungsi penyesuaian untuk setiap slide saat halaman pertama kali dimuat.
             slides.forEach(slide => {
                 adjustContentToFit(slide);
             });
 
-            // Tampilkan slide pertama setelah semua penyesuaian selesai
             showSlide(currentSlide);
         });
     </script>
