@@ -687,13 +687,11 @@
             const nextButton = document.getElementById('next-slide');
             let currentSlide = 0;
 
+            // --- FUNGSI NAVIGASI (TETAP SAMA) ---
             function showSlide(index) {
-                // Sembunyikan semua slide
-                slides.forEach((slide, i) => {
+                slides.forEach((slide) => {
                     slide.classList.remove('active');
                 });
-                
-                // Tampilkan slide yang dipilih
                 slides[index].classList.add('active');
             }
 
@@ -707,11 +705,60 @@
                 showSlide(currentSlide);
             }
 
-            // Event Listeners untuk panah
+            // --- FUNGSI BARU UNTUK PENYESUAIAN KONTEN ---
+            /**
+             * Memeriksa apakah konten sebuah slide meluap (overflow) dan menyesuaikan 
+             * ukuran font serta padding agar pas di layar.
+             * @param {HTMLElement} slide Elemen slide yang akan disesuaikan.
+             */
+            function adjustContentToFit(slide) {
+                const contentContainer = slide.querySelector('.content');
+                if (!contentContainer) return;
+
+                // Tentukan elemen mana yang ukuran fontnya bisa dikurangi
+                const scalableText = contentContainer.querySelectorAll('.title, .subtitle, .toc-text, .section-title, .section-content, .activity-text, .output-title, .output-content, .step-title, .step-description, .factor-text, .legal-title, .legal-content, .scale-label, .contact-text, .deliverable-text');
+                
+                // Tentukan elemen mana yang paddingnya bisa dikurangi
+                const scalablePadding = contentContainer.querySelectorAll('.section, .output-box, .framework-section, .legal-box, .step-card, .header, .content');
+
+                let attempts = 0;
+                const maxAttempts = 25; // Pengaman untuk mencegah loop tak terbatas
+
+                // Terus ulangi selama konten lebih tinggi dari wadahnya
+                while (contentContainer.scrollHeight > contentContainer.clientHeight && attempts < maxAttempts) {
+                    
+                    // Kurangi ukuran font dari semua elemen teks yang bisa disesuaikan
+                    scalableText.forEach(el => {
+                        // Ambil ukuran font saat ini dari style inline atau dari CSS
+                        const currentSize = parseFloat(el.style.fontSize || window.getComputedStyle(el).fontSize);
+                        // Jangan perkecil font jika sudah terlalu kecil (misal: di bawah 10px)
+                        if (currentSize > 10) {
+                            el.style.fontSize = `${currentSize - 1}px`;
+                        }
+                    });
+
+                    // Kurangi padding dari semua elemen yang bisa disesuaikan
+                    scalablePadding.forEach(el => {
+                        const style = window.getComputedStyle(el);
+                        const currentPaddingTop = parseFloat(el.style.paddingTop || style.paddingTop);
+                        const currentPaddingBottom = parseFloat(el.style.paddingBottom || style.paddingBottom);
+
+                        // Jangan perkecil padding jika sudah terlalu kecil (misal: di bawah 5px)
+                        if (currentPaddingTop > 5) {
+                            el.style.paddingTop = `${currentPaddingTop - 1}px`;
+                        }
+                        if (currentPaddingBottom > 5) {
+                            el.style.paddingBottom = `${currentPaddingBottom - 1}px`;
+                        }
+                    });
+
+                    attempts++;
+                }
+            }
+
+            // --- EVENT LISTENERS (TETAP SAMA) ---
             nextButton.addEventListener('click', nextSlide);
             prevButton.addEventListener('click', prevSlide);
-
-            // Event Listeners untuk tombol panah keyboard
             document.addEventListener('keydown', function (e) {
                 if (e.key === 'ArrowRight') {
                     nextSlide();
@@ -720,7 +767,13 @@
                 }
             });
 
-            // Tampilkan slide pertama saat halaman dimuat
+            // --- EKSEKUSI FUNGSI PENYESUAIAN ---
+            // Jalankan fungsi penyesuaian untuk setiap slide saat halaman pertama kali dimuat.
+            slides.forEach(slide => {
+                adjustContentToFit(slide);
+            });
+
+            // Tampilkan slide pertama setelah semua penyesuaian selesai
             showSlide(currentSlide);
         });
     </script>
