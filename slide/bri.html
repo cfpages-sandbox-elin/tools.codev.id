@@ -602,67 +602,56 @@
     </div>
 
     <script>
-        // JAVASCRIPT TETAP SAMA SEPERTI SEBELUMNYA DAN TIDAK PERLU DIUBAH
         document.addEventListener('DOMContentLoaded', function () {
             // Deklarasi Elemen
             const slides = document.querySelectorAll('.slide');
             const prevButton = document.getElementById('prev-slide');
             const nextButton = document.getElementById('next-slide');
-            
-            // [VARIABEL BARU]
             const slideCounter = document.getElementById('slide-counter');
             const lastSlideOverlay = document.getElementById('last-slide-overlay');
             const restartButton = document.getElementById('restart-presentation');
             let currentSlide = 0;
             let totalSlides = slides.length;
 
+            // ==========================================================
+            // [FUNGSI PARSE MARKDOWN YANG TELAH DIPERBAIKI]
+            // ==========================================================
             function parseMarkdown(htmlString) {
-                // Menambahkan flag 's' (dotAll) pada regex agar '.' dapat mencocokkan
-                // karakter baris baru. Ini membuatnya lebih kuat.
+                // Versi ini lebih kuat dengan secara eksplisit menangani kemungkinan
+                // HTML entities untuk karakter asterisk dan underscore.
                 
-                // 1. Ubah **bold** menjadi <strong>bold</strong>
-                let processedHtml = htmlString.replace(/\*\*(.*?)\*\*/gs, '<strong>$1</strong>');
+                let decodedHtml = htmlString
+                    .replace(/&ast;/g, '*')
+                    .replace(/&lowbar;/g, '_');
                 
-                // 2. Ubah _italic_ menjadi <em>italic</em>
-                processedHtml = processedHtml.replace(/_(.*?)_/gs, '<em>$1</em>');
-                
-                // 3. Ubah *italic* menjadi <em>italic</em>
-                processedHtml = processedHtml.replace(/\*(.*?)\*/gs, '<em>$1</em>');
-                
+                // Urutan sangat penting: Bold dijalankan pertama.
+                let processedHtml = decodedHtml
+                    .replace(/\*\*(.*?)\*\*/gs, '<strong>$1</strong>') // Bold
+                    .replace(/_(.*?)_/gs, '<em>$1</em>')           // Italic (dengan _)
+                    .replace(/\*(.*?)\*/gs, '<em>$1</em>');          // Italic (dengan *)
+
                 return processedHtml;
             }
 
             function applyMarkdownParsing() {
-                // Tentukan elemen mana saja yang kontennya perlu di-parsing
-                const selectors = '.section-content, .summary-text, .step-description, .point-text, .activity-list-item, .output-content, .factor-text, .program-title';
+                const selectors = '.section-content, .summary-text, .step-description, .point-text, .activity-list-item, .output-content, .factor-text, .program-title, .step-title, .subtitle';
                 const elementsToParse = document.querySelectorAll(selectors);
-
                 elementsToParse.forEach(el => {
-                    // Ambil HTML di dalamnya, proses, lalu ganti kembali
                     el.innerHTML = parseMarkdown(el.innerHTML);
                 });
             }
+            // ==========================================================
 
-            /**
-             * [FUNGSI showSlide DIREVISI]
-             * Fungsi ini sekarang juga mengurus pembaruan nomor slide
-             * dan menonaktifkan panah kanan di slide terakhir.
-             */
+            // Fungsi showSlide
             function showSlide(index) {
-                // Sembunyikan pesan slide terakhir jika ada
                 lastSlideOverlay.classList.remove('visible');
-
                 slides.forEach((slide) => {
                     slide.classList.remove('active');
                 });
                 slides[index].classList.add('active');
-
-                // Update teks pada slide counter
                 slideCounter.textContent = `${index + 1} / ${totalSlides}`;
-                
-                // Atur visibilitas panah kanan
                 if (index === totalSlides - 1) {
-                    nextButton.style.opacity = '0.3'; // Buat panah kanan jadi redup
+                    nextButton.style.opacity = '0.3';
                     nextButton.style.cursor = 'not-allowed';
                 } else {
                     nextButton.style.opacity = '1';
@@ -670,21 +659,17 @@
                 }
             }
 
-            /**
-             * [FUNGSI nextSlide DIREVISI]
-             * Fungsi ini tidak lagi berputar, tetapi akan menampilkan pesan
-             * jika pengguna mencoba lanjut dari slide terakhir.
-             */
+            // Fungsi navigasi
             function nextSlide() {
                 if (currentSlide < totalSlides - 1) {
                     currentSlide++;
                     showSlide(currentSlide);
                 } else {
-                    // Tampilkan overlay jika sudah di slide terakhir
                     lastSlideOverlay.classList.add('visible');
-                    // Sembunyikan otomatis setelah beberapa detik jika tidak ada interaksi
                     setTimeout(() => {
-                        lastSlideOverlay.classList.remove('visible');
+                        if(lastSlideOverlay.classList.contains('visible')) {
+                           lastSlideOverlay.classList.remove('visible');
+                        }
                     }, 4000);
                 }
             }
@@ -700,10 +685,9 @@
             restartButton.addEventListener('click', () => {
                 currentSlide = 0;
                 showSlide(currentSlide);
-                lastSlideOverlay.classList.remove('visible');
             });
             
-            // Fungsi penyesuaian konten (tetap sama)
+            // Fungsi penyesuaian konten (tidak diubah)
             function adjustContentToFit(slide) {
                 const contentContainer = slide.querySelector('.content');
                 if (!contentContainer) return;
@@ -727,6 +711,7 @@
                 }
             }
 
+            // Event Listeners
             nextButton.addEventListener('click', nextSlide);
             prevButton.addEventListener('click', prevSlide);
             document.addEventListener('keydown', function (e) {
@@ -737,6 +722,8 @@
                 }
             });
 
+            // Eksekusi Awal
+            applyMarkdownParsing();
             slides.forEach(slide => {
                 adjustContentToFit(slide);
             });
