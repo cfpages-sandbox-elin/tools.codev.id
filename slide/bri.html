@@ -616,6 +616,31 @@
             let currentSlide = 0;
             let totalSlides = slides.length;
 
+            function parseMarkdown(htmlString) {
+                // 1. Ubah **bold** menjadi <strong>bold</strong>
+                //    Ini dijalankan pertama agar tidak bentrok dengan italic.
+                let processedHtml = htmlString.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                
+                // 2. Ubah _italic_ menjadi <em>italic</em>
+                processedHtml = processedHtml.replace(/_(.*?)_/g, '<em>$1</em>');
+                
+                // 3. Ubah *italic* menjadi <em>italic</em>
+                processedHtml = processedHtml.replace(/\*(.*?)\*/g, '<em>$1</em>');
+                
+                return processedHtml;
+            }
+
+            function applyMarkdownParsing() {
+                // Tentukan elemen mana saja yang kontennya perlu di-parsing
+                const selectors = '.section-content, .summary-text, .step-description, .point-text, .activity-list-item, .output-content, .factor-text, .program-title';
+                const elementsToParse = document.querySelectorAll(selectors);
+
+                elementsToParse.forEach(el => {
+                    // Ambil HTML di dalamnya, proses, lalu ganti kembali
+                    el.innerHTML = parseMarkdown(el.innerHTML);
+                });
+            }
+
             /**
              * [FUNGSI showSlide DIREVISI]
              * Fungsi ini sekarang juga mengurus pembaruan nomor slide
