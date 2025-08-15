@@ -12,11 +12,34 @@
         body {
             font-family: 'Roboto', sans-serif;
         }
+        @media print {
+            /* Sembunyikan semua elemen di luar dokumen saat mencetak */
+            body > *:not(#document-container) {
+                display: none;
+            }
+
+            /* Atur ulang body untuk mode cetak */
+            body {
+                background-color: white !important;
+                margin: 0;
+                padding: 0;
+            }
+
+            /* Atur kontainer dokumen agar memenuhi halaman PDF */
+            #document-container {
+                max-width: none !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 1.5cm !important; /* Memberi margin seperti dokumen Word */
+                box-shadow: none !important;
+                border: none !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-100">
 
-    <div class="max-w-4xl mx-auto bg-white p-8 sm:p-12 shadow-lg my-12">
+    <div id="document-container" class="max-w-4xl mx-auto bg-white p-8 sm:p-12 shadow-lg my-12">
         
         <!-- KOP SURAT / HEADER -->
         <header class="flex justify-between items-start pb-4 mb-8 border-b-2 border-gray-300">
