@@ -57,6 +57,12 @@
                 font-size: 13pt; /* Untuk judul sub-seksi per program */
             }
 
+            #document-container h3,
+            #document-container h4 {
+                page-break-after: avoid; /* Properti lama untuk kompatibilitas maksimal */
+                break-after: avoid;      /* Properti CSS yang lebih modern */
+            }
+
             /* Atur teks tabel agar sedikit lebih kecil dan rapat, sesuai standar dokumen */
             #document-container th,
             #document-container td {
