@@ -41,7 +41,6 @@
             max-width: 1422px;
             height: auto;
             max-height: 800px;
-            /* THIS IS THE CRITICAL FIX: It anchors the child elements */
             position: relative; 
             overflow: hidden;
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
@@ -81,7 +80,7 @@
             height: 100%;
             background-size: cover;
             background-position: center;
-            opacity: 0.05; /* Subtle background texture */
+            opacity: 0.05;
             z-index: -1;
         }
         .slide-header {
@@ -97,6 +96,7 @@
             color: #f8fafc; /* White */
             position: relative;
             padding-bottom: 1rem;
+            line-height: 1.2; /* Adjust line height for two-line titles */
         }
         .slide-title::after {
             content: '';
@@ -107,10 +107,20 @@
             height: 4px;
             background-color: #6366f1; /* Indigo-500 */
         }
+        
+        /* --- NEW STYLE FOR THE TITLE PREFIX --- */
+        .title-prefix {
+            display: block;
+            font-size: 1.25rem; /* 20px - Smaller than main title */
+            font-weight: 500; /* Medium weight, not bold */
+            color: #94a3b8; /* Slate-400 - Muted color */
+            margin-bottom: 0.25rem;
+        }
+
         .slide-content {
             padding: 140px 80px 80px 80px;
             height: 100%;
-            box-sizing: border-box; /* Important for accurate height calculation */
+            box-sizing: border-box; 
         }
         
         /* 
@@ -136,83 +146,26 @@
         === CORE DARK MODE STYLES & NAVIGATION ===
         =============================================
         */
-        .highlight-blue { color: #818cf8; /* Indigo-400 */ }
-        .highlight-green { color: #4ade80; /* Green-400 */ }
-        .highlight-red { color: #f87171; /* Red-400 */ }
-
-        .nav-arrow {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 44px;
-            height: 44px;
-            background-color: rgba(30, 41, 59, 0.5);
-            color: #cbd5e1; /* Slate-300 */
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 1.25rem;
-            transition: all 0.2s ease-in-out;
-            z-index: 10;
-        }
-        .nav-arrow:hover {
-            background-color: #6366f1; /* Indigo-500 */
-            color: white;
-            transform: translateY(-50%) scale(1.1);
-        }
-        #prev-slide { left: 20px; }
-        #next-slide { right: 20px; }
-
-        #slide-counter {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            background-color: rgba(0, 0, 0, 0.4);
-            color: #e2e8f0; /* Slate-200 */
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 14px;
-            z-index: 10;
-            user-select: none;
-        }
-
-        .bg-slate-800\/50 {
-            background-color: rgba(30, 41, 59, 0.5); /* Slate-800 with alpha */
-        }
+        .highlight-blue { color: #818cf8; } .highlight-green { color: #4ade80; } .highlight-red { color: #f87171; }
+        .nav-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; background-color: rgba(30, 41, 59, 0.5); color: #cbd5e1; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.25rem; transition: all 0.2s ease-in-out; z-index: 10; }
+        .nav-arrow:hover { background-color: #6366f1; color: white; transform: translateY(-50%) scale(1.1); }
+        #prev-slide { left: 20px; } #next-slide { right: 20px; }
+        #slide-counter { position: absolute; bottom: 20px; right: 20px; background-color: rgba(0, 0, 0, 0.4); color: #e2e8f0; padding: 6px 14px; border-radius: 20px; font-size: 14px; z-index: 10; user-select: none; }
+        .bg-slate-800\/50 { background-color: rgba(30, 41, 59, 0.5); }
         
         /* 
         =============================================
         === SPECIFIC SLIDE STYLES (for robust layout) ===
         =============================================
         */
-        .pie-chart-container {
-            position: relative; width: 320px; height: 320px; margin: 0 auto;
-        }
-        .pie-chart-bg {
-            position: absolute; inset: 0; border-radius: 50%; background-image: conic-gradient(#4338ca 0% 52%, #475569 52% 100%);
-        }
-        .pie-chart-center {
-            position: absolute; inset: 2rem; background-color: #0f172a; border-radius: 50%; display: flex; justify-content: center; align-items: center; text-align: center;
-        }
-        .bar-chart-row {
-            display: flex; align-items: center; gap: 1rem; padding: 1rem; background-color: rgba(30, 41, 59, 0.5); border-radius: 0.5rem;
-        }
-        .bar-chart-label {
-            width: 180px; text-align: right; font-size: 1.25rem; font-weight: 600; color: #e2e8f0; flex-shrink: 0;
-        }
-        .bar-chart-bar-container {
-            flex-grow: 1; background-color: #334155; border-radius: 9999px; height: 2.5rem;
-        }
-        .bar-chart-bar {
-            background-color: #6366f1; height: 100%; border-radius: 9999px;
-        }
-        .bar-chart-value {
-            width: 180px; text-align: left; font-size: 1.25rem; font-weight: 700; color: #f8fafc; flex-shrink: 0;
-        }
+        .pie-chart-container { position: relative; width: 320px; height: 320px; margin: 0 auto; }
+        .pie-chart-bg { position: absolute; inset: 0; border-radius: 50%; background-image: conic-gradient(#4338ca 0% 52%, #475569 52% 100%); }
+        .pie-chart-center { position: absolute; inset: 2rem; background-color: #0f172a; border-radius: 50%; display: flex; justify-content: center; align-items: center; text-align: center; }
+        .bar-chart-row { display: flex; align-items: center; gap: 1rem; padding: 1rem; background-color: rgba(30, 41, 59, 0.5); border-radius: 0.5rem; }
+        .bar-chart-label { width: 180px; text-align: right; font-size: 1.25rem; font-weight: 600; color: #e2e8f0; flex-shrink: 0; }
+        .bar-chart-bar-container { flex-grow: 1; background-color: #334155; border-radius: 9999px; height: 2.5rem; }
+        .bar-chart-bar { background-color: #6366f1; height: 100%; border-radius: 9999px; }
+        .bar-chart-value { width: 180px; text-align: left; font-size: 1.25rem; font-weight: 700; color: #f8fafc; flex-shrink: 0; }
     </style>
 </head>
 <body>
