@@ -96,6 +96,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function nextSlide() {
+        if (!document.fullscreenElement) {
+            toggleFullScreen();
+            return; 
+        }
+
         if (currentSlide < totalSlides - 1) {
             currentSlide++;
             showSlide(currentSlide);
