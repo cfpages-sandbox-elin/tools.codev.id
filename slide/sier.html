@@ -17,9 +17,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
+        /* 
+        =============================================
+        === GLOBAL & PREMIUM DARK MODE THEME ===
+        =============================================
+        */
         body {
             font-family: 'Poppins', sans-serif;
             background-color: #0a192f; /* Dark Navy Blue */
+            color: #cbd5e1; /* Default text color (Slate-300) */
         }
         #presentation-wrapper {
             width: 100vw;
@@ -32,7 +38,7 @@
         #presentation-container {
             aspect-ratio: 16 / 9;
             width: 100%;
-            max-width: 1422px; /* For 16:9 on a typical screen */
+            max-width: 1422px;
             height: auto;
             max-height: 800px;
             position: relative;
@@ -40,6 +46,12 @@
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
             border-radius: 12px;
         }
+
+        /* 
+        =============================================
+        === GENERAL SLIDE STYLING ===
+        =============================================
+        */
         .slide {
             position: absolute;
             width: 100%;
@@ -50,62 +62,38 @@
             visibility: hidden;
             transition: opacity 0.6s ease-in-out, transform 0.6s ease-in-out;
             transform: scale(0.98);
-            background-color: #0a192f;
+            background-color: #0a192f; /* Dark Navy Blue */
+            z-index: 1;
         }
         .slide.active {
             opacity: 1;
             visibility: visible;
             transform: scale(1);
-            z-index: 1;
+            z-index: 2;
         }
-        .nav-arrow {
+        .slide::before {
+            content: "";
             position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 44px;
-            height: 44px;
-            background-color: rgba(255, 255, 255, 0.1);
-            color: #cbd5e1;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 20px;
-            cursor: pointer;
-            z-index: 10;
-            transition: all 0.3s;
-            backdrop-filter: blur(5px);
-        }
-        .nav-arrow:hover {
-            background-color: rgba(99, 102, 241, 0.8);
-            color: white;
-            transform: translateY(-50%) scale(1.1);
-        }
-        #prev-slide { left: 20px; }
-        #next-slide { right: 20px; }
-
-        #slide-counter {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            background-color: rgba(0, 0, 0, 0.4);
-            color: #e2e8f0;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 14px;
-            z-index: 10;
-            user-select: none;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0.05; /* Subtle background texture */
+            z-index: -1;
         }
         .slide-header {
             position: absolute;
             top: 60px;
             left: 80px;
             right: 80px;
+            z-index: 5;
         }
         .slide-title {
             font-size: 2.5rem; /* 40px */
             font-weight: 700;
-            color: #f8fafc;
+            color: #f8fafc; /* White */
             position: relative;
             padding-bottom: 1rem;
         }
@@ -121,10 +109,122 @@
         .slide-content {
             padding: 140px 80px 80px 80px;
             height: 100%;
+            box-sizing: border-box; /* Important for accurate height calculation */
         }
+        
+        /* 
+        =============================================
+        === CENTRALIZED SLIDE BACKGROUND IMAGES ===
+        =============================================
+        */
+        #slide1::before { background-image: url('https://i.imgur.com/uFL5Gj7.png'); opacity: 0.1; background-size: 25%; }
+        #slide2::before { background-image: url('https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=1280&q=80'); }
+        #slide3::before { background-image: url('https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=1280&q=80'); }
+        #slide4::before, #slide5::before { background-image: url('https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=1280&q=80'); }
+        #slide6::before, #slide7::before, #slide8::before { background-image: url('https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1280&q=80'); }
+        #slide9::before, #slide10::before, #slide11::before { background-image: url('https://images.unsplash.com/photo-1556155092-490a1ba16284?w=1280&q=80'); }
+        #slide12::before, #slide13::before, #slide14::before, #slide15::before { background-image: url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1280&q=80'); }
+        #slide16::before, #slide17::before, #slide18::before { background-image: url('https://images.unsplash.com/photo-1586985289524-7373531b782b?w=1280&q=80'); }
+        #slide19::before, #slide20::before, #slide21::before, #slide22::before, #slide23::before, #slide24::before { background-image: url('https://images.unsplash.com/photo-1554224155-8d044b40a257?w=1280&q=80'); }
+        #slide25::before { background-image: url('https://images.unsplash.com/photo-1542838132-92c53300491e?w=1280&q=80'); }
+        #slide26::before, #slide27::before { background-image: url('https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=1280&q=80'); }
+        #slide28::before { background-image: url('https://i.imgur.com/uFL5Gj7.png'); opacity: 0.1; background-size: 25%; }
+
+        /* 
+        =============================================
+        === CORE DARK MODE STYLES ===
+        =============================================
+        */
         .highlight-blue { color: #818cf8; /* Indigo-400 */ }
         .highlight-green { color: #4ade80; /* Green-400 */ }
         .highlight-red { color: #f87171; /* Red-400 */ }
+
+        .nav-arrow {
+            background-color: rgba(30, 41, 59, 0.5);
+            color: #cbd5e1; /* Slate-300 */
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.1);
+            z-index: 10;
+        }
+        .nav-arrow:hover {
+            background-color: #6366f1; /* Indigo-500 */
+            color: white;
+        }
+        #slide-counter {
+            background-color: rgba(0, 0, 0, 0.4);
+            color: #e2e8f0; /* Slate-200 */
+        }
+
+        .bg-slate-800\/50 {
+            background-color: rgba(30, 41, 59, 0.5); /* Slate-800 with alpha */
+        }
+        
+        /* 
+        =============================================
+        === SPECIFIC SLIDE STYLES (for robust layout) ===
+        =============================================
+        */
+
+        /* Slide 6: Fix for Pie Chart Layout */
+        .pie-chart-container {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            margin: 0 auto;
+        }
+        .pie-chart-bg {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background-image: conic-gradient(#4338ca 0% 52%, #475569 52% 100%);
+        }
+        .pie-chart-center {
+            position: absolute;
+            inset: 2rem;
+            background-color: #0f172a;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        /* Slide 8: NEW Robust Bar Chart Layout */
+        .bar-chart-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background-color: rgba(30, 41, 59, 0.5);
+            border-radius: 0.5rem;
+        }
+        .bar-chart-label {
+            width: 180px;
+            text-align: right;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            flex-shrink: 0;
+        }
+        .bar-chart-bar-container {
+            flex-grow: 1;
+            background-color: #334155;
+            border-radius: 9999px;
+            height: 2.5rem;
+        }
+        .bar-chart-bar {
+            background-color: #6366f1;
+            height: 100%;
+            border-radius: 9999px;
+        }
+        .bar-chart-value {
+            width: 180px;
+            text-align: left;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #f8fafc;
+            flex-shrink: 0;
+        }
     </style>
 </head>
 <body>
@@ -223,8 +323,6 @@
                 </div>
             </section>
             
-            <!-- ... All slides are now provided in Bahasa Indonesia based on the plan ... -->
-
             <section id="slide6" class="slide">
                 <div class="slide-header"><h1 class="slide-title">Aspek Bisnis: Area Jangkauan Pasar (Market Catchment)</h1></div>
                 <div class="slide-content flex items-center gap-10">
@@ -280,30 +378,31 @@
                 </div>
             </section>
 
+            <!-- Slide 8: Potensi Pasar Berdasarkan Pendapatan -->
             <section id="slide8" class="slide">
                 <div class="slide-header"><h1 class="slide-title">Aspek Bisnis: Potensi Pasar Berdasarkan Pendapatan</h1></div>
                 <div class="slide-content flex flex-col justify-center">
                     <p class="text-xl text-center text-slate-300 mb-8">Kecamatan Waru dan Rungkut menjadi kantong pasar terbesar, dengan total lebih dari 180.000 jiwa pada segmen pendapatan menengah ke atas.</p>
                     <div class="w-full max-w-6xl mx-auto space-y-4">
-                        <div class="flex items-center gap-4 p-4 bg-slate-800/50 rounded-lg">
-                            <div class="w-48 text-right text-2xl font-semibold text-slate-200">Waru (Sidoarjo)</div>
-                            <div class="flex-1 bg-slate-700 rounded-full h-10"><div class="bg-indigo-500 h-10 rounded-full" style="width: 100%;"></div></div>
-                            <div class="w-48 text-left text-2xl font-bold text-white">114.271 Jiwa</div>
+                        <div class="bar-chart-row">
+                            <div class="bar-chart-label">Waru (Sidoarjo)</div>
+                            <div class="bar-chart-bar-container"><div class="bar-chart-bar" style="width: 100%;"></div></div>
+                            <div class="bar-chart-value">114.271 Jiwa</div>
                         </div>
-                        <div class="flex items-center gap-4 p-4 bg-slate-800/50 rounded-lg">
-                            <div class="w-48 text-right text-2xl font-semibold text-slate-200">Rungkut</div>
-                            <div class="flex-1 bg-slate-700 rounded-full h-10"><div class="bg-indigo-500 h-10 rounded-full" style="width: 59%;"></div></div>
-                            <div class="w-48 text-left text-2xl font-bold text-white">67.340 Jiwa</div>
+                        <div class="bar-chart-row">
+                            <div class="bar-chart-label">Rungkut</div>
+                            <div class="bar-chart-bar-container"><div class="bar-chart-bar" style="width: 59%;"></div></div>
+                            <div class="bar-chart-value">67.340 Jiwa</div>
                         </div>
-                         <div class="flex items-center gap-4 p-4 bg-slate-800/50 rounded-lg">
-                            <div class="w-48 text-right text-2xl font-semibold text-slate-200">Tenggilis Mejoyo</div>
-                            <div class="flex-1 bg-slate-700 rounded-full h-10"><div class="bg-indigo-500 h-10 rounded-full" style="width: 32%;"></div></div>
-                             <div class="w-48 text-left text-2xl font-bold text-white">36.691 Jiwa</div>
+                        <div class="bar-chart-row">
+                            <div class="bar-chart-label">Tenggilis Mejoyo</div>
+                            <div class="bar-chart-bar-container"><div class="bar-chart-bar" style="width: 32%;"></div></div>
+                            <div class="bar-chart-value">36.691 Jiwa</div>
                         </div>
-                         <div class="flex items-center gap-4 p-4 bg-slate-800/50 rounded-lg">
-                            <div class="w-48 text-right text-2xl font-semibold text-slate-200">Gunung Anyar</div>
-                            <div class="flex-1 bg-slate-700 rounded-full h-10"><div class="bg-indigo-500 h-10 rounded-full" style="width: 30%;"></div></div>
-                             <div class="w-48 text-left text-2xl font-bold text-white">33.848 Jiwa</div>
+                        <div class="bar-chart-row">
+                            <div class="bar-chart-label">Gunung Anyar</div>
+                            <div class="bar-chart-bar-container"><div class="bar-chart-bar" style="width: 30%;"></div></div>
+                            <div class="bar-chart-value">33.848 Jiwa</div>
                         </div>
                     </div>
                 </div>
