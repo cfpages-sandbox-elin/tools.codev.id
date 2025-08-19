@@ -24,8 +24,8 @@
         */
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: #0a192f; /* Dark Navy Blue */
-            color: #cbd5e1; /* Default text color (Slate-300) */
+            background-color: #0a192f;
+            color: #cbd5e1;
         }
         #presentation-wrapper {
             width: 100vw;
@@ -53,75 +53,20 @@
         =============================================
         */
         .slide {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            opacity: 0;
-            visibility: hidden;
+            position: absolute; width: 100%; height: 100%; top: 0; left: 0;
+            opacity: 0; visibility: hidden;
             transition: opacity 0.6s ease-in-out, transform 0.6s ease-in-out;
             transform: scale(0.98);
-            background-color: #0a192f; /* Dark Navy Blue */
+            background-color: #0a192f;
             z-index: 1;
         }
-        .slide.active {
-            opacity: 1;
-            visibility: visible;
-            transform: scale(1);
-            z-index: 2;
-        }
-        .slide::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-size: cover;
-            background-position: center;
-            opacity: 0.05;
-            z-index: -1;
-        }
-        .slide-header {
-            position: absolute;
-            top: 60px;
-            left: 80px;
-            right: 80px;
-            z-index: 5;
-        }
-        .slide-title {
-            font-size: 2.5rem; /* 40px */
-            font-weight: 700;
-            color: #f8fafc; /* White */
-            position: relative;
-            padding-bottom: 1rem;
-            line-height: 1.2; /* Adjust line height for two-line titles */
-        }
-        .slide-title::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 80px;
-            height: 4px;
-            background-color: #6366f1; /* Indigo-500 */
-        }
-        
-        /* --- NEW STYLE FOR THE TITLE PREFIX --- */
-        .title-prefix {
-            display: block;
-            font-size: 1.25rem; /* 20px - Smaller than main title */
-            font-weight: 500; /* Medium weight, not bold */
-            color: #94a3b8; /* Slate-400 - Muted color */
-            margin-bottom: 0.25rem;
-        }
-
-        .slide-content {
-            padding: 140px 80px 80px 80px;
-            height: 100%;
-            box-sizing: border-box; 
-        }
+        .slide.active { opacity: 1; visibility: visible; transform: scale(1); z-index: 2; }
+        .slide::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; opacity: 0.05; z-index: -1; }
+        .slide-header { position: absolute; top: 60px; left: 80px; right: 80px; z-index: 5; }
+        .slide-title { font-size: 2.5rem; font-weight: 700; color: #f8fafc; position: relative; padding-bottom: 1rem; line-height: 1.2; }
+        .slide-title::after { content: ''; position: absolute; bottom: 0; left: 0; width: 80px; height: 4px; background-color: #6366f1; }
+        .title-prefix { display: block; font-size: 1.25rem; font-weight: 500; color: #94a3b8; margin-bottom: 0.25rem; }
+        .slide-content { padding: 140px 80px 80px 80px; height: 100%; box-sizing: border-box; }
         
         /* 
         =============================================
@@ -143,7 +88,7 @@
 
         /* 
         =============================================
-        === CORE DARK MODE STYLES & NAVIGATION ===
+        === CORE DARK MODE STYLES & UI ELEMENTS ===
         =============================================
         */
         .highlight-blue { color: #818cf8; } .highlight-green { color: #4ade80; } .highlight-red { color: #f87171; }
@@ -153,9 +98,26 @@
         #slide-counter { position: absolute; bottom: 20px; right: 20px; background-color: rgba(0, 0, 0, 0.4); color: #e2e8f0; padding: 6px 14px; border-radius: 20px; font-size: 14px; z-index: 10; user-select: none; }
         .bg-slate-800\/50 { background-color: rgba(30, 41, 59, 0.5); }
         
+        /* --- NEW: Fullscreen Button Style --- */
+        #fullscreen-btn { position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; background-color: rgba(30, 41, 59, 0.5); color: #cbd5e1; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; transition: all 0.2s ease-in-out; }
+        #fullscreen-btn:hover { background-color: #6366f1; color: white; }
+
+        /* --- NEW: Hanging Indent List Style --- */
+        .hanging-list li {
+            display: flex;
+            align-items: flex-start; /* Aligns icon with the top of the text block */
+            gap: 0.75rem; /* 12px space between icon and text */
+        }
+        .hanging-list li > i {
+            margin-top: 0.25rem; /* Vertically align icon better with text line-height */
+        }
+        .hanging-list li > div {
+            flex: 1; /* Allows text block to wrap correctly */
+        }
+
         /* 
         =============================================
-        === SPECIFIC SLIDE STYLES (for robust layout) ===
+        === SPECIFIC SLIDE LAYOUTS ===
         =============================================
         */
         .pie-chart-container { position: relative; width: 320px; height: 320px; margin: 0 auto; }
@@ -175,6 +137,7 @@
             <div class="nav-arrow" id="prev-slide"><i class="fas fa-chevron-left"></i></div>
             <div class="nav-arrow" id="next-slide"><i class="fas fa-chevron-right"></i></div>
             <div id="slide-counter">1 / 28</div>
+            <div id="fullscreen-btn" title="Toggle Fullscreen (Double Click)"><i class="fas fa-expand"></i></div>
 
             <!-- SLIDES START HERE -->
 
@@ -246,10 +209,10 @@
                     <div class="grid grid-cols-2 gap-10 w-full">
                         <div class="bg-slate-800/50 p-8 rounded-lg">
                             <h3 class="text-2xl font-semibold text-slate-100 mb-4 flex items-center"><i class="fa-solid fa-bullseye text-3xl mr-4 text-indigo-400"></i>Tujuan Studi</h3>
-                            <ul class="list-disc list-inside space-y-3 text-lg text-slate-300">
-                                <li>Menilai kelayakan proyek secara <strong class="text-white">multi-aspek</strong>: bisnis, teknis, legal, dan finansial.</li>
-                                <li>Menyediakan <strong class="text-white">dasar pertimbangan komprehensif</strong> bagi manajemen untuk pengambilan keputusan strategis.</li>
-                                <li>Memberikan rekomendasi yang <strong class="text-white">aplikatif dan berkelanjutan</strong> untuk implementasi.</li>
+                            <ul class="list-none space-y-3 text-lg text-slate-300 hanging-list">
+                                <li><i class="fa-solid fa-fw fa-check text-indigo-400"></i><div>Menilai kelayakan proyek secara <strong class="text-white">multi-aspek</strong>: bisnis, teknis, legal, dan finansial.</div></li>
+                                <li><i class="fa-solid fa-fw fa-check text-indigo-400"></i><div>Menyediakan <strong class="text-white">dasar pertimbangan komprehensif</strong> bagi manajemen untuk pengambilan keputusan strategis.</div></li>
+                                <li><i class="fa-solid fa-fw fa-check text-indigo-400"></i><div>Memberikan rekomendasi yang <strong class="text-white">aplikatif dan berkelanjutan</strong> untuk implementasi.</div></li>
                             </ul>
                         </div>
                         <div class="bg-slate-800/50 p-8 rounded-lg">
@@ -366,16 +329,16 @@
             </section>
 
             <section id="slide10" class="slide">
-                 <div class="slide-header"><h1 class="slide-title">Aspek Bisnis: Analisis Kompetitor - Padel</h1></div>
+                <div class="slide-header"><h1 class="slide-title">Aspek Bisnis: Analisis Kompetitor - Padel</h1></div>
                 <div class="slide-content flex items-center">
                     <div class="w-full grid grid-cols-2 gap-10">
                         <div>
                             <h3 class="text-3xl font-semibold text-slate-100 mb-4">"Pain Points" Pasar Saat Ini</h3>
                             <p class="text-xl text-slate-300 leading-relaxed">Meskipun rating Google para kompetitor tinggi, analisis ulasan mendalam mengungkap keluhan konsisten yang menjadi celah strategis bagi pendatang baru.</p>
-                             <ul class="list-none space-y-4 mt-6 text-xl text-slate-200">
-                                <li class="flex items-start"><i class="fa-solid fa-smoking-ban text-2xl mr-4 text-red-400 mt-1"></i><div><strong class="text-white">Masalah Perokok:</strong> Keluhan terbesar di banyak venue, mengganggu kenyamanan keluarga dan pemain non-perokok.</div></li>
-                                <li class="flex items-start"><i class="fa-solid fa-mobile-screen-button text-2xl mr-4 text-red-400 mt-1"></i><div><strong class="text-white">Sistem Booking Error:</strong> Aplikasi atau proses reservasi yang tidak stabil seringkali menjadi sumber frustrasi pelanggan.</div></li>
-                                <li class="flex items-start"><i class="fa-solid fa-broom text-2xl mr-4 text-red-400 mt-1"></i><div><strong class="text-white">Fasilitas Pendukung Standar:</strong> Kualitas toilet, shower, dan lounge yang tidak sebanding dengan harga sewa lapangan.</div></li>
+                            <ul class="list-none space-y-4 mt-6 text-xl text-slate-200 hanging-list">
+                                <li><i class="fa-solid fa-fw fa-smoking-ban text-2xl text-red-400"></i><div><strong class="text-white">Masalah Perokok:</strong> Keluhan terbesar di banyak venue, mengganggu kenyamanan keluarga dan pemain non-perokok.</div></li>
+                                <li><i class="fa-solid fa-fw fa-mobile-screen-button text-2xl text-red-400"></i><div><strong class="text-white">Sistem Booking Error:</strong> Aplikasi atau proses reservasi yang tidak stabil seringkali menjadi sumber frustrasi pelanggan.</div></li>
+                                <li><i class="fa-solid fa-fw fa-broom text-2xl text-red-400"></i><div><strong class="text-white">Fasilitas Pendukung Standar:</strong> Kualitas toilet, shower, dan lounge yang tidak sebanding dengan harga sewa lapangan.</div></li>
                             </ul>
                         </div>
                         <div class="bg-slate-800/50 p-8 rounded-lg">
@@ -515,19 +478,19 @@
                         <div class="bg-red-900/20 p-8 rounded-lg border border-red-500">
                             <h3 class="text-2xl font-semibold text-slate-100 mb-4 flex items-center"><i class="fa-solid fa-bolt text-3xl mr-4 text-red-400"></i>1. Kepatuhan Jarak Aman SUTT</h3>
                             <p class="text-lg text-slate-300 leading-relaxed">Keberadaan Saluran Udara Tegangan Tinggi (SUTT) 150kV di lokasi proyek mewajibkan kepatuhan ketat terhadap standar keselamatan PLN.</p>
-                            <ul class="list-disc list-inside mt-4 space-y-2 text-lg text-slate-200">
-                                <li>Jarak aman vertikal minimum: <strong class="text-white">8,5 meter</strong> dari konduktor ke air.</li>
-                                <li>Jarak aman horizontal minimum: <strong class="text-white">6 meter</strong> dari sumbu tiang ke bangunan.</li>
-                                <li><strong class="text-red-300">Implikasi:</strong> Membatasi desain ketinggian jaring pengaman dan penempatan bangunan.</li>
+                            <ul class="list-none mt-4 space-y-2 text-lg text-slate-200 hanging-list">
+                                <li><i class="fa-solid fa-fw fa-check text-indigo-400"></i><div>Jarak aman vertikal minimum: <strong class="text-white">8,5 meter</strong> dari konduktor ke air.</div></li>
+                                <li><i class="fa-solid fa-fw fa-check text-indigo-400"></i><div>Jarak aman horizontal minimum: <strong class="text-white">6 meter</strong> dari sumbu tiang ke bangunan.</div></li>
+                                <li><i class="fa-solid fa-fw fa-triangle-exclamation text-red-400"></i><div><strong class="text-red-300">Implikasi:</strong> Membatasi desain ketinggian jaring pengaman dan penempatan bangunan.</div></li>
                             </ul>
                         </div>
                         <div class="bg-red-900/20 p-8 rounded-lg border border-red-500">
                              <h3 class="text-2xl font-semibold text-slate-100 mb-4 flex items-center"><i class="fa-solid fa-tree text-3xl mr-4 text-red-400"></i>2. Pembangunan di Zona RTH</h3>
                             <p class="text-lg text-slate-300 leading-relaxed">Danau yang diusulkan untuk Driving Range merupakan zona Ruang Terbuka Hijau (RTH) aktif. Pembangunan struktur permanen di atasnya berpotensi melanggar prinsip konservasi.</p>
-                            <ul class="list-disc list-inside mt-4 space-y-2 text-lg text-slate-200">
-                                <li>Dasar hukum: UU No. 26/2007 & PP No. 26/2008.</li>
-                                <li>Kawasan SIER saat ini sudah berada di ambang batas minimum RTH.</li>
-                                <li><strong class="text-red-300">Implikasi:</strong> Memicu kewajiban <strong class="text-white">penyediaan kompensasi RTH</strong> (fisik/finansial) yang akan menambah biaya dan kompleksitas perizinan.</li>
+                            <ul class="list-none mt-4 space-y-2 text-lg text-slate-200 hanging-list">
+                                <li><i class="fa-solid fa-fw fa-check text-indigo-400"></i><div>Dasar hukum: UU No. 26/2007 & PP No. 26/2008.</div></li>
+                                <li><i class="fa-solid fa-fw fa-check text-indigo-400"></i><div>Kawasan SIER saat ini sudah berada di ambang batas minimum RTH.</div></li>
+                                <li><i class="fa-solid fa-fw fa-triangle-exclamation text-red-400"></i><div><strong class="text-red-300">Implikasi:</strong> Memicu kewajiban <strong class="text-white">penyediaan kompensasi RTH</strong> (fisik/finansial) yang akan menambah biaya dan kompleksitas perizinan.</div></li>
                             </ul>
                         </div>
                     </div>
@@ -549,11 +512,11 @@
                             </div>
                             <div class="bg-slate-800/50 p-6 rounded-lg">
                                 <h3 class="text-xl font-semibold text-slate-100 mb-3">Peran Baru (Staf Langsung)</h3>
-                                <ul class="list-disc list-inside text-lg text-slate-300">
-                                    <li>Supervisor Driving Range & Padel</li>
-                                    <li>Staf Resepsionis / Front Office</li>
-                                    <li>Marshal / Staf Lapangan</li>
-                                    <li>Staf Food & Beverage (Cafe)</li>
+                                <ul class="list-none space-y-2 text-lg text-slate-300 hanging-list">
+                                    <li><i class="fa-solid fa-fw fa-circle text-indigo-400 text-xs"></i><div>Supervisor Driving Range & Padel</div></li>
+                                    <li><i class="fa-solid fa-fw fa-circle text-indigo-400 text-xs"></i><div>Staf Resepsionis / Front Office</div></li>
+                                    <li><i class="fa-solid fa-fw fa-circle text-indigo-400 text-xs"></i><div>Marshal / Staf Lapangan</div></li>
+                                    <li><i class="fa-solid fa-fw fa-circle text-indigo-400 text-xs"></i><div>Staf Food & Beverage (Cafe)</div></li>
                                 </ul>
                             </div>
                             <div class="bg-slate-800/50 p-6 rounded-lg">

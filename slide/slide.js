@@ -1,23 +1,27 @@
 // slide.js 
 document.addEventListener('DOMContentLoaded', function () {
+    // --- ELEMENT SELECTORS ---
+    const presentationContainer = document.getElementById('presentation-container');
     const slides = document.querySelectorAll('.slide');
     const prevButton = document.getElementById('prev-slide');
     const nextButton = document.getElementById('next-slide');
     const slideCounter = document.getElementById('slide-counter');
+    const fullscreenButton = document.getElementById('fullscreen-btn');
     
+    // --- STATE VARIABLES ---
     let currentSlide = 0;
     const totalSlides = slides.length;
+
+    // --- CORE FUNCTIONS ---
 
     function formatSlideTitles() {
         const titles = document.querySelectorAll('.slide-title');
         titles.forEach(title => {
             const originalHTML = title.innerHTML;
-            if (originalHTML.includes(':')) {
+            if (originalHTML.includes(':') && !originalHTML.includes('<span')) {
                 const parts = originalHTML.split(':');
                 const prefix = parts[0];
-                const mainTitle = parts.slice(1).join(':').trim(); // Join back in case there are multiple colons
-                
-                // Reconstruct the title with new HTML structure
+                const mainTitle = parts.slice(1).join(':').trim();
                 title.innerHTML = `<span class="title-prefix">${prefix}</span>${mainTitle}`;
             }
         });
@@ -27,40 +31,59 @@ document.addEventListener('DOMContentLoaded', function () {
         const slideContent = slide.querySelector('.slide-content');
         if (!slideContent) return;
 
-        // Only run if content is overflowing.
         if (slideContent.scrollHeight <= slideContent.clientHeight) {
-            return;
+            return; // Exit if the slide already fits.
         }
 
-        const scalableText = slideContent.querySelectorAll('h2, h3, p, li, div.text-2xl, div.text-xl, div.text-lg, .bar-chart-label, .bar-chart-value, .text-slate-100, .text-slate-200, .text-slate-300');
-        const scalablePadding = slideContent.querySelectorAll('.bg-slate-800\\/50, .bar-chart-row');
+        const fontHierarchy = ['text-3xl', 'text-2xl', 'text-xl', 'text-lg', 'text-base', 'text-sm'];
+        const paddingHierarchy = ['p-8', 'p-6', 'p-4']; // Using Tailwind's padding classes
         
         let attempts = 0;
-        const maxAttempts = 40;
+        const maxAttempts = 20;
 
         while (slideContent.scrollHeight > slideContent.clientHeight && attempts < maxAttempts) {
-            scalableText.forEach(el => {
-                const currentSize = parseFloat(window.getComputedStyle(el).fontSize);
-                if (currentSize > 15) {
-                    el.style.fontSize = `${currentSize - 0.25}px`;
+            // Priority 1: Reduce font sizes class by class
+            let fontAdjusted = false;
+            for (let i = 0; i < fontHierarchy.length - 1; i++) {
+                const currentClass = fontHierarchy[i];
+                const smallerClass = fontHierarchy[i+1];
+                const elements = slideContent.querySelectorAll(`.${currentClass}`);
+                if (elements.length > 0) {
+                    elements.forEach(el => {
+                        el.classList.remove(currentClass);
+                        el.classList.add(smallerClass);
+                    });
+                    fontAdjusted = true;
+                    break; // Adjust one level at a time and re-check
                 }
-            });
-            scalablePadding.forEach(el => {
-                const style = window.getComputedStyle(el);
-                const currentPaddingTop = parseFloat(style.paddingTop);
-                const currentPaddingBottom = parseFloat(style.paddingBottom);
-                if (currentPaddingTop > 10) { el.style.paddingTop = `${currentPaddingTop - 0.5}px`; }
-                if (currentPaddingBottom > 10) { el.style.paddingBottom = `${currentPaddingBottom - 0.5}px`; }
-            });
+            }
+
+            // Priority 2: Reduce padding if font adjustment is not enough or not possible
+            if (!fontAdjusted) {
+                let paddingAdjusted = false;
+                for (let i = 0; i < paddingHierarchy.length - 1; i++) {
+                     const currentClass = paddingHierarchy[i];
+                     const smallerClass = paddingHierarchy[i+1];
+                     const elements = slideContent.querySelectorAll(`.${currentClass}`);
+                     if (elements.length > 0) {
+                        elements.forEach(el => {
+                           el.classList.remove(currentClass);
+                           el.classList.add(smallerClass);
+                        });
+                        paddingAdjusted = true;
+                        break;
+                     }
+                }
+                // If no adjustments can be made, break the loop to prevent freezing
+                if (!paddingAdjusted) break;
+            }
             attempts++;
         }
     }
 
     function showSlide(index) {
         slides.forEach(slide => slide.classList.remove('active'));
-        if (slides[index]) {
-            slides[index].classList.add('active');
-        }
+        if (slides[index]) slides[index].classList.add('active');
         slideCounter.textContent = `${index + 1} / ${totalSlides}`;
         updateNavButtons();
     }
@@ -86,26 +109,43 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- INITIALIZATION ---
+    /**
+     * Toggles fullscreen mode for the presentation container.
+     */
+    function toggleFullScreen() {
+        if (!document.fullscreenElement) {
+            presentationContainer.requestFullscreen().catch(err => {
+                alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    }
     
-    // 1. Format all titles first.
+    // --- INITIALIZATION & EVENT LISTENERS ---
+    
+    // 1. Format titles first.
     formatSlideTitles();
 
-    // 2. Then, run the smart auto-fit logic on the new layouts.
-    slides.forEach((slide) => {
-        setTimeout(() => {
-            adjustContentToFit(slide);
-        }, 50); 
+    // 2. Run smart auto-fit logic on all slides after a brief render delay.
+    slides.forEach(slide => {
+        setTimeout(() => adjustContentToFit(slide), 50); 
     });
 
-    // Add Event Listeners
+    // 3. Set up event listeners.
     nextButton.addEventListener('click', nextSlide);
     prevButton.addEventListener('click', prevSlide);
+    fullscreenButton.addEventListener('click', toggleFullScreen);
+    presentationContainer.addEventListener('dblclick', toggleFullScreen); // Double-click for convenience
     document.addEventListener('keydown', function (e) {
-        if (e.key === 'ArrowRight') nextSlide();
+        if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
         else if (e.key === 'ArrowLeft') prevSlide();
+        else if (e.key === 'f' || e.key === 'F11') {
+            e.preventDefault();
+            toggleFullScreen();
+        }
     });
 
-    // Show the first slide
+    // 4. Show the first slide.
     showSlide(currentSlide);
 });
