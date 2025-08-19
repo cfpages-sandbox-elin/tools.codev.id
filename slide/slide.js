@@ -1,4 +1,4 @@
-// slide.js 
+// slide.js auto fullscreen
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
