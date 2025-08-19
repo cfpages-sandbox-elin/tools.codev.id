@@ -8,66 +8,48 @@ document.addEventListener('DOMContentLoaded', function () {
     const totalSlides = slides.length;
 
     /**
-     * Intelligently adjusts content ONLY if an overlap is detected between the header and the main content.
-     * Slides that already fit perfectly are ignored.
+     * Intelligently adjusts content ONLY if vertical overflow is detected within the main content area.
+     * Slides that already fit are not modified.
      * @param {HTMLElement} slide - The slide element to check and potentially adjust.
      */
     function adjustContentToFit(slide) {
-        const slideHeader = slide.querySelector('.slide-header');
         const slideContent = slide.querySelector('.slide-content');
-        
-        if (!slideHeader || !slideContent) {
-            return; // Exit if the necessary elements aren't on the slide.
+        if (!slideContent) return; // Exit if no content area
+
+        // --- THE NEW, MORE RELIABLE CHECK ---
+        // Only run the adjustment logic if the content is actually overflowing.
+        if (slideContent.scrollHeight <= slideContent.clientHeight) {
+            // console.log(`Slide ${slide.id} fits perfectly. No action taken.`);
+            return; // EXIT. This slide is fine.
         }
 
-        const buffer = 20; // The minimum desired pixel gap between header and content.
-        
-        // --- The CRITICAL CHECK ---
-        // First, check if there is an actual overlap.
-        // If the bottom of the header is safely above the top of the content, the slide is fine.
-        if ((slideHeader.offsetTop + slideHeader.offsetHeight + buffer) <= slideContent.offsetTop) {
-            // console.log(`Slide ${slide.id} is OK. No adjustments needed.`);
-            return; // EXIT THE FUNCTION. Do not touch this slide.
-        }
+        // If we reach here, the slide has overflow. Now we fix it.
+        // console.warn(`Slide ${slide.id} has overflow. Applying adjustments...`);
 
-        // If the code reaches here, it means an overlap was detected.
-        // Now, we proceed with the iterative adjustments.
-        // console.log(`Slide ${slide.id} has an overlap. Starting adjustments...`);
-
-        const slideTitle = slide.querySelector('.slide-title');
-        const scalableContentText = slideContent.querySelectorAll('h2, h3, p, li, div.text-2xl, div.text-xl, div.text-lg, .bar-chart-label, .bar-chart-value');
-        const scalableContentPadding = slideContent.querySelectorAll('.bg-slate-800\\/50, .bar-chart-row');
+        const scalableText = slideContent.querySelectorAll('h2, h3, p, li, div.text-2xl, div.text-xl, div.text-lg, .bar-chart-label, .bar-chart-value, .text-slate-100, .text-slate-200, .text-slate-300');
+        const scalablePadding = slideContent.querySelectorAll('.bg-slate-800\\/50, .bar-chart-row');
 
         let attempts = 0;
-        const maxAttempts = 30;
+        const maxAttempts = 40; // Allow for more gradual adjustments
 
-        // Loop to fix the detected overlap.
-        while ((slideHeader.offsetTop + slideHeader.offsetHeight + buffer) > slideContent.offsetTop && attempts < maxAttempts) {
+        while (slideContent.scrollHeight > slideContent.clientHeight && attempts < maxAttempts) {
             
-            // First priority: reduce padding inside content boxes.
-            scalableContentPadding.forEach(el => {
+            // Make smaller, more gradual adjustments
+            scalableText.forEach(el => {
+                const currentSize = parseFloat(window.getComputedStyle(el).fontSize);
+                if (currentSize > 15) { // Minimum font size for readability
+                    el.style.fontSize = `${currentSize - 0.25}px`;
+                }
+            });
+            
+            scalablePadding.forEach(el => {
                 const style = window.getComputedStyle(el);
                 const currentPaddingTop = parseFloat(style.paddingTop);
-                if (currentPaddingTop > 10) { el.style.paddingTop = `${currentPaddingTop - 1}px`; }
                 const currentPaddingBottom = parseFloat(style.paddingBottom);
-                if (currentPaddingBottom > 10) { el.style.paddingBottom = `${currentPaddingBottom - 1}px`; }
+                if (currentPaddingTop > 10) { el.style.paddingTop = `${currentPaddingTop - 0.5}px`; }
+                if (currentPaddingBottom > 10) { el.style.paddingBottom = `${currentPaddingBottom - 0.5}px`; }
             });
 
-            // Second priority: reduce content text font size.
-            scalableContentText.forEach(el => {
-                const currentSize = parseFloat(window.getComputedStyle(el).fontSize);
-                if (currentSize > 14) { // Minimum font size for content
-                    el.style.fontSize = `${currentSize - 0.4}px`;
-                }
-            });
-            
-            // Last resort: reduce the main title font size.
-            if (slideTitle) {
-                const currentTitleSize = parseFloat(window.getComputedStyle(slideTitle).fontSize);
-                if (currentTitleSize > 24) { // Minimum font size for title
-                    slideTitle.style.fontSize = `${currentTitleSize - 0.5}px`;
-                }
-            }
             attempts++;
         }
     }
@@ -103,14 +85,12 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // --- INITIALIZATION ---
-
-    // Apply the smart auto-fitting logic to every slide upon loading.
     console.log("Running smart auto-fit for all slides...");
-    slides.forEach(slide => {
-        // A minimal delay can help ensure the browser has calculated layouts before we measure them.
+    slides.forEach((slide) => {
+        // Use a minimal timeout to ensure the browser has rendered the slide's initial state
         setTimeout(() => {
             adjustContentToFit(slide);
-        }, 10);
+        }, 50); 
     });
     console.log("Auto-fit complete.");
 
