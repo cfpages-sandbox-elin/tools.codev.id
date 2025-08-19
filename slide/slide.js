@@ -13,6 +13,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const totalSlides = slides.length;
 
     // --- CORE FUNCTIONS ---
+    function autoAssignSlideIds() {
+        slides.forEach((slide, index) => {
+            // The index starts at 0, so we add 1 for human-readable numbering (1, 2, 3...)
+            slide.id = `slide${index + 1}`;
+        });
+        // Optional: Log to console to confirm it worked
+        console.log(`Successfully assigned IDs to ${slides.length} slides.`);
+    }
 
     function formatSlideTitles() {
         const titles = document.querySelectorAll('.slide-title');
@@ -129,15 +137,13 @@ document.addEventListener('DOMContentLoaded', function () {
     
     // --- INITIALIZATION & EVENT LISTENERS ---
     
-    // 1. Format titles first.
+    autoAssignSlideIds();
     formatSlideTitles();
 
-    // 2. Run smart auto-fit logic on all slides after a brief render delay.
     slides.forEach(slide => {
         setTimeout(() => adjustContentToFit(slide), 50); 
     });
 
-    // 3. Set up event listeners.
     nextButton.addEventListener('click', nextSlide);
     prevButton.addEventListener('click', prevSlide);
     fullscreenButton.addEventListener('click', toggleFullScreen);
