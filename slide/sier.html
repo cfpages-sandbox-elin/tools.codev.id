@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feasibility Study - SIER Driving Range & Padel</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #0a192f; /* Dark Navy Blue */
+        }
+        #presentation-wrapper {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+        #presentation-container {
+            aspect-ratio: 16 / 9;
+            width: 100%;
+            max-width: 1422px; /* For 16:9 on a typical screen */
+            height: auto;
+            max-height: 800px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            border-radius: 12px;
+        }
+        .slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.6s ease-in-out, transform 0.6s ease-in-out;
+            transform: scale(0.98);
+            background-color: #0a192f;
+        }
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1);
+            z-index: 1;
+        }
+        .nav-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 44px;
+            height: 44px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #cbd5e1;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.3s;
+            backdrop-filter: blur(5px);
+        }
+        .nav-arrow:hover {
+            background-color: rgba(99, 102, 241, 0.8);
+            color: white;
+            transform: translateY(-50%) scale(1.1);
+        }
+        #prev-slide { left: 20px; }
+        #next-slide { right: 20px; }
+
+        #slide-counter {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.4);
+            color: #e2e8f0;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 10;
+            user-select: none;
+        }
+        .slide-header {
+            position: absolute;
+            top: 60px;
+            left: 80px;
+            right: 80px;
+        }
+        .slide-title {
+            font-size: 2.5rem; /* 40px */
+            font-weight: 700;
+            color: #f8fafc;
+            position: relative;
+            padding-bottom: 1rem;
+        }
+        .slide-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 80px;
+            height: 4px;
+            background-color: #6366f1; /* Indigo-500 */
+        }
+        .slide-content {
+            padding: 140px 80px 80px 80px;
+            height: 100%;
+        }
+        .highlight-blue { color: #818cf8; /* Indigo-400 */ }
+        .highlight-green { color: #4ade80; /* Green-400 */ }
+        .highlight-red { color: #f87171; /* Red-400 */ }
+    </style>
+</head>
+<body>
+    <div id="presentation-wrapper">
+        <div id="presentation-container">
+            <!-- Navigation -->
+            <div class="nav-arrow" id="prev-slide"><i class="fas fa-chevron-left"></i></div>
+            <div class="nav-arrow" id="next-slide"><i class="fas fa-chevron-right"></i></div>
+            <div id="slide-counter">1 / 28</div>
+
+            <!-- SLIDES START HERE -->
+
+            <!-- Slide 1: Judul -->
+            <section id="slide1" class="slide active">
+                <div class="h-full w-full flex flex-col justify-center items-center text-center bg-cover bg-center" style="background-image: linear-gradient(rgba(10, 25, 47, 0.8), rgba(10, 25, 47, 0.95)), url('https://i.imgur.com/8QpL5sH.jpeg');">
+                    <img src="https://i.imgur.com/uFL5Gj7.png" alt="SIER Logo" class="w-48 h-48 mb-6">
+                    <h1 class="text-5xl font-bold text-white tracking-tight leading-tight">FEASIBILITY STUDY & BASIC DESIGN</h1>
+                    <h2 class="text-3xl font-light text-slate-300 mt-4">Pembangunan Fasilitas Olahraga Driving Range & Paddle Tenis<br/>Beserta Meeting Point di Kawasan Industri</h2>
+                    <div class="mt-12 border-t border-slate-700 pt-6">
+                        <p class="text-slate-400 text-lg">Diajukan kepada:</p>
+                        <p class="text-slate-200 text-2xl font-semibold mt-1">PT. SURABAYA INDUSTRIAL ESTATE RUNGKUT (SIER)</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 2: Ringkasan Eksekutif -->
+            <section id="slide2" class="slide">
+                <div class="slide-header"><h1 class="slide-title">Ringkasan Eksekutif</h1></div>
+                <div class="slide-content flex items-center">
+                    <div class="grid grid-cols-3 gap-8 w-full">
+                        <div class="bg-slate-800/50 p-6 rounded-lg border-l-4 border-indigo-500">
+                            <h3 class="text-2xl font-semibold text-slate-100 mb-3">Tujuan Strategis</h3>
+                            <p class="text-slate-300 text-lg leading-relaxed">Transformasi SIER menjadi ekosistem industri modern yang terintegrasi, meningkatkan daya tarik kawasan dan kesejahteraan para tenant melalui penyediaan fasilitas penunjang gaya hidup.</p>
+                        </div>
+                        <div class="bg-slate-800/50 p-6 rounded-lg border-l-4 border-indigo-500">
+                            <h3 class="text-2xl font-semibold text-slate-100 mb-3">Fasilitas yang Diusulkan</h3>
+                            <p class="text-slate-300 text-lg leading-relaxed">Pembangunan fasilitas olahraga premium: sebuah <strong class="highlight-blue">Driving Range</strong>, <strong class="highlight-blue">4 Lapangan Padel</strong>, dan <strong class="highlight-blue">Meeting Point</strong> multifungsi sebagai pusat interaksi sosial dan bisnis.</p>
+                        </div>
+                        <div class="bg-slate-800/50 p-6 rounded-lg border-l-4 border-green-500">
+                            <h3 class="text-2xl font-semibold text-slate-100 mb-3">Kesimpulan Akhir</h3>
+                            <p class="text-slate-300 text-lg leading-relaxed">Studi menyimpulkan bahwa <strong class="highlight-green">proyek Padel sangat layak</strong> sebagai investasi premium. Sebaliknya, <strong class="highlight-red">proyek Driving Range tidak layak secara finansial</strong> dalam konfigurasi saat ini.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 3: Agenda Presentasi -->
+            <section id="slide3" class="slide">
+                 <div class="slide-header"><h1 class="slide-title">Agenda Presentasi</h1></div>
+                <div class="slide-content flex items-center justify-center">
+                    <div class="w-full max-w-5xl grid grid-cols-2 gap-x-12 gap-y-8">
+                        <div class="flex items-center text-2xl"><div class="flex items-center justify-center text-indigo-400 text-3xl w-16 mr-4"><i class="fa-solid fa-book-open"></i></div><span class="text-slate-200">1. Pendahuluan & Tujuan Proyek</span></div>
+                        <div class="flex items-center text-2xl"><div class="flex items-center justify-center text-indigo-400 text-3xl w-16 mr-4"><i class="fa-solid fa-magnifying-glass-chart"></i></div><span class="text-slate-200">2. Analisis Aspek Bisnis</span></div>
+                        <div class="flex items-center text-2xl"><div class="flex items-center justify-center text-indigo-400 text-3xl w-16 mr-4"><i class="fa-solid fa-hard-hat"></i></div><span class="text-slate-200">3. Analisis Aspek Teknis</span></div>
+                        <div class="flex items-center text-2xl"><div class="flex items-center justify-center text-indigo-400 text-3xl w-16 mr-4"><i class="fa-solid fa-leaf"></i></div><span class="text-slate-200">4. Aspek Legal & Lingkungan</span></div>
+                        <div class="flex items-center text-2xl"><div class="flex items-center justify-center text-indigo-400 text-3xl w-16 mr-4"><i class="fa-solid fa-sack-dollar"></i></div><span class="text-slate-200">5. Analisis Finansial Mendalam</span></div>
+                        <div class="flex items-center text-2xl"><div class="flex items-center justify-center text-indigo-400 text-3xl w-16 mr-4"><i class="fa-solid fa-shield-halved"></i></div><span class="text-slate-200">6. Analisis Risiko</span></div>
+                        <div class="flex items-center text-2xl col-span-2 justify-center text-3xl"><div class="flex items-center justify-center text-indigo-400 text-4xl w-16 mr-4"><i class="fa-solid fa-bullseye"></i></div><span class="text-slate-100 font-semibold">7. Kesimpulan & Rekomendasi Strategis</span></div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 4: Latar Belakang & Konteks Strategis -->
+            <section id="slide4" class="slide">
+                <div class="slide-header"><h1 class="slide-title">Latar Belakang & Konteks Strategis</h1></div>
+                <div class="slide-content flex items-center">
+                    <div class="max-w-4xl">
+                        <p class="text-2xl text-slate-300 leading-relaxed">Seiring berkembangnya kebutuhan industri dan tren gaya hidup, PT SIER berkomitmen untuk terus ber-evolusi. Proyek ini merupakan inisiatif strategis untuk mentransformasi Kawasan Industri SIER dari sekadar pusat bisnis menjadi <strong class="highlight-blue">ekosistem terpadu yang modern dan produktif</strong>.</p>
+                        <p class="text-2xl text-slate-300 mt-8 leading-relaxed">Tujuannya adalah memperkuat daya tarik kawasan, meningkatkan kualitas hidup para tenant, dan menciptakan sumber pendapatan baru yang berkelanjutan.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 5: Tujuan & Ruang Lingkup Proyek -->
+            <section id="slide5" class="slide">
+                <div class="slide-header"><h1 class="slide-title">Tujuan & Ruang Lingkup Proyek</h1></div>
+                <div class="slide-content flex items-center">
+                    <div class="grid grid-cols-2 gap-10 w-full">
+                        <div class="bg-slate-800/50 p-8 rounded-lg">
+                            <h3 class="text-2xl font-semibold text-slate-100 mb-4 flex items-center"><i class="fa-solid fa-bullseye-arrow text-3xl mr-4 text-indigo-400"></i>Tujuan Studi</h3>
+                            <ul class="list-disc list-inside space-y-3 text-lg text-slate-300">
+                                <li>Menilai kelayakan proyek secara <strong class="text-white">multi-aspek</strong>: bisnis, teknis, legal, dan finansial.</li>
+                                <li>Menyediakan <strong class="text-white">dasar pertimbangan komprehensif</strong> bagi manajemen untuk pengambilan keputusan strategis.</li>
+                                <li>Memberikan rekomendasi yang <strong class="text-white">aplikatif dan berkelanjutan</strong> untuk implementasi.</li>
+                            </ul>
+                        </div>
+                        <div class="bg-slate-800/50 p-8 rounded-lg">
+                            <h3 class="text-2xl font-semibold text-slate-100 mb-4 flex items-center"><i class="fa-solid fa-compass-drafting text-3xl mr-4 text-indigo-400"></i>Ruang Lingkup</h3>
+                             <ul class="list-disc list-inside space-y-3 text-lg text-slate-300">
+                                <li>Penyusunan <strong class="text-white">Studi Kelayakan (Feasibility Study)</strong> yang mendalam.</li>
+                                <li>Penyusunan <strong class="text-white">Desain Dasar (Basic Design)</strong> untuk fasilitas Driving Range, Padel, dan Meeting Point.</li>
+                                <li>Analisis tiga unit bisnis yang direncanakan sebagai satu <strong class="text-white">kawasan terpadu</strong>.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- ... All slides are now provided in Bahasa Indonesia based on the plan ... -->
+
+            <section id="slide6" class="slide">
+                <div class="slide-header"><h1 class="slide-title">Aspek Bisnis: Area Jangkauan Pasar (Market Catchment)</h1></div>
+                <div class="slide-content flex items-center gap-10">
+                    <div class="w-1/2">
+                        <h2 class="text-3xl font-semibold text-slate-100 mb-4">Konsep Pasar Berbasis Radius</h2>
+                        <p class="text-xl text-slate-300 leading-relaxed">Analisis pasar dibagi menjadi dua lingkup utama berdasarkan kedekatan geografis dengan lokasi proyek, menunjukkan basis populasi yang kuat dan terkonsentrasi.</p>
+                        <div class="mt-8 space-y-4">
+                            <div class="bg-indigo-900/40 p-4 rounded-md">
+                                <p class="text-lg font-semibold text-indigo-300">Pasar Primer (Ring 1): &lt; 3 km</p>
+                                <p class="text-2xl font-bold text-white">237.230 Jiwa (52%)</p>
+                            </div>
+                            <div class="bg-slate-700/40 p-4 rounded-md">
+                                <p class="text-lg font-semibold text-slate-400">Pasar Sekunder (Ring 2): 3 - 5 km</p>
+                                <p class="text-2xl font-bold text-white">216.143 Jiwa (48%)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="w-1/2">
+                        <!-- Visualisasi Pie Chart Sederhana -->
+                        <div class="relative w-80 h-80 mx-auto">
+                           <div class="absolute inset-0 rounded-full" style="background-image: conic-gradient(#4338ca 0% 52%, #475569 52% 100%);"></div>
+                           <div class="absolute inset-8 bg-slate-900 rounded-full flex justify-center items-center text-center">
+                               <div>
+                                   <p class="text-slate-300 text-lg">Total Populasi</p>
+                                   <p class="text-white font-bold text-4xl">453.373</p>
+                               </div>
+                           </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="slide7" class="slide">
+                <div class="slide-header"><h1 class="slide-title">Aspek Bisnis: Kekuatan Demografi</h1></div>
+                <div class="slide-content flex items-center gap-10">
+                    <div class="w-2/3">
+                         <h2 class="text-3xl font-semibold text-slate-100 mb-4">Dominasi Usia Produktif</h2>
+                        <p class="text-xl text-slate-300 leading-relaxed mb-6">Struktur populasi sangat mendukung, dengan konsentrasi pada kelompok usia 25-39 tahun, yang merupakan target pasar ideal untuk olahraga modern seperti Padel dan Driving Range.</p>
+                        <!-- Visualisasi Bar Chart Sederhana -->
+                        <div class="space-y-2">
+                            <div class="flex items-center"><div class="w-24 text-right mr-4 text-slate-400">25-39 Thn</div><div class="h-10 bg-indigo-500 rounded" style="width: 80%;"></div><div class="ml-4 text-white font-semibold">140.181</div></div>
+                            <div class="flex items-center"><div class="w-24 text-right mr-4 text-slate-400">40-54 Thn</div><div class="h-10 bg-indigo-500 rounded" style="width: 49%;"></div><div class="ml-4 text-white font-semibold">86.137</div></div>
+                            <div class="flex items-center"><div class="w-24 text-right mr-4 text-slate-400">15-24 Thn</div><div class="h-10 bg-indigo-500 rounded" style="width: 39%;"></div><div class="ml-4 text-white font-semibold">69.109</div></div>
+                        </div>
+                    </div>
+                    <div class="w-1/3">
+                        <div class="bg-slate-800/50 p-8 rounded-lg text-center">
+                            <h3 class="text-xl font-semibold text-slate-200 mb-2">Rasio Ketergantungan</h3>
+                            <p class="text-6xl font-bold text-green-400">41.12</p>
+                            <p class="text-lg text-slate-300 mt-3 leading-relaxed">Sangat rendah, mengindikasikan <strong class="text-white">daya beli dan kemandirian finansial masyarakat yang kuat</strong> untuk mendukung aktivitas rekreasi.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="slide8" class="slide">
+                <div class="slide-header"><h1 class="slide-title">Aspek Bisnis: Potensi Pasar Berdasarkan Pendapatan</h1></div>
+                <div class="slide-content flex flex-col justify-center">
+                    <p class="text-xl text-center text-slate-300 mb-8">Kecamatan Waru dan Rungkut menjadi kantong pasar terbesar, dengan total lebih dari 180.000 jiwa pada segmen pendapatan menengah ke atas.</p>
+                    <div class="w-full max-w-6xl mx-auto space-y-4">
+                        <div class="flex items-center gap-4 p-4 bg-slate-800/50 rounded-lg">
+                            <div class="w-48 text-right text-2xl font-semibold text-slate-200">Waru (Sidoarjo)</div>
+                            <div class="flex-1 bg-slate-700 rounded-full h-10"><div class="bg-indigo-500 h-10 rounded-full" style="width: 100%;"></div></div>
+                            <div class="w-48 text-left text-2xl font-bold text-white">114.271 Jiwa</div>
+                        </div>
+                        <div class="flex items-center gap-4 p-4 bg-slate-800/50 rounded-lg">
+                            <div class="w-48 text-right text-2xl font-semibold text-slate-200">Rungkut</div>
+                            <div class="flex-1 bg-slate-700 rounded-full h-10"><div class="bg-indigo-500 h-10 rounded-full" style="width: 59%;"></div></div>
+                            <div class="w-48 text-left text-2xl font-bold text-white">67.340 Jiwa</div>
+                        </div>
+                         <div class="flex items-center gap-4 p-4 bg-slate-800/50 rounded-lg">
+                            <div class="w-48 text-right text-2xl font-semibold text-slate-200">Tenggilis Mejoyo</div>
+                            <div class="flex-1 bg-slate-700 rounded-full h-10"><div class="bg-indigo-500 h-10 rounded-full" style="width: 32%;"></div></div>
+                             <div class="w-48 text-left text-2xl font-bold text-white">36.691 Jiwa</div>
+                        </div>
+                         <div class="flex items-center gap-4 p-4 bg-slate-800/50 rounded-lg">
+                            <div class="w-48 text-right text-2xl font-semibold text-slate-200">Gunung Anyar</div>
+                            <div class="flex-1 bg-slate-700 rounded-full h-10"><div class="bg-indigo-500 h-10 rounded-full" style="width: 30%;"></div></div>
+                             <div class="w-48 text-left text-2xl font-bold text-white">33.848 Jiwa</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="slide9" class="slide">
+                <div class="slide-header"><h1 class="slide-title">Aspek Bisnis: Analisis Kompetitor - Driving Range</h1></div>
+                <div class="slide-content flex items-center">
+                    <div class="w-full grid grid-cols-2 gap-10">
+                        <div>
+                            <h3 class="text-3xl font-semibold text-slate-100 mb-4">Lanskap Persaingan</h3>
+                            <p class="text-xl text-slate-300 leading-relaxed">Pasar terpolarisasi antara segmen <strong class="text-white">Mewah (Premium)</strong> dan <strong class="text-white">Terjangkau (Fungsional)</strong>. Kompetitor premium seperti Bukit Darmo dan Graha Family menawarkan eksklusivitas, namun seringkali lemah dalam aspek operasional dasar.</p>
+                        </div>
+                        <div class="bg-slate-800/50 p-8 rounded-lg">
+                             <h3 class="text-2xl font-semibold text-slate-100 mb-4 flex items-center"><i class="fa-solid fa-key text-3xl mr-4 text-indigo-400"></i>Peluang Pasar Kunci</h3>
+                             <p class="text-xl text-slate-200 leading-relaxed">Terdapat celah pasar yang signifikan untuk posisi <strong class="highlight-blue text-2xl">"Premium Value"</strong>: menawarkan fasilitas modern dan layanan superior dengan harga yang rasional, mengatasi kelemahan operasional (kebersihan, layanan staf) dari pemain yang ada.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="slide10" class="slide">
+                 <div class="slide-header"><h1 class="slide-title">Aspek Bisnis: Analisis Kompetitor - Padel</h1></div>
+                <div class="slide-content flex items-center">
+                    <div class="w-full grid grid-cols-2 gap-10">
+                        <div>
+                            <h3 class="text-3xl font-semibold text-slate-100 mb-4">"Pain Points" Pasar Saat Ini</h3>
+                            <p class="text-xl text-slate-300 leading-relaxed">Meskipun rating Google para kompetitor tinggi, analisis ulasan mendalam mengungkap keluhan konsisten yang menjadi celah strategis bagi pendatang baru.</p>
+                             <ul class="list-none space-y-4 mt-6 text-xl text-slate-200">
+                                <li class="flex items-start"><i class="fa-solid fa-smoking-ban text-2xl mr-4 text-red-400 mt-1"></i><div><strong class="text-white">Masalah Perokok:</strong> Keluhan terbesar di banyak venue, mengganggu kenyamanan keluarga dan pemain non-perokok.</div></li>
+                                <li class="flex items-start"><i class="fa-solid fa-mobile-screen-button text-2xl mr-4 text-red-400 mt-1"></i><div><strong class="text-white">Sistem Booking Error:</strong> Aplikasi atau proses reservasi yang tidak stabil seringkali menjadi sumber frustrasi pelanggan.</div></li>
+                                <li class="flex items-start"><i class="fa-solid fa-broom text-2xl mr-4 text-red-400 mt-1"></i><div><strong class="text-white">Fasilitas Pendukung Standar:</strong> Kualitas toilet, shower, dan lounge yang tidak sebanding dengan harga sewa lapangan.</div></li>
+                            </ul>
+                        </div>
+                        <div class="bg-slate-800/50 p-8 rounded-lg">
+                             <h3 class="text-2xl font-semibold text-slate-100 mb-4 flex items-center"><i class="fa-solid fa-key text-3xl mr-4 text-indigo-400"></i>Peluang Strategis</h3>
+                             <p class="text-xl text-slate-200 leading-relaxed">Menciptakan sebuah <strong class="highlight-blue text-2xl">"Refined Social Club"</strong> dengan kebijakan <strong class="text-white">100% bebas asap rokok</strong>, sistem booking digital yang andal, dan fasilitas pendukung berkualitas premium untuk mendominasi pasar.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="slide11" class="slide">
+                <div class="slide-header"><h1 class="slide-title">Aspek Bisnis: Posisi Strategis di Pasar</h1></div>
+                <div class="slide-content flex flex-col justify-center items-center">
+                    <div class="text-center max-w-5xl mb-10">
+                        <h2 class="text-3xl font-semibold text-slate-100">Menjawab Kebutuhan Pasar yang Belum Terpenuhi</h2>
+                        <p class="text-xl text-slate-300 mt-2">Dengan menganalisis celah pasar, proyek ini diposisikan secara strategis untuk menjadi pemimpin di segmennya, bukan sekadar menjadi pengikut.</p>
+                    </div>
+                    <div class="w-full grid grid-cols-2 gap-8">
+                        <div class="bg-slate-800/50 p-8 rounded-lg border-t-4 border-indigo-500">
+                            <h3 class="text-2xl font-bold text-indigo-300 mb-3">Driving Range</h3>
+                            <p class="text-4xl font-semibold text-white">"Premium Value"</p>
+                            <p class="text-lg text-slate-300 mt-4">Menawarkan pengalaman setara fasilitas mewah (teknologi modern, kebersihan superior, layanan prima) dengan struktur harga yang tetap rasional dan kompetitif.</p>
+                        </div>
+                        <div class="bg-slate-800/50 p-8 rounded-lg border-t-4 border-indigo-500">
+                             <h3 class="text-2xl font-bold text-indigo-300 mb-3">Padel</h3>
+                            <p class="text-4xl font-semibold text-white">"Refined Social Club"</p>
+                            <p class="text-lg text-slate-300 mt-4">Menjadi destinasi sosial premium yang sehat dan nyaman (100% bebas rokok), dengan fasilitas lengkap dan pengalaman digital tanpa hambatan.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- All other slides here -->
+            <section id="slide12" class="slide">
+                <div class="slide-header"><h1 class="slide-title">Aspek Teknis: Kondisi Eksisting & Master Plan</h1></div>
+                <div class="slide-content flex items-center gap-8">
+                    <div class="w-1/2">
+                        <h3 class="text-2xl font-semibold text-slate-100 mb-3">Kondisi Awal (Brownfield)</h3>
+                        <p class="text-lg text-slate-300 mb-4">Proyek dikembangkan di area yang telah memiliki sejumlah aset, termasuk danau retensi, lapangan futsal, gedung koperasi, dan gedung arsip. Ini memberikan peluang untuk renovasi sekaligus tantangan pembongkaran.</p>
+                        <img src="https://i.imgur.com/kYqP96D.png" alt="Site Plan Existing" class="rounded-lg shadow-lg">
+                    </div>
+                    <div class="w-1/2">
+                        <h3 class="text-2xl font-semibold text-slate-100 mb-3">Rencana Zonasi (Master Plan)</h3>
+                        <p class="text-lg text-slate-300 mb-4">Tata letak strategis dirancang untuk menciptakan sinergi dan alur pengunjung yang logis antar fasilitas.</p>
+                        <ul class="list-none space-y-2 text-lg text-slate-200">
+                            <li><strong class="text-indigo-300 w-28 inline-block">Zona E:</strong> Driving Range (di atas danau)</li>
+                            <li><strong class="text-indigo-300 w-28 inline-block">Zona A & C:</strong> Lapangan Padel</li>
+                            <li><strong class="text-indigo-300 w-28 inline-block">Zona F:</strong> Meeting Point</li>
+                        </ul>
+                         <img src="https://i.imgur.com/6XyJb7a.png" alt="Zoning Plan" class="rounded-lg shadow-lg mt-4">
+                    </div>
+                </div>
+            </section>
+
+             <section id="slide13" class="slide">
+                <div class="slide-header"><h1 class="slide-title">Aspek Teknis: Driving Range - Desain & Tantangan Utama</h1></div>
+                <div class="slide-content flex items-center gap-10">
+                    <div class="w-1/2">
+                        <h3 class="text-2xl font-semibold text-slate-100 mb-3">Konsep Desain</h3>
+                        <p class="text-lg text-slate-300">Bangunan <strong class="text-white">Hitting Bay</strong> sepanjang 85 meter di tepi selatan danau, dilengkapi fasilitas pendukung (toilet, pro shop, kafe). Dikelilingi oleh struktur <strong class="text-white">Pagar Jaring (Safety Netting)</strong> yang tinggi di atas danau.</p>
+                        <img src="https://i.imgur.com/gHh9Y2Q.png" alt="Hitting Bay Design" class="rounded-lg shadow-lg mt-4">
+                    </div>
+                    <div class="w-1/2 bg-red-900/20 p-8 rounded-lg border border-red-500">
+                        <h3 class="text-3xl font-bold text-red-300 mb-4">Tantangan Teknis Kritis</h3>
+                        <p class="text-xl text-slate-200 leading-relaxed">Tantangan paling fundamental adalah <strong class="text-white">pemasangan pondasi tiang pancang di tengah danau</strong>. Kondisi tanah tepi danau yang lunak dan jenuh air membuat mobilisasi alat berat seperti crane secara langsung dari darat menjadi sangat berisiko dan tidak memungkinkan.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="slide14" class="slide">
+                <div class="slide-header"><h1 class="slide-title">Aspek Teknis: Driving Range - Solusi Konstruksi</h1></div>
+                <div class="slide-content flex items-center">
+                    <div class="w-full text-center">
+                        <h2 class="text-3xl font-semibold text-slate-100 mb-4">Metodologi Konstruksi di Atas Air</h2>
+                        <p class="text-xl text-slate-300 max-w-5xl mx-auto mb-10">Untuk mengatasi kendala aksesibilitas dan stabilitas tanah, diusulkan metode konstruksi bertahap yang terstruktur dan aman menggunakan platform kerja sementara.</p>
+                        <div class="grid grid-cols-5 gap-4 text-left">
+                            <div class="bg-slate-800 p-4 rounded-lg"><strong>Tahap 1:</strong> Bangun Jembatan Kerja Sementara (Trestle) dari tepi danau.</div>
+                            <div class="bg-slate-800 p-4 rounded-lg"><strong>Tahap 2:</strong> Mobilisasi alat berat (crane, mesin bor) di atas Trestle untuk pekerjaan pondasi.</div>
+                            <div class="bg-slate-800 p-4 rounded-lg"><strong>Tahap 3:</strong> Pemasangan Tiang Pancang Baja (Steel Pipe Pile) dan Pile Cap.</div>
+                            <div class="bg-slate-800 p-4 rounded-lg"><strong>Tahap 4:</strong> Pemasangan Struktur Atas (Rangka Baja, Lantai, Atap).</div>
+                            <div class="bg-slate-800 p-4 rounded-lg"><strong>Tahap 5:</strong> Pemasangan Jaring dan demobilisasi Trestle.</div>
+                        </div>
+                         <p class="text-lg text-indigo-300 mt-8">Solusi ini secara efektif menghilangkan risiko yang terkait dengan kondisi tanah tepi danau yang tidak stabil.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="slide15" class="slide">
+                <div class="slide-header"><h1 class="slide-title">Aspek Teknis: Padel & Meeting Point</h1></div>
+                <div class="slide-content flex items-center gap-10">
+                    <div class="w-1/2">
+                        <h3 class="text-2xl font-semibold text-slate-100 mb-4">Pengembangan Lapangan Padel</h3>
+                        <p class="text-lg text-slate-300 mb-4">Menggunakan strategi 2 tahap yang efisien untuk mencapai total 4 lapangan standar internasional:</p>
+                        <ul class="list-decimal list-inside space-y-2 text-lg text-slate-200">
+                            <li><strong class="text-white">Tahap 1 (Renovasi):</strong> Mengkonversi bangunan lapangan futsal eksisting menjadi 2 lapangan Padel. Memanfaatkan struktur yang ada untuk menekan biaya dan waktu.</li>
+                            <li><strong class="text-white">Tahap 2 (Bangun Baru):</strong> Membongkar total gedung koperasi dan membangun 2 lapangan Padel baru dari nol.</li>
+                        </ul>
+                    </div>
+                    <div class="w-1/2">
+                        <h3 class="text-2xl font-semibold text-slate-100 mb-4">Pengembangan Meeting Point</h3>
+                        <p class="text-lg text-slate-300 mb-4">Meskipun renovasi gedung arsip eksisting lebih cepat dan murah, studi teknis merekomendasikan opsi kedua:</p>
+                        <div class="bg-indigo-900/40 p-6 rounded-lg">
+                            <h4 class="text-xl font-bold text-indigo-200">Rekomendasi: Pembongkaran & Pembangunan Baru</h4>
+                            <p class="text-lg text-slate-200 mt-2">Untuk menjamin <strong class="text-white">kualitas struktur, kebebasan desain yang optimal, dan efisiensi operasional jangka panjang</strong>, tanpa dibatasi oleh konfigurasi bangunan lama.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="slide16" class="slide">
+                <div class="slide-header"><h1 class="slide-title">Aspek Legal: Kerangka Perizinan</h1></div>
+                <div class="slide-content flex items-center">
+                    <div class="w-full">
+                         <div class="grid grid-cols-2 gap-8">
+                            <div class="bg-slate-800/50 p-8 rounded-lg">
+                                <h3 class="text-2xl font-semibold text-slate-100 mb-4">Sistem OSS-RBA</h3>
+                                <p class="text-lg text-slate-300 leading-relaxed">Seluruh perizinan usaha wajib diproses melalui sistem Online Single Submission-Risk Based Approach. Langkah awal adalah penentuan KBLI yang tepat untuk mendapatkan Nomor Induk Berusaha (NIB).</p>
+                            </div>
+                            <div class="bg-slate-800/50 p-8 rounded-lg">
+                                 <h3 class="text-2xl font-semibold text-slate-100 mb-4">Klasifikasi Usaha (KBLI)</h3>
+                                 <ul class="list-none space-y-2 text-lg text-slate-200">
+                                     <li><strong class="text-indigo-300 w-24 inline-block">Padel:</strong> KBLI 93114 - Fasilitas Lapangan</li>
+                                     <li><strong class="text-indigo-300 w-24 inline-block">Driving Range:</strong> KBLI 93119 - Aktivitas Olahraga Lainnya</li>
+                                     <li><strong class="text-indigo-300 w-24 inline-block">Cafe:</strong> KBLI 56303 - Rumah Minum/Kafe</li>
+                                 </ul>
+                            </div>
+                         </div>
+                         <p class="text-xl text-center text-slate-300 mt-10">Kesesuaian dengan <strong class="text-white">Rencana Tata Ruang Wilayah (RTRW/RDTR)</strong> Kota Surabaya adalah prasyarat mutlak untuk dapat melanjutkan proses perizinan teknis seperti Persetujuan Bangunan Gedung (PBG).</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="slide17" class="slide">
+                <div class="slide-header"><h1 class="slide-title">Aspek Lingkungan: Tantangan Kritis</h1></div>
+                <div class="slide-content flex items-center">
+                     <div class="w-full grid grid-cols-2 gap-10">
+                        <div class="bg-red-900/20 p-8 rounded-lg border border-red-500">
+                            <h3 class="text-2xl font-semibold text-slate-100 mb-4 flex items-center"><i class="fa-solid fa-bolt text-3xl mr-4 text-red-400"></i>1. Kepatuhan Jarak Aman SUTT</h3>
+                            <p class="text-lg text-slate-300 leading-relaxed">Keberadaan Saluran Udara Tegangan Tinggi (SUTT) 150kV di lokasi proyek mewajibkan kepatuhan ketat terhadap standar keselamatan PLN.</p>
+                            <ul class="list-disc list-inside mt-4 space-y-2 text-lg text-slate-200">
+                                <li>Jarak aman vertikal minimum: <strong class="text-white">8,5 meter</strong> dari konduktor ke air.</li>
+                                <li>Jarak aman horizontal minimum: <strong class="text-white">6 meter</strong> dari sumbu tiang ke bangunan.</li>
+                                <li><strong class="text-red-300">Implikasi:</strong> Membatasi desain ketinggian jaring pengaman dan penempatan bangunan.</li>
+                            </ul>
+                        </div>
+                        <div class="bg-red-900/20 p-8 rounded-lg border border-red-500">
+                             <h3 class="text-2xl font-semibold text-slate-100 mb-4 flex items-center"><i class="fa-solid fa-tree text-3xl mr-4 text-red-400"></i>2. Pembangunan di Zona RTH</h3>
+                            <p class="text-lg text-slate-300 leading-relaxed">Danau yang diusulkan untuk Driving Range merupakan zona Ruang Terbuka Hijau (RTH) aktif. Pembangunan struktur permanen di atasnya berpotensi melanggar prinsip konservasi.</p>
+                            <ul class="list-disc list-inside mt-4 space-y-2 text-lg text-slate-200">
+                                <li>Dasar hukum: UU No. 26/2007 & PP No. 26/2008.</li>
+                                <li>Kawasan SIER saat ini sudah berada di ambang batas minimum RTH.</li>
+                                <li><strong class="text-red-300">Implikasi:</strong> Memicu kewajiban <strong class="text-white">penyediaan kompensasi RTH</strong> (fisik/finansial) yang akan menambah biaya dan kompleksitas perizinan.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="slide18" class="slide">
+                <div class="slide-header"><h1 class="slide-title">Struktur Organisasi yang Diusulkan</h1></div>
+                <div class="slide-content flex items-center">
+                    <div class="w-full">
+                        <div class="text-center max-w-5xl mx-auto mb-10">
+                            <h2 class="text-3xl font-semibold text-slate-100">Model Efisien: Integrasi ke dalam Struktur Eksisting</h2>
+                            <p class="text-xl text-slate-300 mt-2">Tidak membentuk unit baru, melainkan mengintegrasikan pengelolaan ke dalam <strong class="highlight-blue">Divisi Jasa Penunjang PT SIER</strong> yang sudah ada untuk efisiensi dan sinergi, dengan penambahan fungsi dan personel spesialis.</p>
+                        </div>
+                        <div class="grid grid-cols-3 gap-8">
+                            <div class="bg-slate-800/50 p-6 rounded-lg">
+                                <h3 class="text-xl font-semibold text-slate-100 mb-3">Peran Diperluas</h3>
+                                <p class="text-lg text-slate-300"><strong class="text-white">Manajer Kawasan Olahraga:</strong> Peran eksisting yang tanggung jawabnya diperluas mencakup pengawasan keseluruhan Driving Range & Padel.</p>
+                            </div>
+                            <div class="bg-slate-800/50 p-6 rounded-lg">
+                                <h3 class="text-xl font-semibold text-slate-100 mb-3">Peran Baru (Staf Langsung)</h3>
+                                <ul class="list-disc list-inside text-lg text-slate-300">
+                                    <li>Supervisor Driving Range & Padel</li>
+                                    <li>Staf Resepsionis / Front Office</li>
+                                    <li>Marshal / Staf Lapangan</li>
+                                    <li>Staf Food & Beverage (Cafe)</li>
+                                </ul>
+                            </div>
+                            <div class="bg-slate-800/50 p-6 rounded-lg">
+                                <h3 class="text-xl font-semibold text-slate-100 mb-3">Integrasi dengan Divisi Lain</h3>
+                                 <p class="text-lg text-slate-300">Tim Pemeliharaan Fasilitas, Danau, Keamanan, dan Kebersihan yang sudah ada akan mendapat tambahan tugas dan area cakupan.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+             <!-- Financials -->
+            <section id="slide19" class="slide">
+                <div class="slide-header"><h1 class="slide-title">Finansial: Total Kebutuhan Investasi (CAPEX)</h1></div>
+                <div class="slide-content flex items-center justify-center">
+                    <div class="w-full max-w-5xl text-center">
+                        <p class="text-2xl text-slate-300">Estimasi <strong class="text-white">Grand Total Investasi</strong> yang diperlukan untuk merealisasikan proyek secara keseluruhan adalah:</p>
+                        <p class="text-7xl font-bold text-indigo-400 my-8 tracking-tight">Rp 48.358.159.000,-</p>
+                        <p class="text-2xl text-slate-300 mb-10">(Empat Puluh Delapan Miliar Tiga Ratus Lima Puluh Delapan Juta Rupiah)</p>
+                        <div class="grid grid-cols-3 gap-6 text-left">
+                            <div class="bg-slate-800 p-6 rounded-lg">
+                                <p class="text-lg text-slate-400">Driving Range</p>
+                                <p class="text-3xl font-semibold text-slate-100">Rp 41,00 Miliar</p>
+                            </div>
+                            <div class="bg-slate-800 p-6 rounded-lg">
+                                <p class="text-lg text-slate-400">Lapangan Padel</p>
+                                <p class="text-3xl font-semibold text-slate-100">Rp 6,37 Miliar</p>
+                            </div>
+                            <div class="bg-slate-800 p-6 rounded-lg">
+                                <p class="text-lg text-slate-400">Meeting Point</p>
+                                <p class="text-3xl font-semibold text-slate-100">Rp 0,98 Miliar</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="slide20" class="slide">
+                <div class="slide-header"><h1 class="slide-title">Finansial: Proyeksi Laba/Rugi - Driving Range</h1></div>
+                <div class="slide-content flex items-center">
+                     <div class="w-full grid grid-cols-2 gap-10">
+                        <div>
+                            <h3 class="text-3xl font-semibold text-slate-100 mb-4">Kinerja Operasional yang Tipis</h3>
+                            <p class="text-xl text-slate-300 leading-relaxed">Meskipun mampu mencatatkan laba operasional (EBIT) positif selama 6 tahun pertama, marginnya sangat tipis, dengan puncak hanya Rp 2,7 Miliar.</p>
+                            <p class="text-xl text-slate-300 mt-4 leading-relaxed">Ini menunjukkan bahwa "mesin" bisnis inti tidak cukup kuat untuk menopang skala investasi yang masif.</p>
+                        </div>
+                        <div class="bg-red-900/20 p-8 rounded-lg border border-red-500">
+                             <h3 class="text-2xl font-semibold text-slate-100 mb-4 flex items-center"><i class="fa-solid fa-arrow-trend-down text-3xl mr-4 text-red-400"></i>Titik Balik Negatif (Tahun ke-7)</h3>
+                             <p class="text-xl text-slate-200 leading-relaxed"><strong class="text-white">Beban penyusutan yang melonjak</strong> akibat investasi kembali (rekondisi) membuat EBIT berubah menjadi <strong class="text-red-300 text-2xl">negatif (-Rp 1,06 Miliar)</strong> mulai tahun ke-7. Secara fundamental, proyek mulai merugi secara operasional.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="slide21" class="slide">
+                <div class="slide-header"><h1 class="slide-title">Finansial: Proyeksi Laba/Rugi - Padel</h1></div>
+                <div class="slide-content flex items-center">
+                     <div class="w-full grid grid-cols-2 gap-10">
+                        <div class="bg-green-900/20 p-8 rounded-lg border border-green-500">
+                             <h3 class="text-2xl font-semibold text-slate-100 mb-4 flex items-center"><i class="fa-solid fa-arrow-trend-up text-3xl mr-4 text-green-400"></i>Profitabilitas Kuat Sejak Awal</h3>
+                             <p class="text-xl text-slate-200 leading-relaxed">Proyek Padel menunjukkan <strong class="text-white">fundamental bisnis yang sangat sehat</strong>. Laba operasional (EBIT) konsisten kuat sejak tahun pertama, dimulai dari <strong class="text-green-300 text-2xl">Rp 2,3 Miliar</strong>. Ini membuktikan model bisnisnya sangat profitabel.</p>
+                        </div>
+                        <div>
+                            <h3 class="text-3xl font-semibold text-slate-100 mb-4">Struktur Biaya Terkendali</h3>
+                            <p class="text-xl text-slate-300 leading-relaxed">Skala investasi yang terukur dan proporsional dengan potensi pendapatan menghasilkan struktur biaya yang sehat. Bahkan setelah investasi kembali (rekondisi), EBIT tetap <strong class="text-white">positif dan solid</strong>, menunjukkan ketahanan model bisnis jangka panjang.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="slide23" class="slide">
+                <div class="slide-header"><h1 class="slide-title">Finansial: Analisis Sensitivitas (Stress Test)</h1></div>
+                <div class="slide-content flex items-center">
+                    <div class="w-full text-center">
+                        <h2 class="text-3xl font-semibold text-slate-100 mb-4">Menguji Ketahanan Proyek Padel</h2>
+                        <p class="text-xl text-slate-300 max-w-5xl mx-auto mb-10">Analisis menguji skenario paling pesimistis: biaya investasi membengkak 20% (<em class="italic">cost overrun</em>) DAN pendapatan hanya tercapai 80% dari target.</p>
+                        <div class="bg-slate-800/50 p-10 rounded-lg max-w-3xl mx-auto">
+                            <h3 class="text-2xl text-slate-200 mb-4">Hasil Stress Test:</h3>
+                            <p class="text-lg text-slate-300">Bahkan dalam kondisi tertekan yang signifikan ini, proyek Padel masih mampu menghasilkan:</p>
+                            <p class="text-5xl font-bold text-green-400 mt-4">IRR 13.62%</p>
+                            <p class="text-xl font-medium text-slate-100 mt-2">(Masih di atas <em class="italic">hurdle rate</em> 12.00%)</p>
+                             <p class="text-lg text-slate-300 mt-6">Ini membuktikan bahwa proyek Padel memiliki profil risiko yang rendah dan sangat tangguh (<em class="italic">highly resilient</em>).</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="slide24" class="slide">
+                <div class="slide-header"><h1 class="slide-title">Finansial: Perbandingan Periode Pengembalian Modal</h1></div>
+                <div class="slide-content flex items-center">
+                    <div class="w-full grid grid-cols-2 gap-8">
+                        <div class="text-center bg-slate-800/50 p-8 rounded-lg">
+                            <i class="fas fa-hourglass-half text-6xl text-green-400 mb-6"></i>
+                            <h3 class="text-3xl font-bold text-white mb-4">Proyek Padel</h3>
+                            <p class="text-xl text-slate-300">Discounted Payback Period</p>
+                            <p class="text-6xl font-bold text-green-400 mt-2">3 Tahun 8 Bulan</p>
+                            <p class="text-lg text-slate-400 mt-4">Pengembalian modal yang sangat cepat, menunjukkan efisiensi modal yang luar biasa dan risiko likuiditas yang rendah.</p>
+                        </div>
+                         <div class="text-center bg-slate-800/50 p-8 rounded-lg">
+                            <i class="fas fa-hourglass-end text-6xl text-red-400 mb-6"></i>
+                            <h3 class="text-3xl font-bold text-white mb-4">Proyek Driving Range</h3>
+                             <p class="text-xl text-slate-300">Discounted Payback Period</p>
+                            <p class="text-6xl font-bold text-red-400 mt-2">Tidak Balik Modal</p>
+                             <p class="text-lg text-slate-400 mt-4">Proyek tidak akan pernah mampu mengembalikan investasi awal dalam nilai uang hari ini, mengonfirmasi statusnya sebagai investasi yang merugi.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="slide25" class="slide">
+                <div class="slide-header"><h1 class="slide-title">Manajemen Risiko</h1></div>
+                <div class="slide-content flex items-center">
+                    <div class="w-full space-y-6">
+                        <div class="grid grid-cols-3 gap-6">
+                            <div class="font-semibold text-xl text-slate-300">Kategori Risiko</div>
+                            <div class="font-semibold text-xl text-slate-300">Deskripsi Risiko</div>
+                            <div class="font-semibold text-xl text-slate-300">Strategi Mitigasi</div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-6 p-4 bg-slate-800/50 rounded-lg items-center">
+                            <div class="font-semibold text-lg text-indigo-300">Regulasi & Lingkungan</div>
+                            <div class="text-slate-200">Keterlambatan perizinan akibat isu RTH dan zonasi.</div>
+                            <div class="text-slate-200">Koordinasi intensif dengan Dinas Tata Ruang & LH sejak awal. Menyiapkan skenario dan anggaran kompensasi RTH.</div>
+                        </div>
+                         <div class="grid grid-cols-3 gap-6 p-4 bg-slate-800/50 rounded-lg items-center">
+                            <div class="font-semibold text-lg text-indigo-300">Pasar & Persaingan</div>
+                            <div class="text-slate-200">Popularitas Padel bersifat sementara (tren musiman).</div>
+                            <div class="text-slate-200">Diversifikasi pendapatan (F&B, event). Membangun brand sebagai "destinasi olahraga", bukan hanya "tempat Padel".</div>
+                        </div>
+                         <div class="grid grid-cols-3 gap-6 p-4 bg-slate-800/50 rounded-lg items-center">
+                            <div class="font-semibold text-lg text-indigo-300">Operasional</div>
+                            <div class="text-slate-200">Gagal mencapai standar layanan premium yang dijanjikan, merusak reputasi.</div>
+                            <div class="text-slate-200">Rekrutmen dan pelatihan staf berstandar perhotelan. Implementasi SOP yang ketat dan pengukuran KPI kepuasan pelanggan.</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="slide26" class="slide">
+                 <div class="slide-header"><h1 class="slide-title">Kesimpulan Akhir</h1></div>
+                <div class="slide-content flex items-center">
+                     <div class="grid grid-cols-2 gap-10 w-full">
+                        <div class="bg-green-900/20 p-8 rounded-lg border-2 border-green-500">
+                            <h3 class="text-3xl font-semibold text-green-300 mb-4">1. Proyek Padel: Sangat Layak (Highly Feasible)</h3>
+                            <p class="text-xl text-slate-200 leading-relaxed">Merupakan <strong class="text-white">peluang investasi premium</strong> dengan fundamental bisnis yang sangat kuat. Proyek ini profitabel, tangguh, dan menawarkan pengembalian investasi yang cepat dan signifikan. Profil risikonya rendah dan terkendali.</p>
+                        </div>
+                        <div class="bg-red-900/20 p-8 rounded-lg border-2 border-red-500">
+                             <h3 class="text-3xl font-semibold text-red-300 mb-4">2. Proyek Driving Range: Tidak Layak (Not Feasible)</h3>
+                             <p class="text-xl text-slate-200 leading-relaxed">Memiliki <strong class="text-white">masalah fundamental</strong> pada model bisnisnya. Ketidakseimbangan antara skala investasi yang masif dan potensi pendapatan yang rendah membuatnya <strong class="text-white">tidak layak secara finansial</strong> dan berisiko tinggi menghancurkan nilai perusahaan.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+    
+    <script src="./slide/slide.js"></script>
+</body>
+</html>
