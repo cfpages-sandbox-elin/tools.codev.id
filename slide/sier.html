@@ -602,31 +602,42 @@
                 </div>
             </section>
 
-            <!-- Slide 22 (BARU): Rincian CAPEX Driving Range -->
+            <!-- Slide 22 (REVISED): Rincian CAPEX Driving Range -->
             <section id="slide22" class="slide">
                 <div class="slide-header"><h1 class="slide-title"><span class="title-prefix">Finansial: Rincian CAPEX</span>Driving Range: Rp 41 Miliar</h1></div>
                 <div class="slide-content flex flex-col justify-center">
                     <h2 class="text-2xl font-semibold text-slate-100 text-center mb-8">Investasi Masif Didominasi oleh Pekerjaan Struktur di Atas Air</h2>
                     <div class="w-full max-w-5xl mx-auto space-y-4">
+                        <!-- Bar 1: Struktur -->
                         <div class="flex items-center p-4 bg-slate-800/50 rounded-lg">
                             <div class="w-1/3 text-xl font-semibold text-slate-200">Pekerjaan Struktur (Pondasi & Atas)</div>
                             <div class="w-2/3 flex items-center gap-4">
-                                <div class="flex-grow h-8 bg-indigo-500 rounded"></div>
-                                <div class="text-2xl font-bold text-white">Rp 27,04 M</div>
+                                <div class="flex-grow bg-slate-700 rounded h-8">
+                                    <div class="h-8 bg-indigo-500 rounded" style="width: 100%;"></div>
+                                </div>
+                                <div class="text-2xl font-bold text-white w-32 text-right">Rp 27,04 M</div>
                             </div>
                         </div>
+                         <!-- Bar 2: Teknologi -->
                          <div class="flex items-center p-4 bg-slate-800/50 rounded-lg">
                             <div class="w-1/3 text-xl font-semibold text-slate-200">Teknologi, Peralatan, & Interior</div>
                             <div class="w-2/3 flex items-center gap-4">
-                                <div class="flex-grow h-8 bg-indigo-500 rounded" style="width: 14%;"></div>
-                                <div class="text-2xl font-bold text-white">Rp 3,76 M</div>
+                                <div class="flex-grow bg-slate-700 rounded h-8">
+                                    <!-- Proporsi: (3.76 / 27.04) * 100 = 13.9% -->
+                                    <div class="h-8 bg-indigo-500 rounded" style="width: 13.9%;"></div>
+                                </div>
+                                <div class="text-2xl font-bold text-white w-32 text-right">Rp 3,76 M</div>
                             </div>
                         </div>
+                         <!-- Bar 3: PPN & Kontingensi -->
                          <div class="flex items-center p-4 bg-slate-800/50 rounded-lg">
                             <div class="w-1/3 text-xl font-semibold text-slate-200">PPN (12%) & Kontingensi (10%)</div>
                             <div class="w-2/3 flex items-center gap-4">
-                                <div class="flex-grow h-8 bg-indigo-500 rounded" style="width: 28%;"></div>
-                                <div class="text-2xl font-bold text-white">Rp 7,72 M</div>
+                                <div class="flex-grow bg-slate-700 rounded h-8">
+                                     <!-- Proporsi: (7.72 / 27.04) * 100 = 28.5% -->
+                                    <div class="h-8 bg-indigo-500 rounded" style="width: 28.5%;"></div>
+                                </div>
+                                <div class="text-2xl font-bold text-white w-32 text-right">Rp 7,72 M</div>
                             </div>
                         </div>
                     </div>
@@ -636,16 +647,62 @@
             
             <!-- Slide 23 (REVISED): Rincian CAPEX Padel -->
             <section id="slide23" class="slide">
-                <div class="slide-header"><h1 class="slide-title"><span class="title-prefix">Finansial: Rincian CAPEX</span>Lapangan Padel: Rp 6.37 Miliar</h1></div>
-                <div class="slide-content flex items-center justify-center">
-                    <div class="w-full max-w-3xl bg-green-900/20 p-8 rounded-lg border border-green-500 text-center">
-                        <i class="fa-solid fa-receipt text-6xl text-green-400 mb-6"></i>
-                        <h3 class="text-3xl font-bold text-green-300 mb-4">Investasi yang Efisien & Terkendali</h3>
-                        <p class="text-xl text-slate-200 leading-relaxed mb-6">Total biaya untuk 4 lapangan berstandar premium, mencakup semua pekerjaan sipil, finishing, dan pajak.</p>
-                        <ul class="list-none text-left space-y-3 text-lg text-slate-200 max-w-md mx-auto">
-                           <li><strong class="text-white w-52 inline-block">Struktur & Arsitektur:</strong> Rp 4,05 Miliar</li>
-                           <li><strong class="text-white w-52 inline-block">Kontingensi (10%):</strong> Rp 0,51 Miliar</li>
-                           <li><strong class="text-white w-52 inline-block">PPN (12%):</strong> Rp 0,68 Miliar</li>
+                <div class="slide-header"><h1 class="slide-title"><span class="title-prefix">Finansial: Rincian CAPEX</span>Lapangan Padel: Rp 6,37 Miliar</h1></div>
+                <div class="slide-content flex flex-col justify-center">
+                    <p class="text-center text-xl text-slate-300 mb-8">Total investasi Padel merupakan gabungan dari dua tahap: renovasi area futsal yang efisien dan pembangunan area baru yang berkualitas.</p>
+                    <div class="grid grid-cols-2 gap-8 w-full max-w-6xl mx-auto">
+                        <!-- Area A (Renovasi) -->
+                        <div class="bg-slate-800/50 p-6 rounded-lg">
+                            <h3 class="text-2xl font-semibold text-slate-100 mb-3 flex items-center"><i class="fas fa-wrench mr-3 text-indigo-400"></i>Area A (Renovasi Futsal)</h3>
+                            <p class="text-4xl font-bold text-white mb-4">Rp 1,54 Miliar</p>
+                            <p class="text-lg text-slate-300">Biaya lebih rendah karena memanfaatkan struktur bangunan yang sudah ada, fokus pada konversi dan finishing lapangan.</p>
+                        </div>
+                        <!-- Area C (Bangun Baru) -->
+                        <div class="bg-slate-800/50 p-6 rounded-lg">
+                            <h3 class="text-2xl font-semibold text-slate-100 mb-3 flex items-center"><i class="fas fa-hard-hat mr-3 text-indigo-400"></i>Area C (Bangun Baru)</h3>
+                            <p class="text-4xl font-bold text-white mb-4">Rp 3,63 Miliar</p>
+                            <p class="text-lg text-slate-300">Biaya lebih tinggi karena mencakup pembongkaran total dan konstruksi baru dari pondasi hingga atap untuk kualitas optimal.</p>
+                        </div>
+                    </div>
+                     <div class="w-full max-w-3xl mx-auto mt-8 pt-6 border-t border-slate-700 text-center">
+                        <p class="text-xl text-slate-300">Total Biaya Fisik (A+C) + Kontingensi + PPN (12%)</p>
+                        <p class="text-3xl font-bold text-green-400 mt-2">Menghasilkan Total Investasi Padel: Rp 6,37 Miliar</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 24 (BARU): Asumsi Umum & Makroekonomi -->
+            <section id="slide24" class="slide">
+                <div class="slide-header"><h1 class="slide-title">Finansial: Asumsi Utama Proyeksi</h1></div>
+                <div class="slide-content flex flex-col justify-center">
+                    <p class="text-center text-xl text-slate-300 mb-8">Seluruh proyeksi keuangan dibangun di atas asumsi yang realistis dan konservatif untuk memastikan kredibilitas analisis.</p>
+                    <div class="grid grid-cols-2 gap-8 w-full max-w-5xl mx-auto">
+                        <div class="bg-slate-800/50 p-6 rounded-lg text-center"><i class="fas fa-chart-line text-4xl text-indigo-400 mb-3"></i><h3 class="text-2xl font-semibold text-white">Tingkat Inflasi</h3><p class="text-4xl font-bold text-slate-300">2,1%</p><p class="text-slate-400">Untuk eskalasi biaya operasional.</p></div>
+                        <div class="bg-slate-800/50 p-6 rounded-lg text-center"><i class="fas fa-money-bill-wave text-4xl text-indigo-400 mb-3"></i><h3 class="text-2xl font-semibold text-white">Kenaikan Gaji</h3><p class="text-4xl font-bold text-slate-300">6,5%</p><p class="text-slate-400">Merefleksikan penyesuaian UMR.</p></div>
+                        <div class="bg-slate-800/50 p-6 rounded-lg text-center"><i class="fas fa-percentage text-4xl text-indigo-400 mb-3"></i><h3 class="text-2xl font-semibold text-white">Pajak Penghasilan</h3><p class="text-4xl font-bold text-slate-300">22%</p><p class="text-slate-400">Tarif PPh Badan yang berlaku.</p></div>
+                        <div class="bg-slate-800/50 p-6 rounded-lg text-center"><i class="fas fa-balance-scale text-4xl text-indigo-400 mb-3"></i><h3 class="text-2xl font-semibold text-white">Biaya Modal (WACC)</h3><p class="text-4xl font-bold text-slate-300">12,00%</p><p class="text-slate-400">Sebagai *hurdle rate* standar kelayakan.</p></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 25 (BARU): Asumsi Pendapatan -->
+            <section id="slide25" class="slide">
+                <div class="slide-header"><h1 class="slide-title">Finansial: Asumsi Pendapatan</h1></div>
+                <div class="slide-content flex items-center gap-10">
+                    <div class="w-1/2 bg-slate-800/50 p-8 rounded-lg">
+                        <h3 class="text-2xl font-semibold text-slate-100 mb-4">Driving Range</h3>
+                        <ul class="list-none space-y-3 text-lg text-slate-200">
+                            <li><i class="fas fa-golf-ball-tee text-indigo-400 mr-3"></i><strong class="w-32 inline-block text-slate-400">Weekday:</strong> Rp 100.000 / 100 bola</li>
+                            <li><i class="fas fa-golf-ball-tee text-indigo-400 mr-3"></i><strong class="w-32 inline-block text-slate-400">Weekend:</strong> Rp 130.000 / 100 bola</li>
+                            <li><i class="fas fa-dollar-sign text-indigo-400 mr-3"></i><strong class="w-32 inline-block text-slate-400">Ancillary:</strong> Sewa stik & ruang komersial</li>
+                        </ul>
+                    </div>
+                     <div class="w-1/2 bg-slate-800/50 p-8 rounded-lg">
+                        <h3 class="text-2xl font-semibold text-slate-100 mb-4">Lapangan Padel</h3>
+                         <ul class="list-none space-y-3 text-lg text-slate-200">
+                            <li><i class="fas fa-table-tennis-paddle-ball text-indigo-400 mr-3"></i><strong class="w-32 inline-block text-slate-400">Weekday:</strong> Rp 250.000 / jam</li>
+                            <li><i class="fas fa-table-tennis-paddle-ball text-indigo-400 mr-3"></i><strong class="w-32 inline-block text-slate-400">Weekend:</strong> Rp 350.000 / jam</li>
+                            <li><i class="fas fa-arrow-up-right-dots text-indigo-400 mr-3"></i><strong class="w-32 inline-block text-slate-400">Eskalasi Tarif:</strong> +5% setiap 2 tahun</li>
                         </ul>
                     </div>
                 </div>
