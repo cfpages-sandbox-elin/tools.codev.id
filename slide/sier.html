@@ -128,6 +128,22 @@
         .bar-chart-bar-container { flex-grow: 1; background-color: #334155; border-radius: 9999px; height: 2.5rem; }
         .bar-chart-bar { background-color: #6366f1; height: 100%; border-radius: 9999px; }
         .bar-chart-value { width: 180px; text-align: left; font-size: 1.25rem; font-weight: 700; color: #f8fafc; flex-shrink: 0; }
+
+        /* --- BARU: Style untuk Image Zoom & Lightbox --- */
+        .zoom-image {
+            transition: transform 0.3s ease-in-out;
+            cursor: zoom-in;
+        }
+        /* Efek zoom saat hover */
+        #presentation-container:hover .zoom-image:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        /* Style untuk Lightbox (awalnya tersembunyi) */
+        #lightbox.visible {
+            opacity: 1;
+            visibility: visible;
+        }
     </style>
 </head>
 <body>
@@ -716,18 +732,30 @@
                 </div>
             </section>
 
+            <!-- Slide 24 BARU: Finansial: Total Kebutuhan Investasi (CAPEX) - Meeting Point -->
             <section id="slide24" class="slide">
-                <div class="slide-header"><h1 class="slide-title"><span class="title-prefix">Finansial: Rincian CAPEX</span>Meeting Point: Rp 0.98 Miliar</h1></div>
-                <div class="slide-content flex items-center justify-center">
-                    <div class="w-full max-w-3xl bg-slate-800/50 p-8 rounded-lg text-center">
-                        <i class="fa-solid fa-mug-hot text-6xl text-indigo-300 mb-6"></i>
-                        <h3 class="text-3xl font-bold text-indigo-300 mb-4">Investasi Pendukung yang Vital</h3>
-                        <p class="text-xl text-slate-200 leading-relaxed mb-6">Investasi untuk fasilitas F&B dan ruang sosial yang akan meningkatkan pengalaman pengunjung dan menjadi sumber pendapatan tambahan.</p>
-                        <ul class="list-none text-left space-y-3 text-lg text-slate-200 max-w-md mx-auto">
-                           <li><strong class="text-white w-48 inline-block">Konstruksi Fisik:</strong> Rp 0,49 Miliar</li>
-                           <li><strong class="text-white w-48 inline-block">Interior (Konsep #1):</strong> Rp 0,29 Miliar</li>
-                           <li><strong class="text-white w-48 inline-block">Kontingensi & PPN:</strong> Rp 0,18 Miliar</li>
-                        </ul>
+                <div class="slide-header"><h1 class="slide-title">Finansial: Detail Investasi (CAPEX) - Meeting Point</h1></div>
+                <div class="slide-content flex flex-col justify-center">
+                    <div class="text-center mb-8">
+                        <p class="text-2xl text-slate-300">Total Kebutuhan Investasi (termasuk PPN & Kontingensi):</p>
+                        <p class="text-6xl font-bold text-indigo-400 mt-2">Rp 983,34 Juta</p>
+                    </div>
+                    <div class="grid grid-cols-3 gap-6 text-center">
+                        <div class="bg-slate-800/50 p-6 rounded-lg">
+                            <p class="text-lg text-slate-400">Pekerjaan Konstruksi Fisik</p>
+                            <p class="text-3xl font-semibold text-slate-100 mt-1">Rp 498,57 Jt</p>
+                            <p class="text-sm text-slate-400 mt-2">(Struktur, Arsitektur, MEP, Lansekap)</p>
+                        </div>
+                        <div class="bg-slate-800/50 p-6 rounded-lg">
+                            <p class="text-lg text-slate-400">Konsep & Interior (Business Hub)</p>
+                            <p class="text-3xl font-semibold text-slate-100 mt-1">Rp 299,60 Jt</p>
+                            <p class="text-sm text-slate-400 mt-2">(Termasuk 4 Unit Meeting Pods)</p>
+                        </div>
+                        <div class="bg-slate-800/50 p-6 rounded-lg">
+                            <p class="text-lg text-slate-400">Kontingensi & PPN</p>
+                            <p class="text-3xl font-semibold text-slate-100 mt-1">Rp 185,17 Jt</p>
+                            <p class="text-sm text-slate-400 mt-2">(Kontingensi 10% + PPN 12%)</p>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -746,25 +774,60 @@
                 </div>
             </section>
 
-            <!-- Slide 25 (BARU): Asumsi Pendapatan -->
-            <section id="slide25" class="slide">
-                <div class="slide-header"><h1 class="slide-title">Finansial: Asumsi Pendapatan</h1></div>
-                <div class="slide-content flex items-center gap-10">
-                    <div class="w-1/2 bg-slate-800/50 p-8 rounded-lg">
-                        <h3 class="text-2xl font-semibold text-slate-100 mb-4">Driving Range</h3>
-                        <ul class="list-none space-y-3 text-lg text-slate-200">
-                            <li><i class="fas fa-golf-ball-tee text-indigo-400 mr-3"></i><strong class="w-32 inline-block text-slate-400">Weekday:</strong> Rp 100.000 / 100 bola</li>
-                            <li><i class="fas fa-golf-ball-tee text-indigo-400 mr-3"></i><strong class="w-32 inline-block text-slate-400">Weekend:</strong> Rp 130.000 / 100 bola</li>
-                            <li><i class="fas fa-dollar-sign text-indigo-400 mr-3"></i><strong class="w-32 inline-block text-slate-400">Ancillary:</strong> Sewa stik & ruang komersial</li>
-                        </ul>
+            <!-- Slide 21 BARU: Finansial: Asumsi Utama Pendapatan - Driving Range -->
+            <section id="slide21" class="slide">
+                <div class="slide-header"><h1 class="slide-title">Finansial: Asumsi Utama Pendapatan - Driving Range</h1></div>
+                <div class="slide-content flex items-center">
+                    <div class="w-full grid grid-cols-2 gap-8">
+                        <div class="bg-slate-800/50 p-6 rounded-lg">
+                            <h3 class="text-xl font-semibold text-slate-100 mb-3">Operasional & Kapasitas</h3>
+                            <ul class="list-none space-y-2 text-lg text-slate-300">
+                                <li class="flex justify-between"><span><i class="fa-solid fa-fw fa-layer-group text-indigo-400 mr-2"></i>Kapasitas:</span><strong class="text-white">28 Unit Hitting Bay</strong></li>
+                                <li class="flex justify-between"><span><i class="fa-solid fa-fw fa-clock text-indigo-400 mr-2"></i>Jam Operasional:</span><strong class="text-white">15 Jam / Hari (06:00-21:00)</strong></li>
+                                <li class="flex justify-between"><span><i class="fa-solid fa-fw fa-calendar-days text-indigo-400 mr-2"></i>Hari Operasional:</span><strong class="text-white">365 Hari / Tahun</strong></li>
+                            </ul>
+                        </div>
+                        <div class="bg-slate-800/50 p-6 rounded-lg">
+                            <h3 class="text-xl font-semibold text-slate-100 mb-3">Tarif & Pendapatan Tambahan</h3>
+                            <ul class="list-none space-y-2 text-lg text-slate-300">
+                                <li class="flex justify-between"><span><i class="fa-solid fa-fw fa-golf-ball-tee text-indigo-400 mr-2"></i>Tarif (100 Bola):</span><strong class="text-white">Rp 100rb (Weekday) / Rp 130rb (Weekend)</strong></li>
+                                <li class="flex justify-between"><span><i class="fa-solid fa-fw fa-building-user text-indigo-400 mr-2"></i>Sewa Ruang Komersial:</span><strong class="text-white">Rp 50.000 / m²</strong></li>
+                                <li class="flex justify-between"><span><i class="fa-solid fa-fw fa-arrow-trend-up text-indigo-400 mr-2"></i>Eskalasi Tarif:</span><strong class="text-white">Naik 5% setiap 2 tahun</strong></li>
+                            </ul>
+                        </div>
+                        <div class="col-span-2 bg-slate-800/50 p-6 rounded-lg">
+                            <h3 class="text-xl font-semibold text-slate-100 mb-3">Proyeksi Pendapatan Tahun ke-3 (Maturity)</h3>
+                            <p class="text-4xl font-bold text-green-400 text-center">~Rp 7,88 Miliar / Tahun</p>
+                        </div>
                     </div>
-                     <div class="w-1/2 bg-slate-800/50 p-8 rounded-lg">
-                        <h3 class="text-2xl font-semibold text-slate-100 mb-4">Lapangan Padel</h3>
-                         <ul class="list-none space-y-3 text-lg text-slate-200">
-                            <li><i class="fas fa-table-tennis-paddle-ball text-indigo-400 mr-3"></i><strong class="w-32 inline-block text-slate-400">Weekday:</strong> Rp 250.000 / jam</li>
-                            <li><i class="fas fa-table-tennis-paddle-ball text-indigo-400 mr-3"></i><strong class="w-32 inline-block text-slate-400">Weekend:</strong> Rp 350.000 / jam</li>
-                            <li><i class="fas fa-arrow-up-right-dots text-indigo-400 mr-3"></i><strong class="w-32 inline-block text-slate-400">Eskalasi Tarif:</strong> +5% setiap 2 tahun</li>
-                        </ul>
+                </div>
+            </section>
+
+            <!-- Slide 22 BARU: Finansial: Asumsi Utama Pendapatan - Padel -->
+            <section id="slide22" class="slide">
+                <div class="slide-header"><h1 class="slide-title">Finansial: Asumsi Utama Pendapatan - Padel</h1></div>
+                <div class="slide-content flex items-center">
+                    <div class="w-full grid grid-cols-2 gap-8">
+                        <div class="bg-slate-800/50 p-6 rounded-lg">
+                            <h3 class="text-xl font-semibold text-slate-100 mb-3">Operasional & Kapasitas</h3>
+                            <ul class="list-none space-y-2 text-lg text-slate-300">
+                                <li class="flex justify-between"><span><i class="fa-solid fa-fw fa-table-tennis-paddle-ball text-indigo-400 mr-2"></i>Kapasitas:</span><strong class="text-white">4 Lapangan</strong></li>
+                                <li class="flex justify-between"><span><i class="fa-solid fa-fw fa-clock text-indigo-400 mr-2"></i>Jam Operasional:</span><strong class="text-white">15 Jam / Hari (06:00-21:00)</strong></li>
+                                <li class="flex justify-between"><span><i class="fa-solid fa-fw fa-calendar-days text-indigo-400 mr-2"></i>Hari Operasional:</span><strong class="text-white">365 Hari / Tahun</strong></li>
+                            </ul>
+                        </div>
+                        <div class="bg-slate-800/50 p-6 rounded-lg">
+                            <h3 class="text-xl font-semibold text-slate-100 mb-3">Tarif Sewa Lapangan</h3>
+                            <ul class="list-none space-y-2 text-lg text-slate-300">
+                                <li class="flex justify-between"><span><i class="fa-solid fa-fw fa-sun text-indigo-400 mr-2"></i>Tarif Weekday:</span><strong class="text-white">Rp 250.000 / Jam</strong></li>
+                                <li class="flex justify-between"><span><i class="fa-solid fa-fw fa-moon text-indigo-400 mr-2"></i>Tarif Weekend:</span><strong class="text-white">Rp 350.000 / Jam</strong></li>
+                                <li class="flex justify-between"><span><i class="fa-solid fa-fw fa-arrow-trend-up text-indigo-400 mr-2"></i>Eskalasi Tarif:</span><strong class="text-white">Naik 5% setiap 2 tahun</strong></li>
+                            </ul>
+                        </div>
+                        <div class="col-span-2 bg-slate-800/50 p-6 rounded-lg">
+                            <h3 class="text-xl font-semibold text-slate-100 mb-3">Proyeksi Pendapatan Tahun ke-4 (Maturity)</h3>
+                            <p class="text-4xl font-bold text-green-400 text-center">~Rp 4,50 Miliar / Tahun</p>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -1221,6 +1284,11 @@
                     <h2 class="text-4xl font-light text-slate-300 mt-4">Diskusi & Tanya Jawab</h2>
                 </div>
             </section>
+
+            <div id="lightbox" class="fixed inset-0 bg-black/80 flex items-center justify-center p-8 z-50 opacity-0 invisible transition-opacity duration-300">
+                <img id="lightbox-img" src="" alt="Zoomed Image" class="max-w-full max-h-full object-contain">
+                <div id="lightbox-close" class="absolute top-8 right-8 text-white text-4xl cursor-pointer">&times;</div>
+            </div>
 
         </div>
     </div>

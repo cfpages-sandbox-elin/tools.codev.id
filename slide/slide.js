@@ -1,4 +1,4 @@
-// slide.js auto fullscreen
+// slide.js tambah lightbox img
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -7,6 +7,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const nextButton = document.getElementById('next-slide');
     const slideCounter = document.getElementById('slide-counter');
     const fullscreenButton = document.getElementById('fullscreen-btn');
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const lightboxClose = document.getElementById('lightbox-close');
     
     // --- STATE VARIABLES ---
     let currentSlide = 0;
@@ -37,54 +40,25 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function adjustContentToFit(slide) {
         const slideContent = slide.querySelector('.slide-content');
-        if (!slideContent) return;
+        if (!slideContent || slideContent.scrollHeight <= slideContent.clientHeight) return;
 
-        if (slideContent.scrollHeight <= slideContent.clientHeight) {
-            return; // Exit if the slide already fits.
-        }
-
-        const fontHierarchy = ['text-3xl', 'text-2xl', 'text-xl', 'text-lg', 'text-base', 'text-sm'];
-        const paddingHierarchy = ['p-8', 'p-6', 'p-4']; // Using Tailwind's padding classes
-        
+        const scalableText = slideContent.querySelectorAll('h2, h3, p, li, div.text-2xl, div.text-xl, div.text-lg, .bar-chart-label, .bar-chart-value, .text-slate-100, .text-slate-200, .text-slate-300');
+        const scalablePadding = slideContent.querySelectorAll('.bg-slate-800\\/50, .bar-chart-row');
         let attempts = 0;
-        const maxAttempts = 20;
+        const maxAttempts = 40;
 
         while (slideContent.scrollHeight > slideContent.clientHeight && attempts < maxAttempts) {
-            // Priority 1: Reduce font sizes class by class
-            let fontAdjusted = false;
-            for (let i = 0; i < fontHierarchy.length - 1; i++) {
-                const currentClass = fontHierarchy[i];
-                const smallerClass = fontHierarchy[i+1];
-                const elements = slideContent.querySelectorAll(`.${currentClass}`);
-                if (elements.length > 0) {
-                    elements.forEach(el => {
-                        el.classList.remove(currentClass);
-                        el.classList.add(smallerClass);
-                    });
-                    fontAdjusted = true;
-                    break; // Adjust one level at a time and re-check
-                }
-            }
-
-            // Priority 2: Reduce padding if font adjustment is not enough or not possible
-            if (!fontAdjusted) {
-                let paddingAdjusted = false;
-                for (let i = 0; i < paddingHierarchy.length - 1; i++) {
-                     const currentClass = paddingHierarchy[i];
-                     const smallerClass = paddingHierarchy[i+1];
-                     const elements = slideContent.querySelectorAll(`.${currentClass}`);
-                     if (elements.length > 0) {
-                        elements.forEach(el => {
-                           el.classList.remove(currentClass);
-                           el.classList.add(smallerClass);
-                        });
-                        paddingAdjusted = true;
-                        break;
-                     }
-                }
-                // If no adjustments can be made, break the loop to prevent freezing
-                if (!paddingAdjusted) break;
-            }
+            scalableText.forEach(el => {
+                const currentSize = parseFloat(window.getComputedStyle(el).fontSize);
+                if (currentSize > 15) el.style.fontSize = `${currentSize - 0.25}px`;
+            });
+            scalablePadding.forEach(el => {
+                const style = window.getComputedStyle(el);
+                const currentPaddingTop = parseFloat(style.paddingTop);
+                const currentPaddingBottom = parseFloat(style.paddingBottom);
+                if (currentPaddingTop > 10) el.style.paddingTop = `${currentPaddingTop - 0.5}px`;
+                if (currentPaddingBottom > 10) el.style.paddingBottom = `${currentPaddingBottom - 0.5}px`;
+            });
             attempts++;
         }
     }
@@ -108,7 +82,6 @@ document.addEventListener('DOMContentLoaded', function () {
             toggleFullScreen();
             return; 
         }
-
         if (currentSlide < totalSlides - 1) {
             currentSlide++;
             showSlide(currentSlide);
@@ -122,9 +95,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    /**
-     * Toggles fullscreen mode for the presentation container.
-     */
     function toggleFullScreen() {
         if (!document.fullscreenElement) {
             presentationContainer.requestFullscreen().catch(err => {
@@ -134,29 +104,59 @@ document.addEventListener('DOMContentLoaded', function () {
             document.exitFullscreen();
         }
     }
+
+    // --- NEW: LIGHTBOX FUNCTIONS ---
+    function openLightbox(src) {
+        lightboxImg.src = src;
+        lightbox.classList.add('visible');
+    }
+
+    function closeLightbox() {
+        lightbox.classList.remove('visible');
+    }
     
     // --- INITIALIZATION & EVENT LISTENERS ---
     
     autoAssignSlideIds();
     formatSlideTitles();
 
-    slides.forEach(slide => {
+    slides.forEach((slide) => {
         setTimeout(() => adjustContentToFit(slide), 50); 
+        
+        // NEW: Add zoom/lightbox listeners to images in each slide's content
+        const images = slide.querySelectorAll('.slide-content img');
+        images.forEach(img => {
+            img.classList.add('zoom-image'); // Add class for hover effect
+            img.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent slide change on image click
+                openLightbox(img.src);
+            });
+        });
     });
 
     nextButton.addEventListener('click', nextSlide);
     prevButton.addEventListener('click', prevSlide);
     fullscreenButton.addEventListener('click', toggleFullScreen);
-    presentationContainer.addEventListener('dblclick', toggleFullScreen); // Double-click for convenience
+    presentationContainer.addEventListener('dblclick', toggleFullScreen);
     document.addEventListener('keydown', function (e) {
         if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
         else if (e.key === 'ArrowLeft') prevSlide();
         else if (e.key === 'f' || e.key === 'F11') {
             e.preventDefault();
             toggleFullScreen();
+        } else if (e.key === 'Escape' && lightbox.classList.contains('visible')) {
+            closeLightbox();
         }
     });
 
-    // 4. Show the first slide.
+    // NEW: Lightbox close listeners
+    lightboxClose.addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', (e) => {
+        // Close if the click is on the background, not the image itself
+        if (e.target === lightbox) {
+            closeLightbox();
+        }
+    });
+
     showSlide(currentSlide);
 });
