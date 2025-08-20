@@ -1,4 +1,4 @@
-// slide.js FINAL (dengan perbaikan lightbox & zoom)
+// slide.js FINAL V2 (dengan perbaikan lightbox & zoom)
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -120,21 +120,27 @@ document.addEventListener('DOMContentLoaded', function () {
     formatSlideTitles();
 
     slides.forEach((slide) => {
-        setTimeout(() => adjustContentToFit(slide), 50); 
-        // Add the zoom-image class to all images inside slide content
-        const images = slide.querySelectorAll('.slide-content img');
-        images.forEach(img => img.classList.add('zoom-image'));
+        setTimeout(() => adjustContentToFit(slide), 50);
     });
+    
+    // --- KUNCI PERBAIKAN LIGHTBOX V2: More Robust Initialization ---
+    // This function ensures that listeners are attached correctly.
+    function initializeImageListeners() {
+        const images = document.querySelectorAll('.slide-content img');
+        images.forEach(img => {
+            // Ensure the class for CSS hover effect is present
+            if (!img.classList.contains('zoom-image')) {
+                img.classList.add('zoom-image');
+            }
+            // Remove any old listeners to prevent duplicates, then add a new one.
+            img.onclick = (e) => {
+                e.stopPropagation(); // Prevent slide change on image click
+                openLightbox(e.target.src);
+            };
+        });
+    }
 
-    // --- KUNCI PERBAIKAN LIGHTBOX: Event Delegation ---
-    // Daripada menambahkan listener ke setiap gambar, kita tambahkan satu listener ke parent container.
-    presentationContainer.addEventListener('click', function(e) {
-        // Cek apakah elemen yang diklik adalah gambar yang bisa di-zoom
-        if (e.target.matches('.zoom-image')) {
-            e.stopPropagation(); // Mencegah slide berganti saat gambar diklik
-            openLightbox(e.target.src);
-        }
-    });
+    initializeImageListeners(); // Run it on initial load
 
     nextButton.addEventListener('click', nextSlide);
     prevButton.addEventListener('click', prevSlide);
