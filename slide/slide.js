@@ -1,4 +1,4 @@
-// slide.js tambah lightbox img
+// slide.js FINAL (dengan perbaikan lightbox & zoom)
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -105,7 +105,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- NEW: LIGHTBOX FUNCTIONS ---
     function openLightbox(src) {
         lightboxImg.src = src;
         lightbox.classList.add('visible');
@@ -122,16 +121,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
     slides.forEach((slide) => {
         setTimeout(() => adjustContentToFit(slide), 50); 
-        
-        // NEW: Add zoom/lightbox listeners to images in each slide's content
+        // Add the zoom-image class to all images inside slide content
         const images = slide.querySelectorAll('.slide-content img');
-        images.forEach(img => {
-            img.classList.add('zoom-image'); // Add class for hover effect
-            img.addEventListener('click', (e) => {
-                e.stopPropagation(); // Prevent slide change on image click
-                openLightbox(img.src);
-            });
-        });
+        images.forEach(img => img.classList.add('zoom-image'));
+    });
+
+    // --- KUNCI PERBAIKAN LIGHTBOX: Event Delegation ---
+    // Daripada menambahkan listener ke setiap gambar, kita tambahkan satu listener ke parent container.
+    presentationContainer.addEventListener('click', function(e) {
+        // Cek apakah elemen yang diklik adalah gambar yang bisa di-zoom
+        if (e.target.matches('.zoom-image')) {
+            e.stopPropagation(); // Mencegah slide berganti saat gambar diklik
+            openLightbox(e.target.src);
+        }
     });
 
     nextButton.addEventListener('click', nextSlide);
@@ -149,10 +151,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // NEW: Lightbox close listeners
     lightboxClose.addEventListener('click', closeLightbox);
     lightbox.addEventListener('click', (e) => {
-        // Close if the click is on the background, not the image itself
         if (e.target === lightbox) {
             closeLightbox();
         }
