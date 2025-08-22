@@ -1,4 +1,4 @@
-// slide.js FINAL (Download PDF + fix styling zai 5 + fullscreen mode
+// slide.js FINAL (Download PDF + fix styling zai 6 + fullscreen mode + screenshot api
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -106,12 +106,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const slides = document.querySelectorAll('.slide');
             if (slides.length === 0) throw new Error("Tidak ada elemen .slide yang ditemukan.");
             
-            // Wait for fonts to load
-            console.log("Memastikan font 'Poppins' sudah dimuat...");
-            await document.fonts.load('1em Poppins');
-            await document.fonts.ready;
-            console.log("Font 'Poppins' berhasil dimuat.");
-            
             // Create a new PDF document
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF({
@@ -130,6 +124,9 @@ document.addEventListener('DOMContentLoaded', function () {
             // Wait for fullscreen to activate
             await new Promise(resolve => setTimeout(resolve, 1000));
             
+            // Array to store screenshot data
+            const screenshots = [];
+            
             for (let i = 0; i < slides.length; i++) {
                 console.log(`[Slide ${i + 1}/${slides.length}] Memulai proses...`);
                 
@@ -137,115 +134,113 @@ document.addEventListener('DOMContentLoaded', function () {
                 showSlide(i);
                 
                 // Wait a bit for the slide to become fully visible and render
-                await new Promise(resolve => setTimeout(resolve, 1500));
+                await new Promise(resolve => setTimeout(resolve, 2000));
                 
-                console.log(`[Slide ${i + 1}] Menunggu gambar...`);
-                const currentSlideElement = slides[i];
-                const images = Array.from(currentSlideElement.querySelectorAll('img'));
+                console.log(`[Slide ${i + 1}] Mengambil screenshot...`);
                 
-                // Preload all images with proper CORS handling
-                const imagePromises = images.map(img => {
-                    return new Promise((resolve) => {
-                        if (img.complete && img.naturalHeight !== 0) {
-                            resolve();
-                            return;
-                        }
-                        
-                        const tempImg = new Image();
-                        tempImg.crossOrigin = "Anonymous";
-                        
-                        tempImg.onload = () => {
-                            // Replace the original image's src with the properly loaded one
-                            img.src = tempImg.src;
-                            resolve();
-                        };
-                        
-                        tempImg.onerror = () => {
-                            console.warn(`[Slide ${i + 1}] Gagal memuat: ${img.src}. Melanjutkan...`);
-                            resolve();
-                        };
-                        
-                        // Handle relative URLs
-                        let src = img.src;
-                        if (src.startsWith('/')) {
-                            // Convert relative URL to absolute
-                            src = window.location.origin + src;
-                        }
-                        tempImg.src = src;
+                // Use the Screen Capture API to take a screenshot
+                try {
+                    const stream = await navigator.mediaDevices.getDisplayMedia({
+                        video: {
+                            cursor: "never"
+                        },
+                        audio: false
                     });
-                });
-                
-                await Promise.all(imagePromises);
-                console.log(`[Slide ${i + 1}] Gambar selesai.`);
-                
-                // Give more time for rendering
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                console.log(`[Slide ${i + 1}] Merender ke canvas...`);
-                
-                // Create a wrapper div to ensure proper styling
-                const wrapper = document.createElement('div');
-                wrapper.style.position = 'fixed';
-                wrapper.style.top = '0';
-                wrapper.style.left = '0';
-                wrapper.style.width = '100vw';
-                wrapper.style.height = '100vh';
-                wrapper.style.backgroundColor = '#0a192f';
-                wrapper.style.zIndex = '9999';
-                wrapper.style.display = 'flex';
-                wrapper.style.justifyContent = 'center';
-                wrapper.style.alignItems = 'center';
-                
-                // Clone the slide with all its styles
-                const slideClone = currentSlideElement.cloneNode(true);
-                slideClone.style.position = 'relative';
-                slideClone.style.width = '1366px';
-                slideClone.style.height = '768px';
-                slideClone.style.transform = 'none';
-                slideClone.style.opacity = '1';
-                slideClone.style.visibility = 'visible';
-                slideClone.style.fontFamily = "'Poppins', sans-serif";
-                
-                // Apply font to all text elements
-                const textElements = slideClone.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, div, li, td, th');
-                textElements.forEach(el => {
-                    el.style.fontFamily = "'Poppins', sans-serif";
-                });
-                
-                wrapper.appendChild(slideClone);
-                document.body.appendChild(wrapper);
-                
-                // Wait for the wrapper to be added to the DOM
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
-                // Capture the wrapper
-                const canvas = await html2canvas(wrapper, {
-                    scale: 1,
-                    useCORS: true,
-                    logging: false,
-                    width: 1366,
-                    height: 768,
-                    backgroundColor: null,
-                    letterRendering: true,
-                    foreignObjectRendering: true,
-                    allowTaint: true
-                });
-                
-                // Remove the wrapper
-                document.body.removeChild(wrapper);
-                
-                if (!canvas) {
-                    throw new Error(`[Slide ${i+1}] Gagal menghasilkan canvas.`);
+                    
+                    // Create a video element to capture the stream
+                    const video = document.createElement('video');
+                    video.srcObject = stream;
+                    video.play();
+                    
+                    // Wait for the video to be ready
+                    await new Promise(resolve => {
+                        video.onloadedmetadata = resolve;
+                    });
+                    
+                    // Create a canvas to capture the video frame
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 1366;
+                    canvas.height = 768;
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Draw the video frame to the canvas
+                    ctx.drawImage(video, 0, 0, 1366, 768);
+                    
+                    // Get the image data
+                    const imgData = canvas.toDataURL('image/jpeg', 0.98);
+                    screenshots.push(imgData);
+                    
+                    // Stop the stream
+                    stream.getTracks().forEach(track => track.stop());
+                    
+                    console.log(`[Slide ${i + 1}] Screenshot berhasil.`);
+                } catch (err) {
+                    console.error(`[Slide ${i + 1}] Gagal mengambil screenshot:`, err);
+                    
+                    // Fallback to html2canvas with better CORS handling
+                    console.log(`[Slide ${i + 1}] Menggunakan metode fallback...`);
+                    
+                    // Create a wrapper div to ensure proper styling
+                    const wrapper = document.createElement('div');
+                    wrapper.style.position = 'fixed';
+                    wrapper.style.top = '0';
+                    wrapper.style.left = '0';
+                    wrapper.style.width = '100vw';
+                    wrapper.style.height = '100vh';
+                    wrapper.style.backgroundColor = '#0a192f';
+                    wrapper.style.zIndex = '9999';
+                    wrapper.style.display = 'flex';
+                    wrapper.style.justifyContent = 'center';
+                    wrapper.style.alignItems = 'center';
+                    wrapper.style.fontFamily = "'Poppins', sans-serif";
+                    
+                    // Clone the slide with all its styles
+                    const slideClone = slides[i].cloneNode(true);
+                    slideClone.style.position = 'relative';
+                    slideClone.style.width = '1366px';
+                    slideClone.style.height = '768px';
+                    slideClone.style.transform = 'none';
+                    slideClone.style.opacity = '1';
+                    slideClone.style.visibility = 'visible';
+                    
+                    wrapper.appendChild(slideClone);
+                    document.body.appendChild(wrapper);
+                    
+                    // Wait for the wrapper to be added to the DOM
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    
+                    // Capture the wrapper
+                    const fallbackCanvas = await html2canvas(wrapper, {
+                        scale: 1,
+                        useCORS: true,
+                        logging: false,
+                        width: 1366,
+                        height: 768,
+                        backgroundColor: null,
+                        letterRendering: true,
+                        foreignObjectRendering: true,
+                        allowTaint: true,
+                        proxy: 'https://api.allorigins.win/raw?url=' // Proxy for external resources
+                    });
+                    
+                    // Remove the wrapper
+                    document.body.removeChild(wrapper);
+                    
+                    if (!fallbackCanvas) {
+                        throw new Error(`[Slide ${i+1}] Gagal menghasilkan canvas.`);
+                    }
+                    const fallbackImgData = fallbackCanvas.toDataURL('image/jpeg', 0.98);
+                    screenshots.push(fallbackImgData);
+                    console.log(`[Slide ${i + 1}] Fallback berhasil.`);
                 }
-                const imgData = canvas.toDataURL('image/jpeg', 0.98);
-                console.log(`[Slide ${i + 1}] Berhasil dirender.`);
-                
-                // Add new page for each slide except the first one
+            }
+            
+            // Add all screenshots to the PDF
+            for (let i = 0; i < screenshots.length; i++) {
                 if (i > 0) {
                     pdf.addPage([1366, 768], 'landscape');
                 }
-                
-                pdf.addImage(imgData, 'JPEG', 0, 0, 1366, 768);
+                pdf.addImage(screenshots[i], 'JPEG', 0, 0, 1366, 768);
                 console.log(`[Slide ${i + 1}] Berhasil ditambahkan ke PDF.`);
             }
             
