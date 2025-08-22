@@ -1,4 +1,4 @@
-// slide.js FINAL (fungsi Download PDF + fix laman PDF sama 11 + zai fix + jspdf library added
+// slide.js FINAL (fungsi Download PDF + fix laman PDF sama 13 + zai fix + jspdf + html2canvas added
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -155,6 +155,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 await new Promise(resolve => setTimeout(resolve, 500));
                 
                 console.log(`[Slide ${i + 1}] Merender ke canvas...`);
+                // Use html2canvas directly
                 const canvas = await html2canvas(clone, {
                     scale: 2,
                     useCORS: true,
