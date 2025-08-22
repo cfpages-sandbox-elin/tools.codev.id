@@ -1,4 +1,4 @@
-// slide.js FINAL (dengan fungsi Download PDF + fix laman PDF sama 9 + waitforassets + debugging)
+// slide.js FINAL (dengan fungsi Download PDF + fix laman PDF sama 10 + waitforassets + debugging)
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -94,7 +94,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // slide.js -> GANTI FUNGSI INI DENGAN VERSI FINAL YANG SUDAH TERUJI
     async function downloadPDF() {
-        // --- LANGKAH 0: PERSIAPAN & INISIALISASI ---
         if (document.body.classList.contains('pdf-generating')) return;
 
         console.log("--- MEMULAI PROSES GENERATE PDF ---");
@@ -128,11 +127,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 jsPDF: { unit: 'px', format: [1280, 720], orientation: 'landscape' }
             };
 
-            // Buat DOKUMEN PDF KOSONG terlebih dahulu menggunakan API yang benar
             const pdf = await html2pdf().set(options).get('jsPDF');
-            console.log("Objek jsPDF berhasil didapatkan dari worker.");
+            console.log("Objek jsPDF berhasil didapatkan.");
+            
+            // Kosongkan halaman pertama yang mungkin dibuat secara default
+            if (pdf.getNumberOfPages() > 0) {
+                pdf.deletePage(1);
+            }
 
-            // --- LANGKAH 1: LOOP & RENDER SETIAP SLIDE ---
             for (let i = 0; i < slides.length; i++) {
                 console.log(`[Slide ${i + 1}/${slides.length}] Memulai proses...`);
                 const slide = slides[i];
@@ -147,7 +149,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 tempContainer.innerHTML = '';
                 tempContainer.appendChild(clone);
 
-                // Menunggu semua gambar di dalam kloningan selesai dimuat
                 console.log(`[Slide ${i + 1}] Menunggu gambar...`);
                 const images = Array.from(clone.querySelectorAll('img'));
                 const imagePromises = images.map(img => {
@@ -165,29 +166,24 @@ document.addEventListener('DOMContentLoaded', function () {
                 
                 await new Promise(resolve => setTimeout(resolve, 500));
 
-                // --- PERBAIKAN KUNCI: MENGGUNAKAN API YANG BENAR UNTUK MENGHASILKAN CANVAS ---
+                // --- PERBAIKAN KUNCI: MENGGUNAKAN API .get('canvas') YANG BENAR ---
                 console.log(`[Slide ${i + 1}] Merender ke canvas...`);
-                const canvas = await html2pdf().from(clone).set(options).toCanvas();
+                // Buat worker baru untuk setiap slide agar tidak ada state yang terbawa
+                const canvas = await html2pdf().from(clone).set(options).get('canvas');
+                if (!canvas) {
+                    throw new Error(`[Slide ${i+1}] Gagal menghasilkan canvas.`);
+                }
                 const imgData = canvas.toDataURL('image/jpeg', 0.98);
                 console.log(`[Slide ${i + 1}] Berhasil dirender.`);
-                // -------------------------------------------------------------------------
+                // -------------------------------------------------------------
 
-                // Tambahkan ke PDF
-                if (i > 0) {
-                    pdf.addPage([1280, 720], 'landscape');
-                } else {
-                    // Hapus halaman kosong pertama yang mungkin dibuat oleh .get('jsPDF')
-                    if (pdf.getNumberOfPages() > 0 && pdf.internal.pages.length > 1) {
-                        pdf.deletePage(1);
-                    }
-                }
+                pdf.addPage([1280, 720], 'landscape');
                 pdf.addImage(imgData, 'JPEG', 0, 0, 1280, 720);
                 console.log(`[Slide ${i + 1}] Berhasil ditambahkan ke PDF.`);
             }
 
-            // --- LANGKAH 2: SIMPAN PDF ---
             console.log("Semua slide telah diproses. Menyimpan file PDF...");
-            pdf.save(options.filename);
+            await pdf.save(options.filename);
             console.log("--- PROSES PDF BERHASIL ---");
 
         } catch (error) {
@@ -198,7 +194,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
             alert("Terjadi kesalahan kritis saat membuat PDF. Silakan buka konsol (F12) untuk melihat detail teknis.");
         } finally {
-            // --- LANGKAH 3: PEMBERSIHAN ---
             console.log("Membersihkan sumber daya...");
             document.body.classList.remove('pdf-generating');
             downloadButton.innerHTML = originalIcon;
