@@ -1,4 +1,4 @@
-// slide.js FINAL (dengan fungsi Download PDF + fix laman PDF sama 5 + waitforassets)
+// slide.js FINAL (dengan fungsi Download PDF + fix laman PDF sama 6 + waitforassets + debugging)
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -93,9 +93,14 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     // slide.js -> GANTI FUNGSI INI DENGAN VERSI FINAL YANG SUDAH TERUJI
     async function downloadPDF() {
-        if (downloadButton.classList.contains('loading')) return;
+        // --- LANGKAH 0: PERSIAPAN & INISIALISASI ---
+        if (document.body.classList.contains('pdf-generating')) return;
 
+        console.log("--- MEMULAI PROSES GENERATE PDF ---");
+        const downloadButton = document.getElementById('download-btn');
         const originalIcon = downloadButton.innerHTML;
+        
+        document.body.classList.add('pdf-generating');
         downloadButton.innerHTML = '<i class="fas fa-spinner"></i>';
         downloadButton.classList.add('loading');
 
@@ -105,30 +110,38 @@ document.addEventListener('DOMContentLoaded', function () {
             left: '-9999px',
             top: '0',
             margin: '0',
-            padding: '0'
+            padding: '0',
+            width: '1280px', // Tentukan ukuran container agar konsisten
+            height: '720px'
         });
         document.body.appendChild(tempContainer);
 
         try {
-            if (slides.length === 0) throw new Error("Tidak ada slide untuk di-download.");
+            const slides = document.querySelectorAll('.slide');
+            if (slides.length === 0) throw new Error("Tidak ada elemen .slide yang ditemukan.");
 
-            // 1. Dapatkan konstruktor jsPDF dari bundle dengan aman.
-            const { jsPDF } = html2pdf.get('jsPDF');
+            console.log("Memastikan font 'Poppins' sudah dimuat...");
+            await document.fonts.load('1em Poppins'); // Tunggu font krusial siap
+            console.log("Font 'Poppins' berhasil dimuat.");
+
+            // Dapatkan konstruktor jsPDF dari bundle dengan aman
+            const { jsPDF } = window.html2pdf.get('jsPDF');
             const pdf = new jsPDF({
                 orientation: 'landscape',
                 unit: 'px',
                 format: [1280, 720]
             });
 
-            // 2. Loop setiap slide satu per satu.
+            // --- LANGKAH 1: LOOP & RENDER SETIAP SLIDE ---
             for (let i = 0; i < slides.length; i++) {
+                console.log(`[Slide ${i + 1}/${slides.length}] Memulai proses...`);
                 const slide = slides[i];
                 const clone = slide.cloneNode(true);
                 
                 Object.assign(clone.style, {
                     opacity: '1',
                     visibility: 'visible',
-                    position: 'relative',
+                    position: 'absolute', // Gunakan absolute agar tidak mengganggu layout lain
                     transform: 'none',
                     display: 'block',
                     height: '720px',
@@ -137,47 +150,77 @@ document.addEventListener('DOMContentLoaded', function () {
                     padding: '0'
                 });
                 
+                tempContainer.innerHTML = ''; // Bersihkan container sebelum menempelkan clone baru
                 tempContainer.appendChild(clone);
 
-                // 3. TUNGGU ASET SELESAI DIMUAT (PERBAIKAN KUNCI)
-                // Ini akan menjeda eksekusi sampai semua <img> di slide siap.
-                await waitForAssets(clone);
+                // --- PERBAIKAN KUNCI: MENUNGGU SEMUA GAMBAR DI DALAM CLONE ---
+                console.log(`[Slide ${i + 1}] Menunggu gambar di dalam slide...`);
+                const images = Array.from(clone.querySelectorAll('img'));
+                const imagePromises = images.map(img => {
+                    // Jika src kosong atau sudah complete, langsung resolve
+                    if (!img.src || img.complete) return Promise.resolve();
+                    // Jika tidak, tunggu event 'load' atau 'error'
+                    return new Promise((resolve, reject) => {
+                        img.onload = resolve;
+                        img.onerror = () => {
+                            console.warn(`[Slide ${i + 1}] Gagal memuat gambar: ${img.src}. Proses akan dilanjutkan.`);
+                            resolve(); // Kita resolve agar proses tidak berhenti total
+                        };
+                    });
+                });
+                
+                await Promise.all(imagePromises);
+                console.log(`[Slide ${i + 1}] Semua gambar selesai diproses.`);
+                
+                // Beri jeda tambahan untuk background-image dan render akhir
+                await new Promise(resolve => setTimeout(resolve, 500));
 
-                // 4. Ubah kloningan yang sudah SIAP SEPENUHNYA menjadi gambar.
+                // --- RENDER KE CANVAS ---
+                console.log(`[Slide ${i + 1}] Merender ke canvas...`);
                 const canvas = await html2canvas(clone, {
                     scale: 2,
                     useCORS: true,
                     logging: false,
-                    // Menghilangkan padding putih dengan menentukan area tangkap
-                    x: 0,
-                    y: 0,
-                    width: 1280,
-                    height: 720
+                    // Pastikan area tangkap bersih dari padding/margin liar
+                    x: 0, y: 0, width: 1280, height: 720
                 });
                 const imgData = canvas.toDataURL('image/jpeg', 0.98);
+                console.log(`[Slide ${i + 1}] Berhasil dirender ke canvas.`);
 
-                // 5. Tambahkan gambar ke dokumen PDF.
+                // --- TAMBAHKAN KE PDF ---
                 if (i > 0) {
                     pdf.addPage([1280, 720], 'landscape');
                 }
                 pdf.addImage(imgData, 'JPEG', 0, 0, 1280, 720);
-
-                tempContainer.innerHTML = ''; // Bersihkan untuk slide berikutnya
+                console.log(`[Slide ${i + 1}] Berhasil ditambahkan ke dokumen PDF.`);
             }
 
-            // 6. Simpan PDF.
+            // --- LANGKAH 2: SIMPAN PDF ---
+            console.log("Semua slide telah diproses. Menyimpan file PDF...");
             pdf.save('SIER - Studi Kelayakan Proyek Olahraga.pdf');
+            console.log("--- PROSES PDF BERHASIL ---");
 
         } catch (error) {
-            console.error("Gagal membuat PDF:", error);
-            alert("Terjadi kesalahan kritis saat membuat PDF. Silakan muat ulang halaman dan coba lagi. Detail teknis ada di konsol.");
+            // --- BLOK DEBUGGING JIKA TERJADI ERROR ---
+            console.error("--- PROSES PDF GAGAL ---");
+            console.error("Pesan Error:", error.message);
+            console.error("Objek Error Lengkap:", error);
+            if (error.stack) {
+                console.error("Stack Trace:", error.stack);
+            }
+            alert("Terjadi kesalahan kritis saat membuat PDF. Silakan buka konsol (F12) untuk melihat detail teknis dan laporkan pesan error tersebut.");
+
         } finally {
+            // --- LANGKAH 3: PEMBERSIHAN ---
+            console.log("Membersihkan sumber daya...");
+            document.body.classList.remove('pdf-generating');
             downloadButton.innerHTML = originalIcon;
             downloadButton.classList.remove('loading');
             
             if (document.body.contains(tempContainer)) {
                 document.body.removeChild(tempContainer);
             }
+            console.log("Pembersihan selesai.");
         }
     }
 
