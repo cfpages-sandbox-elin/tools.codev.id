@@ -1,4 +1,4 @@
-// slide.js FINAL (dengan fungsi Download PDF + fix laman PDF sama 4)
+// slide.js FINAL (dengan fungsi Download PDF + fix laman PDF sama 5 + waitforassets)
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -72,6 +72,25 @@ document.addEventListener('DOMContentLoaded', function () {
     function openLightbox(src) { lightboxImg.src = src; lightbox.classList.add('visible'); }
     function closeLightbox() { lightbox.classList.remove('visible'); }
     
+    function waitForAssets(element) {
+        const images = Array.from(element.querySelectorAll('img'));
+        const promises = images.map(img => {
+            return new Promise((resolve, reject) => {
+                if (img.complete) {
+                    resolve();
+                } else {
+                    img.onload = resolve;
+                    img.onerror = reject;
+                }
+            });
+        });
+
+        // Kita juga tambahkan jeda singkat untuk memberi kesempatan font dan background-image render.
+        // Ini adalah jaring pengaman terakhir.
+        promises.push(new Promise(resolve => setTimeout(resolve, 300)));
+
+        return Promise.all(promises);
+    }
     // slide.js -> GANTI FUNGSI INI DENGAN VERSI FINAL YANG SUDAH TERUJI
     async function downloadPDF() {
         if (downloadButton.classList.contains('loading')) return;
@@ -81,7 +100,6 @@ document.addEventListener('DOMContentLoaded', function () {
         downloadButton.classList.add('loading');
 
         const tempContainer = document.createElement('div');
-        // Mencegah style dari luar mengganggu rendering
         Object.assign(tempContainer.style, {
             position: 'absolute',
             left: '-9999px',
@@ -94,16 +112,15 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             if (slides.length === 0) throw new Error("Tidak ada slide untuk di-download.");
 
-            // 1. BUAT DOKUMEN PDF KOSONG SECARA MANUAL
-            // Kita akses konstruktor jsPDF dari bundle html2pdf. Ini cara yang benar.
-            const { jsPDF } = html2pdf.jsPDF;
+            // 1. Dapatkan konstruktor jsPDF dari bundle dengan aman.
+            const { jsPDF } = html2pdf.get('jsPDF');
             const pdf = new jsPDF({
                 orientation: 'landscape',
                 unit: 'px',
                 format: [1280, 720]
             });
 
-            // 2. LOOP SETIAP SLIDE UNTUK DIUBAH MENJADI GAMBAR
+            // 2. Loop setiap slide satu per satu.
             for (let i = 0; i < slides.length; i++) {
                 const slide = slides[i];
                 const clone = slide.cloneNode(true);
@@ -122,16 +139,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 
                 tempContainer.appendChild(clone);
 
-                // Beri waktu untuk browser merender (mencegah race condition)
-                await new Promise(resolve => setTimeout(resolve, 50));
+                // 3. TUNGGU ASET SELESAI DIMUAT (PERBAIKAN KUNCI)
+                // Ini akan menjeda eksekusi sampai semua <img> di slide siap.
+                await waitForAssets(clone);
 
-                // 3. UBAH CLONE MENJADI GAMBAR DENGAN KONTROL PENUH
+                // 4. Ubah kloningan yang sudah SIAP SEPENUHNYA menjadi gambar.
                 const canvas = await html2canvas(clone, {
                     scale: 2,
                     useCORS: true,
                     logging: false,
-                    // INI KUNCI UNTUK MENGHILANGKAN PADDING PUTIH:
-                    // Kita secara eksplisit memberitahu area mana yang harus "difoto".
+                    // Menghilangkan padding putih dengan menentukan area tangkap
                     x: 0,
                     y: 0,
                     width: 1280,
@@ -139,23 +156,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
                 const imgData = canvas.toDataURL('image/jpeg', 0.98);
 
-                // 4. TAMBAHKAN GAMBAR KE DOKUMEN PDF
-                // Tambahkan halaman baru jika ini bukan slide pertama
+                // 5. Tambahkan gambar ke dokumen PDF.
                 if (i > 0) {
                     pdf.addPage([1280, 720], 'landscape');
                 }
-                // Tempatkan gambar di halaman saat ini, di posisi 0,0
                 pdf.addImage(imgData, 'JPEG', 0, 0, 1280, 720);
 
                 tempContainer.innerHTML = ''; // Bersihkan untuk slide berikutnya
             }
 
-            // 5. SIMPAN PDF SETELAH SEMUA HALAMAN DITAMBAHKAN
+            // 6. Simpan PDF.
             pdf.save('SIER - Studi Kelayakan Proyek Olahraga.pdf');
 
         } catch (error) {
             console.error("Gagal membuat PDF:", error);
-            alert("Terjadi kesalahan saat membuat PDF. Silakan periksa konsol untuk detail.");
+            alert("Terjadi kesalahan kritis saat membuat PDF. Silakan muat ulang halaman dan coba lagi. Detail teknis ada di konsol.");
         } finally {
             downloadButton.innerHTML = originalIcon;
             downloadButton.classList.remove('loading');
