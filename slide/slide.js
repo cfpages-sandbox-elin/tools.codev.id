@@ -1,4 +1,4 @@
-// slide.js FINAL (Download PDF + fix styling zai 4 + try to fix blank
+// slide.js FINAL (Download PDF + fix styling zai 5 + fullscreen mode
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -124,6 +124,12 @@ document.addEventListener('DOMContentLoaded', function () {
             // Store the current active slide
             const originalActiveSlide = currentSlide;
             
+            // Enter fullscreen mode
+            const presentationContainer = document.getElementById('presentation-container');
+            await presentationContainer.requestFullscreen();
+            // Wait for fullscreen to activate
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
             for (let i = 0; i < slides.length; i++) {
                 console.log(`[Slide ${i + 1}/${slides.length}] Memulai proses...`);
                 
@@ -131,40 +137,102 @@ document.addEventListener('DOMContentLoaded', function () {
                 showSlide(i);
                 
                 // Wait a bit for the slide to become fully visible and render
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                await new Promise(resolve => setTimeout(resolve, 1500));
                 
                 console.log(`[Slide ${i + 1}] Menunggu gambar...`);
-                const images = Array.from(slides[i].querySelectorAll('img'));
+                const currentSlideElement = slides[i];
+                const images = Array.from(currentSlideElement.querySelectorAll('img'));
+                
+                // Preload all images with proper CORS handling
                 const imagePromises = images.map(img => {
-                    if (!img.src || img.complete) return Promise.resolve();
                     return new Promise((resolve) => {
-                        img.onload = resolve;
-                        img.onerror = () => {
+                        if (img.complete && img.naturalHeight !== 0) {
+                            resolve();
+                            return;
+                        }
+                        
+                        const tempImg = new Image();
+                        tempImg.crossOrigin = "Anonymous";
+                        
+                        tempImg.onload = () => {
+                            // Replace the original image's src with the properly loaded one
+                            img.src = tempImg.src;
+                            resolve();
+                        };
+                        
+                        tempImg.onerror = () => {
                             console.warn(`[Slide ${i + 1}] Gagal memuat: ${img.src}. Melanjutkan...`);
                             resolve();
                         };
+                        
+                        // Handle relative URLs
+                        let src = img.src;
+                        if (src.startsWith('/')) {
+                            // Convert relative URL to absolute
+                            src = window.location.origin + src;
+                        }
+                        tempImg.src = src;
                     });
                 });
+                
                 await Promise.all(imagePromises);
                 console.log(`[Slide ${i + 1}] Gambar selesai.`);
                 
                 // Give more time for rendering
-                await new Promise(resolve => setTimeout(resolve, 500));
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 
                 console.log(`[Slide ${i + 1}] Merender ke canvas...`);
-                // Capture the entire presentation container which includes the active slide
-                const canvas = await html2canvas(document.getElementById('presentation-container'), {
+                
+                // Create a wrapper div to ensure proper styling
+                const wrapper = document.createElement('div');
+                wrapper.style.position = 'fixed';
+                wrapper.style.top = '0';
+                wrapper.style.left = '0';
+                wrapper.style.width = '100vw';
+                wrapper.style.height = '100vh';
+                wrapper.style.backgroundColor = '#0a192f';
+                wrapper.style.zIndex = '9999';
+                wrapper.style.display = 'flex';
+                wrapper.style.justifyContent = 'center';
+                wrapper.style.alignItems = 'center';
+                
+                // Clone the slide with all its styles
+                const slideClone = currentSlideElement.cloneNode(true);
+                slideClone.style.position = 'relative';
+                slideClone.style.width = '1366px';
+                slideClone.style.height = '768px';
+                slideClone.style.transform = 'none';
+                slideClone.style.opacity = '1';
+                slideClone.style.visibility = 'visible';
+                slideClone.style.fontFamily = "'Poppins', sans-serif";
+                
+                // Apply font to all text elements
+                const textElements = slideClone.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, div, li, td, th');
+                textElements.forEach(el => {
+                    el.style.fontFamily = "'Poppins', sans-serif";
+                });
+                
+                wrapper.appendChild(slideClone);
+                document.body.appendChild(wrapper);
+                
+                // Wait for the wrapper to be added to the DOM
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Capture the wrapper
+                const canvas = await html2canvas(wrapper, {
                     scale: 1,
                     useCORS: true,
                     logging: false,
                     width: 1366,
                     height: 768,
-                    backgroundColor: null, // Use the background from the element itself
-                    // Additional options to improve rendering
+                    backgroundColor: null,
                     letterRendering: true,
                     foreignObjectRendering: true,
-                    removeContainer: false
+                    allowTaint: true
                 });
+                
+                // Remove the wrapper
+                document.body.removeChild(wrapper);
                 
                 if (!canvas) {
                     throw new Error(`[Slide ${i+1}] Gagal menghasilkan canvas.`);
@@ -180,6 +248,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 pdf.addImage(imgData, 'JPEG', 0, 0, 1366, 768);
                 console.log(`[Slide ${i + 1}] Berhasil ditambahkan ke PDF.`);
             }
+            
             console.log("Semua slide telah diproses. Menyimpan file PDF...");
             pdf.save('SIER - Studi Kelayakan Proyek Olahraga.pdf');
             console.log("--- PROSES PDF BERHASIL ---");
@@ -195,6 +264,11 @@ document.addEventListener('DOMContentLoaded', function () {
             document.body.classList.remove('pdf-generating');
             downloadButton.innerHTML = originalIcon;
             downloadButton.classList.remove('loading');
+            
+            // Exit fullscreen
+            if (document.fullscreenElement) {
+                await document.exitFullscreen();
+            }
             
             // Restore the original active slide
             showSlide(originalActiveSlide);
