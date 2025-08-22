@@ -1,4 +1,4 @@
-// slide.js FINAL (dengan fungsi Download PDF + fix laman PDF sama 8 + waitforassets + debugging)
+// slide.js FINAL (dengan fungsi Download PDF + fix laman PDF sama 9 + waitforassets + debugging)
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -107,13 +107,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const tempContainer = document.createElement('div');
         Object.assign(tempContainer.style, {
-            position: 'absolute',
-            left: '-9999px',
-            top: '0',
-            margin: '0',
-            padding: '0',
-            width: '1280px',
-            height: '720px'
+            position: 'absolute', left: '-9999px', top: '0',
+            margin: '0', padding: '0', width: '1280px', height: '720px'
         });
         document.body.appendChild(tempContainer);
 
@@ -125,8 +120,6 @@ document.addEventListener('DOMContentLoaded', function () {
             await document.fonts.load('1em Poppins');
             console.log("Font 'Poppins' berhasil dimuat.");
 
-            // --- PERBAIKAN KUNCI: MENGGUNAKAN API YANG BENAR DAN DIDOKUMENTASIKAN ---
-            // 1. Definisikan opsi PDF
             const options = {
                 margin: 0,
                 filename: 'SIER - Studi Kelayakan Proyek Olahraga.pdf',
@@ -135,13 +128,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 jsPDF: { unit: 'px', format: [1280, 720], orientation: 'landscape' }
             };
 
-            // 2. Buat instance worker HANYA SEKALI
-            const worker = html2pdf().set(options);
-
-            // 3. Dapatkan objek PDF dari worker tersebut. Ini adalah metode asinkron.
-            const pdf = await worker.get('jsPDF');
+            // Buat DOKUMEN PDF KOSONG terlebih dahulu menggunakan API yang benar
+            const pdf = await html2pdf().set(options).get('jsPDF');
             console.log("Objek jsPDF berhasil didapatkan dari worker.");
-            // -------------------------------------------------------------------------
 
             // --- LANGKAH 1: LOOP & RENDER SETIAP SLIDE ---
             for (let i = 0; i < slides.length; i++) {
@@ -176,26 +165,29 @@ document.addEventListener('DOMContentLoaded', function () {
                 
                 await new Promise(resolve => setTimeout(resolve, 500));
 
-                // Render ke canvas
+                // --- PERBAIKAN KUNCI: MENGGUNAKAN API YANG BENAR UNTUK MENGHASILKAN CANVAS ---
                 console.log(`[Slide ${i + 1}] Merender ke canvas...`);
-                const canvas = await html2canvas(clone, options.html2canvas);
+                const canvas = await html2pdf().from(clone).set(options).toCanvas();
                 const imgData = canvas.toDataURL('image/jpeg', 0.98);
                 console.log(`[Slide ${i + 1}] Berhasil dirender.`);
+                // -------------------------------------------------------------------------
 
                 // Tambahkan ke PDF
-                // Kosongkan halaman default pertama yang mungkin dibuat oleh worker
-                if (i === 0) {
-                    pdf.deletePage(1);
+                if (i > 0) {
+                    pdf.addPage([1280, 720], 'landscape');
+                } else {
+                    // Hapus halaman kosong pertama yang mungkin dibuat oleh .get('jsPDF')
+                    if (pdf.getNumberOfPages() > 0 && pdf.internal.pages.length > 1) {
+                        pdf.deletePage(1);
+                    }
                 }
-                pdf.addPage([1280, 720], 'landscape');
                 pdf.addImage(imgData, 'JPEG', 0, 0, 1280, 720);
                 console.log(`[Slide ${i + 1}] Berhasil ditambahkan ke PDF.`);
             }
 
             // --- LANGKAH 2: SIMPAN PDF ---
             console.log("Semua slide telah diproses. Menyimpan file PDF...");
-            // Gunakan worker untuk menyimpan PDF yang telah kita modifikasi
-            await worker.save();
+            pdf.save(options.filename);
             console.log("--- PROSES PDF BERHASIL ---");
 
         } catch (error) {
