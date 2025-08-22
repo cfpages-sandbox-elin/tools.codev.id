@@ -1,4 +1,4 @@
-// slide.js FINAL (Download PDF + fix styling zai 3
+// slide.js FINAL (Download PDF + fix styling zai 4 + try to fix blank
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -102,17 +102,6 @@ document.addEventListener('DOMContentLoaded', function () {
         downloadButton.innerHTML = '<i class="fas fa-spinner"></i>';
         downloadButton.classList.add('loading');
         
-        // Create a temporary container that mimics the original presentation container
-        const tempContainer = document.createElement('div');
-        tempContainer.id = 'presentation-container';
-        tempContainer.style.position = 'absolute';
-        tempContainer.style.left = '-9999px';
-        tempContainer.style.top = '0';
-        tempContainer.style.width = '1366px';
-        tempContainer.style.height = '768px';
-        tempContainer.style.backgroundColor = '#0a192f';
-        document.body.appendChild(tempContainer);
-        
         try {
             const slides = document.querySelectorAll('.slide');
             if (slides.length === 0) throw new Error("Tidak ada elemen .slide yang ditemukan.");
@@ -132,28 +121,20 @@ document.addEventListener('DOMContentLoaded', function () {
             });
             console.log("Objek jsPDF berhasil dibuat.");
             
+            // Store the current active slide
+            const originalActiveSlide = currentSlide;
+            
             for (let i = 0; i < slides.length; i++) {
                 console.log(`[Slide ${i + 1}/${slides.length}] Memulai proses...`);
-                const slide = slides[i];
                 
-                // Clone the slide with all its styles
-                const clone = slide.cloneNode(true);
+                // Make the slide we want to capture active
+                showSlide(i);
                 
-                // Clear the temporary container and add the cloned slide
-                tempContainer.innerHTML = '';
-                tempContainer.appendChild(clone);
-                
-                // Make sure the slide is visible and properly styled
-                clone.classList.add('active');
-                clone.style.opacity = '1';
-                clone.style.visibility = 'visible';
-                clone.style.transform = 'none';
-                clone.style.display = 'block';
-                clone.style.width = '100%';
-                clone.style.height = '100%';
+                // Wait a bit for the slide to become fully visible and render
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 
                 console.log(`[Slide ${i + 1}] Menunggu gambar...`);
-                const images = Array.from(clone.querySelectorAll('img'));
+                const images = Array.from(slides[i].querySelectorAll('img'));
                 const imagePromises = images.map(img => {
                     if (!img.src || img.complete) return Promise.resolve();
                     return new Promise((resolve) => {
@@ -167,12 +148,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 await Promise.all(imagePromises);
                 console.log(`[Slide ${i + 1}] Gambar selesai.`);
                 
-                // Give time for rendering
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                // Give more time for rendering
+                await new Promise(resolve => setTimeout(resolve, 500));
                 
                 console.log(`[Slide ${i + 1}] Merender ke canvas...`);
-                const canvas = await html2canvas(tempContainer, {
-                    scale: 1, // Using scale 1 to match screen resolution
+                // Capture the entire presentation container which includes the active slide
+                const canvas = await html2canvas(document.getElementById('presentation-container'), {
+                    scale: 1,
                     useCORS: true,
                     logging: false,
                     width: 1366,
@@ -214,9 +196,8 @@ document.addEventListener('DOMContentLoaded', function () {
             downloadButton.innerHTML = originalIcon;
             downloadButton.classList.remove('loading');
             
-            if (document.body.contains(tempContainer)) {
-                document.body.removeChild(tempContainer);
-            }
+            // Restore the original active slide
+            showSlide(originalActiveSlide);
             console.log("Pembersihan selesai.");
         }
     }
