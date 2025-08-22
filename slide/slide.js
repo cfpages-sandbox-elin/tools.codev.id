@@ -1,4 +1,4 @@
-// slide.js FINAL (dengan fungsi Download PDF + fix laman PDF sama 6 + waitforassets + debugging)
+// slide.js FINAL (dengan fungsi Download PDF + fix laman PDF sama 7 + waitforassets + debugging)
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -91,6 +91,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         return Promise.all(promises);
     }
+
     // slide.js -> GANTI FUNGSI INI DENGAN VERSI FINAL YANG SUDAH TERUJI
     async function downloadPDF() {
         // --- LANGKAH 0: PERSIAPAN & INISIALISASI ---
@@ -111,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function () {
             top: '0',
             margin: '0',
             padding: '0',
-            width: '1280px', // Tentukan ukuran container agar konsisten
+            width: '1280px',
             height: '720px'
         });
         document.body.appendChild(tempContainer);
@@ -121,11 +122,14 @@ document.addEventListener('DOMContentLoaded', function () {
             if (slides.length === 0) throw new Error("Tidak ada elemen .slide yang ditemukan.");
 
             console.log("Memastikan font 'Poppins' sudah dimuat...");
-            await document.fonts.load('1em Poppins'); // Tunggu font krusial siap
+            await document.fonts.load('1em Poppins');
             console.log("Font 'Poppins' berhasil dimuat.");
 
-            // Dapatkan konstruktor jsPDF dari bundle dengan aman
-            const { jsPDF } = window.html2pdf.get('jsPDF');
+            // PERBAIKAN KUNCI: Menggunakan API yang BENAR untuk mengakses jsPDF dari bundle.
+            const { jsPDF } = window.html2pdf.jsPDF;
+            if (!jsPDF) {
+                throw new Error("Konstruktor jsPDF tidak dapat ditemukan di dalam bundle html2pdf.");
+            }
             const pdf = new jsPDF({
                 orientation: 'landscape',
                 unit: 'px',
@@ -141,7 +145,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 Object.assign(clone.style, {
                     opacity: '1',
                     visibility: 'visible',
-                    position: 'absolute', // Gunakan absolute agar tidak mengganggu layout lain
+                    position: 'absolute',
                     transform: 'none',
                     display: 'block',
                     height: '720px',
@@ -150,21 +154,19 @@ document.addEventListener('DOMContentLoaded', function () {
                     padding: '0'
                 });
                 
-                tempContainer.innerHTML = ''; // Bersihkan container sebelum menempelkan clone baru
+                tempContainer.innerHTML = '';
                 tempContainer.appendChild(clone);
 
-                // --- PERBAIKAN KUNCI: MENUNGGU SEMUA GAMBAR DI DALAM CLONE ---
+                // Menunggu semua gambar di dalam kloningan selesai dimuat
                 console.log(`[Slide ${i + 1}] Menunggu gambar di dalam slide...`);
                 const images = Array.from(clone.querySelectorAll('img'));
                 const imagePromises = images.map(img => {
-                    // Jika src kosong atau sudah complete, langsung resolve
                     if (!img.src || img.complete) return Promise.resolve();
-                    // Jika tidak, tunggu event 'load' atau 'error'
-                    return new Promise((resolve, reject) => {
+                    return new Promise((resolve) => {
                         img.onload = resolve;
                         img.onerror = () => {
                             console.warn(`[Slide ${i + 1}] Gagal memuat gambar: ${img.src}. Proses akan dilanjutkan.`);
-                            resolve(); // Kita resolve agar proses tidak berhenti total
+                            resolve(); // Lanjutkan proses meskipun satu gambar gagal
                         };
                     });
                 });
@@ -172,22 +174,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 await Promise.all(imagePromises);
                 console.log(`[Slide ${i + 1}] Semua gambar selesai diproses.`);
                 
-                // Beri jeda tambahan untuk background-image dan render akhir
+                // Jeda tambahan untuk background-image dan render akhir
                 await new Promise(resolve => setTimeout(resolve, 500));
 
-                // --- RENDER KE CANVAS ---
+                // Render ke canvas
                 console.log(`[Slide ${i + 1}] Merender ke canvas...`);
                 const canvas = await html2canvas(clone, {
                     scale: 2,
                     useCORS: true,
                     logging: false,
-                    // Pastikan area tangkap bersih dari padding/margin liar
                     x: 0, y: 0, width: 1280, height: 720
                 });
                 const imgData = canvas.toDataURL('image/jpeg', 0.98);
                 console.log(`[Slide ${i + 1}] Berhasil dirender ke canvas.`);
 
-                // --- TAMBAHKAN KE PDF ---
+                // Tambahkan ke PDF
                 if (i > 0) {
                     pdf.addPage([1280, 720], 'landscape');
                 }
