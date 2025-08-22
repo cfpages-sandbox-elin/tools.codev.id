@@ -15,6 +15,7 @@
     
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
         /* 
@@ -98,9 +99,26 @@
         #slide-counter { position: absolute; bottom: 20px; right: 20px; background-color: rgba(0, 0, 0, 0.4); color: #e2e8f0; padding: 6px 14px; border-radius: 20px; font-size: 14px; z-index: 10; user-select: none; }
         .bg-slate-800\/50 { background-color: rgba(30, 41, 59, 0.5); }
         
-        /* --- NEW: Fullscreen Button Style --- */
+        /* --- NEW: Fullscreen & Download Button Style --- */
         #fullscreen-btn { position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; background-color: rgba(30, 41, 59, 0.5); color: #cbd5e1; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; transition: all 0.2s ease-in-out; }
         #fullscreen-btn:hover { background-color: #6366f1; color: white; }
+        #download-btn {
+            bottom: 20px;
+            top: auto;
+            left: 20px;
+        }
+
+        #download-btn.loading {
+            background-color: #f59e0b; /* Amber-500 */
+            color: #020617;
+            cursor: not-allowed;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
 
         /* --- NEW: Hanging Indent List Style --- */
         .hanging-list li {
@@ -154,6 +172,7 @@
             <div class="nav-arrow" id="next-slide"><i class="fas fa-chevron-right"></i></div>
             <div id="slide-counter">1 / 28</div>
             <div id="fullscreen-btn" title="Toggle Fullscreen (Double Click)"><i class="fas fa-expand"></i></div>
+            <div id="download-btn" class="nav-arrow" style="bottom: 20px; top: auto; left: 20px;" title="Download as PDF"><i class="fas fa-download"></i></div>
 
             <!-- SLIDES START HERE -->
 
