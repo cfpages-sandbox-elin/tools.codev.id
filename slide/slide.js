@@ -1,4 +1,4 @@
-// slide.js FINAL (dengan fungsi Download PDF)
+// slide.js FINAL (dengan fungsi Download PDF + fix laman PDF sama)
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -80,25 +80,25 @@ document.addEventListener('DOMContentLoaded', function () {
         downloadButton.innerHTML = '<i class="fas fa-spinner"></i>';
         downloadButton.classList.add('loading');
 
-        // BARU: Buat container sementara di luar layar
+        // Buat container sementara di luar layar (logika ini tetap diperlukan dan sudah benar)
         const tempContainer = document.createElement('div');
         tempContainer.style.position = 'absolute';
-        tempContainer.style.left = '-9999px'; // Posisikan jauh di luar layar
+        tempContainer.style.left = '-9999px';
         tempContainer.style.top = '0';
         document.body.appendChild(tempContainer);
 
-        const options = {
-            margin: 0,
-            filename: 'SIER - Studi Kelayakan Proyek Olahraga.pdf',
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, logging: false },
-            jsPDF: { unit: 'px', format: [1280, 720], orientation: 'landscape' }
-        };
-
-        const worker = html2pdf().set(options);
+        // Dapatkan library jsPDF dari bundle html2pdf yang sudah di-load
+        const { jsPDF } = window.jspdf;
+        
+        // 1. Inisialisasi PDF kosong dengan orientasi dan ukuran yang benar
+        const pdf = new jsPDF({
+            orientation: 'landscape',
+            unit: 'px',
+            format: [1280, 720]
+        });
 
         try {
-            // Proses satu per satu untuk stabilitas
+            // 2. Looping setiap slide satu per satu
             for (let i = 0; i < slides.length; i++) {
                 const slide = slides[i];
                 const clone = slide.cloneNode(true);
@@ -106,35 +106,47 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Siapkan clone untuk di-render
                 clone.style.opacity = '1';
                 clone.style.visibility = 'visible';
-                clone.style.position = 'relative'; // relative, bukan absolute
+                clone.style.position = 'relative';
                 clone.style.transform = 'none';
-                clone.style.display = 'block'; // Pastikan terlihat
+                clone.style.display = 'block';
                 clone.style.height = '720px';
                 clone.style.width = '1280px';
                 
-                // MODIFIKASI: Masukkan clone ke container sementara agar bisa dirender
+                // Masukkan clone ke container sementara agar bisa dirender oleh browser
                 tempContainer.appendChild(clone);
 
-                await worker.from(clone).toPdf().get('pdf').then(pdf => {
-                    if (i < slides.length - 1) {
-                        pdf.addPage();
-                    }
+                // 2a. Ubah slide (yang ada di dalam clone) menjadi canvas (gambar)
+                const canvas = await html2canvas(clone, {
+                    scale: 2, // Meningkatkan resolusi
+                    useCORS: true,
+                    logging: false
                 });
+                const imgData = canvas.toDataURL('image/jpeg', 0.98);
 
-                // MODIFIKASI: Bersihkan container setelah slide selesai diproses
+                // 2b. Tambahkan halaman baru jika ini bukan slide pertama
+                if (i > 0) {
+                    pdf.addPage();
+                }
+
+                // 2c. Tambahkan gambar dari canvas ke halaman PDF saat ini
+                pdf.addImage(imgData, 'JPEG', 0, 0, 1280, 720);
+
+                // Bersihkan container untuk persiapan slide berikutnya
                 tempContainer.innerHTML = '';
             }
 
-            await worker.save();
+            // 3. Simpan PDF setelah semua halaman ditambahkan
+            pdf.save('SIER - Studi Kelayakan Proyek Olahraga.pdf');
+
         } catch (error) {
             console.error("Gagal membuat PDF:", error);
-            alert("Terjadi kesalahan saat membuat PDF. Silakan coba lagi.");
+            alert("Terjadi kesalahan saat membuat PDF. Silakan periksa konsol untuk detail.");
         } finally {
             // Kembalikan tombol ke kondisi semula
             downloadButton.innerHTML = originalIcon;
             downloadButton.classList.remove('loading');
             
-            // HAPUS SETELAH DIGUNAKAN: Hapus container sementara dari body
+            // Hapus container sementara dari body
             document.body.removeChild(tempContainer);
         }
     }
