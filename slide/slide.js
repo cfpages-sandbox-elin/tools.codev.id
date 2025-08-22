@@ -1,4 +1,4 @@
-// slide.js FINAL (dengan fungsi Download PDF + fix laman PDF sama 7 + waitforassets + debugging)
+// slide.js FINAL (dengan fungsi Download PDF + fix laman PDF sama 8 + waitforassets + debugging)
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -125,16 +125,23 @@ document.addEventListener('DOMContentLoaded', function () {
             await document.fonts.load('1em Poppins');
             console.log("Font 'Poppins' berhasil dimuat.");
 
-            // PERBAIKAN KUNCI: Menggunakan API yang BENAR untuk mengakses jsPDF dari bundle.
-            const { jsPDF } = window.html2pdf.jsPDF;
-            if (!jsPDF) {
-                throw new Error("Konstruktor jsPDF tidak dapat ditemukan di dalam bundle html2pdf.");
-            }
-            const pdf = new jsPDF({
-                orientation: 'landscape',
-                unit: 'px',
-                format: [1280, 720]
-            });
+            // --- PERBAIKAN KUNCI: MENGGUNAKAN API YANG BENAR DAN DIDOKUMENTASIKAN ---
+            // 1. Definisikan opsi PDF
+            const options = {
+                margin: 0,
+                filename: 'SIER - Studi Kelayakan Proyek Olahraga.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, logging: false, x: 0, y: 0, width: 1280, height: 720 },
+                jsPDF: { unit: 'px', format: [1280, 720], orientation: 'landscape' }
+            };
+
+            // 2. Buat instance worker HANYA SEKALI
+            const worker = html2pdf().set(options);
+
+            // 3. Dapatkan objek PDF dari worker tersebut. Ini adalah metode asinkron.
+            const pdf = await worker.get('jsPDF');
+            console.log("Objek jsPDF berhasil didapatkan dari worker.");
+            // -------------------------------------------------------------------------
 
             // --- LANGKAH 1: LOOP & RENDER SETIAP SLIDE ---
             for (let i = 0; i < slides.length; i++) {
@@ -143,74 +150,61 @@ document.addEventListener('DOMContentLoaded', function () {
                 const clone = slide.cloneNode(true);
                 
                 Object.assign(clone.style, {
-                    opacity: '1',
-                    visibility: 'visible',
-                    position: 'absolute',
-                    transform: 'none',
-                    display: 'block',
-                    height: '720px',
-                    width: '1280px',
-                    margin: '0',
-                    padding: '0'
+                    opacity: '1', visibility: 'visible', position: 'absolute',
+                    transform: 'none', display: 'block', height: '720px',
+                    width: '1280px', margin: '0', padding: '0'
                 });
                 
                 tempContainer.innerHTML = '';
                 tempContainer.appendChild(clone);
 
                 // Menunggu semua gambar di dalam kloningan selesai dimuat
-                console.log(`[Slide ${i + 1}] Menunggu gambar di dalam slide...`);
+                console.log(`[Slide ${i + 1}] Menunggu gambar...`);
                 const images = Array.from(clone.querySelectorAll('img'));
                 const imagePromises = images.map(img => {
                     if (!img.src || img.complete) return Promise.resolve();
                     return new Promise((resolve) => {
                         img.onload = resolve;
                         img.onerror = () => {
-                            console.warn(`[Slide ${i + 1}] Gagal memuat gambar: ${img.src}. Proses akan dilanjutkan.`);
-                            resolve(); // Lanjutkan proses meskipun satu gambar gagal
+                            console.warn(`[Slide ${i + 1}] Gagal memuat: ${img.src}. Melanjutkan...`);
+                            resolve();
                         };
                     });
                 });
-                
                 await Promise.all(imagePromises);
-                console.log(`[Slide ${i + 1}] Semua gambar selesai diproses.`);
+                console.log(`[Slide ${i + 1}] Gambar selesai.`);
                 
-                // Jeda tambahan untuk background-image dan render akhir
                 await new Promise(resolve => setTimeout(resolve, 500));
 
                 // Render ke canvas
                 console.log(`[Slide ${i + 1}] Merender ke canvas...`);
-                const canvas = await html2canvas(clone, {
-                    scale: 2,
-                    useCORS: true,
-                    logging: false,
-                    x: 0, y: 0, width: 1280, height: 720
-                });
+                const canvas = await html2canvas(clone, options.html2canvas);
                 const imgData = canvas.toDataURL('image/jpeg', 0.98);
-                console.log(`[Slide ${i + 1}] Berhasil dirender ke canvas.`);
+                console.log(`[Slide ${i + 1}] Berhasil dirender.`);
 
                 // Tambahkan ke PDF
-                if (i > 0) {
-                    pdf.addPage([1280, 720], 'landscape');
+                // Kosongkan halaman default pertama yang mungkin dibuat oleh worker
+                if (i === 0) {
+                    pdf.deletePage(1);
                 }
+                pdf.addPage([1280, 720], 'landscape');
                 pdf.addImage(imgData, 'JPEG', 0, 0, 1280, 720);
-                console.log(`[Slide ${i + 1}] Berhasil ditambahkan ke dokumen PDF.`);
+                console.log(`[Slide ${i + 1}] Berhasil ditambahkan ke PDF.`);
             }
 
             // --- LANGKAH 2: SIMPAN PDF ---
             console.log("Semua slide telah diproses. Menyimpan file PDF...");
-            pdf.save('SIER - Studi Kelayakan Proyek Olahraga.pdf');
+            // Gunakan worker untuk menyimpan PDF yang telah kita modifikasi
+            await worker.save();
             console.log("--- PROSES PDF BERHASIL ---");
 
         } catch (error) {
-            // --- BLOK DEBUGGING JIKA TERJADI ERROR ---
-            console.error("--- PROSES PDF GAGAL ---");
-            console.error("Pesan Error:", error.message);
-            console.error("Objek Error Lengkap:", error);
-            if (error.stack) {
-                console.error("Stack Trace:", error.stack);
-            }
-            alert("Terjadi kesalahan kritis saat membuat PDF. Silakan buka konsol (F12) untuk melihat detail teknis dan laporkan pesan error tersebut.");
-
+            console.error("--- PROSES PDF GAGAL ---", {
+                message: error.message,
+                stack: error.stack,
+                errorObject: error
+            });
+            alert("Terjadi kesalahan kritis saat membuat PDF. Silakan buka konsol (F12) untuk melihat detail teknis.");
         } finally {
             // --- LANGKAH 3: PEMBERSIHAN ---
             console.log("Membersihkan sumber daya...");
