@@ -1,4 +1,4 @@
-// slide.js FINAL (Download PDF + fix styling zai 6 + fullscreen mode + screenshot api
+// slide.js FINAL (Download PDF + fix styling zai 7 + fullscreen mode + tab capture api
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -127,6 +127,54 @@ document.addEventListener('DOMContentLoaded', function () {
             // Array to store screenshot data
             const screenshots = [];
             
+            // Try to use the Tab Capture API (Chrome extension approach)
+            let stream;
+            try {
+                // This approach works if you have a Chrome extension with the appropriate permissions
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        mandatory: {
+                            chromeMediaSource: 'tab',
+                            minWidth: 1366,
+                            maxWidth: 1366,
+                            minHeight: 768,
+                            maxHeight: 768
+                        }
+                    }
+                });
+            } catch (err) {
+                console.log("Tab Capture API tidak tersedia, menggunakan Screen Capture API...");
+                // Fallback to Screen Capture API with better instructions
+                stream = await navigator.mediaDevices.getDisplayMedia({
+                    video: {
+                        cursor: "never",
+                        width: { ideal: 1366 },
+                        height: { ideal: 768 }
+                    },
+                    audio: false
+                });
+                
+                // Show instructions to the user
+                alert("Saat diminta, pilih tab browser ini (bukan seluruh layar) untuk menghindari menangkap elemen desktop.");
+            }
+            
+            // Create a video element to capture the stream
+            const video = document.createElement('video');
+            video.srcObject = stream;
+            video.play();
+            
+            // Wait for the video to be ready
+            await new Promise(resolve => {
+                video.onloadedmetadata = resolve;
+            });
+            
+            // Create a canvas to capture the video frame
+            const canvas = document.createElement('canvas');
+            canvas.width = 1366;
+            canvas.height = 768;
+            const ctx = canvas.getContext('2d');
+            
+            // Now, for each slide, switch to it, wait, and capture
             for (let i = 0; i < slides.length; i++) {
                 console.log(`[Slide ${i + 1}/${slides.length}] Memulai proses...`);
                 
@@ -138,102 +186,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 
                 console.log(`[Slide ${i + 1}] Mengambil screenshot...`);
                 
-                // Use the Screen Capture API to take a screenshot
-                try {
-                    const stream = await navigator.mediaDevices.getDisplayMedia({
-                        video: {
-                            cursor: "never"
-                        },
-                        audio: false
-                    });
-                    
-                    // Create a video element to capture the stream
-                    const video = document.createElement('video');
-                    video.srcObject = stream;
-                    video.play();
-                    
-                    // Wait for the video to be ready
-                    await new Promise(resolve => {
-                        video.onloadedmetadata = resolve;
-                    });
-                    
-                    // Create a canvas to capture the video frame
-                    const canvas = document.createElement('canvas');
-                    canvas.width = 1366;
-                    canvas.height = 768;
-                    const ctx = canvas.getContext('2d');
-                    
-                    // Draw the video frame to the canvas
-                    ctx.drawImage(video, 0, 0, 1366, 768);
-                    
-                    // Get the image data
-                    const imgData = canvas.toDataURL('image/jpeg', 0.98);
-                    screenshots.push(imgData);
-                    
-                    // Stop the stream
-                    stream.getTracks().forEach(track => track.stop());
-                    
-                    console.log(`[Slide ${i + 1}] Screenshot berhasil.`);
-                } catch (err) {
-                    console.error(`[Slide ${i + 1}] Gagal mengambil screenshot:`, err);
-                    
-                    // Fallback to html2canvas with better CORS handling
-                    console.log(`[Slide ${i + 1}] Menggunakan metode fallback...`);
-                    
-                    // Create a wrapper div to ensure proper styling
-                    const wrapper = document.createElement('div');
-                    wrapper.style.position = 'fixed';
-                    wrapper.style.top = '0';
-                    wrapper.style.left = '0';
-                    wrapper.style.width = '100vw';
-                    wrapper.style.height = '100vh';
-                    wrapper.style.backgroundColor = '#0a192f';
-                    wrapper.style.zIndex = '9999';
-                    wrapper.style.display = 'flex';
-                    wrapper.style.justifyContent = 'center';
-                    wrapper.style.alignItems = 'center';
-                    wrapper.style.fontFamily = "'Poppins', sans-serif";
-                    
-                    // Clone the slide with all its styles
-                    const slideClone = slides[i].cloneNode(true);
-                    slideClone.style.position = 'relative';
-                    slideClone.style.width = '1366px';
-                    slideClone.style.height = '768px';
-                    slideClone.style.transform = 'none';
-                    slideClone.style.opacity = '1';
-                    slideClone.style.visibility = 'visible';
-                    
-                    wrapper.appendChild(slideClone);
-                    document.body.appendChild(wrapper);
-                    
-                    // Wait for the wrapper to be added to the DOM
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    
-                    // Capture the wrapper
-                    const fallbackCanvas = await html2canvas(wrapper, {
-                        scale: 1,
-                        useCORS: true,
-                        logging: false,
-                        width: 1366,
-                        height: 768,
-                        backgroundColor: null,
-                        letterRendering: true,
-                        foreignObjectRendering: true,
-                        allowTaint: true,
-                        proxy: 'https://api.allorigins.win/raw?url=' // Proxy for external resources
-                    });
-                    
-                    // Remove the wrapper
-                    document.body.removeChild(wrapper);
-                    
-                    if (!fallbackCanvas) {
-                        throw new Error(`[Slide ${i+1}] Gagal menghasilkan canvas.`);
-                    }
-                    const fallbackImgData = fallbackCanvas.toDataURL('image/jpeg', 0.98);
-                    screenshots.push(fallbackImgData);
-                    console.log(`[Slide ${i + 1}] Fallback berhasil.`);
-                }
+                // Draw the current video frame to the canvas
+                ctx.drawImage(video, 0, 0, 1366, 768);
+                
+                // Get the image data
+                const imgData = canvas.toDataURL('image/jpeg', 0.98);
+                screenshots.push(imgData);
+                
+                console.log(`[Slide ${i + 1}] Screenshot berhasil.`);
             }
+            
+            // Stop the stream
+            stream.getTracks().forEach(track => track.stop());
             
             // Add all screenshots to the PDF
             for (let i = 0; i < screenshots.length; i++) {
