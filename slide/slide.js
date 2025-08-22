@@ -1,4 +1,4 @@
-// slide.js FINAL (Download PDF + fix styling zai 1
+// slide.js FINAL (Download PDF + fix styling zai 3
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -101,15 +101,18 @@ document.addEventListener('DOMContentLoaded', function () {
         document.body.classList.add('pdf-generating');
         downloadButton.innerHTML = '<i class="fas fa-spinner"></i>';
         downloadButton.classList.add('loading');
+        
+        // Create a temporary container that mimics the original presentation container
         const tempContainer = document.createElement('div');
-        Object.assign(tempContainer.style, {
-            position: 'absolute', left: '-9999px', top: '0',
-            margin: '0', padding: '0', width: '1280px', height: '720px',
-            fontFamily: "'Poppins', sans-serif", // Explicitly set font
-            backgroundColor: '#0a192f', // Set background color
-            color: '#cbd5e1' // Set text color
-        });
+        tempContainer.id = 'presentation-container';
+        tempContainer.style.position = 'absolute';
+        tempContainer.style.left = '-9999px';
+        tempContainer.style.top = '0';
+        tempContainer.style.width = '1366px';
+        tempContainer.style.height = '768px';
+        tempContainer.style.backgroundColor = '#0a192f';
         document.body.appendChild(tempContainer);
+        
         try {
             const slides = document.querySelectorAll('.slide');
             if (slides.length === 0) throw new Error("Tidak ada elemen .slide yang ditemukan.");
@@ -125,40 +128,29 @@ document.addEventListener('DOMContentLoaded', function () {
             const pdf = new jsPDF({
                 orientation: 'landscape',
                 unit: 'px',
-                format: [1280, 720]
+                format: [1366, 768]
             });
             console.log("Objek jsPDF berhasil dibuat.");
             
             for (let i = 0; i < slides.length; i++) {
                 console.log(`[Slide ${i + 1}/${slides.length}] Memulai proses...`);
                 const slide = slides[i];
+                
+                // Clone the slide with all its styles
                 const clone = slide.cloneNode(true);
                 
-                // Apply styles to match original
-                Object.assign(clone.style, {
-                    opacity: '1', 
-                    visibility: 'visible', 
-                    position: 'relative',
-                    transform: 'none', 
-                    display: 'block', 
-                    height: '720px',
-                    width: '1280px', 
-                    margin: '0', 
-                    padding: '0',
-                    fontFamily: "'Poppins', sans-serif",
-                    backgroundColor: '#0a192f',
-                    color: '#cbd5e1',
-                    overflow: 'hidden'
-                });
-                
-                // Apply font to all text elements
-                const textElements = clone.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, div, li, td, th');
-                textElements.forEach(el => {
-                    el.style.fontFamily = "'Poppins', sans-serif";
-                });
-                
+                // Clear the temporary container and add the cloned slide
                 tempContainer.innerHTML = '';
                 tempContainer.appendChild(clone);
+                
+                // Make sure the slide is visible and properly styled
+                clone.classList.add('active');
+                clone.style.opacity = '1';
+                clone.style.visibility = 'visible';
+                clone.style.transform = 'none';
+                clone.style.display = 'block';
+                clone.style.width = '100%';
+                clone.style.height = '100%';
                 
                 console.log(`[Slide ${i + 1}] Menunggu gambar...`);
                 const images = Array.from(clone.querySelectorAll('img'));
@@ -175,21 +167,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 await Promise.all(imagePromises);
                 console.log(`[Slide ${i + 1}] Gambar selesai.`);
                 
-                // Give more time for rendering
+                // Give time for rendering
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 
                 console.log(`[Slide ${i + 1}] Merender ke canvas...`);
-                const canvas = await html2canvas(clone, {
-                    scale: 2,
+                const canvas = await html2canvas(tempContainer, {
+                    scale: 1, // Using scale 1 to match screen resolution
                     useCORS: true,
                     logging: false,
-                    width: 1280,
-                    height: 720,
-                    backgroundColor: '#0a192f',
+                    width: 1366,
+                    height: 768,
+                    backgroundColor: null, // Use the background from the element itself
                     // Additional options to improve rendering
                     letterRendering: true,
                     foreignObjectRendering: true,
-                    removeContainer: true
+                    removeContainer: false
                 });
                 
                 if (!canvas) {
@@ -200,10 +192,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 
                 // Add new page for each slide except the first one
                 if (i > 0) {
-                    pdf.addPage([1280, 720], 'landscape');
+                    pdf.addPage([1366, 768], 'landscape');
                 }
                 
-                pdf.addImage(imgData, 'JPEG', 0, 0, 1280, 720);
+                pdf.addImage(imgData, 'JPEG', 0, 0, 1366, 768);
                 console.log(`[Slide ${i + 1}] Berhasil ditambahkan ke PDF.`);
             }
             console.log("Semua slide telah diproses. Menyimpan file PDF...");
