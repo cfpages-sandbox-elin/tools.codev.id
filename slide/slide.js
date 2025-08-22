@@ -1,4 +1,4 @@
-// slide.js FINAL (fungsi Download PDF + fix laman PDF sama 13 + zai fix + jspdf + html2canvas added
+// slide.js FINAL (Download PDF + fix styling zai 1
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -92,7 +92,6 @@ document.addEventListener('DOMContentLoaded', function () {
         return Promise.all(promises);
     }
 
-    // slide.js -> GANTI FUNGSI INI DENGAN VERSI FINAL YANG SUDAH TERUJI
     async function downloadPDF() {
         if (document.body.classList.contains('pdf-generating')) return;
         console.log("--- MEMULAI PROSES GENERATE PDF ---");
@@ -105,17 +104,23 @@ document.addEventListener('DOMContentLoaded', function () {
         const tempContainer = document.createElement('div');
         Object.assign(tempContainer.style, {
             position: 'absolute', left: '-9999px', top: '0',
-            margin: '0', padding: '0', width: '1280px', height: '720px'
+            margin: '0', padding: '0', width: '1280px', height: '720px',
+            fontFamily: "'Poppins', sans-serif", // Explicitly set font
+            backgroundColor: '#0a192f', // Set background color
+            color: '#cbd5e1' // Set text color
         });
         document.body.appendChild(tempContainer);
         try {
             const slides = document.querySelectorAll('.slide');
             if (slides.length === 0) throw new Error("Tidak ada elemen .slide yang ditemukan.");
+            
+            // Wait for fonts to load
             console.log("Memastikan font 'Poppins' sudah dimuat...");
             await document.fonts.load('1em Poppins');
+            await document.fonts.ready;
             console.log("Font 'Poppins' berhasil dimuat.");
             
-            // Create a new PDF document using the UMD build
+            // Create a new PDF document
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF({
                 orientation: 'landscape',
@@ -129,14 +134,32 @@ document.addEventListener('DOMContentLoaded', function () {
                 const slide = slides[i];
                 const clone = slide.cloneNode(true);
                 
+                // Apply styles to match original
                 Object.assign(clone.style, {
-                    opacity: '1', visibility: 'visible', position: 'absolute',
-                    transform: 'none', display: 'block', height: '720px',
-                    width: '1280px', margin: '0', padding: '0'
+                    opacity: '1', 
+                    visibility: 'visible', 
+                    position: 'relative',
+                    transform: 'none', 
+                    display: 'block', 
+                    height: '720px',
+                    width: '1280px', 
+                    margin: '0', 
+                    padding: '0',
+                    fontFamily: "'Poppins', sans-serif",
+                    backgroundColor: '#0a192f',
+                    color: '#cbd5e1',
+                    overflow: 'hidden'
+                });
+                
+                // Apply font to all text elements
+                const textElements = clone.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, div, li, td, th');
+                textElements.forEach(el => {
+                    el.style.fontFamily = "'Poppins', sans-serif";
                 });
                 
                 tempContainer.innerHTML = '';
                 tempContainer.appendChild(clone);
+                
                 console.log(`[Slide ${i + 1}] Menunggu gambar...`);
                 const images = Array.from(clone.querySelectorAll('img'));
                 const imagePromises = images.map(img => {
@@ -152,16 +175,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 await Promise.all(imagePromises);
                 console.log(`[Slide ${i + 1}] Gambar selesai.`);
                 
-                await new Promise(resolve => setTimeout(resolve, 500));
+                // Give more time for rendering
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 
                 console.log(`[Slide ${i + 1}] Merender ke canvas...`);
-                // Use html2canvas directly
                 const canvas = await html2canvas(clone, {
                     scale: 2,
                     useCORS: true,
                     logging: false,
                     width: 1280,
-                    height: 720
+                    height: 720,
+                    backgroundColor: '#0a192f',
+                    // Additional options to improve rendering
+                    letterRendering: true,
+                    foreignObjectRendering: true,
+                    removeContainer: true
                 });
                 
                 if (!canvas) {
