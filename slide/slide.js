@@ -1,4 +1,4 @@
-// slide.js FINAL (dengan fungsi Download PDF + fix laman PDF sama 3)
+// slide.js FINAL (dengan fungsi Download PDF + fix laman PDF sama 4)
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function openLightbox(src) { lightboxImg.src = src; lightbox.classList.add('visible'); }
     function closeLightbox() { lightbox.classList.remove('visible'); }
     
-    // --- FUNGSI BARU: DOWNLOAD PDF ---
+    // slide.js -> GANTI FUNGSI INI DENGAN VERSI FINAL YANG SUDAH TERUJI
     async function downloadPDF() {
         if (downloadButton.classList.contains('loading')) return;
 
@@ -81,30 +81,33 @@ document.addEventListener('DOMContentLoaded', function () {
         downloadButton.classList.add('loading');
 
         const tempContainer = document.createElement('div');
-        tempContainer.style.position = 'absolute';
-        tempContainer.style.left = '-9999px';
-        tempContainer.style.top = '0';
+        // Mencegah style dari luar mengganggu rendering
+        Object.assign(tempContainer.style, {
+            position: 'absolute',
+            left: '-9999px',
+            top: '0',
+            margin: '0',
+            padding: '0'
+        });
         document.body.appendChild(tempContainer);
 
         try {
             if (slides.length === 0) throw new Error("Tidak ada slide untuk di-download.");
 
-            const options = {
-                margin: 0,
-                filename: 'SIER - Studi Kelayakan Proyek Olahraga.pdf',
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, logging: false },
-                jsPDF: { unit: 'px', format: [1280, 720], orientation: 'landscape' }
-            };
+            // 1. BUAT DOKUMEN PDF KOSONG SECARA MANUAL
+            // Kita akses konstruktor jsPDF dari bundle html2pdf. Ini cara yang benar.
+            const { jsPDF } = html2pdf.jsPDF;
+            const pdf = new jsPDF({
+                orientation: 'landscape',
+                unit: 'px',
+                format: [1280, 720]
+            });
 
-            // Buat instance worker HANYA SEKALI
-            const worker = html2pdf().set(options);
-
+            // 2. LOOP SETIAP SLIDE UNTUK DIUBAH MENJADI GAMBAR
             for (let i = 0; i < slides.length; i++) {
                 const slide = slides[i];
                 const clone = slide.cloneNode(true);
                 
-                // Atur gaya kloningan agar siap dirender
                 Object.assign(clone.style, {
                     opacity: '1',
                     visibility: 'visible',
@@ -112,42 +115,51 @@ document.addEventListener('DOMContentLoaded', function () {
                     transform: 'none',
                     display: 'block',
                     height: '720px',
-                    width: '1280px'
+                    width: '1280px',
+                    margin: '0',
+                    padding: '0'
                 });
                 
-                // Masukkan kloningan ke container sementara
                 tempContainer.appendChild(clone);
 
-                // ---- INI BAGIAN KUNCINYA ----
-                // BARU: Beri browser waktu sepersekian detik (misal: 50 milidetik) untuk merender elemen sepenuhnya
-                // sebelum kita mencoba "memfotonya". Ini untuk menghindari race condition.
-                await new Promise(resolve => setTimeout(resolve, 150));
-                // -----------------------------
+                // Beri waktu untuk browser merender (mencegah race condition)
+                await new Promise(resolve => setTimeout(resolve, 50));
 
-                // Tambahkan kloningan yang sudah dirender ke worker PDF
-                await worker.from(clone).toPdf().get('pdf').then(pdf => {
-                    // Tambahkan halaman baru untuk slide berikutnya (jika ada)
-                    if (i < slides.length - 1) {
-                        pdf.addPage();
-                    }
+                // 3. UBAH CLONE MENJADI GAMBAR DENGAN KONTROL PENUH
+                const canvas = await html2canvas(clone, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    // INI KUNCI UNTUK MENGHILANGKAN PADDING PUTIH:
+                    // Kita secara eksplisit memberitahu area mana yang harus "difoto".
+                    x: 0,
+                    y: 0,
+                    width: 1280,
+                    height: 720
                 });
+                const imgData = canvas.toDataURL('image/jpeg', 0.98);
 
-                // Bersihkan container untuk persiapan slide berikutnya
-                tempContainer.innerHTML = '';
+                // 4. TAMBAHKAN GAMBAR KE DOKUMEN PDF
+                // Tambahkan halaman baru jika ini bukan slide pertama
+                if (i > 0) {
+                    pdf.addPage([1280, 720], 'landscape');
+                }
+                // Tempatkan gambar di halaman saat ini, di posisi 0,0
+                pdf.addImage(imgData, 'JPEG', 0, 0, 1280, 720);
+
+                tempContainer.innerHTML = ''; // Bersihkan untuk slide berikutnya
             }
 
-            // Setelah semua slide diproses, simpan PDF-nya
-            await worker.save();
+            // 5. SIMPAN PDF SETELAH SEMUA HALAMAN DITAMBAHKAN
+            pdf.save('SIER - Studi Kelayakan Proyek Olahraga.pdf');
 
         } catch (error) {
             console.error("Gagal membuat PDF:", error);
             alert("Terjadi kesalahan saat membuat PDF. Silakan periksa konsol untuk detail.");
         } finally {
-            // Kembalikan tombol ke kondisi semula
             downloadButton.innerHTML = originalIcon;
             downloadButton.classList.remove('loading');
             
-            // Hapus container sementara dari body
             if (document.body.contains(tempContainer)) {
                 document.body.removeChild(tempContainer);
             }
