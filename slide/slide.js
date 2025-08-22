@@ -1,4 +1,4 @@
-// slide.js FINAL (dengan fungsi Download PDF + fix laman PDF sama)
+// slide.js FINAL (dengan fungsi Download PDF + fix laman PDF sama 2)
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -74,36 +74,51 @@ document.addEventListener('DOMContentLoaded', function () {
     
     // --- FUNGSI BARU: DOWNLOAD PDF ---
     async function downloadPDF() {
-        if (downloadButton.classList.contains('loading')) return; // Mencegah klik ganda
+        if (downloadButton.classList.contains('loading')) return;
 
         const originalIcon = downloadButton.innerHTML;
         downloadButton.innerHTML = '<i class="fas fa-spinner"></i>';
         downloadButton.classList.add('loading');
 
-        // Buat container sementara di luar layar (logika ini tetap diperlukan dan sudah benar)
         const tempContainer = document.createElement('div');
         tempContainer.style.position = 'absolute';
         tempContainer.style.left = '-9999px';
         tempContainer.style.top = '0';
         document.body.appendChild(tempContainer);
 
-        // Dapatkan library jsPDF dari bundle html2pdf yang sudah di-load
-        const { jsPDF } = window.jspdf;
-        
-        // 1. Inisialisasi PDF kosong dengan orientasi dan ukuran yang benar
-        const pdf = new jsPDF({
-            orientation: 'landscape',
-            unit: 'px',
-            format: [1280, 720]
-        });
-
         try {
-            // 2. Looping setiap slide satu per satu
-            for (let i = 0; i < slides.length; i++) {
+            if (slides.length === 0) return; // Keluar jika tidak ada slide
+
+            // --- LANGKAH 1: Buat Halaman Pertama & Dapatkan Objek PDF ---
+            // Kita proses slide pertama secara terpisah untuk menginisialisasi objek PDF.
+            const firstSlideClone = slides[0].cloneNode(true);
+            firstSlideClone.style.opacity = '1';
+            firstSlideClone.style.visibility = 'visible';
+            firstSlideClone.style.position = 'relative';
+            firstSlideClone.style.transform = 'none';
+            firstSlideClone.style.display = 'block';
+            firstSlideClone.style.height = '720px';
+            firstSlideClone.style.width = '1280px';
+            tempContainer.appendChild(firstSlideClone);
+
+            const options = {
+                margin: 0,
+                filename: 'SIER - Studi Kelayakan Proyek Olahraga.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, logging: false },
+                jsPDF: { unit: 'px', format: [1280, 720], orientation: 'landscape' }
+            };
+
+            // Dapatkan instance PDF setelah memproses elemen pertama.
+            const pdf = await html2pdf().from(firstSlideClone).set(options).toPdf().get('pdf');
+            tempContainer.innerHTML = ''; // Bersihkan setelah selesai
+
+            // --- LANGKAH 2: Loop Sisa Slide & Tambahkan ke PDF yang Ada ---
+            // Kita mulai loop dari slide kedua (index = 1)
+            for (let i = 1; i < slides.length; i++) {
                 const slide = slides[i];
                 const clone = slide.cloneNode(true);
                 
-                // Siapkan clone untuk di-render
                 clone.style.opacity = '1';
                 clone.style.visibility = 'visible';
                 clone.style.position = 'relative';
@@ -112,31 +127,23 @@ document.addEventListener('DOMContentLoaded', function () {
                 clone.style.height = '720px';
                 clone.style.width = '1280px';
                 
-                // Masukkan clone ke container sementara agar bisa dirender oleh browser
                 tempContainer.appendChild(clone);
 
-                // 2a. Ubah slide (yang ada di dalam clone) menjadi canvas (gambar)
-                const canvas = await html2canvas(clone, {
-                    scale: 2, // Meningkatkan resolusi
-                    useCORS: true,
-                    logging: false
-                });
+                // Ubah slide menjadi gambar menggunakan html2canvas (yang tersedia secara global)
+                const canvas = await html2canvas(clone, options.html2canvas);
                 const imgData = canvas.toDataURL('image/jpeg', 0.98);
 
-                // 2b. Tambahkan halaman baru jika ini bukan slide pertama
-                if (i > 0) {
-                    pdf.addPage();
-                }
-
-                // 2c. Tambahkan gambar dari canvas ke halaman PDF saat ini
+                // Tambahkan halaman baru ke objek PDF yang sudah ada
+                pdf.addPage();
+                
+                // Tambahkan gambar ke halaman baru tersebut
                 pdf.addImage(imgData, 'JPEG', 0, 0, 1280, 720);
-
-                // Bersihkan container untuk persiapan slide berikutnya
-                tempContainer.innerHTML = '';
+                
+                tempContainer.innerHTML = ''; // Bersihkan container
             }
 
-            // 3. Simpan PDF setelah semua halaman ditambahkan
-            pdf.save('SIER - Studi Kelayakan Proyek Olahraga.pdf');
+            // --- LANGKAH 3: Simpan PDF yang Sudah Lengkap ---
+            pdf.save(options.filename);
 
         } catch (error) {
             console.error("Gagal membuat PDF:", error);
