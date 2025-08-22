@@ -1,4 +1,4 @@
-// slide.js FINAL (dengan fungsi Download PDF + fix laman PDF sama 2)
+// slide.js FINAL (dengan fungsi Download PDF + fix laman PDF sama 3)
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -87,19 +87,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.body.appendChild(tempContainer);
 
         try {
-            if (slides.length === 0) return; // Keluar jika tidak ada slide
-
-            // --- LANGKAH 1: Buat Halaman Pertama & Dapatkan Objek PDF ---
-            // Kita proses slide pertama secara terpisah untuk menginisialisasi objek PDF.
-            const firstSlideClone = slides[0].cloneNode(true);
-            firstSlideClone.style.opacity = '1';
-            firstSlideClone.style.visibility = 'visible';
-            firstSlideClone.style.position = 'relative';
-            firstSlideClone.style.transform = 'none';
-            firstSlideClone.style.display = 'block';
-            firstSlideClone.style.height = '720px';
-            firstSlideClone.style.width = '1280px';
-            tempContainer.appendChild(firstSlideClone);
+            if (slides.length === 0) throw new Error("Tidak ada slide untuk di-download.");
 
             const options = {
                 margin: 0,
@@ -109,41 +97,47 @@ document.addEventListener('DOMContentLoaded', function () {
                 jsPDF: { unit: 'px', format: [1280, 720], orientation: 'landscape' }
             };
 
-            // Dapatkan instance PDF setelah memproses elemen pertama.
-            const pdf = await html2pdf().from(firstSlideClone).set(options).toPdf().get('pdf');
-            tempContainer.innerHTML = ''; // Bersihkan setelah selesai
+            // Buat instance worker HANYA SEKALI
+            const worker = html2pdf().set(options);
 
-            // --- LANGKAH 2: Loop Sisa Slide & Tambahkan ke PDF yang Ada ---
-            // Kita mulai loop dari slide kedua (index = 1)
-            for (let i = 1; i < slides.length; i++) {
+            for (let i = 0; i < slides.length; i++) {
                 const slide = slides[i];
                 const clone = slide.cloneNode(true);
                 
-                clone.style.opacity = '1';
-                clone.style.visibility = 'visible';
-                clone.style.position = 'relative';
-                clone.style.transform = 'none';
-                clone.style.display = 'block';
-                clone.style.height = '720px';
-                clone.style.width = '1280px';
+                // Atur gaya kloningan agar siap dirender
+                Object.assign(clone.style, {
+                    opacity: '1',
+                    visibility: 'visible',
+                    position: 'relative',
+                    transform: 'none',
+                    display: 'block',
+                    height: '720px',
+                    width: '1280px'
+                });
                 
+                // Masukkan kloningan ke container sementara
                 tempContainer.appendChild(clone);
 
-                // Ubah slide menjadi gambar menggunakan html2canvas (yang tersedia secara global)
-                const canvas = await html2canvas(clone, options.html2canvas);
-                const imgData = canvas.toDataURL('image/jpeg', 0.98);
+                // ---- INI BAGIAN KUNCINYA ----
+                // BARU: Beri browser waktu sepersekian detik (misal: 50 milidetik) untuk merender elemen sepenuhnya
+                // sebelum kita mencoba "memfotonya". Ini untuk menghindari race condition.
+                await new Promise(resolve => setTimeout(resolve, 150));
+                // -----------------------------
 
-                // Tambahkan halaman baru ke objek PDF yang sudah ada
-                pdf.addPage();
-                
-                // Tambahkan gambar ke halaman baru tersebut
-                pdf.addImage(imgData, 'JPEG', 0, 0, 1280, 720);
-                
-                tempContainer.innerHTML = ''; // Bersihkan container
+                // Tambahkan kloningan yang sudah dirender ke worker PDF
+                await worker.from(clone).toPdf().get('pdf').then(pdf => {
+                    // Tambahkan halaman baru untuk slide berikutnya (jika ada)
+                    if (i < slides.length - 1) {
+                        pdf.addPage();
+                    }
+                });
+
+                // Bersihkan container untuk persiapan slide berikutnya
+                tempContainer.innerHTML = '';
             }
 
-            // --- LANGKAH 3: Simpan PDF yang Sudah Lengkap ---
-            pdf.save(options.filename);
+            // Setelah semua slide diproses, simpan PDF-nya
+            await worker.save();
 
         } catch (error) {
             console.error("Gagal membuat PDF:", error);
@@ -154,7 +148,9 @@ document.addEventListener('DOMContentLoaded', function () {
             downloadButton.classList.remove('loading');
             
             // Hapus container sementara dari body
-            document.body.removeChild(tempContainer);
+            if (document.body.contains(tempContainer)) {
+                document.body.removeChild(tempContainer);
+            }
         }
     }
 
