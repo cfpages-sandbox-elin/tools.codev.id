@@ -1,4 +1,4 @@
-// slide.js FINAL (dengan fungsi Download PDF + fix laman PDF sama 10 + waitforassets + debugging)
+// slide.js FINAL (dengan fungsi Download PDF + fix laman PDF sama 11 + zai fix
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -95,7 +95,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // slide.js -> GANTI FUNGSI INI DENGAN VERSI FINAL YANG SUDAH TERUJI
     async function downloadPDF() {
         if (document.body.classList.contains('pdf-generating')) return;
-
         console.log("--- MEMULAI PROSES GENERATE PDF ---");
         const downloadButton = document.getElementById('download-btn');
         const originalIcon = downloadButton.innerHTML;
@@ -103,22 +102,18 @@ document.addEventListener('DOMContentLoaded', function () {
         document.body.classList.add('pdf-generating');
         downloadButton.innerHTML = '<i class="fas fa-spinner"></i>';
         downloadButton.classList.add('loading');
-
         const tempContainer = document.createElement('div');
         Object.assign(tempContainer.style, {
             position: 'absolute', left: '-9999px', top: '0',
             margin: '0', padding: '0', width: '1280px', height: '720px'
         });
         document.body.appendChild(tempContainer);
-
         try {
             const slides = document.querySelectorAll('.slide');
             if (slides.length === 0) throw new Error("Tidak ada elemen .slide yang ditemukan.");
-
             console.log("Memastikan font 'Poppins' sudah dimuat...");
             await document.fonts.load('1em Poppins');
             console.log("Font 'Poppins' berhasil dimuat.");
-
             const options = {
                 margin: 0,
                 filename: 'SIER - Studi Kelayakan Proyek Olahraga.pdf',
@@ -126,15 +121,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 html2canvas: { scale: 2, useCORS: true, logging: false, x: 0, y: 0, width: 1280, height: 720 },
                 jsPDF: { unit: 'px', format: [1280, 720], orientation: 'landscape' }
             };
-
-            const pdf = await html2pdf().set(options).get('jsPDF');
-            console.log("Objek jsPDF berhasil didapatkan.");
             
-            // Kosongkan halaman pertama yang mungkin dibuat secara default
-            if (pdf.getNumberOfPages() > 0) {
-                pdf.deletePage(1);
-            }
-
+            // Create a new PDF document directly
+            const { jsPDF } = window.jspdf || window.jspdf.jsPDF;
+            const pdf = new jsPDF({
+                orientation: 'landscape',
+                unit: 'px',
+                format: [1280, 720]
+            });
+            console.log("Objek jsPDF berhasil dibuat.");
+            
             for (let i = 0; i < slides.length; i++) {
                 console.log(`[Slide ${i + 1}/${slides.length}] Memulai proses...`);
                 const slide = slides[i];
@@ -148,7 +144,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 
                 tempContainer.innerHTML = '';
                 tempContainer.appendChild(clone);
-
                 console.log(`[Slide ${i + 1}] Menunggu gambar...`);
                 const images = Array.from(clone.querySelectorAll('img'));
                 const imagePromises = images.map(img => {
@@ -165,27 +160,33 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.log(`[Slide ${i + 1}] Gambar selesai.`);
                 
                 await new Promise(resolve => setTimeout(resolve, 500));
-
-                // --- PERBAIKAN KUNCI: MENGGUNAKAN API .get('canvas') YANG BENAR ---
+                
                 console.log(`[Slide ${i + 1}] Merender ke canvas...`);
-                // Buat worker baru untuk setiap slide agar tidak ada state yang terbawa
-                const canvas = await html2pdf().from(clone).set(options).get('canvas');
+                const canvas = await html2canvas(clone, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    width: 1280,
+                    height: 720
+                });
+                
                 if (!canvas) {
                     throw new Error(`[Slide ${i+1}] Gagal menghasilkan canvas.`);
                 }
                 const imgData = canvas.toDataURL('image/jpeg', 0.98);
                 console.log(`[Slide ${i + 1}] Berhasil dirender.`);
-                // -------------------------------------------------------------
-
-                pdf.addPage([1280, 720], 'landscape');
+                
+                // Add new page for each slide except the first one
+                if (i > 0) {
+                    pdf.addPage([1280, 720], 'landscape');
+                }
+                
                 pdf.addImage(imgData, 'JPEG', 0, 0, 1280, 720);
                 console.log(`[Slide ${i + 1}] Berhasil ditambahkan ke PDF.`);
             }
-
             console.log("Semua slide telah diproses. Menyimpan file PDF...");
-            await pdf.save(options.filename);
+            pdf.save(options.filename);
             console.log("--- PROSES PDF BERHASIL ---");
-
         } catch (error) {
             console.error("--- PROSES PDF GAGAL ---", {
                 message: error.message,
