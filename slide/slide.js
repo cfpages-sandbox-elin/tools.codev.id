@@ -1,4 +1,4 @@
-// slide.js FINAL (Download PDF + fix styling zai 7 + fullscreen mode + tab capture api
+// slide.js FINAL (Download PDF + fix styling zai 8 + ask permission first
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -118,44 +118,24 @@ document.addEventListener('DOMContentLoaded', function () {
             // Store the current active slide
             const originalActiveSlide = currentSlide;
             
-            // Enter fullscreen mode
-            const presentationContainer = document.getElementById('presentation-container');
-            await presentationContainer.requestFullscreen();
-            // Wait for fullscreen to activate
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Show instructions to the user
+            alert("Anda akan diminta untuk memilih sumber tangkapan layar. Silakan pilih 'Tab ini' atau 'Browser Tab' untuk menghindari menangkap elemen desktop.");
             
-            // Array to store screenshot data
-            const screenshots = [];
-            
-            // Try to use the Tab Capture API (Chrome extension approach)
+            // Request screen capture permission first
             let stream;
             try {
-                // This approach works if you have a Chrome extension with the appropriate permissions
-                stream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        mandatory: {
-                            chromeMediaSource: 'tab',
-                            minWidth: 1366,
-                            maxWidth: 1366,
-                            minHeight: 768,
-                            maxHeight: 768
-                        }
-                    }
-                });
-            } catch (err) {
-                console.log("Tab Capture API tidak tersedia, menggunakan Screen Capture API...");
-                // Fallback to Screen Capture API with better instructions
                 stream = await navigator.mediaDevices.getDisplayMedia({
                     video: {
                         cursor: "never",
                         width: { ideal: 1366 },
                         height: { ideal: 768 }
                     },
-                    audio: false
+                    audio: false,
+                    preferCurrentTab: true // This is a hint to the browser to prefer the current tab
                 });
-                
-                // Show instructions to the user
-                alert("Saat diminta, pilih tab browser ini (bukan seluruh layar) untuk menghindari menangkap elemen desktop.");
+            } catch (err) {
+                console.error("Gagal mendapatkan izin tangkapan layar:", err);
+                throw new Error("Anda harus memberikan izin untuk melanjutkan.");
             }
             
             // Create a video element to capture the stream
@@ -173,6 +153,15 @@ document.addEventListener('DOMContentLoaded', function () {
             canvas.width = 1366;
             canvas.height = 768;
             const ctx = canvas.getContext('2d');
+            
+            // Now enter fullscreen mode
+            const presentationContainer = document.getElementById('presentation-container');
+            await presentationContainer.requestFullscreen();
+            // Wait for fullscreen to activate
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Array to store screenshot data
+            const screenshots = [];
             
             // Now, for each slide, switch to it, wait, and capture
             for (let i = 0; i < slides.length; i++) {
@@ -199,6 +188,11 @@ document.addEventListener('DOMContentLoaded', function () {
             // Stop the stream
             stream.getTracks().forEach(track => track.stop());
             
+            // Exit fullscreen
+            if (document.fullscreenElement) {
+                await document.exitFullscreen();
+            }
+            
             // Add all screenshots to the PDF
             for (let i = 0; i < screenshots.length; i++) {
                 if (i > 0) {
@@ -224,7 +218,7 @@ document.addEventListener('DOMContentLoaded', function () {
             downloadButton.innerHTML = originalIcon;
             downloadButton.classList.remove('loading');
             
-            // Exit fullscreen
+            // Exit fullscreen if still in fullscreen
             if (document.fullscreenElement) {
                 await document.exitFullscreen();
             }
