@@ -1,4 +1,4 @@
-// slide.js FINAL (dengan fungsi Download PDF + fix laman PDF sama 11 + zai fix
+// slide.js FINAL (fungsi Download PDF + fix laman PDF sama 11 + zai fix + jspdf library added
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -114,16 +114,9 @@ document.addEventListener('DOMContentLoaded', function () {
             console.log("Memastikan font 'Poppins' sudah dimuat...");
             await document.fonts.load('1em Poppins');
             console.log("Font 'Poppins' berhasil dimuat.");
-            const options = {
-                margin: 0,
-                filename: 'SIER - Studi Kelayakan Proyek Olahraga.pdf',
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, logging: false, x: 0, y: 0, width: 1280, height: 720 },
-                jsPDF: { unit: 'px', format: [1280, 720], orientation: 'landscape' }
-            };
             
-            // Create a new PDF document directly
-            const { jsPDF } = window.jspdf || window.jspdf.jsPDF;
+            // Create a new PDF document using the UMD build
+            const { jsPDF } = window.jspdf;
             const pdf = new jsPDF({
                 orientation: 'landscape',
                 unit: 'px',
@@ -185,7 +178,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.log(`[Slide ${i + 1}] Berhasil ditambahkan ke PDF.`);
             }
             console.log("Semua slide telah diproses. Menyimpan file PDF...");
-            pdf.save(options.filename);
+            pdf.save('SIER - Studi Kelayakan Proyek Olahraga.pdf');
             console.log("--- PROSES PDF BERHASIL ---");
         } catch (error) {
             console.error("--- PROSES PDF GAGAL ---", {
