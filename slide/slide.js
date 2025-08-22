@@ -74,33 +74,12 @@ document.addEventListener('DOMContentLoaded', function () {
     
     // --- FUNGSI BARU: DOWNLOAD PDF ---
     async function downloadPDF() {
-        // Beri umpan balik visual bahwa proses sedang berjalan
+        if (downloadButton.classList.contains('loading')) return; // Mencegah klik ganda
+
         const originalIcon = downloadButton.innerHTML;
         downloadButton.innerHTML = '<i class="fas fa-spinner"></i>';
         downloadButton.classList.add('loading');
-        
-        // Buat container sementara yang tidak terlihat oleh pengguna
-        const printContainer = document.createElement('div');
-        printContainer.style.position = 'absolute';
-        printContainer.style.left = '-9999px'; // Posisikan jauh di luar layar
-        printContainer.style.width = '1280px'; // Lebar tetap untuk konsistensi
 
-        // Kloning semua slide ke dalam container sementara
-        slides.forEach(slide => {
-            const clone = slide.cloneNode(true);
-            // Paksa slide menjadi terlihat dan statis untuk di-capture
-            clone.style.opacity = '1';
-            clone.style.visibility = 'visible';
-            clone.style.position = 'relative'; // Bukan absolute
-            clone.style.transform = 'none';
-            clone.style.height = '720px'; // Tinggi tetap
-            clone.style.pageBreakAfter = 'always'; // Beri jeda halaman untuk PDF
-            printContainer.appendChild(clone);
-        });
-
-        document.body.appendChild(printContainer);
-
-        // Opsi untuk html2pdf
         const options = {
             margin: 0,
             filename: 'SIER - Studi Kelayakan Proyek Olahraga.pdf',
@@ -109,11 +88,32 @@ document.addEventListener('DOMContentLoaded', function () {
             jsPDF: { unit: 'px', format: [1280, 720], orientation: 'landscape' }
         };
 
-        // Generate PDF dari container sementara
-        await html2pdf().from(printContainer).set(options).save();
+        const worker = html2pdf().set(options);
 
-        // Bersihkan setelah selesai
-        document.body.removeChild(printContainer);
+        // Proses satu per satu untuk stabilitas
+        for (let i = 0; i < slides.length; i++) {
+            const slide = slides[i];
+            const clone = slide.cloneNode(true);
+            
+            // Siapkan clone untuk di-render
+            clone.style.opacity = '1';
+            clone.style.visibility = 'visible';
+            clone.style.position = 'relative';
+            clone.style.transform = 'none';
+            clone.style.height = '720px';
+            clone.style.width = '1280px';
+            
+            // Tambahkan ke worker
+            await worker.from(clone).toPdf().get('pdf').then(pdf => {
+                if (i < slides.length - 1) {
+                    pdf.addPage();
+                }
+            });
+        }
+
+        await worker.save();
+        
+        // Kembalikan tombol ke kondisi semula
         downloadButton.innerHTML = originalIcon;
         downloadButton.classList.remove('loading');
     }
