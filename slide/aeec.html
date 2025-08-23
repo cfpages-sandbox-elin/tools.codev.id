@@ -80,10 +80,13 @@
         .slide-title::after { content: ''; position: absolute; bottom: 0; left: 0; width: 70px; height: 4px; background-color: #003d7a; /* UNAIR Blue */ }
         .title-prefix { display: block; font-size: 1.2rem; font-weight: 500; color: #0056b3; /* Brighter Blue */ margin-bottom: 0.25rem; letter-spacing: 0.5px;}
         .slide-content {
-            flex: 1; /* This is the key: makes the content area grow to fill remaining space */
-            padding: 2rem 70px 70px 70px; /* Use a smaller top padding for visual spacing */
+            flex: 1; /* This makes it fill the available space */
+            padding: 2rem 70px 70px 70px;
             box-sizing: border-box; 
-            overflow-y: auto; /* Allows content to scroll if it's genuinely too large for the screen */
+            overflow-y: auto; /* Allows scrolling for long content */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
         
         /* 
