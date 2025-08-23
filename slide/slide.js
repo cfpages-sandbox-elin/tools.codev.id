@@ -1,4 +1,4 @@
-// slide.js FINAL (Download PDF + fix styling zai 8 + ask permission first
+// slide.js FINAL (Download PDF + fix styling zai 8 + ask permission first + DYNAMIC SCRIPT LOAD)
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -7,22 +7,47 @@ document.addEventListener('DOMContentLoaded', function () {
     const nextButton = document.getElementById('next-slide');
     const slideCounter = document.getElementById('slide-counter');
     const fullscreenButton = document.getElementById('fullscreen-btn');
-    const downloadButton = document.getElementById('download-btn'); // Tombol baru
+    const downloadButton = document.getElementById('download-btn');
     const lightbox = document.getElementById('lightbox');
     const lightboxImg = document.getElementById('lightbox-img');
     const lightboxClose = document.getElementById('lightbox-close');
     
+    // --- DEPENDENCY URL ---
+    // The only script needed by the current downloadPDF function is jsPDF.
+    const JSPDF_URL = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+
     // --- STATE VARIABLES ---
     let currentSlide = 0;
     const totalSlides = slides.length;
 
+    function loadScript(src) {
+        return new Promise((resolve, reject) => {
+            // Check if the script is already on the page
+            if (document.querySelector(`script[src="${src}"]`)) {
+                console.log(`Script already loaded: ${src}`);
+                resolve();
+                return;
+            }
+
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = () => {
+                console.log(`Script successfully loaded: ${src}`);
+                resolve();
+            };
+            script.onerror = () => {
+                console.error(`Failed to load script: ${src}`);
+                reject(new Error(`Failed to load script: ${src}`));
+            };
+            document.head.appendChild(script);
+        });
+    }
+
     // --- CORE FUNCTIONS ---
     function autoAssignSlideIds() {
         slides.forEach((slide, index) => {
-            // The index starts at 0, so we add 1 for human-readable numbering (1, 2, 3...)
             slide.id = `slide${index + 1}`;
         });
-        // Optional: Log to console to confirm it worked
         console.log(`Successfully assigned IDs to ${slides.length} slides.`);
     }
 
@@ -72,33 +97,11 @@ document.addEventListener('DOMContentLoaded', function () {
     function openLightbox(src) { lightboxImg.src = src; lightbox.classList.add('visible'); }
     function closeLightbox() { lightbox.classList.remove('visible'); }
     
-    function waitForAssets(element) {
-        const images = Array.from(element.querySelectorAll('img'));
-        const promises = images.map(img => {
-            return new Promise((resolve, reject) => {
-                if (img.complete) {
-                    resolve();
-                } else {
-                    img.onload = resolve;
-                    img.onerror = reject;
-                }
-            });
-        });
-
-        // Kita juga tambahkan jeda singkat untuk memberi kesempatan font dan background-image render.
-        // Ini adalah jaring pengaman terakhir.
-        promises.push(new Promise(resolve => setTimeout(resolve, 300)));
-
-        return Promise.all(promises);
-    }
-
     async function downloadPDF() {
         if (document.body.classList.contains('pdf-generating')) return;
         console.log("--- MEMULAI PROSES GENERATE PDF ---");
         const downloadButton = document.getElementById('download-btn');
         const originalIcon = downloadButton.innerHTML;
-        
-        // --- NEW: Get the document title for the filename ---
         const fileName = `${document.title}.pdf`;
 
         document.body.classList.add('pdf-generating');
@@ -109,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const slides = document.querySelectorAll('.slide');
             if (slides.length === 0) throw new Error("Tidak ada elemen .slide yang ditemukan.");
             
-            // Create a new PDF document
+            // This line now safely assumes jsPDF is loaded
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF({
                 orientation: 'landscape',
@@ -118,85 +121,56 @@ document.addEventListener('DOMContentLoaded', function () {
             });
             console.log("Objek jsPDF berhasil dibuat.");
             
-            // Store the current active slide
             const originalActiveSlide = currentSlide;
             
-            // Show instructions to the user
             alert("Anda akan diminta untuk memilih sumber tangkapan layar. Silakan pilih 'Tab ini' atau 'Browser Tab' untuk menghindari menangkap elemen desktop.");
             
-            // Request screen capture permission first
             let stream;
             try {
                 stream = await navigator.mediaDevices.getDisplayMedia({
-                    video: {
-                        cursor: "never",
-                        width: { ideal: 1366 },
-                        height: { ideal: 768 }
-                    },
+                    video: { cursor: "never", width: { ideal: 1366 }, height: { ideal: 768 } },
                     audio: false,
-                    preferCurrentTab: true // This is a hint to the browser to prefer the current tab
+                    preferCurrentTab: true
                 });
             } catch (err) {
                 console.error("Gagal mendapatkan izin tangkapan layar:", err);
                 throw new Error("Anda harus memberikan izin untuk melanjutkan.");
             }
             
-            // Create a video element to capture the stream
             const video = document.createElement('video');
             video.srcObject = stream;
             video.play();
             
-            // Wait for the video to be ready
-            await new Promise(resolve => {
-                video.onloadedmetadata = resolve;
-            });
+            await new Promise(resolve => { video.onloadedmetadata = resolve; });
             
-            // Create a canvas to capture the video frame
             const canvas = document.createElement('canvas');
             canvas.width = 1366;
             canvas.height = 768;
             const ctx = canvas.getContext('2d');
             
-            // Now enter fullscreen mode
-            const presentationContainer = document.getElementById('presentation-container');
             await presentationContainer.requestFullscreen();
-            // Wait for fullscreen to activate
             await new Promise(resolve => setTimeout(resolve, 1000));
             
-            // Array to store screenshot data
             const screenshots = [];
             
-            // Now, for each slide, switch to it, wait, and capture
             for (let i = 0; i < slides.length; i++) {
                 console.log(`[Slide ${i + 1}/${slides.length}] Memulai proses...`);
-                
-                // Make the slide we want to capture active
                 showSlide(i);
-                
-                // Wait a bit for the slide to become fully visible and render
                 await new Promise(resolve => setTimeout(resolve, 2000));
                 
                 console.log(`[Slide ${i + 1}] Mengambil screenshot...`);
-                
-                // Draw the current video frame to the canvas
                 ctx.drawImage(video, 0, 0, 1366, 768);
-                
-                // Get the image data
                 const imgData = canvas.toDataURL('image/jpeg', 0.98);
                 screenshots.push(imgData);
-                
                 console.log(`[Slide ${i + 1}] Screenshot berhasil.`);
             }
             
-            // Stop the stream
             stream.getTracks().forEach(track => track.stop());
             
-            // Exit fullscreen
             if (document.fullscreenElement) {
                 await document.exitFullscreen();
             }
             
-            // Add all screenshots to the PDF
             for (let i = 0; i < screenshots.length; i++) {
                 if (i > 0) {
                     pdf.addPage([1366, 768], 'landscape');
@@ -206,15 +180,10 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             
             console.log(`Semua slide telah diproses. Menyimpan file PDF sebagai: ${fileName}`);
-            // --- MODIFIED: Use the dynamic fileName variable ---
             pdf.save(fileName);
             console.log("--- PROSES PDF BERHASIL ---");
         } catch (error) {
-            console.error("--- PROSES PDF GAGAL ---", {
-                message: error.message,
-                stack: error.stack,
-                errorObject: error
-            });
+            console.error("--- PROSES PDF GAGAL ---", { message: error.message, stack: error.stack, errorObject: error });
             alert("Terjadi kesalahan kritis saat membuat PDF. Silakan buka konsol (F12) untuk melihat detail teknis.");
         } finally {
             console.log("Membersihkan sumber daya...");
@@ -222,14 +191,24 @@ document.addEventListener('DOMContentLoaded', function () {
             downloadButton.innerHTML = originalIcon;
             downloadButton.classList.remove('loading');
             
-            // Exit fullscreen if still in fullscreen
             if (document.fullscreenElement) {
                 await document.exitFullscreen();
             }
             
-            // Restore the original active slide
             showSlide(originalActiveSlide);
             console.log("Pembersihan selesai.");
+        }
+    }
+
+    async function handleDownloadClick() {
+        try {
+            // First, load the script and wait for it to be ready
+            await loadScript(JSPDF_URL);
+            // Once the script is loaded, window.jspdf is available, so we can proceed
+            await downloadPDF();
+        } catch (error) {
+            alert('Could not load the required PDF library. Please check your internet connection and try again.');
+            console.error(error);
         }
     }
 
@@ -248,10 +227,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     initializeImageListeners();
 
-    // Tambahkan event listener untuk tombol baru
-    downloadButton.addEventListener('click', downloadPDF);
+    // --- MODIFIED: The download button now calls the new handler function ---
+    downloadButton.addEventListener('click', handleDownloadClick);
 
-    // Event listener lainnya (tidak berubah)
+    // Other event listeners (unchanged)
     nextButton.addEventListener('click', nextSlide);
     prevButton.addEventListener('click', prevSlide);
     fullscreenButton.addEventListener('click', toggleFullScreen);
