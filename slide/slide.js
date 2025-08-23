@@ -1,4 +1,4 @@
-// slide.js FINAL (Download PDF + fix small error
+// slide.js FINAL (With Conditional Fullscreen and Mobile Controls hapus adjustcontenttoslide)
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -13,32 +13,29 @@ document.addEventListener('DOMContentLoaded', function () {
     const lightboxClose = document.getElementById('lightbox-close');
     
     // --- DEPENDENCY URL ---
-    // The only script needed by the current downloadPDF function is jsPDF.
     const JSPDF_URL = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
 
     // --- STATE VARIABLES ---
     let currentSlide = 0;
     const totalSlides = slides.length;
+    // --- NEW: Define isMobile check in a shared scope ---
+    const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    
+    // --- MOBILE GESTURE STATE ---
+    let touchStartX = 0;
+    let touchStartY = 0;
 
+    // --- DYNAMIC SCRIPT LOADER ---
     function loadScript(src) {
         return new Promise((resolve, reject) => {
-            // Check if the script is already on the page
             if (document.querySelector(`script[src="${src}"]`)) {
-                console.log(`Script already loaded: ${src}`);
                 resolve();
                 return;
             }
-
             const script = document.createElement('script');
             script.src = src;
-            script.onload = () => {
-                console.log(`Script successfully loaded: ${src}`);
-                resolve();
-            };
-            script.onerror = () => {
-                console.error(`Failed to load script: ${src}`);
-                reject(new Error(`Failed to load script: ${src}`));
-            };
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
             document.head.appendChild(script);
         });
     }
@@ -48,7 +45,6 @@ document.addEventListener('DOMContentLoaded', function () {
         slides.forEach((slide, index) => {
             slide.id = `slide${index + 1}`;
         });
-        console.log(`Successfully assigned IDs to ${slides.length} slides.`);
     }
 
     function formatSlideTitles() {
@@ -62,19 +58,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 title.innerHTML = `<span class="title-prefix">${prefix}</span>${mainTitle}`;
             }
         });
-    }
-
-    function adjustContentToFit(slide) {
-        const slideContent = slide.querySelector('.slide-content');
-        if (!slideContent || slideContent.scrollHeight <= slideContent.clientHeight) return;
-        const scalableText = slideContent.querySelectorAll('h2, h3, p, li, div.text-2xl, div.text-xl, div.text-lg, .bar-chart-label, .bar-chart-value, .text-slate-100, .text-slate-200, .text-slate-300');
-        const scalablePadding = slideContent.querySelectorAll('.bg-slate-800\\/50, .bar-chart-row');
-        let attempts = 0; const maxAttempts = 40;
-        while (slideContent.scrollHeight > slideContent.clientHeight && attempts < maxAttempts) {
-            scalableText.forEach(el => { const currentSize = parseFloat(window.getComputedStyle(el).fontSize); if (currentSize > 15) el.style.fontSize = `${currentSize - 0.25}px`; });
-            scalablePadding.forEach(el => { const style = window.getComputedStyle(el); const currentPaddingTop = parseFloat(style.paddingTop); const currentPaddingBottom = parseFloat(style.paddingBottom); if (currentPaddingTop > 10) el.style.paddingTop = `${currentPaddingTop - 0.5}px`; if (currentPaddingBottom > 10) el.style.paddingBottom = `${currentPaddingBottom - 0.5}px`; });
-            attempts++;
-        }
     }
 
     function showSlide(index) {
@@ -91,9 +74,35 @@ document.addEventListener('DOMContentLoaded', function () {
         nextButton.style.cursor = (currentSlide === totalSlides - 1) ? 'not-allowed' : 'pointer';
     }
 
-    function nextSlide() { if (!document.fullscreenElement) { toggleFullScreen(); return; } if (currentSlide < totalSlides - 1) { currentSlide++; showSlide(currentSlide); } }
-    function prevSlide() { if (currentSlide > 0) { currentSlide--; showSlide(currentSlide); } }
-    function toggleFullScreen() { if (!document.fullscreenElement) { presentationContainer.requestFullscreen().catch(err => { alert(`Error: ${err.message}`); }); } else { document.exitFullscreen(); } }
+    // --- MODIFIED: Navigation functions with device-specific logic ---
+    function nextSlide() { 
+        // --- RESTORED: Desktop-only fullscreen logic ---
+        if (!isMobile && !document.fullscreenElement) {
+            toggleFullScreen();
+            return;
+        }
+
+        if (currentSlide < totalSlides - 1) { 
+            currentSlide++; 
+            showSlide(currentSlide); 
+        } 
+    }
+    
+    function prevSlide() { 
+        if (currentSlide > 0) { 
+            currentSlide--; 
+            showSlide(currentSlide); 
+        } 
+    }
+
+    function toggleFullScreen() { 
+        if (!document.fullscreenElement) { 
+            presentationContainer.requestFullscreen().catch(err => { alert(`Error: ${err.message}`); }); 
+        } else { 
+            document.exitFullscreen(); 
+        } 
+    }
+
     function openLightbox(src) { lightboxImg.src = src; lightbox.classList.add('visible'); }
     function closeLightbox() { lightbox.classList.remove('visible'); }
     
@@ -216,11 +225,60 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // --- MOBILE GESTURE HANDLING ---
+    function initializeMobileControls() {
+        // The check remains the same, but now it uses the globally scoped `isMobile` variable
+        if (!isMobile) return;
+
+        console.log("Mobile controls enabled.");
+
+        function handleTouchStart(e) {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }
+
+        function handleTouchEnd(e) {
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndY = e.changedTouches[0].clientY;
+
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
+            
+            const swipeThreshold = 50;
+            const tapThreshold = 10;
+
+            if (Math.abs(deltaY) > Math.abs(deltaX)) {
+                return;
+            }
+
+            // Swipe Logic
+            if (Math.abs(deltaX) > swipeThreshold) {
+                if (deltaX < 0) {
+                    nextSlide();
+                } else {
+                    prevSlide();
+                }
+            } 
+            // Tap Logic
+            else if (Math.abs(deltaX) < tapThreshold) {
+                const containerWidth = presentationContainer.offsetWidth;
+                if (touchStartX > containerWidth / 2) {
+                    nextSlide();
+                } else {
+                    prevSlide();
+                }
+            }
+        }
+
+        presentationContainer.addEventListener('touchstart', handleTouchStart);
+        presentationContainer.addEventListener('touchend', handleTouchEnd);
+    }
+
+
     // --- INITIALIZATION & EVENT LISTENERS ---
     
     autoAssignSlideIds();
     formatSlideTitles();
-    slides.forEach((slide) => setTimeout(() => adjustContentToFit(slide), 50));
     
     function initializeImageListeners() {
         const images = document.querySelectorAll('.slide-content img');
@@ -231,22 +289,24 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     initializeImageListeners();
 
-    // --- MODIFIED: The download button now calls the new handler function ---
+    // Event listeners
     downloadButton.addEventListener('click', handleDownloadClick);
-
-    // Other event listeners (unchanged)
     nextButton.addEventListener('click', nextSlide);
     prevButton.addEventListener('click', prevSlide);
     fullscreenButton.addEventListener('click', toggleFullScreen);
     presentationContainer.addEventListener('dblclick', toggleFullScreen);
+    
     document.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
         else if (e.key === 'ArrowLeft') prevSlide();
         else if (e.key === 'f' || e.key === 'F11') { e.preventDefault(); toggleFullScreen(); }
         else if (e.key === 'Escape' && lightbox.classList.contains('visible')) closeLightbox();
     });
+    
     lightboxClose.addEventListener('click', closeLightbox);
     lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
 
+    // Activate mobile controls and show the first slide
+    initializeMobileControls();
     showSlide(currentSlide);
 });
