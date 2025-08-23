@@ -7,6 +7,7 @@
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="slide.css">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,149 +24,63 @@
     -->
 
     <style>
-        /* 
-        =============================================
-        === GLOBAL & PREMIUM LIGHT MODE THEME ===
-        =============================================
-        */
+        /* ============================================= */
+        /* === theme.css: The AEEC/UNAIR Theme Skin === */
+        /* ============================================= */
+
         body {
             font-family: 'Poppins', sans-serif;
             background-color: #f0f4f8; /* Light grey-blue background */
             color: #1e293b; /* Slate 800 for text */
         }
-        #presentation-wrapper {
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 2rem;
-            box-sizing: border-box;
-        }
+
         #presentation-container {
-            aspect-ratio: 16 / 9;
-            width: 100%;
-            max-width: 1422px;
-            height: auto;
-            max-height: 800px;
-            position: relative; 
-            overflow: hidden;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
-            border-radius: 12px;
-            border: 1px solid #e2e8f0; /* Slate 200 border */
+            border-color: #e2e8f0; /* Slate 200 border */
         }
 
-        /* 
-        =============================================
-        === GENERAL SLIDE STYLING ===
-        =============================================
-        */
         .slide {
-            position: absolute; width: 100%; height: 100%; top: 0; left: 0;
-            opacity: 0; visibility: hidden;
-            transition: opacity 0.6s ease-in-out, transform 0.6s ease-in-out;
-            transform: scale(0.98);
             background-color: #ffffff;
-            z-index: 1;
-            /* --- FIX: Use Flexbox for robust layout --- */
-            display: flex;
-            flex-direction: column;
         }
-        .slide.active { opacity: 1; visibility: visible; transform: scale(1); z-index: 2; }
-        .slide-header {
-            padding: 50px 70px 0 70px;
-            flex-shrink: 0; /* Prevents the header from shrinking if content is too large */
-        }
-        .slide-title { font-size: 2.25rem; font-weight: 700; color: #0f172a; /* Slate 900 */ position: relative; padding-bottom: 1rem; line-height: 1.2; }
-        .slide-title::after { content: ''; position: absolute; bottom: 0; left: 0; width: 70px; height: 4px; background-color: #003d7a; /* UNAIR Blue */ }
-        .title-prefix { display: block; font-size: 1.2rem; font-weight: 500; color: #0056b3; /* Brighter Blue */ margin-bottom: 0.25rem; letter-spacing: 0.5px;}
-        .slide-content {
-            flex: 1; /* This makes it fill the available space */
-            padding: 2rem 70px 70px 70px;
-            box-sizing: border-box; 
-            overflow-y: auto; /* Allows scrolling for long content */
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        
-        /* 
-        =============================================
-        === UI ELEMENTS & THEME COLORS ===
-        =============================================
-        */
-        .unair-blue { color: #003d7a; } .unair-gold { color: #fbbf24; } /* Amber 400 */
-        .nav-arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; background-color: rgba(255, 255, 255, 0.7); color: #334155; backdrop-filter: blur(5px); border: 1px solid rgba(0,0,0,0.05); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.25rem; transition: all 0.2s ease-in-out; z-index: 10; }
-        .nav-arrow:hover { background-color: #003d7a; color: white; transform: translateY(-50%) scale(1.1); }
-        #prev-slide { left: 20px; } #next-slide { right: 20px; }
-        #slide-counter { position: absolute; bottom: 20px; right: 20px; background-color: rgba(15, 23, 42, 0.7); color: #e2e8f0; padding: 6px 14px; border-radius: 20px; font-size: 14px; z-index: 10; user-select: none; }
-        #fullscreen-btn { position: absolute; top: 20px; right: 20px; width: 40px; height: 40px; background-color: rgba(255, 255, 255, 0.7); color: #334155; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; transition: all 0.2s ease-in-out; }
-        #fullscreen-btn:hover { background-color: #003d7a; color: white; }
-        #download-btn { bottom: 20px; top: auto; left: 20px; }
-        #download-btn.loading { background-color: #f59e0b; color: #020617; cursor: not-allowed; animation: spin 1s linear infinite; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        /* General list styling */
-        .content-list li { display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1rem; }
-        .content-list li > i { margin-top: 5px; color: #003d7a; }
-        .content-list li > div { flex: 1; }
-        
-        /* Lightbox for Images */
-        #lightbox { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 100; display: flex; justify-content: center; align-items: center; opacity: 0; visibility: hidden; transition: opacity 0.3s ease-in-out; backdrop-filter: blur(8px); }
-        #lightbox.visible { opacity: 1; visibility: visible; }
-        #lightbox-img { max-width: 90%; max-height: 90%; object-fit: contain; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
-        #lightbox-close { position: absolute; top: 30px; right: 30px; font-size: 2.5rem; color: white; cursor: pointer; transition: transform 0.2s ease; }
-        #lightbox-close:hover { transform: scale(1.2); }
-        .zoom-image { cursor: zoom-in; }
+        .slide-title { color: #0f172a; /* Slate 900 */ }
+        .slide-title::after { background-color: #003d7a; /* UNAIR Blue */ }
+        .title-prefix { color: #0056b3; /* Brighter Blue */ }
 
+        .nav-arrow, #fullscreen-btn {
+            background-color: rgba(255, 255, 255, 0.7);
+            color: #334155;
+            border-color: rgba(0,0,0,0.05);
+        }
+
+        .nav-arrow:hover, #fullscreen-btn:hover {
+            background-color: #003d7a;
+            color: white;
+        }
+
+        #download-btn.loading {
+            background-color: #f59e0b; /* Amber-500 */
+            color: #020617;
+        }
+
+        #slide-counter {
+            background-color: rgba(15, 23, 42, 0.7);
+            color: #e2e8f0;
+        }
+
+        .content-list li > i {
+            color: #003d7a;
+        }
+
+        .unair-gold { color: #fbbf24; } /* Amber 400 */
+
+        /* CSS Chart Theme */
         .css-chart-container {
-            width: 100%;
-            height: 250px;
             background-color: #f8fafc; /* Slate 50 */
-            border: 1px solid #e2e8f0; /* Slate 200 */
-            border-radius: 0.5rem;
-            display: flex;
-            align-items: flex-end; /* Makes bars grow from the bottom */
-            justify-content: space-around;
-            padding: 1.5rem 1rem 0 1rem;
-            box-sizing: border-box;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            position: relative;
-            overflow: hidden;
+            border-color: #e2e8f0; /* Slate 200 */
         }
-        .chart-bar {
-            width: 15%;
-            background-color: #0056b3; /* A nice shade of blue */
-            border-radius: 6px 6px 0 0;
-            transform-origin: bottom;
-            /* Animation for bars growing */
-            animation: grow 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-        }
-        /* Stagger the animation delay for a nice effect */
-        .chart-bar:nth-child(2) { animation-delay: 0.15s; background-color: #003d7a; }
-        .chart-bar:nth-child(3) { animation-delay: 0.3s; }
-        .chart-bar:nth-child(4) { animation-delay: 0.45s; background-color: #003d7a; }
-
-        .chart-arrow {
-            position: absolute;
-            top: 1.5rem;
-            right: 1.5rem;
-            font-size: 2rem;
-            color: #1e40af; /* Blue 800 */
-            opacity: 0;
-            /* Animation for the arrow fading in after bars grow */
-            animation: fadeIn 0.8s ease-out 1s forwards;
-        }
-        /* Keyframe Animations */
-        @keyframes grow {
-            from { transform: scaleY(0); }
-            to { transform: scaleY(1); }
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
+        .chart-bar { background-color: #0056b3; }
+        .chart-bar:nth-child(2), .chart-bar:nth-child(4) { background-color: #003d7a; }
+        .chart-arrow { color: #1e40af; /* Blue 800 */ }
     </style>
 </head>
 <body>
