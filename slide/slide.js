@@ -98,6 +98,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const downloadButton = document.getElementById('download-btn');
         const originalIcon = downloadButton.innerHTML;
         
+        // --- NEW: Get the document title for the filename ---
+        const fileName = `${document.title}.pdf`;
+
         document.body.classList.add('pdf-generating');
         downloadButton.innerHTML = '<i class="fas fa-spinner"></i>';
         downloadButton.classList.add('loading');
@@ -202,8 +205,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.log(`[Slide ${i + 1}] Berhasil ditambahkan ke PDF.`);
             }
             
-            console.log("Semua slide telah diproses. Menyimpan file PDF...");
-            pdf.save('SIER - Studi Kelayakan Proyek Olahraga.pdf');
+            console.log(`Semua slide telah diproses. Menyimpan file PDF sebagai: ${fileName}`);
+            // --- MODIFIED: Use the dynamic fileName variable ---
+            pdf.save(fileName);
             console.log("--- PROSES PDF BERHASIL ---");
         } catch (error) {
             console.error("--- PROSES PDF GAGAL ---", {
