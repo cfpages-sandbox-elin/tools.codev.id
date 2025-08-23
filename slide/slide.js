@@ -1,4 +1,4 @@
-// slide.js FINAL (Download PDF + fix styling zai 8 + ask permission first + DYNAMIC SCRIPT LOAD)
+// slide.js FINAL (Download PDF + fix small error
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -104,6 +104,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const originalIcon = downloadButton.innerHTML;
         const fileName = `${document.title}.pdf`;
 
+        // --- FIX: Declare the variable here, in the function's top-level scope ---
+        let originalActiveSlide;
+
         document.body.classList.add('pdf-generating');
         downloadButton.innerHTML = '<i class="fas fa-spinner"></i>';
         downloadButton.classList.add('loading');
@@ -112,7 +115,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const slides = document.querySelectorAll('.slide');
             if (slides.length === 0) throw new Error("Tidak ada elemen .slide yang ditemukan.");
             
-            // This line now safely assumes jsPDF is loaded
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF({
                 orientation: 'landscape',
@@ -121,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
             console.log("Objek jsPDF berhasil dibuat.");
             
-            const originalActiveSlide = currentSlide;
+            originalActiveSlide = currentSlide;
             
             alert("Anda akan diminta untuk memilih sumber tangkapan layar. Silakan pilih 'Tab ini' atau 'Browser Tab' untuk menghindari menangkap elemen desktop.");
             
@@ -195,7 +197,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 await document.exitFullscreen();
             }
             
-            showSlide(originalActiveSlide);
+            if (originalActiveSlide !== undefined) {
+                showSlide(originalActiveSlide);
+            }
             console.log("Pembersihan selesai.");
         }
     }
