@@ -206,3 +206,262 @@
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+/* ============================================= */
+/* === PREMIUM BACKGROUNDS LIBRARY (v2.0)    === */
+/* Now uses CSS variables for easy theming.    */
+/* Define --theme-pattern-color in your theme. */
+/* ============================================= */
+
+/* --- Base setup for all backgrounds --- */
+.slide::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: -1;
+    pointer-events: none;
+    /* --pattern-color is defined by the user's theme. A neutral fallback is provided. */
+    --pattern-color: var(--theme-pattern-color, #9ca3af);
+    --pattern-color-light: var(--theme-pattern-color-light, #d1d5db);
+}
+
+@keyframes twinkle {
+    0% { opacity: 0; }
+    50% { opacity: 0.15; }
+    100% { opacity: 0; }
+}
+@keyframes float {
+    0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-1000px) rotate(720deg);
+        opacity: 0;
+    }
+}
+
+/* --- OPTION 1: Subtle Dot Grid --- */
+.bg-dots::before {
+    background-image: radial-gradient(var(--pattern-color) 1px, transparent 1px);
+    background-size: 20px 20px;
+    opacity: 0.2;
+}
+
+/* --- OPTION 2: Animated Twinkling Stars --- */
+.bg-stars::before {
+    background:
+        radial-gradient(circle, var(--pattern-color-light) 1px, transparent 1px) 0 0 / 50px 50px,
+        radial-gradient(circle, var(--pattern-color-light) 1px, transparent 1px) 25px 25px / 60px 60px;
+    animation: twinkle 15s infinite linear;
+}
+
+/* --- OPTION 3: Faint Diagonal Lines --- */
+.bg-lines::before {
+    background-image: repeating-linear-gradient(
+        45deg, 
+        var(--pattern-color), 
+        var(--pattern-color) 1px, 
+        transparent 1px, 
+        transparent 20px
+    );
+    opacity: 0.2;
+}
+
+/* --- OPTION 4: Technical Blueprint Grid --- */
+.bg-grid::before {
+    background-image: 
+        linear-gradient(to right, var(--pattern-color) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--pattern-color) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.2;
+}
+
+/* --- OPTION 5: Soft Gradient Spotlight --- */
+.bg-spotlight::before {
+    background-image: radial-gradient(
+        circle at 20% 20%,
+        var(--pattern-color),
+        transparent 40%
+    );
+    opacity: 0.15;
+}
+
+/* --- OPTION 6: Minimalist Border Fade --- */
+.bg-border-fade::before {
+    background: 
+        radial-gradient(ellipse at center, transparent 50%, var(--pattern-color) 100%);
+    opacity: 0.2;
+}
+
+/* --- OPTION 7: SVG Contour Lines --- */
+/* NOTE: The color in SVG backgrounds is hardcoded and does NOT use variables. */
+/* To change it, you must generate a new URL-encoded SVG. */
+.bg-contours::before { /* Default is grey #9ca3af */
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 2000 1500'%3e%3cdefs%3e%3cpath fill='none' stroke-width='1.5' stroke-opacity='0.5' stroke='%239ca3af' id='a' d='M0-281.3c27.6 0 50 22.4 50 50s-22.4 50-50 50-50-22.4-50-50 22.4-50 50-50z'/%3e%3c/defs%3e%3cg transform='translate(1000 750)'%3e%3cuse href='%23a' y='-500'/%3e%3cuse href='%23a' y='-400'/%3e%3cuse href='%23a' y='-300'/%3e%3cuse href='%23a' y='-200'/%3e%3cuse href='%23a' y='-100'/%3e%3cuse href='%23a'/%3e%3cuse href='%23a' y='100'/%3e%3cuse href='%23a' y='200'/%3e%3cuse href='%23a' y='300'/%3e%3cuse href='%23a' y='400'/%3e%3cuse href='%23a' y='500'/%3e%3c/g%3e%3c/svg%3e");
+    background-size: cover;
+    background-position: center center;
+    opacity: 0.25;
+}
+
+/* --- OPTION 8: SVG Honeycomb Pattern --- */
+.bg-honeycomb::before { /* Default is grey #9ca3af */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cg fill-rule='evenodd'%3E%3Cg id='hexagons' fill='%239ca3af' fill-opacity='0.4' fill-rule='nonzero'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.99-7.5L26 15v18l-13 7.5L0 33V15z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    opacity: 0.3;
+}
+
+/* --- OPTION 9: Plus Sign Pattern --- */
+.bg-plus::before {
+    background-image: 
+        linear-gradient(var(--pattern-color) 1px, transparent 1px),
+        linear-gradient(to right, var(--pattern-color) 1px, transparent 1px);
+    background-size: 15px 15px;
+    background-position: center center;
+    opacity: 0.3;
+}
+
+/* --- OPTION 10: Gently Floating Bubbles --- */
+.bg-bubbles::before {
+    background: transparent;
+    border-radius: 50%;
+    /* Bubbles use the lighter color variable */
+    box-shadow: 
+        -10vw 15vh 2px var(--pattern-color-light), 10vw 30vh 3px var(--pattern-color-light),
+        -30vw 50vh 2px var(--pattern-color-light), 50vw 70vh 4px var(--pattern-color-light),
+        80vw 20vh 2px var(--pattern-color-light), 60vw 90vh 3px var(--pattern-color-light);
+    animation: float 25s infinite linear;
+    top: 100%;
+    opacity: 0;
+}
+
+/* ============================================= */
+/* === PREMIUM TEXT SKINS LIBRARY (v2.0)     === */
+/* Apply a single skin class to a parent .slide */
+/* element to style all headings within it.    */
+/* ============================================= */
+
+/* --- Base definition of what a "heading" is --- */
+/* This defines all the elements that will be affected by a skin. */
+.slide h1,
+.slide h2,
+.slide h3,
+.slide h4,
+.slide h5,
+.slide h6,
+.slide .slide-title {
+    /* Ensures smooth rendering of text effects */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* --- OPTION 1: Polished Glass --- */
+.skin-glass h1, .skin-glass h2, .skin-glass h3, .skin-glass h4, .skin-glass h5, .skin-glass h6, .skin-glass .slide-title {
+    color: transparent;
+    background: linear-gradient(175deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.1) 40%, rgba(255, 255, 255, 0) 60%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* --- OPTION 2: Brushed Metal --- */
+.skin-brushed-metal h1, .skin-brushed-metal h2, .skin-brushed-metal h3, .skin-brushed-metal h4, .skin-brushed-metal h5, .skin-brushed-metal h6, .skin-brushed-metal .slide-title {
+    color: transparent;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.1) 40%, rgba(0, 0, 0, 0.1) 60%, rgba(0, 0, 0, 0.4));
+    background-clip: text;
+    -webkit-background-clip: text;
+    text-shadow: 0 1px 0px rgba(255, 255, 255, 0.3);
+}
+
+/* --- OPTION 3: Neon Glow --- */
+.skin-neon-glow { --glow-color: #00aaff; } /* Variable is set on the parent */
+.skin-neon-glow h1, .skin-neon-glow h2, .skin-neon-glow h3, .skin-neon-glow h4, .skin-neon-glow h5, .skin-neon-glow h6, .skin-neon-glow .slide-title {
+    text-shadow: 0 0 5px var(--glow-color), 0 0 10px var(--glow-color), 0 0 20px var(--glow-color), 0 0 40px var(--glow-color);
+}
+
+/* --- OPTION 4: 3D Emboss --- */
+.skin-emboss h1, .skin-emboss h2, .skin-emboss h3, .skin-emboss h4, .skin-emboss h5, .skin-emboss h6, .skin-emboss .slide-title {
+    text-shadow: -1px -1px 1px rgba(255, 255, 255, 0.7), 1px 1px 1px rgba(0, 0, 0, 0.3);
+}
+
+/* --- OPTION 5: Letterpress / Engraved --- */
+.skin-letterpress h1, .skin-letterpress h2, .skin-letterpress h3, .skin-letterpress h4, .skin-letterpress h5, .skin-letterpress h6, .skin-letterpress .slide-title {
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2), -1px -1px 0px rgba(255, 255, 255, 0.7);
+}
+
+/* --- OPTION 6: Subtle Gradient Fade --- */
+.skin-gradient-fade h1, .skin-gradient-fade h2, .skin-gradient-fade h3, .skin-gradient-fade h4, .skin-gradient-fade h5, .skin-gradient-fade h6, .skin-gradient-fade .slide-title {
+    color: transparent;
+    background: linear-gradient(to bottom, currentColor 30%, rgba(255, 255, 255, 0.5) 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    mix-blend-mode: screen;
+}
+
+/* --- OPTION 7: Clean Outline --- */
+.skin-outline h1, .skin-outline h2, .skin-outline h3, .skin-outline h4, .skin-outline h5, .skin-outline h6, .skin-outline .slide-title {
+    -webkit-text-stroke: 1px currentColor;
+    -webkit-text-fill-color: transparent;
+    text-shadow: none;
+}
+.skin-outline-2 h1, .skin-outline-2 h2, .skin-outline-2 h3, .skin-outline-2 h4, .skin-outline-2 h5, .skin-outline-2 h6, .skin-outline-2 .slide-title {
+    -webkit-text-stroke: 2px currentColor;
+    -webkit-text-fill-color: transparent;
+    text-shadow: none;
+}
+
+/* --- OPTION 8: Animated Holographic Foil --- */
+@keyframes holographic-shine {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+}
+.skin-holographic h1, .skin-holographic h2, .skin-holographic h3, .skin-holographic h4, .skin-holographic h5, .skin-holographic h6, .skin-holographic .slide-title {
+    color: transparent;
+    background: linear-gradient(90deg, #ff00de, #de00ff, #7100ff, #0059ff, #00a2ff, #00e7ff, #00ffca, #00ff89, #40ff00, #95ff00, #eeff00, #ffc400, #ff7700, #ff0000, #ff00de);
+    background-size: 300% 300%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    animation: holographic-shine 8s ease-in-out infinite alternate;
+}
+
+/* ============================================= */
+/* === PREMIUM CALLOUTS LIBRARY (v1.0)       === */
+/* Use for highlighting key information blocks.  */
+/* ============================================= */
+
+/* --- Base style for all callout boxes --- */
+.callout {
+    padding: 1rem 1.5rem;
+    margin: 1rem 0;
+    border-left-width: 5px;
+    border-left-style: solid;
+    border-radius: 0.5rem;
+}
+.callout > *:first-child { margin-top: 0; }
+.callout > *:last-child { margin-bottom: 0; }
+
+/* --- THEMEABLE COLORS using CSS Variables --- */
+/* The user will define these colors in their theme style block */
+
+/* 1. Info Style (Blue) */
+.callout-info {
+    background-color: var(--callout-info-bg, #f0f9ff); /* Default fallback color */
+    border-left-color: var(--callout-info-border, #0ea5e9);
+}
+
+/* 2. Success Style (Green) */
+.callout-success {
+    background-color: var(--callout-success-bg, #f0fdf4);
+    border-left-color: var(--callout-success-border, #22c55e);
+}
+
+/* 3. Warning Style (Amber/Yellow) */
+.callout-warning {
+    background-color: var(--callout-warning-bg, #fffbeb);
+    border-left-color: var(--callout-warning-border, #f59e0b);
+}
+
+/* 4. Danger Style (Red) */
+.callout-danger {
+    background-color: var(--callout-danger-bg, #fef2f2);
+    border-left-color: var(--callout-danger-border, #ef4444);
+}
