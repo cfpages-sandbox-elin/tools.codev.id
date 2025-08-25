@@ -1,4 +1,4 @@
-// proyek.js v0.9 fix3 + chart
+// proyek.js v0.9 fix4 + chart
 document.addEventListener('DOMContentLoaded', () => {
     // Definisi elemen UI
     const tabKontraktor = document.getElementById('tab-kontraktor');
@@ -458,8 +458,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </div>
                                 <div>
                                     <h3 class="font-semibold text-purple-800">Jumlah Termin</h3>
-                                    <p class="text-2xl font-bold text-purple-600 mt-1">${results.jumlahTermin} + Retensi</p>
-                                    <p class="text-sm text-purple-600 mt-1">Pembayaran setiap ${Math.round(100 / (results.jumlahTermin + 1))}% progress</p>
+                                    <p class="text-2xl font-bold text-purple-600 mt-1">${results.jumlahTermin}</p>
+                                    <p class="text-sm text-purple-600 mt-1">Pembayaran setiap ${(100 / results.jumlahTermin).toFixed(1)}% progress</p>
+                                    <p class="text-xs text-purple-500 mt-1">Termasuk 5% retensi di termin terakhir</p>
                                 </div>
                             </div>
                         </div>
@@ -514,20 +515,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderTimeline(results) {
         const milestones = projectData.timeline_milestones;
-        const progressPerTermin = 95 / results.jumlahTermin; // 95% karena 5% retensi
+        // Perbaikan: 100% progress dibagi ke jumlah termin
+        const progressPerTermin = 100 / results.jumlahTermin;
         let terminHTML_Content = '';
         
         // Loop untuk setiap termin
         for (let i = 1; i <= results.jumlahTermin; i++) {
             const progressAwal = (i - 1) * progressPerTermin;
             const progressAkhir = i * progressPerTermin;
-            const persentasePembayaran = 100 / (results.jumlahTermin + 1); // +1 karena retensi
+            // Perbaikan: Persentase pembayaran adalah 100% / jumlah termin
+            const persentasePembayaran = 100 / results.jumlahTermin;
             const nominalPembayaran = results.totalNilaiProyekKlien * persentasePembayaran / 100;
             
-            terminHTML_Content += `<div class="border-l-2 border-indigo-500 pl-4 mt-6">
+            // Tentukan apakah ini termin terakhir yang berisi retensi
+            const isTerminTerakhir = i === results.jumlahTermin;
+            const persentaseRetensi = isTerminTerakhir ? 5 : 0;
+            const nominalRetensi = results.totalNilaiProyekKlien * persentaseRetensi / 100;
+            const nominalPembayaranProgress = nominalPembayaran - nominalRetensi;
+            
+            terminHTML_Content += `<div class="border-l-2 ${isTerminTerakhir ? 'border-green-500' : 'border-indigo-500'} pl-4 mt-6">
                                 <h3 class="font-semibold text-lg">Termin ${i} (Progress ${progressAwal.toFixed(0)}% s/d ${progressAkhir.toFixed(0)}%)</h3>
-                                <p class="text-sm text-gray-600 mt-1">Pembayaran: <strong>${formatRupiah(nominalPembayaran)}</strong> (${persentasePembayaran.toFixed(1)}% dari total proyek)</p>
-                                <ul class="list-disc list-inside mt-2 text-sm text-gray-600 space-y-1">`;
+                                <p class="text-sm text-gray-600 mt-1">Pembayaran: <strong>${formatRupiah(nominalPembayaran)}</strong> (${persentasePembayaran.toFixed(1)}% dari total proyek)</p>`;
+            
+            if (isTerminTerakhir) {
+                terminHTML_Content += `<p class="text-sm text-yellow-600 mt-1"><em>Termasuk retensi 5% (${formatRupiah(nominalRetensi)}) yang dibayar setelah masa garansi 3-6 bulan</em></p>`;
+            }
+            
+            terminHTML_Content += `<ul class="list-disc list-inside mt-2 text-sm text-gray-600 space-y-1">`;
             
             // Cari milestones yang termasuk dalam rentang progress ini
             const milestonesInTermin = milestones.filter(m => 
@@ -545,15 +559,6 @@ document.addEventListener('DOMContentLoaded', () => {
             terminHTML_Content += `</ul></div>`;
         }
         
-        // Termin retensi
-        terminHTML_Content += `<div class="border-l-2 border-green-500 pl-4 mt-6">
-                        <h3 class="font-semibold text-lg">Termin Pelunasan (Retensi 5%)</h3>
-                        <p class="text-sm text-gray-600 mt-1">Pembayaran: <strong>${formatRupiah(results.totalNilaiProyekKlien * 0.05)}</strong> (5% dari total proyek)</p>
-                        <ul class="list-disc list-inside mt-2 text-sm text-gray-600 space-y-1">
-                            <li><strong>100%:</strong> Pembayaran akhir setelah masa pemeliharaan (retensi) selama 3-6 bulan selesai.</li>
-                        </ul>
-                    </div>`;
-                        
         document.getElementById('output-timeline').innerHTML = terminHTML_Content;
     }
 
@@ -962,26 +967,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function getRencanaPembayaranHTML(results) {
-        const persentasePerTermin = 100 / (results.jumlahTermin + 1);
+        // Perbaikan: 100% dibagi ke jumlah termin
+        const persentasePerTermin = 100 / results.jumlahTermin;
         let html = '<div class="space-y-2">';
         
         for (let i = 1; i <= results.jumlahTermin; i++) {
             const nominal = results.totalNilaiProyekKlien * persentasePerTermin / 100;
+            
+            // Tentukan apakah ini termin terakhir yang berisi retensi
+            const isTerminTerakhir = i === results.jumlahTermin;
+            const persentaseRetensi = isTerminTerakhir ? 5 : 0;
+            const nominalRetensi = results.totalNilaiProyekKlien * persentaseRetensi / 100;
+            const nominalPembayaranProgress = nominal - nominalRetensi;
+            
             html += `
                 <div class="flex justify-between">
                     <span>Termin ${i}:</span>
                     <span class="font-medium">${formatRupiah(nominal)} (${persentasePerTermin.toFixed(1)}%)</span>
                 </div>
             `;
+            
+            if (isTerminTerakhir) {
+                html += `
+                    <div class="text-sm text-yellow-600 ml-4">
+                        <em>• Termasuk retensi 5% (${formatRupiah(nominalRetensi)}) yang dibayar setelah masa garansi</em>
+                    </div>
+                `;
+            }
         }
-        
-        // Retensi
-        html += `
-            <div class="flex justify-between pt-2 border-t border-gray-200">
-                <span>Retensi (5%):</span>
-                <span class="font-medium">${formatRupiah(results.totalNilaiProyekKlien * 0.05)} (5%)</span>
-            </div>
-        `;
         
         html += '</div>';
         return html;
@@ -1063,6 +1076,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     const targetView = document.getElementById(tab.id.replace('tab-', 'view-'));
                     views.forEach(view => view.style.display = 'none');
                     targetView.style.display = tab.id === 'tab-asumsi' ? 'block' : 'grid';
+                    
+                    // Trigger recalculate saat tab berubah
+                    if (projectData && projectData.harga_per_meter) {
+                        calculateProject();
+                    }
                 });
             });
             
@@ -1103,6 +1121,21 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Jalankan kalkulasi pertama kali
             calculateProject();
+            
+            // Pastikan sub-tab aktif ter-render dengan benar setelah halaman dimuat
+            setTimeout(() => {
+                // Untuk tab kontraktor
+                const activeSubtabKontraktor = document.querySelector('.subtab-kontraktor.active-tab');
+                if (activeSubtabKontraktor) {
+                    activeSubtabKontraktor.click();
+                }
+                
+                // Untuk tab klien
+                const activeSubtabKlien = document.querySelector('.subtab-klien.active-tab');
+                if (activeSubtabKlien) {
+                    activeSubtabKlien.click();
+                }
+            }, 100);
             
         } catch (error) {
             console.error('Gagal memuat data proyek:', error);
