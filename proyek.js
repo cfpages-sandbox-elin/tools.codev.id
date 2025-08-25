@@ -1,4 +1,4 @@
-// proyek.js v0.8 tambah subtab klien
+// proyek.js v0.9 fix + chart
 document.addEventListener('DOMContentLoaded', () => {
     // Definisi elemen UI
     const tabKontraktor = document.getElementById('tab-kontraktor');
@@ -28,19 +28,113 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let projectData = {};
 
-    const setupTabs = () => {
-        tabKontraktor.addEventListener('click', () => {
-            viewKontraktor.style.display = 'grid';
-            viewKlien.style.display = 'none';
-            tabKontraktor.classList.replace('inactive-tab', 'active-tab');
-            tabKlien.classList.replace('active-tab', 'inactive-tab');
+    const setupSubTabs = () => {
+        // Sub-tab Kontraktor
+        const subtabContentsKontraktor = document.querySelectorAll('#view-kontraktor .subtab-content');
+        
+        subtabRingkasanKontraktor.addEventListener('click', () => {
+            // Update tab status
+            document.querySelectorAll('.subtab-kontraktor').forEach(tab => {
+                tab.classList.replace('active-tab', 'inactive-tab');
+            });
+            subtabRingkasanKontraktor.classList.replace('inactive-tab', 'active-tab');
+            
+            // Update content visibility
+            subtabContentsKontraktor.forEach(content => content.classList.add('hidden'));
+            document.getElementById('subtab-content-ringkasan-kontraktor').classList.remove('hidden');
+            
+            // Re-render ringkasan
+            if (projectData && projectData.harga_per_meter) {
+                calculateProject();
+            }
         });
-
-        tabKlien.addEventListener('click', () => {
-            viewKontraktor.style.display = 'none';
-            viewKlien.style.display = 'grid';
-            tabKlien.classList.replace('inactive-tab', 'active-tab');
-            tabKontraktor.classList.replace('active-tab', 'inactive-tab');
+        
+        subtabRabKontraktor.addEventListener('click', () => {
+            // Update tab status
+            document.querySelectorAll('.subtab-kontraktor').forEach(tab => {
+                tab.classList.replace('active-tab', 'inactive-tab');
+            });
+            subtabRabKontraktor.classList.replace('inactive-tab', 'active-tab');
+            
+            // Update content visibility
+            subtabContentsKontraktor.forEach(content => content.classList.add('hidden'));
+            document.getElementById('subtab-content-rab-kontraktor').classList.remove('hidden');
+            
+            // Re-render RAB
+            if (projectData && projectData.harga_per_meter) {
+                calculateProject();
+            }
+        });
+        
+        subtabTukangKontraktor.addEventListener('click', () => {
+            // Update tab status
+            document.querySelectorAll('.subtab-kontraktor').forEach(tab => {
+                tab.classList.replace('active-tab', 'inactive-tab');
+            });
+            subtabTukangKontraktor.classList.replace('inactive-tab', 'active-tab');
+            
+            // Update content visibility
+            subtabContentsKontraktor.forEach(content => content.classList.add('hidden'));
+            document.getElementById('subtab-content-tukang-kontraktor').classList.remove('hidden');
+            
+            // Re-render tenaga kerja
+            if (projectData && projectData.harga_per_meter) {
+                calculateProject();
+            }
+        });
+        
+        // Sub-tab Klien
+        const subtabContentsKlien = document.querySelectorAll('#view-klien .subtab-content');
+        
+        subtabRingkasanKlien.addEventListener('click', () => {
+            // Update tab status
+            document.querySelectorAll('.subtab-klien').forEach(tab => {
+                tab.classList.replace('active-tab', 'inactive-tab');
+            });
+            subtabRingkasanKlien.classList.replace('inactive-tab', 'active-tab');
+            
+            // Update content visibility
+            subtabContentsKlien.forEach(content => content.classList.add('hidden'));
+            document.getElementById('subtab-content-ringkasan-klien').classList.remove('hidden');
+            
+            // Re-render ringkasan
+            if (projectData && projectData.harga_per_meter) {
+                calculateProject();
+            }
+        });
+        
+        subtabRabKlien.addEventListener('click', () => {
+            // Update tab status
+            document.querySelectorAll('.subtab-klien').forEach(tab => {
+                tab.classList.replace('active-tab', 'inactive-tab');
+            });
+            subtabRabKlien.classList.replace('inactive-tab', 'active-tab');
+            
+            // Update content visibility
+            subtabContentsKlien.forEach(content => content.classList.add('hidden'));
+            document.getElementById('subtab-content-rab-klien').classList.remove('hidden');
+            
+            // Re-render RAB
+            if (projectData && projectData.harga_per_meter) {
+                calculateProject();
+            }
+        });
+        
+        subtabTimelineKlien.addEventListener('click', () => {
+            // Update tab status
+            document.querySelectorAll('.subtab-klien').forEach(tab => {
+                tab.classList.replace('active-tab', 'inactive-tab');
+            });
+            subtabTimelineKlien.classList.replace('inactive-tab', 'active-tab');
+            
+            // Update content visibility
+            subtabContentsKlien.forEach(content => content.classList.add('hidden'));
+            document.getElementById('subtab-content-timeline-klien').classList.remove('hidden');
+            
+            // Re-render timeline
+            if (projectData && projectData.harga_per_meter) {
+                calculateProject();
+            }
         });
     };
 
@@ -370,26 +464,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderOutputs(results) {
         // --- RENDER BAGIAN KONTRAKTOR ---
-        // Ringkasan di sidebar
-        document.getElementById('output-ringkasan-kontraktor').innerHTML = `
+        // Ringkasan singkat di sidebar
+        document.getElementById('output-ringkasan-singkat-kontraktor').innerHTML = `
             <div class="flex justify-between"><span class="font-medium">Estimasi Durasi:</span> <span class="font-semibold">${results.durasiTotalBulan.toFixed(1)} bulan</span></div>
             <div class="flex justify-between"><span class="font-medium">Total Biaya Tukang:</span> <span>${formatRupiah(results.totalBiayaTukang)}</span></div>
-            <div class="flex justify-between"><span class="font-medium">Total Biaya Material (Kulak):</span> <span>${formatRupiah(results.totalBiayaMaterialKulak)}</span></div>
+            <div class="flex justify-between"><span class="font-medium">Total Biaya Material:</span> <span>${formatRupiah(results.totalBiayaMaterialKulak)}</span></div>
             <hr class="my-2 border-t border-gray-200">
             <div class="flex justify-between"><span class="font-semibold text-lg text-gray-800">Total HPP Proyek:</span> <span class="font-bold text-lg text-blue-600">${formatRupiah(results.totalBiayaProyekInternal)}</span></div>
             <div class="flex justify-between"><span class="font-semibold text-lg text-gray-800">Estimasi Profit:</span> <span class="font-bold text-lg text-green-600">${formatRupiah(results.profitEstimasi)} (${results.profitMargin.toFixed(1)}%)</span></div>
-        `;
-        
-        // RAB di sidebar
-        document.getElementById('output-rab-kontraktor').innerHTML = `
-            <div class="flex justify-between"><span class="font-medium">Total Material:</span> <span>${formatRupiah(results.totalBiayaMaterialKulak)}</span></div>
-            <div class="flex justify-between"><span class="font-medium">Jenis Material:</span> <span>${projectData.spesifikasi_teknis[results.hargaKey].length} item</span></div>
-        `;
-        
-        // Tenaga Kerja di sidebar
-        document.getElementById('output-tukang-kontraktor').innerHTML = `
-            <div class="flex justify-between"><span class="font-medium">Total Biaya Tukang:</span> <span>${formatRupiah(results.totalBiayaTukang)}</span></div>
-            <div class="flex justify-between"><span class="font-medium">Estimasi Durasi:</span> <span>${results.durasiTotalBulan.toFixed(1)} bulan</span></div>
         `;
         
         // Cek sub-tab aktif untuk menentukan konten utama
@@ -401,34 +483,79 @@ document.addEventListener('DOMContentLoaded', () => {
             if (ringkasanMain) {
                 ringkasanMain.innerHTML = `
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="bg-blue-50 p-4 rounded-lg">
-                            <h3 class="font-semibold text-blue-800">Biaya Material</h3>
-                            <p class="text-2xl font-bold text-blue-600 mt-2">${formatRupiah(results.totalBiayaMaterialKulak)}</p>
-                            <p class="text-sm text-blue-600 mt-1">Total harga kulak semua material</p>
+                        <div class="bg-blue-50 p-5 rounded-lg border border-blue-100">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-blue-100 mr-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-blue-800">Biaya Material</h3>
+                                    <p class="text-2xl font-bold text-blue-600 mt-1">${formatRupiah(results.totalBiayaMaterialKulak)}</p>
+                                    <p class="text-sm text-blue-600 mt-1">Total harga kulak semua material</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="bg-green-50 p-4 rounded-lg">
-                            <h3 class="font-semibold text-green-800">Biaya Tenaga Kerja</h3>
-                            <p class="text-2xl font-bold text-green-600 mt-2">${formatRupiah(results.totalBiayaTukang)}</p>
-                            <p class="text-sm text-green-600 mt-1">Total biaya untuk semua tenaga kerja</p>
+                        <div class="bg-green-50 p-5 rounded-lg border border-green-100">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-green-100 mr-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-green-800">Biaya Tenaga Kerja</h3>
+                                    <p class="text-2xl font-bold text-green-600 mt-1">${formatRupiah(results.totalBiayaTukang)}</p>
+                                    <p class="text-sm text-green-600 mt-1">Total biaya untuk semua tenaga kerja</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="bg-purple-50 p-4 rounded-lg">
-                            <h3 class="font-semibold text-purple-800">Total HPP Proyek</h3>
-                            <p class="text-2xl font-bold text-purple-600 mt-2">${formatRupiah(results.totalBiayaProyekInternal)}</p>
-                            <p class="text-sm text-purple-600 mt-1">Total biaya internal proyek</p>
+                        <div class="bg-purple-50 p-5 rounded-lg border border-purple-100">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-purple-100 mr-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-purple-800">Total HPP Proyek</h3>
+                                    <p class="text-2xl font-bold text-purple-600 mt-1">${formatRupiah(results.totalBiayaProyekInternal)}</p>
+                                    <p class="text-sm text-purple-600 mt-1">Total biaya internal proyek</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="bg-yellow-50 p-4 rounded-lg">
-                            <h3 class="font-semibold text-yellow-800">Estimasi Profit</h3>
-                            <p class="text-2xl font-bold text-yellow-600 mt-2">${formatRupiah(results.profitEstimasi)}</p>
-                            <p class="text-sm text-yellow-600 mt-1">(${results.profitMargin.toFixed(1)}% dari nilai proyek)</p>
+                        <div class="bg-yellow-50 p-5 rounded-lg border border-yellow-100">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-yellow-100 mr-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-yellow-800">Estimasi Profit</h3>
+                                    <p class="text-2xl font-bold text-yellow-600 mt-1">${formatRupiah(results.profitEstimasi)}</p>
+                                    <p class="text-sm text-yellow-600 mt-1">(${results.profitMargin.toFixed(1)}% dari nilai proyek)</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="mt-6 bg-gray-50 p-4 rounded-lg">
-                        <h3 class="font-semibold text-gray-800">Detail Biaya per Kategori</h3>
-                        <div class="mt-3 space-y-2">
+                    <div class="mt-8 bg-gray-50 p-6 rounded-lg border border-gray-200">
+                        <h3 class="font-semibold text-gray-800 text-lg mb-4">Detail Biaya per Kategori</h3>
+                        <div class="space-y-3">
                             ${getKategoriBiayaHTML(results.hargaKey, results.totalBiayaMaterialKulak)}
                         </div>
                     </div>
+                    <div class="mt-8 bg-white p-6 rounded-lg border border-gray-200">
+                        <h3 class="font-semibold text-gray-800 text-lg mb-4">Distribusi Biaya</h3>
+                        <div class="h-64">
+                            <canvas id="biayaChart"></canvas>
+                        </div>
+                    </div>
                 `;
+                
+                // Render chart jika ada library chart
+                renderBiayaChart(results);
             }
         } else if (activeSubtabKontraktor === 'subtab-rab-kontraktor') {
             // Render RAB table di main content
@@ -459,25 +586,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         // --- RENDER BAGIAN KLIEN ---
-        // Ringkasan di sidebar
-        document.getElementById('output-ringkasan-klien').innerHTML = `
+        // Ringkasan singkat di sidebar
+        document.getElementById('output-ringkasan-singkat-klien').innerHTML = `
             <div class="flex justify-between"><span class="font-medium">Estimasi Durasi:</span> <span class="font-semibold">${results.durasiTotalBulan.toFixed(1)} bulan</span></div>
             <div class="flex justify-between"><span class="font-medium">Luas Bangunan:</span> <span>${results.luas_bangunan} m²</span></div>
             <div class="flex justify-between"><span class="font-medium">Harga per m²:</span> <span>${formatRupiah(results.hargaData.nilai)}</span></div>
             <hr class="my-2 border-t border-gray-200">
             <div class="flex justify-between"><span class="font-semibold text-lg text-gray-800">Total Nilai Proyek:</span> <span class="font-bold text-lg text-indigo-600">${formatRupiah(results.totalNilaiProyekKlien)}</span></div>
-        `;
-        
-        // RAB di sidebar
-        document.getElementById('output-rab-klien').innerHTML = `
-            <div class="flex justify-between"><span class="font-medium">Total Material:</span> <span>${formatRupiah(results.totalBiayaMaterialPasar)}</span></div>
-            <div class="flex justify-between"><span class="font-medium">Jenis Material:</span> <span>${projectData.spesifikasi_teknis[results.hargaKey].length} item</span></div>
-        `;
-        
-        // Timeline di sidebar
-        document.getElementById('output-timeline-klien').innerHTML = `
-            <div class="flex justify-between"><span class="font-medium">Jumlah Termin:</span> <span>${results.jumlahTermin} + Retensi</span></div>
-            <div class="flex justify-between"><span class="font-medium">Estimasi Durasi:</span> <span>${results.durasiTotalBulan.toFixed(1)} bulan</span></div>
         `;
         
         // Cek sub-tab aktif untuk menentukan konten utama
@@ -489,34 +604,79 @@ document.addEventListener('DOMContentLoaded', () => {
             if (ringkasanMain) {
                 ringkasanMain.innerHTML = `
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="bg-blue-50 p-4 rounded-lg">
-                            <h3 class="font-semibold text-blue-800">Total Nilai Proyek</h3>
-                            <p class="text-2xl font-bold text-blue-600 mt-2">${formatRupiah(results.totalNilaiProyekKlien)}</p>
-                            <p class="text-sm text-blue-600 mt-1">Untuk ${results.luas_bangunan} m² dengan kualitas ${results.hargaKey}</p>
+                        <div class="bg-blue-50 p-5 rounded-lg border border-blue-100">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-blue-100 mr-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-blue-800">Total Nilai Proyek</h3>
+                                    <p class="text-2xl font-bold text-blue-600 mt-1">${formatRupiah(results.totalNilaiProyekKlien)}</p>
+                                    <p class="text-sm text-blue-600 mt-1">Untuk ${results.luas_bangunan} m² dengan kualitas ${results.hargaKey}</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="bg-green-50 p-4 rounded-lg">
-                            <h3 class="font-semibold text-green-800">Estimasi Durasi</h3>
-                            <p class="text-2xl font-bold text-green-600 mt-2">${results.durasiTotalBulan.toFixed(1)} bulan</p>
-                            <p class="text-sm text-green-600 mt-1">(~${Math.round(results.totalHariKerja)} hari kerja)</p>
+                        <div class="bg-green-50 p-5 rounded-lg border border-green-100">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-green-100 mr-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-green-800">Estimasi Durasi</h3>
+                                    <p class="text-2xl font-bold text-green-600 mt-1">${results.durasiTotalBulan.toFixed(1)} bulan</p>
+                                    <p class="text-sm text-green-600 mt-1">(~${Math.round(results.totalHariKerja)} hari kerja)</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="bg-purple-50 p-4 rounded-lg">
-                            <h3 class="font-semibold text-purple-800">Jumlah Termin</h3>
-                            <p class="text-2xl font-bold text-purple-600 mt-2">${results.jumlahTermin} + Retensi</p>
-                            <p class="text-sm text-purple-600 mt-1">Pembayaran setiap ${Math.round(100 / (results.jumlahTermin + 1))}% progress</p>
+                        <div class="bg-purple-50 p-5 rounded-lg border border-purple-100">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-purple-100 mr-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-purple-800">Jumlah Termin</h3>
+                                    <p class="text-2xl font-bold text-purple-600 mt-1">${results.jumlahTermin} + Retensi</p>
+                                    <p class="text-sm text-purple-600 mt-1">Pembayaran setiap ${Math.round(100 / (results.jumlahTermin + 1))}% progress</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="bg-yellow-50 p-4 rounded-lg">
-                            <h3 class="font-semibold text-yellow-800">Harga per m²</h3>
-                            <p class="text-2xl font-bold text-yellow-600 mt-2">${formatRupiah(results.hargaData.nilai)}</p>
-                            <p class="text-sm text-yellow-600 mt-1">Kualitas ${results.hargaKey}</p>
+                        <div class="bg-yellow-50 p-5 rounded-lg border border-yellow-100">
+                            <div class="flex items-center">
+                                <div class="p-3 rounded-full bg-yellow-100 mr-4">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-yellow-800">Harga per m²</h3>
+                                    <p class="text-2xl font-bold text-yellow-600 mt-1">${formatRupiah(results.hargaData.nilai)}</p>
+                                    <p class="text-sm text-yellow-600 mt-1">Kualitas ${results.hargaKey}</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="mt-6 bg-gray-50 p-4 rounded-lg">
-                        <h3 class="font-semibold text-gray-800">Rencana Pembayaran</h3>
-                        <div class="mt-3">
+                    <div class="mt-8 bg-gray-50 p-6 rounded-lg border border-gray-200">
+                        <h3 class="font-semibold text-gray-800 text-lg mb-4">Rencana Pembayaran</h3>
+                        <div class="space-y-3">
                             ${getRencanaPembayaranHTML(results)}
                         </div>
                     </div>
+                    <div class="mt-8 bg-white p-6 rounded-lg border border-gray-200">
+                        <h3 class="font-semibold text-gray-800 text-lg mb-4">Distribusi Pembayaran</h3>
+                        <div class="h-64">
+                            <canvas id="pembayaranChart"></canvas>
+                        </div>
+                    </div>
                 `;
+                
+                // Render chart jika ada library chart
+                renderPembayaranChart(results);
             }
         } else if (activeSubtabKlien === 'subtab-rab-klien') {
             // Render RAB table di main content
@@ -709,6 +869,204 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         detailPekerjaanContainer.innerHTML = html;
+    }
+
+    function renderBiayaChart(results) {
+        // Cek apakah Chart.js tersedia
+        if (typeof Chart === 'undefined') {
+            console.log('Chart.js tidak tersedia');
+            return;
+        }
+        
+        // Hapus chart yang sudah ada
+        const existingChart = Chart.getChart('biayaChart');
+        if (existingChart) {
+            existingChart.destroy();
+        }
+        
+        // Siapkan data untuk chart
+        const spesifikasi = projectData.spesifikasi_teknis[results.hargaKey];
+        const kategoriBiaya = {};
+        
+        spesifikasi.forEach(item => {
+            const kategori = item.kategori || 'Lainnya';
+            const volume = eval(item.rumus_kebutuhan);
+            const harga = item.harga.kulak_rumus ? eval(item.harga.kulak_rumus) : item.harga.kulak;
+            const subtotal = volume * harga;
+            
+            if (!kategoriBiaya[kategori]) {
+                kategoriBiaya[kategori] = 0;
+            }
+            kategoriBiaya[kategori] += subtotal;
+        });
+        
+        const labels = Object.keys(kategoriBiaya);
+        const data = Object.values(kategoriBiaya);
+        
+        // Buat chart
+        const ctx = document.getElementById('biayaChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(255, 206, 86, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(153, 102, 255, 0.7)',
+                        'rgba(255, 159, 64, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = formatRupiah(context.raw);
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((context.raw / total) * 100);
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    function renderPembayaranChart(results) {
+        // Cek apakah Chart.js tersedia
+        if (typeof Chart === 'undefined') {
+            console.log('Chart.js tidak tersedia');
+            return;
+        }
+        
+        // Hapus chart yang sudah ada
+        const existingChart = Chart.getChart('pembayaranChart');
+        if (existingChart) {
+            existingChart.destroy();
+        }
+        
+        // Siapkan data untuk chart
+        const labels = [];
+        const data = [];
+        const persentasePerTermin = 100 / (results.jumlahTermin + 1);
+        
+        for (let i = 1; i <= results.jumlahTermin; i++) {
+            labels.push(`Termin ${i}`);
+            data.push(persentasePerTermin);
+        }
+        
+        labels.push('Retensi');
+        data.push(5);
+        
+        // Buat chart
+        const ctx = document.getElementById('pembayaranChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Persentase Pembayaran',
+                    data: data,
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(255, 206, 86, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(153, 102, 255, 0.7)',
+                        'rgba(255, 159, 64, 0.7)',
+                        'rgba(199, 199, 199, 0.7)',
+                        'rgba(83, 102, 255, 0.7)',
+                        'rgba(40, 159, 64, 0.7)',
+                        'rgba(210, 99, 132, 0.7)',
+                        'rgba(80, 206, 86, 0.7)',
+                        'rgba(70, 192, 192, 0.7)',
+                        'rgba(153, 50, 255, 0.7)',
+                        'rgba(255, 120, 64, 0.7)',
+                        'rgba(54, 140, 235, 0.7)',
+                        'rgba(255, 70, 132, 0.7)',
+                        'rgba(255, 180, 86, 0.7)',
+                        'rgba(75, 160, 192, 0.7)',
+                        'rgba(153, 80, 255, 0.7)',
+                        'rgba(255, 50, 64, 0.7)',
+                        'rgba(100, 100, 100, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)',
+                        'rgba(199, 199, 199, 1)',
+                        'rgba(83, 102, 255, 1)',
+                        'rgba(40, 159, 64, 1)',
+                        'rgba(210, 99, 132, 1)',
+                        'rgba(80, 206, 86, 1)',
+                        'rgba(70, 192, 192, 1)',
+                        'rgba(153, 50, 255, 1)',
+                        'rgba(255, 120, 64, 1)',
+                        'rgba(54, 140, 235, 1)',
+                        'rgba(255, 70, 132, 1)',
+                        'rgba(255, 180, 86, 1)',
+                        'rgba(75, 160, 192, 1)',
+                        'rgba(153, 80, 255, 1)',
+                        'rgba(255, 50, 64, 1)',
+                        'rgba(100, 100, 100, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 15,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw;
+                                const nominal = results.totalNilaiProyekKlien * value / 100;
+                                return `${value}%: ${formatRupiah(nominal)}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
     }
 
     function getKualitasPenjelasan(kualitas, termin) {

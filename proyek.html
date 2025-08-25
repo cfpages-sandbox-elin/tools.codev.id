@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
         .active-tab { border-color: #4f46e5; color: #4f46e5; }
@@ -19,7 +20,7 @@
 
     <div class="container mx-auto p-4 md:p-8">
         <header class="mb-8">
-            <h1 class="text-4xl font-bold text-gray-900">Project Estimator v0.8</h1>
+            <h1 class="text-4xl font-bold text-gray-900">Project Estimator v0.9</h1>
             <p class="text-lg text-gray-600 mt-2">Alat dinamis untuk merencanakan proyek konstruksi Anda.</p>
         </header>
 
@@ -74,8 +75,8 @@
                 </div>
 
             </div>
-            <!-- Tampilan Kontraktor -->
-            <div id="view-kontraktor" class="view-content grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Modifikasi HTML untuk tab Kontraktor -->
+            <div id="view-kontraktor" class="view-content hidden grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <section class="lg:col-span-1 space-y-6">
                     <!-- Input Proyek tetap sama -->
                     <div class="bg-white p-6 rounded-lg shadow-md">
@@ -96,72 +97,68 @@
                         </div>
                     </div>
                     
-                    <!-- Sub-tab untuk Kontraktor -->
+                    <!-- Ringkasan singkat di sidebar -->
                     <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h2 class="text-2xl font-semibold mb-4">Ringkasan</h2>
+                        <div id="output-ringkasan-singkat-kontraktor" class="space-y-3"></div>
+                    </div>
+                </section>
+                
+                <section class="lg:col-span-2 space-y-6">
+                    <!-- Sub-tab untuk Kontraktor di bagian utama -->
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
                         <div class="border-b border-gray-200">
-                            <nav class="-mb-px flex space-x-4" aria-label="Tabs">
-                                <button id="subtab-ringkasan-kontraktor" class="subtab-kontraktor active-tab whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
-                                    💰 Ringkasan
+                            <nav class="-mb-px flex" aria-label="Tabs">
+                                <button id="subtab-ringkasan-kontraktor" class="subtab-kontraktor active-tab flex-1 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-center">
+                                    💰 Ringkasan Biaya Internal
                                 </button>
-                                <button id="subtab-rab-kontraktor" class="subtab-kontraktor inactive-tab whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                                <button id="subtab-rab-kontraktor" class="subtab-kontraktor inactive-tab flex-1 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-center">
                                     📋 RAB Material
                                 </button>
-                                <button id="subtab-tukang-kontraktor" class="subtab-kontraktor inactive-tab whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
-                                    👷 Tenaga Kerja
+                                <button id="subtab-tukang-kontraktor" class="subtab-kontraktor inactive-tab flex-1 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-center">
+                                    👷 Rencana Tenaga Kerja
                                 </button>
                             </nav>
                         </div>
                         
                         <!-- Konten Sub-tab -->
-                        <div id="subtab-content-ringkasan-kontraktor" class="subtab-content mt-4">
-                            <h3 class="text-lg font-semibold mb-3">Ringkasan Biaya Internal</h3>
-                            <div id="output-ringkasan-kontraktor" class="space-y-3"></div>
-                        </div>
-                        
-                        <div id="subtab-content-rab-kontraktor" class="subtab-content mt-4 hidden">
-                            <h3 class="text-lg font-semibold mb-3">RAB Material (Harga Kulak)</h3>
-                            <div id="output-rab-kontraktor" class="space-y-3"></div>
-                        </div>
-                        
-                        <div id="subtab-content-tukang-kontraktor" class="subtab-content mt-4 hidden">
-                            <h3 class="text-lg font-semibold mb-3">Rencana Tenaga Kerja</h3>
-                            <div id="output-tukang-kontraktor" class="space-y-3"></div>
-                        </div>
-                    </div>
-                </section>
-                
-                <section class="lg:col-span-2 space-y-8">
-                    <!-- Konten utama akan diisi berdasarkan sub-tab yang aktif -->
-                    <div id="main-content-kontraktor">
-                        <!-- Konten default: RAB Material -->
-                        <div class="bg-white p-6 rounded-lg shadow-md">
-                            <h2 class="text-2xl font-semibold mb-4">RAB Material (Harga Kulak)</h2>
-                            <div class="overflow-x-auto">
-                                <table class="min-w-full divide-y divide-gray-200">
-                                    <thead class="bg-gray-50">
-                                        <tr>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Material</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Volume</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Harga Satuan</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subtotal</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="output-rab-table-kontraktor" class="bg-white divide-y divide-gray-200"></tbody>
-                                </table>
+                        <div class="p-6">
+                            <div id="subtab-content-ringkasan-kontraktor" class="subtab-content">
+                                <h3 class="text-xl font-semibold mb-4">Ringkasan Biaya Internal</h3>
+                                <div id="output-ringkasan-kontraktor-main" class="space-y-6"></div>
                             </div>
-                        </div>
-                        
-                        <!-- Rencana Tenaga Kerja -->
-                        <div class="bg-white p-6 rounded-lg shadow-md">
-                            <h2 class="text-2xl font-semibold mb-4">Rencana Tenaga Kerja per Fase</h2>
-                            <div id="output-rencana-tukang" class="space-y-6"></div>
-                            <div id="output-total-durasi" class="border-t-2 border-gray-300 pt-4 mt-6"></div>
+                            
+                            <div id="subtab-content-rab-kontraktor" class="subtab-content hidden">
+                                <h3 class="text-xl font-semibold mb-4">RAB Material (Harga Kulak)</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Material</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Volume</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Harga Satuan</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subtotal</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="output-rab-table-kontraktor" class="bg-white divide-y divide-gray-200"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <div id="subtab-content-tukang-kontraktor" class="subtab-content hidden">
+                                <h3 class="text-xl font-semibold mb-4">Rencana Tenaga Kerja</h3>
+                                <div id="output-rencana-tukang" class="space-y-6 mb-6"></div>
+                                <div id="output-total-durasi" class="border-t-2 border-gray-300 pt-4 mb-6"></div>
+                                
+                                <h3 class="text-xl font-semibold mb-4">Detail Pekerjaan per Minggu</h3>
+                                <div id="output-detail-pekerjaan" class="space-y-4"></div>
+                            </div>
                         </div>
                     </div>
                 </section>
             </div>
 
-            <!-- Tampilan Klien -->
+            <!-- Modifikasi HTML untuk tab Klien -->
             <div id="view-klien" class="view-content hidden grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <section class="lg:col-span-1 space-y-6">
                     <!-- Input Klien -->
@@ -179,65 +176,58 @@
                         </div>
                     </div>
                     
-                    <!-- Sub-tab untuk Klien -->
+                    <!-- Ringkasan singkat di sidebar -->
                     <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h2 class="text-2xl font-semibold mb-4">Ringkasan</h2>
+                        <div id="output-ringkasan-singkat-klien" class="space-y-3"></div>
+                    </div>
+                </section>
+                
+                <section class="lg:col-span-2 space-y-6">
+                    <!-- Sub-tab untuk Klien di bagian utama -->
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
                         <div class="border-b border-gray-200">
-                            <nav class="-mb-px flex space-x-4" aria-label="Tabs">
-                                <button id="subtab-ringkasan-klien" class="subtab-klien active-tab whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
-                                    📝 Ringkasan
+                            <nav class="-mb-px flex" aria-label="Tabs">
+                                <button id="subtab-ringkasan-klien" class="subtab-klien active-tab flex-1 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-center">
+                                    📝 Ringkasan Penawaran
                                 </button>
-                                <button id="subtab-rab-klien" class="subtab-klien inactive-tab whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                                <button id="subtab-rab-klien" class="subtab-klien inactive-tab flex-1 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-center">
                                     📋 RAB Material
                                 </button>
-                                <button id="subtab-timeline-klien" class="subtab-klien inactive-tab whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
-                                    📅 Timeline
+                                <button id="subtab-timeline-klien" class="subtab-klien inactive-tab flex-1 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-center">
+                                    📅 Timeline & Termin
                                 </button>
                             </nav>
                         </div>
                         
                         <!-- Konten Sub-tab -->
-                        <div id="subtab-content-ringkasan-klien" class="subtab-content mt-4">
-                            <h3 class="text-lg font-semibold mb-3">Ringkasan Penawaran</h3>
-                            <div id="output-ringkasan-klien" class="space-y-3"></div>
-                        </div>
-                        
-                        <div id="subtab-content-rab-klien" class="subtab-content mt-4 hidden">
-                            <h3 class="text-lg font-semibold mb-3">RAB Material (Harga Pasar)</h3>
-                            <div id="output-rab-klien" class="space-y-3"></div>
-                        </div>
-                        
-                        <div id="subtab-content-timeline-klien" class="subtab-content mt-4 hidden">
-                            <h3 class="text-lg font-semibold mb-3">Timeline & Termin</h3>
-                            <div id="output-timeline-klien" class="space-y-3"></div>
-                        </div>
-                    </div>
-                </section>
-                
-                <section class="lg:col-span-2 space-y-8">
-                    <!-- Konten utama akan diisi berdasarkan sub-tab yang aktif -->
-                    <div id="main-content-klien">
-                        <!-- Konten default: RAB Material -->
-                        <div class="bg-white p-6 rounded-lg shadow-md">
-                            <h2 class="text-2xl font-semibold mb-4">Estimasi Rincian Biaya Material (Harga Pasar)</h2>
-                            <div class="overflow-x-auto">
-                                <table class="min-w-full divide-y divide-gray-200">
-                                    <thead class="bg-gray-50">
-                                        <tr>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Material</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Volume</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Harga Satuan</th>
-                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subtotal</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="output-rab-table-klien" class="bg-white divide-y divide-gray-200"></tbody>
-                                </table>
+                        <div class="p-6">
+                            <div id="subtab-content-ringkasan-klien" class="subtab-content">
+                                <h3 class="text-xl font-semibold mb-4">Ringkasan Penawaran</h3>
+                                <div id="output-ringkasan-klien-main" class="space-y-6"></div>
                             </div>
-                        </div>
-                        
-                        <!-- Timeline & Termin -->
-                        <div class="bg-white p-6 rounded-lg shadow-md">
-                            <h2 class="text-2xl font-semibold mb-4">Timeline Progres & Termin</h2>
-                            <div id="output-timeline" class="space-y-6"></div>
+                            
+                            <div id="subtab-content-rab-klien" class="subtab-content hidden">
+                                <h3 class="text-xl font-semibold mb-4">RAB Material (Harga Pasar)</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Material</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Volume</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Harga Satuan</th>
+                                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subtotal</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="output-rab-table-klien" class="bg-white divide-y divide-gray-200"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <div id="subtab-content-timeline-klien" class="subtab-content hidden">
+                                <h3 class="text-xl font-semibold mb-4">Timeline Progres & Termin</h3>
+                                <div id="output-timeline" class="space-y-6"></div>
+                            </div>
                         </div>
                     </div>
                 </section>
