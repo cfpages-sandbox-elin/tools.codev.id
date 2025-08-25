@@ -1,4 +1,4 @@
-// proyek.js v1.0 refaktor + fix + loading
+// proyek.js v1.0 refaktor + fix + loading + debugging ga penting
 document.addEventListener('DOMContentLoaded', () => {
     // Definisi elemen UI
     const tabKontraktor = document.getElementById('tab-kontraktor');
@@ -34,10 +34,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
 
     const setupSubTabs = () => {
+        console.log('Setting up sub-tabs...');
+        
         // Sub-tab Kontraktor
         const subtabContentsKontraktor = document.querySelectorAll('#view-kontraktor .subtab-content');
+        console.log('Contractor subtab contents:', subtabContentsKontraktor.length);
         
         subtabRingkasanKontraktor.addEventListener('click', () => {
+            console.log('Contractor summary tab clicked');
             // Update tab status
             document.querySelectorAll('.subtab-kontraktor').forEach(tab => {
                 tab.classList.replace('active-tab', 'inactive-tab');
@@ -46,7 +50,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Update content visibility
             subtabContentsKontraktor.forEach(content => content.classList.add('hidden'));
-            document.getElementById('subtab-content-ringkasan-kontraktor').classList.remove('hidden');
+            const targetContent = document.getElementById('subtab-content-ringkasan-kontraktor');
+            if (targetContent) {
+                targetContent.classList.remove('hidden');
+                console.log('Contractor summary content shown');
+            }
             
             // Re-render ringkasan
             if (projectData && projectData.harga_per_meter) {
@@ -55,6 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         subtabRabKontraktor.addEventListener('click', () => {
+            console.log('Contractor RAB tab clicked');
             // Update tab status
             document.querySelectorAll('.subtab-kontraktor').forEach(tab => {
                 tab.classList.replace('active-tab', 'inactive-tab');
@@ -63,7 +72,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Update content visibility
             subtabContentsKontraktor.forEach(content => content.classList.add('hidden'));
-            document.getElementById('subtab-content-rab-kontraktor').classList.remove('hidden');
+            const targetContent = document.getElementById('subtab-content-rab-kontraktor');
+            if (targetContent) {
+                targetContent.classList.remove('hidden');
+                console.log('Contractor RAB content shown');
+            }
             
             // Re-render RAB
             if (projectData && projectData.harga_per_meter) {
@@ -72,6 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         subtabTukangKontraktor.addEventListener('click', () => {
+            console.log('Contractor labor tab clicked');
             // Update tab status
             document.querySelectorAll('.subtab-kontraktor').forEach(tab => {
                 tab.classList.replace('active-tab', 'inactive-tab');
@@ -80,7 +94,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Update content visibility
             subtabContentsKontraktor.forEach(content => content.classList.add('hidden'));
-            document.getElementById('subtab-content-tukang-kontraktor').classList.remove('hidden');
+            const targetContent = document.getElementById('subtab-content-tukang-kontraktor');
+            if (targetContent) {
+                targetContent.classList.remove('hidden');
+                console.log('Contractor labor content shown');
+            }
             
             // Re-render tenaga kerja
             if (projectData && projectData.harga_per_meter) {
@@ -90,8 +108,10 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Sub-tab Klien
         const subtabContentsKlien = document.querySelectorAll('#view-klien .subtab-content');
+        console.log('Client subtab contents:', subtabContentsKlien.length);
         
         subtabRingkasanKlien.addEventListener('click', () => {
+            console.log('Client summary tab clicked');
             // Update tab status
             document.querySelectorAll('.subtab-klien').forEach(tab => {
                 tab.classList.replace('active-tab', 'inactive-tab');
@@ -100,7 +120,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Update content visibility
             subtabContentsKlien.forEach(content => content.classList.add('hidden'));
-            document.getElementById('subtab-content-ringkasan-klien').classList.remove('hidden');
+            const targetContent = document.getElementById('subtab-content-ringkasan-klien');
+            if (targetContent) {
+                targetContent.classList.remove('hidden');
+                console.log('Client summary content shown');
+            }
             
             // Re-render ringkasan
             if (projectData && projectData.harga_per_meter) {
@@ -109,6 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         subtabRabKlien.addEventListener('click', () => {
+            console.log('Client RAB tab clicked');
             // Update tab status
             document.querySelectorAll('.subtab-klien').forEach(tab => {
                 tab.classList.replace('active-tab', 'inactive-tab');
@@ -117,7 +142,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Update content visibility
             subtabContentsKlien.forEach(content => content.classList.add('hidden'));
-            document.getElementById('subtab-content-rab-klien').classList.remove('hidden');
+            const targetContent = document.getElementById('subtab-content-rab-klien');
+            if (targetContent) {
+                targetContent.classList.remove('hidden');
+                console.log('Client RAB content shown');
+            }
             
             // Re-render RAB
             if (projectData && projectData.harga_per_meter) {
@@ -126,6 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         subtabTimelineKlien.addEventListener('click', () => {
+            console.log('Client timeline tab clicked');
             // Update tab status
             document.querySelectorAll('.subtab-klien').forEach(tab => {
                 tab.classList.replace('active-tab', 'inactive-tab');
@@ -134,7 +164,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Update content visibility
             subtabContentsKlien.forEach(content => content.classList.add('hidden'));
-            document.getElementById('subtab-content-timeline-klien').classList.remove('hidden');
+            const targetContent = document.getElementById('subtab-content-timeline-klien');
+            if (targetContent) {
+                targetContent.classList.remove('hidden');
+                console.log('Client timeline content shown');
+            }
             
             // Re-render timeline
             if (projectData && projectData.harga_per_meter) {
@@ -143,21 +177,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         
         // Initialize active sub-tab content visibility
+        console.log('Initializing active sub-tab content visibility...');
         const activeSubtabKontraktor = document.querySelector('#view-kontraktor .subtab-kontraktor.active-tab');
+        console.log('Active contractor subtab:', activeSubtabKontraktor ? activeSubtabKontraktor.id : 'none');
+        
         if (activeSubtabKontraktor) {
             const targetContent = document.getElementById(`subtab-content-${activeSubtabKontraktor.id.replace('subtab-', '')}`);
             if (targetContent) {
                 subtabContentsKontraktor.forEach(content => content.classList.add('hidden'));
                 targetContent.classList.remove('hidden');
+                console.log('Contractor sub-tab content initialized');
             }
         }
         
         const activeSubtabKlien = document.querySelector('#view-klien .subtab-klien.active-tab');
+        console.log('Active client subtab:', activeSubtabKlien ? activeSubtabKlien.id : 'none');
+        
         if (activeSubtabKlien) {
             const targetContent = document.getElementById(`subtab-content-${activeSubtabKlien.id.replace('subtab-', '')}`);
             if (targetContent) {
                 subtabContentsKlien.forEach(content => content.classList.add('hidden'));
                 targetContent.classList.remove('hidden');
+                console.log('Client sub-tab content initialized');
             }
         }
     };
@@ -461,8 +502,78 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderOutputs(results) {
-        renderContractorOutputs(results);
-        renderClientOutputs(results);
+        console.log('Rendering outputs for active tab...');
+        
+        // --- RENDER BAGIAN KONTRAKTOR ---
+        // Ringkasan singkat di sidebar
+        const contractorSidebar = document.getElementById('output-ringkasan-singkat-kontraktor');
+        if (contractorSidebar) {
+            contractorSidebar.innerHTML = `
+                <div class="flex justify-between"><span class="font-medium">Estimasi Durasi:</span> <span class="font-semibold">${results.durasiTotalBulan.toFixed(1)} bulan</span></div>
+                <div class="flex justify-between"><span class="font-medium">Total Biaya Tukang:</span> <span>${formatRupiah(results.totalBiayaTukang)}</span></div>
+                <div class="flex justify-between"><span class="font-medium">Total Biaya Material:</span> <span>${formatRupiah(results.totalBiayaMaterialKulak)}</span></div>
+                <hr class="my-2 border-t border-gray-200">
+                <div class="flex justify-between"><span class="font-semibold text-lg text-gray-800">Total HPP Proyek:</span> <span class="font-bold text-lg text-blue-600">${formatRupiah(results.totalBiayaProyekInternal)}</span></div>
+                <div class="flex justify-between"><span class="font-semibold text-lg text-gray-800">Estimasi Profit:</span> <span class="font-bold text-lg text-green-600">${formatRupiah(results.profitEstimasi)} (${results.profitMargin.toFixed(1)}%)</span></div>
+            `;
+            console.log('Contractor sidebar rendered');
+        }
+        
+        // Cek sub-tab aktif untuk menentukan konten utama
+        const activeSubtabKontraktor = document.querySelector('.subtab-kontraktor.active-tab');
+        console.log('Active contractor subtab:', activeSubtabKontraktor ? activeSubtabKontraktor.id : 'none');
+        
+        if (activeSubtabKontraktor) {
+            switch (activeSubtabKontraktor.id) {
+                case 'subtab-ringkasan-kontraktor':
+                    console.log('Rendering contractor summary...');
+                    renderContractorSummary(results);
+                    break;
+                case 'subtab-rab-kontraktor':
+                    console.log('Rendering contractor RAB...');
+                    renderContractorRAB(results);
+                    break;
+                case 'subtab-tukang-kontraktor':
+                    console.log('Rendering contractor labor...');
+                    renderContractorLabor(results);
+                    break;
+            }
+        }
+        
+        // --- RENDER BAGIAN KLIEN ---
+        // Ringkasan singkat di sidebar
+        const clientSidebar = document.getElementById('output-ringkasan-singkat-klien');
+        if (clientSidebar) {
+            clientSidebar.innerHTML = `
+                <div class="flex justify-between"><span class="font-medium">Estimasi Durasi:</span> <span class="font-semibold">${results.durasiTotalBulan.toFixed(1)} bulan</span></div>
+                <div class="flex justify-between"><span class="font-medium">Luas Bangunan:</span> <span>${results.luas_bangunan} m²</span></div>
+                <div class="flex justify-between"><span class="font-medium">Harga per m²:</span> <span>${formatRupiah(results.hargaData.nilai)}</span></div>
+                <hr class="my-2 border-t border-gray-200">
+                <div class="flex justify-between"><span class="font-semibold text-lg text-gray-800">Total Nilai Proyek:</span> <span class="font-bold text-lg text-indigo-600">${formatRupiah(results.totalNilaiProyekKlien)}</span></div>
+            `;
+            console.log('Client sidebar rendered');
+        }
+        
+        // Cek sub-tab aktif untuk menentukan konten utama
+        const activeSubtabKlien = document.querySelector('.subtab-klien.active-tab');
+        console.log('Active client subtab:', activeSubtabKlien ? activeSubtabKlien.id : 'none');
+        
+        if (activeSubtabKlien) {
+            switch (activeSubtabKlien.id) {
+                case 'subtab-ringkasan-klien':
+                    console.log('Rendering client summary...');
+                    renderClientSummary(results);
+                    break;
+                case 'subtab-rab-klien':
+                    console.log('Rendering client RAB...');
+                    renderClientRAB(results);
+                    break;
+                case 'subtab-timeline-klien':
+                    console.log('Rendering client timeline...');
+                    renderClientTimeline(results);
+                    break;
+            }
+        }
     }
 
     function renderContractorOutputs(results) {
@@ -1251,12 +1362,14 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch('proyek.json');
             projectData = await response.json();
+            console.log('Project data loaded:', projectData);
             
             // Setup Tabs utama
             const tabs = document.querySelectorAll('.tab');
             const views = document.querySelectorAll('.view-content');
             tabs.forEach(tab => {
                 tab.addEventListener('click', () => {
+                    console.log('Tab clicked:', tab.id);
                     tabs.forEach(t => t.classList.replace('active-tab', 'inactive-tab'));
                     tab.classList.replace('inactive-tab', 'active-tab');
                     const targetView = document.getElementById(tab.id.replace('tab-', 'view-'));
@@ -1307,28 +1420,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 calculateProject();
             });
             
-            // Jalankan kalkulasi pertama kali
-            calculateProject();
-            
             // Sembunyikan loading indicator setelah selesai
             loadingIndicator.classList.add('hidden');
             
-            // Trigger active sub-tab after a short delay to ensure DOM is ready
+            // Jalankan kalkulasi pertama kali
+            console.log('Running initial calculation...');
+            calculateProject();
+            
+            // Force render contractor tab content after a delay
             setTimeout(() => {
-                // Check which main tab is active and trigger its active sub-tab
+                console.log('Force rendering contractor tab content...');
                 const activeMainTab = document.querySelector('.tab.active-tab');
-                if (activeMainTab.id === 'tab-kontraktor') {
+                console.log('Active main tab:', activeMainTab ? activeMainTab.id : 'none');
+                
+                if (activeMainTab && activeMainTab.id === 'tab-kontraktor') {
+                    console.log('Contractor tab is active, forcing sub-tab click...');
                     const activeSubtab = document.querySelector('#view-kontraktor .subtab-kontraktor.active-tab');
+                    console.log('Active subtab:', activeSubtab ? activeSubtab.id : 'none');
+                    
                     if (activeSubtab) {
+                        console.log('Clicking active subtab...');
                         activeSubtab.click();
-                    }
-                } else if (activeMainTab.id === 'tab-klien') {
-                    const activeSubtab = document.querySelector('#view-klien .subtab-klien.active-tab');
-                    if (activeSubtab) {
-                        activeSubtab.click();
+                    } else {
+                        console.log('No active subtab found, clicking first subtab...');
+                        const firstSubtab = document.querySelector('#subtab-ringkasan-kontraktor');
+                        if (firstSubtab) {
+                            firstSubtab.click();
+                        }
                     }
                 }
-            }, 100);
+            }, 200);
             
         } catch (error) {
             console.error('Gagal memuat data proyek:', error);
