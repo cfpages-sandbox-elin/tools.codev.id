@@ -17,16 +17,46 @@
       "nilai": 6000000
     }
   },
-  "rumus_komposisi_tukang": {
-    "mandor": "Math.ceil(luas_bangunan / 100)",
-    "tukang_ahli": "Math.ceil(luas_bangunan / 30)",
-    "kenek_laden": "Math.ceil(luas_bangunan / 15)"
-  },
   "rumus_durasi_proyek_bulan": "Math.ceil((luas_bangunan / 20) + 2)",
   "biaya_tukang_harian": {
     "mandor": 200000,
     "tukang_ahli": 150000,
     "kenek_laden": 120000
+  },
+  "fase_proyek": {
+    "struktur": {
+      "nama": "Fase 1: Pekerjaan Struktur",
+      "persentase_durasi": 0.40,
+      "milestone_awal": 5,
+      "milestone_akhir": 45,
+      "komposisi_tukang_rumus": {
+        "mandor": "Math.ceil(luas_bangunan / 100)",
+        "tukang_ahli": "Math.ceil(luas_bangunan / 30)",
+        "kenek_laden": "Math.ceil(luas_bangunan / 15)"
+      }
+    },
+    "arsitektur_awal": {
+      "nama": "Fase 2: Dinding, Atap & Plester",
+      "persentase_durasi": 0.35,
+      "milestone_awal": 45,
+      "milestone_akhir": 70,
+      "komposisi_tukang_rumus": {
+        "mandor": "Math.ceil(luas_bangunan / 120)",
+        "tukang_ahli": "Math.ceil(luas_bangunan / 25)",
+        "kenek_laden": "Math.ceil(luas_bangunan / 40)"
+      }
+    },
+    "finishing": {
+      "nama": "Fase 3: Finishing & Detail",
+      "persentase_durasi": 0.25,
+      "milestone_awal": 70,
+      "milestone_akhir": 95,
+      "komposisi_tukang_rumus": {
+        "mandor": "Math.ceil(luas_bangunan / 150)",
+        "tukang_ahli": "Math.ceil(luas_bangunan / 40)",
+        "kenek_laden": "Math.ceil(luas_bangunan / 80)"
+      }
+    }
   },
   "spesifikasi_teknis": {
     "standar": [
