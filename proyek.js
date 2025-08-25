@@ -1,4 +1,4 @@
-// proyek.js v0.5 refactor
+// proyek.js v0.5 refactor + fix
 document.addEventListener('DOMContentLoaded', () => {
     // Definisi elemen UI
     const tabKontraktor = document.getElementById('tab-kontraktor');
@@ -54,9 +54,11 @@ document.addEventListener('DOMContentLoaded', () => {
         lastObj[finalKey] = value;
     };
 
-    function calculateDurations(luas_bangunan, data) {
-        const spesifikasi = data.spesifikasi_teknis[data.harga_per_meter.standar.label.includes('Standar') ? 'standar' : selectHarga.value]; // Fallback to standar if key not found
+    function calculateDurations(luas_bangunan, data, hargaKey) {
+        // Menggunakan hargaKey langsung, lebih aman
+        const spesifikasi = data.spesifikasi_teknis[hargaKey];
         let totalVolumeBeton_m3 = 0;
+        
         const itemBeton = spesifikasi.find(item => item.nama.toLowerCase().includes("beton ready mix"));
         if (itemBeton) {
             totalVolumeBeton_m3 = eval(itemBeton.rumus_kebutuhan);
@@ -130,8 +132,23 @@ document.addEventListener('DOMContentLoaded', () => {
             totalBiayaMaterialKulak += subtotalKulak;
             totalBiayaMaterialPasar += subtotalPasar;
 
-            rabKontraktorHTML += `<tr>...</tr>`; // (Salin-tempel dari versi sebelumnya)
-            rabKlienHTML += `<tr>...</tr>`; // (Salin-tempel dari versi sebelumnya)
+            // --- INI ADALAH BAGIAN YANG DIPERBAIKI ---
+            rabKontraktorHTML += `
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.nama}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${volume.toFixed(2)} ${item.satuan}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatRupiah(hargaKulak)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-semibold">${formatRupiah(subtotalKulak)}</td>
+                </tr>`;
+                
+            rabKlienHTML += `
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.nama}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${volume.toFixed(2)} ${item.satuan}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatRupiah(hargaPasar)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatRupiah(subtotalPasar)}</td>
+                </tr>`;
+            // --- AKHIR BAGIAN YANG DIPERBAIKI ---
         });
         
         return { totalBiayaMaterialKulak, totalBiayaMaterialPasar, rabKontraktorHTML, rabKlienHTML };
