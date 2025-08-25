@@ -1,4 +1,4 @@
-// proyek.js v0.9 fix2 + chart
+// proyek.js v0.9 fix3 + chart
 document.addEventListener('DOMContentLoaded', () => {
     // Definisi elemen UI
     const tabKontraktor = document.getElementById('tab-kontraktor');
@@ -360,7 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="mt-8 bg-gray-50 p-6 rounded-lg border border-gray-200">
                         <h3 class="font-semibold text-gray-800 text-lg mb-4">Detail Biaya per Kategori</h3>
                         <div class="space-y-3">
-                            ${getKategoriBiayaHTML(results.hargaKey, results.totalBiayaMaterialKulak)}
+                            ${getKategoriBiayaHTML(results.hargaKey, results.totalBiayaMaterialKulak, results.luas_bangunan)}
                         </div>
                     </div>
                     <div class="mt-8 bg-white p-6 rounded-lg border border-gray-200">
@@ -707,8 +707,15 @@ document.addEventListener('DOMContentLoaded', () => {
         
         spesifikasi.forEach(item => {
             const kategori = item.kategori || 'Lainnya';
-            const volume = eval(item.rumus_kebutuhan);
-            const harga = item.harga.kulak_rumus ? eval(item.harga.kulak_rumus) : item.harga.kulak;
+            // Create a function with luas_bangunan as a parameter and call it with eval
+            const volume = (function(luas_bangunan) {
+                return eval(item.rumus_kebutuhan);
+            })(results.luas_bangunan);
+            
+            const harga = item.harga.kulak_rumus ? (function(luas_bangunan) {
+                return eval(item.harga.kulak_rumus);
+            })(results.luas_bangunan) : item.harga.kulak;
+            
             const subtotal = volume * harga;
             
             if (!kategoriBiaya[kategori]) {
@@ -917,14 +924,21 @@ document.addEventListener('DOMContentLoaded', () => {
         return penjelasanKualitas[indexPenjelasan];
     }
 
-    function getKategoriBiayaHTML(hargaKey, totalBiayaMaterial) {
+    function getKategoriBiayaHTML(hargaKey, totalBiayaMaterial, luas_bangunan) {
         const spesifikasi = projectData.spesifikasi_teknis[hargaKey];
         const kategoriBiaya = {};
         
         spesifikasi.forEach(item => {
             const kategori = item.kategori || 'Lainnya';
-            const volume = eval(item.rumus_kebutuhan);
-            const harga = item.harga.kulak_rumus ? eval(item.harga.kulak_rumus) : item.harga.kulak;
+            // Create a function with luas_bangunan as a parameter and call it with eval
+            const volume = (function(luas_bangunan) {
+                return eval(item.rumus_kebutuhan);
+            })(luas_bangunan);
+            
+            const harga = item.harga.kulak_rumus ? (function(luas_bangunan) {
+                return eval(item.harga.kulak_rumus);
+            })(luas_bangunan) : item.harga.kulak;
+            
             const subtotal = volume * harga;
             
             if (!kategoriBiaya[kategori]) {
