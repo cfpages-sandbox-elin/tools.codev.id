@@ -22,6 +22,10 @@
     "dinding_hari_per_m2_terpasang": 0.1,
     "finishing_hari_per_m2_bangunan": 0.25
   },
+  "logika_overlap_durasi": {
+    "struktur_selesai_untuk_mulai_dinding_persen": 0.70,
+    "dinding_selesai_untuk_mulai_finishing_persen": 0.50
+  },
   "biaya_tukang_harian": {
     "mandor": 200000,
     "tukang_ahli": 150000,
