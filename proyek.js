@@ -1,4 +1,4 @@
-// proyek.js v1.0 refaktor
+// proyek.js v1.0 refaktor + fix
 document.addEventListener('DOMContentLoaded', () => {
     // Definisi elemen UI
     const tabKontraktor = document.getElementById('tab-kontraktor');
@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const outputTimeline = document.getElementById('output-timeline');
 
     let projectData = {};
+    let assumptionsRendered = false;
 
     const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
 
@@ -359,6 +360,104 @@ document.addEventListener('DOMContentLoaded', () => {
         return { totalBiayaMaterialKulak, totalBiayaMaterialPasar, rabKontraktorHTML, rabKlienHTML };
     }
 
+    function renderAssumptionInputs() {
+        // Check if projectData is available and has the required properties
+        if (!projectData || !projectData.biaya_tukang_harian) {
+            console.warn('Project data not available yet, skipping assumption inputs rendering');
+            return;
+        }
+        
+        // If already rendered, do nothing
+        if (assumptionsRendered) {
+            return;
+        }
+        
+        // Render Biaya Tukang
+        const tukangContainer = document.getElementById('assumptions-biaya-tukang');
+        if (tukangContainer) {
+            tukangContainer.innerHTML = '';
+            for (const [posisi, harga] of Object.entries(projectData.biaya_tukang_harian)) {
+                tukangContainer.innerHTML += `
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 capitalize">${posisi.replace('_', ' ')}</label>
+                        <input type="number" class="mt-1 w-full rounded-md border-gray-300" 
+                            data-path="biaya_tukang_harian.${posisi}" value="${harga}">
+                    </div>`;
+            }
+        }
+        
+        // Render Produktivitas
+        const produktivitasContainer = document.getElementById('assumptions-produktivitas');
+        if (produktivitasContainer) {
+            produktivitasContainer.innerHTML = '';
+            for (const [key, val] of Object.entries(projectData.produktivitas_kerja)) {
+                produktivitasContainer.innerHTML += `
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 capitalize">${key.replace(/_/g, ' ')}</label>
+                        <input type="number" step="0.01" class="mt-1 w-full rounded-md border-gray-300" 
+                            data-path="produktivitas_kerja.${key}" value="${val}">
+                    </div>`;
+            }
+        }
+        
+        // Render Overlap
+        const overlapContainer = document.getElementById('assumptions-overlap');
+        if (overlapContainer) {
+            overlapContainer.innerHTML = '';
+            for (const [key, val] of Object.entries(projectData.logika_overlap_durasi)) {
+                overlapContainer.innerHTML += `
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 capitalize">${key.replace(/_/g, ' ')}</label>
+                        <input type="number" step="0.01" class="mt-1 w-full rounded-md border-gray-300" 
+                            data-path="logika_overlap_durasi.${key}" value="${val}">
+                    </div>`;
+            }
+        }
+        
+        // Render Harga Material
+        const materialContainer = document.getElementById('assumptions-harga-material');
+        if (materialContainer) {
+            materialContainer.innerHTML = '';
+            for (const [kualitas, items] of Object.entries(projectData.spesifikasi_teknis)) {
+                let itemsHTML = `<div class="md:col-span-1 lg:col-span-1"><h4 class="text-lg font-semibold capitalize border-b pb-2 mb-3">${kualitas}</h4><div class="space-y-4">`;
+                items.forEach((item, index) => {
+                    itemsHTML += `
+                        <div>
+                            <p class="text-sm font-medium text-gray-800">${item.nama}</p>
+                            <div class="flex space-x-2 mt-1">
+                                <input type="number" placeholder="Kulak" class="w-1/2 rounded-md border-gray-300" 
+                                    data-path="spesifikasi_teknis.${kualitas}.${index}.harga.kulak" 
+                                    value="${item.harga.kulak || ''}" ${item.harga.kulak_rumus ? 'disabled' : ''}>
+                                <input type="number" placeholder="Pasar" class="w-1/2 rounded-md border-gray-300" 
+                                    data-path="spesifikasi_teknis.${kualitas}.${index}.harga.pasar" 
+                                    value="${item.harga.pasar || ''}" ${item.harga.pasar_rumus ? 'disabled' : ''}>
+                            </div>
+                        </div>
+                    `;
+                });
+                itemsHTML += `</div></div>`;
+                materialContainer.innerHTML += itemsHTML;
+            }
+        }
+        
+        // Tambah event listener untuk semua input di tab asumsi
+        const viewAsumsi = document.getElementById('view-asumsi');
+        if (viewAsumsi) {
+            viewAsumsi.addEventListener('input', (event) => {
+                if (event.target.tagName === 'INPUT') {
+                    const path = event.target.dataset.path;
+                    const value = parseFloat(event.target.value) || 0;
+                    if (path) {
+                        updateNestedObject(projectData, path, value);
+                        calculateProject(); // Kalkulasi ulang setiap ada perubahan
+                    }
+                }
+            });
+        }
+        
+        assumptionsRendered = true;
+    }
+
     function renderOutputs(results) {
         renderContractorOutputs(results);
         renderClientOutputs(results);
@@ -598,80 +697,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
                     
         document.getElementById('output-timeline').innerHTML = terminHTML_Content;
-    }
-
-    function renderAssumptionInputs() {
-        // Render Biaya Tukang
-        const tukangContainer = document.getElementById('assumptions-biaya-tukang');
-        tukangContainer.innerHTML = '';
-        for (const [posisi, harga] of Object.entries(projectData.biaya_tukang_harian)) {
-            tukangContainer.innerHTML += `
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 capitalize">${posisi.replace('_', ' ')}</label>
-                    <input type="number" class="mt-1 w-full rounded-md border-gray-300" 
-                           data-path="biaya_tukang_harian.${posisi}" value="${harga}">
-                </div>`;
-        }
-        
-        // Render Produktivitas
-        const produktivitasContainer = document.getElementById('assumptions-produktivitas');
-        produktivitasContainer.innerHTML = '';
-        for (const [key, val] of Object.entries(projectData.produktivitas_kerja)) {
-             produktivitasContainer.innerHTML += `
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 capitalize">${key.replace(/_/g, ' ')}</label>
-                    <input type="number" step="0.01" class="mt-1 w-full rounded-md border-gray-300" 
-                           data-path="produktivitas_kerja.${key}" value="${val}">
-                </div>`;
-        }
-
-        // Render Overlap
-        const overlapContainer = document.getElementById('assumptions-overlap');
-        overlapContainer.innerHTML = '';
-        for (const [key, val] of Object.entries(projectData.logika_overlap_durasi)) {
-             overlapContainer.innerHTML += `
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 capitalize">${key.replace(/_/g, ' ')}</label>
-                    <input type="number" step="0.01" class="mt-1 w-full rounded-md border-gray-300" 
-                           data-path="logika_overlap_durasi.${key}" value="${val}">
-                </div>`;
-        }
-
-        // Render Harga Material
-        const materialContainer = document.getElementById('assumptions-harga-material');
-        materialContainer.innerHTML = '';
-        for (const [kualitas, items] of Object.entries(projectData.spesifikasi_teknis)) {
-            let itemsHTML = `<div class="md:col-span-1 lg:col-span-1"><h4 class="text-lg font-semibold capitalize border-b pb-2 mb-3">${kualitas}</h4><div class="space-y-4">`;
-            items.forEach((item, index) => {
-                itemsHTML += `
-                    <div>
-                        <p class="text-sm font-medium text-gray-800">${item.nama}</p>
-                        <div class="flex space-x-2 mt-1">
-                            <input type="number" placeholder="Kulak" class="w-1/2 rounded-md border-gray-300" 
-                                   data-path="spesifikasi_teknis.${kualitas}.${index}.harga.kulak" 
-                                   value="${item.harga.kulak || ''}" ${item.harga.kulak_rumus ? 'disabled' : ''}>
-                            <input type="number" placeholder="Pasar" class="w-1/2 rounded-md border-gray-300" 
-                                   data-path="spesifikasi_teknis.${kualitas}.${index}.harga.pasar" 
-                                   value="${item.harga.pasar || ''}" ${item.harga.pasar_rumus ? 'disabled' : ''}>
-                        </div>
-                    </div>
-                `;
-            });
-            itemsHTML += `</div></div>`;
-            materialContainer.innerHTML += itemsHTML;
-        }
-
-        // Tambah satu event listener untuk semua input di tab asumsi
-        document.getElementById('view-asumsi').addEventListener('input', (event) => {
-            if (event.target.tagName === 'INPUT') {
-                const path = event.target.dataset.path;
-                const value = parseFloat(event.target.value) || 0;
-                if (path) {
-                    updateNestedObject(projectData, path, value);
-                    calculateProject(); // Kalkulasi ulang setiap ada perubahan
-                }
-            }
-        });
     }
 
     function renderDetailPekerjaan(results) {
@@ -1203,7 +1228,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const init = async () => {
         try {
             const response = await fetch('proyek.json');
-            projectData = await response.json;
+            projectData = await response.json();
             
             // Setup Tabs utama
             const tabs = document.querySelectorAll('.tab');
@@ -1219,6 +1244,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Trigger recalculate saat tab berubah
                     if (projectData && projectData.harga_per_meter) {
                         calculateProject();
+                    }
+                    
+                    // Render assumption inputs when assumptions tab is clicked
+                    if (tab.id === 'tab-asumsi') {
+                        renderAssumptionInputs();
                     }
                 });
             });
@@ -1239,9 +1269,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 optionKlien.textContent = projectData.harga_per_meter[key].label;
                 selectHargaKlien.appendChild(optionKlien);
             }
-            
-            // Render input asumsi untuk pertama kali
-            renderAssumptionInputs(); 
             
             // Tambah event listener untuk input utama
             inputLuasBangunan.addEventListener('input', calculateProject);
