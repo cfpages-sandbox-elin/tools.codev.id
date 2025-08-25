@@ -1,10 +1,17 @@
-// proyek.js v0.7 upgrade tab klien
+// proyek.js v0.8 tambah subtab klien
 document.addEventListener('DOMContentLoaded', () => {
     // Definisi elemen UI
     const tabKontraktor = document.getElementById('tab-kontraktor');
     const tabKlien = document.getElementById('tab-klien');
     const viewKontraktor = document.getElementById('view-kontraktor');
     const viewKlien = document.getElementById('view-klien');
+
+    const subtabRingkasanKontraktor = document.getElementById('subtab-ringkasan-kontraktor');
+    const subtabRabKontraktor = document.getElementById('subtab-rab-kontraktor');
+    const subtabTukangKontraktor = document.getElementById('subtab-tukang-kontraktor');
+    const subtabRingkasanKlien = document.getElementById('subtab-ringkasan-klien');
+    const subtabRabKlien = document.getElementById('subtab-rab-klien');
+    const subtabTimelineKlien = document.getElementById('subtab-timeline-klien');
 
     const outputRingkasanKontraktor = document.getElementById('output-ringkasan-kontraktor');
     const outputRingkasanKlien = document.getElementById('output-ringkasan-klien');
@@ -34,6 +41,189 @@ document.addEventListener('DOMContentLoaded', () => {
             viewKlien.style.display = 'grid';
             tabKlien.classList.replace('inactive-tab', 'active-tab');
             tabKontraktor.classList.replace('active-tab', 'inactive-tab');
+        });
+    };
+
+    const setupSubTabs = () => {
+        // Sub-tab Kontraktor
+        const subtabContentsKontraktor = document.querySelectorAll('#view-kontraktor .subtab-content');
+        const mainContentKontraktor = document.getElementById('main-content-kontraktor');
+        
+        subtabRingkasanKontraktor.addEventListener('click', () => {
+            // Update tab status
+            document.querySelectorAll('.subtab-kontraktor').forEach(tab => {
+                tab.classList.replace('active-tab', 'inactive-tab');
+            });
+            subtabRingkasanKontraktor.classList.replace('inactive-tab', 'active-tab');
+            
+            // Update content visibility
+            subtabContentsKontraktor.forEach(content => content.classList.add('hidden'));
+            document.getElementById('subtab-content-ringkasan-kontraktor').classList.remove('hidden');
+            
+            // Update main content
+            mainContentKontraktor.innerHTML = `
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-semibold mb-4">Ringkasan Biaya Internal</h2>
+                    <div id="output-ringkasan-kontraktor-main" class="space-y-4"></div>
+                </div>
+            `;
+            // Re-render ringkasan
+            if (projectData && projectData.harga_per_meter) {
+                calculateProject();
+            }
+        });
+        
+        subtabRabKontraktor.addEventListener('click', () => {
+            // Update tab status
+            document.querySelectorAll('.subtab-kontraktor').forEach(tab => {
+                tab.classList.replace('active-tab', 'inactive-tab');
+            });
+            subtabRabKontraktor.classList.replace('inactive-tab', 'active-tab');
+            
+            // Update content visibility
+            subtabContentsKontraktor.forEach(content => content.classList.add('hidden'));
+            document.getElementById('subtab-content-rab-kontraktor').classList.remove('hidden');
+            
+            // Update main content
+            mainContentKontraktor.innerHTML = `
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-semibold mb-4">RAB Material (Harga Kulak)</h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Material</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Volume</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Harga Satuan</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody id="output-rab-table-kontraktor" class="bg-white divide-y divide-gray-200"></tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            // Re-render RAB
+            if (projectData && projectData.harga_per_meter) {
+                calculateProject();
+            }
+        });
+        
+        subtabTukangKontraktor.addEventListener('click', () => {
+            // Update tab status
+            document.querySelectorAll('.subtab-kontraktor').forEach(tab => {
+                tab.classList.replace('active-tab', 'inactive-tab');
+            });
+            subtabTukangKontraktor.classList.replace('inactive-tab', 'active-tab');
+            
+            // Update content visibility
+            subtabContentsKontraktor.forEach(content => content.classList.add('hidden'));
+            document.getElementById('subtab-content-tukang-kontraktor').classList.remove('hidden');
+            
+            // Update main content
+            mainContentKontraktor.innerHTML = `
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-semibold mb-4">Rencana Tenaga Kerja per Fase</h2>
+                    <div id="output-rencana-tukang" class="space-y-6"></div>
+                    <div id="output-total-durasi" class="border-t-2 border-gray-300 pt-4 mt-6"></div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-semibold mb-4">Detail Pekerjaan per Minggu</h2>
+                    <div id="output-detail-pekerjaan" class="space-y-4"></div>
+                </div>
+            `;
+            // Re-render tenaga kerja
+            if (projectData && projectData.harga_per_meter) {
+                calculateProject();
+            }
+        });
+        
+        // Sub-tab Klien
+        const subtabContentsKlien = document.querySelectorAll('#view-klien .subtab-content');
+        const mainContentKlien = document.getElementById('main-content-klien');
+        
+        subtabRingkasanKlien.addEventListener('click', () => {
+            // Update tab status
+            document.querySelectorAll('.subtab-klien').forEach(tab => {
+                tab.classList.replace('active-tab', 'inactive-tab');
+            });
+            subtabRingkasanKlien.classList.replace('inactive-tab', 'active-tab');
+            
+            // Update content visibility
+            subtabContentsKlien.forEach(content => content.classList.add('hidden'));
+            document.getElementById('subtab-content-ringkasan-klien').classList.remove('hidden');
+            
+            // Update main content
+            mainContentKlien.innerHTML = `
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-semibold mb-4">Ringkasan Penawaran</h2>
+                    <div id="output-ringkasan-klien-main" class="space-y-4"></div>
+                </div>
+            `;
+            // Re-render ringkasan
+            if (projectData && projectData.harga_per_meter) {
+                calculateProject();
+            }
+        });
+        
+        subtabRabKlien.addEventListener('click', () => {
+            // Update tab status
+            document.querySelectorAll('.subtab-klien').forEach(tab => {
+                tab.classList.replace('active-tab', 'inactive-tab');
+            });
+            subtabRabKlien.classList.replace('inactive-tab', 'active-tab');
+            
+            // Update content visibility
+            subtabContentsKlien.forEach(content => content.classList.add('hidden'));
+            document.getElementById('subtab-content-rab-klien').classList.remove('hidden');
+            
+            // Update main content
+            mainContentKlien.innerHTML = `
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-semibold mb-4">Estimasi Rincian Biaya Material (Harga Pasar)</h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Material</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Volume</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Harga Satuan</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody id="output-rab-table-klien" class="bg-white divide-y divide-gray-200"></tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            // Re-render RAB
+            if (projectData && projectData.harga_per_meter) {
+                calculateProject();
+            }
+        });
+        
+        subtabTimelineKlien.addEventListener('click', () => {
+            // Update tab status
+            document.querySelectorAll('.subtab-klien').forEach(tab => {
+                tab.classList.replace('active-tab', 'inactive-tab');
+            });
+            subtabTimelineKlien.classList.replace('inactive-tab', 'active-tab');
+            
+            // Update content visibility
+            subtabContentsKlien.forEach(content => content.classList.add('hidden'));
+            document.getElementById('subtab-content-timeline-klien').classList.remove('hidden');
+            
+            // Update main content
+            mainContentKlien.innerHTML = `
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-semibold mb-4">Timeline Progres & Termin</h2>
+                    <div id="output-timeline" class="space-y-6"></div>
+                </div>
+            `;
+            // Re-render timeline
+            if (projectData && projectData.harga_per_meter) {
+                calculateProject();
+            }
         });
     };
 
@@ -180,6 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderOutputs(results) {
         // --- RENDER BAGIAN KONTRAKTOR ---
+        // Ringkasan di sidebar
         document.getElementById('output-ringkasan-kontraktor').innerHTML = `
             <div class="flex justify-between"><span class="font-medium">Estimasi Durasi:</span> <span class="font-semibold">${results.durasiTotalBulan.toFixed(1)} bulan</span></div>
             <div class="flex justify-between"><span class="font-medium">Total Biaya Tukang:</span> <span>${formatRupiah(results.totalBiayaTukang)}</span></div>
@@ -188,23 +379,87 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="flex justify-between"><span class="font-semibold text-lg text-gray-800">Total HPP Proyek:</span> <span class="font-bold text-lg text-blue-600">${formatRupiah(results.totalBiayaProyekInternal)}</span></div>
             <div class="flex justify-between"><span class="font-semibold text-lg text-gray-800">Estimasi Profit:</span> <span class="font-bold text-lg text-green-600">${formatRupiah(results.profitEstimasi)} (${results.profitMargin.toFixed(1)}%)</span></div>
         `;
-        document.getElementById('output-rencana-tukang').innerHTML = results.rencanaTukangHTML;
-        document.getElementById('output-total-durasi').innerHTML = `
-            <div class="flex justify-between text-base">
-                <span class="font-semibold text-gray-800">TOTAL ESTIMASI PROYEK:</span>
-                <div class="text-right">
-                    <p class="font-bold text-lg text-indigo-600">${results.durasiTotalBulan.toFixed(1)} bulan</p>
-                    <p class="text-sm text-gray-600">(~${Math.round(results.totalHariKerja)} hari kerja)</p>
+        
+        // RAB di sidebar
+        document.getElementById('output-rab-kontraktor').innerHTML = `
+            <div class="flex justify-between"><span class="font-medium">Total Material:</span> <span>${formatRupiah(results.totalBiayaMaterialKulak)}</span></div>
+            <div class="flex justify-between"><span class="font-medium">Jenis Material:</span> <span>${projectData.spesifikasi_teknis[results.hargaKey].length} item</span></div>
+        `;
+        
+        // Tenaga Kerja di sidebar
+        document.getElementById('output-tukang-kontraktor').innerHTML = `
+            <div class="flex justify-between"><span class="font-medium">Total Biaya Tukang:</span> <span>${formatRupiah(results.totalBiayaTukang)}</span></div>
+            <div class="flex justify-between"><span class="font-medium">Estimasi Durasi:</span> <span>${results.durasiTotalBulan.toFixed(1)} bulan</span></div>
+        `;
+        
+        // Cek sub-tab aktif untuk menentukan konten utama
+        const activeSubtabKontraktor = document.querySelector('.subtab-kontraktor.active-tab').id;
+        
+        if (activeSubtabKontraktor === 'subtab-ringkasan-kontraktor') {
+            // Render ringkasan di main content
+            const ringkasanMain = document.getElementById('output-ringkasan-kontraktor-main');
+            if (ringkasanMain) {
+                ringkasanMain.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <h3 class="font-semibold text-blue-800">Biaya Material</h3>
+                            <p class="text-2xl font-bold text-blue-600 mt-2">${formatRupiah(results.totalBiayaMaterialKulak)}</p>
+                            <p class="text-sm text-blue-600 mt-1">Total harga kulak semua material</p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <h3 class="font-semibold text-green-800">Biaya Tenaga Kerja</h3>
+                            <p class="text-2xl font-bold text-green-600 mt-2">${formatRupiah(results.totalBiayaTukang)}</p>
+                            <p class="text-sm text-green-600 mt-1">Total biaya untuk semua tenaga kerja</p>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-lg">
+                            <h3 class="font-semibold text-purple-800">Total HPP Proyek</h3>
+                            <p class="text-2xl font-bold text-purple-600 mt-2">${formatRupiah(results.totalBiayaProyekInternal)}</p>
+                            <p class="text-sm text-purple-600 mt-1">Total biaya internal proyek</p>
+                        </div>
+                        <div class="bg-yellow-50 p-4 rounded-lg">
+                            <h3 class="font-semibold text-yellow-800">Estimasi Profit</h3>
+                            <p class="text-2xl font-bold text-yellow-600 mt-2">${formatRupiah(results.profitEstimasi)}</p>
+                            <p class="text-sm text-yellow-600 mt-1">(${results.profitMargin.toFixed(1)}% dari nilai proyek)</p>
+                        </div>
+                    </div>
+                    <div class="mt-6 bg-gray-50 p-4 rounded-lg">
+                        <h3 class="font-semibold text-gray-800">Detail Biaya per Kategori</h3>
+                        <div class="mt-3 space-y-2">
+                            ${getKategoriBiayaHTML(results.hargaKey, results.totalBiayaMaterialKulak)}
+                        </div>
+                    </div>
+                `;
+            }
+        } else if (activeSubtabKontraktor === 'subtab-rab-kontraktor') {
+            // Render RAB table di main content
+            const rabTable = document.getElementById('output-rab-table-kontraktor');
+            if (rabTable) {
+                rabTable.innerHTML = results.rabKontraktorHTML + `
+                    <tr class="bg-gray-50">
+                        <td colspan="3" class="px-6 py-3 text-right text-sm font-bold text-gray-700">TOTAL BIAYA MATERIAL (KULAK)</td>
+                        <td class="px-6 py-3 text-left text-sm font-bold text-gray-900">${formatRupiah(results.totalBiayaMaterialKulak)}</td>
+                    </tr>
+                `;
+            }
+        } else if (activeSubtabKontraktor === 'subtab-tukang-kontraktor') {
+            // Render tenaga kerja di main content
+            document.getElementById('output-rencana-tukang').innerHTML = results.rencanaTukangHTML;
+            document.getElementById('output-total-durasi').innerHTML = `
+                <div class="flex justify-between text-base">
+                    <span class="font-semibold text-gray-800">TOTAL ESTIMASI PROYEK:</span>
+                    <div class="text-right">
+                        <p class="font-bold text-lg text-indigo-600">${results.durasiTotalBulan.toFixed(1)} bulan</p>
+                        <p class="text-sm text-gray-600">(~${Math.round(results.totalHariKerja)} hari kerja)</p>
+                    </div>
                 </div>
-            </div>
-        `;
-        document.getElementById('output-rab-table-kontraktor').innerHTML = results.rabKontraktorHTML + `
-            <tr class="bg-gray-50">
-                <td colspan="3" class="px-6 py-3 text-right text-sm font-bold text-gray-700">TOTAL BIAYA MATERIAL (KULAK)</td>
-                <td class="px-6 py-3 text-left text-sm font-bold text-gray-900">${formatRupiah(results.totalBiayaMaterialKulak)}</td>
-            </tr>
-        `;
+            `;
+            
+            // Render detail pekerjaan per minggu
+            renderDetailPekerjaan(results);
+        }
+        
         // --- RENDER BAGIAN KLIEN ---
+        // Ringkasan di sidebar
         document.getElementById('output-ringkasan-klien').innerHTML = `
             <div class="flex justify-between"><span class="font-medium">Estimasi Durasi:</span> <span class="font-semibold">${results.durasiTotalBulan.toFixed(1)} bulan</span></div>
             <div class="flex justify-between"><span class="font-medium">Luas Bangunan:</span> <span>${results.luas_bangunan} m²</span></div>
@@ -212,15 +467,72 @@ document.addEventListener('DOMContentLoaded', () => {
             <hr class="my-2 border-t border-gray-200">
             <div class="flex justify-between"><span class="font-semibold text-lg text-gray-800">Total Nilai Proyek:</span> <span class="font-bold text-lg text-indigo-600">${formatRupiah(results.totalNilaiProyekKlien)}</span></div>
         `;
-        document.getElementById('output-rab-table-klien').innerHTML = results.rabKlienHTML + `
-            <tr class="bg-gray-50">
-                <td colspan="3" class="px-6 py-3 text-right text-sm font-semibold text-gray-600">ESTIMASI BIAYA MATERIAL (PASAR)</td>
-                <td class="px-6 py-3 text-left text-sm font-semibold text-gray-800">${formatRupiah(results.totalBiayaMaterialPasar)}</td>
-            </tr>
+        
+        // RAB di sidebar
+        document.getElementById('output-rab-klien').innerHTML = `
+            <div class="flex justify-between"><span class="font-medium">Total Material:</span> <span>${formatRupiah(results.totalBiayaMaterialPasar)}</span></div>
+            <div class="flex justify-between"><span class="font-medium">Jenis Material:</span> <span>${projectData.spesifikasi_teknis[results.hargaKey].length} item</span></div>
         `;
         
-        // Render Timeline & Termin Dinamis
-        renderTimeline(results);
+        // Timeline di sidebar
+        document.getElementById('output-timeline-klien').innerHTML = `
+            <div class="flex justify-between"><span class="font-medium">Jumlah Termin:</span> <span>${results.jumlahTermin} + Retensi</span></div>
+            <div class="flex justify-between"><span class="font-medium">Estimasi Durasi:</span> <span>${results.durasiTotalBulan.toFixed(1)} bulan</span></div>
+        `;
+        
+        // Cek sub-tab aktif untuk menentukan konten utama
+        const activeSubtabKlien = document.querySelector('.subtab-klien.active-tab').id;
+        
+        if (activeSubtabKlien === 'subtab-ringkasan-klien') {
+            // Render ringkasan di main content
+            const ringkasanMain = document.getElementById('output-ringkasan-klien-main');
+            if (ringkasanMain) {
+                ringkasanMain.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <h3 class="font-semibold text-blue-800">Total Nilai Proyek</h3>
+                            <p class="text-2xl font-bold text-blue-600 mt-2">${formatRupiah(results.totalNilaiProyekKlien)}</p>
+                            <p class="text-sm text-blue-600 mt-1">Untuk ${results.luas_bangunan} m² dengan kualitas ${results.hargaKey}</p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg">
+                            <h3 class="font-semibold text-green-800">Estimasi Durasi</h3>
+                            <p class="text-2xl font-bold text-green-600 mt-2">${results.durasiTotalBulan.toFixed(1)} bulan</p>
+                            <p class="text-sm text-green-600 mt-1">(~${Math.round(results.totalHariKerja)} hari kerja)</p>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded-lg">
+                            <h3 class="font-semibold text-purple-800">Jumlah Termin</h3>
+                            <p class="text-2xl font-bold text-purple-600 mt-2">${results.jumlahTermin} + Retensi</p>
+                            <p class="text-sm text-purple-600 mt-1">Pembayaran setiap ${Math.round(100 / (results.jumlahTermin + 1))}% progress</p>
+                        </div>
+                        <div class="bg-yellow-50 p-4 rounded-lg">
+                            <h3 class="font-semibold text-yellow-800">Harga per m²</h3>
+                            <p class="text-2xl font-bold text-yellow-600 mt-2">${formatRupiah(results.hargaData.nilai)}</p>
+                            <p class="text-sm text-yellow-600 mt-1">Kualitas ${results.hargaKey}</p>
+                        </div>
+                    </div>
+                    <div class="mt-6 bg-gray-50 p-4 rounded-lg">
+                        <h3 class="font-semibold text-gray-800">Rencana Pembayaran</h3>
+                        <div class="mt-3">
+                            ${getRencanaPembayaranHTML(results)}
+                        </div>
+                    </div>
+                `;
+            }
+        } else if (activeSubtabKlien === 'subtab-rab-klien') {
+            // Render RAB table di main content
+            const rabTable = document.getElementById('output-rab-table-klien');
+            if (rabTable) {
+                rabTable.innerHTML = results.rabKlienHTML + `
+                    <tr class="bg-gray-50">
+                        <td colspan="3" class="px-6 py-3 text-right text-sm font-semibold text-gray-600">ESTIMASI BIAYA MATERIAL (PASAR)</td>
+                        <td class="px-6 py-3 text-left text-sm font-semibold text-gray-800">${formatRupiah(results.totalBiayaMaterialPasar)}</td>
+                    </tr>
+                `;
+            }
+        } else if (activeSubtabKlien === 'subtab-timeline-klien') {
+            // Render timeline di main content
+            renderTimeline(results);
+        }
     }
 
     function renderTimeline(results) {
@@ -266,37 +578,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>`;
                         
         document.getElementById('output-timeline').innerHTML = terminHTML_Content;
-    }
-
-    function getKualitasPenjelasan(kualitas, termin) {
-        const penjelasan = {
-            'standar': [
-                'Pembayaran untuk material standar seperti besi beton polos dan bata ringan.',
-                'Pekerjaan struktur menggunakan sistem konvensional dengan campuran manual.',
-                'Finishing menggunakan cat tembok standar dan keramik lantai 40x40.'
-            ],
-            'premium': [
-                'Pembayaran untuk material premium seperti besi beton ulir dan bata ringan kualitas 1.',
-                'Pekerjaan struktur menggunakan sistem yang lebih presisi dengan semen mortar.',
-                'Finishing menggunakan cat tembok premium dan granit tile 60x60.'
-            ],
-            'deluxe': [
-                'Pembayaran untuk material deluxe seperti beton ready mix K-300 dan marmer lokal.',
-                'Pekerjaan struktur menggunakan beton cor siap pakai untuk kualitas lebih baik.',
-                'Finishing menggunakan cat tembok high-end dan marmer lokal dengan pemasangan yang teliti.'
-            ],
-            'luxury': [
-                'Pembayaran untuk material luxury seperti beton ready mix K-350 dan marmer import Italy.',
-                'Pekerjaan struktur menggunakan beton cor siap pakai kualitas tinggi dan waterproofing membrane.',
-                'Finishing menggunakan cat tembok import dan marmer Italy dengan pemasangan premium.'
-            ]
-        };
-        
-        // Ambil penjelasan berdasarkan termin (berputar jika melebihi jumlah penjelasan)
-        const penjelasanKualitas = penjelasan[kualitas] || penjelasan['standar'];
-        const indexPenjelasan = (termin - 1) % penjelasanKualitas.length;
-        
-        return penjelasanKualitas[indexPenjelasan];
     }
 
     function renderAssumptionInputs() {
@@ -373,6 +654,168 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function renderDetailPekerjaan(results) {
+        const totalMinggu = Math.ceil(results.durasiTotalBulan * 4);
+        const detailPekerjaanContainer = document.getElementById('output-detail-pekerjaan');
+        
+        if (!detailPekerjaanContainer) return;
+        
+        let html = '';
+        
+        // Ambil milestones dari projectData
+        const milestones = projectData.timeline_milestones;
+        
+        // Buat timeline per minggu
+        for (let minggu = 1; minggu <= totalMinggu; minggu++) {
+            const persentaseProgress = Math.min(100, Math.round((minggu / totalMinggu) * 100));
+            
+            // Cari milestone yang sesuai dengan minggu ini
+            const milestoneMingguIni = milestones.filter(m => 
+                m.persentase >= persentaseProgress - 5 && m.persentase <= persentaseProgress + 5
+            );
+            
+            // Tentukan fase berdasarkan persentase progress
+            let fase = 'Persiapan';
+            if (persentaseProgress >= 5 && persentaseProgress < 45) fase = 'Struktur';
+            else if (persentaseProgress >= 45 && persentaseProgress < 70) fase = 'Dinding & Atap';
+            else if (persentaseProgress >= 70) fase = 'Finishing';
+            
+            // Tentukan pekerjaan berdasarkan fase
+            let pekerjaan = '';
+            if (fase === 'Persiapan') {
+                pekerjaan = 'Mobilisasi, pembersihan lahan, pengukuran';
+            } else if (fase === 'Struktur') {
+                pekerjaan = 'Pekerjaan pondasi, kolom, balok, dan plat lantai';
+            } else if (fase === 'Dinding & Atap') {
+                pekerjaan = 'Pemasangan dinding, plesteran, dan rangka atap';
+            } else if (fase === 'Finishing') {
+                pekerjaan = 'Pemasangan plafond, kusen, lantai, dan pengecatan';
+            }
+            
+            html += `
+                <div class="border-l-4 ${getMingguColor(minggu, totalMinggu)} pl-4 py-2">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-semibold">Minggu ${minggu} (Progress ~${persentaseProgress}%)</h4>
+                        <span class="text-sm px-2 py-1 rounded ${getFaseBadgeClass(fase)}">${fase}</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-1">${pekerjaan}</p>
+                    ${milestoneMingguIni.length > 0 ? `
+                        <div class="mt-2 bg-yellow-50 p-2 rounded text-sm">
+                            <strong>Milestone:</strong> ${milestoneMingguIni.map(m => m.nama_teknis).join(', ')}
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+        
+        detailPekerjaanContainer.innerHTML = html;
+    }
+
+    function getKualitasPenjelasan(kualitas, termin) {
+        const penjelasan = {
+            'standar': [
+                'Pembayaran untuk material standar seperti besi beton polos dan bata ringan.',
+                'Pekerjaan struktur menggunakan sistem konvensional dengan campuran manual.',
+                'Finishing menggunakan cat tembok standar dan keramik lantai 40x40.'
+            ],
+            'premium': [
+                'Pembayaran untuk material premium seperti besi beton ulir dan bata ringan kualitas 1.',
+                'Pekerjaan struktur menggunakan sistem yang lebih presisi dengan semen mortar.',
+                'Finishing menggunakan cat tembok premium dan granit tile 60x60.'
+            ],
+            'deluxe': [
+                'Pembayaran untuk material deluxe seperti beton ready mix K-300 dan marmer lokal.',
+                'Pekerjaan struktur menggunakan beton cor siap pakai untuk kualitas lebih baik.',
+                'Finishing menggunakan cat tembok high-end dan marmer lokal dengan pemasangan yang teliti.'
+            ],
+            'luxury': [
+                'Pembayaran untuk material luxury seperti beton ready mix K-350 dan marmer import Italy.',
+                'Pekerjaan struktur menggunakan beton cor siap pakai kualitas tinggi dan waterproofing membrane.',
+                'Finishing menggunakan cat tembok import dan marmer Italy dengan pemasangan premium.'
+            ]
+        };
+        
+        // Ambil penjelasan berdasarkan termin (berputar jika melebihi jumlah penjelasan)
+        const penjelasanKualitas = penjelasan[kualitas] || penjelasan['standar'];
+        const indexPenjelasan = (termin - 1) % penjelasanKualitas.length;
+        
+        return penjelasanKualitas[indexPenjelasan];
+    }
+
+    function getKategoriBiayaHTML(hargaKey, totalBiayaMaterial) {
+        const spesifikasi = projectData.spesifikasi_teknis[hargaKey];
+        const kategoriBiaya = {};
+        
+        spesifikasi.forEach(item => {
+            const kategori = item.kategori || 'Lainnya';
+            const volume = eval(item.rumus_kebutuhan);
+            const harga = item.harga.kulak_rumus ? eval(item.harga.kulak_rumus) : item.harga.kulak;
+            const subtotal = volume * harga;
+            
+            if (!kategoriBiaya[kategori]) {
+                kategoriBiaya[kategori] = 0;
+            }
+            kategoriBiaya[kategori] += subtotal;
+        });
+        
+        let html = '';
+        for (const [kategori, biaya] of Object.entries(kategoriBiaya)) {
+            const persentase = (biaya / totalBiayaMaterial * 100).toFixed(1);
+            html += `
+                <div class="flex justify-between">
+                    <span>${kategori}:</span>
+                    <span class="font-medium">${formatRupiah(biaya)} (${persentase}%)</span>
+                </div>
+            `;
+        }
+        
+        return html;
+    }
+
+    function getRencanaPembayaranHTML(results) {
+        const persentasePerTermin = 100 / (results.jumlahTermin + 1);
+        let html = '<div class="space-y-2">';
+        
+        for (let i = 1; i <= results.jumlahTermin; i++) {
+            const nominal = results.totalNilaiProyekKlien * persentasePerTermin / 100;
+            html += `
+                <div class="flex justify-between">
+                    <span>Termin ${i}:</span>
+                    <span class="font-medium">${formatRupiah(nominal)} (${persentasePerTermin.toFixed(1)}%)</span>
+                </div>
+            `;
+        }
+        
+        // Retensi
+        html += `
+            <div class="flex justify-between pt-2 border-t border-gray-200">
+                <span>Retensi (5%):</span>
+                <span class="font-medium">${formatRupiah(results.totalNilaiProyekKlien * 0.05)} (5%)</span>
+            </div>
+        `;
+        
+        html += '</div>';
+        return html;
+    }
+
+    function getMingguColor(minggu, totalMinggu) {
+        const persentase = minggu / totalMinggu;
+        if (persentase < 0.25) return 'border-blue-500';
+        if (persentase < 0.5) return 'border-green-500';
+        if (persentase < 0.75) return 'border-yellow-500';
+        return 'border-red-500';
+    }
+
+    function getFaseBadgeClass(fase) {
+        switch(fase) {
+            case 'Persiapan': return 'bg-blue-100 text-blue-800';
+            case 'Struktur': return 'bg-green-100 text-green-800';
+            case 'Dinding & Atap': return 'bg-yellow-100 text-yellow-800';
+            case 'Finishing': return 'bg-purple-100 text-purple-800';
+            default: return 'bg-gray-100 text-gray-800';
+        }
+    }
+
     const calculateProject = () => {
         if (!projectData.harga_per_meter) return;
         
@@ -421,7 +864,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('proyek.json');
             projectData = await response.json();
             
-            // Setup Tabs
+            // Setup Tabs utama
             const tabs = document.querySelectorAll('.tab');
             const views = document.querySelectorAll('.view-content');
             tabs.forEach(tab => {
@@ -433,6 +876,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     targetView.style.display = tab.id === 'tab-asumsi' ? 'block' : 'grid';
                 });
             });
+            
+            // Setup Sub-tabs
+            setupSubTabs();
             
             // Populate select harga untuk kontraktor dan klien
             for (const key in projectData.harga_per_meter) {
