@@ -1,4 +1,4 @@
-// proyek.js v0.5 refactor + fix
+// proyek.js v0.5 refactor + fix2
 document.addEventListener('DOMContentLoaded', () => {
     // Definisi elemen UI
     const tabKontraktor = document.getElementById('tab-kontraktor');
@@ -312,14 +312,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const calculateProject = () => {
         if (!projectData.harga_per_meter) return;
-
         // 1. KUMPULKAN INPUT
         const luas_bangunan = parseFloat(inputLuasBangunan.value) || 0;
         const hargaKey = selectHarga.value;
         const jumlahTermin = parseInt(inputTermin.value) || 1;
         
         // 2. PANGGIL SPESIALIS UNTUK MENGHITUNG SETIAP BAGIAN
-        const durations = calculateDurations(luas_bangunan, projectData);
+        const durations = calculateDurations(luas_bangunan, projectData, hargaKey); // Fixed: Added hargaKey parameter
         const labor = calculateLaborCost(luas_bangunan, durations, projectData);
         const materials = calculateMaterialCost(luas_bangunan, projectData.spesifikasi_teknis[hargaKey]);
         
