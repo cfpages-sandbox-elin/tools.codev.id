@@ -1,4 +1,4 @@
-// proyek.js v0.5 refactor + fix2
+// proyek.js v0.5 refactor + fix2 + upgrade durasi
 document.addEventListener('DOMContentLoaded', () => {
     // Definisi elemen UI
     const tabKontraktor = document.getElementById('tab-kontraktor');
@@ -55,7 +55,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     function calculateDurations(luas_bangunan, data, hargaKey) {
-        // Menggunakan hargaKey langsung, lebih aman
         const spesifikasi = data.spesifikasi_teknis[hargaKey];
         let totalVolumeBeton_m3 = 0;
         
@@ -63,18 +62,42 @@ document.addEventListener('DOMContentLoaded', () => {
         if (itemBeton) {
             totalVolumeBeton_m3 = eval(itemBeton.rumus_kebutuhan);
         } else {
+            // Fallback untuk standar dan premium - gunakan perhitungan yang lebih realistis
             const itemSemen = spesifikasi.find(item => item.nama.toLowerCase().includes("semen"));
             if (itemSemen) {
-                totalVolumeBeton_m3 = eval(itemSemen.rumus_kebutuhan) / 8;
+                // Perbaiki konversi semen ke beton - lebih realistis
+                // Asumsi: 1 sak semen (50kg) = 0.03m³ beton
+                const volumeSemen_m3 = eval(itemSemen.rumus_kebutuhan) * 0.03;
+                totalVolumeBeton_m3 = volumeSemen_m3;
             }
         }
+        
+        // Tambahkan faktor kualitas - bangunan higher quality perlu lebih beton
+        const kualitasFaktor = {
+            'standar': 1.0,
+            'premium': 1.1,
+            'deluxe': 1.3,
+            'luxury': 1.5
+        };
+        totalVolumeBeton_m3 *= kualitasFaktor[hargaKey] || 1.0;
+        
         const totalLuasDinding_m2 = luas_bangunan * 3.5;
         
         const produktivitas = data.produktivitas_kerja;
-        const hariKerjaStruktur = totalVolumeBeton_m3 * produktivitas.struktur_hari_per_m3_beton;
-        const hariKerjaDinding = totalLuasDinding_m2 * produktivitas.dinding_hari_per_m2_terpasang;
-        const hariKerjaFinishing = luas_bangunan * produktivitas.finishing_hari_per_m2_bangunan;
-
+        
+        // Adjust produktivitas berdasarkan kualitas - higher quality butuh lebih waktu
+        const produktivitasFaktor = {
+            'standar': 1.0,
+            'premium': 1.1,
+            'deluxe': 1.25,
+            'luxury': 1.4
+        };
+        const produktivitasAdjust = produktivitasFaktor[hargaKey] || 1.0;
+        
+        const hariKerjaStruktur = totalVolumeBeton_m3 * produktivitas.struktur_hari_per_m3_beton * produktivitasAdjust;
+        const hariKerjaDinding = totalLuasDinding_m2 * produktivitas.dinding_hari_per_m2_terpasang * produktivitasAdjust;
+        const hariKerjaFinishing = luas_bangunan * produktivitas.finishing_hari_per_m2_bangunan * produktivitasAdjust;
+        
         const overlap = data.logika_overlap_durasi;
         const startStruktur = 0;
         const endStruktur = hariKerjaStruktur;
@@ -82,10 +105,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const endDinding = startDinding + hariKerjaDinding;
         const startFinishing = startDinding + (hariKerjaDinding * overlap.dinding_selesai_untuk_mulai_finishing_persen);
         const endFinishing = startFinishing + hariKerjaFinishing;
-
         const totalHariKerja = Math.max(endStruktur, endDinding, endFinishing) + 10;
         const durasiTotalBulan = totalHariKerja / 25;
-
+        
         return { durasiTotalBulan, totalHariKerja };
     }
 
