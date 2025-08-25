@@ -38,6 +38,43 @@
         </div>
 
         <main>
+            <div id="view-asumsi" class="view-content hidden space-y-8">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Kartu Biaya Tukang -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-semibold mb-4">🧑‍🔧 Biaya Tenaga Kerja (per Hari)</h3>
+                        <div id="assumptions-biaya-tukang" class="space-y-3">
+                            <!-- Input akan di-render oleh JS -->
+                        </div>
+                    </div>
+
+                    <!-- Kartu Produktivitas -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-semibold mb-4">⏱️ Produktivitas Kerja</h3>
+                        <div id="assumptions-produktivitas" class="space-y-3">
+                            <!-- Input akan di-render oleh JS -->
+                        </div>
+                    </div>
+
+                    <!-- Kartu Logika Overlap -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-semibold mb-4">🔗 Logika Overlap Proyek</h3>
+                        <div id="assumptions-overlap" class="space-y-3">
+                            <!-- Input akan di-render oleh JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kontainer Harga Material -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-semibold mb-4">🧱 Harga Material</h2>
+                    <div id="assumptions-harga-material" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6">
+                        <!-- Input harga akan di-render oleh JS -->
+                    </div>
+                </div>
+
+            </div>
             <!-- Tampilan Kontraktor -->
             <div id="view-kontraktor" class="view-content grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <section class="lg:col-span-1 space-y-6">
