@@ -1,4 +1,4 @@
-// proyek.js v0.4 refactor
+// proyek.js v0.5 refactor
 document.addEventListener('DOMContentLoaded', () => {
     // Definisi elemen UI
     const tabKontraktor = document.getElementById('tab-kontraktor');
@@ -37,42 +37,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
 
-    const calculateProject = () => {
-        if (!projectData.harga_per_meter) return;
-
-        // 1. KUMPULKAN INPUT
-        const luas_bangunan = parseFloat(inputLuasBangunan.value) || 0;
-        const hargaKey = selectHarga.value;
-        const jumlahTermin = parseInt(inputTermin.value) || 1;
+    const updateNestedObject = (obj, path, value) => {
+        const keys = path.split('.');
+        const lastKey = keys.pop();
+        const lastObj = keys.reduce((o, key, i) => {
+             // Jika key adalah angka (indeks array), pastikan kita bekerja dengan array
+             const isArrayIndex = !isNaN(parseInt(key, 10)) && isFinite(key);
+             if (isArrayIndex) {
+                 return o[parseInt(key, 10)];
+             }
+             return o[key];
+        }, obj);
         
-        // 2. PANGGIL SPESIALIS UNTUK MENGHITUNG SETIAP BAGIAN
-        const durations = calculateDurations(luas_bangunan, projectData);
-        const labor = calculateLaborCost(luas_bangunan, durations, projectData);
-        const materials = calculateMaterialCost(luas_bangunan, projectData.spesifikasi_teknis[hargaKey]);
-        
-        // 3. HITUNG TOTAL & PROFIT
-        const hargaData = projectData.harga_per_meter[hargaKey];
-        const totalNilaiProyekKlien = luas_bangunan * hargaData.nilai;
-        const totalBiayaProyekInternal = materials.totalBiayaMaterialKulak + labor.totalBiayaTukang;
-        const profitEstimasi = totalNilaiProyekKlien - totalBiayaProyekInternal;
-        const profitMargin = (profitEstimasi / totalNilaiProyekKlien) * 100 || 0;
-
-        // 4. KUMPULKAN SEMUA HASIL UNTUK DI-RENDER
-        const results = {
-            ...durations,
-            ...labor,
-            ...materials,
-            luas_bangunan,
-            jumlahTermin,
-            hargaData,
-            totalNilaiProyekKlien,
-            totalBiayaProyekInternal,
-            profitEstimasi,
-            profitMargin
-        };
-
-        // 5. RENDER SEMUA HASIL KE TAMPILAN
-        renderOutputs(results);
+        // Handle jika key adalah indeks array
+        const finalKey = !isNaN(parseInt(lastKey, 10)) && isFinite(lastKey) ? parseInt(lastKey, 10) : lastKey;
+        lastObj[finalKey] = value;
     };
 
     function calculateDurations(luas_bangunan, data) {
@@ -240,49 +219,153 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('output-timeline').innerHTML = terminHTML_Content;
     }
 
+    function renderAssumptionInputs() {
+        // Render Biaya Tukang
+        const tukangContainer = document.getElementById('assumptions-biaya-tukang');
+        tukangContainer.innerHTML = '';
+        for (const [posisi, harga] of Object.entries(projectData.biaya_tukang_harian)) {
+            tukangContainer.innerHTML += `
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 capitalize">${posisi.replace('_', ' ')}</label>
+                    <input type="number" class="mt-1 w-full rounded-md border-gray-300" 
+                           data-path="biaya_tukang_harian.${posisi}" value="${harga}">
+                </div>`;
+        }
+        
+        // Render Produktivitas
+        const produktivitasContainer = document.getElementById('assumptions-produktivitas');
+        produktivitasContainer.innerHTML = '';
+        for (const [key, val] of Object.entries(projectData.produktivitas_kerja)) {
+             produktivitasContainer.innerHTML += `
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 capitalize">${key.replace(/_/g, ' ')}</label>
+                    <input type="number" step="0.01" class="mt-1 w-full rounded-md border-gray-300" 
+                           data-path="produktivitas_kerja.${key}" value="${val}">
+                </div>`;
+        }
+
+        // Render Overlap
+        const overlapContainer = document.getElementById('assumptions-overlap');
+        overlapContainer.innerHTML = '';
+        for (const [key, val] of Object.entries(projectData.logika_overlap_durasi)) {
+             overlapContainer.innerHTML += `
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 capitalize">${key.replace(/_/g, ' ')}</label>
+                    <input type="number" step="0.01" class="mt-1 w-full rounded-md border-gray-300" 
+                           data-path="logika_overlap_durasi.${key}" value="${val}">
+                </div>`;
+        }
+
+        // Render Harga Material
+        const materialContainer = document.getElementById('assumptions-harga-material');
+        materialContainer.innerHTML = '';
+        for (const [kualitas, items] of Object.entries(projectData.spesifikasi_teknis)) {
+            let itemsHTML = `<div class="md:col-span-1 lg:col-span-1"><h4 class="text-lg font-semibold capitalize border-b pb-2 mb-3">${kualitas}</h4><div class="space-y-4">`;
+            items.forEach((item, index) => {
+                itemsHTML += `
+                    <div>
+                        <p class="text-sm font-medium text-gray-800">${item.nama}</p>
+                        <div class="flex space-x-2 mt-1">
+                            <input type="number" placeholder="Kulak" class="w-1/2 rounded-md border-gray-300" 
+                                   data-path="spesifikasi_teknis.${kualitas}.${index}.harga.kulak" 
+                                   value="${item.harga.kulak || ''}" ${item.harga.kulak_rumus ? 'disabled' : ''}>
+                            <input type="number" placeholder="Pasar" class="w-1/2 rounded-md border-gray-300" 
+                                   data-path="spesifikasi_teknis.${kualitas}.${index}.harga.pasar" 
+                                   value="${item.harga.pasar || ''}" ${item.harga.pasar_rumus ? 'disabled' : ''}>
+                        </div>
+                    </div>
+                `;
+            });
+            itemsHTML += `</div></div>`;
+            materialContainer.innerHTML += itemsHTML;
+        }
+
+        // Tambah satu event listener untuk semua input di tab asumsi
+        document.getElementById('view-asumsi').addEventListener('input', (event) => {
+            if (event.target.tagName === 'INPUT') {
+                const path = event.target.dataset.path;
+                const value = parseFloat(event.target.value) || 0;
+                if (path) {
+                    updateNestedObject(projectData, path, value);
+                    calculateProject(); // Kalkulasi ulang setiap ada perubahan
+                }
+            }
+        });
+    }
+
+    const calculateProject = () => {
+        if (!projectData.harga_per_meter) return;
+
+        // 1. KUMPULKAN INPUT
+        const luas_bangunan = parseFloat(inputLuasBangunan.value) || 0;
+        const hargaKey = selectHarga.value;
+        const jumlahTermin = parseInt(inputTermin.value) || 1;
+        
+        // 2. PANGGIL SPESIALIS UNTUK MENGHITUNG SETIAP BAGIAN
+        const durations = calculateDurations(luas_bangunan, projectData);
+        const labor = calculateLaborCost(luas_bangunan, durations, projectData);
+        const materials = calculateMaterialCost(luas_bangunan, projectData.spesifikasi_teknis[hargaKey]);
+        
+        // 3. HITUNG TOTAL & PROFIT
+        const hargaData = projectData.harga_per_meter[hargaKey];
+        const totalNilaiProyekKlien = luas_bangunan * hargaData.nilai;
+        const totalBiayaProyekInternal = materials.totalBiayaMaterialKulak + labor.totalBiayaTukang;
+        const profitEstimasi = totalNilaiProyekKlien - totalBiayaProyekInternal;
+        const profitMargin = (profitEstimasi / totalNilaiProyekKlien) * 100 || 0;
+
+        // 4. KUMPULKAN SEMUA HASIL UNTUK DI-RENDER
+        const results = {
+            ...durations,
+            ...labor,
+            ...materials,
+            luas_bangunan,
+            jumlahTermin,
+            hargaData,
+            totalNilaiProyekKlien,
+            totalBiayaProyekInternal,
+            profitEstimasi,
+            profitMargin
+        };
+
+        // 5. RENDER SEMUA HASIL KE TAMPILAN
+        renderOutputs(results);
+    };
+
     const init = async () => {
         try {
             const response = await fetch('proyek.json');
             projectData = await response.json();
             
-            // Setup event listener untuk Tab
-            const tabKontraktor = document.getElementById('tab-kontraktor');
-            const tabKlien = document.getElementById('tab-klien');
-            const viewKontraktor = document.getElementById('view-kontraktor');
-            const viewKlien = document.getElementById('view-klien');
-
-            tabKontraktor.addEventListener('click', () => {
-                viewKontraktor.style.display = 'grid';
-                viewKlien.style.display = 'none';
-                tabKontraktor.classList.replace('inactive-tab', 'active-tab');
-                tabKlien.classList.replace('active-tab', 'inactive-tab');
+            // Setup Tabs
+            const tabs = document.querySelectorAll('.tab');
+            const views = document.querySelectorAll('.view-content');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.replace('active-tab', 'inactive-tab'));
+                    tab.classList.replace('inactive-tab', 'active-tab');
+                    const targetView = document.getElementById(tab.id.replace('tab-', 'view-'));
+                    views.forEach(view => view.style.display = 'none');
+                    targetView.style.display = tab.id === 'tab-asumsi' ? 'block' : 'grid';
+                });
             });
 
-            tabKlien.addEventListener('click', () => {
-                viewKontraktor.style.display = 'none';
-                viewKlien.style.display = 'grid';
-                tabKlien.classList.replace('inactive-tab', 'active-tab');
-                tabKontraktor.classList.replace('active-tab', 'inactive-tab');
-            });
-
-            // Populate select harga dari data JSON
-            const selectHarga = document.getElementById('select-harga');
+            // Populate select harga
             for (const key in projectData.harga_per_meter) {
                 const option = document.createElement('option');
                 option.value = key;
                 option.textContent = projectData.harga_per_meter[key].label;
                 selectHarga.appendChild(option);
             }
+            
+            // Render input asumsi untuk pertama kali
+            renderAssumptionInputs(); 
 
-            // Tambah event listener untuk input
-            const inputLuasBangunan = document.getElementById('input-luas-bangunan');
-            const inputTermin = document.getElementById('input-termin');
-
+            // Tambah event listener untuk input utama
             inputLuasBangunan.addEventListener('input', calculateProject);
             selectHarga.addEventListener('change', calculateProject);
             inputTermin.addEventListener('input', calculateProject);
 
-            // Jalankan kalkulasi pertama kali saat halaman dimuat
+            // Jalankan kalkulasi pertama kali
             calculateProject();
             
         } catch (error) {
@@ -291,6 +374,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Panggil fungsi inisialisasi
     init();
 });
