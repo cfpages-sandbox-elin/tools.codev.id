@@ -17,7 +17,11 @@
       "nilai": 6000000
     }
   },
-  "rumus_durasi_proyek_bulan": "Math.ceil((luas_bangunan / 20) + 2)",
+  "produktivitas_kerja": {
+    "struktur_hari_per_m3_beton": 0.5,
+    "dinding_hari_per_m2_terpasang": 0.1,
+    "finishing_hari_per_m2_bangunan": 0.25
+  },
   "biaya_tukang_harian": {
     "mandor": 200000,
     "tukang_ahli": 150000,

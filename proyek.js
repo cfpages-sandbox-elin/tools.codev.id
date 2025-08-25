@@ -1,4 +1,4 @@
-// proyek.js v0.2
+// proyek.js v0.3
 document.addEventListener('DOMContentLoaded', () => {
     // Definisi elemen UI
     const tabKontraktor = document.getElementById('tab-kontraktor');
@@ -38,10 +38,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
 
     const calculateProject = () => {
-        // Pastikan data JSON sudah ter-load sebelum menjalankan
         if (!projectData.harga_per_meter) {
             console.warn("Data proyek belum siap.");
-            return; 
+            return;
         }
 
         // --- 1. PENGAMBILAN INPUT PENGGUNA ---
@@ -53,32 +52,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // --- 2. KALKULASI UTAMA ---
 
-        // A. Durasi & Biaya Tenaga Kerja (METODE BARU BERBASIS FASE)
-        const durasiTotalBulan = eval(projectData.rumus_durasi_proyek_bulan);
+        // A. Hitung Kebutuhan Volume Kunci untuk Durasi
+        const spesifikasi = projectData.spesifikasi_teknis[hargaKey];
+        let totalVolumeBeton_m3 = 0;
+        
+        const itemBeton = spesifikasi.find(item => item.nama.toLowerCase().includes("beton ready mix"));
+        if (itemBeton) {
+            totalVolumeBeton_m3 = eval(itemBeton.rumus_kebutuhan);
+        } else {
+            const itemSemen = spesifikasi.find(item => item.nama.toLowerCase().includes("semen"));
+            if (itemSemen) {
+                const volumeSemen = eval(itemSemen.rumus_kebutuhan);
+                totalVolumeBeton_m3 = volumeSemen / 8;
+            }
+        }
+
+        const luasDindingPerM2Bangunan = 3.5;
+        const totalLuasDinding_m2 = luas_bangunan * luasDindingPerM2Bangunan;
+
+        // B. Hitung Durasi Proyek Berdasarkan Produktivitas
+        const produktivitas = projectData.produktivitas_kerja;
+        const hariKerjaStruktur = totalVolumeBeton_m3 * produktivitas.struktur_hari_per_m3_beton;
+        const hariKerjaDinding = totalLuasDinding_m2 * produktivitas.dinding_hari_per_m2_terpasang;
+        const hariKerjaFinishing = luas_bangunan * produktivitas.finishing_hari_per_m2_bangunan;
+        const totalHariKerja = hariKerjaStruktur + hariKerjaDinding + hariKerjaFinishing + 10;
+        const durasiTotalBulan = totalHariKerja / 25;
+
+        // C. Hitung Biaya Tenaga Kerja Berbasis Fase & Durasi BARU
         let totalBiayaTukang = 0;
         let rencanaTukangHTML = '';
 
         for (const [key, fase] of Object.entries(projectData.fase_proyek)) {
-            // Hitung durasi fase
             const durasiFaseBulan = durasiTotalBulan * fase.persentase_durasi;
-            const durasiFaseHari = durasiFaseBulan * 25; // Asumsi 25 hari kerja/bulan
-
-            // Hitung komposisi tim untuk fase ini
+            const durasiFaseHari = durasiFaseBulan * 25;
             const timFase = {};
             for (const [posisi, rumus] of Object.entries(fase.komposisi_tukang_rumus)) {
                 timFase[posisi] = eval(rumus);
             }
-
-            // Hitung biaya harian untuk tim fase ini
             const biayaHarianFase = (timFase.mandor * projectData.biaya_tukang_harian.mandor) +
                                     (timFase.tukang_ahli * projectData.biaya_tukang_harian.tukang_ahli) +
                                     (timFase.kenek_laden * projectData.biaya_tukang_harian.kenek_laden);
-
-            // Hitung total biaya untuk fase ini
             const totalBiayaFase = biayaHarianFase * durasiFaseHari;
             totalBiayaTukang += totalBiayaFase;
 
-            // Siapkan HTML untuk ditampilkan di tab Kontraktor
             rencanaTukangHTML += `
                 <div class="border-t pt-4 border-gray-200">
                     <h3 class="font-semibold text-lg text-gray-800">${fase.nama}</h3>
@@ -91,8 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }
 
-        // B. Rencana Anggaran Biaya (RAB) Material (Dual Pricing)
-        const spesifikasi = projectData.spesifikasi_teknis[hargaKey];
+        // D. Rencana Anggaran Biaya (RAB) Material (Dual Pricing)
         let totalBiayaMaterialKulak = 0;
         let totalBiayaMaterialPasar = 0;
         let rabKontraktorHTML = '';
@@ -123,16 +138,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 </tr>`;
         });
         
-        // C. Total & Summary
+        // E. Total & Summary
         const totalBiayaProyekInternal = totalBiayaMaterialKulak + totalBiayaTukang;
         const profitEstimasi = totalNilaiProyekKlien - totalBiayaProyekInternal;
         const profitMargin = (profitEstimasi / totalNilaiProyekKlien) * 100 || 0;
 
         // --- 3. RENDER OUTPUT KE HTML ---
-
-        // A. Render Ringkasan
         outputRingkasanKontraktor.innerHTML = `
-            <div class="flex justify-between"><span class="font-medium">Estimasi Durasi:</span> <span class="font-semibold">${durasiTotalBulan} bulan</span></div>
+            <div class="flex justify-between"><span class="font-medium">Estimasi Durasi:</span> <span class="font-semibold">${durasiTotalBulan.toFixed(1)} bulan</span></div>
             <div class="flex justify-between"><span class="font-medium">Total Biaya Tukang:</span> <span>${formatRupiah(totalBiayaTukang)}</span></div>
             <div class="flex justify-between"><span class="font-medium">Total Biaya Material (Kulak):</span> <span>${formatRupiah(totalBiayaMaterialKulak)}</span></div>
             <hr class="my-2 border-t border-gray-200">
@@ -140,16 +153,14 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="flex justify-between"><span class="font-semibold text-lg text-gray-800">Estimasi Profit:</span> <span class="font-bold text-lg text-green-600">${formatRupiah(profitEstimasi)} (${profitMargin.toFixed(1)}%)</span></div>`;
 
         outputRingkasanKlien.innerHTML = `
-            <div class="flex justify-between"><span class="font-medium">Estimasi Durasi:</span> <span class="font-semibold">${durasiTotalBulan} bulan</span></div>
+            <div class="flex justify-between"><span class="font-medium">Estimasi Durasi:</span> <span class="font-semibold">${durasiTotalBulan.toFixed(1)} bulan</span></div>
             <div class="flex justify-between"><span class="font-medium">Luas Bangunan:</span> <span>${luas_bangunan} m²</span></div>
             <div class="flex justify-between"><span class="font-medium">Harga per m²:</span> <span>${formatRupiah(hargaData.nilai)}</span></div>
             <hr class="my-2 border-t border-gray-200">
             <div class="flex justify-between"><span class="font-semibold text-lg text-gray-800">Total Nilai Proyek:</span> <span class="font-bold text-lg text-indigo-600">${formatRupiah(totalNilaiProyekKlien)}</span></div>`;
 
-        // B. Render Rencana Tukang
         document.getElementById('output-rencana-tukang').innerHTML = rencanaTukangHTML;
 
-        // C. Render Tabel RAB
         document.getElementById('output-rab-table-kontraktor').innerHTML = rabKontraktorHTML + `
             <tr class="bg-gray-50">
                 <td colspan="3" class="px-6 py-3 text-right text-sm font-bold text-gray-700">TOTAL BIAYA MATERIAL (KULAK)</td>
@@ -161,7 +172,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td class="px-6 py-3 text-left text-sm font-semibold text-gray-800">${formatRupiah(totalBiayaMaterialPasar)}</td>
             </tr>`;
 
-        // D. Render Timeline & Termin Dinamis
         const milestones = projectData.timeline_milestones;
         const progressPerTermin = 95 / jumlahTermin;
         let currentTermin = 1;
