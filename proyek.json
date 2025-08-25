@@ -34,9 +34,9 @@
       "milestone_awal": 5,
       "milestone_akhir": 45,
       "komposisi_tukang_rumus": {
-        "mandor": "Math.ceil(luas_bangunan / 100)",
-        "tukang_ahli": "Math.ceil(luas_bangunan / 30)",
-        "kenek_laden": "Math.ceil(luas_bangunan / 15)"
+        "mandor": "1",
+        "tukang_ahli": "2 + Math.max(0, Math.ceil((luas_bangunan - 50) / 50))",
+        "kenek_laden": "3 + Math.max(0, Math.ceil((luas_bangunan - 50) / 40))"
       }
     },
     "arsitektur_awal": {
@@ -45,9 +45,9 @@
       "milestone_awal": 45,
       "milestone_akhir": 70,
       "komposisi_tukang_rumus": {
-        "mandor": "Math.ceil(luas_bangunan / 120)",
-        "tukang_ahli": "Math.ceil(luas_bangunan / 25)",
-        "kenek_laden": "Math.ceil(luas_bangunan / 40)"
+        "mandor": "1",
+        "tukang_ahli": "2 + Math.max(0, Math.ceil((luas_bangunan - 50) / 40))",
+        "kenek_laden": "2 + Math.max(0, Math.ceil((luas_bangunan - 50) / 60))"
       }
     },
     "finishing": {
@@ -56,9 +56,9 @@
       "milestone_awal": 70,
       "milestone_akhir": 95,
       "komposisi_tukang_rumus": {
-        "mandor": "Math.ceil(luas_bangunan / 150)",
-        "tukang_ahli": "Math.ceil(luas_bangunan / 40)",
-        "kenek_laden": "Math.ceil(luas_bangunan / 80)"
+        "mandor": "1",
+        "tukang_ahli": "2 + Math.max(0, Math.ceil((luas_bangunan - 70) / 60))",
+        "kenek_laden": "1 + Math.max(0, Math.ceil((luas_bangunan - 70) / 80))"
       }
     }
   },
