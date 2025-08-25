@@ -19,7 +19,7 @@
 
     <div class="container mx-auto p-4 md:p-8">
         <header class="mb-8">
-            <h1 class="text-4xl font-bold text-gray-900">Project Estimator v0.6</h1>
+            <h1 class="text-4xl font-bold text-gray-900">Project Estimator v0.7</h1>
             <p class="text-lg text-gray-600 mt-2">Alat dinamis untuk merencanakan proyek konstruksi Anda.</p>
         </header>
 
@@ -137,11 +137,21 @@
                 <section class="lg:col-span-1 space-y-6">
                     <div class="bg-white p-6 rounded-lg shadow-md">
                         <h2 class="text-2xl font-semibold mb-4">Ringkasan Penawaran</h2>
-                        <div id="output-ringkasan-klien" class="space-y-3"></div>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="select-harga-klien" class="block text-sm font-medium text-gray-700">Kualitas & Harga per m²</label>
+                                <select id="select-harga-klien" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></select>
+                            </div>
+                            <div>
+                                <label for="input-termin-klien" class="block text-sm font-medium text-gray-700">Jumlah Termin (maks. 20)</label>
+                                <input type="number" id="input-termin-klien" min="1" max="20" value="10" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                            </div>
+                            <div id="output-ringkasan-klien" class="space-y-3"></div>
+                        </div>
                     </div>
                 </section>
                 <section class="lg:col-span-2 space-y-8">
-                    <!-- == TABEL RAB & TIMELINE KLIEN LENGKAP == -->
+                    <!-- Tabel RAB tetap sama -->
                     <div class="bg-white p-6 rounded-lg shadow-md">
                         <h2 class="text-2xl font-semibold mb-4">Estimasi Rincian Biaya Material (Harga Pasar)</h2>
                         <div class="overflow-x-auto">
@@ -158,6 +168,7 @@
                             </table>
                         </div>
                     </div>
+                    <!-- Timeline & Termin -->
                     <div class="bg-white p-6 rounded-lg shadow-md">
                         <h2 class="text-2xl font-semibold mb-4">Timeline Progres & Termin</h2>
                         <div id="output-timeline" class="space-y-6"></div>
