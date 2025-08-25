@@ -1,4 +1,4 @@
-// proyek.js v1.0 refaktor + fix + loading + debugging + fix infinite loop
+// proyek.js v1.0 refaktor + fix + loading + debugging + fix infinite loop + force show active tab
 document.addEventListener('DOMContentLoaded', () => {
     // Definisi elemen UI
     const tabKontraktor = document.getElementById('tab-kontraktor');
@@ -1384,6 +1384,17 @@ document.addEventListener('DOMContentLoaded', () => {
             // Setup Tabs utama
             const tabs = document.querySelectorAll('.tab');
             const views = document.querySelectorAll('.view-content');
+            
+            // Set initial display for active tab
+            const activeTab = document.querySelector('.tab.active-tab');
+            if (activeTab) {
+                const targetView = document.getElementById(activeTab.id.replace('tab-', 'view-'));
+                if (targetView) {
+                    targetView.style.display = activeTab.id === 'tab-asumsi' ? 'block' : 'grid';
+                    console.log(`Setting initial display for ${activeTab.id} to ${targetView.style.display}`);
+                }
+            }
+            
             tabs.forEach(tab => {
                 tab.addEventListener('click', () => {
                     console.log('Tab clicked:', tab.id);
@@ -1443,6 +1454,49 @@ document.addEventListener('DOMContentLoaded', () => {
             // Jalankan kalkulasi pertama kali
             console.log('Running initial calculation...');
             calculateProject();
+            
+            // Force render the active sub-tab content after a delay
+            setTimeout(() => {
+                console.log('Force rendering active sub-tab content...');
+                const activeMainTab = document.querySelector('.tab.active-tab');
+                console.log('Active main tab:', activeMainTab ? activeMainTab.id : 'none');
+                
+                if (activeMainTab) {
+                    if (activeMainTab.id === 'tab-kontraktor') {
+                        const activeSubtab = document.querySelector('#view-kontraktor .subtab-kontraktor.active-tab');
+                        console.log('Active contractor subtab:', activeSubtab ? activeSubtab.id : 'none');
+                        
+                        if (activeSubtab) {
+                            const targetContent = document.getElementById(`subtab-content-${activeSubtab.id.replace('subtab-', '')}`);
+                            if (targetContent) {
+                                console.log('Making sure contractor sub-tab content is visible...');
+                                // Make sure all sub-tab contents are hidden first
+                                document.querySelectorAll('#view-kontraktor .subtab-content').forEach(content => {
+                                    content.classList.add('hidden');
+                                });
+                                // Then show the active one
+                                targetContent.classList.remove('hidden');
+                            }
+                        }
+                    } else if (activeMainTab.id === 'tab-klien') {
+                        const activeSubtab = document.querySelector('#view-klien .subtab-klien.active-tab');
+                        console.log('Active client subtab:', activeSubtab ? activeSubtab.id : 'none');
+                        
+                        if (activeSubtab) {
+                            const targetContent = document.getElementById(`subtab-content-${activeSubtab.id.replace('subtab-', '')}`);
+                            if (targetContent) {
+                                console.log('Making sure client sub-tab content is visible...');
+                                // Make sure all sub-tab contents are hidden first
+                                document.querySelectorAll('#view-klien .subtab-content').forEach(content => {
+                                    content.classList.add('hidden');
+                                });
+                                // Then show the active one
+                                targetContent.classList.remove('hidden');
+                            }
+                        }
+                    }
+                }
+            }, 100);
             
         } catch (error) {
             console.error('Gagal memuat data proyek:', error);
