@@ -1,4 +1,4 @@
-// proyek.js v0.9 fix5 + chart
+// proyek.js v0.9 fix5 + chart + ubah pikiran terakhir
 document.addEventListener('DOMContentLoaded', () => {
     // Definisi elemen UI
     const tabKontraktor = document.getElementById('tab-kontraktor');
@@ -460,7 +460,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <h3 class="font-semibold text-purple-800">Jumlah Termin</h3>
                                     <p class="text-2xl font-bold text-purple-600 mt-1">${results.jumlahTermin} + Retensi</p>
                                     <p class="text-sm text-purple-600 mt-1">Pembayaran setiap ${(100 / results.jumlahTermin).toFixed(1)}% progress</p>
-                                    <p class="text-xs text-purple-500 mt-1">Retensi 5% dibayar terpisah setelah masa garansi</p>
+                                    ${100 / results.jumlahTermin < 5 ? 
+                                        `<p class="text-xs text-purple-500 mt-1">Termin terakhir dan retensi masing-masing ${(100 / results.jumlahTermin / 2).toFixed(1)}%</p>` : 
+                                        `<p class="text-xs text-purple-500 mt-1">Retensi 5% dibayar terpisah setelah masa garansi</p>`
+                                    }
                                 </div>
                             </div>
                         </div>
@@ -531,8 +534,8 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Untuk termin terakhir, hitung retensi
             if (i === results.jumlahTermin) {
-                // Jika persentase pembayaran kurang dari 2.5%, bagi rata
-                if (persentasePembayaran < 2.5) {
+                // Jika persentase pembayaran per termin kurang dari 5%, bagi rata
+                if (persentasePembayaran < 5) {
                     persentasePembayaran = persentasePembayaran / 2;
                     nominalRetensi = results.totalNilaiProyekKlien * persentasePembayaran / 100;
                     nominalPembayaran = results.totalNilaiProyekKlien * persentasePembayaran / 100;
@@ -549,7 +552,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Jika ini termin terakhir dan ada retensi
             if (i === results.jumlahTermin && nominalRetensi > 0) {
-                terminHTML_Content += `<p class="text-sm text-yellow-600 mt-1"><em>Termasuk retensi 5% (${formatRupiah(nominalRetensi)}) yang dibayar setelah masa garansi 3-6 bulan</em></p>`;
+                terminHTML_Content += `<p class="text-sm text-yellow-600 mt-1"><em>Retensi: ${formatRupiah(nominalRetensi)} (${(nominalRetensi / results.totalNilaiProyekKlien * 100).toFixed(1)}%) yang dibayar setelah masa garansi 3-6 bulan</em></p>`;
             }
             
             terminHTML_Content += `<ul class="list-disc list-inside mt-2 text-sm text-gray-600 space-y-1">`;
@@ -570,16 +573,19 @@ document.addEventListener('DOMContentLoaded', () => {
             terminHTML_Content += `</ul></div>`;
         }
         
-        // Tambahkan bagian retensi terpisah
-        const nominalRetensiTotal = results.totalNilaiProyekKlien * 0.05;
-        terminHTML_Content += `<div class="border-l-2 border-red-500 pl-4 mt-6">
-                        <h3 class="font-semibold text-lg">Retensi</h3>
-                        <p class="text-sm text-gray-600 mt-1">Pembayaran: <strong>${formatRupiah(nominalRetensiTotal)}</strong> (5% dari total proyek)</p>
-                        <ul class="list-disc list-inside mt-2 text-sm text-gray-600 space-y-1">
-                            <li><strong>100%:</strong> Pembayaran 5% retensi setelah 3-6 bulan konstruksi tidak ada masalah dalam bangunan.</li>
-                            <li><em>Catatan: Retensi adalah jaminan kualitas yang dibayar setelah masa perawatan selesai.</em></li>
-                        </ul>
-                    </div>`;
+        // Tambahkan bagian retensi terpisah hanya jika belum ditampilkan di termin terakhir
+        const persentasePerTerminAwal = 100 / results.jumlahTermin;
+        if (persentasePerTerminAwal >= 5) {
+            const nominalRetensiTotal = results.totalNilaiProyekKlien * 0.05;
+            terminHTML_Content += `<div class="border-l-2 border-red-500 pl-4 mt-6">
+                            <h3 class="font-semibold text-lg">Retensi</h3>
+                            <p class="text-sm text-gray-600 mt-1">Pembayaran: <strong>${formatRupiah(nominalRetensiTotal)}</strong> (5% dari total proyek)</p>
+                            <ul class="list-disc list-inside mt-2 text-sm text-gray-600 space-y-1">
+                                <li><strong>100%:</strong> Pembayaran 5% retensi setelah 3-6 bulan konstruksi tidak ada masalah dalam bangunan.</li>
+                                <li><em>Catatan: Retensi adalah jaminan kualitas yang dibayar setelah masa perawatan selesai.</em></li>
+                            </ul>
+                        </div>`;
+        }
                     
         document.getElementById('output-timeline').innerHTML = terminHTML_Content;
     }
@@ -827,8 +833,8 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Untuk termin terakhir, hitung retensi
             if (i === results.jumlahTermin) {
-                // Jika persentase pembayaran kurang dari 2.5%, bagi rata
-                if (persentasePembayaran < 2.5) {
+                // Jika persentase pembayaran per termin kurang dari 5%, bagi rata
+                if (persentasePembayaran < 5) {
                     persentasePembayaran = persentasePembayaran / 2;
                 } else {
                     // Jika tidak, kurangi 5% untuk retensi
@@ -840,9 +846,11 @@ document.addEventListener('DOMContentLoaded', () => {
             data.push(persentasePembayaran);
         }
         
-        // Tambahkan retensi sebagai item terpisah
-        labels.push('Retensi');
-        data.push(5);
+        // Tambahkan retensi sebagai item terpisah hanya jika persentase per termin >= 5%
+        if (persentasePerTermin >= 5) {
+            labels.push('Retensi');
+            data.push(5);
+        }
         
         // Buat chart
         const ctx = document.getElementById('pembayaranChart').getContext('2d');
@@ -928,7 +936,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 let label = `${value}%: ${formatRupiah(nominal)}`;
                                 
                                 // Tambahkan keterangan khusus untuk retensi
-                                if (context.dataIndex === data.length - 1) {
+                                if (persentasePerTermin >= 5 && context.dataIndex === data.length - 1) {
                                     label += ' (Dibayar setelah masa garansi)';
                                 }
                                 
@@ -1020,8 +1028,8 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Untuk termin terakhir, hitung retensi
             if (i === results.jumlahTermin) {
-                // Jika persentase pembayaran kurang dari 2.5%, bagi rata
-                if (persentasePembayaran < 2.5) {
+                // Jika persentase pembayaran per termin kurang dari 5%, bagi rata
+                if (persentasePembayaran < 5) {
                     persentasePembayaran = persentasePembayaran / 2;
                     nominalRetensi = results.totalNilaiProyekKlien * persentasePembayaran / 100;
                     nominalPembayaran = results.totalNilaiProyekKlien * persentasePembayaran / 100;
@@ -1042,23 +1050,25 @@ document.addEventListener('DOMContentLoaded', () => {
             if (i === results.jumlahTermin && nominalRetensi > 0) {
                 html += `
                     <div class="text-sm text-yellow-600 ml-4">
-                        <em>• Termasuk retensi 5% (${formatRupiah(nominalRetensi)}) yang dibayar setelah masa garansi</em>
+                        <em>• Retensi: ${formatRupiah(nominalRetensi)} (${(nominalRetensi / results.totalNilaiProyekKlien * 100).toFixed(1)}%) yang dibayar setelah masa garansi</em>
                     </div>
                 `;
             }
         }
         
-        // Tambahkan retensi sebagai item terpisah
-        const nominalRetensiTotal = results.totalNilaiProyekKlien * 0.05;
-        html += `
-            <div class="flex justify-between pt-2 border-t border-gray-200 mt-2">
-                <span class="font-semibold">Retensi:</span>
-                <span class="font-medium">${formatRupiah(nominalRetensiTotal)} (5%)</span>
-            </div>
-            <div class="text-sm text-gray-500 ml-4 mt-1">
-                <em>Dibayar setelah 3-6 bulan konstruksi tidak ada masalah dalam bangunan</em>
-            </div>
-        `;
+        // Tambahkan retensi sebagai item terpisah hanya jika belum ditampilkan di termin terakhir
+        if (persentasePerTermin >= 5) {
+            const nominalRetensiTotal = results.totalNilaiProyekKlien * 0.05;
+            html += `
+                <div class="flex justify-between pt-2 border-t border-gray-200 mt-2">
+                    <span class="font-semibold">Retensi:</span>
+                    <span class="font-medium">${formatRupiah(nominalRetensiTotal)} (5%)</span>
+                </div>
+                <div class="text-sm text-gray-500 ml-4 mt-1">
+                    <em>Dibayar setelah 3-6 bulan konstruksi tidak ada masalah dalam bangunan</em>
+                </div>
+            `;
+        }
         
         html += '</div>';
         return html;
