@@ -1,4 +1,4 @@
-// proyek.js v1.0 refaktor + fix
+// proyek.js v1.0 refaktor + fix + loading
 document.addEventListener('DOMContentLoaded', () => {
     // Definisi elemen UI
     const tabKontraktor = document.getElementById('tab-kontraktor');
@@ -25,6 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const outputRabTableKontraktor = document.getElementById('output-rab-table-kontraktor');
     const outputRabTableKlien = document.getElementById('output-rab-table-klien');
     const outputTimeline = document.getElementById('output-timeline');
+
+    const loadingIndicator = document.getElementById('loading-indicator');
 
     let projectData = {};
     let assumptionsRendered = false;
@@ -712,8 +714,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Buat timeline per minggu
         for (let minggu = 1; minggu <= totalMinggu; minggu++) {
-            const hariAwal = (minggu - 1) * 5 + 1;
-            const hariAkhir = Math.min(minggu * 5, results.totalHariKerja);
+            const hariAwal = Math.round((minggu - 1) * 5 + 1); // Bulatkan ke atas
+            const hariAkhir = Math.round(Math.min(minggu * 5, results.totalHariKerja)); // Bulatkan ke atas
             const persentaseProgress = Math.min(100, Math.round((minggu / totalMinggu) * 100));
             
             // Cari milestone yang sesuai dengan minggu ini
@@ -1223,9 +1225,29 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // 5. RENDER SEMUA HASIL KE TAMPILAN
         renderOutputs(results);
+        
+        // Pastikan sub-tab aktif ter-render dengan benar
+        setTimeout(() => {
+            // Check which main tab is active and trigger its active sub-tab
+            const activeMainTab = document.querySelector('.tab.active-tab');
+            if (activeMainTab.id === 'tab-kontraktor') {
+                const activeSubtab = document.querySelector('#view-kontraktor .subtab-kontraktor.active-tab');
+                if (activeSubtab) {
+                    activeSubtab.click();
+                }
+            } else if (activeMainTab.id === 'tab-klien') {
+                const activeSubtab = document.querySelector('#view-klien .subtab-klien.active-tab');
+                if (activeSubtab) {
+                    activeSubtab.click();
+                }
+            }
+        }, 50);
     };
 
     const init = async () => {
+        // Tampilkan loading indicator
+        loadingIndicator.classList.remove('hidden');
+        
         try {
             const response = await fetch('proyek.json');
             projectData = await response.json();
@@ -1288,6 +1310,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Jalankan kalkulasi pertama kali
             calculateProject();
             
+            // Sembunyikan loading indicator setelah selesai
+            loadingIndicator.classList.add('hidden');
+            
             // Trigger active sub-tab after a short delay to ensure DOM is ready
             setTimeout(() => {
                 // Check which main tab is active and trigger its active sub-tab
@@ -1308,6 +1333,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Gagal memuat data proyek:', error);
             alert('Gagal memuat data proyek. Pastikan file proyek.json ada dan formatnya benar.');
+            // Sembunyikan loading indicator meskipun ada error
+            loadingIndicator.classList.add('hidden');
         }
     };
 

@@ -20,8 +20,8 @@
 
     <div class="container mx-auto p-4 md:p-8">
         <header class="mb-8">
-            <h1 class="text-4xl font-bold text-gray-900">Project Estimator v0.9</h1>
-            <p class="text-lg text-gray-600 mt-2">Alat dinamis untuk merencanakan proyek konstruksi Anda.</p>
+            <h1 class="text-4xl font-bold text-gray-900 justify-center">Project Estimator v1.0</h1>
+            <p class="text-lg text-gray-600 mt-2 justify-center">Alat dinamis untuk merencanakan proyek konstruksi Anda.</p>
         </header>
 
         <div class="mb-8 border-b border-gray-200">
@@ -233,6 +233,14 @@
                 </section>
             </div>
         </main>
+    </div>
+
+    <!-- Tambahkan loading indicator di HTML -->
+    <div id="loading-indicator" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500 mb-4"></div>
+            <p class="text-gray-700">Memuat data proyek...</p>
+        </div>
     </div>
 
     <script src="proyek.js"></script>
