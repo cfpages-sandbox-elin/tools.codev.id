@@ -1,0 +1,76 @@
+{
+  "harga_per_meter": {
+    "standar": {
+      "label": "Rp 3,5 Juta - Standar",
+      "nilai": 3500000
+    },
+    "premium": {
+      "label": "Rp 4 Juta - Premium",
+      "nilai": 4000000
+    },
+    "deluxe": {
+      "label": "Rp 5 Juta - Deluxe",
+      "nilai": 5000000
+    },
+    "luxury": {
+      "label": "Rp 6 Juta - Luxury",
+      "nilai": 6000000
+    }
+  },
+  "rumus_komposisi_tukang": {
+    "mandor": "Math.ceil(luas_bangunan / 100)",
+    "tukang_ahli": "Math.ceil(luas_bangunan / 30)",
+    "kenek_laden": "Math.ceil(luas_bangunan / 15)"
+  },
+  "spesifikasi_teknis": {
+    "standar": [
+      { "nama": "Besi Beton Polos SNI", "satuan": "kg", "rumus_kebutuhan": "luas_bangunan * 45", "harga_satuan": 11000, "kategori": "Struktur" },
+      { "nama": "Semen PCC", "satuan": "sak", "rumus_kebutuhan": "luas_bangunan * 9", "harga_satuan": 60000, "kategori": "Struktur" },
+      { "nama": "Bata Ringan", "satuan": "m³", "rumus_kebutuhan": "luas_bangunan * 0.5", "harga_satuan": 520000, "kategori": "Dinding" },
+      { "nama": "Keramik Lantai 40x40", "satuan": "m²", "rumus_kebutuhan": "luas_bangunan * 1.1", "harga_satuan": 65000, "kategori": "Finishing" },
+      { "nama": "Cat Tembok Interior (Standar)", "satuan": "pail", "rumus_kebutuhan": "luas_bangunan * 0.1", "harga_satuan": 750000, "kategori": "Finishing" }
+    ],
+    "premium": [
+      { "nama": "Besi Beton Ulir SNI", "satuan": "kg", "rumus_kebutuhan": "luas_bangunan * 50", "harga_satuan": 12500, "kategori": "Struktur" },
+      { "nama": "Semen PCC Premium", "satuan": "sak", "rumus_kebutuhan": "luas_bangunan * 9.5", "harga_satuan": 70000, "kategori": "Struktur" },
+      { "nama": "Bata Ringan Kualitas 1", "satuan": "m³", "rumus_kebutuhan": "luas_bangunan * 0.5", "harga_satuan": 580000, "kategori": "Dinding" },
+      { "nama": "Granit Tile 60x60", "satuan": "m²", "rumus_kebutuhan": "luas_bangunan * 1.1", "harga_satuan": 160000, "kategori": "Finishing" },
+      { "nama": "Cat Tembok Interior (Premium)", "satuan": "pail", "rumus_kebutuhan": "luas_bangunan * 0.12", "harga_satuan": 1200000, "kategori": "Finishing" }
+    ],
+    "deluxe": [
+      { "nama": "Besi Beton Ulir SNI Full", "satuan": "kg", "rumus_kebutuhan": "luas_bangunan * 55", "harga_satuan": 14000, "kategori": "Struktur" },
+      { "nama": "Beton Ready Mix K-300", "satuan": "m³", "rumus_kebutuhan": "luas_bangunan * 0.4", "harga_satuan": 950000, "kategori": "Struktur" },
+      { "nama": "Dinding Panel Precast", "satuan": "m²", "rumus_kebutuhan": "luas_bangunan * 3", "harga_satuan": 250000, "kategori": "Dinding" },
+      { "nama": "Marmer Lokal", "satuan": "m²", "rumus_kebutuhan": "luas_bangunan * 1.1", "harga_satuan": 700000, "kategori": "Finishing" },
+      { "nama": "Cat Tembok (High-end)", "satuan": "pail", "rumus_kebutuhan": "luas_bangunan * 0.15", "harga_satuan": 2500000, "kategori": "Finishing" }
+    ],
+    "luxury": [
+      { "nama": "Besi Beton Ulir SNI Full", "satuan": "kg", "rumus_kebutuhan": "luas_bangunan * 60", "harga_satuan": 14000, "kategori": "Struktur" },
+      { "nama": "Beton Ready Mix K-350", "satuan": "m³", "rumus_kebutuhan": "luas_bangunan * 0.45", "harga_satuan": 1100000, "kategori": "Struktur" },
+      { "nama": "Dinding Panel Precast", "satuan": "m²", "rumus_kebutuhan": "luas_bangunan * 3", "harga_satuan": 250000, "kategori": "Dinding" },
+      { "nama": "Marmer Import", "satuan": "m²", "rumus_kebutuhan": "luas_bangunan * 1.1", "harga_satuan": 2000000, "kategori": "Finishing" },
+      { "nama": "Cat Tembok (Import)", "satuan": "pail", "rumus_kebutuhan": "luas_bangunan * 0.15", "harga_satuan": 4000000, "kategori": "Finishing" }
+    ]
+  },
+  "timeline_milestones": [
+    { "persentase": 5, "nama_teknis": "Mobilisasi & Persiapan", "narasi_klien": "Persiapan lahan, pembersihan, pengukuran, dan pengadaan material tahap awal." },
+    { "persentase": 10, "nama_teknis": "Pondasi Selesai", "narasi_klien": "Seluruh kerangka pondasi di bawah tanah (pondasi & sloof) telah selesai dicor." },
+    { "persentase": 15, "nama_teknis": "Struktur Kolom Lt. 1", "narasi_klien": "Semua tiang (kolom) beton di lantai 1 telah berdiri kokoh." },
+    { "persentase": 20, "nama_teknis": "Struktur Plat Lt. 2", "narasi_klien": "Pengecoran lantai beton untuk lantai 2 telah selesai. Pijakan untuk lantai dua sudah jadi." },
+    { "persentase": 25, "nama_teknis": "Struktur Kolom Lt. 2", "narasi_klien": "Tiang (kolom) beton di lantai 2 telah berdiri." },
+    { "persentase": 30, "nama_teknis": "Struktur Atap Selesai", "narasi_klien": "Struktur atap beton telah selesai dicor. Kerangka bangunan utuh telah selesai." },
+    { "persentase": 35, "nama_teknis": "Dinding Lt. 1 Terpasang", "narasi_klien": "Pemasangan seluruh dinding bata di lantai 1 selesai." },
+    { "persentase": 40, "nama_teknis": "Dinding Lt. 2 Terpasang", "narasi_klien": "Pemasangan seluruh dinding bata di lantai 2 selesai." },
+    { "persentase": 45, "nama_teknis": "Rangka Atap & Genteng", "narasi_klien": "Rangka atap baja ringan dan penutup atap (genteng) telah terpasang." },
+    { "persentase": 50, "nama_teknis": "Instalasi MEP (Rough-in)", "narasi_klien": "Seluruh jalur pipa air dan kabel listrik telah tertanam rapi di dalam dinding." },
+    { "persentase": 55, "nama_teknis": "Plesteran Selesai", "narasi_klien": "Pekerjaan plesteran seluruh dinding telah selesai, permukaan siap untuk dihaluskan." },
+    { "persentase": 60, "nama_teknis": "Acian Selesai", "narasi_klien": "Seluruh dinding telah dihaluskan (aci), siap untuk pengecatan dasar." },
+    { "persentase": 65, "nama_teknis": "Rangka Plafond", "narasi_klien": "Pemasangan seluruh kerangka untuk langit-langit (plafond) selesai." },
+    { "persentase": 70, "nama_teknis": "Pemasangan Kusen", "narasi_klien": "Seluruh kusen untuk pintu dan jendela telah terpasang." },
+    { "persentase": 75, "nama_teknis": "Pemasangan Lantai", "narasi_klien": "Pemasangan keramik/granit di seluruh lantai utama telah selesai." },
+    { "persentase": 80, "nama_teknis": "Pemasangan Plafond & Pintu/Jendela", "narasi_klien": "Penutup plafond, daun pintu, dan daun jendela telah terpasang." },
+    { "persentase": 85, "nama_teknis": "Pengecatan Dasar & Eksterior", "narasi_klien": "Pengecatan dasar seluruh interior dan pengecatan finish eksterior selesai." },
+    { "persentase": 90, "nama_teknis": "Pemasangan Sanitasi & Listrik", "narasi_klien": "Pemasangan closet, shower, keran, lampu, dan saklar telah selesai." },
+    { "persentase": 95, "nama_teknis": "Pengecatan Finish & Detail", "narasi_klien": "Pengecatan finish interior dan pemasangan detail-detail akhir selesai." }
+  ]
+}

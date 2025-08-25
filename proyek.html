@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Estimator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="mb-8">
+            <h1 class="text-4xl font-bold text-gray-900">Project Estimator</h1>
+            <p class="text-lg text-gray-600 mt-2">Alat dinamis untuk merencanakan proyek konstruksi Anda.</p>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Kolom Input & Ringkasan -->
+            <section class="lg:col-span-1 space-y-6">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-semibold mb-4">Input Proyek</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="input-luas-bangunan" class="block text-sm font-medium text-gray-700">Luas Bangunan (m²)</label>
+                            <input type="number" id="input-luas-bangunan" value="90" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="select-harga" class="block text-sm font-medium text-gray-700">Kualitas & Harga per m²</label>
+                            <select id="select-harga" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></select>
+                        </div>
+                        <div>
+                            <label for="input-termin" class="block text-sm font-medium text-gray-700">Jumlah Termin (tanpa retensi)</label>
+                            <input type="number" id="input-termin" value="10" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-semibold mb-4">Ringkasan Proyek</h2>
+                    <div id="output-ringkasan" class="space-y-3">
+                        <!-- Hasil akan di-render oleh JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Kolom Hasil Detil -->
+            <section class="lg:col-span-2 space-y-8">
+                <!-- Rencana Anggaran Biaya -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-semibold mb-4">Rencana Anggaran Biaya (RAB) Material</h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Material</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Volume</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Harga Satuan</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody id="output-rab-table" class="bg-white divide-y divide-gray-200">
+                                <!-- Hasil akan di-render oleh JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Timeline & Termin -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h2 class="text-2xl font-semibold mb-4">Timeline Progres & Termin</h2>
+                    <div id="output-timeline" class="space-y-6">
+                        <!-- Hasil akan di-render oleh JS -->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="proyek.js"></script>
+</body>
+</html>
