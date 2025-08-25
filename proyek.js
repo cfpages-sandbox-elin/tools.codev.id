@@ -1,4 +1,4 @@
-// proyek.js v1.0 refaktor + fix + loading + debugging ga penting
+// proyek.js v1.0 refaktor + fix + loading + debugging + fix infinite loop
 document.addEventListener('DOMContentLoaded', () => {
     // Definisi elemen UI
     const tabKontraktor = document.getElementById('tab-kontraktor');
@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let projectData = {};
     let assumptionsRendered = false;
+    let isRendering = false;
 
     const formatRupiah = (number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
 
@@ -56,8 +57,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('Contractor summary content shown');
             }
             
-            // Re-render ringkasan
-            if (projectData && projectData.harga_per_meter) {
+            // Only recalculate if not already rendering
+            if (!isRendering && projectData && projectData.harga_per_meter) {
                 calculateProject();
             }
         });
@@ -78,8 +79,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('Contractor RAB content shown');
             }
             
-            // Re-render RAB
-            if (projectData && projectData.harga_per_meter) {
+            // Only recalculate if not already rendering
+            if (!isRendering && projectData && projectData.harga_per_meter) {
                 calculateProject();
             }
         });
@@ -100,8 +101,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('Contractor labor content shown');
             }
             
-            // Re-render tenaga kerja
-            if (projectData && projectData.harga_per_meter) {
+            // Only recalculate if not already rendering
+            if (!isRendering && projectData && projectData.harga_per_meter) {
                 calculateProject();
             }
         });
@@ -126,8 +127,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('Client summary content shown');
             }
             
-            // Re-render ringkasan
-            if (projectData && projectData.harga_per_meter) {
+            // Only recalculate if not already rendering
+            if (!isRendering && projectData && projectData.harga_per_meter) {
                 calculateProject();
             }
         });
@@ -148,8 +149,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('Client RAB content shown');
             }
             
-            // Re-render RAB
-            if (projectData && projectData.harga_per_meter) {
+            // Only recalculate if not already rendering
+            if (!isRendering && projectData && projectData.harga_per_meter) {
                 calculateProject();
             }
         });
@@ -170,8 +171,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('Client timeline content shown');
             }
             
-            // Re-render timeline
-            if (projectData && projectData.harga_per_meter) {
+            // Only recalculate if not already rendering
+            if (!isRendering && projectData && projectData.harga_per_meter) {
                 calculateProject();
             }
         });
@@ -1296,63 +1297,79 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const calculateProject = () => {
-        if (!projectData.harga_per_meter) return;
+        if (!projectData.harga_per_meter || isRendering) return;
         
-        // Tentukan input mana yang digunakan berdasarkan tab aktif
-        const activeTab = document.querySelector('.tab.active-tab').id;
-        const isKlienTab = activeTab === 'tab-klien';
+        // Set flag to prevent re-entrancy
+        isRendering = true;
         
-        // 1. KUMPULKAN INPUT
-        const luas_bangunan = parseFloat(inputLuasBangunan.value) || 0;
-        const hargaKey = isKlienTab ? selectHargaKlien.value : selectHarga.value;
-        const jumlahTermin = isKlienTab ? parseInt(inputTerminKlien.value) || 1 : parseInt(inputTermin.value) || 1;
-        
-        // 2. PANGGIL SPESIALIS UNTUK MENGHITUNG SETIAP BAGIAN
-        const durations = calculateDurations(luas_bangunan, projectData, hargaKey);
-        const labor = calculateLaborCost(luas_bangunan, durations, projectData);
-        const materials = calculateMaterialCost(luas_bangunan, projectData.spesifikasi_teknis[hargaKey]);
-        
-        // 3. HITUNG TOTAL & PROFIT
-        const hargaData = projectData.harga_per_meter[hargaKey];
-        const totalNilaiProyekKlien = luas_bangunan * hargaData.nilai;
-        const totalBiayaProyekInternal = materials.totalBiayaMaterialKulak + labor.totalBiayaTukang;
-        const profitEstimasi = totalNilaiProyekKlien - totalBiayaProyekInternal;
-        const profitMargin = (profitEstimasi / totalNilaiProyekKlien) * 100 || 0;
-        
-        // 4. KUMPULKAN SEMUA HASIL UNTUK DI-RENDER
-        const results = {
-            ...durations,
-            ...labor,
-            ...materials,
-            luas_bangunan,
-            jumlahTermin,
-            hargaData,
-            totalNilaiProyekKlien,
-            totalBiayaProyekInternal,
-            profitEstimasi,
-            profitMargin,
-            hargaKey // Tambahkan hargaKey untuk digunakan di render
-        };
-        
-        // 5. RENDER SEMUA HASIL KE TAMPILAN
-        renderOutputs(results);
-        
-        // Pastikan sub-tab aktif ter-render dengan benar
-        setTimeout(() => {
-            // Check which main tab is active and trigger its active sub-tab
-            const activeMainTab = document.querySelector('.tab.active-tab');
-            if (activeMainTab.id === 'tab-kontraktor') {
-                const activeSubtab = document.querySelector('#view-kontraktor .subtab-kontraktor.active-tab');
-                if (activeSubtab) {
-                    activeSubtab.click();
+        try {
+            // Tentukan input mana yang digunakan berdasarkan tab aktif
+            const activeTab = document.querySelector('.tab.active-tab').id;
+            const isKlienTab = activeTab === 'tab-klien';
+            
+            // 1. KUMPULKAN INPUT
+            const luas_bangunan = parseFloat(inputLuasBangunan.value) || 0;
+            const hargaKey = isKlienTab ? selectHargaKlien.value : selectHarga.value;
+            const jumlahTermin = isKlienTab ? parseInt(inputTerminKlien.value) || 1 : parseInt(inputTermin.value) || 1;
+            
+            // 2. PANGGIL SPESIALIS UNTUK MENGHITUNG SETIAP BAGIAN
+            const durations = calculateDurations(luas_bangunan, projectData, hargaKey);
+            const labor = calculateLaborCost(luas_bangunan, durations, projectData);
+            const materials = calculateMaterialCost(luas_bangunan, projectData.spesifikasi_teknis[hargaKey]);
+            
+            // 3. HITUNG TOTAL & PROFIT
+            const hargaData = projectData.harga_per_meter[hargaKey];
+            const totalNilaiProyekKlien = luas_bangunan * hargaData.nilai;
+            const totalBiayaProyekInternal = materials.totalBiayaMaterialKulak + labor.totalBiayaTukang;
+            const profitEstimasi = totalNilaiProyekKlien - totalBiayaProyekInternal;
+            const profitMargin = (profitEstimasi / totalNilaiProyekKlien) * 100 || 0;
+            
+            // 4. KUMPULKAN SEMUA HASIL UNTUK DI-RENDER
+            const results = {
+                ...durations,
+                ...labor,
+                ...materials,
+                luas_bangunan,
+                jumlahTermin,
+                hargaData,
+                totalNilaiProyekKlien,
+                totalBiayaProyekInternal,
+                profitEstimasi,
+                profitMargin,
+                hargaKey // Tambahkan hargaKey untuk digunakan di render
+            };
+            
+            // 5. RENDER SEMUA HASIL KE TAMPILAN
+            renderOutputs(results);
+            
+            // Pastikan sub-tab aktif ter-render dengan benar
+            setTimeout(() => {
+                // Check which main tab is active and trigger its active sub-tab
+                const activeMainTab = document.querySelector('.tab.active-tab');
+                if (activeMainTab.id === 'tab-kontraktor') {
+                    const activeSubtab = document.querySelector('#view-kontraktor .subtab-kontraktor.active-tab');
+                    if (activeSubtab) {
+                        // Only trigger click if the content is not visible
+                        const targetContent = document.getElementById(`subtab-content-${activeSubtab.id.replace('subtab-', '')}`);
+                        if (targetContent && targetContent.classList.contains('hidden')) {
+                            activeSubtab.click();
+                        }
+                    }
+                } else if (activeMainTab.id === 'tab-klien') {
+                    const activeSubtab = document.querySelector('#view-klien .subtab-klien.active-tab');
+                    if (activeSubtab) {
+                        // Only trigger click if the content is not visible
+                        const targetContent = document.getElementById(`subtab-content-${activeSubtab.id.replace('subtab-', '')}`);
+                        if (targetContent && targetContent.classList.contains('hidden')) {
+                            activeSubtab.click();
+                        }
+                    }
                 }
-            } else if (activeMainTab.id === 'tab-klien') {
-                const activeSubtab = document.querySelector('#view-klien .subtab-klien.active-tab');
-                if (activeSubtab) {
-                    activeSubtab.click();
-                }
-            }
-        }, 50);
+            }, 50);
+        } finally {
+            // Reset flag
+            isRendering = false;
+        }
     };
 
     const init = async () => {
@@ -1377,7 +1394,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     targetView.style.display = tab.id === 'tab-asumsi' ? 'block' : 'grid';
                     
                     // Trigger recalculate saat tab berubah
-                    if (projectData && projectData.harga_per_meter) {
+                    if (!isRendering && projectData && projectData.harga_per_meter) {
                         calculateProject();
                     }
                     
@@ -1426,30 +1443,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // Jalankan kalkulasi pertama kali
             console.log('Running initial calculation...');
             calculateProject();
-            
-            // Force render contractor tab content after a delay
-            setTimeout(() => {
-                console.log('Force rendering contractor tab content...');
-                const activeMainTab = document.querySelector('.tab.active-tab');
-                console.log('Active main tab:', activeMainTab ? activeMainTab.id : 'none');
-                
-                if (activeMainTab && activeMainTab.id === 'tab-kontraktor') {
-                    console.log('Contractor tab is active, forcing sub-tab click...');
-                    const activeSubtab = document.querySelector('#view-kontraktor .subtab-kontraktor.active-tab');
-                    console.log('Active subtab:', activeSubtab ? activeSubtab.id : 'none');
-                    
-                    if (activeSubtab) {
-                        console.log('Clicking active subtab...');
-                        activeSubtab.click();
-                    } else {
-                        console.log('No active subtab found, clicking first subtab...');
-                        const firstSubtab = document.querySelector('#subtab-ringkasan-kontraktor');
-                        if (firstSubtab) {
-                            firstSubtab.click();
-                        }
-                    }
-                }
-            }, 200);
             
         } catch (error) {
             console.error('Gagal memuat data proyek:', error);
