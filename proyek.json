@@ -22,34 +22,72 @@
     "tukang_ahli": "Math.ceil(luas_bangunan / 30)",
     "kenek_laden": "Math.ceil(luas_bangunan / 15)"
   },
+  "rumus_durasi_proyek_bulan": "Math.ceil((luas_bangunan / 20) + 2)",
+  "biaya_tukang_harian": {
+    "mandor": 200000,
+    "tukang_ahli": 150000,
+    "kenek_laden": 120000
+  },
   "spesifikasi_teknis": {
     "standar": [
-      { "nama": "Besi Beton Polos SNI", "satuan": "kg", "rumus_kebutuhan": "luas_bangunan * 45", "harga_satuan": 11000, "kategori": "Struktur" },
-      { "nama": "Semen PCC", "satuan": "sak", "rumus_kebutuhan": "luas_bangunan * 9", "harga_satuan": 60000, "kategori": "Struktur" },
-      { "nama": "Bata Ringan", "satuan": "m³", "rumus_kebutuhan": "luas_bangunan * 0.5", "harga_satuan": 520000, "kategori": "Dinding" },
-      { "nama": "Keramik Lantai 40x40", "satuan": "m²", "rumus_kebutuhan": "luas_bangunan * 1.1", "harga_satuan": 65000, "kategori": "Finishing" },
-      { "nama": "Cat Tembok Interior (Standar)", "satuan": "pail", "rumus_kebutuhan": "luas_bangunan * 0.1", "harga_satuan": 750000, "kategori": "Finishing" }
+      { "nama": "Besi Beton Polos SNI", "satuan": "kg", "rumus_kebutuhan": "luas_bangunan * 45", "harga": { "kulak": 9500, "pasar": 11000 }, "kategori": "Struktur" },
+      { "nama": "Semen PCC", "satuan": "sak", "rumus_kebutuhan": "luas_bangunan * 9", "harga": { "kulak": 58000, "pasar": 65000 }, "kategori": "Struktur" },
+      { "nama": "Pasir & Split", "satuan": "m³", "rumus_kebutuhan": "luas_bangunan * 0.8", "harga": { "kulak": 220000, "pasar": 280000 }, "kategori": "Struktur" },
+      { "nama": "Bata Ringan", "satuan": "m³", "rumus_kebutuhan": "luas_bangunan * 0.5", "harga": { "kulak": 510000, "pasar": 580000 }, "kategori": "Dinding" },
+      { "nama": "Semen Mortar", "satuan": "sak", "rumus_kebutuhan": "luas_bangunan * 1.2", "harga": { "kulak": 75000, "pasar": 85000 }, "kategori": "Dinding" },
+      { "nama": "Rangka Atap Baja Ringan", "satuan": "kg", "rumus_kebutuhan": "luas_bangunan * 12", "harga": { "kulak": 15000, "pasar": 18000 }, "kategori": "Atap" },
+      { "nama": "Genteng Beton Flat", "satuan": "m²", "rumus_kebutuhan": "luas_bangunan * 0.6", "harga": { "kulak": 90000, "pasar": 110000 }, "kategori": "Atap" },
+      { "nama": "Kusen Aluminium 3 inch", "satuan": "m'", "rumus_kebutuhan": "luas_bangunan * 1.5", "harga": { "kulak": 65000, "pasar": 90000 }, "kategori": "Pintu & Jendela" },
+      { "nama": "Pintu Engineering Door", "satuan": "unit", "rumus_kebutuhan": "Math.ceil(luas_bangunan / 30)", "harga": { "kulak": 600000, "pasar": 850000 }, "kategori": "Pintu & Jendela" },
+      { "nama": "Keramik Lantai 40x40", "satuan": "m²", "rumus_kebutuhan": "luas_bangunan * 1.1", "harga": { "kulak": 60000, "pasar": 75000 }, "kategori": "Lantai" },
+      { "nama": "Closet Duduk (Standar)", "satuan": "unit", "rumus_kebutuhan": "Math.ceil(luas_bangunan / 50)", "harga": { "kulak": 850000, "pasar": 1200000 }, "kategori": "Sanitasi" },
+      { "nama": "Papan Gypsum & Hollow", "satuan": "m²", "rumus_kebutuhan": "luas_bangunan * 1", "harga": { "kulak": 70000, "pasar": 90000 }, "kategori": "Plafond" },
+      { "nama": "Cat Tembok Interior (Standar)", "satuan": "pail", "rumus_kebutuhan": "luas_bangunan * 0.1", "harga": { "kulak": 700000, "pasar": 850000 }, "kategori": "Pengecatan" },
+      { "nama": "Pipa PVC & Kabel Listrik", "satuan": "lot", "rumus_kebutuhan": "1", "harga": { "kulak_rumus": "250000 * Math.ceil(luas_bangunan / 10)", "pasar_rumus": "350000 * Math.ceil(luas_bangunan / 10)" }, "kategori": "MEP" }
     ],
     "premium": [
-      { "nama": "Besi Beton Ulir SNI", "satuan": "kg", "rumus_kebutuhan": "luas_bangunan * 50", "harga_satuan": 12500, "kategori": "Struktur" },
-      { "nama": "Semen PCC Premium", "satuan": "sak", "rumus_kebutuhan": "luas_bangunan * 9.5", "harga_satuan": 70000, "kategori": "Struktur" },
-      { "nama": "Bata Ringan Kualitas 1", "satuan": "m³", "rumus_kebutuhan": "luas_bangunan * 0.5", "harga_satuan": 580000, "kategori": "Dinding" },
-      { "nama": "Granit Tile 60x60", "satuan": "m²", "rumus_kebutuhan": "luas_bangunan * 1.1", "harga_satuan": 160000, "kategori": "Finishing" },
-      { "nama": "Cat Tembok Interior (Premium)", "satuan": "pail", "rumus_kebutuhan": "luas_bangunan * 0.12", "harga_satuan": 1200000, "kategori": "Finishing" }
+      { "nama": "Besi Beton Ulir SNI", "satuan": "kg", "rumus_kebutuhan": "luas_bangunan * 50", "harga": { "kulak": 11000, "pasar": 12500 }, "kategori": "Struktur" },
+      { "nama": "Semen PCC Premium", "satuan": "sak", "rumus_kebutuhan": "luas_bangunan * 9.5", "harga": { "kulak": 68000, "pasar": 75000 }, "kategori": "Struktur" },
+      { "nama": "Pasir & Split Premium", "satuan": "m³", "rumus_kebutuhan": "luas_bangunan * 0.8", "harga": { "kulak": 250000, "pasar": 310000 }, "kategori": "Struktur" },
+      { "nama": "Bata Ringan Kualitas 1", "satuan": "m³", "rumus_kebutuhan": "luas_bangunan * 0.5", "harga": { "kulak": 560000, "pasar": 620000 }, "kategori": "Dinding" },
+      { "nama": "Semen Mortar MU", "satuan": "sak", "rumus_kebutuhan": "luas_bangunan * 1.2", "harga": { "kulak": 85000, "pasar": 95000 }, "kategori": "Dinding" },
+      { "nama": "Rangka Atap Baja Ringan (Taso)", "satuan": "kg", "rumus_kebutuhan": "luas_bangunan * 12", "harga": { "kulak": 18000, "pasar": 22000 }, "kategori": "Atap" },
+      { "nama": "Genteng Keramik", "satuan": "m²", "rumus_kebutuhan": "luas_bangunan * 0.6", "harga": { "kulak": 140000, "pasar": 165000 }, "kategori": "Atap" },
+      { "nama": "Kusen Aluminium 4 inch (Alexindo)", "satuan": "m'", "rumus_kebutuhan": "luas_bangunan * 1.5", "harga": { "kulak": 95000, "pasar": 125000 }, "kategori": "Pintu & Jendela" },
+      { "nama": "Pintu Solid Engineering", "satuan": "unit", "rumus_kebutuhan": "Math.ceil(luas_bangunan / 30)", "harga": { "kulak": 1500000, "pasar": 1900000 }, "kategori": "Pintu & Jendela" },
+      { "nama": "Granit Tile 60x60", "satuan": "m²", "rumus_kebutuhan": "luas_bangunan * 1.1", "harga": { "kulak": 150000, "pasar": 180000 }, "kategori": "Lantai" },
+      { "nama": "Closet Duduk (American Standard)", "satuan": "unit", "rumus_kebutuhan": "Math.ceil(luas_bangunan / 50)", "harga": { "kulak": 1800000, "pasar": 2500000 }, "kategori": "Sanitasi" },
+      { "nama": "Papan Gypsum & Hollow (Jayaboard)", "satuan": "m²", "rumus_kebutuhan": "luas_bangunan * 1", "harga": { "kulak": 95000, "pasar": 115000 }, "kategori": "Plafond" },
+      { "nama": "Cat Tembok Interior (Premium)", "satuan": "pail", "rumus_kebutuhan": "luas_bangunan * 0.12", "harga": { "kulak": 1100000, "pasar": 1400000 }, "kategori": "Pengecatan" },
+      { "nama": "Pipa PVC & Kabel Listrik (High Grade)", "satuan": "lot", "rumus_kebutuhan": "1", "harga": { "kulak_rumus": "350000 * Math.ceil(luas_bangunan / 10)", "pasar_rumus": "450000 * Math.ceil(luas_bangunan / 10)" }, "kategori": "MEP" }
     ],
     "deluxe": [
-      { "nama": "Besi Beton Ulir SNI Full", "satuan": "kg", "rumus_kebutuhan": "luas_bangunan * 55", "harga_satuan": 14000, "kategori": "Struktur" },
-      { "nama": "Beton Ready Mix K-300", "satuan": "m³", "rumus_kebutuhan": "luas_bangunan * 0.4", "harga_satuan": 950000, "kategori": "Struktur" },
-      { "nama": "Dinding Panel Precast", "satuan": "m²", "rumus_kebutuhan": "luas_bangunan * 3", "harga_satuan": 250000, "kategori": "Dinding" },
-      { "nama": "Marmer Lokal", "satuan": "m²", "rumus_kebutuhan": "luas_bangunan * 1.1", "harga_satuan": 700000, "kategori": "Finishing" },
-      { "nama": "Cat Tembok (High-end)", "satuan": "pail", "rumus_kebutuhan": "luas_bangunan * 0.15", "harga_satuan": 2500000, "kategori": "Finishing" }
+      { "nama": "Besi Beton Ulir SNI Full", "satuan": "kg", "rumus_kebutuhan": "luas_bangunan * 55", "harga": { "kulak": 12500, "pasar": 14000 }, "kategori": "Struktur" },
+      { "nama": "Beton Ready Mix K-300", "satuan": "m³", "rumus_kebutuhan": "luas_bangunan * 0.4", "harga": { "kulak": 900000, "pasar": 980000 }, "kategori": "Struktur" },
+      { "nama": "Waterproofing Membrane", "satuan": "m²", "rumus_kebutuhan": "luas_bangunan * 0.5", "harga": { "kulak": 120000, "pasar": 150000 }, "kategori": "Struktur" },
+      { "nama": "Dinding Bata Merah Ekspos", "satuan": "m²", "rumus_kebutuhan": "luas_bangunan * 3.5", "harga": { "kulak": 150000, "pasar": 180000 }, "kategori": "Dinding" },
+      { "nama": "Atap Aspal (Bitumen)", "satuan": "m²", "rumus_kebutuhan": "luas_bangunan * 0.6", "harga": { "kulak": 250000, "pasar": 300000 }, "kategori": "Atap" },
+      { "nama": "Kusen UPVC", "satuan": "m'", "rumus_kebutuhan": "luas_bangunan * 1.5", "harga": { "kulak": 180000, "pasar": 250000 }, "kategori": "Pintu & Jendela" },
+      { "nama": "Pintu Kayu Solid Merbau", "satuan": "unit", "rumus_kebutuhan": "Math.ceil(luas_bangunan / 30)", "harga": { "kulak": 4000000, "pasar": 5500000 }, "kategori": "Pintu & Jendela" },
+      { "nama": "Marmer Lokal", "satuan": "m²", "rumus_kebutuhan": "luas_bangunan * 1.1", "harga": { "kulak": 650000, "pasar": 800000 }, "kategori": "Lantai" },
+      { "nama": "Closet Duduk (TOTO)", "satuan": "unit", "rumus_kebutuhan": "Math.ceil(luas_bangunan / 50)", "harga": { "kulak": 3500000, "pasar": 4500000 }, "kategori": "Sanitasi" },
+      { "nama": "Plafond Gypsum Tahan Air", "satuan": "m²", "rumus_kebutuhan": "luas_bangunan * 1", "harga": { "kulak": 130000, "pasar": 160000 }, "kategori": "Plafond" },
+      { "nama": "Cat Tembok (High-end)", "satuan": "pail", "rumus_kebutuhan": "luas_bangunan * 0.15", "harga": { "kulak": 2200000, "pasar": 2800000 }, "kategori": "Pengecatan" },
+      { "nama": "Pipa PVC & Kabel Listrik (High Grade)", "satuan": "lot", "rumus_kebutuhan": "1", "harga": { "kulak_rumus": "350000 * Math.ceil(luas_bangunan / 10)", "pasar_rumus": "450000 * Math.ceil(luas_bangunan / 10)" }, "kategori": "MEP" }
     ],
     "luxury": [
-      { "nama": "Besi Beton Ulir SNI Full", "satuan": "kg", "rumus_kebutuhan": "luas_bangunan * 60", "harga_satuan": 14000, "kategori": "Struktur" },
-      { "nama": "Beton Ready Mix K-350", "satuan": "m³", "rumus_kebutuhan": "luas_bangunan * 0.45", "harga_satuan": 1100000, "kategori": "Struktur" },
-      { "nama": "Dinding Panel Precast", "satuan": "m²", "rumus_kebutuhan": "luas_bangunan * 3", "harga_satuan": 250000, "kategori": "Dinding" },
-      { "nama": "Marmer Import", "satuan": "m²", "rumus_kebutuhan": "luas_bangunan * 1.1", "harga_satuan": 2000000, "kategori": "Finishing" },
-      { "nama": "Cat Tembok (Import)", "satuan": "pail", "rumus_kebutuhan": "luas_bangunan * 0.15", "harga_satuan": 4000000, "kategori": "Finishing" }
+      { "nama": "Besi Beton Ulir SNI Full", "satuan": "kg", "rumus_kebutuhan": "luas_bangunan * 60", "harga": { "kulak": 12500, "pasar": 14000 }, "kategori": "Struktur" },
+      { "nama": "Beton Ready Mix K-350", "satuan": "m³", "rumus_kebutuhan": "luas_bangunan * 0.45", "harga": { "kulak": 980000, "pasar": 1100000 }, "kategori": "Struktur" },
+      { "nama": "Waterproofing Membrane Bakar", "satuan": "m²", "rumus_kebutuhan": "luas_bangunan * 0.5", "harga": { "kulak": 180000, "pasar": 220000 }, "kategori": "Struktur" },
+      { "nama": "Dinding Panel Precast", "satuan": "m²", "rumus_kebutuhan": "luas_bangunan * 3", "harga": { "kulak": 220000, "pasar": 260000 }, "kategori": "Dinding" },
+      { "nama": "Atap Membrane / Kaca Tempered", "satuan": "m²", "rumus_kebutuhan": "luas_bangunan * 0.6", "harga": { "kulak": 800000, "pasar": 1200000 }, "kategori": "Atap" },
+      { "nama": "Kusen Aluminium (Import Profile)", "satuan": "m'", "rumus_kebutuhan": "luas_bangunan * 1.5", "harga": { "kulak": 400000, "pasar": 600000 }, "kategori": "Pintu & Jendela" },
+      { "nama": "Pintu Kayu Jati Solid", "satuan": "unit", "rumus_kebutuhan": "Math.ceil(luas_bangunan / 30)", "harga": { "kulak": 8000000, "pasar": 11000000 }, "kategori": "Pintu & Jendela" },
+      { "nama": "Marmer Import Italy", "satuan": "m²", "rumus_kebutuhan": "luas_bangunan * 1.1", "harga": { "kulak": 1800000, "pasar": 2500000 }, "kategori": "Lantai" },
+      { "nama": "Closet Duduk (Grohe/Kohler)", "satuan": "unit", "rumus_kebutuhan": "Math.ceil(luas_bangunan / 50)", "harga": { "kulak": 8000000, "pasar": 12000000 }, "kategori": "Sanitasi" },
+      { "nama": "Plafond Kayu / WPC", "satuan": "m²", "rumus_kebutuhan": "luas_bangunan * 1", "harga": { "kulak": 450000, "pasar": 600000 }, "kategori": "Plafond" },
+      { "nama": "Cat Tembok (Import)", "satuan": "pail", "rumus_kebutuhan": "luas_bangunan * 0.15", "harga": { "kulak": 3500000, "pasar": 4500000 }, "kategori": "Pengecatan" },
+      { "nama": "Sistem MEP (Smart Home Ready)", "satuan": "lot", "rumus_kebutuhan": "1", "harga": { "kulak_rumus": "550000 * Math.ceil(luas_bangunan / 10)", "pasar_rumus": "750000 * Math.ceil(luas_bangunan / 10)" }, "kategori": "MEP" }
     ]
   },
   "timeline_milestones": [

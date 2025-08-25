@@ -11,6 +11,20 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
     </style>
+    <style>
+        .active-tab {
+            border-color: #4f46e5; /* indigo-500 */
+            color: #4f46e5;
+        }
+        .inactive-tab {
+            border-color: transparent;
+            color: #6b7280; /* gray-500 */
+        }
+        .inactive-tab:hover {
+            border-color: #d1d5db; /* gray-300 */
+            color: #4b5563; /* gray-600 */
+        }
+    </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
 
@@ -20,65 +34,51 @@
             <p class="text-lg text-gray-600 mt-2">Alat dinamis untuk merencanakan proyek konstruksi Anda.</p>
         </header>
 
-        <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Kolom Input & Ringkasan -->
-            <section class="lg:col-span-1 space-y-6">
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h2 class="text-2xl font-semibold mb-4">Input Proyek</h2>
-                    <div class="space-y-4">
-                        <div>
-                            <label for="input-luas-bangunan" class="block text-sm font-medium text-gray-700">Luas Bangunan (m²)</label>
-                            <input type="number" id="input-luas-bangunan" value="90" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                        </div>
-                        <div>
-                            <label for="select-harga" class="block text-sm font-medium text-gray-700">Kualitas & Harga per m²</label>
-                            <select id="select-harga" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></select>
-                        </div>
-                        <div>
-                            <label for="input-termin" class="block text-sm font-medium text-gray-700">Jumlah Termin (tanpa retensi)</label>
-                            <input type="number" id="input-termin" value="10" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                        </div>
-                    </div>
-                </div>
+        <div class="mb-8 border-b border-gray-200">
+            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                <button id="tab-kontraktor" class="tab active-tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                    👷🏻‍♂️ Kontraktor
+                </button>
+                <button id="tab-klien" class="tab inactive-tab whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                    🙋🏻‍♂️ Klien
+                </button>
+            </nav>
+        </div>
 
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h2 class="text-2xl font-semibold mb-4">Ringkasan Proyek</h2>
-                    <div id="output-ringkasan" class="space-y-3">
-                        <!-- Hasil akan di-render oleh JS -->
+        <main>
+            <!-- Tampilan Kontraktor (Default terlihat) -->
+            <div id="view-kontraktor" class="view-content grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <section class="lg:col-span-1 space-y-6">
+                    <!-- Input Proyek (pindahkan ke sini) -->
+                    <!-- Ringkasan Proyek Kontraktor -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h2 class="text-2xl font-semibold mb-4">Ringkasan Biaya Internal</h2>
+                        <div id="output-ringkasan-kontraktor" class="space-y-3">
+                            <!-- Hasil akan di-render oleh JS -->
+                        </div>
                     </div>
-                </div>
-            </section>
+                </section>
+                <section class="lg:col-span-2 space-y-8">
+                    <!-- RAB Kontraktor (pindahkan ke sini) -->
+                </section>
+            </div>
 
-            <!-- Kolom Hasil Detil -->
-            <section class="lg:col-span-2 space-y-8">
-                <!-- Rencana Anggaran Biaya -->
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h2 class="text-2xl font-semibold mb-4">Rencana Anggaran Biaya (RAB) Material</h2>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Material</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Volume</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Harga Satuan</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subtotal</th>
-                                </tr>
-                            </thead>
-                            <tbody id="output-rab-table" class="bg-white divide-y divide-gray-200">
-                                <!-- Hasil akan di-render oleh JS -->
-                            </tbody>
-                        </table>
+            <!-- Tampilan Klien (Default tersembunyi) -->
+            <div id="view-klien" class="view-content hidden grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <section class="lg:col-span-1 space-y-6">
+                    <!-- Ringkasan Proyek Klien -->
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h2 class="text-2xl font-semibold mb-4">Ringkasan Penawaran</h2>
+                        <div id="output-ringkasan-klien" class="space-y-3">
+                            <!-- Hasil akan di-render oleh JS -->
+                        </div>
                     </div>
-                </div>
-
-                <!-- Timeline & Termin -->
-                <div class="bg-white p-6 rounded-lg shadow-md">
-                    <h2 class="text-2xl font-semibold mb-4">Timeline Progres & Termin</h2>
-                    <div id="output-timeline" class="space-y-6">
-                        <!-- Hasil akan di-render oleh JS -->
-                    </div>
-                </div>
-            </section>
+                </section>
+                <section class="lg:col-span-2 space-y-8">
+                    <!-- RAB Klien (pindahkan ke sini) -->
+                    <!-- Timeline & Termin (pindahkan ke sini) -->
+                </section>
+            </div>
         </main>
     </div>
 
