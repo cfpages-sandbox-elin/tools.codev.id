@@ -58,11 +58,26 @@
       "strengths": ["Innovation", "Creativity", "Vision", "Starting projects"],
       "challenges": ["Follow-through", "Attention to detail", "Timing", "Sensing others' needs"],
       "plan": [
-        "1. Create a 'Completion System': Partner with a Steel or Tempo genius who excels at details and timing.",
-        "2. Set 'Innovation Time': Block 2-3 hours daily for creative work without interruptions.",
-        "3. Implement the '3-Day Rule': Wait 3 days before acting on new ideas to avoid distraction.",
-        "4. Build a 'Dynamo Dashboard': Track only 3 key metrics for each project.",
-        "5. Create a 'Not-To-Do List': Identify tasks that drain your energy and delegate them."
+        {
+          "title": "Create a Completion System",
+          "details": "A Completion System ensures you follow through on your brilliant ideas. To create one: 1) Identify a Steel or Tempo genius in your network who excels at details and timing. 2) Schedule weekly 30-minute accountability sessions where you report progress. 3) Use a shared dashboard (like Notion or Trello) where they can see your milestones. 4) Set consequences for missed deadlines (e.g., donating to a cause you dislike). 5) Reward yourself for completed projects to reinforce the behavior."
+        },
+        {
+          "title": "Set Innovation Time",
+          "details": "Protect your creative energy by blocking 2-3 hours daily for uninterrupted innovation. To implement: 1) Choose your peak creative time (morning for most dynamos). 2) Put this time in your calendar as a non-negotiable meeting. 3) Turn off all notifications and devices. 4) Have a dedicated space with your creative tools. 5) Start each session with a 10-minute free-writing exercise to unlock ideas. 6) End by documenting your top 3 ideas for later development."
+        },
+        {
+          "title": "Implement the 3-Day Rule",
+          "details": "Prevent distraction by waiting 3 days before acting on new ideas. To implement: 1) Create an 'Idea Parking Lot' (physical notebook or digital app). 2) When a new idea strikes, document it immediately with date and initial excitement level (1-10). 3) Set a calendar reminder for 3 days later. 4) Re-evaluate the idea: Does it still excite you? Does it align with current goals? 5) Only pursue ideas that maintain high excitement and alignment."
+        },
+        {
+          "title": "Build a Dynamo Dashboard",
+          "details": "Track only 3 key metrics for each project to avoid overwhelm. To create: 1) Choose metrics that measure progress toward your vision (e.g., 'Prototype completed' rather than 'Hours worked'). 2) Use a visual dashboard (like Geckoboard or a simple whiteboard). 3) Update metrics weekly at the same time. 4) Set thresholds for each metric that trigger action. 5) Review monthly with your accountability partner to ensure you're focusing on what truly matters."
+        },
+        {
+          "title": "Create a Not-To-Do List",
+          "details": "Identify tasks that drain your energy and delegate them. To implement: 1) Track all activities for one week and note energy levels (high/medium/low). 2) Identify recurring low-energy tasks. 3) For each task: Can it be automated? Delegated? Eliminated? 4) Create a formal Not-To-Do list with these tasks. 5) Review quarterly and add new energy-draining tasks. 6) Use the reclaimed time for high-energy, high-impact activities."
+        }
       ]
     },
     "blaze": {
@@ -71,11 +86,26 @@
       "strengths": ["Communication", "Networking", "Leadership", "Motivation"],
       "challenges": ["Detailed analysis", "Consistency", "Systems thinking", "Solitary work"],
       "plan": [
-        "1. Create a 'Relationship Map': Identify 20 key relationships to nurture quarterly.",
-        "2. Implement 'Focus Fridays': Dedicate one day weekly to deep work without meetings.",
-        "3. Build a 'Blaze Brief': Create templates for routine communications.",
-        "4. Partner with a Steel genius: Have them handle data and systems.",
-        "5. Practice the '1-3-5 Rule': Daily, achieve 1 big, 3 medium, and 5 small tasks."
+        {
+          "title": "Create a Relationship Map",
+          "details": "Identify 20 key relationships to nurture quarterly. To create: 1) List everyone in your network by category (mentors, peers, mentees, connectors). 2) Rate each relationship by value (1-10) and current engagement (high/medium/low). 3) Select top 20 across categories. 4) For each, note: their goals, how you can help, and how they can help you. 5) Schedule quarterly check-ins with each. 6) Use a CRM like HubSpot or even a spreadsheet to track interactions."
+        },
+        {
+          "title": "Implement Focus Fridays",
+          "details": "Dedicate one day weekly to deep work without meetings. To implement: 1) Block your entire Friday calendar as 'Focus Time'. 2) Choose 1-2 important projects requiring deep thinking. 3) Prepare Thursday evening: clear workspace, gather materials, set specific goals. 4) Turn off all notifications and social media. 5) Work in 90-minute focused sprints with 30-minute breaks. 6) End day by reviewing progress and planning next week's focus."
+        },
+        {
+          "title": "Build a Blaze Brief",
+          "details": "Create templates for routine communications to save time. To implement: 1) Identify recurring communications (emails, proposals, updates). 2) For each, create a template with: purpose, key points, call to action. 3) Include placeholders for personalization (name, specific details). 4) Store templates in an accessible system (email templates, document library). 5) Review and update templates quarterly based on feedback. 6) Track time saved to reinforce the habit."
+        },
+        {
+          "title": "Partner with a Steel Genius",
+          "details": "Have them handle data and systems. To implement: 1) Identify Steel geniuses in your network (they love details and systems). 2) Propose a mutual support partnership: you handle relationships, they handle data. 3) Define clear boundaries: what they'll analyze, what decisions you'll make together. 4) Schedule regular syncs to review their analysis. 5) Compensate them fairly (money, introductions, reciprocal help). 6) Celebrate wins together to strengthen the partnership."
+        },
+        {
+          "title": "Practice the 1-3-5 Rule",
+          "details": "Daily, achieve 1 big, 3 medium, and 5 small tasks. To implement: 1) Each evening, list all tasks for tomorrow. 2) Categorize by size/impact: Big (2+ hours, high impact), Medium (30-60 mins), Small (under 30 mins). 3) Select 1 Big, 3 Medium, 5 Small tasks that align with your goals. 4) Schedule them in your calendar with time blocks. 5) Start with the Big task when energy is highest. 6) At day's end, review completion and adjust tomorrow's list."
+        }
       ]
     },
     "tempo": {
@@ -84,11 +114,26 @@
       "strengths": ["Timing", "Perseverance", "Sensing opportunities", "Stability"],
       "challenges": ["Innovation", "Public speaking", "Strategic planning", "Risk-taking"],
       "plan": [
-        "1. Create a 'Tempo Trigger': Establish a clear signal for when to act on opportunities.",
-        "2. Implement 'Innovation Partnerships': Collaborate with Dynamo geniuses.",
-        "3. Build a 'Tempo Tracker': Monitor market rhythms and personal energy cycles.",
-        "4. Practice 'Strategic Risk': Take 1 small calculated risk monthly.",
-        "5. Create a 'Growth Ritual': Spend 30 minutes daily learning something new."
+        {
+          "title": "Create a Tempo Trigger",
+          "details": "Establish a clear signal for when to act on opportunities. To create: 1) Identify your best past decisions: what signals were present? 2) Define 3-5 specific triggers (e.g., market conditions, personal readiness, resource availability). 3) Assign a point value to each trigger. 4) Set a threshold (e.g., 8/10 points) for taking action. 5) Create a decision checklist to verify triggers. 6) Practice with low-stakes decisions to refine your trigger system."
+        },
+        {
+          "title": "Implement Innovation Partnerships",
+          "details": "Collaborate with Dynamo geniuses. To implement: 1) Identify Dynamo geniuses who complement your stability. 2) Propose structured collaborations: you provide timing/stability, they provide innovation. 3) Define clear roles: who ideates, who evaluates, who executes. 4) Set regular brainstorming sessions with your Tempo insights as foundation. 5) Create a shared innovation pipeline to track ideas. 6) Celebrate both successes and learning experiences to strengthen the partnership."
+        },
+        {
+          "title": "Build a Tempo Tracker",
+          "details": "Monitor market rhythms and personal energy cycles. To create: 1) Track key market indicators relevant to your field. 2) Monitor your personal energy levels throughout the day (1-10 scale). 3) Note when you make good decisions: what was your energy? market conditions? 4) Identify patterns: when are you most intuitive? when is the market most receptive? 5) Schedule important decisions during your peak Tempo times. 6) Review monthly to refine your understanding of your natural rhythms."
+        },
+        {
+          "title": "Practice Strategic Risk",
+          "details": "Take 1 small calculated risk monthly. To implement: 1) Define 'small risk' for you (e.g., 5% of resources, 1 day of time). 2) Create a risk assessment template: potential upside, downside, mitigation strategies. 3) Each month, identify 3 potential risks meeting your criteria. 4) Select one with best risk-reward ratio. 5) Execute with clear success metrics. 6) Afterward, conduct a 'risk review': what worked? what didn't? what did you learn?"
+        },
+        {
+          "title": "Create a Growth Ritual",
+          "details": "Spend 30 minutes daily learning something new. To implement: 1) Choose a consistent time (morning works best for most). 2) Select diverse learning sources: books, podcasts, courses, mentors. 3) Create a learning plan: 1 month per new topic. 4) During your ritual: consume new information for 20 mins, then reflect for 10 mins. 5) Keep a learning journal: key insights, how to apply, connections to existing knowledge. 6) Monthly, review journal entries and identify patterns to guide future learning."
+        }
       ]
     },
     "steel": {
@@ -97,11 +142,26 @@
       "strengths": ["Analysis", "Organization", "Systems building", "Precision"],
       "challenges": ["Small talk", "Spontaneity", "Big-picture thinking", "Delegation"],
       "plan": [
-        "1. Create a 'Steel System': Document all processes in a central manual.",
-        "2. Implement 'People Time': Schedule 3 short social interactions daily.",
-        "3. Build a 'Delegation Dashboard': Identify tasks only you should do.",
-        "4. Partner with a Blaze genius: Have them handle relationships and communication.",
-        "5. Practice 'Visionary Hour': Weekly, spend 60 minutes on big-picture thinking."
+        {
+          "title": "Create a Steel System",
+          "details": "Document all processes in a central manual. To implement: 1) Identify all recurring tasks in your work/life. 2) For each, document: purpose, steps, tools, time required, quality standards. 3) Use a consistent format (checklists work well). 4) Store in a central, searchable location (Notion, Confluence, or physical binder). 5) Review and update systems quarterly. 6) Create a 'System Index' to quickly find the right process for any situation."
+        },
+        {
+          "title": "Implement People Time",
+          "details": "Schedule 3 short social interactions daily. To implement: 1) Block 15-minute slots in your calendar for 'Connection Time'. 2) Prepare 2-3 conversation starters related to current projects or interests. 3) Reach out to different people each day: colleagues, clients, mentors. 4) During interactions: focus on listening, ask open questions, find common ground. 5) Afterward, note 1 key insight from the conversation. 6) Weekly, review these insights to identify patterns and opportunities."
+        },
+        {
+          "title": "Build a Delegation Dashboard",
+          "details": "Identify tasks only you should do. To create: 1) List all your regular tasks. 2) For each, ask: Does this require my unique skills? Could someone else do it 80% as well? 3) Categorize tasks: Core (only you), Important (delegate with oversight), Routine (fully delegate). 4) For Important tasks: create clear instructions and success metrics. 5) For Routine tasks: document processes and train others. 6) Track time saved and reinvest it in high-value Core tasks."
+        },
+        {
+          "title": "Partner with a Blaze Genius",
+          "details": "Have them handle relationships and communication. To implement: 1) Identify Blaze geniuses who complement your systems focus. 2) Propose a mutual support partnership: you handle systems, they handle relationships. 3) Define which communications they'll own (client updates, team motivation). 4) Provide them with clear data points to inform their communications. 5) Schedule brief syncs to align on messaging. 6) Measure the impact: improved relationships, team morale, client satisfaction."
+        },
+        {
+          "title": "Practice Visionary Hour",
+          "details": "Weekly, spend 60 minutes on big-picture thinking. To implement: 1) Choose a consistent time (Friday afternoons work well). 2) Remove yourself from your usual workspace. 3) Bring only a journal and pen (no devices). 4) Ask: Where is this heading in 5 years? What's missing? What should we stop/start? 5. Capture all ideas without judgment. 6) Afterward, categorize ideas: immediate actions, future considerations, wild possibilities. 7) Share insights with your team or mentor."
+        }
       ]
     }
   }

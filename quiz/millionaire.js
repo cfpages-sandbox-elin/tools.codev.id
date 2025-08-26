@@ -239,14 +239,17 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
       
       <div class="bg-white border border-gray-200 rounded-xl p-6 mb-8">
-        <h3 class="text-xl font-bold text-gray-800 mb-4">Your Personalized Success Plan</h3>
-        <div class="space-y-4">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-xl font-bold text-gray-800">Your Personalized Success Plan</h3>
+          <button id="copy-btn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition duration-300 flex items-center">
+            <i class="fas fa-copy mr-2"></i> Copy Results
+          </button>
+        </div>
+        <div class="space-y-6">
           ${geniusData.plan.map((step, index) => `
-            <div class="flex">
-              <div class="flex-shrink-0 w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center text-white font-bold mr-4">
-                ${index + 1}
-              </div>
-              <p class="text-gray-700 pt-1">${step}</p>
+            <div class="border-l-4 border-teal-500 pl-4 py-1">
+              <h4 class="font-bold text-lg text-gray-800 mb-2">${step.title}</h4>
+              <p class="text-gray-700">${step.details}</p>
             </div>
           `).join('')}
         </div>
@@ -263,8 +266,78 @@ document.addEventListener('DOMContentLoaded', function() {
     resultsContainer.classList.remove('hidden');
     restartBtn.classList.remove('hidden');
     
+    // Add copy functionality
+    const copyBtn = document.getElementById('copy-btn');
+    copyBtn.addEventListener('click', copyResults);
+    
     // Clear saved progress
     localStorage.removeItem('millionaireQuizProgress');
+  }
+  
+  // Copy Results to Clipboard
+  function copyResults() {
+    // Get the genius type and plan
+    const geniusCounts = {
+      dynamo: 0,
+      blaze: 0,
+      tempo: 0,
+      steel: 0
+    };
+    
+    answers.forEach(answerIndex => {
+      if (answerIndex !== undefined) {
+        const question = quizData.questions[answers.indexOf(answerIndex)];
+        const selectedOption = question.options[answerIndex];
+        geniusCounts[selectedOption.genius]++;
+      }
+    });
+    
+    let maxCount = 0;
+    let resultGenius = 'dynamo';
+    
+    for (const genius in geniusCounts) {
+      if (geniusCounts[genius] > maxCount) {
+        maxCount = geniusCounts[genius];
+        resultGenius = genius;
+      }
+    }
+    
+    const geniusData = quizData.geniusTypes[resultGenius];
+    
+    // Format the results for copying
+    let resultsText = `MILLIONAIRE GENIUS QUIZ RESULTS\n\n`;
+    resultsText += `Genius Type: ${geniusData.name}\n\n`;
+    resultsText += `Description: ${geniusData.description}\n\n`;
+    resultsText += `Strengths:\n`;
+    geniusData.strengths.forEach(strength => {
+      resultsText += `- ${strength}\n`;
+    });
+    resultsText += `\nChallenges:\n`;
+    geniusData.challenges.forEach(challenge => {
+      resultsText += `- ${challenge}\n`;
+    });
+    resultsText += `\nPersonalized Success Plan:\n`;
+    geniusData.plan.forEach((step, index) => {
+      resultsText += `${index + 1}. ${step.title}\n`;
+      resultsText += `   ${step.details}\n\n`;
+    });
+    resultsText += `Next Steps: Now that you know your genius type, focus on implementing your personalized plan. Remember to partner with complementary geniuses to cover your weak areas!`;
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(resultsText).then(() => {
+      // Show success message
+      const copyBtn = document.getElementById('copy-btn');
+      const originalHTML = copyBtn.innerHTML;
+      copyBtn.innerHTML = '<i class="fas fa-check mr-2"></i> Copied!';
+      copyBtn.classList.add('bg-green-100', 'text-green-800');
+      
+      setTimeout(() => {
+        copyBtn.innerHTML = originalHTML;
+        copyBtn.classList.remove('bg-green-100', 'text-green-800');
+      }, 2000);
+    }).catch(err => {
+      console.error('Failed to copy results: ', err);
+    });
   }
   
   // Restart Quiz
