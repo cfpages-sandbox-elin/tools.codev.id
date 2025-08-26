@@ -1,0 +1,108 @@
+{
+  "questions": [
+    {
+      "id": 1,
+      "text": "When starting a new project, what excites you most?",
+      "options": [
+        { "text": "Creating innovative solutions from scratch", "genius": "dynamo" },
+        { "text": "Connecting with people who can help make it happen", "genius": "blaze" },
+        { "text": "Ensuring all details are perfectly organized", "genius": "steel" },
+        { "text": "Sensing the right timing to launch", "genius": "tempo" }
+      ]
+    },
+    {
+      "id": 2,
+      "text": "In a team setting, you naturally:",
+      "options": [
+        { "text": "Generate new ideas and possibilities", "genius": "dynamo" },
+        { "text": "Build relationships and motivate others", "genius": "blaze" },
+        { "text": "Focus on systems and efficient processes", "genius": "steel" },
+        { "text": "Maintain stability and support the team", "genius": "tempo" }
+      ]
+    },
+    {
+      "id": 3,
+      "text": "What's your biggest challenge with money?",
+      "options": [
+        { "text": "Following through on financial plans", "genius": "dynamo" },
+        { "text": "Sticking to detailed budgets", "genius": "blaze" },
+        { "text": "Taking calculated risks", "genius": "steel" },
+        { "text": "Making quick investment decisions", "genius": "tempo" }
+      ]
+    },
+    {
+      "id": 4,
+      "text": "You learn best through:",
+      "options": [
+        { "text": "Experimenting and creating new things", "genius": "dynamo" },
+        { "text": "Conversations and storytelling", "genius": "blaze" },
+        { "text": "Detailed analysis and data", "genius": "steel" },
+        { "text": "Hands-on experience and intuition", "genius": "tempo" }
+      ]
+    },
+    {
+      "id": 5,
+      "text": "In your ideal workday, you spend most time:",
+      "options": [
+        { "text": "Brainstorming and innovating", "genius": "dynamo" },
+        { "text": "Networking and collaborating", "genius": "blaze" },
+        { "text": "Organizing and optimizing systems", "genius": "steel" },
+        { "text": "Supporting others and maintaining harmony", "genius": "tempo" }
+      ]
+    }
+  ],
+  "geniusTypes": {
+    "dynamo": {
+      "name": "Dynamo Genius",
+      "description": "You're naturally creative and innovative, seeing possibilities others miss. Like Richard Branson and Steve Jobs, you excel at starting things but may struggle with finishing details.",
+      "strengths": ["Innovation", "Creativity", "Vision", "Starting projects"],
+      "challenges": ["Follow-through", "Attention to detail", "Timing", "Sensing others' needs"],
+      "plan": [
+        "1. Create a 'Completion System': Partner with a Steel or Tempo genius who excels at details and timing.",
+        "2. Set 'Innovation Time': Block 2-3 hours daily for creative work without interruptions.",
+        "3. Implement the '3-Day Rule': Wait 3 days before acting on new ideas to avoid distraction.",
+        "4. Build a 'Dynamo Dashboard': Track only 3 key metrics for each project.",
+        "5. Create a 'Not-To-Do List': Identify tasks that drain your energy and delegate them."
+      ]
+    },
+    "blaze": {
+      "name": "Blaze Genius",
+      "description": "You're a natural connector and communicator, building relationships effortlessly. Like Oprah Winfrey and Bill Clinton, you magnify opportunities through people but may overlook details.",
+      "strengths": ["Communication", "Networking", "Leadership", "Motivation"],
+      "challenges": ["Detailed analysis", "Consistency", "Systems thinking", "Solitary work"],
+      "plan": [
+        "1. Create a 'Relationship Map': Identify 20 key relationships to nurture quarterly.",
+        "2. Implement 'Focus Fridays': Dedicate one day weekly to deep work without meetings.",
+        "3. Build a 'Blaze Brief': Create templates for routine communications.",
+        "4. Partner with a Steel genius: Have them handle data and systems.",
+        "5. Practice the '1-3-5 Rule': Daily, achieve 1 big, 3 medium, and 5 small tasks."
+      ]
+    },
+    "tempo": {
+      "name": "Tempo Genius",
+      "description": "You're grounded and intuitive, with excellent timing and perseverance. Like Warren Buffett and Mother Teresa, you create value through perfect timing but may resist change.",
+      "strengths": ["Timing", "Perseverance", "Sensing opportunities", "Stability"],
+      "challenges": ["Innovation", "Public speaking", "Strategic planning", "Risk-taking"],
+      "plan": [
+        "1. Create a 'Tempo Trigger': Establish a clear signal for when to act on opportunities.",
+        "2. Implement 'Innovation Partnerships': Collaborate with Dynamo geniuses.",
+        "3. Build a 'Tempo Tracker': Monitor market rhythms and personal energy cycles.",
+        "4. Practice 'Strategic Risk': Take 1 small calculated risk monthly.",
+        "5. Create a 'Growth Ritual': Spend 30 minutes daily learning something new."
+      ]
+    },
+    "steel": {
+      "name": "Steel Genius",
+      "description": "You're detail-oriented and systematic, creating order from chaos. Like Mark Zuckerberg and Ray Kroc, you build efficient systems but may struggle with people connections.",
+      "strengths": ["Analysis", "Organization", "Systems building", "Precision"],
+      "challenges": ["Small talk", "Spontaneity", "Big-picture thinking", "Delegation"],
+      "plan": [
+        "1. Create a 'Steel System': Document all processes in a central manual.",
+        "2. Implement 'People Time': Schedule 3 short social interactions daily.",
+        "3. Build a 'Delegation Dashboard': Identify tasks only you should do.",
+        "4. Partner with a Blaze genius: Have them handle relationships and communication.",
+        "5. Practice 'Visionary Hour': Weekly, spend 60 minutes on big-picture thinking."
+      ]
+    }
+  }
+}
