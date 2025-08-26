@@ -20,27 +20,42 @@
                 font-weight: bold;
                 margin-top: 24pt;
                 margin-bottom: 12pt;
+                page-break-after: avoid;
+                page-break-inside: avoid;
             }
             .heading-2 {
                 font-size: 14pt;
                 font-weight: bold;
                 margin-top: 18pt;
                 margin-bottom: 6pt;
+                page-break-after: avoid;
+                page-break-inside: avoid;
             }
             .heading-3 {
                 font-size: 12pt;
                 font-weight: bold;
                 margin-top: 12pt;
                 margin-bottom: 6pt;
+                page-break-after: avoid;
+                page-break-inside: avoid;
             }
             .normal-text {
                 font-size: 12pt;
                 margin-bottom: 6pt;
+                orphans: 3;
+                widows: 3;
             }
             .reviewer-info {
                 font-style: italic;
                 margin-top: 24pt;
                 margin-bottom: 12pt;
+                page-break-inside: avoid;
+            }
+            /* Prevent breaks between heading and first paragraph */
+            .heading-1 + .normal-text,
+            .heading-2 + .normal-text,
+            .heading-3 + .normal-text {
+                page-break-before: avoid;
             }
         }
         
