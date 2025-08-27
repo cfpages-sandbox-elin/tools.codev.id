@@ -30,6 +30,7 @@
                 <button id="tab-edit" class="tab-button" role="tab" data-tab-key="edit">✏️ Edit</button>
                 <button id="tab-numbering" class="tab-button" role="tab" data-tab-key="numbering">🔢 Numbering</button>
                 <button id="tab-merge" class="tab-button" role="tab" data-tab-key="merge">🔀 Merge</button>
+                <button id="tab-compress" class="tab-button" role="tab" data-tab-key="compress">🗜️ Compress</button>
             </nav>
         </div>
 
@@ -276,6 +277,48 @@
             <div id="merge-status" class="text-center mb-4 min-h-[2rem]"></div>
         </div>
 
+        <div id="tab-content-compress" class="hidden">
+            <!-- COMPRESS TOOL UI -->
+            <div class="text-center mb-4">
+                <h2 class="text-2xl font-semibold text-slate-700">PDF Compressor</h2>
+                <p class="text-slate-500 mt-1">Reduce the file size of your PDF documents.</p>
+            </div>
+            <div class="border-b pb-6 mb-6">
+                <label class="block text-sm font-medium text-slate-700 mb-2">1. Upload PDF(s)</label>
+                <input id="compress-file-upload" type="file" multiple class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100" accept=".pdf">
+            </div>
+            
+            <div id="compress-options" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label for="compression-level" class="block text-sm font-medium text-slate-700 mb-2">Compression Level</label>
+                    <select id="compression-level" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 rounded-md">
+                        <option value="low">Low (Basic optimization)</option>
+                        <option value="medium" selected>Medium (Image compression)</option>
+                        <option value="high">High (Aggressive compression)</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="image-quality" class="block text-sm font-medium text-slate-700 mb-2">Image Quality</label>
+                    <input type="range" id="image-quality" min="10" max="100" value="70" class="mt-1 block w-full">
+                    <div class="flex justify-between text-xs text-slate-500">
+                        <span>Low</span>
+                        <span id="image-quality-value">70%</span>
+                        <span>High</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="compress-files-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6"></div>
+            
+            <div class="flex items-center justify-center mb-6">
+                <button id="compress-button" type="button" disabled class="px-8 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:bg-slate-400 disabled:cursor-not-allowed">Compress and Download</button>
+            </div>
+            
+            <div id="compress-status" class="text-center mb-4 min-h-[2rem]"></div>
+            <div id="compress-results" class="text-center"></div>
+        </div>
+
         <!-- NEW: Hidden input for image uploads -->
         <input type="file" id="edit-image-upload" class="hidden" accept="image/png, image/jpeg">
     </div>
@@ -323,5 +366,6 @@ document.addEventListener('DOMContentLoaded', () => {
 <script src="pdf-edit.js" defer></script>
 <script src="pdf-numbering.js" defer></script>
 <script src="pdf-merge.js" defer></script>
+<script src="pdf-compress.js" defer></script>
 </body>
 </html>
