@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curriculum Vitae - Dr. Windijarto, SE. MBA</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Anda bisa menambahkan custom font di sini jika diperlukan */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom class untuk timeline */
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -30px;
+            top: 4px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #f59e0b; /* amber-500 */
+            border: 2px solid #ffffff;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div class="container mx-auto max-w-4xl my-10 p-8 md:p-12 bg-white shadow-2xl rounded-2xl">
+
+        <!-- HEADER SECTION -->
+        <header class="flex flex-col md:flex-row items-center md:items-start text-center md:text-left mb-12">
+            <!-- Profile Picture -->
+            <div class="mb-6 md:mb-0 md:mr-8">
+                <img src="/img/windijarto.png" alt="Dr. Windijarto" class="w-40 h-40 rounded-full object-cover border-4 border-amber-400 shadow-md">
+            </div>
+            <!-- Name & Title -->
+            <div class="flex-grow">
+                <h1 class="text-4xl md:text-5xl font-bold text-gray-800">Dr. Windijarto, SE. MBA</h1>
+                <p class="text-xl text-amber-600 mt-2">Dosen, Peneliti, & Konsultan Bidang Ekonomi dan Manajemen</p>
+                <div class="mt-4 text-sm text-gray-500 flex flex-col sm:flex-row justify-center md:justify-start gap-x-6 gap-y-2">
+                    <div class="flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+                        </svg>
+                        <span>Pacitan, 14 April 1963</span>
+                    </div>
+                    <div class="flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
+                        </svg>
+                        <span>Fakultas Ekonomi dan Bisnis, Universitas Airlangga</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT -->
+        <main>
+
+            <!-- PROFILE SUMMARY -->
+            <section class="mb-10">
+                <h2 class="text-2xl font-bold text-gray-800 border-b-2 border-amber-300 pb-2 mb-4">Profil Profesional</h2>
+                <p class="text-gray-600 leading-relaxed">
+                    Seorang akademisi dan konsultan berpengalaman lebih dari 32 tahun di bidang Ekonomi dan Manajemen Keuangan. Memiliki rekam jejak yang kuat dalam penelitian, pengajaran, dan proyek konsultasi strategis untuk berbagai institusi pemerintah dan perusahaan terkemuka di Indonesia.
+                </p>
+            </section>
+            
+            <div class="grid md:grid-cols-3 gap-10">
+                <!-- LEFT COLUMN -->
+                <div class="md:col-span-1">
+                    <!-- PENDIDIKAN -->
+                    <section>
+                        <h2 class="text-xl font-bold text-gray-800 border-b-2 border-amber-300 pb-2 mb-6">Pendidikan</h2>
+                        <div class="relative border-l-2 border-amber-200 ml-4">
+                            <div class="mb-6 ml-8 relative timeline-item">
+                                <p class="font-bold text-amber-600">2008</p>
+                                <h3 class="font-semibold text-gray-700">Doktor (Ilmu Ekonomi)</h3>
+                                <p class="text-sm text-gray-500">Universitas Airlangga</p>
+                            </div>
+                            <div class="mb-6 ml-8 relative timeline-item">
+                                <p class="font-bold text-amber-600">1994</p>
+                                <h3 class="font-semibold text-gray-700">Master of Business Administration (MBA)</h3>
+                                <p class="text-sm text-gray-500">University of Central Arkansas, USA</p>
+                            </div>
+                            <div class="ml-8 relative timeline-item">
+                                <p class="font-bold text-amber-600">1987</p>
+                                <h3 class="font-semibold text-gray-700">Sarjana Ekonomi (S1)</h3>
+                                <p class="text-sm text-gray-500">Universitas Airlangga</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- PENGALAMAN KERJA -->
+                     <section class="mt-10">
+                        <h2 class="text-xl font-bold text-gray-800 border-b-2 border-amber-300 pb-2 mb-6">Pengalaman Kerja</h2>
+                        <div class="relative border-l-2 border-amber-200 ml-4">
+                            <div class="mb-6 ml-8 relative timeline-item">
+                                <p class="font-bold text-amber-600">2015 - Sekarang</p>
+                                <h3 class="font-semibold text-gray-700">Ketua LPMB-FEB UNAIR</h3>
+                            </div>
+                            <div class="mb-6 ml-8 relative timeline-item">
+                                <p class="font-bold text-amber-600">2015 - 2020</p>
+                                <h3 class="font-semibold text-gray-700">Ketua Program Studi S2 PSDM</h3>
+                                <p class="text-sm text-gray-500">Sekolah Pasca Sarjana</p>
+                            </div>
+                            <div class="mb-6 ml-8 relative timeline-item">
+                                <p class="font-bold text-amber-600">2010 - 2015</p>
+                                <h3 class="font-semibold text-gray-700">Wakil Dekan III, FEB Unair</h3>
+                            </div>
+                            <div class="mb-6 ml-8 relative timeline-item">
+                                <p class="font-bold text-amber-600">2004 - 2010</p>
+                                <h3 class="font-semibold text-gray-700">Ketua Laboratorium PMB (LPMB)</h3>
+                                <p class="text-sm text-gray-500">Fakultas Ekonomi Universitas Airlangga</p>
+                            </div>
+                             <div class="ml-8 relative timeline-item">
+                                <p class="font-bold text-amber-600">1988 - Sekarang</p>
+                                <h3 class="font-semibold text-gray-700">Dosen FEB</h3>
+                                <p class="text-sm text-gray-500">Universitas Airlangga</p>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- RIGHT COLUMN -->
+                <div class="md:col-span-2">
+                    <!-- PENGALAMAN KONSULTAN -->
+                    <section>
+                        <h2 class="text-xl font-bold text-gray-800 border-b-2 border-amber-300 pb-2 mb-6">Pengalaman Konsultan (2020 - Sekarang)</h2>
+                        <div class="overflow-x-auto bg-gray-50 p-4 rounded-lg">
+                            <table class="w-full text-sm text-left text-gray-600">
+                                <thead class="text-xs text-gray-700 uppercase bg-gray-100 rounded-t-lg">
+                                    <tr>
+                                        <th scope="col" class="py-3 px-4 w-1/6">Tahun</th>
+                                        <th scope="col" class="py-3 px-4 w-3/6">Nama Kegiatan</th>
+                                        <th scope="col" class="py-3 px-4 w-2/6">Nama Lembaga</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="bg-white border-b border-gray-200">
+                                        <td class="py-3 px-4 font-medium">2024</td>
+                                        <td class="py-3 px-4">Studi Konsesi Terminal Multipurpose Batang</td>
+                                        <td class="py-3 px-4">PT Pelabuhan Indonesia (Persero) Regional 3</td>
+                                    </tr>
+                                     <tr class="bg-white border-b border-gray-200">
+                                        <td class="py-3 px-4 font-medium">2023</td>
+                                        <td class="py-3 px-4">Restrukturisasi Keuangan Korporasi Karyawan Keluarga Petrokimia Gresik</td>
+                                        <td class="py-3 px-4">PT Petrokimia Gresik</td>
+                                    </tr>
+                                    <tr class="bg-white border-b border-gray-200">
+                                        <td class="py-3 px-4 font-medium">2022</td>
+                                        <td class="py-3 px-4">Pembuatan RJPP PT Surabaya Industrial Estate Rungkut 2021-2026</td>
+                                        <td class="py-3 px-4">PT Surabaya Industrial Estate Rungkut</td>
+                                    </tr>
+                                    <tr class="bg-white border-b border-gray-200">
+                                        <td class="py-3 px-4 font-medium">2021</td>
+                                        <td class="py-3 px-4">Kajian Penempatan Karyawan PT. Petrokimia Gresik pada Anak Usaha</td>
+                                        <td class="py-3 px-4">PT Petrokimia Gresik</td>
+                                    </tr>
+                                    <tr class="bg-white border-b border-gray-200">
+                                        <td class="py-3 px-4 font-medium">2021</td>
+                                        <td class="py-3 px-4">Kajian Prospektus Badan Usaha Milik Daerah Jawa Timur</td>
+                                        <td class="py-3 px-4">Pemprov Jawa Timur</td>
+                                    </tr>
+                                    <tr class="bg-white border-b border-gray-200">
+                                        <td class="py-3 px-4 font-medium">2020</td>
+                                        <td class="py-3 px-4">Kajian Kelayakan Bisnis dan Pola Kerjasama Pengembangan Bisnis Industri Gula Rafinasi</td>
+                                        <td class="py-3 px-4">PT PG Rajawali 1</td>
+                                    </tr>
+                                    <tr class="bg-white">
+                                        <td class="py-3 px-4 font-medium">...</td>
+                                        <td class="py-3 px-4 italic">dan puluhan proyek lainnya.</td>
+                                        <td class="py-3 px-4"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="text-xs text-center mt-2 text-gray-500">Daftar lengkap tersedia berdasarkan permintaan.</p>
+                    </section>
+
+                     <section class="mt-10">
+                        <h2 class="text-xl font-bold text-gray-800 border-b-2 border-amber-300 pb-2 mb-6">Pengalaman Konsultan (Hingga 2020)</h2>
+                        <ul class="list-disc list-outside space-y-3 text-gray-600 pl-5 text-sm">
+                            <li><strong>Ketua Tim Sosial Ekonomi:</strong> Studi Pemagaran, Land Clearing & Relokasi Lahan Proyek Petrochemical Complex Jawa Barat (Kerjasama ITS & PT Pertamina).</li>
+                            <li><strong>Penyusunan Studi Kelayakan Bisnis Properti</strong> di Perumahan Dinas Tuban PT Sinergi Mitra Investasi (PT. SMI).</li>
+                            <li><strong>Ketua Tim Sosial Ekonomi:</strong> Proyek Pemantauan RKL-RPL NGRR Tuban 2020.</li>
+                            <li><strong>Tim Sosial Ekonomi:</strong> Penyusunan Amdal PT Pertamina NGRR Tuban 2020.</li>
+                            <li><strong>Studi Kelayakan Pembangunan Jalan Tol KLBM</strong> (bundaran manyar) dari dan menuju kawasan industri JIIPE, Manyar Gresik.</li>
+                            <li><strong>Ketua Tim Konsultan</strong> Transformasi Sistem Manajemen Semen Indonesia.</li>
+                            <li><strong>Legal Aspek dan Sosial Mapping</strong> PT. Pertamina untuk proyek Jasa Konsultansi Offshore Site Development Kilang Bontang.</li>
+                        </ul>
+                         <p class="text-xs text-center mt-4 text-gray-500">Dan berbagai proyek konsultasi lainnya di bidang sosial, ekonomi, dan keuangan.</p>
+                    </section>
+                </div>
+            </div>
+        </main>
+
+    </div>
+</body>
+</html>
