@@ -24,6 +24,34 @@
             background-color: #f59e0b; /* amber-500 */
             border: 2px solid #ffffff;
         }
+
+        .profile-image {
+            /* Menggeser fokus vertikal gambar ke atas (20% dari atas).
+            Anda bisa mengubah nilai 20% menjadi 10% atau 25% untuk menemukan
+            posisi yang paling pas untuk foto Anda. */
+            object-position: 50% 20%;
+        }
+
+        @media print {
+            /* Menghilangkan background abu-abu pada body */
+            body {
+                background-color: #fff;
+            }
+
+            /* Menghilangkan shadow, margin, dan border radius pada container utama */
+            .container {
+                margin: 0;
+                padding: 0;
+                box-shadow: none;
+                max-width: 100%;
+                border-radius: 0;
+            }
+        
+            /* Mencegah elemen terpotong di tengah saat pindah halaman */
+            section, table, div {
+                page-break-inside: avoid;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -34,7 +62,7 @@
         <header class="flex flex-col md:flex-row items-center md:items-start text-center md:text-left mb-12">
             <!-- Profile Picture -->
             <div class="mb-6 md:mb-0 md:mr-8">
-                <img src="/img/windijarto.png" alt="Dr. Windijarto" class="w-40 h-40 rounded-full object-cover border-4 border-amber-400 shadow-md">
+                <img src="/img/windijarto.png" alt="Dr. Windijarto" class="profile-image w-40 h-40 rounded-full object-cover border-4 border-amber-400 shadow-md">
             </div>
             <!-- Name & Title -->
             <div class="flex-grow">
