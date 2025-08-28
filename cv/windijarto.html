@@ -32,6 +32,44 @@
             object-position: 50% 20%;
         }
 
+        .wavy-underline {
+            position: relative;
+            /* Memberi ruang di bawah untuk garis bergelombang */
+            padding-bottom: 8px; 
+        }
+
+        .wavy-underline::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 80px; /* Atur panjang gelombangnya di sini */
+            height: 4px; /* Atur ketebalan gelombangnya */
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 4'%3E%3Cpath d='M0,2 C20,4 40,0 60,2 C80,4 80,2 80,2' stroke='%23f59e0b' fill='none' stroke-width='2'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+        }
+
+        .fading-timeline {
+            position: relative;
+            padding-left: 2px; /* Memberi sedikit ruang */
+        }
+
+        .fading-timeline::before {
+            content: '';
+            position: absolute;
+            top: 10px;  /* Mulai sedikit di bawah titik pertama */
+            bottom: 10px; /* Berakhir sedikit di atas titik terakhir */
+            left: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, #fcd34d, #f59e0b, #fcd34d); /* Warna emas dari terang ke gelap lalu terang */
+            border-radius: 2px;
+        }
+
+        /* Sedikit penyesuaian untuk titik timeline agar berada di atas garis */
+        .timeline-item::before {
+            z-index: 1; 
+        }
+
         @media print {
             /* Menghilangkan background abu-abu pada body */
             body {
@@ -90,7 +128,7 @@
 
             <!-- PROFILE SUMMARY -->
             <section class="mb-10">
-                <h2 class="text-2xl font-bold text-gray-800 border-b-2 border-amber-300 pb-2 mb-4">Profil Profesional</h2>
+                <h2 class="text-2xl font-bold text-gray-800 pb-2 mb-4 wavy-underline">Profil Profesional</h2>
                 <p class="text-gray-600 leading-relaxed">
                     Seorang akademisi dan konsultan berpengalaman lebih dari 32 tahun di bidang Ekonomi dan Manajemen Keuangan. Memiliki rekam jejak yang kuat dalam penelitian, pengajaran, dan proyek konsultasi strategis untuk berbagai institusi pemerintah dan perusahaan terkemuka di Indonesia.
                 </p>
@@ -101,8 +139,8 @@
                 <div class="md:col-span-1">
                     <!-- PENDIDIKAN -->
                     <section>
-                        <h2 class="text-xl font-bold text-gray-800 border-b-2 border-amber-300 pb-2 mb-6">Pendidikan</h2>
-                        <div class="relative border-l-2 border-amber-200 ml-4">
+                        <h2 class="text-xl font-bold text-gray-800 wavy-underline pb-2 mb-6">Pendidikan</h2>
+                        <div class="relative fading-timeline ml-4">
                             <div class="mb-6 ml-8 relative timeline-item">
                                 <p class="font-bold text-amber-600">2008</p>
                                 <h3 class="font-semibold text-gray-700">Doktor (Ilmu Ekonomi)</h3>
@@ -123,8 +161,8 @@
 
                     <!-- PENGALAMAN KERJA -->
                      <section class="mt-10">
-                        <h2 class="text-xl font-bold text-gray-800 border-b-2 border-amber-300 pb-2 mb-6">Pengalaman Kerja</h2>
-                        <div class="relative border-l-2 border-amber-200 ml-4">
+                        <h2 class="text-xl font-bold text-gray-800 wavy-underline pb-2 mb-6">Pengalaman Kerja</h2>
+                        <div class="relative fading-timeline ml-4">
                             <div class="mb-6 ml-8 relative timeline-item">
                                 <p class="font-bold text-amber-600">2015 - Sekarang</p>
                                 <h3 class="font-semibold text-gray-700">Ketua LPMB-FEB UNAIR</h3>
@@ -156,7 +194,7 @@
                 <div class="md:col-span-2">
                     <!-- PENGALAMAN KONSULTAN -->
                     <section>
-                        <h2 class="text-xl font-bold text-gray-800 border-b-2 border-amber-300 pb-2 mb-6">Pengalaman Konsultan (2020 - Sekarang)</h2>
+                        <h2 class="text-xl font-bold text-gray-800 wavy-underline pb-2 mb-6">Pengalaman Konsultan (2020 - Sekarang)</h2>
                         <div class="overflow-x-auto bg-gray-50 p-4 rounded-lg">
                             <table class="w-full text-sm text-left text-gray-600">
                                 <thead class="text-xs text-gray-700 uppercase bg-gray-100 rounded-t-lg">
@@ -209,7 +247,7 @@
                     </section>
 
                      <section class="mt-10">
-                        <h2 class="text-xl font-bold text-gray-800 border-b-2 border-amber-300 pb-2 mb-6">Pengalaman Konsultan (Hingga 2020)</h2>
+                        <h2 class="text-xl font-bold text-gray-800 wavy-underline pb-2 mb-6">Pengalaman Konsultan (Hingga 2020)</h2>
                         <ul class="list-disc list-outside space-y-3 text-gray-600 pl-5 text-sm">
                             <li><strong>Ketua Tim Sosial Ekonomi:</strong> Studi Pemagaran, Land Clearing & Relokasi Lahan Proyek Petrochemical Complex Jawa Barat (Kerjasama ITS & PT Pertamina).</li>
                             <li><strong>Penyusunan Studi Kelayakan Bisnis Properti</strong> di Perumahan Dinas Tuban PT Sinergi Mitra Investasi (PT. SMI).</li>
