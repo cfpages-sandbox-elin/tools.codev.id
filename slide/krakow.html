@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Research Goals Settings + Hypothesis</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/slide.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Theme Styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f4f8;
+            color: #1e293b;
+        }
+        #presentation-container {
+            border-color: #e2e8f0;
+        }
+        .slide {
+            background-color: #ffffff;
+        }
+        .slide-title { 
+            color: #0f172a;
+        }
+        .slide-title::after { 
+            background-color: #003d7a; 
+        }
+        .title-prefix { 
+            color: #0056b3; 
+        }
+        .nav-arrow, #fullscreen-btn {
+            background-color: rgba(255, 255, 255, 0.7);
+            color: #334155;
+            border-color: rgba(0,0,0,0.05);
+        }
+        .nav-arrow:hover, #fullscreen-btn:hover {
+            background-color: #003d7a;
+            color: white;
+        }
+        #slide-counter {
+            background-color: rgba(15, 23, 42, 0.7);
+            color: #e2e8f0;
+        }
+        .content-list li > i {
+            color: #003d7a;
+        }
+        .unair-gold { 
+            color: #fbbf24; 
+        }
+        /* Chart Theme */
+        .css-chart-container {
+            background-color: #f8fafc;
+            border-color: #e2e8f0;
+        }
+        .chart-bar { 
+            background-color: #0056b3; 
+        }
+        .chart-bar:nth-child(2), .chart-bar:nth-child(4) { 
+            background-color: #003d7a; 
+        }
+        .chart-arrow { 
+            color: #1e40af; 
+        }
+        /* Research Theme Variables */
+        :root {
+            --theme-pattern-color: #003d7a;
+            --theme-pattern-color-light: #5b9bd5;
+            --callout-info-bg: #f0f9ff;
+            --callout-info-border: #0ea5e9;
+            --callout-success-bg: #f0fdf4;
+            --callout-success-border: #22c55e;
+            --callout-warning-bg: #fffbeb;
+            --callout-warning-border: #f59e0b;
+            --callout-danger-bg: #fef2f2;
+            --callout-danger-border: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <div id="presentation-wrapper">
+        <div id="presentation-container">
+            <!-- Navigation -->
+            <div class="nav-arrow" id="prev-slide"><i class="fas fa-chevron-left"></i></div>
+            <div class="nav-arrow" id="next-slide"><i class="fas fa-chevron-right"></i></div>
+            <div id="slide-counter">1 / 10</div>
+            <div id="fullscreen-btn" title="Toggle Fullscreen"><i class="fas fa-expand"></i></div>
+            <div id="download-btn" class="nav-arrow" title="Download as PDF"><i class="fas fa-download"></i></div>
+            
+            <!-- Lightbox container -->
+            <div id="lightbox">
+                <span id="lightbox-close">&times;</span>
+                <img id="lightbox-img" src="" alt="Zoomed Image">
+            </div>
+            
+            <!-- SLIDES START HERE -->
+            <!-- Slide 1: Title -->
+            <section id="slide1" class="slide bg-dots">
+                <div class="h-full w-full flex flex-col justify-center items-center text-center p-10" style="background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(226, 232, 240, 1) 100%);">
+                    <div class="flex items-center gap-6 mb-8">
+                        <img src="/img/logo-unair-biru.png" alt="UNAIR Logo" class="h-24">
+                        <img src="/img/logo-krakow.png" alt="Krakow University Logo" class="h-24">
+                    </div>
+                    <p class="text-xl font-medium text-slate-600 mb-2">Summer School in Krakow: Future in Research</p>
+                    <h1 class="text-5xl font-bold text-slate-900 tracking-tight leading-tight">Research Goals Settings + Hypothesis</h1>
+                    <div class="mt-12 border-t border-slate-300 pt-6 w-full max-w-3xl">
+                        <p class="text-slate-800 text-xl font-semibold">Dr. Windijarto, S.E., MBA</p>
+                        <p class="text-slate-600 text-lg mb-2">Head of Human Resource Development Department</p>
+                        <p class="text-slate-600 text-lg mb-2">Postgraduate School, UNIVERSITAS AIRLANGGA</p>
+                        <p class="text-slate-500 text-md">September 2025</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 2: Research Process Overview -->
+            <section id="slide2" class="slide bg-grid">
+                <div class="slide-header">
+                    <h2 class="slide-title">Research Process: Setting the Foundation</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="flex flex-col md:flex-row gap-8 items-center">
+                        <div class="w-full md:w-1/2">
+                            <div class="callout callout-info">
+                                <p class="font-semibold text-lg mb-2">Research begins with clear goals</p>
+                                <p>Well-defined research objectives guide the entire research process and determine the methodology, data collection, and analysis techniques.</p>
+                            </div>
+                            <div class="mt-6">
+                                <h3 class="text-xl font-semibold mb-4 text-slate-800">Key Components:</h3>
+                                <ul class="content-list">
+                                    <li>
+                                        <i class="fas fa-bullseye"></i>
+                                        <div>
+                                            <h4 class="font-semibold">Research Goals</h4>
+                                            <p>Broad statements about the research purpose</p>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <i class="fas fa-lightbulb"></i>
+                                        <div>
+                                            <h4 class="font-semibold">Research Questions</h4>
+                                            <p>Specific inquiries the research aims to answer</p>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <i class="fas fa-flask"></i>
+                                        <div>
+                                            <h4 class="font-semibold">Hypotheses</h4>
+                                            <p>Testable predictions about relationships between variables</p>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="w-full md:w-1/2">
+                            <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
+                                <h3 class="text-xl font-semibold mb-4 text-center text-slate-800">Research Process Flow</h3>
+                                <div class="space-y-4">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">1</div>
+                                        <div class="ml-4">
+                                            <h4 class="font-semibold">Identify Research Problem</h4>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">2</div>
+                                        <div class="ml-4">
+                                            <h4 class="font-semibold">Set Research Goals & Questions</h4>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">3</div>
+                                        <div class="ml-4">
+                                            <h4 class="font-semibold">Formulate Hypotheses</h4>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">4</div>
+                                        <div class="ml-4">
+                                            <h4 class="font-semibold">Design Methodology</h4>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">5</div>
+                                        <div class="ml-4">
+                                            <h4 class="font-semibold">Collect & Analyze Data</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 3: Research Goals -->
+            <section id="slide3" class="slide bg-lines">
+                <div class="slide-header">
+                    <h2 class="slide-title">Setting Effective Research Goals</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <h3 class="text-xl font-semibold mb-4 text-slate-800">Characteristics of Good Research Goals</h3>
+                            <div class="callout callout-success">
+                                <p class="font-semibold mb-2">SMART Framework:</p>
+                                <ul class="list-disc pl-5 space-y-1">
+                                    <li><span class="font-semibold">S</span>pecific - Clearly defined</li>
+                                    <li><span class="font-semibold">M</span>easurable - Quantifiable outcomes</li>
+                                    <li><span class="font-semibold">A</span>chievable - Realistic and attainable</li>
+                                    <li><span class="font-semibold">R</span>elevant - Aligned with research problem</li>
+                                    <li><span class="font-semibold">T</span>ime-bound - Defined timeframe</li>
+                                </ul>
+                            </div>
+                            <div class="mt-6">
+                                <h4 class="font-semibold mb-2">Types of Research Goals:</h4>
+                                <ul class="space-y-2">
+                                    <li class="flex items-start">
+                                        <i class="fas fa-search text-blue-600 mt-1 mr-2"></i>
+                                        <div>
+                                            <span class="font-semibold">Exploratory:</span> Investigate new phenomena
+                                        </div>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-chart-line text-blue-600 mt-1 mr-2"></i>
+                                        <div>
+                                            <span class="font-semibold">Descriptive:</span> Document characteristics
+                                        </div>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-balance-scale text-blue-600 mt-1 mr-2"></i>
+                                        <div>
+                                            <span class="font-semibold">Explanatory:</span> Test cause-effect relationships
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200 h-full">
+                                <h3 class="text-xl font-semibold mb-4 text-center text-slate-800">Examples of Research Goals</h3>
+                                <div class="space-y-4">
+                                    <div class="p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                                        <p class="font-semibold text-blue-800">Weak Goal:</p>
+                                        <p class="text-slate-700">"Study employee motivation."</p>
+                                    </div>
+                                    <div class="p-4 bg-green-50 rounded-lg border-l-4 border-green-500">
+                                        <p class="font-semibold text-green-800">Strong Goal:</p>
+                                        <p class="text-slate-700">"Identify the impact of remote work arrangements on employee motivation levels in the technology sector by Q4 2025."</p>
+                                    </div>
+                                    <div class="p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                                        <p class="font-semibold text-blue-800">Weak Goal:</p>
+                                        <p class="text-slate-700">"Analyze consumer behavior."</p>
+                                    </div>
+                                    <div class="p-4 bg-green-50 rounded-lg border-l-4 border-green-500">
+                                        <p class="font-semibold text-green-800">Strong Goal:</p>
+                                        <p class="text-slate-700">"Examine the relationship between social media advertising expenditure and purchasing decisions among millennials in urban areas by December 2025."</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 4: Research Questions -->
+            <section id="slide4" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Formulating Research Questions</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="flex flex-col md:flex-row gap-8">
+                        <div class="w-full md:w-1/2">
+                            <div class="callout callout-info mb-6">
+                                <p class="font-semibold text-lg mb-2">Research Questions</p>
+                                <p>Specific, focused inquiries that your research aims to answer. They bridge the gap between research goals and hypotheses.</p>
+                            </div>
+                            <h3 class="text-xl font-semibold mb-4 text-slate-800">Characteristics of Good Research Questions:</h3>
+                            <ul class="space-y-3">
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <div>
+                                        <span class="font-semibold">Focused & Specific:</span> Narrow enough to be thoroughly investigated
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <div>
+                                        <span class="font-semibold">Researchable:</span> Can be answered through data collection
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <div>
+                                        <span class="font-semibold">Complex:</span> Require analysis and critical thinking
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <div>
+                                        <span class="font-semibold">Relevant:</span> Address important aspects of the research problem
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="w-full md:w-1/2">
+                            <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
+                                <h3 class="text-xl font-semibold mb-4 text-center text-slate-800">From Goals to Questions</h3>
+                                <div class="space-y-6">
+                                    <div>
+                                        <p class="font-semibold text-blue-700 mb-2">Research Goal:</p>
+                                        <p class="text-slate-700 p-3 bg-blue-50 rounded-lg">"Identify factors influencing employee retention in multinational corporations."</p>
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-green-700 mb-2">Research Questions:</p>
+                                        <ul class="space-y-2">
+                                            <li class="flex items-start">
+                                                <i class="fas fa-question-circle text-green-500 mt-1 mr-2"></i>
+                                                <div>What is the relationship between compensation packages and employee retention rates?</div>
+                                            </li>
+                                            <li class="flex items-start">
+                                                <i class="fas fa-question-circle text-green-500 mt-1 mr-2"></i>
+                                                <div>How do leadership styles impact employee satisfaction and retention?</div>
+                                            </li>
+                                            <li class="flex items-start">
+                                                <i class="fas fa-question-circle text-green-500 mt-1 mr-2"></i>
+                                                <div>To what extent do career development opportunities influence retention decisions?</div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 5: Hypotheses -->
+            <section id="slide5" class="slide bg-grid">
+                <div class="slide-header">
+                    <h2 class="slide-title">Understanding Hypotheses</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <div class="callout callout-info mb-6">
+                                <p class="font-semibold text-lg mb-2">What is a Hypothesis?</p>
+                                <p>A specific, testable prediction about the expected relationship between variables in a study.</p>
+                            </div>
+                            <h3 class="text-xl font-semibold mb-4 text-slate-800">Key Functions of Hypotheses:</h3>
+                            <ul class="space-y-3">
+                                <li class="flex items-start">
+                                    <i class="fas fa-arrow-right text-blue-600 mt-1 mr-2"></i>
+                                    <div>
+                                        <span class="font-semibold">Guide Research Design:</span> Determines methodology and data collection
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-arrow-right text-blue-600 mt-1 mr-2"></i>
+                                    <div>
+                                        <span class="font-semibold">Provide Focus:</span> Directs attention to specific relationships
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-arrow-right text-blue-600 mt-1 mr-2"></i>
+                                    <div>
+                                        <span class="font-semibold">Enable Testing:</span> Allows for empirical verification
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-arrow-right text-blue-600 mt-1 mr-2"></i>
+                                    <div>
+                                        <span class="font-semibold">Advance Knowledge:</span> Contributes to theory development
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div>
+                            <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200 h-full">
+                                <h3 class="text-xl font-semibold mb-4 text-center text-slate-800">Types of Hypotheses</h3>
+                                <div class="space-y-4">
+                                    <div class="p-4 bg-blue-50 rounded-lg">
+                                        <p class="font-semibold text-blue-800 mb-2">Alternative Hypothesis (H₁)</p>
+                                        <p class="text-slate-700 mb-2">States the expected relationship between variables.</p>
+                                        <p class="italic text-slate-600">Example: "Increased training opportunities lead to higher employee productivity."</p>
+                                    </div>
+                                    <div class="p-4 bg-amber-50 rounded-lg">
+                                        <p class="font-semibold text-amber-800 mb-2">Null Hypothesis (H₀)</p>
+                                        <p class="text-slate-700 mb-2">States no relationship exists between variables.</p>
+                                        <p class="italic text-slate-600">Example: "There is no relationship between training opportunities and employee productivity."</p>
+                                    </div>
+                                    <div class="p-4 bg-green-50 rounded-lg">
+                                        <p class="font-semibold text-green-800 mb-2">Directional vs. Non-directional</p>
+                                        <p class="text-slate-700">Directional specifies the expected direction of the relationship, while non-directional only indicates that a relationship exists.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 6: Formulating Hypotheses -->
+            <section id="slide6" class="slide bg-lines">
+                <div class="slide-header">
+                    <h2 class="slide-title">Formulating Strong Hypotheses</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="flex flex-col md:flex-row gap-8">
+                        <div class="w-full md:w-1/2">
+                            <h3 class="text-xl font-semibold mb-4 text-slate-800">Characteristics of Good Hypotheses:</h3>
+                            <ul class="space-y-3">
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <div>
+                                        <span class="font-semibold">Testable:</span> Can be supported or refuted through empirical evidence
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <div>
+                                        <span class="font-semibold">Falsifiable:</span> Must be possible to prove it wrong
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <div>
+                                        <span class="font-semibold">Precise:</span> Clearly defines variables and expected relationships
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <div>
+                                        <span class="font-semibold">Based on Theory:</span> Grounded in existing literature or logical reasoning
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <div>
+                                        <span class="font-semibold">Concise:</span> Expressed clearly and succinctly
+                                    </div>
+                                </li>
+                            </ul>
+                            <div class="mt-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                                <p class="font-semibold text-blue-800 mb-2">Hypothesis Development Process:</p>
+                                <ol class="list-decimal pl-5 space-y-1">
+                                    <li>Identify variables</li>
+                                    <li>Determine relationship between variables</li>
+                                    <li>Formulate the statement</li>
+                                    <li>Ensure testability</li>
+                                    <li>Refine and finalize</li>
+                                </ol>
+                            </div>
+                        </div>
+                        <div class="w-full md:w-1/2">
+                            <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200 h-full">
+                                <h3 class="text-xl font-semibold mb-4 text-center text-slate-800">Examples: Weak vs. Strong</h3>
+                                <div class="space-y-6">
+                                    <div>
+                                        <p class="font-semibold text-red-600 mb-2">Weak Hypothesis:</p>
+                                        <p class="text-slate-700 p-3 bg-red-50 rounded-lg">"Employee satisfaction affects productivity."</p>
+                                        <div class="mt-2 text-sm text-slate-600">
+                                            <p class="font-semibold">Issues:</p>
+                                            <ul class="list-disc pl-5">
+                                                <li>Vague variables</li>
+                                                <li>No direction specified</li>
+                                                <li>Not measurable</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-green-600 mb-2">Strong Hypothesis:</p>
+                                        <p class="text-slate-700 p-3 bg-green-50 rounded-lg">"Employees who participate in flexible work arrangements report higher job satisfaction scores and demonstrate 15% higher productivity compared to employees with fixed schedules."</p>
+                                        <div class="mt-2 text-sm text-slate-600">
+                                            <p class="font-semibold">Strengths:</p>
+                                            <ul class="list-disc pl-5">
+                                                <li>Specific variables</li>
+                                                <li>Clear direction</li>
+                                                <li>Measurable outcomes</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 7: Variables in Hypotheses -->
+            <section id="slide7" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Understanding Variables in Hypotheses</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <h3 class="text-xl font-semibold mb-4 text-slate-800">Types of Variables:</h3>
+                            <div class="space-y-4">
+                                <div class="p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                                    <p class="font-semibold text-blue-800 mb-1">Independent Variable (IV)</p>
+                                    <p class="text-slate-700">The variable that is manipulated or changed to observe its effect.</p>
+                                    <p class="text-sm text-slate-600 mt-2 italic">Example: Training method</p>
+                                </div>
+                                <div class="p-4 bg-green-50 rounded-lg border-l-4 border-green-500">
+                                    <p class="font-semibold text-green-800 mb-1">Dependent Variable (DV)</p>
+                                    <p class="text-slate-700">The variable that is observed and measured for changes.</p>
+                                    <p class="text-sm text-slate-600 mt-2 italic">Example: Employee performance</p>
+                                </div>
+                                <div class="p-4 bg-amber-50 rounded-lg border-l-4 border-amber-500">
+                                    <p class="font-semibold text-amber-800 mb-1">Control Variables</p>
+                                    <p class="text-slate-700">Variables kept constant to prevent their influence on the outcome.</p>
+                                    <p class="text-sm text-slate-600 mt-2 italic">Example: Work experience, education level</p>
+                                </div>
+                                <div class="p-4 bg-purple-50 rounded-lg border-l-4 border-purple-500">
+                                    <p class="font-semibold text-purple-800 mb-1">Moderating Variables</p>
+                                    <p class="text-slate-700">Variables that affect the strength or direction of the relationship.</p>
+                                    <p class="text-sm text-slate-600 mt-2 italic">Example: Employee motivation</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200 h-full">
+                                <h3 class="text-xl font-semibold mb-4 text-center text-slate-800">Variable Relationships</h3>
+                                <div class="space-y-4">
+                                    <div class="text-center">
+                                        <div class="inline-block p-4 bg-blue-100 rounded-lg">
+                                            <p class="font-semibold text-blue-800">Independent Variable</p>
+                                            <p class="text-slate-700">Training Method</p>
+                                        </div>
+                                        <div class="my-3">
+                                            <i class="fas fa-arrow-down text-2xl text-blue-600"></i>
+                                        </div>
+                                        <div class="inline-block p-4 bg-green-100 rounded-lg">
+                                            <p class="font-semibold text-green-800">Dependent Variable</p>
+                                            <p class="text-slate-700">Employee Performance</p>
+                                        </div>
+                                    </div>
+                                    <div class="p-4 bg-slate-50 rounded-lg">
+                                        <p class="font-semibold text-slate-800 mb-2">Hypothesis Example:</p>
+                                        <p class="text-slate-700 italic">"Employees who participate in interactive training (IV) will demonstrate higher performance scores (DV) than those who receive lecture-based training, when controlling for years of experience (CV). This relationship will be stronger for highly motivated employees (MV)."</p>
+                                    </div>
+                                    <div class="callout callout-info">
+                                        <p class="text-sm">Clear identification of variables is essential for testable hypotheses and valid research design.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 8: Testing Hypotheses -->
+            <section id="slide8" class="slide bg-grid">
+                <div class="slide-header">
+                    <h2 class="slide-title">Testing Hypotheses</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="flex flex-col md:flex-row gap-8">
+                        <div class="w-full md:w-1/2">
+                            <h3 class="text-xl font-semibold mb-4 text-slate-800">Hypothesis Testing Process:</h3>
+                            <ol class="space-y-4">
+                                <li class="flex">
+                                    <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold mr-3 flex-shrink-0">1</div>
+                                    <div>
+                                        <h4 class="font-semibold">State Hypotheses</h4>
+                                        <p class="text-slate-700">Formulate null (H₀) and alternative (H₁) hypotheses</p>
+                                    </div>
+                                </li>
+                                <li class="flex">
+                                    <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold mr-3 flex-shrink-0">2</div>
+                                    <div>
+                                        <h4 class="font-semibold">Set Significance Level</h4>
+                                        <p class="text-slate-700">Determine alpha (α), typically 0.05</p>
+                                    </div>
+                                </li>
+                                <li class="flex">
+                                    <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold mr-3 flex-shrink-0">3</div>
+                                    <div>
+                                        <h4 class="font-semibold">Select Appropriate Test</h4>
+                                        <p class="text-slate-700">Choose statistical test based on data type and research design</p>
+                                    </div>
+                                </li>
+                                <li class="flex">
+                                    <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold mr-3 flex-shrink-0">4</div>
+                                    <div>
+                                        <h4 class="font-semibold">Calculate Test Statistic</h4>
+                                        <p class="text-slate-700">Compute value from sample data</p>
+                                    </div>
+                                </li>
+                                <li class="flex">
+                                    <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold mr-3 flex-shrink-0">5</div>
+                                    <div>
+                                        <h4 class="font-semibold">Make Decision</h4>
+                                        <p class="text-slate-700">Compare p-value to α or test statistic to critical value</p>
+                                    </div>
+                                </li>
+                                <li class="flex">
+                                    <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold mr-3 flex-shrink-0">6</div>
+                                    <div>
+                                        <h4 class="font-semibold">Interpret Results</h4>
+                                        <p class="text-slate-700">Draw conclusions about the hypothesis</p>
+                                    </div>
+                                </li>
+                            </ol>
+                        </div>
+                        <div class="w-full md:w-1/2">
+                            <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200 h-full">
+                                <h3 class="text-xl font-semibold mb-4 text-center text-slate-800">Types of Errors in Hypothesis Testing</h3>
+                                <div class="space-y-4">
+                                    <div class="p-4 bg-red-50 rounded-lg border-l-4 border-red-500">
+                                        <p class="font-semibold text-red-800 mb-2">Type I Error (False Positive)</p>
+                                        <p class="text-slate-700 mb-2">Rejecting a true null hypothesis</p>
+                                        <p class="text-sm text-slate-600">Probability = α (significance level)</p>
+                                        <p class="text-sm text-slate-600 italic">Example: Concluding a treatment works when it doesn't</p>
+                                    </div>
+                                    <div class="p-4 bg-amber-50 rounded-lg border-l-4 border-amber-500">
+                                        <p class="font-semibold text-amber-800 mb-2">Type II Error (False Negative)</p>
+                                        <p class="text-slate-700 mb-2">Failing to reject a false null hypothesis</p>
+                                        <p class="text-sm text-slate-600">Probability = β</p>
+                                        <p class="text-sm text-slate-600 italic">Example: Concluding a treatment doesn't work when it does</p>
+                                    </div>
+                                    <div class="p-4 bg-green-50 rounded-lg border-l-4 border-green-500">
+                                        <p class="font-semibold text-green-800 mb-2">Statistical Power</p>
+                                        <p class="text-slate-700">Probability of correctly rejecting a false null hypothesis</p>
+                                        <p class="text-sm text-slate-600">Power = 1 - β</p>
+                                        <p class="text-sm text-slate-600">Influenced by sample size, effect size, and α</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 9: Examples -->
+            <section id="slide9" class="slide bg-lines">
+                <div class="slide-header">
+                    <h2 class="slide-title">Research Goals & Hypotheses: Examples</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="space-y-8">
+                        <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
+                            <h3 class="text-xl font-semibold mb-4 text-center text-slate-800">Example 1: Business Research</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="p-4 bg-blue-50 rounded-lg">
+                                    <p class="font-semibold text-blue-800 mb-2">Research Goal:</p>
+                                    <p class="text-slate-700">To determine the impact of leadership style on employee job satisfaction in multinational corporations.</p>
+                                </div>
+                                <div class="p-4 bg-green-50 rounded-lg">
+                                    <p class="font-semibold text-green-800 mb-2">Research Question:</p>
+                                    <p class="text-slate-700">How does transformational leadership affect employee job satisfaction compared to transactional leadership?</p>
+                                </div>
+                                <div class="p-4 bg-amber-50 rounded-lg">
+                                    <p class="font-semibold text-amber-800 mb-2">Hypothesis:</p>
+                                    <p class="text-slate-700">Employees under transformational leadership report higher job satisfaction scores than those under transactional leadership.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
+                            <h3 class="text-xl font-semibold mb-4 text-center text-slate-800">Example 2: Marketing Research</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="p-4 bg-blue-50 rounded-lg">
+                                    <p class="font-semibold text-blue-800 mb-2">Research Goal:</p>
+                                    <p class="text-slate-700">To examine the effectiveness of social media marketing on consumer purchase intentions.</p>
+                                </div>
+                                <div class="p-4 bg-green-50 rounded-lg">
+                                    <p class="font-semibold text-green-800 mb-2">Research Question:</p>
+                                    <p class="text-slate-700">Does the frequency of social media advertisements influence purchase intentions among young adults?</p>
+                                </div>
+                                <div class="p-4 bg-amber-50 rounded-lg">
+                                    <p class="font-semibold text-amber-800 mb-2">Hypothesis:</p>
+                                    <p class="text-slate-700">Higher frequency of social media advertisements leads to increased purchase intentions among consumers aged 18-30.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
+                            <h3 class="text-xl font-semibold mb-4 text-center text-slate-800">Example 3: Educational Research</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="p-4 bg-blue-50 rounded-lg">
+                                    <p class="font-semibold text-blue-800 mb-2">Research Goal:</p>
+                                    <p class="text-slate-700">To investigate the relationship between online learning platforms and academic performance.</p>
+                                </div>
+                                <div class="p-4 bg-green-50 rounded-lg">
+                                    <p class="font-semibold text-green-800 mb-2">Research Question:</p>
+                                    <p class="text-slate-700">How does the use of interactive online learning platforms affect student engagement and academic performance?</p>
+                                </div>
+                                <div class="p-4 bg-amber-50 rounded-lg">
+                                    <p class="font-semibold text-amber-800 mb-2">Hypothesis:</p>
+                                    <p class="text-slate-700">Students using interactive online learning platforms will show higher engagement levels and achieve better academic performance than those using traditional platforms.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 10: Summary -->
+            <section id="slide10" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Key Takeaways</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="flex flex-col md:flex-row gap-8">
+                        <div class="w-full md:w-1/2">
+                            <div class="callout callout-info mb-6">
+                                <p class="font-semibold text-lg">Research Goals & Hypotheses form the foundation of any research project</p>
+                            </div>
+                            <h3 class="text-xl font-semibold mb-4 text-slate-800">Key Points:</h3>
+                            <ul class="space-y-3">
+                                <li class="flex items-start">
+                                    <i class="fas fa-lightbulb text-yellow-500 mt-1 mr-2"></i>
+                                    <div>
+                                        <span class="font-semibold">Clear Goals:</span> Use SMART framework for effective research objectives
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-lightbulb text-yellow-500 mt-1 mr-2"></i>
+                                    <div>
+                                        <span class="font-semibold">Focused Questions:</span> Develop specific, researchable questions that guide your study
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-lightbulb text-yellow-500 mt-1 mr-2"></i>
+                                    <div>
+                                        <span class="font-semibold">Testable Hypotheses:</span> Formulate clear, falsifiable predictions about variable relationships
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-lightbulb text-yellow-500 mt-1 mr-2"></i>
+                                    <div>
+                                        <span class="font-semibold">Variable Identification:</span> Clearly define independent, dependent, and control variables
+                                    </div>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-lightbulb text-yellow-500 mt-1 mr-2"></i>
+                                    <div>
+                                        <span class="font-semibold">Rigorous Testing:</span> Follow systematic hypothesis testing procedures to validate findings
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="w-full md:w-1/2">
+                            <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200 h-full">
+                                <h3 class="text-xl font-semibold mb-4 text-center text-slate-800">Best Practices</h3>
+                                <div class="space-y-4">
+                                    <div class="p-4 bg-blue-50 rounded-lg">
+                                        <p class="font-semibold text-blue-800 mb-2">Align Goals, Questions & Hypotheses</p>
+                                        <p class="text-slate-700">Ensure all components are logically connected and mutually supportive</p>
+                                    </div>
+                                    <div class="p-4 bg-green-50 rounded-lg">
+                                        <p class="font-semibold text-green-800 mb-2">Ground in Existing Literature</p>
+                                        <p class="text-slate-700">Base your hypotheses on theoretical frameworks and previous research</p>
+                                    </div>
+                                    <div class="p-4 bg-amber-50 rounded-lg">
+                                        <p class="font-semibold text-amber-800 mb-2">Consider Practical Constraints</p>
+                                        <p class="text-slate-700">Ensure your research goals and hypotheses are achievable within available resources</p>
+                                    </div>
+                                    <div class="p-4 bg-purple-50 rounded-lg">
+                                        <p class="font-semibold text-purple-800 mb-2">Iterative Refinement</p>
+                                        <p class="text-slate-700">Continuously refine goals and hypotheses as your understanding evolves</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-8 text-center">
+                        <p class="text-xl font-semibold text-slate-800">Thank You!</p>
+                        <p class="text-slate-600">Questions & Discussion</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="/slide.js"></script>
+</body>
+</html>
