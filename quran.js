@@ -1,4 +1,4 @@
-// quran.js v0.5
+// quran.js v0.5 validated
 const API_URL = "https://script.google.com/macros/s/AKfycbzlqWMArBZkIfPWVNP6KuM0wyy2u3zvN3INFKzoQMI5MHiRQHQTVehC-9Mi7HiwK3q86A/exec";
 
 // Check if API URL is set
@@ -136,7 +136,7 @@ function setupEventListeners() {
         });
     }
     
-    // Parent label change - FIXED: Added proper null checks
+    // Parent label change
     if (elements.parentLabelSelect) {
         elements.parentLabelSelect.addEventListener('change', () => {
             const parentId = elements.parentLabelSelect.value;
@@ -779,7 +779,6 @@ function showParsedPreview() {
     }
 }
 
-// FIXED: Improved addSelectedLabel function
 function addSelectedLabel() {
     if (!elements.parentLabelSelect) {
         console.error('Parent label select element not found');
@@ -820,7 +819,6 @@ function addSelectedLabel() {
     showSuccess('Label added successfully!');
 }
 
-// FIXED: Improved createNewLabel function
 function createNewLabel() {
     if (!elements.newLabelInput || !elements.newLabelType) {
         console.error('New label input or type element not found');
@@ -875,7 +873,6 @@ function createNewLabel() {
     showSuccess('Label created successfully!');
 }
 
-// FIXED: Improved updateSelectedLabels function
 function updateSelectedLabels() {
     if (!elements.labelsContainer) {
         console.error('Labels container element not found');
@@ -962,55 +959,89 @@ function updateSelectedLabels() {
     }
 }
 
+// FIXED: Improved saveAyah function with better validation
 async function saveAyah() {
+    // Debug: Log the current state
+    console.log('Saving ayah - Current state:');
+    console.log('parsedAyahData:', parsedAyahData);
+    console.log('selectedLabels:', selectedLabels);
+    console.log('Elements:');
+    console.log('- surahInput:', elements.surahInput ? elements.surahInput.value : 'element not found');
+    console.log('- ayahInput:', elements.ayahInput ? elements.ayahInput.value : 'element not found');
+    console.log('- arabicInput:', elements.arabicInput ? elements.arabicInput.value : 'element not found');
+    console.log('- englishInput:', elements.englishInput ? elements.englishInput.value : 'element not found');
+    console.log('- sourceInput:', elements.sourceInput ? elements.sourceInput.value : 'element not found');
+    
+    // Use parsedAyahData if available, otherwise use form values
+    const surah = parsedAyahData ? parsedAyahData.SURAH : 
+                 (elements.surahInput ? elements.surahInput.value.trim() : '');
+    
+    const ayah = parsedAyahData ? parsedAyahData.AYAH : 
+                (elements.ayahInput ? elements.ayahInput.value.trim() : '');
+    
+    const arabic = parsedAyahData ? parsedAyahData.ARB : 
+                  (elements.arabicInput ? elements.arabicInput.value.trim() : '');
+    
+    const english = parsedAyahData ? parsedAyahData.ENG : 
+                   (elements.englishInput ? elements.englishInput.value.trim() : '');
+    
+    const source = parsedAyahData ? parsedAyahData.SOURCE : 
+                  (elements.sourceInput ? elements.sourceInput.value.trim() : '');
+    
     // Validate form
-    if (!elements.surahInput || !elements.surahInput.value.trim()) {
+    if (!surah) {
         showError('Please enter surah information');
+        console.error('Validation failed: Surah is empty');
         return;
     }
     
-    if (!elements.ayahInput || !elements.ayahInput.value.trim()) {
+    if (!ayah) {
         showError('Please enter ayah number');
+        console.error('Validation failed: Ayah number is empty');
         return;
     }
     
-    if (!elements.arabicInput || !elements.arabicInput.value.trim()) {
+    if (!arabic) {
         showError('Please enter Arabic text');
+        console.error('Validation failed: Arabic text is empty');
         return;
     }
     
-    if (!elements.englishInput || !elements.englishInput.value.trim()) {
+    if (!english) {
         showError('Please enter English translation');
+        console.error('Validation failed: English translation is empty');
         return;
     }
     
-    if (!elements.sourceInput || !elements.sourceInput.value.trim()) {
+    if (!source) {
         showError('Please enter source URL');
+        console.error('Validation failed: Source URL is empty');
         return;
     }
     
     if (selectedLabels.length === 0) {
         showError('Please add at least one label');
+        console.error('Validation failed: No labels selected');
         return;
     }
     
     // Create ayah object
-    const ayah = {
-        SURAH: elements.surahInput.value.trim(),
-        AYAH: elements.ayahInput.value.trim(),
-        ARB: elements.arabicInput.value.trim(),
-        ENG: elements.englishInput.value.trim(),
+    const ayahData = {
+        SURAH: surah,
+        AYAH: ayah,
+        ARB: arabic,
+        ENG: english,
         IDN: '', // Optional field
         LABEL: selectedLabels.join(','),
-        SOURCE: elements.sourceInput.value.trim()
+        SOURCE: source
     };
     
     // If editing, include the ID
     if (editingAyahId) {
-        ayah.Id = editingAyahId;
+        ayahData.Id = editingAyahId;
     }
     
-    console.log('Saving ayah:', ayah);
+    console.log('Saving ayah data:', ayahData);
     
     // Show loading state
     if (elements.saveButton) {
@@ -1019,7 +1050,7 @@ async function saveAyah() {
     }
     
     // Save to Google Sheet
-    const success = await saveAyahToSheet(ayah);
+    const success = await saveAyahToSheet(ayahData);
     
     // Reset button state
     if (elements.saveButton) {
