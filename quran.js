@@ -1,9 +1,9 @@
-// quran.js v0.3
-const API_URL = "https://script.google.com/macros/s/AKfycbzlqWMArBZkIfPWVNP6KuM0wyy2u3zvN3INFKzoQMI5MHiRQHQTVehC-9Mi7HiwK3q86A/exec"; // Replace with your deployed Google Apps Script URL
+// quran.js v0.4
+const API_URL = "https://script.google.com/macros/s/AKfycbzlqWMArBZkIfPWVNP6KuM0wyy2u3zvN3INFKzoQMI5MHiRQHQTVehC-9Mi7HiwK3q86A/exec";
 
-// Check if API URL is still the default
+// Check if API URL is set
 function isApiUrlSet() {
-    return API_URL !== "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE";
+    return API_URL && API_URL !== "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE";
 }
 
 // State
@@ -13,64 +13,81 @@ let selectedLabels = [];
 let editingAyahId = null;
 let parsedAyahData = null;
 
-// DOM Elements
-const elements = {
-    // Ayah list
-    ayahList: document.getElementById('ayahList'),
-    loadingIndicator: document.getElementById('loadingIndicator'),
-    emptyState: document.getElementById('emptyState'),
-    
-    // Search and filter
-    searchInput: document.getElementById('searchInput'),
-    surahFilter: document.getElementById('surahFilter'),
-    labelFilter: document.getElementById('labelFilter'),
-    
-    // Modals
-    ayahModal: document.getElementById('ayahModal'),
-    labelsModal: document.getElementById('labelsModal'),
-    
-    // Ayah form
-    modalTitle: document.getElementById('modalTitle'),
-    pasteInput: document.getElementById('pasteInput'),
-    parseButton: document.getElementById('parseButton'),
-    surahInput: document.getElementById('surahInput'),
-    ayahInput: document.getElementById('ayahInput'),
-    arabicInput: document.getElementById('arabicInput'),
-    englishInput: document.getElementById('englishInput'),
-    sourceInput: document.getElementById('sourceInput'),
-    labelsContainer: document.getElementById('labelsContainer'),
-    parentLabelSelect: document.getElementById('parentLabelSelect'),
-    childLabelSelect: document.getElementById('childLabelSelect'),
-    addLabelButton: document.getElementById('addLabelButton'),
-    newLabelInput: document.getElementById('newLabelInput'),
-    newLabelType: document.getElementById('newLabelType'),
-    newLabelParent: document.getElementById('newLabelParent'),
-    createLabelButton: document.getElementById('createLabelButton'),
-    
-    // Buttons
-    addNewAyah: document.getElementById('addNewAyah'),
-    manageLabels: document.getElementById('manageLabels'),
-    closeModal: document.getElementById('closeModal'),
-    cancelButton: document.getElementById('cancelButton'),
-    saveButton: document.getElementById('saveButton'),
-    closeLabelsModal: document.getElementById('closeLabelsModal'),
-    closeLabelsModalButton: document.getElementById('closeLabelsModalButton'),
-    
-    // Labels management
-    newLabelNameInput: document.getElementById('newLabelNameInput'),
-    newLabelParentSelect: document.getElementById('newLabelParentSelect'),
-    addNewLabelButton: document.getElementById('addNewLabelButton'),
-    labelsHierarchy: document.getElementById('labelsHierarchy'),
-    
-    // Parsed ayah preview
-    parsedPreview: document.getElementById('parsedPreview'),
-    
-    // API URL warning
-    apiUrlWarning: document.getElementById('apiUrlWarning')
-};
+// DOM Elements - will be initialized after DOM loads
+let elements = {};
 
-// Event Listeners
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize DOM elements
+function initializeElements() {
+    elements = {
+        // Ayah list
+        ayahList: document.getElementById('ayahList'),
+        loadingIndicator: document.getElementById('loadingIndicator'),
+        emptyState: document.getElementById('emptyState'),
+        
+        // Search and filter
+        searchInput: document.getElementById('searchInput'),
+        surahFilter: document.getElementById('surahFilter'),
+        labelFilter: document.getElementById('labelFilter'),
+        
+        // Modals
+        ayahModal: document.getElementById('ayahModal'),
+        labelsModal: document.getElementById('labelsModal'),
+        
+        // Ayah form
+        modalTitle: document.getElementById('modalTitle'),
+        pasteInput: document.getElementById('pasteInput'),
+        parseButton: document.getElementById('parseButton'),
+        surahInput: document.getElementById('surahInput'),
+        ayahInput: document.getElementById('ayahInput'),
+        arabicInput: document.getElementById('arabicInput'),
+        englishInput: document.getElementById('englishInput'),
+        sourceInput: document.getElementById('sourceInput'),
+        labelsContainer: document.getElementById('labelsContainer'),
+        parentLabelSelect: document.getElementById('parentLabelSelect'),
+        childLabelSelect: document.getElementById('childLabelSelect'),
+        addLabelButton: document.getElementById('addLabelButton'),
+        newLabelInput: document.getElementById('newLabelInput'),
+        newLabelType: document.getElementById('newLabelType'),
+        newLabelParent: document.getElementById('newLabelParent'),
+        createLabelButton: document.getElementById('createLabelButton'),
+        
+        // Buttons
+        addNewAyah: document.getElementById('addNewAyah'),
+        manageLabels: document.getElementById('manageLabels'),
+        closeModal: document.getElementById('closeModal'),
+        cancelButton: document.getElementById('cancelButton'),
+        saveButton: document.getElementById('saveButton'),
+        closeLabelsModal: document.getElementById('closeLabelsModal'),
+        closeLabelsModalButton: document.getElementById('closeLabelsModalButton'),
+        
+        // Labels management
+        newLabelNameInput: document.getElementById('newLabelNameInput'),
+        newLabelParentSelect: document.getElementById('newLabelParentSelect'),
+        addNewLabelButton: document.getElementById('addNewLabelButton'),
+        labelsHierarchy: document.getElementById('labelsHierarchy'),
+        
+        // Parsed ayah preview
+        parsedPreview: document.getElementById('parsedPreview'),
+        
+        // Step indicators
+        step1Indicator: document.getElementById('step1Indicator'),
+        step2Indicator: document.getElementById('step2Indicator'),
+        step3Indicator: document.getElementById('step3Indicator'),
+        connector1: document.getElementById('connector1'),
+        connector2: document.getElementById('connector2'),
+        
+        // Review section
+        reviewSurah: document.getElementById('reviewSurah'),
+        reviewAyah: document.getElementById('reviewAyah'),
+        reviewLabels: document.getElementById('reviewLabels')
+    };
+}
+
+// Initialize the app
+function initializeApp() {
+    // Initialize DOM elements
+    initializeElements();
+    
     // Check if API URL is set
     if (!isApiUrlSet()) {
         showApiUrlWarning();
@@ -79,6 +96,12 @@ document.addEventListener('DOMContentLoaded', () => {
         loadLabels();
     }
     
+    // Set up event listeners
+    setupEventListeners();
+}
+
+// Set up all event listeners
+function setupEventListeners() {
     // Modal controls
     elements.addNewAyah.addEventListener('click', openAddAyahModal);
     elements.manageLabels.addEventListener('click', openLabelsModal);
@@ -116,7 +139,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const parentId = elements.parentLabelSelect.value;
         populateChildSelect(parentId);
     });
-});
+}
+
+// Event Listeners - will be set up after DOM loads
+document.addEventListener('DOMContentLoaded', initializeApp);
 
 // Helper function to check if text contains Arabic characters
 function isArabic(text) {
@@ -468,6 +494,7 @@ function openAddAyahModal() {
     editingAyahId = null;
     elements.modalTitle.textContent = 'Add New Ayah';
     resetAyahForm();
+    resetStepIndicators();
     elements.ayahModal.classList.remove('hidden');
     
     // Focus on the paste input and set up event listeners
@@ -475,6 +502,16 @@ function openAddAyahModal() {
         elements.pasteInput.focus();
         setupPasteEventListeners();
     }, 100);
+}
+
+function resetStepIndicators() {
+    // Reset step indicators
+    elements.step1Indicator.classList.add('active');
+    elements.step1Indicator.classList.remove('completed');
+    elements.step2Indicator.classList.remove('active', 'completed');
+    elements.step3Indicator.classList.remove('active', 'completed');
+    elements.connector1.classList.remove('completed');
+    elements.connector2.classList.remove('completed');
 }
 
 function setupPasteEventListeners() {
@@ -500,6 +537,7 @@ function handlePaste(e) {
 function handleKeyDown(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault(); // Prevent new line
+        
         if (parsedAyahData) {
             // Check if at least one label is selected
             if (selectedLabels.length === 0) {
@@ -520,8 +558,10 @@ function closeAyahModal() {
     resetAyahForm();
     
     // Remove event listeners to prevent memory leaks
-    elements.pasteInput.removeEventListener('paste', handlePaste);
-    elements.pasteInput.removeEventListener('keydown', handleKeyDown);
+    if (elements.pasteInput) {
+        elements.pasteInput.removeEventListener('paste', handlePaste);
+        elements.pasteInput.removeEventListener('keydown', handleKeyDown);
+    }
 }
 
 function openLabelsModal() {
@@ -534,12 +574,13 @@ function closeLabelsModal() {
 }
 
 function resetAyahForm() {
-    elements.pasteInput.value = '';
-    elements.surahInput.value = '';
-    elements.ayahInput.value = '';
-    elements.arabicInput.value = '';
-    elements.englishInput.value = '';
-    elements.sourceInput.value = '';
+    if (elements.pasteInput) elements.pasteInput.value = '';
+    if (elements.surahInput) elements.surahInput.value = '';
+    if (elements.ayahInput) elements.ayahInput.value = '';
+    if (elements.arabicInput) elements.arabicInput.value = '';
+    if (elements.englishInput) elements.englishInput.value = '';
+    if (elements.sourceInput) elements.sourceInput.value = '';
+    
     selectedLabels = [];
     parsedAyahData = null;
     updateSelectedLabels();
@@ -552,6 +593,11 @@ function resetAyahForm() {
     
     // Reset save button state
     updateSaveButtonState();
+    
+    // Reset review section
+    if (elements.reviewSurah) elements.reviewSurah.textContent = '-';
+    if (elements.reviewAyah) elements.reviewAyah.textContent = '-';
+    if (elements.reviewLabels) elements.reviewLabels.textContent = '-';
 }
 
 // Ayah Form Functions
@@ -613,11 +659,11 @@ function parsePastedAyah() {
         }
         
         // Update form fields
-        elements.surahInput.value = `${surahNumber}. ${surahName}`;
-        elements.ayahInput.value = ayahNumber;
-        elements.arabicInput.value = arabicText;
-        elements.englishInput.value = englishText;
-        elements.sourceInput.value = sourceUrl;
+        if (elements.surahInput) elements.surahInput.value = `${surahNumber}. ${surahName}`;
+        if (elements.ayahInput) elements.ayahInput.value = ayahNumber;
+        if (elements.arabicInput) elements.arabicInput.value = arabicText;
+        if (elements.englishInput) elements.englishInput.value = englishText;
+        if (elements.sourceInput) elements.sourceInput.value = sourceUrl;
         
         // Store parsed data
         parsedAyahData = {
@@ -628,8 +674,18 @@ function parsePastedAyah() {
             SOURCE: sourceUrl
         };
         
+        // Update step indicators
+        elements.step1Indicator.classList.remove('active');
+        elements.step1Indicator.classList.add('completed');
+        elements.step2Indicator.classList.add('active');
+        elements.connector1.classList.add('completed');
+        
         // Show parsed preview
         showParsedPreview();
+        
+        // Update review section
+        if (elements.reviewSurah) elements.reviewSurah.textContent = parsedAyahData.SURAH;
+        if (elements.reviewAyah) elements.reviewAyah.textContent = parsedAyahData.AYAH;
         
         // Update save button state
         updateSaveButtonState();
@@ -643,12 +699,14 @@ function parsePastedAyah() {
 
 function updateSaveButtonState() {
     // Enable save button only if we have parsed data and at least one label
-    if (parsedAyahData && selectedLabels.length > 0) {
-        elements.saveButton.disabled = false;
-        elements.saveButton.classList.remove('opacity-50', 'cursor-not-allowed');
-    } else {
-        elements.saveButton.disabled = true;
-        elements.saveButton.classList.add('opacity-50', 'cursor-not-allowed');
+    if (elements.saveButton) {
+        if (parsedAyahData && selectedLabels.length > 0) {
+            elements.saveButton.disabled = false;
+            elements.saveButton.classList.remove('opacity-50', 'cursor-not-allowed');
+        } else {
+            elements.saveButton.disabled = true;
+            elements.saveButton.classList.add('opacity-50', 'cursor-not-allowed');
+        }
     }
 }
 
@@ -660,11 +718,13 @@ function showParsedPreview() {
         previewContainer.className = 'mt-4 p-4 bg-indigo-50 rounded-lg border border-indigo-200 hidden';
         
         // Insert after the paste textarea
-        elements.pasteInput.parentNode.insertBefore(previewContainer, elements.pasteInput.nextSibling);
-        elements.parsedPreview = previewContainer;
+        if (elements.pasteInput && elements.pasteInput.parentNode) {
+            elements.pasteInput.parentNode.insertBefore(previewContainer, elements.pasteInput.nextSibling);
+            elements.parsedPreview = previewContainer;
+        }
     }
     
-    if (parsedAyahData) {
+    if (parsedAyahData && elements.parsedPreview) {
         elements.parsedPreview.innerHTML = `
             <h4 class="font-medium text-indigo-800 mb-2">Parsed Ayah Preview:</h4>
             <div class="text-sm">
@@ -677,7 +737,7 @@ function showParsedPreview() {
             <p class="mt-2 text-indigo-700 font-medium">Now add at least one label below, then press Enter to save</p>
         `;
         elements.parsedPreview.classList.remove('hidden');
-    } else {
+    } else if (elements.parsedPreview) {
         elements.parsedPreview.classList.add('hidden');
     }
 }
@@ -757,6 +817,8 @@ function createNewLabel() {
 }
 
 function updateSelectedLabels() {
+    if (!elements.labelsContainer) return;
+    
     elements.labelsContainer.innerHTML = '';
     
     if (selectedLabels.length === 0) {
@@ -786,31 +848,54 @@ function updateSelectedLabels() {
             elements.labelsContainer.appendChild(labelTag);
         }
     });
+    
+    // Update review section
+    if (elements.reviewLabels) {
+        const labelNames = selectedLabels.map(id => {
+            const label = labels.find(l => l.id === id);
+            return label ? label.name : '';
+        }).filter(name => name).join(', ');
+        
+        elements.reviewLabels.textContent = labelNames || '-';
+    }
+    
+    // Update step indicators if we have labels
+    if (selectedLabels.length > 0) {
+        elements.step2Indicator.classList.remove('active');
+        elements.step2Indicator.classList.add('completed');
+        elements.step3Indicator.classList.add('active');
+        elements.connector2.classList.add('completed');
+    } else {
+        elements.step2Indicator.classList.add('active');
+        elements.step2Indicator.classList.remove('completed');
+        elements.step3Indicator.classList.remove('active', 'completed');
+        elements.connector2.classList.remove('completed');
+    }
 }
 
 async function saveAyah() {
     // Validate form
-    if (!elements.surahInput.value.trim()) {
+    if (!elements.surahInput || !elements.surahInput.value.trim()) {
         showError('Please enter surah information');
         return;
     }
     
-    if (!elements.ayahInput.value.trim()) {
+    if (!elements.ayahInput || !elements.ayahInput.value.trim()) {
         showError('Please enter ayah number');
         return;
     }
     
-    if (!elements.arabicInput.value.trim()) {
+    if (!elements.arabicInput || !elements.arabicInput.value.trim()) {
         showError('Please enter Arabic text');
         return;
     }
     
-    if (!elements.englishInput.value.trim()) {
+    if (!elements.englishInput || !elements.englishInput.value.trim()) {
         showError('Please enter English translation');
         return;
     }
     
-    if (!elements.sourceInput.value.trim()) {
+    if (!elements.sourceInput || !elements.sourceInput.value.trim()) {
         showError('Please enter source URL');
         return;
     }
@@ -837,15 +922,19 @@ async function saveAyah() {
     }
     
     // Show loading state
-    elements.saveButton.disabled = true;
-    elements.saveButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+    if (elements.saveButton) {
+        elements.saveButton.disabled = true;
+        elements.saveButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+    }
     
     // Save to Google Sheet
     const success = await saveAyahToSheet(ayah);
     
     // Reset button state
-    elements.saveButton.disabled = false;
-    elements.saveButton.innerHTML = 'Save Ayah';
+    if (elements.saveButton) {
+        elements.saveButton.disabled = false;
+        elements.saveButton.innerHTML = 'Save Ayah';
+    }
     
     if (success) {
         showSuccess('Ayah saved successfully!');
@@ -868,11 +957,11 @@ function editAyah(ayahId) {
     elements.modalTitle.textContent = 'Edit Ayah';
     
     // Populate form
-    elements.surahInput.value = ayah.SURAH || '';
-    elements.ayahInput.value = ayah.AYAH || '';
-    elements.arabicInput.value = ayah.ARB || '';
-    elements.englishInput.value = ayah.ENG || '';
-    elements.sourceInput.value = ayah.SOURCE || '';
+    if (elements.surahInput) elements.surahInput.value = ayah.SURAH || '';
+    if (elements.ayahInput) elements.ayahInput.value = ayah.AYAH || '';
+    if (elements.arabicInput) elements.arabicInput.value = ayah.ARB || '';
+    if (elements.englishInput) elements.englishInput.value = ayah.ENG || '';
+    if (elements.sourceInput) elements.sourceInput.value = ayah.SOURCE || '';
     
     // Parse labels
     selectedLabels = ayah.LABEL ? ayah.LABEL.split(',').map(label => label.trim()) : [];
@@ -937,6 +1026,8 @@ function addNewLabel() {
 }
 
 function displayLabelsHierarchy() {
+    if (!elements.labelsHierarchy) return;
+    
     elements.labelsHierarchy.innerHTML = '';
     
     // Get parent labels
