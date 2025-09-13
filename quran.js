@@ -1,4 +1,4 @@
-// quran.js v0.4
+// quran.js v0.5
 const API_URL = "https://script.google.com/macros/s/AKfycbzlqWMArBZkIfPWVNP6KuM0wyy2u3zvN3INFKzoQMI5MHiRQHQTVehC-9Mi7HiwK3q86A/exec";
 
 // Check if API URL is set
@@ -103,42 +103,46 @@ function initializeApp() {
 // Set up all event listeners
 function setupEventListeners() {
     // Modal controls
-    elements.addNewAyah.addEventListener('click', openAddAyahModal);
-    elements.manageLabels.addEventListener('click', openLabelsModal);
-    elements.closeModal.addEventListener('click', closeAyahModal);
-    elements.cancelButton.addEventListener('click', closeAyahModal);
-    elements.closeLabelsModal.addEventListener('click', closeLabelsModal);
-    elements.closeLabelsModalButton.addEventListener('click', closeLabelsModal);
+    if (elements.addNewAyah) elements.addNewAyah.addEventListener('click', openAddAyahModal);
+    if (elements.manageLabels) elements.manageLabels.addEventListener('click', openLabelsModal);
+    if (elements.closeModal) elements.closeModal.addEventListener('click', closeAyahModal);
+    if (elements.cancelButton) elements.cancelButton.addEventListener('click', closeAyahModal);
+    if (elements.closeLabelsModal) elements.closeLabelsModal.addEventListener('click', closeLabelsModal);
+    if (elements.closeLabelsModalButton) elements.closeLabelsModalButton.addEventListener('click', closeLabelsModal);
     
     // Ayah form
-    elements.parseButton.addEventListener('click', parsePastedAyah);
-    elements.saveButton.addEventListener('click', saveAyah);
-    elements.addLabelButton.addEventListener('click', addSelectedLabel);
-    elements.createLabelButton.addEventListener('click', createNewLabel);
+    if (elements.parseButton) elements.parseButton.addEventListener('click', parsePastedAyah);
+    if (elements.saveButton) elements.saveButton.addEventListener('click', saveAyah);
+    if (elements.addLabelButton) elements.addLabelButton.addEventListener('click', addSelectedLabel);
+    if (elements.createLabelButton) elements.createLabelButton.addEventListener('click', createNewLabel);
     
     // Labels management
-    elements.addNewLabelButton.addEventListener('click', addNewLabel);
+    if (elements.addNewLabelButton) elements.addNewLabelButton.addEventListener('click', addNewLabel);
     
     // Search and filter
-    elements.searchInput.addEventListener('input', filterAyahs);
-    elements.surahFilter.addEventListener('change', filterAyahs);
-    elements.labelFilter.addEventListener('change', filterAyahs);
+    if (elements.searchInput) elements.searchInput.addEventListener('input', filterAyahs);
+    if (elements.surahFilter) elements.surahFilter.addEventListener('change', filterAyahs);
+    if (elements.labelFilter) elements.labelFilter.addEventListener('change', filterAyahs);
     
     // Label type change
-    elements.newLabelType.addEventListener('change', () => {
-        if (elements.newLabelType.value === 'child') {
-            elements.newLabelParent.classList.remove('hidden');
-            populateParentSelect(elements.newLabelParent, labels);
-        } else {
-            elements.newLabelParent.classList.add('hidden');
-        }
-    });
+    if (elements.newLabelType) {
+        elements.newLabelType.addEventListener('change', () => {
+            if (elements.newLabelType.value === 'child') {
+                if (elements.newLabelParent) elements.newLabelParent.classList.remove('hidden');
+                populateParentSelect(elements.newLabelParent, labels);
+            } else {
+                if (elements.newLabelParent) elements.newLabelParent.classList.add('hidden');
+            }
+        });
+    }
     
-    // Parent label change
-    elements.parentLabelSelect.addEventListener('change', () => {
-        const parentId = elements.parentLabelSelect.value;
-        populateChildSelect(parentId);
-    });
+    // Parent label change - FIXED: Added proper null checks
+    if (elements.parentLabelSelect) {
+        elements.parentLabelSelect.addEventListener('change', () => {
+            const parentId = elements.parentLabelSelect.value;
+            populateChildSelect(parentId);
+        });
+    }
 }
 
 // Event Listeners - will be set up after DOM loads
@@ -202,8 +206,8 @@ async function loadLabels() {
         ];
         
         populateLabelFilters();
-        populateParentSelect(elements.parentLabelSelect, labels);
-        populateParentSelect(elements.newLabelParentSelect, labels);
+        if (elements.parentLabelSelect) populateParentSelect(elements.parentLabelSelect, labels);
+        if (elements.newLabelParentSelect) populateParentSelect(elements.newLabelParentSelect, labels);
     } catch (error) {
         console.error('Error loading labels:', error);
     }
@@ -336,12 +340,12 @@ function showSetupInstructions() {
 }
 
 function showLoading() {
-    elements.loadingIndicator.classList.remove('hidden');
-    elements.emptyState.classList.add('hidden');
+    if (elements.loadingIndicator) elements.loadingIndicator.classList.remove('hidden');
+    if (elements.emptyState) elements.emptyState.classList.add('hidden');
 }
 
 function hideLoading() {
-    elements.loadingIndicator.classList.add('hidden');
+    if (elements.loadingIndicator) elements.loadingIndicator.classList.add('hidden');
 }
 
 function showError(message) {
@@ -369,14 +373,16 @@ function showSuccess(message) {
 }
 
 function displayAyahs(ayahsToDisplay) {
+    if (!elements.ayahList) return;
+    
     elements.ayahList.innerHTML = '';
     
     if (ayahsToDisplay.length === 0) {
-        elements.emptyState.classList.remove('hidden');
+        if (elements.emptyState) elements.emptyState.classList.remove('hidden');
         return;
     }
     
-    elements.emptyState.classList.add('hidden');
+    if (elements.emptyState) elements.emptyState.classList.add('hidden');
     
     ayahsToDisplay.forEach(ayah => {
         const ayahElement = createAyahElement(ayah);
@@ -435,6 +441,8 @@ function createAyahElement(ayah) {
 }
 
 function populateSurahFilter() {
+    if (!elements.surahFilter) return;
+    
     const surahSet = new Set();
     
     ayahs.forEach(ayah => {
@@ -454,6 +462,8 @@ function populateSurahFilter() {
 }
 
 function populateLabelFilters() {
+    if (!elements.labelFilter) return;
+    
     elements.labelFilter.innerHTML = '<option value="">All Labels</option>';
     
     // Add parent labels
@@ -466,6 +476,8 @@ function populateLabelFilters() {
 }
 
 function populateParentSelect(selectElement, labelsList) {
+    if (!selectElement) return;
+    
     selectElement.innerHTML = '<option value="">Select Parent Label</option>';
     
     labelsList.filter(label => !label.parentId).forEach(label => {
@@ -477,6 +489,8 @@ function populateParentSelect(selectElement, labelsList) {
 }
 
 function populateChildSelect(parentId) {
+    if (!elements.childLabelSelect) return;
+    
     elements.childLabelSelect.innerHTML = '<option value="">Select Child Label</option>';
     
     if (parentId) {
@@ -492,29 +506,43 @@ function populateChildSelect(parentId) {
 // Modal Functions
 function openAddAyahModal() {
     editingAyahId = null;
-    elements.modalTitle.textContent = 'Add New Ayah';
+    if (elements.modalTitle) elements.modalTitle.textContent = 'Add New Ayah';
     resetAyahForm();
     resetStepIndicators();
-    elements.ayahModal.classList.remove('hidden');
+    if (elements.ayahModal) elements.ayahModal.classList.remove('hidden');
     
     // Focus on the paste input and set up event listeners
     setTimeout(() => {
-        elements.pasteInput.focus();
-        setupPasteEventListeners();
+        if (elements.pasteInput) {
+            elements.pasteInput.focus();
+            setupPasteEventListeners();
+        }
     }, 100);
 }
 
 function resetStepIndicators() {
     // Reset step indicators
-    elements.step1Indicator.classList.add('active');
-    elements.step1Indicator.classList.remove('completed');
-    elements.step2Indicator.classList.remove('active', 'completed');
-    elements.step3Indicator.classList.remove('active', 'completed');
-    elements.connector1.classList.remove('completed');
-    elements.connector2.classList.remove('completed');
+    if (elements.step1Indicator) {
+        elements.step1Indicator.classList.add('active');
+        elements.step1Indicator.classList.remove('completed');
+    }
+    if (elements.step2Indicator) {
+        elements.step2Indicator.classList.remove('active', 'completed');
+    }
+    if (elements.step3Indicator) {
+        elements.step3Indicator.classList.remove('active', 'completed');
+    }
+    if (elements.connector1) {
+        elements.connector1.classList.remove('completed');
+    }
+    if (elements.connector2) {
+        elements.connector2.classList.remove('completed');
+    }
 }
 
 function setupPasteEventListeners() {
+    if (!elements.pasteInput) return;
+    
     // Remove existing event listeners to prevent duplicates
     elements.pasteInput.removeEventListener('paste', handlePaste);
     elements.pasteInput.removeEventListener('keydown', handleKeyDown);
@@ -543,7 +571,8 @@ function handleKeyDown(e) {
             if (selectedLabels.length === 0) {
                 showError('Please add at least one label before saving');
                 // Scroll to labels section
-                document.getElementById('labelsSection').scrollIntoView({ behavior: 'smooth' });
+                const labelsSection = document.getElementById('labelsSection');
+                if (labelsSection) labelsSection.scrollIntoView({ behavior: 'smooth' });
                 return;
             }
             saveAyah();
@@ -554,7 +583,7 @@ function handleKeyDown(e) {
 }
 
 function closeAyahModal() {
-    elements.ayahModal.classList.add('hidden');
+    if (elements.ayahModal) elements.ayahModal.classList.add('hidden');
     resetAyahForm();
     
     // Remove event listeners to prevent memory leaks
@@ -566,11 +595,11 @@ function closeAyahModal() {
 
 function openLabelsModal() {
     displayLabelsHierarchy();
-    elements.labelsModal.classList.remove('hidden');
+    if (elements.labelsModal) elements.labelsModal.classList.remove('hidden');
 }
 
 function closeLabelsModal() {
-    elements.labelsModal.classList.add('hidden');
+    if (elements.labelsModal) elements.labelsModal.classList.add('hidden');
 }
 
 function resetAyahForm() {
@@ -602,6 +631,8 @@ function resetAyahForm() {
 
 // Ayah Form Functions
 function parsePastedAyah() {
+    if (!elements.pasteInput) return;
+    
     const pastedText = elements.pasteInput.value.trim();
     
     if (!pastedText) {
@@ -675,10 +706,16 @@ function parsePastedAyah() {
         };
         
         // Update step indicators
-        elements.step1Indicator.classList.remove('active');
-        elements.step1Indicator.classList.add('completed');
-        elements.step2Indicator.classList.add('active');
-        elements.connector1.classList.add('completed');
+        if (elements.step1Indicator) {
+            elements.step1Indicator.classList.remove('active');
+            elements.step1Indicator.classList.add('completed');
+        }
+        if (elements.step2Indicator) {
+            elements.step2Indicator.classList.add('active');
+        }
+        if (elements.connector1) {
+            elements.connector1.classList.add('completed');
+        }
         
         // Show parsed preview
         showParsedPreview();
@@ -742,23 +779,33 @@ function showParsedPreview() {
     }
 }
 
+// FIXED: Improved addSelectedLabel function
 function addSelectedLabel() {
+    if (!elements.parentLabelSelect) {
+        console.error('Parent label select element not found');
+        return;
+    }
+    
     const parentId = elements.parentLabelSelect.value;
-    const childId = elements.childLabelSelect.value;
+    const childId = elements.childLabelSelect ? elements.childLabelSelect.value : '';
     
     if (!parentId) {
         showError('Please select a parent label');
         return;
     }
     
+    console.log('Adding labels - Parent:', parentId, 'Child:', childId);
+    
     // Add parent label if not already selected
     if (!selectedLabels.includes(parentId)) {
         selectedLabels.push(parentId);
+        console.log('Added parent label:', parentId);
     }
     
     // Add child label if selected and not already selected
     if (childId && !selectedLabels.includes(childId)) {
         selectedLabels.push(childId);
+        console.log('Added child label:', childId);
     }
     
     updateSelectedLabels();
@@ -766,12 +813,20 @@ function addSelectedLabel() {
     
     // Reset selects
     elements.parentLabelSelect.value = '';
-    elements.childLabelSelect.innerHTML = '<option value="">Select Child Label</option>';
+    if (elements.childLabelSelect) {
+        elements.childLabelSelect.innerHTML = '<option value="">Select Child Label</option>';
+    }
     
     showSuccess('Label added successfully!');
 }
 
+// FIXED: Improved createNewLabel function
 function createNewLabel() {
+    if (!elements.newLabelInput || !elements.newLabelType) {
+        console.error('New label input or type element not found');
+        return;
+    }
+    
     const labelName = elements.newLabelInput.value.trim();
     
     if (!labelName) {
@@ -780,7 +835,8 @@ function createNewLabel() {
     }
     
     const labelType = elements.newLabelType.value;
-    const parentId = labelType === 'child' ? elements.newLabelParent.value : null;
+    const parentId = labelType === 'child' && elements.newLabelParent ? 
+                    elements.newLabelParent.value : null;
     
     // Generate a simple ID from the label name
     const labelId = labelName.toLowerCase().replace(/\s+/g, '-');
@@ -798,12 +854,14 @@ function createNewLabel() {
         parentId: parentId
     };
     
+    console.log('Creating new label:', newLabel);
+    
     labels.push(newLabel);
     
     // Update UI
     populateLabelFilters();
-    populateParentSelect(elements.parentLabelSelect, labels);
-    populateParentSelect(elements.newLabelParentSelect, labels);
+    if (elements.parentLabelSelect) populateParentSelect(elements.parentLabelSelect, labels);
+    if (elements.newLabelParentSelect) populateParentSelect(elements.newLabelParentSelect, labels);
     
     // Add to selected labels
     selectedLabels.push(labelId);
@@ -812,12 +870,17 @@ function createNewLabel() {
     
     // Reset input
     elements.newLabelInput.value = '';
+    if (elements.newLabelParent) elements.newLabelParent.value = '';
     
     showSuccess('Label created successfully!');
 }
 
+// FIXED: Improved updateSelectedLabels function
 function updateSelectedLabels() {
-    if (!elements.labelsContainer) return;
+    if (!elements.labelsContainer) {
+        console.error('Labels container element not found');
+        return;
+    }
     
     elements.labelsContainer.innerHTML = '';
     
@@ -826,14 +889,26 @@ function updateSelectedLabels() {
         return;
     }
     
+    console.log('Updating selected labels:', selectedLabels);
+    
     selectedLabels.forEach(labelId => {
         const label = labels.find(l => l.id === labelId);
         if (label) {
             const isParent = !label.parentId;
             const labelTag = document.createElement('span');
             labelTag.className = `label-tag ${isParent ? 'parent-label' : 'child-label'} flex items-center`;
+            
+            // Show parent-child relationship in the tag
+            let labelText = label.name;
+            if (!isParent && label.parentId) {
+                const parentLabel = labels.find(l => l.id === label.parentId);
+                if (parentLabel) {
+                    labelText = `${parentLabel.name} > ${label.name}`;
+                }
+            }
+            
             labelTag.innerHTML = `
-                ${label.name}
+                ${labelText}
                 <button class="ml-2 ${isParent ? 'text-white' : 'text-indigo-900'} hover:text-gray-200" data-id="${labelId}">
                     <i class="fas fa-times"></i>
                 </button>
@@ -846,6 +921,8 @@ function updateSelectedLabels() {
             });
             
             elements.labelsContainer.appendChild(labelTag);
+        } else {
+            console.error('Label not found for ID:', labelId);
         }
     });
     
@@ -861,15 +938,27 @@ function updateSelectedLabels() {
     
     // Update step indicators if we have labels
     if (selectedLabels.length > 0) {
-        elements.step2Indicator.classList.remove('active');
-        elements.step2Indicator.classList.add('completed');
-        elements.step3Indicator.classList.add('active');
-        elements.connector2.classList.add('completed');
+        if (elements.step2Indicator) {
+            elements.step2Indicator.classList.remove('active');
+            elements.step2Indicator.classList.add('completed');
+        }
+        if (elements.step3Indicator) {
+            elements.step3Indicator.classList.add('active');
+        }
+        if (elements.connector2) {
+            elements.connector2.classList.add('completed');
+        }
     } else {
-        elements.step2Indicator.classList.add('active');
-        elements.step2Indicator.classList.remove('completed');
-        elements.step3Indicator.classList.remove('active', 'completed');
-        elements.connector2.classList.remove('completed');
+        if (elements.step2Indicator) {
+            elements.step2Indicator.classList.add('active');
+            elements.step2Indicator.classList.remove('completed');
+        }
+        if (elements.step3Indicator) {
+            elements.step3Indicator.classList.remove('active', 'completed');
+        }
+        if (elements.connector2) {
+            elements.connector2.classList.remove('completed');
+        }
     }
 }
 
@@ -921,6 +1010,8 @@ async function saveAyah() {
         ayah.Id = editingAyahId;
     }
     
+    console.log('Saving ayah:', ayah);
+    
     // Show loading state
     if (elements.saveButton) {
         elements.saveButton.disabled = true;
@@ -954,7 +1045,7 @@ function editAyah(ayahId) {
     }
     
     editingAyahId = ayahId;
-    elements.modalTitle.textContent = 'Edit Ayah';
+    if (elements.modalTitle) elements.modalTitle.textContent = 'Edit Ayah';
     
     // Populate form
     if (elements.surahInput) elements.surahInput.value = ayah.SURAH || '';
@@ -969,7 +1060,7 @@ function editAyah(ayahId) {
     updateSaveButtonState();
     
     // Open modal
-    elements.ayahModal.classList.remove('hidden');
+    if (elements.ayahModal) elements.ayahModal.classList.remove('hidden');
 }
 
 function deleteAyah(ayahId) {
@@ -983,6 +1074,11 @@ function deleteAyah(ayahId) {
 
 // Labels Management Functions
 function addNewLabel() {
+    if (!elements.newLabelNameInput) {
+        console.error('New label name input element not found');
+        return;
+    }
+    
     const labelName = elements.newLabelNameInput.value.trim();
     
     if (!labelName) {
@@ -990,7 +1086,7 @@ function addNewLabel() {
         return;
     }
     
-    const parentId = elements.newLabelParentSelect.value;
+    const parentId = elements.newLabelParentSelect ? elements.newLabelParentSelect.value : null;
     
     // Generate a simple ID from the label name
     const labelId = labelName.toLowerCase().replace(/\s+/g, '-');
@@ -1008,16 +1104,18 @@ function addNewLabel() {
         parentId: parentId || null
     };
     
+    console.log('Creating new label in management section:', newLabel);
+    
     labels.push(newLabel);
     
     // Update UI
     populateLabelFilters();
-    populateParentSelect(elements.parentLabelSelect, labels);
-    populateParentSelect(elements.newLabelParentSelect, labels);
+    if (elements.parentLabelSelect) populateParentSelect(elements.parentLabelSelect, labels);
+    if (elements.newLabelParentSelect) populateParentSelect(elements.newLabelParentSelect, labels);
     
     // Reset input
     elements.newLabelNameInput.value = '';
-    elements.newLabelParentSelect.value = '';
+    if (elements.newLabelParentSelect) elements.newLabelParentSelect.value = '';
     
     // Refresh labels hierarchy
     displayLabelsHierarchy();
@@ -1026,7 +1124,10 @@ function addNewLabel() {
 }
 
 function displayLabelsHierarchy() {
-    if (!elements.labelsHierarchy) return;
+    if (!elements.labelsHierarchy) {
+        console.error('Labels hierarchy element not found');
+        return;
+    }
     
     elements.labelsHierarchy.innerHTML = '';
     
@@ -1096,6 +1197,8 @@ function displayLabelsHierarchy() {
 
 function deleteLabel(labelId) {
     if (confirm('Are you sure you want to delete this label?')) {
+        console.log('Deleting label:', labelId);
+        
         // Remove label
         labels = labels.filter(label => label.id !== labelId);
         
@@ -1110,8 +1213,8 @@ function deleteLabel(labelId) {
         
         // Update UI
         populateLabelFilters();
-        populateParentSelect(elements.parentLabelSelect, labels);
-        populateParentSelect(elements.newLabelParentSelect, labels);
+        if (elements.parentLabelSelect) populateParentSelect(elements.parentLabelSelect, labels);
+        if (elements.newLabelParentSelect) populateParentSelect(elements.newLabelParentSelect, labels);
         displayLabelsHierarchy();
         
         showSuccess('Label deleted successfully');
@@ -1120,9 +1223,9 @@ function deleteLabel(labelId) {
 
 // Filter Functions
 function filterAyahs() {
-    const searchTerm = elements.searchInput.value.toLowerCase();
-    const surahFilter = elements.surahFilter.value;
-    const labelFilter = elements.labelFilter.value;
+    const searchTerm = elements.searchInput ? elements.searchInput.value.toLowerCase() : '';
+    const surahFilter = elements.surahFilter ? elements.surahFilter.value : '';
+    const labelFilter = elements.labelFilter ? elements.labelFilter.value : '';
     
     let filteredAyahs = ayahs;
     
