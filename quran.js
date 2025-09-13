@@ -1,5 +1,10 @@
-// quran.js v0.2
+// quran.js v0.3
 const API_URL = "https://script.google.com/macros/s/AKfycbzlqWMArBZkIfPWVNP6KuM0wyy2u3zvN3INFKzoQMI5MHiRQHQTVehC-9Mi7HiwK3q86A/exec"; // Replace with your deployed Google Apps Script URL
+
+// Check if API URL is still the default
+function isApiUrlSet() {
+    return API_URL !== "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE";
+}
 
 // State
 let ayahs = [];
@@ -58,13 +63,21 @@ const elements = {
     labelsHierarchy: document.getElementById('labelsHierarchy'),
     
     // Parsed ayah preview
-    parsedPreview: document.getElementById('parsedPreview')
+    parsedPreview: document.getElementById('parsedPreview'),
+    
+    // API URL warning
+    apiUrlWarning: document.getElementById('apiUrlWarning')
 };
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', () => {
-    loadAyahs();
-    loadLabels();
+    // Check if API URL is set
+    if (!isApiUrlSet()) {
+        showApiUrlWarning();
+    } else {
+        loadAyahs();
+        loadLabels();
+    }
     
     // Modal controls
     elements.addNewAyah.addEventListener('click', openAddAyahModal);
@@ -195,6 +208,107 @@ async function saveAyahToSheet(ayah) {
 }
 
 // UI Functions
+function showApiUrlWarning() {
+    // Create a warning banner that stays at the top
+    const warningBanner = document.createElement('div');
+    warningBanner.id = 'apiUrlWarning';
+    warningBanner.className = 'fixed top-0 left-0 right-0 bg-yellow-500 text-white p-4 text-center z-50 shadow-lg';
+    warningBanner.innerHTML = `
+        <div class="container mx-auto flex items-center justify-between">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                <span><strong>Configuration Required:</strong> You need to set up the Google Sheets API URL. 
+                <a href="#" id="setupInstructions" class="underline ml-2">Click here for instructions</a></span>
+            </div>
+            <button id="dismissWarning" class="ml-4 text-white hover:text-gray-200">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(warningBanner);
+    
+    // Add event listeners
+    document.getElementById('dismissWarning').addEventListener('click', () => {
+        warningBanner.remove();
+    });
+    
+    document.getElementById('setupInstructions').addEventListener('click', (e) => {
+        e.preventDefault();
+        showSetupInstructions();
+    });
+}
+
+function showSetupInstructions() {
+    const instructionsModal = document.createElement('div');
+    instructionsModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    instructionsModal.innerHTML = `
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-semibold">Setup Instructions</h3>
+                    <button id="closeInstructions" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6">
+                <ol class="list-decimal pl-5 space-y-4">
+                    <li>
+                        <strong>Create a Google Sheet:</strong>
+                        <p class="mt-1">Go to Google Sheets and create a new spreadsheet named "Quran Categorizer".</p>
+                    </li>
+                    <li>
+                        <strong>Set up the sheet:</strong>
+                        <p class="mt-1">Rename the first sheet to "QURAN" and add the following headers in the first row: SURAH, AYAH, ARB, ENG, IDN, LABEL, SOURCE</p>
+                    </li>
+                    <li>
+                        <strong>Open Apps Script Editor:</strong>
+                        <p class="mt-1">In your Google Sheet, click on "Extensions" > "Apps Script" to open the script editor.</p>
+                    </li>
+                    <li>
+                        <strong>Paste the script code:</strong>
+                        <p class="mt-1">Delete any existing code and paste the Google Apps Script code provided.</p>
+                    </li>
+                    <li>
+                        <strong>Deploy the script:</strong>
+                        <p class="mt-1">Click "Deploy" > "New deployment", select "Web app", set execute as "Me" and access as "Anyone", then click "Deploy".</p>
+                    </li>
+                    <li>
+                        <strong>Authorize the script:</strong>
+                        <p class="mt-1">Click "Authorize access", select your account, and grant the necessary permissions.</p>
+                    </li>
+                    <li>
+                        <strong>Copy the web app URL:</strong>
+                        <p class="mt-1">After deployment, copy the web app URL.</p>
+                    </li>
+                    <li>
+                        <strong>Update the JavaScript file:</strong>
+                        <p class="mt-1">In the quran.js file, replace "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE" with the copied URL.</p>
+                    </li>
+                </ol>
+                <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                    <p class="text-blue-800"><strong>Note:</strong> After making these changes, refresh the page to start using the app.</p>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 rounded-b-xl flex justify-end">
+                <button id="closeInstructionsButton" class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors">Close</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(instructionsModal);
+    
+    // Add event listeners
+    document.getElementById('closeInstructions').addEventListener('click', () => {
+        instructionsModal.remove();
+    });
+    
+    document.getElementById('closeInstructionsButton').addEventListener('click', () => {
+        instructionsModal.remove();
+    });
+}
+
 function showLoading() {
     elements.loadingIndicator.classList.remove('hidden');
     elements.emptyState.classList.add('hidden');
@@ -387,6 +501,13 @@ function handleKeyDown(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault(); // Prevent new line
         if (parsedAyahData) {
+            // Check if at least one label is selected
+            if (selectedLabels.length === 0) {
+                showError('Please add at least one label before saving');
+                // Scroll to labels section
+                document.getElementById('labelsSection').scrollIntoView({ behavior: 'smooth' });
+                return;
+            }
             saveAyah();
         } else {
             parsePastedAyah();
@@ -428,6 +549,9 @@ function resetAyahForm() {
         elements.parsedPreview.innerHTML = '';
         elements.parsedPreview.classList.add('hidden');
     }
+    
+    // Reset save button state
+    updateSaveButtonState();
 }
 
 // Ayah Form Functions
@@ -507,10 +631,24 @@ function parsePastedAyah() {
         // Show parsed preview
         showParsedPreview();
         
-        showSuccess('Ayah parsed successfully! Press Enter to save.');
+        // Update save button state
+        updateSaveButtonState();
+        
+        showSuccess('Ayah parsed successfully! Now add at least one label and press Enter to save.');
     } catch (error) {
         console.error('Error parsing ayah:', error);
         showError('Failed to parse ayah. Please check the format and try again.');
+    }
+}
+
+function updateSaveButtonState() {
+    // Enable save button only if we have parsed data and at least one label
+    if (parsedAyahData && selectedLabels.length > 0) {
+        elements.saveButton.disabled = false;
+        elements.saveButton.classList.remove('opacity-50', 'cursor-not-allowed');
+    } else {
+        elements.saveButton.disabled = true;
+        elements.saveButton.classList.add('opacity-50', 'cursor-not-allowed');
     }
 }
 
@@ -536,7 +674,7 @@ function showParsedPreview() {
                 <p><strong>English:</strong> ${parsedAyahData.ENG}</p>
                 <p><strong>Source:</strong> <a href="${parsedAyahData.SOURCE}" target="_blank" class="text-indigo-600 hover:underline">${parsedAyahData.SOURCE}</a></p>
             </div>
-            <p class="mt-2 text-indigo-700 font-medium">Press Enter to save this ayah</p>
+            <p class="mt-2 text-indigo-700 font-medium">Now add at least one label below, then press Enter to save</p>
         `;
         elements.parsedPreview.classList.remove('hidden');
     } else {
@@ -564,10 +702,13 @@ function addSelectedLabel() {
     }
     
     updateSelectedLabels();
+    updateSaveButtonState();
     
     // Reset selects
     elements.parentLabelSelect.value = '';
     elements.childLabelSelect.innerHTML = '<option value="">Select Child Label</option>';
+    
+    showSuccess('Label added successfully!');
 }
 
 function createNewLabel() {
@@ -607,6 +748,7 @@ function createNewLabel() {
     // Add to selected labels
     selectedLabels.push(labelId);
     updateSelectedLabels();
+    updateSaveButtonState();
     
     // Reset input
     elements.newLabelInput.value = '';
@@ -617,6 +759,11 @@ function createNewLabel() {
 function updateSelectedLabels() {
     elements.labelsContainer.innerHTML = '';
     
+    if (selectedLabels.length === 0) {
+        elements.labelsContainer.innerHTML = '<p class="text-gray-500 text-sm">No labels selected yet. Please add at least one label.</p>';
+        return;
+    }
+    
     selectedLabels.forEach(labelId => {
         const label = labels.find(l => l.id === labelId);
         if (label) {
@@ -625,7 +772,7 @@ function updateSelectedLabels() {
             labelTag.className = `label-tag ${isParent ? 'parent-label' : 'child-label'} flex items-center`;
             labelTag.innerHTML = `
                 ${label.name}
-                <button class="ml-2 text-white hover:text-gray-200" data-id="${labelId}">
+                <button class="ml-2 ${isParent ? 'text-white' : 'text-indigo-900'} hover:text-gray-200" data-id="${labelId}">
                     <i class="fas fa-times"></i>
                 </button>
             `;
@@ -633,6 +780,7 @@ function updateSelectedLabels() {
             labelTag.querySelector('button').addEventListener('click', () => {
                 selectedLabels = selectedLabels.filter(id => id !== labelId);
                 updateSelectedLabels();
+                updateSaveButtonState();
             });
             
             elements.labelsContainer.appendChild(labelTag);
@@ -667,6 +815,11 @@ async function saveAyah() {
         return;
     }
     
+    if (selectedLabels.length === 0) {
+        showError('Please add at least one label');
+        return;
+    }
+    
     // Create ayah object
     const ayah = {
         SURAH: elements.surahInput.value.trim(),
@@ -683,15 +836,23 @@ async function saveAyah() {
         ayah.Id = editingAyahId;
     }
     
+    // Show loading state
+    elements.saveButton.disabled = true;
+    elements.saveButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+    
     // Save to Google Sheet
     const success = await saveAyahToSheet(ayah);
+    
+    // Reset button state
+    elements.saveButton.disabled = false;
+    elements.saveButton.innerHTML = 'Save Ayah';
     
     if (success) {
         showSuccess('Ayah saved successfully!');
         closeAyahModal();
         loadAyahs(); // Reload ayahs
     } else {
-        showError('Failed to save ayah. Please try again.');
+        showError('Failed to save ayah. Please check your internet connection and try again.');
     }
 }
 
@@ -716,6 +877,7 @@ function editAyah(ayahId) {
     // Parse labels
     selectedLabels = ayah.LABEL ? ayah.LABEL.split(',').map(label => label.trim()) : [];
     updateSelectedLabels();
+    updateSaveButtonState();
     
     // Open modal
     elements.ayahModal.classList.remove('hidden');

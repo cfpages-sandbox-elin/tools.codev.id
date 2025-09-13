@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quran Categorizer v0.2</title>
+    <title>Quran Categorizer v0.3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -58,6 +58,51 @@
         }
         .paste-area:focus-within {
             border-color: #4f46e5;
+        }
+        .step-indicator {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .step {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            background-color: #e5e7eb;
+            color: #6b7280;
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+        .step.active {
+            background-color: #4f46e5;
+            color: white;
+        }
+        .step.completed {
+            background-color: #10b981;
+            color: white;
+        }
+        .step-text {
+            margin-right: 1.5rem;
+            font-weight: 500;
+            color: #6b7280;
+        }
+        .step-text.active {
+            color: #4f46e5;
+        }
+        .step-text.completed {
+            color: #10b981;
+        }
+        .step-connector {
+            flex: 1;
+            height: 2px;
+            background-color: #e5e7eb;
+            margin: 0 0.5rem;
+        }
+        .step-connector.completed {
+            background-color: #10b981;
         }
     </style>
 </head>
@@ -143,8 +188,21 @@
                 </div>
             </div>
             <div class="p-6">
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Paste from Quran.com</label>
+                <!-- Step Indicator -->
+                <div class="step-indicator">
+                    <div class="step active" id="step1Indicator">1</div>
+                    <div class="step-text active">Paste Ayah</div>
+                    <div class="step-connector" id="connector1"></div>
+                    <div class="step" id="step2Indicator">2</div>
+                    <div class="step-text">Add Labels</div>
+                    <div class="step-connector" id="connector2"></div>
+                    <div class="step" id="step3Indicator">3</div>
+                    <div class="step-text">Save</div>
+                </div>
+                
+                <!-- Step 1: Paste Ayah -->
+                <div id="step1" class="mb-6">
+                    <h4 class="text-md font-medium mb-2">Step 1: Paste Ayah from Quran.com</h4>
                     <div class="paste-area">
                         <textarea id="pasteInput" rows="5" placeholder="Paste ayah from quran.com here..." class="w-full px-4 py-2 bg-transparent border-0 focus:ring-0 resize-none"></textarea>
                     </div>
@@ -153,58 +211,42 @@
                     </div>
                     <div class="mt-2 text-sm text-gray-500">
                         <i class="fas fa-info-circle mr-1"></i>
-                        Content will be parsed automatically. Press Enter to save.
+                        Content will be parsed automatically. Press Enter to proceed to labels.
                     </div>
                 </div>
                 
-                <div class="border-t border-gray-200 pt-6">
-                    <h4 class="text-md font-medium mb-4">Ayah Details</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Step 2: Add Labels -->
+                <div id="step2" class="mb-6 border-t border-gray-200 pt-6">
+                    <h4 class="text-md font-medium mb-2">Step 2: Add Labels</h4>
+                    <div id="labelsSection">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Selected Labels</label>
+                            <div id="labelsContainer" class="min-h-[2.5rem] p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <!-- Selected labels will appear here -->
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Add Existing Labels</label>
+                            <div class="flex">
+                                <select id="parentLabelSelect" class="flex-1 px-4 py-2 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                    <option value="">Select Parent Label</option>
+                                </select>
+                                <select id="childLabelSelect" class="flex-1 px-4 py-2 border-t border-b border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                    <option value="">Select Child Label</option>
+                                </select>
+                                <button id="addLabelButton" class="bg-indigo-600 text-white px-4 py-2 rounded-r-lg hover:bg-indigo-700 transition-colors">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                            <p class="mt-1 text-sm text-gray-500">Select a parent label first, then optionally select a child label</p>
+                        </div>
+                        
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Surah</label>
-                            <input type="text" id="surahInput" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Ayah Number</label>
-                            <input type="number" id="ayahInput" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                        </div>
-                    </div>
-                    
-                    <div class="mt-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Arabic Text</label>
-                        <textarea id="arabicInput" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 arabic-text"></textarea>
-                    </div>
-                    
-                    <div class="mt-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">English Translation</label>
-                        <textarea id="englishInput" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
-                    </div>
-                    
-                    <div class="mt-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Source URL</label>
-                        <input type="url" id="sourceInput" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                    </div>
-                    
-                    <div class="mt-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Labels</label>
-                        <div id="labelsContainer" class="mb-2">
-                            <!-- Selected labels will appear here -->
-                        </div>
-                        <div class="flex">
-                            <select id="parentLabelSelect" class="flex-1 px-4 py-2 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="">Select Parent Label</option>
-                            </select>
-                            <select id="childLabelSelect" class="flex-1 px-4 py-2 border-t border-b border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="">Select Child Label</option>
-                            </select>
-                            <button id="addLabelButton" class="bg-indigo-600 text-white px-4 py-2 rounded-r-lg hover:bg-indigo-700 transition-colors">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                        </div>
-                        <div class="mt-2">
-                            <input type="text" id="newLabelInput" placeholder="Or create a new label..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <div class="flex mt-2">
-                                <select id="newLabelType" class="flex-1 px-4 py-2 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Create New Label</label>
+                            <div class="flex">
+                                <input type="text" id="newLabelInput" placeholder="Enter label name..." class="flex-1 px-4 py-2 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <select id="newLabelType" class="flex-1 px-4 py-2 border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                                     <option value="parent">Parent Label</option>
                                     <option value="child">Child Label</option>
                                 </select>
@@ -215,13 +257,33 @@
                                     <i class="fas fa-plus-circle"></i>
                                 </button>
                             </div>
+                            <p class="mt-1 text-sm text-gray-500">Create a new parent label or a child label under an existing parent</p>
                         </div>
                     </div>
+                </div>
+                
+                <!-- Step 3: Save -->
+                <div id="step3" class="border-t border-gray-200 pt-6">
+                    <h4 class="text-md font-medium mb-2">Step 3: Review and Save</h4>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600 mb-2">Your ayah is ready to be saved with the following details:</p>
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                            <div><strong>Surah:</strong> <span id="reviewSurah">-</span></div>
+                            <div><strong>Ayah:</strong> <span id="reviewAyah">-</span></div>
+                            <div class="col-span-2"><strong>Labels:</strong> <span id="reviewLabels">-</span></div>
+                        </div>
+                    </div>
+                    <p class="mt-2 text-sm text-gray-500">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Press Enter or click the Save button below to save this ayah
+                    </p>
                 </div>
             </div>
             <div class="px-6 py-4 bg-gray-50 rounded-b-xl flex justify-end space-x-3">
                 <button id="cancelButton" class="px-4 py-2 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-colors">Cancel</button>
-                <button id="saveButton" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-700 transition-colors">Save Ayah</button>
+                <button id="saveButton" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-700 transition-colors opacity-50 cursor-not-allowed" disabled>
+                    Save Ayah
+                </button>
             </div>
         </div>
     </div>
