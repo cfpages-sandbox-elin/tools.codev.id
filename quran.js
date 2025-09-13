@@ -1,5 +1,5 @@
 // Configuration
-const API_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE"; // Replace with your deployed Google Apps Script URL
+const API_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL_HEREhttps://script.google.com/macros/s/AKfycbzlqWMArBZkIfPWVNP6KuM0wyy2u3zvN3INFKzoQMI5MHiRQHQTVehC-9Mi7HiwK3q86A/exec"; // Replace with your deployed Google Apps Script URL
 
 // State
 let ayahs = [];
