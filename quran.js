@@ -1,5 +1,5 @@
-// Configuration
-const API_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL_HEREhttps://script.google.com/macros/s/AKfycbzlqWMArBZkIfPWVNP6KuM0wyy2u3zvN3INFKzoQMI5MHiRQHQTVehC-9Mi7HiwK3q86A/exec"; // Replace with your deployed Google Apps Script URL
+// quran.js v0.2
+const API_URL = "https://script.google.com/macros/s/AKfycbzlqWMArBZkIfPWVNP6KuM0wyy2u3zvN3INFKzoQMI5MHiRQHQTVehC-9Mi7HiwK3q86A/exec"; // Replace with your deployed Google Apps Script URL
 
 // State
 let ayahs = [];
@@ -103,26 +103,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const parentId = elements.parentLabelSelect.value;
         populateChildSelect(parentId);
     });
-    
-    // Automatic parsing on paste
-    elements.pasteInput.addEventListener('paste', () => {
-        // Small delay to ensure pasted content is available
-        setTimeout(() => {
-            parsePastedAyah();
-        }, 100);
-    });
-    
-    // Handle Enter key in paste textarea
-    elements.pasteInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault(); // Prevent new line
-            if (parsedAyahData) {
-                saveAyah();
-            } else {
-                parsePastedAyah();
-            }
-        }
-    });
 });
 
 // Helper function to check if text contains Arabic characters
@@ -141,19 +121,26 @@ function cleanArabicText(text) {
 async function loadAyahs() {
     showLoading();
     try {
+        console.log('Fetching from API:', API_URL);
         const response = await fetch(API_URL);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
         const result = await response.json();
+        console.log('API Response:', result);
         
         if (result.status === 'success') {
             ayahs = result.data;
             displayAyahs(ayahs);
             populateSurahFilter();
         } else {
-            showError('Failed to load ayahs');
+            showError('Failed to load ayahs: ' + (result.message || 'Unknown error'));
         }
     } catch (error) {
         console.error('Error loading ayahs:', error);
-        showError('Network error. Please try again.');
+        showError('Network error. Please check your API URL and try again.');
     } finally {
         hideLoading();
     }
@@ -368,12 +355,52 @@ function openAddAyahModal() {
     elements.modalTitle.textContent = 'Add New Ayah';
     resetAyahForm();
     elements.ayahModal.classList.remove('hidden');
-    elements.pasteInput.focus();
+    
+    // Focus on the paste input and set up event listeners
+    setTimeout(() => {
+        elements.pasteInput.focus();
+        setupPasteEventListeners();
+    }, 100);
+}
+
+function setupPasteEventListeners() {
+    // Remove existing event listeners to prevent duplicates
+    elements.pasteInput.removeEventListener('paste', handlePaste);
+    elements.pasteInput.removeEventListener('keydown', handleKeyDown);
+    
+    // Add event listeners
+    elements.pasteInput.addEventListener('paste', handlePaste);
+    elements.pasteInput.addEventListener('keydown', handleKeyDown);
+}
+
+function handlePaste(e) {
+    // Show feedback that paste was detected
+    showSuccess('Pasted content detected. Parsing...');
+    
+    // Small delay to ensure pasted content is available
+    setTimeout(() => {
+        parsePastedAyah();
+    }, 100);
+}
+
+function handleKeyDown(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault(); // Prevent new line
+        if (parsedAyahData) {
+            saveAyah();
+        } else {
+            parsePastedAyah();
+        }
+    }
 }
 
 function closeAyahModal() {
     elements.ayahModal.classList.add('hidden');
     resetAyahForm();
+    
+    // Remove event listeners to prevent memory leaks
+    elements.pasteInput.removeEventListener('paste', handlePaste);
+    elements.pasteInput.removeEventListener('keydown', handleKeyDown);
 }
 
 function openLabelsModal() {
@@ -412,74 +439,79 @@ function parsePastedAyah() {
         return;
     }
     
-    // Parse the pasted text
-    const lines = pastedText.split('\n');
-    
-    // Initialize variables
-    let surahName = '';
-    let surahNumber = '';
-    let ayahNumber = '';
-    let arabicText = '';
-    let englishText = '';
-    let sourceUrl = '';
-    
-    // Extract surah and ayah number from the first line
-    const firstLine = lines[0];
-    const surahAyahMatch = firstLine.match(/(.+) \((\d+):(\d+)\)/);
-    
-    if (surahAyahMatch) {
-        surahName = surahAyahMatch[1];
-        surahNumber = surahAyahMatch[2];
-        ayahNumber = surahAyahMatch[3];
-    }
-    
-    // Find Arabic text (look for lines with Arabic characters)
-    for (let i = 1; i < lines.length; i++) {
-        if (isArabic(lines[i])) {
-            arabicText = cleanArabicText(lines[i]);
-            break;
+    try {
+        // Parse the pasted text
+        const lines = pastedText.split('\n');
+        
+        // Initialize variables
+        let surahName = '';
+        let surahNumber = '';
+        let ayahNumber = '';
+        let arabicText = '';
+        let englishText = '';
+        let sourceUrl = '';
+        
+        // Extract surah and ayah number from the first line
+        const firstLine = lines[0];
+        const surahAyahMatch = firstLine.match(/(.+) \((\d+):(\d+)\)/);
+        
+        if (surahAyahMatch) {
+            surahName = surahAyahMatch[1];
+            surahNumber = surahAyahMatch[2];
+            ayahNumber = surahAyahMatch[3];
         }
-    }
-    
-    // Find English translation (look for lines after Arabic that are in English)
-    let foundArabic = false;
-    for (let i = 1; i < lines.length; i++) {
-        if (isArabic(lines[i])) {
-            foundArabic = true;
-        } else if (foundArabic && lines[i].trim() !== '' && !lines[i].startsWith('—') && !lines[i].startsWith('https://')) {
-            englishText = lines[i];
-            break;
+        
+        // Find Arabic text (look for lines with Arabic characters)
+        for (let i = 1; i < lines.length; i++) {
+            if (isArabic(lines[i])) {
+                arabicText = cleanArabicText(lines[i]);
+                break;
+            }
         }
-    }
-    
-    // Extract source URL (usually the last line starting with https://)
-    for (let i = lines.length - 1; i >= 0; i--) {
-        if (lines[i].startsWith('https://')) {
-            sourceUrl = lines[i];
-            break;
+        
+        // Find English translation (look for lines after Arabic that are in English)
+        let foundArabic = false;
+        for (let i = 1; i < lines.length; i++) {
+            if (isArabic(lines[i])) {
+                foundArabic = true;
+            } else if (foundArabic && lines[i].trim() !== '' && !lines[i].startsWith('—') && !lines[i].startsWith('https://')) {
+                englishText = lines[i];
+                break;
+            }
         }
+        
+        // Extract source URL (usually the last line starting with https://)
+        for (let i = lines.length - 1; i >= 0; i--) {
+            if (lines[i].startsWith('https://')) {
+                sourceUrl = lines[i];
+                break;
+            }
+        }
+        
+        // Update form fields
+        elements.surahInput.value = `${surahNumber}. ${surahName}`;
+        elements.ayahInput.value = ayahNumber;
+        elements.arabicInput.value = arabicText;
+        elements.englishInput.value = englishText;
+        elements.sourceInput.value = sourceUrl;
+        
+        // Store parsed data
+        parsedAyahData = {
+            SURAH: `${surahNumber}. ${surahName}`,
+            AYAH: ayahNumber,
+            ARB: arabicText,
+            ENG: englishText,
+            SOURCE: sourceUrl
+        };
+        
+        // Show parsed preview
+        showParsedPreview();
+        
+        showSuccess('Ayah parsed successfully! Press Enter to save.');
+    } catch (error) {
+        console.error('Error parsing ayah:', error);
+        showError('Failed to parse ayah. Please check the format and try again.');
     }
-    
-    // Update form fields
-    elements.surahInput.value = `${surahNumber}. ${surahName}`;
-    elements.ayahInput.value = ayahNumber;
-    elements.arabicInput.value = arabicText;
-    elements.englishInput.value = englishText;
-    elements.sourceInput.value = sourceUrl;
-    
-    // Store parsed data
-    parsedAyahData = {
-        SURAH: `${surahNumber}. ${surahName}`,
-        AYAH: ayahNumber,
-        ARB: arabicText,
-        ENG: englishText,
-        SOURCE: sourceUrl
-    };
-    
-    // Show parsed preview
-    showParsedPreview();
-    
-    showSuccess('Ayah parsed successfully! Press Enter to save.');
 }
 
 function showParsedPreview() {
@@ -500,7 +532,7 @@ function showParsedPreview() {
             <div class="text-sm">
                 <p><strong>Surah:</strong> ${parsedAyahData.SURAH}</p>
                 <p><strong>Ayah:</strong> ${parsedAyahData.AYAH}</p>
-                <p><strong>Arabic:</strong> <span class="arabic-text">${parsedAyahData.ARB}</span></p>
+                <p><strong>Arabic:</strong> <span class="preview-arabic">${parsedAyahData.ARB}</span></p>
                 <p><strong>English:</strong> ${parsedAyahData.ENG}</p>
                 <p><strong>Source:</strong> <a href="${parsedAyahData.SOURCE}" target="_blank" class="text-indigo-600 hover:underline">${parsedAyahData.SOURCE}</a></p>
             </div>
