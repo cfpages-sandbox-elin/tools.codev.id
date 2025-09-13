@@ -1,11 +1,12 @@
 // Configuration
-const API_URL = "https://script.google.com/macros/s/AKfycbzlqWMArBZkIfPWVNP6KuM0wyy2u3zvN3INFKzoQMI5MHiRQHQTVehC-9Mi7HiwK3q86A/exec"; // Replace with your deployed Google Apps Script URL
+const API_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE"; // Replace with your deployed Google Apps Script URL
 
 // State
 let ayahs = [];
 let labels = [];
 let selectedLabels = [];
 let editingAyahId = null;
+let parsedAyahData = null;
 
 // DOM Elements
 const elements = {
@@ -54,7 +55,10 @@ const elements = {
     newLabelNameInput: document.getElementById('newLabelNameInput'),
     newLabelParentSelect: document.getElementById('newLabelParentSelect'),
     addNewLabelButton: document.getElementById('addNewLabelButton'),
-    labelsHierarchy: document.getElementById('labelsHierarchy')
+    labelsHierarchy: document.getElementById('labelsHierarchy'),
+    
+    // Parsed ayah preview
+    parsedPreview: document.getElementById('parsedPreview')
 };
 
 // Event Listeners
@@ -99,7 +103,39 @@ document.addEventListener('DOMContentLoaded', () => {
         const parentId = elements.parentLabelSelect.value;
         populateChildSelect(parentId);
     });
+    
+    // Automatic parsing on paste
+    elements.pasteInput.addEventListener('paste', () => {
+        // Small delay to ensure pasted content is available
+        setTimeout(() => {
+            parsePastedAyah();
+        }, 100);
+    });
+    
+    // Handle Enter key in paste textarea
+    elements.pasteInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault(); // Prevent new line
+            if (parsedAyahData) {
+                saveAyah();
+            } else {
+                parsePastedAyah();
+            }
+        }
+    });
 });
+
+// Helper function to check if text contains Arabic characters
+function isArabic(text) {
+    const arabicRegex = /[\u0600-\u06FF]/;
+    return arabicRegex.test(text);
+}
+
+// Helper function to clean Arabic text
+function cleanArabicText(text) {
+    // Remove ayah numbers at the end (Arabic numerals)
+    return text.replace(/[\u0660-\u0669]+$/, '').trim();
+}
 
 // API Functions
 async function loadAyahs() {
@@ -332,6 +368,7 @@ function openAddAyahModal() {
     elements.modalTitle.textContent = 'Add New Ayah';
     resetAyahForm();
     elements.ayahModal.classList.remove('hidden');
+    elements.pasteInput.focus();
 }
 
 function closeAyahModal() {
@@ -356,7 +393,14 @@ function resetAyahForm() {
     elements.englishInput.value = '';
     elements.sourceInput.value = '';
     selectedLabels = [];
+    parsedAyahData = null;
     updateSelectedLabels();
+    
+    // Hide parsed preview if it exists
+    if (elements.parsedPreview) {
+        elements.parsedPreview.innerHTML = '';
+        elements.parsedPreview.classList.add('hidden');
+    }
 }
 
 // Ayah Form Functions
@@ -371,49 +415,101 @@ function parsePastedAyah() {
     // Parse the pasted text
     const lines = pastedText.split('\n');
     
+    // Initialize variables
+    let surahName = '';
+    let surahNumber = '';
+    let ayahNumber = '';
+    let arabicText = '';
+    let englishText = '';
+    let sourceUrl = '';
+    
     // Extract surah and ayah number from the first line
     const firstLine = lines[0];
     const surahAyahMatch = firstLine.match(/(.+) \((\d+):(\d+)\)/);
     
     if (surahAyahMatch) {
-        const surahName = surahAyahMatch[1];
-        const surahNumber = surahAyahMatch[2];
-        const ayahNumber = surahAyahMatch[3];
-        
-        elements.surahInput.value = `${surahNumber}. ${surahName}`;
-        elements.ayahInput.value = ayahNumber;
+        surahName = surahAyahMatch[1];
+        surahNumber = surahAyahMatch[2];
+        ayahNumber = surahAyahMatch[3];
     }
     
-    // Extract Arabic text (usually the line after the first one)
-    if (lines.length > 1) {
-        elements.arabicInput.value = lines[1];
-    }
-    
-    // Extract English translation (usually starts after the Arabic line and before the "—" line)
-    let englishLines = [];
-    let foundDash = false;
-    
-    for (let i = 2; i < lines.length; i++) {
-        if (lines[i].startsWith('—')) {
-            foundDash = true;
+    // Find Arabic text (look for lines with Arabic characters)
+    for (let i = 1; i < lines.length; i++) {
+        if (isArabic(lines[i])) {
+            arabicText = cleanArabicText(lines[i]);
             break;
         }
-        if (lines[i].trim()) {
-            englishLines.push(lines[i]);
+    }
+    
+    // Find English translation (look for lines after Arabic that are in English)
+    let foundArabic = false;
+    for (let i = 1; i < lines.length; i++) {
+        if (isArabic(lines[i])) {
+            foundArabic = true;
+        } else if (foundArabic && lines[i].trim() !== '' && !lines[i].startsWith('—') && !lines[i].startsWith('https://')) {
+            englishText = lines[i];
+            break;
         }
     }
     
-    if (englishLines.length > 0) {
-        elements.englishInput.value = englishLines.join(' ');
+    // Extract source URL (usually the last line starting with https://)
+    for (let i = lines.length - 1; i >= 0; i--) {
+        if (lines[i].startsWith('https://')) {
+            sourceUrl = lines[i];
+            break;
+        }
     }
     
-    // Extract source URL (usually the last line)
-    const lastLine = lines[lines.length - 1];
-    if (lastLine.startsWith('https://')) {
-        elements.sourceInput.value = lastLine;
+    // Update form fields
+    elements.surahInput.value = `${surahNumber}. ${surahName}`;
+    elements.ayahInput.value = ayahNumber;
+    elements.arabicInput.value = arabicText;
+    elements.englishInput.value = englishText;
+    elements.sourceInput.value = sourceUrl;
+    
+    // Store parsed data
+    parsedAyahData = {
+        SURAH: `${surahNumber}. ${surahName}`,
+        AYAH: ayahNumber,
+        ARB: arabicText,
+        ENG: englishText,
+        SOURCE: sourceUrl
+    };
+    
+    // Show parsed preview
+    showParsedPreview();
+    
+    showSuccess('Ayah parsed successfully! Press Enter to save.');
+}
+
+function showParsedPreview() {
+    if (!elements.parsedPreview) {
+        // Create preview container if it doesn't exist
+        const previewContainer = document.createElement('div');
+        previewContainer.id = 'parsedPreview';
+        previewContainer.className = 'mt-4 p-4 bg-indigo-50 rounded-lg border border-indigo-200 hidden';
+        
+        // Insert after the paste textarea
+        elements.pasteInput.parentNode.insertBefore(previewContainer, elements.pasteInput.nextSibling);
+        elements.parsedPreview = previewContainer;
     }
     
-    showSuccess('Ayah parsed successfully!');
+    if (parsedAyahData) {
+        elements.parsedPreview.innerHTML = `
+            <h4 class="font-medium text-indigo-800 mb-2">Parsed Ayah Preview:</h4>
+            <div class="text-sm">
+                <p><strong>Surah:</strong> ${parsedAyahData.SURAH}</p>
+                <p><strong>Ayah:</strong> ${parsedAyahData.AYAH}</p>
+                <p><strong>Arabic:</strong> <span class="arabic-text">${parsedAyahData.ARB}</span></p>
+                <p><strong>English:</strong> ${parsedAyahData.ENG}</p>
+                <p><strong>Source:</strong> <a href="${parsedAyahData.SOURCE}" target="_blank" class="text-indigo-600 hover:underline">${parsedAyahData.SOURCE}</a></p>
+            </div>
+            <p class="mt-2 text-indigo-700 font-medium">Press Enter to save this ayah</p>
+        `;
+        elements.parsedPreview.classList.remove('hidden');
+    } else {
+        elements.parsedPreview.classList.add('hidden');
+    }
 }
 
 function addSelectedLabel() {
