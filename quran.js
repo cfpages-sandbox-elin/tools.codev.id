@@ -1,4 +1,4 @@
-// quran.js v1.0
+// quran.js v1.1
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlqWMArBZkIfPWVNP6KuM0wyy2u3zvN3INFKzoQMI5MHiRQHQTVehC-9Mi7HiwK3q86A/exec";
 const CLOUDFLARE_SHEET_API_URL = "/sheet-api"; // For Google Sheets operations
 const CLOUDFLARE_QURAN_API_URL = "/quran-api"; // For Quran scraping
@@ -98,7 +98,7 @@ function initializeElements() {
 }
 
 // Initialize the app
-function initializeApp() {
+async function initializeApp() {
     // Initialize DOM elements
     initializeElements();
     
@@ -106,9 +106,10 @@ function initializeApp() {
     if (!isApiUrlSet()) {
         showApiUrlWarning();
     } else {
-        loadAyahs();
-        loadLabels();
-        checkForUnlabeledAyahs();
+        showLoading(); 
+        await loadLabels();
+        await loadAyahs(); 
+        checkForUnlabeledAyahs(); 
     }
     
     // Set up event listeners
