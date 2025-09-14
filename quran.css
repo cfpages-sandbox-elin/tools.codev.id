@@ -1,0 +1,146 @@
+/* quran.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+.gradient-bg {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.glass-effect {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.label-tag {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    margin: 0.25rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.parent-label {
+    background-color: #4f46e5;
+    color: white;
+}
+
+.child-label {
+    background-color: #c7d2fe;
+    color: #312e81;
+}
+
+.arabic-text {
+    font-size: 1.5rem;
+    line-height: 2;
+    text-align: right;
+    direction: rtl;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.preview-arabic {
+    font-size: 1.25rem;
+    line-height: 1.8;
+    text-align: right;
+    direction: rtl;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.paste-area {
+    min-height: 120px;
+    border: 2px dashed #d1d5db;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    transition: border-color 0.2s;
+}
+
+.paste-area:focus-within {
+    border-color: #4f46e5;
+}
+
+.step-indicator {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.step {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background-color: #e5e7eb;
+    color: #6b7280;
+    font-weight: 600;
+    margin-right: 0.5rem;
+}
+
+.step.active {
+    background-color: #4f46e5;
+    color: white;
+}
+
+.step.completed {
+    background-color: #10b981;
+    color: white;
+}
+
+.step-text {
+    margin-right: 1.5rem;
+    font-weight: 500;
+    color: #6b7280;
+}
+
+.step-text.active {
+    color: #4f46e5;
+}
+
+.step-text.completed {
+    color: #10b981;
+}
+
+.step-connector {
+    flex: 1;
+    height: 2px;
+    background-color: #e5e7eb;
+    margin: 0 0.5rem;
+}
+
+.step-connector.completed {
+    background-color: #10b981;
+}
+
+.unlabeled-ayah {
+    background-color: #fef3c7;
+    border-left: 4px solid #f59e0b;
+}
+
+.labeled-ayah {
+    border-left: 4px solid #10b981;
+}
+
+.surah-header {
+    background-color: #f3f4f6;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    overflow: hidden;
+}
+
+.surah-title {
+    background-color: #4f46e5;
+    color: white;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+}
+
+.surah-info {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
