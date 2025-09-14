@@ -1,4 +1,4 @@
-/* quran.css */
+/* quran.css v.0.1 */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 body {
@@ -143,4 +143,16 @@ body {
     padding: 0.5rem 1rem;
     font-size: 0.875rem;
     color: #6b7280;
+}
+
+.clickable-label {
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.clickable-label:hover {
+    /* Brighten the label and lift it slightly on hover */
+    transform: translateY(-2px);
+    filter: brightness(1.1);
 }

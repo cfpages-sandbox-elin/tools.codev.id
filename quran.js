@@ -1,4 +1,4 @@
-// quran.js v1.4 accordion surah + persistence
+// quran.js v1.5 clickable label
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlqWMArBZkIfPWVNP6KuM0wyy2u3zvN3INFKzoQMI5MHiRQHQTVehC-9Mi7HiwK3q86A/exec";
 const CLOUDFLARE_SHEET_API_URL = "/sheet-api"; // For Google Sheets operations
 const CLOUDFLARE_QURAN_API_URL = "/quran-api"; // For Quran scraping
@@ -617,14 +617,14 @@ function createAyahElement(ayah) {
     
     let labelsHtml = '';
     ayahLabels.forEach(labelId => {
-        // FIX: Use uppercase 'ID', 'PARENT_ID', and 'NAME'
         const label = labels.find(l => l.ID === labelId);
         if (label) {
             const isParent = !label.PARENT_ID;
-            labelsHtml += `<span class="label-tag ${isParent ? 'parent-label' : 'child-label'}">${label.NAME}</span>`;
+            // Changed to a <button> and added 'clickable-label' class and a data attribute
+            labelsHtml += `<button class="label-tag clickable-label ${isParent ? 'parent-label' : 'child-label'}" data-label-id="${label.ID}">${label.NAME}</button>`;
         }
     });
-    
+
     ayahDiv.innerHTML = `
         <div class="flex justify-between items-start">
             <div class="flex-1">
@@ -651,8 +651,21 @@ function createAyahElement(ayah) {
         </div>
     `;
     
+    // Add event listeners for edit and delete
     ayahDiv.querySelector('.edit-ayah').addEventListener('click', () => editAyah(ayah.Id));
     ayahDiv.querySelector('.delete-ayah').addEventListener('click', () => deleteAyah(ayah.Id));
+
+    // --- START: NEW LOGIC TO ACTIVATE CLICKABLE LABELS ---
+    ayahDiv.querySelectorAll('.clickable-label').forEach(button => {
+        button.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevents other click events from firing
+            const labelId = button.dataset.labelId; // Get the label ID from the data attribute
+            if (labelId) {
+                filterByLabel(labelId);
+            }
+        });
+    });
+    // --- END: NEW LOGIC TO ACTIVATE CLICKABLE LABELS ---
     
     return ayahDiv;
 }
@@ -1581,4 +1594,23 @@ function filterAyahs() {
     }
     
     displayAyahs(filteredAyahs);
+}
+
+function filterByLabel(labelId) {
+    if (!elements.labelFilter) {
+        console.error('Label filter element not found');
+        return;
+    }
+    
+    // Set the value of the main label filter dropdown to the clicked label
+    elements.labelFilter.value = labelId;
+    
+    // Call the existing filter function to update the view
+    filterAyahs();
+    
+    // Optional: Scroll to the top of the page to show the filtered results
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
 }
