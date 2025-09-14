@@ -1,6 +1,6 @@
 // quran.js v0.6 validated
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlqWMArBZkIfPWVNP6KuM0wyy2u3zvN3INFKzoQMI5MHiRQHQTVehC-9Mi7HiwK3q86A/exec";
-const CLOUDFLARE_FUNCTION_URL = "/sheet-api"; // Update this to your actual Cloudflare Function URL
+const CLOUDFLARE_FUNCTION_URL = "/sheet-api"; // Updated to use relative path
 
 // Check if API URL is set
 function isApiUrlSet() {

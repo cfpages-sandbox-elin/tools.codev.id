@@ -6,14 +6,6 @@ export async function onRequest({ request, env }) {
       return handleOptionsRequest();
     }
     
-    // Only allow POST requests
-    if (request.method !== 'POST') {
-      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-        status: 405,
-        headers: corsHeaders()
-      });
-    }
-    
     // Get the Google Apps Script URL from the query parameters
     const url = new URL(request.url);
     const googleScriptUrl = url.searchParams.get('url');
@@ -25,26 +17,47 @@ export async function onRequest({ request, env }) {
       });
     }
     
-    // Get the request body
-    const requestBody = await request.text();
-    
-    // Forward the request to Google Apps Script
-    const response = await fetch(googleScriptUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: requestBody
-    });
-    
-    // Get the response data
-    const responseData = await response.json();
-    
-    // Return the response with CORS headers
-    return new Response(JSON.stringify(responseData), {
-      status: response.status,
-      headers: corsHeaders()
-    });
+    // Handle different HTTP methods
+    if (request.method === 'GET') {
+      // Forward the GET request to Google Apps Script
+      const response = await fetch(googleScriptUrl);
+      
+      // Get the response data
+      const responseData = await response.json();
+      
+      // Return the response with CORS headers
+      return new Response(JSON.stringify(responseData), {
+        status: response.status,
+        headers: corsHeaders()
+      });
+    } else if (request.method === 'POST') {
+      // Get the request body
+      const requestBody = await request.text();
+      
+      // Forward the POST request to Google Apps Script
+      const response = await fetch(googleScriptUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: requestBody
+      });
+      
+      // Get the response data
+      const responseData = await response.json();
+      
+      // Return the response with CORS headers
+      return new Response(JSON.stringify(responseData), {
+        status: response.status,
+        headers: corsHeaders()
+      });
+    } else {
+      // Return 405 Method Not Allowed for other HTTP methods
+      return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+        status: 405,
+        headers: corsHeaders()
+      });
+    }
     
   } catch (error) {
     console.error('Error in sheet-api function:', error);
