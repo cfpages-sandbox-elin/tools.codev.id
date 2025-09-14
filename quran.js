@@ -1,7 +1,8 @@
-// quran.js v1.4 accordion surah
+// quran.js v1.4 accordion surah + persistence
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlqWMArBZkIfPWVNP6KuM0wyy2u3zvN3INFKzoQMI5MHiRQHQTVehC-9Mi7HiwK3q86A/exec";
 const CLOUDFLARE_SHEET_API_URL = "/sheet-api"; // For Google Sheets operations
 const CLOUDFLARE_QURAN_API_URL = "/quran-api"; // For Quran scraping
+const CLOSED_SURAHS_KEY = 'quranCategorizerClosedSurahs';
 
 // Check if API URL is set
 function isApiUrlSet() {
@@ -538,6 +539,11 @@ function displayAyahs(ayahsToDisplay) {
     
     if (elements.emptyState) elements.emptyState.classList.add('hidden');
     
+    const getClosedSurahs = () => {
+        const stored = localStorage.getItem(CLOSED_SURAHS_KEY);
+        return stored ? JSON.parse(stored) : [];
+    };
+    
     const ayahsBySurah = {};
     ayahsToDisplay.forEach(ayah => {
         if (!ayahsBySurah[ayah.SURAH]) {
@@ -554,43 +560,49 @@ function displayAyahs(ayahsToDisplay) {
     
     sortedSurahs.forEach(surah => {
         const surahAyahs = ayahsBySurah[surah];
-
-        // Create a single container for the header and its content
         const surahGroup = document.createElement('div');
         elements.ayahList.appendChild(surahGroup);
         
-        // Create surah header with a clickable title and toggle icon
+        const isClosed = getClosedSurahs().includes(surah);
+        
         const surahHeader = document.createElement('div');
         surahHeader.className = 'surah-header mb-1';
         surahHeader.innerHTML = `
             <div class="surah-title cursor-pointer flex justify-between items-center">
                 <span>${surah}</span>
-                <i class="fas fa-chevron-down toggle-icon transition-transform duration-300"></i>
+                <i class="fas fa-chevron-down toggle-icon transition-transform duration-300 ${isClosed ? 'rotate-180' : ''}"></i>
             </div>
             <div class="surah-info">${surahAyahs.length} ayahs</div>
         `;
         surahGroup.appendChild(surahHeader);
-
-        // Create the container for the ayahs that will be toggled
+        
         const surahContent = document.createElement('div');
-        surahContent.className = 'surah-content'; // Initially visible
-
-        // Sort and display ayahs within their content container
+        surahContent.className = `surah-content ${isClosed ? 'hidden' : ''}`;
+        
         surahAyahs.sort((a, b) => parseInt(a.AYAH) - parseInt(b.AYAH));
         surahAyahs.forEach(ayah => {
             const ayahElement = createAyahElement(ayah);
             surahContent.appendChild(ayahElement);
         });
         surahGroup.appendChild(surahContent);
-
-        // Add the click event listener to the title bar
+        
         const titleDiv = surahHeader.querySelector('.surah-title');
         titleDiv.addEventListener('click', () => {
-            // Toggle the visibility of the ayah list
             surahContent.classList.toggle('hidden');
-            
-            // Rotate the chevron icon
             titleDiv.querySelector('.toggle-icon').classList.toggle('rotate-180');
+            
+            let closedSurahs = getClosedSurahs();
+            if (surahContent.classList.contains('hidden')) {
+                // If the content is now hidden, ADD this surah to the list
+                if (!closedSurahs.includes(surah)) {
+                    closedSurahs.push(surah);
+                }
+            } else {
+                // If the content is now visible, REMOVE this surah from the list
+                closedSurahs = closedSurahs.filter(s => s !== surah);
+            }
+            // Save the updated list back to localStorage
+            localStorage.setItem(CLOSED_SURAHS_KEY, JSON.stringify(closedSurahs));
         });
     });
 }
