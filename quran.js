@@ -1,4 +1,4 @@
-// quran.js v1.3 global paste
+// quran.js v1.4 accordion surah
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlqWMArBZkIfPWVNP6KuM0wyy2u3zvN3INFKzoQMI5MHiRQHQTVehC-9Mi7HiwK3q86A/exec";
 const CLOUDFLARE_SHEET_API_URL = "/sheet-api"; // For Google Sheets operations
 const CLOUDFLARE_QURAN_API_URL = "/quran-api"; // For Quran scraping
@@ -538,7 +538,6 @@ function displayAyahs(ayahsToDisplay) {
     
     if (elements.emptyState) elements.emptyState.classList.add('hidden');
     
-    // Group ayahs by surah
     const ayahsBySurah = {};
     ayahsToDisplay.forEach(ayah => {
         if (!ayahsBySurah[ayah.SURAH]) {
@@ -547,33 +546,51 @@ function displayAyahs(ayahsToDisplay) {
         ayahsBySurah[ayah.SURAH].push(ayah);
     });
     
-    // Sort surahs by number
     const sortedSurahs = Object.keys(ayahsBySurah).sort((a, b) => {
         const aNum = parseInt(a.match(/(\d+)/)[0]);
         const bNum = parseInt(b.match(/(\d+)/)[0]);
         return aNum - bNum;
     });
     
-    // Display ayahs grouped by surah
     sortedSurahs.forEach(surah => {
         const surahAyahs = ayahsBySurah[surah];
+
+        // Create a single container for the header and its content
+        const surahGroup = document.createElement('div');
+        elements.ayahList.appendChild(surahGroup);
         
-        // Create surah header
+        // Create surah header with a clickable title and toggle icon
         const surahHeader = document.createElement('div');
-        surahHeader.className = 'surah-header mb-4';
+        surahHeader.className = 'surah-header mb-1';
         surahHeader.innerHTML = `
-            <div class="surah-title">${surah}</div>
+            <div class="surah-title cursor-pointer flex justify-between items-center">
+                <span>${surah}</span>
+                <i class="fas fa-chevron-down toggle-icon transition-transform duration-300"></i>
+            </div>
             <div class="surah-info">${surahAyahs.length} ayahs</div>
         `;
-        elements.ayahList.appendChild(surahHeader);
-        
-        // Sort ayahs by ayah number
+        surahGroup.appendChild(surahHeader);
+
+        // Create the container for the ayahs that will be toggled
+        const surahContent = document.createElement('div');
+        surahContent.className = 'surah-content'; // Initially visible
+
+        // Sort and display ayahs within their content container
         surahAyahs.sort((a, b) => parseInt(a.AYAH) - parseInt(b.AYAH));
-        
-        // Display ayahs
         surahAyahs.forEach(ayah => {
             const ayahElement = createAyahElement(ayah);
-            elements.ayahList.appendChild(ayahElement);
+            surahContent.appendChild(ayahElement);
+        });
+        surahGroup.appendChild(surahContent);
+
+        // Add the click event listener to the title bar
+        const titleDiv = surahHeader.querySelector('.surah-title');
+        titleDiv.addEventListener('click', () => {
+            // Toggle the visibility of the ayah list
+            surahContent.classList.toggle('hidden');
+            
+            // Rotate the chevron icon
+            titleDiv.querySelector('.toggle-icon').classList.toggle('rotate-180');
         });
     });
 }
