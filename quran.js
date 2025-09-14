@@ -1,4 +1,4 @@
-// quran.js v0.9
+// quran.js v1.0
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlqWMArBZkIfPWVNP6KuM0wyy2u3zvN3INFKzoQMI5MHiRQHQTVehC-9Mi7HiwK3q86A/exec";
 const CLOUDFLARE_SHEET_API_URL = "/sheet-api"; // For Google Sheets operations
 const CLOUDFLARE_QURAN_API_URL = "/quran-api"; // For Quran scraping
@@ -670,6 +670,13 @@ function openAddAyahModal() {
     if (elements.modalTitle) elements.modalTitle.textContent = 'Add New Ayah';
     resetAyahForm();
     resetStepIndicators();
+    
+    // Ensure the paste section is visible when adding a new Ayah
+    const step1Section = document.getElementById('step1');
+    if (step1Section) {
+        step1Section.style.display = 'block';
+    }
+
     if (elements.ayahModal) elements.ayahModal.classList.remove('hidden');
     
     // Focus on the paste input and set up event listeners
@@ -1238,7 +1245,37 @@ function editAyah(ayahId) {
     editingAyahId = ayahId;
     if (elements.modalTitle) elements.modalTitle.textContent = 'Edit Ayah';
     
-    // Populate form
+    // --- START: NEW LOGIC ---
+    
+    // 1. Manually set the parsedAyahData object for editing
+    parsedAyahData = {
+        SURAH: ayah.SURAH || '',
+        AYAH: ayah.AYAH || '',
+        ARB: ayah.ARB || '',
+        ENG: ayah.ENG || '',
+        SOURCE: ayah.SOURCE || ''
+    };
+    
+    // 2. Configure the modal UI for editing
+    const step1Section = document.getElementById('step1');
+    if (step1Section) {
+        step1Section.style.display = 'none'; // Hide the paste section
+    }
+    
+    // Update step indicators to show editing state
+    if (elements.step1Indicator) elements.step1Indicator.classList.add('completed');
+    if (elements.connector1) elements.connector1.classList.add('completed');
+    if (elements.step2Indicator) elements.step2Indicator.classList.add('completed');
+    if (elements.connector2) elements.connector2.classList.add('completed');
+    if (elements.step3Indicator) elements.step3Indicator.classList.add('active');
+    
+    // 3. Populate the review section directly
+    if (elements.reviewSurah) elements.reviewSurah.textContent = parsedAyahData.SURAH;
+    if (elements.reviewAyah) elements.reviewAyah.textContent = parsedAyahData.AYAH;
+    
+    // --- END: NEW LOGIC ---
+    
+    // Populate form (still useful if you want to see the raw data)
     if (elements.surahInput) elements.surahInput.value = ayah.SURAH || '';
     if (elements.ayahInput) elements.ayahInput.value = ayah.AYAH || '';
     if (elements.arabicInput) elements.arabicInput.value = ayah.ARB || '';
