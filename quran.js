@@ -1,9 +1,10 @@
-// quran.js v0.5 validated
-const API_URL = "https://script.google.com/macros/s/AKfycbzlqWMArBZkIfPWVNP6KuM0wyy2u3zvN3INFKzoQMI5MHiRQHQTVehC-9Mi7HiwK3q86A/exec";
+// quran.js v0.6 validated
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlqWMArBZkIfPWVNP6KuM0wyy2u3zvN3INFKzoQMI5MHiRQHQTVehC-9Mi7HiwK3q86A/exec";
+const CLOUDFLARE_FUNCTION_URL = "/sheet-api"; // Update this to your actual Cloudflare Function URL
 
 // Check if API URL is set
 function isApiUrlSet() {
-    return API_URL && API_URL !== "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE";
+    return GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE";
 }
 
 // State
@@ -164,8 +165,8 @@ function cleanArabicText(text) {
 async function loadAyahs() {
     showLoading();
     try {
-        console.log('Fetching from API:', API_URL);
-        const response = await fetch(API_URL);
+        console.log('Fetching from API via Cloudflare Function:', CLOUDFLARE_FUNCTION_URL);
+        const response = await fetch(`${CLOUDFLARE_FUNCTION_URL}?url=${encodeURIComponent(GOOGLE_SCRIPT_URL)}`);
         
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
@@ -215,7 +216,8 @@ async function loadLabels() {
 
 async function saveAyahToSheet(ayah) {
     try {
-        const response = await fetch(API_URL, {
+        console.log('Saving to Google Sheet via Cloudflare Function');
+        const response = await fetch(`${CLOUDFLARE_FUNCTION_URL}?url=${encodeURIComponent(GOOGLE_SCRIPT_URL)}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -223,7 +225,12 @@ async function saveAyahToSheet(ayah) {
             body: JSON.stringify(ayah)
         });
         
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
         const result = await response.json();
+        console.log('Save response:', result);
         
         if (result.status === 'success') {
             return true;
@@ -314,7 +321,7 @@ function showSetupInstructions() {
                     </li>
                     <li>
                         <strong>Update the JavaScript file:</strong>
-                        <p class="mt-1">In the quran.js file, replace "YOUR_GOOGLE_APPS_SCRIPT_URL_HERE" with the copied URL.</p>
+                        <p class="mt-1">In the quran.js file, replace the GOOGLE_SCRIPT_URL with the copied URL.</p>
                     </li>
                 </ol>
                 <div class="mt-6 p-4 bg-blue-50 rounded-lg">
@@ -959,7 +966,6 @@ function updateSelectedLabels() {
     }
 }
 
-// FIXED: Improved saveAyah function with better validation
 async function saveAyah() {
     // Debug: Log the current state
     console.log('Saving ayah - Current state:');
