@@ -1,4 +1,4 @@
-// quran.js v0.7 validated
+// quran.js v0.9
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlqWMArBZkIfPWVNP6KuM0wyy2u3zvN3INFKzoQMI5MHiRQHQTVehC-9Mi7HiwK3q86A/exec";
 const CLOUDFLARE_SHEET_API_URL = "/sheet-api"; // For Google Sheets operations
 const CLOUDFLARE_QURAN_API_URL = "/quran-api"; // For Quran scraping
@@ -212,27 +212,30 @@ async function loadAyahs() {
     }
 }
 
+// Updated loadLabels function to fetch from Google Sheet
 async function loadLabels() {
     try {
-        // For now, we'll use a static list of labels
-        // In a real app, you might want to store labels in the Google Sheet too
-        labels = [
-            { id: 'allah', name: 'ALLAH', parentId: null },
-            { id: 'allah-name', name: 'NAME', parentId: 'allah' },
-            { id: 'allah-attributes', name: 'ATTRIBUTES', parentId: 'allah' },
-            { id: 'prophets', name: 'PROPHETS', parentId: null },
-            { id: 'prophets-muhammad', name: 'MUHAMMAD', parentId: 'prophets' },
-            { id: 'prophets-ibrahim', name: 'IBRAHIM', parentId: 'prophets' },
-            { id: 'hereafter', name: 'HEREAFTER', parentId: null },
-            { id: 'hereafter-jannah', name: 'JANNAH', parentId: 'hereafter' },
-            { id: 'hereafter-jahannam', name: 'JAHANNAM', parentId: 'hereafter' }
-        ];
+        console.log('Loading labels from Google Sheet via Cloudflare Function');
+        const response = await fetch(`${CLOUDFLARE_SHEET_API_URL}?url=${encodeURIComponent(GOOGLE_SCRIPT_URL)}&endpoint=labels`);
         
-        populateLabelFilters();
-        if (elements.parentLabelSelect) populateParentSelect(elements.parentLabelSelect, labels);
-        if (elements.newLabelParentSelect) populateParentSelect(elements.newLabelParentSelect, labels);
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('Labels API Response:', result);
+        
+        if (result.status === 'success') {
+            labels = result.data;
+            populateLabelFilters();
+            if (elements.parentLabelSelect) populateParentSelect(elements.parentLabelSelect, labels);
+            if (elements.newLabelParentSelect) populateParentSelect(elements.newLabelParentSelect, labels);
+        } else {
+            showError('Failed to load labels: ' + (result.message || 'Unknown error'));
+        }
     } catch (error) {
         console.error('Error loading labels:', error);
+        showError('Network error. Please check your API URL and try again.');
     }
 }
 
@@ -395,8 +398,9 @@ function showSetupInstructions() {
                         <p class="mt-1">Go to Google Sheets and create a new spreadsheet named "Quran Categorizer".</p>
                     </li>
                     <li>
-                        <strong>Set up the sheet:</strong>
+                        <strong>Set up the sheets:</strong>
                         <p class="mt-1">Rename the first sheet to "QURAN" and add the following headers in the first row: SURAH, AYAH, ARB, ENG, IDN, LABEL, SOURCE</p>
+                        <p class="mt-1">Create a second sheet named "QURAN LABEL" and add the following headers in the first row: ID, NAME, PARENT_ID</p>
                     </li>
                     <li>
                         <strong>Open Apps Script Editor:</strong>
@@ -1413,7 +1417,6 @@ function filterAyahs() {
     const searchTerm = elements.searchInput ? elements.searchInput.value.toLowerCase() : '';
     const surahFilter = elements.surahFilter ? elements.surahFilter.value : '';
     const labelFilter = elements.labelFilter ? elements.labelFilter.value : '';
-    const showUnlabeledOnly = elements.showUnlabeledOnly ? elements.showUnlabeledOnly.checked : false;
     
     let filteredAyahs = ayahs;
     
@@ -1440,11 +1443,6 @@ function filterAyahs() {
             const ayahLabels = ayah.LABEL.split(',').map(label => label.trim());
             return ayahLabels.includes(labelFilter);
         });
-    }
-    
-    // Filter by unlabeled only
-    if (showUnlabeledOnly) {
-        filteredAyahs = filteredAyahs.filter(ayah => !ayah.LABEL || ayah.LABEL.trim() === '');
     }
     
     displayAyahs(filteredAyahs);

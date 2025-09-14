@@ -9,6 +9,7 @@ export async function onRequest({ request, env }) {
     // Get the Google Apps Script URL from the query parameters
     const url = new URL(request.url);
     const googleScriptUrl = url.searchParams.get('url');
+    const endpoint = url.searchParams.get('endpoint');
     
     if (!googleScriptUrl) {
       return new Response(JSON.stringify({ error: 'Missing Google Script URL parameter' }), {
@@ -17,8 +18,21 @@ export async function onRequest({ request, env }) {
       });
     }
     
-    // Handle different HTTP methods
-    if (request.method === 'GET') {
+    // Handle different endpoints
+    if (endpoint === 'labels') {
+      // Forward the request to get labels
+      const labelsUrl = `${googleScriptUrl}?endpoint=getLabels`;
+      const response = await fetch(labelsUrl);
+      
+      // Get the response data
+      const responseData = await response.json();
+      
+      // Return the response with CORS headers
+      return new Response(JSON.stringify(responseData), {
+        status: response.status,
+        headers: corsHeaders()
+      });
+    } else if (request.method === 'GET') {
       // Forward the GET request to Google Apps Script
       const response = await fetch(googleScriptUrl);
       
