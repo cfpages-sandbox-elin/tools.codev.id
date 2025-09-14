@@ -1,4 +1,4 @@
-// quran.js v1.2
+// quran.js v1.2 NEW
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlqWMArBZkIfPWVNP6KuM0wyy2u3zvN3INFKzoQMI5MHiRQHQTVehC-9Mi7HiwK3q86A/exec";
 const CLOUDFLARE_SHEET_API_URL = "/sheet-api"; // For Google Sheets operations
 const CLOUDFLARE_QURAN_API_URL = "/quran-api"; // For Quran scraping
@@ -210,6 +210,34 @@ async function loadAyahs() {
         showError('Network error. Please check your API URL and try again.');
     } finally {
         hideLoading();
+    }
+}
+
+async function saveLabelToSheet(label) {
+    try {
+        console.log('Saving new label to Google Sheet via Cloudflare Function');
+        // Add an 'action' property to tell the backend what to do
+        const payload = { ...label, action: 'addLabel' };
+
+        const response = await fetch(`${CLOUDFLARE_SHEET_API_URL}?url=${encodeURIComponent(GOOGLE_SCRIPT_URL)}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('Save label response:', result);
+
+        return result.status === 'success';
+    } catch (error) {
+        console.error('Error saving label:', error);
+        return false;
     }
 }
 
@@ -987,14 +1015,13 @@ function addSelectedLabel() {
     showSuccess('Label added successfully!');
 }
 
-function createNewLabel() {
+async function createNewLabel() {
     if (!elements.newLabelInput || !elements.newLabelType) {
         console.error('New label input or type element not found');
         return;
     }
     
     const labelName = elements.newLabelInput.value.trim();
-    
     if (!labelName) {
         showError('Please enter a label name');
         return;
@@ -1004,37 +1031,41 @@ function createNewLabel() {
     const parentId = labelType === 'child' && elements.newLabelParent ? 
                     elements.newLabelParent.value : null;
     
-    // Generate a simple ID from the label name
     const labelId = labelName.toLowerCase().replace(/\s+/g, '-');
     
-    // Check if label already exists
-    if (labels.some(label => label.id === labelId)) {
-        showError('Label already exists');
+    if (labels.some(label => label.ID === labelId)) {
+        showError('Label with this ID already exists');
         return;
     }
     
-    // Add new label
+    // FIX: Create the object with uppercase properties to match the data structure
     const newLabel = {
-        id: labelId,
-        name: labelName.toUpperCase(),
-        parentId: parentId
+        ID: labelId,
+        NAME: labelName.toUpperCase(),
+        PARENT_ID: parentId || "" // Use empty string for no parent, as Google Sheets does
     };
     
-    console.log('Creating new label:', newLabel);
+    console.log('Attempting to create and save new label:', newLabel);
     
+    // FEATURE: Save the new label to the Google Sheet
+    const success = await saveLabelToSheet(newLabel);
+
+    if (!success) {
+        showError('Failed to save new label. Please try again.');
+        return; // Stop execution if saving failed
+    }
+    
+    // If successful, update the local state and UI
     labels.push(newLabel);
     
-    // Update UI
     populateLabelFilters();
     if (elements.parentLabelSelect) populateParentSelect(elements.parentLabelSelect, labels);
     if (elements.newLabelParentSelect) populateParentSelect(elements.newLabelParentSelect, labels);
     
-    // Add to selected labels
     selectedLabels.push(labelId);
     updateSelectedLabels();
     updateSaveButtonState();
     
-    // Reset input
     elements.newLabelInput.value = '';
     if (elements.newLabelParent) elements.newLabelParent.value = '';
     
