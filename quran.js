@@ -1,4 +1,4 @@
-// quran.js v1.1
+// quran.js v1.2
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlqWMArBZkIfPWVNP6KuM0wyy2u3zvN3INFKzoQMI5MHiRQHQTVehC-9Mi7HiwK3q86A/exec";
 const CLOUDFLARE_SHEET_API_URL = "/sheet-api"; // For Google Sheets operations
 const CLOUDFLARE_QURAN_API_URL = "/quran-api"; // For Quran scraping
@@ -552,20 +552,18 @@ function displayAyahs(ayahsToDisplay) {
 function createAyahElement(ayah) {
     const ayahDiv = document.createElement('div');
     
-    // Add different background color based on whether the ayah is labeled
     const isLabeled = ayah.LABEL && ayah.LABEL.trim() !== '';
     ayahDiv.className = `p-6 hover:bg-gray-50 transition-colors ${isLabeled ? 'labeled-ayah' : 'unlabeled-ayah'}`;
     
-    // Parse labels
     const ayahLabels = ayah.LABEL ? ayah.LABEL.split(',').map(label => label.trim()) : [];
     
-    // Create labels HTML
     let labelsHtml = '';
     ayahLabels.forEach(labelId => {
-        const label = labels.find(l => l.id === labelId);
+        // FIX: Use uppercase 'ID', 'PARENT_ID', and 'NAME'
+        const label = labels.find(l => l.ID === labelId);
         if (label) {
-            const isParent = !label.parentId;
-            labelsHtml += `<span class="label-tag ${isParent ? 'parent-label' : 'child-label'}">${label.name}</span>`;
+            const isParent = !label.PARENT_ID;
+            labelsHtml += `<span class="label-tag ${isParent ? 'parent-label' : 'child-label'}">${label.NAME}</span>`;
         }
     });
     
@@ -595,7 +593,6 @@ function createAyahElement(ayah) {
         </div>
     `;
     
-    // Add event listeners
     ayahDiv.querySelector('.edit-ayah').addEventListener('click', () => editAyah(ayah.Id));
     ayahDiv.querySelector('.delete-ayah').addEventListener('click', () => deleteAyah(ayah.Id));
     
@@ -628,11 +625,11 @@ function populateLabelFilters() {
     
     elements.labelFilter.innerHTML = '<option value="">All Labels</option>';
     
-    // Add parent labels
-    labels.filter(label => !label.parentId).forEach(label => {
+    // FIX: Use uppercase 'PARENT_ID', 'ID', and 'NAME'
+    labels.filter(label => !label.PARENT_ID).forEach(label => {
         const option = document.createElement('option');
-        option.value = label.id;
-        option.textContent = label.name;
+        option.value = label.ID;
+        option.textContent = label.NAME;
         elements.labelFilter.appendChild(option);
     });
 }
@@ -642,10 +639,11 @@ function populateParentSelect(selectElement, labelsList) {
     
     selectElement.innerHTML = '<option value="">Select Parent Label</option>';
     
-    labelsList.filter(label => !label.parentId).forEach(label => {
+    // FIX: Use uppercase 'PARENT_ID', 'ID', and 'NAME'
+    labelsList.filter(label => !label.PARENT_ID).forEach(label => {
         const option = document.createElement('option');
-        option.value = label.id;
-        option.textContent = label.name;
+        option.value = label.ID;
+        option.textContent = label.NAME;
         selectElement.appendChild(option);
     });
 }
@@ -656,10 +654,11 @@ function populateChildSelect(parentId) {
     elements.childLabelSelect.innerHTML = '<option value="">Select Child Label</option>';
     
     if (parentId) {
-        labels.filter(label => label.parentId === parentId).forEach(label => {
+        // FIX: Use uppercase 'PARENT_ID', 'ID', and 'NAME'
+        labels.filter(label => label.PARENT_ID === parentId).forEach(label => {
             const option = document.createElement('option');
-            option.value = label.id;
-            option.textContent = label.name;
+            option.value = label.ID;
+            option.textContent = label.NAME;
             elements.childLabelSelect.appendChild(option);
         });
     }
@@ -1058,18 +1057,18 @@ function updateSelectedLabels() {
     console.log('Updating selected labels:', selectedLabels);
     
     selectedLabels.forEach(labelId => {
-        const label = labels.find(l => l.id === labelId);
+        // FIX: Use uppercase properties throughout
+        const label = labels.find(l => l.ID === labelId);
         if (label) {
-            const isParent = !label.parentId;
+            const isParent = !label.PARENT_ID;
             const labelTag = document.createElement('span');
             labelTag.className = `label-tag ${isParent ? 'parent-label' : 'child-label'} flex items-center`;
             
-            // Show parent-child relationship in the tag
-            let labelText = label.name;
-            if (!isParent && label.parentId) {
-                const parentLabel = labels.find(l => l.id === label.parentId);
+            let labelText = label.NAME;
+            if (!isParent && label.PARENT_ID) {
+                const parentLabel = labels.find(l => l.ID === label.PARENT_ID);
                 if (parentLabel) {
-                    labelText = `${parentLabel.name} > ${label.name}`;
+                    labelText = `${parentLabel.NAME} > ${label.NAME}`;
                 }
             }
             
@@ -1092,17 +1091,15 @@ function updateSelectedLabels() {
         }
     });
     
-    // Update review section
     if (elements.reviewLabels) {
         const labelNames = selectedLabels.map(id => {
-            const label = labels.find(l => l.id === id);
-            return label ? label.name : '';
+            const label = labels.find(l => l.ID === id);
+            return label ? label.NAME : '';
         }).filter(name => name).join(', ');
         
         elements.reviewLabels.textContent = labelNames || '-';
     }
-    
-    // Update step indicators if we have labels
+
     if (selectedLabels.length > 0) {
         if (elements.step2Indicator) {
             elements.step2Indicator.classList.remove('active');
