@@ -1,6 +1,7 @@
-// quran.js v0.6 validated
+// quran.js v0.7 validated
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlqWMArBZkIfPWVNP6KuM0wyy2u3zvN3INFKzoQMI5MHiRQHQTVehC-9Mi7HiwK3q86A/exec";
-const CLOUDFLARE_FUNCTION_URL = "/sheet-api"; // Updated to use relative path
+const CLOUDFLARE_SHEET_API_URL = "/sheet-api"; // For Google Sheets operations
+const CLOUDFLARE_QURAN_API_URL = "/quran-api"; // For Quran scraping
 
 // Check if API URL is set
 function isApiUrlSet() {
@@ -24,15 +25,27 @@ function initializeElements() {
         ayahList: document.getElementById('ayahList'),
         loadingIndicator: document.getElementById('loadingIndicator'),
         emptyState: document.getElementById('emptyState'),
+        unlabeledWarning: document.getElementById('unlabeledWarning'),
         
         // Search and filter
         searchInput: document.getElementById('searchInput'),
         surahFilter: document.getElementById('surahFilter'),
         labelFilter: document.getElementById('labelFilter'),
+        showUnlabeledOnly: document.getElementById('showUnlabeledOnly'),
         
         // Modals
         ayahModal: document.getElementById('ayahModal'),
         labelsModal: document.getElementById('labelsModal'),
+        importSurahModal: document.getElementById('importSurahModal'),
+        
+        // Import surah
+        importSurah: document.getElementById('importSurah'),
+        surahUrlInput: document.getElementById('surahUrlInput'),
+        importButton: document.getElementById('importButton'),
+        cancelImportButton: document.getElementById('cancelImportButton'),
+        closeImportModal: document.getElementById('closeImportModal'),
+        importProgress: document.getElementById('importProgress'),
+        progressBar: document.getElementById('progressBar'),
         
         // Ayah form
         modalTitle: document.getElementById('modalTitle'),
@@ -95,6 +108,7 @@ function initializeApp() {
     } else {
         loadAyahs();
         loadLabels();
+        checkForUnlabeledAyahs();
     }
     
     // Set up event listeners
@@ -104,12 +118,18 @@ function initializeApp() {
 // Set up all event listeners
 function setupEventListeners() {
     // Modal controls
+    if (elements.importSurah) elements.importSurah.addEventListener('click', openImportSurahModal);
     if (elements.addNewAyah) elements.addNewAyah.addEventListener('click', openAddAyahModal);
     if (elements.manageLabels) elements.manageLabels.addEventListener('click', openLabelsModal);
     if (elements.closeModal) elements.closeModal.addEventListener('click', closeAyahModal);
     if (elements.cancelButton) elements.cancelButton.addEventListener('click', closeAyahModal);
     if (elements.closeLabelsModal) elements.closeLabelsModal.addEventListener('click', closeLabelsModal);
     if (elements.closeLabelsModalButton) elements.closeLabelsModalButton.addEventListener('click', closeLabelsModal);
+    
+    // Import surah modal
+    if (elements.importButton) elements.importButton.addEventListener('click', importSurah);
+    if (elements.cancelImportButton) elements.cancelImportButton.addEventListener('click', closeImportSurahModal);
+    if (elements.closeImportModal) elements.closeImportModal.addEventListener('click', closeImportSurahModal);
     
     // Ayah form
     if (elements.parseButton) elements.parseButton.addEventListener('click', parsePastedAyah);
@@ -124,6 +144,7 @@ function setupEventListeners() {
     if (elements.searchInput) elements.searchInput.addEventListener('input', filterAyahs);
     if (elements.surahFilter) elements.surahFilter.addEventListener('change', filterAyahs);
     if (elements.labelFilter) elements.labelFilter.addEventListener('change', filterAyahs);
+    if (elements.showUnlabeledOnly) elements.showUnlabeledOnly.addEventListener('change', filterAyahs);
     
     // Label type change
     if (elements.newLabelType) {
@@ -165,8 +186,8 @@ function cleanArabicText(text) {
 async function loadAyahs() {
     showLoading();
     try {
-        console.log('Fetching from API via Cloudflare Function:', CLOUDFLARE_FUNCTION_URL);
-        const response = await fetch(`${CLOUDFLARE_FUNCTION_URL}?url=${encodeURIComponent(GOOGLE_SCRIPT_URL)}`);
+        console.log('Fetching from API via Cloudflare Function:', CLOUDFLARE_SHEET_API_URL);
+        const response = await fetch(`${CLOUDFLARE_SHEET_API_URL}?url=${encodeURIComponent(GOOGLE_SCRIPT_URL)}`);
         
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
@@ -179,6 +200,7 @@ async function loadAyahs() {
             ayahs = result.data;
             displayAyahs(ayahs);
             populateSurahFilter();
+            checkForUnlabeledAyahs();
         } else {
             showError('Failed to load ayahs: ' + (result.message || 'Unknown error'));
         }
@@ -217,7 +239,7 @@ async function loadLabels() {
 async function saveAyahToSheet(ayah) {
     try {
         console.log('Saving to Google Sheet via Cloudflare Function');
-        const response = await fetch(`${CLOUDFLARE_FUNCTION_URL}?url=${encodeURIComponent(GOOGLE_SCRIPT_URL)}`, {
+        const response = await fetch(`${CLOUDFLARE_SHEET_API_URL}?url=${encodeURIComponent(GOOGLE_SCRIPT_URL)}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -241,6 +263,83 @@ async function saveAyahToSheet(ayah) {
     } catch (error) {
         console.error('Error saving ayah:', error);
         return false;
+    }
+}
+
+// Import Surah Functions
+function openImportSurahModal() {
+    if (elements.importSurahModal) elements.importSurahModal.classList.remove('hidden');
+    if (elements.surahUrlInput) {
+        elements.surahUrlInput.value = '';
+        elements.surahUrlInput.focus();
+    }
+    if (elements.importProgress) elements.importProgress.classList.add('hidden');
+}
+
+function closeImportSurahModal() {
+    if (elements.importSurahModal) elements.importSurahModal.classList.add('hidden');
+}
+
+async function importSurah() {
+    const surahUrl = elements.surahUrlInput ? elements.surahUrlInput.value.trim() : '';
+    
+    if (!surahUrl) {
+        showError('Please enter a Quran.com surah URL');
+        return;
+    }
+    
+    // Validate URL format
+    if (!surahUrl.match(/quran\.com\/\d+/)) {
+        showError('Invalid Quran.com URL format. Example: https://quran.com/1');
+        return;
+    }
+    
+    // Show progress
+    if (elements.importProgress) elements.importProgress.classList.remove('hidden');
+    if (elements.progressBar) elements.progressBar.style.width = '0%';
+    
+    try {
+        // Scrape the surah
+        const scrapeResponse = await fetch(`${CLOUDFLARE_QURAN_API_URL}?url=${encodeURIComponent(surahUrl)}&action=scrape`);
+        
+        if (!scrapeResponse.ok) {
+            throw new Error(`HTTP error! Status: ${scrapeResponse.status}`);
+        }
+        
+        const scrapeResult = await scrapeResponse.json();
+        
+        if (scrapeResult.status !== 'success') {
+            throw new Error(scrapeResult.error || 'Failed to scrape surah');
+        }
+        
+        const ayahsToImport = scrapeResult.data;
+        
+        // Save each ayah to Google Sheet
+        for (let i = 0; i < ayahsToImport.length; i++) {
+            const ayah = ayahsToImport[i];
+            const success = await saveAyahToSheet(ayah);
+            
+            // Update progress
+            const progress = ((i + 1) / ayahsToImport.length) * 100;
+            if (elements.progressBar) elements.progressBar.style.width = `${progress}%`;
+            
+            if (!success) {
+                throw new Error(`Failed to save ayah ${i + 1}`);
+            }
+            
+            // Small delay to avoid overwhelming the API
+            await new Promise(resolve => setTimeout(resolve, 200));
+        }
+        
+        showSuccess(`Successfully imported ${ayahsToImport.length} ayahs`);
+        closeImportSurahModal();
+        loadAyahs(); // Reload ayahs
+        
+    } catch (error) {
+        console.error('Error importing surah:', error);
+        showError(`Failed to import surah: ${error.message}`);
+    } finally {
+        if (elements.importProgress) elements.importProgress.classList.add('hidden');
     }
 }
 
@@ -379,6 +478,20 @@ function showSuccess(message) {
     }, 3000);
 }
 
+function checkForUnlabeledAyahs() {
+    const unlabeledAyahs = ayahs.filter(ayah => !ayah.LABEL || ayah.LABEL.trim() === '');
+    
+    if (unlabeledAyahs.length > 0) {
+        if (elements.unlabeledWarning) {
+            elements.unlabeledWarning.classList.remove('hidden');
+        }
+    } else {
+        if (elements.unlabeledWarning) {
+            elements.unlabeledWarning.classList.add('hidden');
+        }
+    }
+}
+
 function displayAyahs(ayahsToDisplay) {
     if (!elements.ayahList) return;
     
@@ -391,15 +504,52 @@ function displayAyahs(ayahsToDisplay) {
     
     if (elements.emptyState) elements.emptyState.classList.add('hidden');
     
+    // Group ayahs by surah
+    const ayahsBySurah = {};
     ayahsToDisplay.forEach(ayah => {
-        const ayahElement = createAyahElement(ayah);
-        elements.ayahList.appendChild(ayahElement);
+        if (!ayahsBySurah[ayah.SURAH]) {
+            ayahsBySurah[ayah.SURAH] = [];
+        }
+        ayahsBySurah[ayah.SURAH].push(ayah);
+    });
+    
+    // Sort surahs by number
+    const sortedSurahs = Object.keys(ayahsBySurah).sort((a, b) => {
+        const aNum = parseInt(a.match(/(\d+)/)[0]);
+        const bNum = parseInt(b.match(/(\d+)/)[0]);
+        return aNum - bNum;
+    });
+    
+    // Display ayahs grouped by surah
+    sortedSurahs.forEach(surah => {
+        const surahAyahs = ayahsBySurah[surah];
+        
+        // Create surah header
+        const surahHeader = document.createElement('div');
+        surahHeader.className = 'surah-header mb-4';
+        surahHeader.innerHTML = `
+            <div class="surah-title">${surah}</div>
+            <div class="surah-info">${surahAyahs.length} ayahs</div>
+        `;
+        elements.ayahList.appendChild(surahHeader);
+        
+        // Sort ayahs by ayah number
+        surahAyahs.sort((a, b) => parseInt(a.AYAH) - parseInt(b.AYAH));
+        
+        // Display ayahs
+        surahAyahs.forEach(ayah => {
+            const ayahElement = createAyahElement(ayah);
+            elements.ayahList.appendChild(ayahElement);
+        });
     });
 }
 
 function createAyahElement(ayah) {
     const ayahDiv = document.createElement('div');
-    ayahDiv.className = 'p-6 hover:bg-gray-50 transition-colors';
+    
+    // Add different background color based on whether the ayah is labeled
+    const isLabeled = ayah.LABEL && ayah.LABEL.trim() !== '';
+    ayahDiv.className = `p-6 hover:bg-gray-50 transition-colors ${isLabeled ? 'labeled-ayah' : 'unlabeled-ayah'}`;
     
     // Parse labels
     const ayahLabels = ayah.LABEL ? ayah.LABEL.split(',').map(label => label.trim()) : [];
@@ -1263,6 +1413,7 @@ function filterAyahs() {
     const searchTerm = elements.searchInput ? elements.searchInput.value.toLowerCase() : '';
     const surahFilter = elements.surahFilter ? elements.surahFilter.value : '';
     const labelFilter = elements.labelFilter ? elements.labelFilter.value : '';
+    const showUnlabeledOnly = elements.showUnlabeledOnly ? elements.showUnlabeledOnly.checked : false;
     
     let filteredAyahs = ayahs;
     
@@ -1289,6 +1440,11 @@ function filterAyahs() {
             const ayahLabels = ayah.LABEL.split(',').map(label => label.trim());
             return ayahLabels.includes(labelFilter);
         });
+    }
+    
+    // Filter by unlabeled only
+    if (showUnlabeledOnly) {
+        filteredAyahs = filteredAyahs.filter(ayah => !ayah.LABEL || ayah.LABEL.trim() === '');
     }
     
     displayAyahs(filteredAyahs);
