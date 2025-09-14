@@ -1,4 +1,4 @@
-// quran.js v1.2 NEW
+// quran.js v1.3 global paste
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlqWMArBZkIfPWVNP6KuM0wyy2u3zvN3INFKzoQMI5MHiRQHQTVehC-9Mi7HiwK3q86A/exec";
 const CLOUDFLARE_SHEET_API_URL = "/sheet-api"; // For Google Sheets operations
 const CLOUDFLARE_QURAN_API_URL = "/quran-api"; // For Quran scraping
@@ -118,6 +118,7 @@ async function initializeApp() {
 
 // Set up all event listeners
 function setupEventListeners() {
+    document.addEventListener('paste', handleGlobalPaste);
     // Modal controls
     if (elements.importSurah) elements.importSurah.addEventListener('click', openImportSurahModal);
     if (elements.addNewAyah) elements.addNewAyah.addEventListener('click', openAddAyahModal);
@@ -756,6 +757,45 @@ function handlePaste(e) {
     setTimeout(() => {
         parsePastedAyah();
     }, 100);
+}
+
+function handleGlobalPaste(e) {
+    // Check if the user is already interacting with an input, textarea, or if the modal is open.
+    // If so, we don't want this global handler to interfere.
+    const activeElement = document.activeElement;
+    const isInputFocused = activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA';
+    const isModalOpen = elements.ayahModal && !elements.ayahModal.classList.contains('hidden');
+
+    if (isInputFocused || isModalOpen) {
+        // Let the default paste behavior or more specific listeners handle this.
+        return;
+    }
+
+    // Prevent the browser from pasting the text directly into the page body.
+    e.preventDefault();
+
+    // Get the text content from the clipboard.
+    const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+
+    // If no text was pasted, do nothing.
+    if (!pastedText) return;
+    
+    console.log('Global paste detected. Opening modal...');
+
+    // Open the "Add New Ayah" modal.
+    openAddAyahModal();
+
+    // A small delay is needed to ensure the modal elements are ready in the DOM.
+    setTimeout(() => {
+        if (elements.pasteInput) {
+            // Set the value of the textarea to the pasted content.
+            elements.pasteInput.value = pastedText;
+
+            // Give user feedback and automatically parse the content.
+            showSuccess('Pasted content detected. Parsing...');
+            parsePastedAyah();
+        }
+    }, 200); // 200ms is a safe delay.
 }
 
 function handleKeyDown(e) {
