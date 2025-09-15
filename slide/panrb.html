@@ -78,6 +78,93 @@
             max-height: 90px;
             width: auto;
         }
+
+        /* --- BPM Lifecycle Diagram Styles --- */
+        .bpm-lifecycle-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+        }
+        .bpm-lifecycle {
+            position: relative;
+            width: 450px;
+            height: 450px;
+            border-radius: 50%;
+            background: conic-gradient(
+                from -18deg,
+                #9333ea 72deg, /* 1. Analyze (Purple) */
+                #be185d 72deg 144deg, /* 2. Model (Pink) */
+                #dc2626 144deg 216deg, /* 3. Execute (Red) */
+                #ea580c 216deg 288deg, /* 4. Monitor (Orange) */
+                #d97706 288deg 360deg /* 5. Optimize (Amber) */
+            );
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .bpm-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50%;
+            height: 50%;
+            background-color: #ffffff; /* Must match slide background */
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #334155;
+        }
+        .bpm-item {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 1px;
+            height: 50%;
+            transform-origin: bottom center;
+            transition: opacity 0.4s ease-in-out;
+        }
+        .bpm-number {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            background-color: #1e293b;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            border: 5px solid #ffffff; /* This border creates the yin-yang illusion */
+            z-index: 2;
+        }
+        .bpm-label {
+            position: absolute;
+            top: 60px;
+            left: 0;
+            width: 100px;
+            text-align: center;
+            transform: translateX(-50%) rotate(calc(-1 * var(--rotation)));
+            font-weight: 500;
+            color: white;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+        }
+
+        /* Highlighting for Slide 11 */
+        .bpm-lifecycle.highlight-critical .bpm-item {
+            opacity: 0.3;
+        }
+        .bpm-lifecycle.highlight-critical .bpm-item.critical-phase {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -443,7 +530,7 @@
                 </div>
             </section>
             
-            <!-- Slide 10: Metodologi: Siklus Hidup Manajemen Proses Bisnis -->
+            <!-- Slide 10: Metodologi: Siklus Hidup Manajemen Proses Bisnis (REVISED with HTML/CSS) -->
             <section id="slide10" class="slide bg-grid">
                 <div class="slide-header">
                     <h2 class="slide-title"><span class="title-prefix">BAGIAN 3: METODOLOGI & ALAT BANTU</span>Metodologi: Siklus Hidup Manajemen Proses Bisnis</h2>
@@ -453,16 +540,27 @@
                         <h3 class="font-bold text-xl text-blue-800 mb-2">Apresiasi Terhadap Metodologi</h3>
                         <p>Draf R-PermenPANRB telah mengadopsi kerangka kerja siklus hidup Manajemen Proses Bisnis (BPM) yang selaras dengan praktik terbaik global. Pendekatan ini memastikan bahwa upaya perbaikan proses dilakukan secara sistematis, terstruktur, dan berkelanjutan.</p>
                     </div>
-                    <div class="relative w-full max-w-5xl mx-auto flex justify-center items-center">
-                        <img src="/img/bpm-lifecycle.png" alt="BPM Lifecycle Diagram" class="max-h-[480px]">
+                    
+                    <div class="bpm-lifecycle-wrapper">
+                        <div class="bpm-lifecycle">
+                            <div class="bpm-center">BPM<br>Lifecycle</div>
+                            <div class="bpm-items">
+                                <div class="bpm-item" style="--rotation: 36deg;"><div class="bpm-number">01</div><div class="bpm-label">Analisis</div></div>
+                                <div class="bpm-item" style="--rotation: 108deg;"><div class="bpm-number">02</div><div class="bpm-label">Pemodelan</div></div>
+                                <div class="bpm-item" style="--rotation: 180deg;"><div class="bpm-number">03</div><div class="bpm-label">Implementasi</div></div>
+                                <div class="bpm-item" style="--rotation: 252deg;"><div class="bpm-number">04</div><div class="bpm-label">Pemantauan</div></div>
+                                <div class="bpm-item" style="--rotation: 324deg;"><div class="bpm-number">05</div><div class="bpm-label">Optimalisasi</div></div>
+                            </div>
+                        </div>
                     </div>
+
                      <div class="callout callout-success mt-8 max-w-5xl mx-auto">
-                        <p><strong>Implikasi Positif:</strong> Adopsi siklus ini secara fundamental mengubah pemetaan proses dari sebuah proyek satu kali (*one-off project*) menjadi sebuah **disiplin manajemen untuk perbaikan berkelanjutan** (*continuous improvement*).</p>
+                        <p><strong>Implikasi Positif:</strong> Adopsi siklus ini secara fundamental mengubah pemetaan proses dari sebuah proyek satu kali (<i>one-off project</i>) menjadi sebuah <strong>disiplin manajemen untuk perbaikan berkelanjutan</strong> (<i>continuous improvement</i>).</p>
                     </div>
                 </div>
             </section>
 
-            <!-- Slide 11: Analisis Fase Kritis: Rancang Ulang & Implementasi -->
+            <!-- Slide 11: Analisis Fase Kritis: Rancang Ulang & Implementasi (REVISED with HTML/CSS) -->
             <section id="slide11" class="slide bg-dots">
                 <div class="slide-header">
                     <h2 class="slide-title"><span class="title-prefix">BAGIAN 3: METODOLOGI & ALAT BANTU</span>Analisis Fase Kritis: Rancang Ulang & Implementasi</h2>
@@ -471,12 +569,18 @@
                     <div class="flex items-center gap-12">
                         <div class="w-1/2">
                            <h3 class="text-2xl font-bold text-slate-800 mb-4">Observasi Terhadap Siklus BPM</h3>
-                            <p class="text-slate-600 mb-6">Meskipun seluruh tahapan dalam siklus BPM penting, pengalaman di sektor publik menunjukkan bahwa fase **Analisis (Analyze), Rancang Ulang (Model), dan Implementasi (Execute)** menghadapi tantangan non-teknis terbesar yang seringkali menjadi penentu keberhasilan atau kegagalan.</p>
-                            <div class="relative w-full max-w-lg mx-auto flex justify-center items-center">
-                                <img src="/img/bpm-lifecycle.png" alt="BPM Lifecycle Diagram" class="max-h-[350px] opacity-20">
-                                <!-- Overlay and Highlight -->
-                                <div class="absolute inset-0 flex items-center justify-center">
-                                    <div class="w-80 h-80 border-4 border-dashed border-red-500 rounded-full animate-pulse" style="transform: rotate(30deg);"></div>
+                            <p class="text-slate-600 mb-6">Meskipun seluruh tahapan penting, pengalaman di sektor publik menunjukkan bahwa fase yang melibatkan perubahan—yaitu **Analisis, Pemodelan (Rancang Ulang), dan Implementasi**—menghadapi tantangan non-teknis terbesar.</p>
+                            
+                            <div class="bpm-lifecycle-wrapper">
+                                <div class="bpm-lifecycle highlight-critical">
+                                    <div class="bpm-center">Fase<br>Kritis</div>
+                                    <div class="bpm-items">
+                                        <div class="bpm-item critical-phase" style="--rotation: 36deg;"><div class="bpm-number">01</div><div class="bpm-label">Analisis</div></div>
+                                        <div class="bpm-item critical-phase" style="--rotation: 108deg;"><div class="bpm-number">02</div><div class="bpm-label">Pemodelan</div></div>
+                                        <div class="bpm-item critical-phase" style="--rotation: 180deg;"><div class="bpm-number">03</div><div class="bpm-label">Implementasi</div></div>
+                                        <div class="bpm-item" style="--rotation: 252deg;"><div class="bpm-number">04</div><div class="bpm-label">Pemantauan</div></div>
+                                        <div class="bpm-item" style="--rotation: 324deg;"><div class="bpm-number">05</div><div class="bpm-label">Optimalisasi</div></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -500,7 +604,7 @@
                                 <li class="flex items-start gap-3 p-3 bg-white border rounded-lg shadow-sm">
                                     <i class="fas fa-cogs text-2xl text-red-500 mt-1 w-8 text-center"></i>
                                     <div>
-                                        <strong class="font-semibold">Keterbatasan Teknologi Warisan (*Legacy*)</strong>
+                                        <strong class="font-semibold">Keterbatasan Teknologi Warisan (<i>Legacy</i>)</strong>
                                         <p class="text-sm text-slate-500">Ide perbaikan proses terkendala oleh sistem atau aplikasi yang sudah usang dan tidak fleksibel untuk diintegrasikan.</p>
                                     </div>
                                 </li>
