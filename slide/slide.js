@@ -1,4 +1,4 @@
-// slide.js v1.0 auto format md luas
+// slide.js v1.0 auto format md luas fix
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -42,28 +42,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // --- CORE FUNCTIONS ---
     function formatMarkdownFormatting() {
-        const elements = document.querySelectorAll('.slide-content p, .slide-content li, .slide-content h3, .slide-content h4, .slide-content div');
+        // Selector yang lebih spesifik dan aman
+        const elements = document.querySelectorAll('.slide-content p, .slide-content li, .slide-content h3, .slide-content h4, .callout p, .callout li, .callout h3');
         
         elements.forEach(el => {
-            // Cek untuk menghindari pemrosesan ulang elemen yang sudah memiliki anak elemen kompleks
-            if (el.children.length > 1) { 
-                // Jika elemen sudah punya banyak anak (misal: div dengan banyak p di dalamnya),
-                // kita proses anaknya satu per satu untuk keamanan.
-                Array.from(el.childNodes).forEach(child => {
-                    if (child.nodeType === 3) { // Hanya proses Text Nodes
-                        const wrapper = document.createElement('span');
-                        wrapper.innerHTML = child.textContent.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                        wrapper.innerHTML = child.textContent.replace(/\*(.*?)\*/g, '<em>$1</em>');
-                        el.replaceChild(wrapper, child);
-                    }
-                });
-            } else {
-                 // Jika elemen sederhana, proses langsung innerHTML-nya
-                let html = el.innerHTML;
-                html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-                html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-                el.innerHTML = html;
-            }
+            let html = el.innerHTML;
+            
+            // Regex yang lebih aman untuk menghindari konflik dengan tag HTML
+            // Ganti **bold** menjadi <strong>
+            html = html.replace(/\*\*(?!\s)(.*?)(?<!\s)\*\*/g, '<strong>$1</strong>');
+            // Ganti *italic* menjadi <em>
+            html = html.replace(/\*(?!\s)(.*?)(?<!\s)\*/g, '<em>$1</em>');
+
+            el.innerHTML = html;
         });
     }
 
