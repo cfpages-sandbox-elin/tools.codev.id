@@ -471,7 +471,7 @@
                     <div class="flex items-center gap-12">
                         <div class="w-1/2">
                            <h3 class="text-2xl font-bold text-slate-800 mb-4">Observasi Terhadap Siklus BPM</h3>
-                            <p class="text-slate-600 mb-6">Meskipun seluruh tahapan dalam siklus BPM penting, pengalaman di sektor publik menunjukkan bahwa fase **Analisis, Rancang Ulang, dan Implementasi** menghadapi tantangan non-teknis terbesar yang seringkali menjadi penentu keberhasilan atau kegagalan.</p>
+                            <p class="text-slate-600 mb-6">Meskipun seluruh tahapan dalam siklus BPM penting, pengalaman di sektor publik menunjukkan bahwa fase **Analisis (Analyze), Rancang Ulang (Model), dan Implementasi (Execute)** menghadapi tantangan non-teknis terbesar yang seringkali menjadi penentu keberhasilan atau kegagalan.</p>
                             <div class="relative w-full max-w-lg mx-auto flex justify-center items-center">
                                 <img src="/img/bpm-lifecycle.png" alt="BPM Lifecycle Diagram" class="max-h-[350px] opacity-20">
                                 <!-- Overlay and Highlight -->
@@ -712,7 +712,7 @@
                 </div>
             </section>
             
-            <!-- Slide 17: Mengukur Kinerja: Tantangan Kontekstualisasi Metrik -->
+            <!-- Slide 17: Mengukur Kinerja: Tantangan Kontekstualisasi Metrik (FIXED) -->
             <section id="slide17" class="slide bg-lines">
                  <div class="slide-header">
                     <h2 class="slide-title"><span class="title-prefix">BAGIAN 4: PENGUKURAN KINERJA</span>Analisis: Tantangan Kontekstualisasi Metrik</h2>
@@ -720,7 +720,7 @@
                 <div class="slide-content">
                      <div class="callout callout-info mb-6">
                         <h3 class="font-bold text-xl text-blue-800 mb-2">Observasi dari Dokumen</h3>
-                        <p>R-PermenPANRB memperkenalkan beberapa metrik kuantitatif yang diadopsi dari sektor industri/manufaktur, seperti *Capability Ratio* (Cp) dan *Capability Index* (Cpk).</p>
+                        <p>R-PermenPANRB memperkenalkan beberapa metrik kuantitatif yang diadopsi dari sektor industri/manufaktur, seperti <i>Capability Ratio</i> (Cp) dan <i>Capability Index</i> (Cpk).</p>
                     </div>
                     <div class="flex justify-around items-stretch gap-8">
                         <!-- Kiri: Industri -->
@@ -728,9 +728,18 @@
                             <h3 class="font-bold text-xl text-slate-800 mb-4 text-center">Konteks Industri Manufaktur</h3>
                             <div class="flex justify-center mb-4"><i class="fas fa-industry text-5xl text-slate-500"></i></div>
                             <ul class="space-y-2">
-                                <li class="flex gap-2"><i class="fas fa-check text-green-500 mt-1"></i>**Karakteristik:** Proses sangat terstandar, berulang, dan outputnya seragam (misal: panjang sekrup).</li>
-                                <li class="flex gap-2"><i class="fas fa-check text-green-500 mt-1"></i>**Pengukuran:** Batas spesifikasi (toleransi) sangat jelas dan terukur secara numerik.</li>
-                                <li class="flex gap-2"><i class="fas fa-check text-green-500 mt-1"></i>**Relevansi Metrik:** Metrik seperti <strong>Cp dan Cpk</strong> sangat relevan untuk mengukur presisi proses.</li>
+                                <li class="flex items-start gap-3">
+                                    <i class="fas fa-check text-green-500 mt-1"></i>
+                                    <div><strong>Karakteristik:</strong> Proses sangat terstandar, berulang, dan outputnya seragam (misal: panjang sekrup).</div>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <i class="fas fa-check text-green-500 mt-1"></i>
+                                    <div><strong>Pengukuran:</strong> Batas spesifikasi (toleransi) sangat jelas dan terukur secara numerik.</div>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <i class="fas fa-check text-green-500 mt-1"></i>
+                                    <div><strong>Relevansi Metrik:</strong> Metrik seperti <strong>Cp dan Cpk</strong> sangat relevan untuk mengukur presisi proses.</div>
+                                </li>
                             </ul>
                         </div>
                         <!-- Kanan: Layanan Publik -->
@@ -738,9 +747,18 @@
                             <h3 class="font-bold text-xl text-amber-800 mb-4 text-center">Konteks Layanan Publik</h3>
                              <div class="flex justify-center mb-4"><i class="fas fa-balance-scale text-5xl text-amber-500"></i></div>
                              <ul class="space-y-2">
-                                <li class="flex gap-2"><i class="fas fa-times text-red-500 mt-1"></i>**Karakteristik:** Proses seringkali melibatkan penilaian, analisis kualitatif, dan kebijakan.</li>
-                                <li class="flex gap-2"><i class="fas fa-times text-red-500 mt-1"></i>**Pengukuran:** Batas spesifikasi (kualitas) sulit didefinisikan secara numerik.</li>
-                                <li class="flex gap-2"><i class="fas fa-question text-orange-500 mt-1"></i>**Analisis Kritis:** Apa "batas toleransi" dari sebuah naskah rekomendasi kebijakan? Bagaimana mengukur "Cpk" dari proses mediasi sengketa?</li>
+                                <li class="flex items-start gap-3">
+                                    <i class="fas fa-times text-red-500 mt-1"></i>
+                                    <div><strong>Karakteristik:</strong> Proses seringkali melibatkan penilaian, analisis kualitatif, dan kebijakan.</div>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <i class="fas fa-times text-red-500 mt-1"></i>
+                                    <div><strong>Pengukuran:</strong> Batas spesifikasi (kualitas) sulit didefinisikan secara numerik.</div>
+                                </li>
+                                <li class="flex items-start gap-3">
+                                    <i class="fas fa-question text-orange-500 mt-1"></i>
+                                    <div><strong>Analisis Kritis:</strong> Apa "batas toleransi" dari sebuah naskah rekomendasi kebijakan? Bagaimana mengukur "Cpk" dari proses mediasi sengketa?</div>
+                                </li>
                              </ul>
                         </div>
                     </div>
