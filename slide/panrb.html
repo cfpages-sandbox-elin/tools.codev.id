@@ -173,7 +173,7 @@
             <!-- Navigation -->
             <div class="nav-arrow" id="prev-slide"><i class="fas fa-chevron-left"></i></div>
             <div class="nav-arrow" id="next-slide"><i class="fas fa-chevron-right"></i></div>
-            <div id="slide-counter">1 / 30</div>
+            <div id="slide-counter">1 / 31</div>
             <div id="fullscreen-btn" title="Toggle Fullscreen"><i class="fas fa-expand"></i></div>
             <div id="download-btn" title="Download as PDF"><i class="fas fa-download"></i></div>
             
@@ -699,38 +699,102 @@
                 </div>
             </section>
             
-            <!-- Slide 14: Alat Bantu Efisiensi: Analisis Nilai Tambah -->
+            <!-- Slide 14: Alat Bantu Efisiensi: Analisis Nilai Tambah (REVISED) -->
             <section id="slide14" class="slide bg-grid">
                 <div class="slide-header">
                     <h2 class="slide-title"><span class="title-prefix">BAGIAN 3: METODOLOGI & ALAT BANTU</span>Alat Bantu Efisiensi: Analisis Nilai Tambah</h2>
                 </div>
-                <div class="slide-content">
-                    <div class="grid grid-cols-2 gap-12 items-center">
-                        <div>
-                            <h3 class="text-2xl font-bold text-slate-800 mb-2">Apresiasi: Alat untuk Budaya Efisiensi</h3>
-                            <p class="text-slate-600 mb-6">Pengenalan Analisis Nilai Tambah adalah langkah penting untuk menggeser fokus dari "menyelesaikan tugas" menjadi "menciptakan nilai", dengan secara sistematis mengidentifikasi dan mengurangi pemborosan (*waste*).</p>
-                            
-                            <div class="p-4 bg-green-50 border-l-4 border-green-500 mb-3">
-                                <h4 class="font-bold text-green-800">Value Added (VA)</h4>
-                                <p class="text-sm text-slate-600">Aktivitas yang menghasilkan nilai langsung bagi pengguna. **Tujuan: Maksimalkan.**</p>
-                            </div>
-                            <div class="p-4 bg-amber-50 border-l-4 border-amber-500 mb-3">
-                                <h4 class="font-bold text-amber-800">Necessary Non-Value Added (NNVA)</h4>
-                                <p class="text-sm text-slate-600">Aktivitas yang wajib karena regulasi/hukum. **Tujuan: Minimalisir & Otomatisasi.**</p>
-                            </div>
-                            <div class="p-4 bg-red-50 border-l-4 border-red-500">
-                                <h4 class="font-bold text-red-800">Non-Value Added (NVA)</h4>
-                                <p class="text-sm text-slate-600">Murni pemborosan (menunggu, birokrasi berlebih). **Tujuan: Eliminasi.**</p>
-                            </div>
+                <div class="slide-content flex flex-col justify-center">
+                    <div class="callout callout-info mb-8">
+                        <h3 class="font-bold text-xl text-blue-800 mb-2">Apresiasi: Alat untuk Menanamkan Budaya Efisiensi</h3>
+                        <p>Pengenalan Analisis Nilai Tambah adalah langkah krusial untuk menggeser fokus dari sekadar "menyelesaikan tugas" menjadi "menciptakan nilai", dengan secara sistematis mengidentifikasi dan mengurangi aktivitas pemborosan (<i>waste</i>).</p>
+                    </div>
 
+                    <div class="grid grid-cols-3 gap-6 text-center">
+                        <!-- Value Added -->
+                        <div class="p-6 bg-green-50 border-2 border-green-300 rounded-lg shadow-lg">
+                            <i class="fas fa-plus-circle text-4xl text-green-600 mb-3"></i>
+                            <h3 class="text-xl font-bold text-green-800">Value Added (VA)</h3>
+                            <p class="text-sm text-slate-600 mt-2">Aktivitas yang menghasilkan nilai langsung bagi pengguna.</p>
+                            <p class="mt-4 font-semibold text-green-700 bg-green-200 px-3 py-1 rounded-full">Tujuan: Maksimalkan</p>
                         </div>
-                        <div class="p-4 bg-white rounded-lg shadow-2xl border flex flex-col items-center">
-                            <p class="text-center font-semibold mb-2">Contoh Pemborosan (NVA) di Birokrasi</p>
-                             <img src="/img/waste-identification.png" alt="Contoh pemborosan" class="w-full object-contain rounded-md">
+                        <!-- Necessary Non-Value Added -->
+                        <div class="p-6 bg-amber-50 border-2 border-amber-300 rounded-lg shadow-lg">
+                            <i class="fas fa-exclamation-circle text-4xl text-amber-600 mb-3"></i>
+                            <h3 class="text-xl font-bold text-amber-800">Necessary Non-Value Added (NNVA)</h3>
+                            <p class="text-sm text-slate-600 mt-2">Wajib karena regulasi/hukum, namun tidak menambah nilai bagi pengguna.</p>
+                             <p class="mt-4 font-semibold text-amber-700 bg-amber-200 px-3 py-1 rounded-full">Tujuan: Minimalisir / Otomatisasi</p>
+                        </div>
+                        <!-- Non-Value Added -->
+                        <div class="p-6 bg-red-50 border-2 border-red-300 rounded-lg shadow-lg">
+                            <i class="fas fa-minus-circle text-4xl text-red-600 mb-3"></i>
+                            <h3 class="text-xl font-bold text-red-800">Non-Value Added (NVA)</h3>
+                            <p class="text-sm text-slate-600 mt-2">Aktivitas yang murni pemborosan dan tidak memberikan nilai apapun.</p>
+                            <p class="mt-4 font-semibold text-red-700 bg-red-200 px-3 py-1 rounded-full">Tujuan: Eliminasi Total</p>
                         </div>
                     </div>
-                     <div class="callout callout-success mt-6">
-                        <p><strong>Rekomendasi:</strong> Disarankan agar **Analisis Nilai Tambah menjadi output wajib** dari fase "Analisis Proses Saat Ini" (AS-IS) dan menjadi dasar utama dalam perancangan proses "TO-BE".</p>
+                </div>
+            </section>
+
+            <!-- Slide 15: Contoh Pemborosan (NVA) dalam Proses Birokrasi (NEW SLIDE) -->
+            <section id="slide15" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title"><span class="title-prefix">BAGIAN 3: METODOLOGI & ALAT BANTU</span>Contoh Pemborosan (NVA) dalam Proses Birokrasi</h2>
+                </div>
+                <div class="slide-content">
+                    <p class="text-center text-slate-600 mb-8">Dengan menggunakan kerangka Analisis Nilai Tambah, kita dapat dengan mudah mengidentifikasi berbagai bentuk pemborosan yang sering terjadi dalam proses kerja pemerintahan.</p>
+                    <div class="grid grid-cols-4 gap-6">
+                        <!-- Waiting -->
+                        <div class="p-4 text-center bg-white border rounded-lg shadow-md">
+                            <i class="fas fa-hourglass-half text-4xl text-red-500 mb-3"></i>
+                            <h3 class="font-semibold">Menunggu</h3>
+                            <p class="text-xs text-slate-500">Menunggu persetujuan, tanda tangan, atau langkah proses selanjutnya.</p>
+                        </div>
+                        <!-- Rework -->
+                        <div class="p-4 text-center bg-white border rounded-lg shadow-md">
+                            <i class="fas fa-undo-alt text-4xl text-red-500 mb-3"></i>
+                            <h3 class="font-semibold">Pengerjaan Ulang</h3>
+                            <p class="text-xs text-slate-500">Memperbaiki kesalahan atau kekurangan data pada dokumen.</p>
+                        </div>
+                        <!-- Unnecessary Movement -->
+                        <div class="p-4 text-center bg-white border rounded-lg shadow-md">
+                            <i class="fas fa-walking text-4xl text-red-500 mb-3"></i>
+                            <h3 class="font-semibold">Pergerakan Fisik</h3>
+                            <p class="text-xs text-slate-500">Mengantar dokumen secara manual dari satu meja/ruangan ke ruangan lain.</p>
+                        </div>
+                        <!-- Over-processing -->
+                        <div class="p-4 text-center bg-white border rounded-lg shadow-md">
+                            <i class="fas fa-layer-group text-4xl text-red-500 mb-3"></i>
+                            <h3 class="font-semibold">Proses Berlebih</h3>
+                            <p class="text-xs text-slate-500">Pemeriksaan berlapis oleh beberapa pihak yang sebenarnya tidak perlu.</p>
+                        </div>
+                        <!-- Unused Talent -->
+                        <div class="p-4 text-center bg-white border rounded-lg shadow-md">
+                            <i class="fas fa-user-times text-4xl text-red-500 mb-3"></i>
+                            <h3 class="font-semibold">SDM Tidak Optimal</h3>
+                            <p class="text-xs text-slate-500">Pejabat tinggi melakukan tugas administratif yang bisa didelegasikan.</p>
+                        </div>
+                        <!-- Unnecessary Inventory -->
+                        <div class="p-4 text-center bg-white border rounded-lg shadow-md">
+                            <i class="fas fa-archive text-4xl text-red-500 mb-3"></i>
+                            <h3 class="font-semibold">Tumpukan Berkas</h3>
+                            <p class="text-xs text-slate-500">Antrian pekerjaan atau dokumen yang menunggu untuk diproses.</p>
+                        </div>
+                        <!-- Unnecessary Transport -->
+                        <div class="p-4 text-center bg-white border rounded-lg shadow-md">
+                            <i class="fas fa-envelope-open-text text-4xl text-red-500 mb-3"></i>
+                            <h3 class="font-semibold">Pengiriman Ganda</h3>
+                            <p class="text-xs text-slate-500">Mengirim data yang sama melalui beberapa sistem yang tidak terintegrasi.</p>
+                        </div>
+                        <!-- Defects -->
+                        <div class="p-4 text-center bg-white border rounded-lg shadow-md">
+                            <i class="fas fa-times-circle text-4xl text-red-500 mb-3"></i>
+                            <h3 class="font-semibold">Kesalahan (Defects)</h3>
+                            <p class="text-xs text-slate-500">Output yang tidak akurat atau tidak lengkap sehingga memicu pengerjaan ulang.</p>
+                        </div>
+                    </div>
+                    <div class="callout callout-success mt-8">
+                        <p><strong>Rekomendasi:</strong> R-PermenPANRB sebaiknya melampirkan daftar contoh pemborosan yang kontekstual dengan birokrasi seperti ini untuk membantu instansi dalam melakukan identifikasi NVA secara lebih mudah dan terarah.</p>
                     </div>
                 </div>
             </section>
