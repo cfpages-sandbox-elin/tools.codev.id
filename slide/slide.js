@@ -1,4 +1,4 @@
-// slide.js FINAL (With Conditional Fullscreen and Mobile Controls hapus adjustcontenttoslide)
+// slide.js v1.0 auto format md
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -41,6 +41,16 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // --- CORE FUNCTIONS ---
+    function formatMarkdownFormatting() {
+        const elements = document.querySelectorAll('.callout p, .callout li, .callout h3');
+        elements.forEach(el => {
+            let html = el.innerHTML;
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            el.innerHTML = html;
+        });
+    }
+
     function autoAssignSlideIds() {
         slides.forEach((slide, index) => {
             slide.id = `slide${index + 1}`;
@@ -276,7 +286,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     // --- INITIALIZATION & EVENT LISTENERS ---
-    
+    formatMarkdownFormatting();
     autoAssignSlideIds();
     formatSlideTitles();
     
