@@ -1,4 +1,4 @@
-// slide.js v1.0 auto format md luas fix
+// slide.js v1.0 auto format md luas fix sak title
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- CORE FUNCTIONS ---
     function formatMarkdownFormatting() {
         // Selector yang lebih spesifik dan aman
-        const elements = document.querySelectorAll('.slide-content p, .slide-content li, .slide-content h3, .slide-content h4, .callout p, .callout li, .callout h3');
+        const elements = document.querySelectorAll('.slide-content p, .slide-content li, .slide-content h3, .slide-content h4, .callout p, .callout li, .callout h3, .slide-title h2');
         
         elements.forEach(el => {
             let html = el.innerHTML;
