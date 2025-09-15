@@ -1,4 +1,4 @@
-// slide.js v1.0 auto format md luas fix sak title
+// slide.js v1.0 biar tombol download ke hide pas fullscreen
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -242,6 +242,18 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // --- FULLSCREEN CHANGE LISTENER ---
+    function handleFullscreenChange() {
+        const downloadButton = document.getElementById('download-btn');
+        if (document.fullscreenElement) {
+            // Saat masuk fullscreen, sembunyikan tombol download
+            downloadButton.style.display = 'none';
+        } else {
+            // Saat keluar dari fullscreen, tampilkan kembali tombol download
+            downloadButton.style.display = 'flex'; // Gunakan 'flex' sesuai styling aslinya
+        }
+    }
+
     // --- MOBILE GESTURE HANDLING ---
     function initializeMobileControls() {
         // The check remains the same, but now it uses the globally scoped `isMobile` variable
@@ -319,6 +331,7 @@ document.addEventListener('DOMContentLoaded', function () {
         else if (e.key === 'f' || e.key === 'F11') { e.preventDefault(); toggleFullScreen(); }
         else if (e.key === 'Escape' && lightbox.classList.contains('visible')) closeLightbox();
     });
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
     
     lightboxClose.addEventListener('click', closeLightbox);
     lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
