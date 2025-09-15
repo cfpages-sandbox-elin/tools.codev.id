@@ -155,6 +155,15 @@
             transform-origin: left center;
             z-index: 1;
         }
+
+        /* --- Helper for Centered Flowchart Steps --- */
+        .flow-step {
+            display: flex;
+            align-items: center;
+            justify-content: center; /* This is the key property */
+            gap: 1rem; /* Equivalent to gap-4 in Tailwind */
+            font-size: 1.25rem; /* Equivalent to text-xl */
+        }
     </style>
 </head>
 <body>
@@ -914,17 +923,17 @@
                         <div class="p-8 border-2 border-red-300 bg-red-50 rounded-lg shadow-2xl">
                             <h4 class="text-2xl font-bold text-red-700 mb-6 text-center"><i class="fas fa-exclamation-triangle mr-2"></i>Alur Proses yang Berisiko Stagnan</h4>
                             <div class="space-y-4">
-                                <div class="flex items-center gap-4 text-xl">
+                                <div class="flow-step">
                                     <i class="fas fa-map-signs text-slate-500 w-8 text-center"></i>
                                     <span class="flex-1 text-center">Peta Proses Dibuat</span>
                                 </div>
                                 <div class="flex justify-center text-3xl text-slate-400 font-semibold">&darr;</div>
-                                <div class="flex items-center gap-4 text-xl">
+                                <div class="flow-step">
                                     <i class="fas fa-file-alt text-slate-500 w-8 text-center"></i>
                                     <span class="flex-1 text-center">Dokumen SOP Disusun</span>
                                 </div>
                                 <div class="flex justify-center text-3xl text-slate-400 font-semibold">&darr;</div>
-                                <div class="font-bold text-red-600 bg-red-100 p-3 rounded-md flex items-center gap-4 text-xl shadow-inner">
+                                <div class="font-bold text-red-600 bg-red-100 p-3 rounded-md flow-step shadow-inner">
                                     <i class="fas fa-archive text-red-600 w-8 text-center"></i>
                                     <span class="flex-1 text-center">Berakhir di Arsip</span>
                                 </div>
@@ -954,17 +963,17 @@
                         <div class="p-8 border-2 border-green-300 bg-green-50 rounded-lg shadow-2xl">
                              <h4 class="text-2xl font-bold text-green-700 mb-6 text-center"><i class="fas fa-check-circle mr-2"></i>Alur Proses yang Ideal dan Berdampak</h4>
                              <div class="space-y-4">
-                                <div class="flex items-center gap-4 text-xl">
+                                <div class="flow-step">
                                     <i class="fas fa-map-signs text-slate-500 w-8 text-center"></i>
                                     <span class="flex-1 text-center">Peta Proses Dibuat</span>
                                 </div>
                                 <div class="flex justify-center text-3xl text-slate-400 font-semibold">&darr;</div>
-                                <div class="flex items-center gap-4 text-xl">
+                                <div class="flow-step">
                                     <i class="fas fa-cogs text-slate-500 w-8 text-center"></i>
                                     <span class="flex-1 text-center">Menjadi Blueprint Aplikasi</span>
                                 </div>
                                 <div class="flex justify-center text-3xl text-slate-400 font-semibold">&darr;</div>
-                                <div class="font-bold text-green-600 bg-green-100 p-3 rounded-md flex items-center gap-4 text-xl shadow-inner">
+                                <div class="font-bold text-green-600 bg-green-100 p-3 rounded-md flow-step shadow-inner">
                                     <i class="fas fa-rocket text-green-600 w-8 text-center"></i>
                                     <span class="flex-1 text-center">Layanan Digital Diluncurkan</span>
                                 </div>
