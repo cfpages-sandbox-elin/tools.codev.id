@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uji Konsep & Rekomendasi Strategis R-PermenPANRB</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Reusable Slide CSS -->
+    <link rel="stylesheet" href="slide.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* --- PANRB-UNAIR Presentation Theme --- */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #eef2f6; /* A very light, neutral blue-gray */
+            color: #1e293b; /* Dark Slate */
+        }
+        #presentation-container {
+            border-color: #cbd5e1;
+        }
+        .slide {
+            background-color: #ffffff;
+        }
+        .slide-title { 
+            color: #0f172a; /* Near Black */
+        }
+        .slide-title::after { 
+            background-color: #003d7a; /* PANRB Dark Blue */
+        }
+        .title-prefix { 
+            color: #0056b3; /* PANRB Medium Blue */
+        }
+        .nav-arrow, #fullscreen-btn, #download-btn {
+            background-color: rgba(255, 255, 255, 0.7);
+            color: #334155;
+            border-color: rgba(0,0,0,0.05);
+            backdrop-filter: blur(4px);
+        }
+        .nav-arrow:hover, #fullscreen-btn:hover, #download-btn:hover {
+            background-color: #003d7a;
+            color: white;
+        }
+        #slide-counter {
+            background-color: rgba(15, 23, 42, 0.75);
+            color: #e2e8f0;
+        }
+        .unair-gold { color: #A4770F; } /* UNAIR Gold */
+        
+        /* --- Theme Variables for Libraries --- */
+        :root {
+            --theme-pattern-color: #64748b; /* Slate 500 */
+            --theme-pattern-color-light: #cbd5e1; /* Slate 300 */
+
+            /* Callout Colors */
+            --callout-info-bg: #eff6ff; /* Blue 50 */
+            --callout-info-border: #3b82f6; /* Blue 500 */
+            --callout-success-bg: #f0fdf4; /* Green 50 */
+            --callout-success-border: #22c55e; /* Green 500 */
+            --callout-warning-bg: #fffbeb; /* Amber 50 */
+            --callout-warning-border: #f59e0b; /* Amber 500 */
+            --callout-danger-bg: #fef2f2; /* Red 50 */
+            --callout-danger-border: #ef4444; /* Red 500 */
+        }
+        
+        /* Custom Helper Classes */
+        .brand-logo {
+            max-height: 90px;
+            width: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="presentation-wrapper">
+        <div id="presentation-container">
+            <!-- Navigation -->
+            <div class="nav-arrow" id="prev-slide"><i class="fas fa-chevron-left"></i></div>
+            <div class="nav-arrow" id="next-slide"><i class="fas fa-chevron-right"></i></div>
+            <div id="slide-counter">1 / 26</div>
+            <div id="fullscreen-btn" title="Toggle Fullscreen"><i class="fas fa-expand"></i></div>
+            <div id="download-btn" title="Download as PDF"><i class="fas fa-download"></i></div>
+            
+            <!-- Lightbox container -->
+            <div id="lightbox">
+                <span id="lightbox-close">&times;</span>
+                <img id="lightbox-img" src="" alt="Zoomed Image">
+            </div>
+            
+            <!-- SLIDES START HERE -->
+
+            <!-- Slide 1: Halaman Judul -->
+            <section id="slide1" class="slide bg-dots">
+                <div class="h-full w-full flex flex-col justify-center items-center text-center p-10" style="background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(241, 245, 249, 1) 100%);">
+                    <div class="flex items-center gap-8 mb-8">
+                        <img src="/img/logo-panrb.png" alt="KemenPANRB Logo" class="brand-logo">
+                        <img src="/img/logo-unair-biru.png" alt="UNAIR Logo" class="brand-logo">
+                    </div>
+                    <p class="text-xl font-medium text-slate-600 mb-2">Uji Konsep & Rekomendasi Strategis</p>
+                    <h1 class="text-5xl font-bold text-slate-900 tracking-tight leading-tight max-w-4xl">Rancangan Peraturan Menteri PANRB tentang Manajemen Proses Bisnis</h1>
+                    <div class="mt-12 border-t border-slate-300 pt-6 w-full max-w-3xl">
+                        <p class="text-slate-800 text-xl font-semibold">Dr. Windijarto, S.E., MBA</p>
+                        <p class="text-slate-600">Fakultas Ekonomi dan Bisnis, Universitas Airlangga</p>
+                        <p class="text-slate-500 text-sm mt-2">Disampaikan dalam Rapat Pembahasan Konsep Manajemen Proses Bisnis KemenPANRB</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 2: Latar Belakang & Mandat Strategis -->
+            <section id="slide2" class="slide bg-grid">
+                <div class="slide-header">
+                    <h2 class="slide-title"><span class="title-prefix">BAGIAN 1: KONTEKS STRATEGIS</span>Latar Belakang: Pelaksanaan Mandat Strategis</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="w-full flex justify-around items-center text-center">
+                        <div class="flex flex-col items-center gap-3">
+                            <div class="p-6 bg-blue-100 border-2 border-blue-300 rounded-lg shadow-md">
+                                <i class="fas fa-file-alt text-5xl text-blue-600"></i>
+                            </div>
+                            <h3 class="font-semibold text-lg">Perpres 132/2022</h3>
+                            <p class="text-sm text-slate-500 max-w-xs">Mengamanatkan Arsitektur SPBE Nasional untuk mengatasi silo & inefisiensi.</p>
+                        </div>
+
+                        <i class="fas fa-arrow-right-long text-5xl text-slate-400 mx-8"></i>
+
+                        <div class="flex flex-col items-center gap-3">
+                            <div class="p-6 bg-sky-100 border-2 border-sky-300 rounded-lg shadow-md">
+                                <i class="fas fa-drafting-compass text-5xl text-sky-600"></i>
+                            </div>
+                            <h3 class="font-semibold text-lg">R-PermenPANRB</h3>
+                            <p class="text-sm text-slate-500 max-w-xs">Menjadi instrumen teknis untuk mengimplementasikan mandat tersebut.</p>
+                        </div>
+
+                        <i class="fas fa-arrow-right-long text-5xl text-slate-400 mx-8"></i>
+
+                        <div class="flex flex-col items-center gap-3">
+                            <div class="p-6 bg-emerald-100 border-2 border-emerald-300 rounded-lg shadow-md">
+                                <i class="fas fa-bullseye text-5xl text-emerald-600"></i>
+                            </div>
+                            <h3 class="font-semibold text-lg">Tujuan Akhir</h3>
+                            <p class="text-sm text-slate-500 max-w-xs">Layanan Terintegrasi & Birokrasi Berkinerja Tinggi.</p>
+                        </div>
+                    </div>
+                    <div class="callout callout-info mt-12">
+                        <p><strong>Poin Kunci:</strong> Presentasi ini bertujuan untuk menggeser fokus dari <strong>kewajiban administratif</strong> (sekadar membuat peta) menjadi <strong>alat strategis</strong> untuk mencapai target kinerja nasional.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 3: Agenda Pembahasan -->
+            <section id="slide3" class="slide bg-lines">
+                 <div class="slide-header">
+                    <h2 class="slide-title"><span class="title-prefix">BAGIAN 1: KONTEKS STRATEGIS</span>Agenda Pembahasan</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-2 gap-12 items-center">
+                        <ul class="space-y-4 text-lg">
+                            <li class="flex items-start gap-4"><i class="fas fa-layer-group text-2xl text-blue-600 w-8 text-center pt-1"></i><div><strong class="font-semibold">Fondasi & Hierarki</strong><p class="text-base text-slate-500">Menganalisis kerangka dasar dan tingkatan proses.</p></div></li>
+                            <li class="flex items-start gap-4"><i class="fas fa-tools text-2xl text-blue-600 w-8 text-center pt-1"></i><div><strong class="font-semibold">Metodologi & Alat Bantu</strong><p class="text-base text-slate-500">Membedah siklus hidup dan tools yang diusulkan.</p></div></li>
+                            <li class="flex items-start gap-4"><i class="fas fa-chart-line text-2xl text-blue-600 w-8 text-center pt-1"></i><div><strong class="font-semibold">Pengukuran Kinerja</strong><p class="text-base text-slate-500">Mengkaji praktikalitas metrik untuk layanan publik.</p></div></li>
+                            <li class="flex items-start gap-4"><i class="fas fa-lightbulb text-2xl text-yellow-500 w-8 text-center pt-1"></i><div><strong class="font-semibold">Faktor Kritis Keberhasilan</strong><p class="text-base text-slate-500">Mengidentifikasi poin-poin yang sering terlewat.</p></div></li>
+                             <li class="flex items-start gap-4"><i class="fas fa-sitemap text-2xl text-blue-600 w-8 text-center pt-1"></i><div><strong class="font-semibold">Tata Kelola & Visi</strong><p class="text-base text-slate-500">Membahas peran, kapasitas, dan arah jangka panjang.</p></div></li>
+                        </ul>
+                        <div class="h-full w-full">
+                            <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=1470&auto=format&fit=crop" alt="Strategic Planning" class="w-full h-full object-cover rounded-lg shadow-xl">
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 4: Paradigma Baru: Dari Peta Statis ke Manajemen Dinamis -->
+            <section id="slide4" class="slide bg-spotlight">
+                <div class="slide-header">
+                    <h2 class="slide-title"><span class="title-prefix">BAGIAN 1: KONTEKS STRATEGIS</span>Paradigma Baru: Dari Peta Statis ke Manajemen Dinamis</h2>
+                </div>
+                <div class="slide-content">
+                     <div class="flex justify-between items-start text-center relative px-4">
+                        <!-- Arrow background -->
+                        <div class="absolute bottom-12 left-0 w-full h-2 bg-slate-200 rounded-full"></div>
+                        <div class="absolute bottom-12 left-0 w-11/12 h-2 bg-blue-500 rounded-full"></div>
+                        <i class="fas fa-caret-right text-4xl text-blue-500 absolute bottom-8 right-0 -mr-2"></i>
+
+                        <!-- Step 1 -->
+                        <div class="w-1/3 relative">
+                            <div class="mb-4 w-16 h-16 bg-white border-4 border-slate-400 text-slate-400 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">1</div>
+                            <h3 class="font-bold text-lg text-slate-500">2012: Era Kepatuhan</h3>
+                            <p class="text-sm text-slate-400">Fokus pada pemenuhan kewajiban untuk membuat dokumen peta proses bisnis.</p>
+                        </div>
+                        <!-- Step 2 -->
+                        <div class="w-1/3 relative">
+                            <div class="mb-4 w-16 h-16 bg-white border-4 border-blue-300 text-blue-500 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">2</div>
+                            <h3 class="font-bold text-lg text-blue-600">2018: Era Penyempurnaan</h3>
+                            <p class="text-sm text-slate-500">Penyempurnaan metodologi pemetaan untuk konsistensi yang lebih baik.</p>
+                        </div>
+                        <!-- Step 3 -->
+                        <div class="w-1/3 relative">
+                            <div class="mb-4 w-16 h-16 bg-blue-500 border-4 border-blue-500 text-white rounded-full flex items-center justify-center mx-auto text-2xl font-bold">3</div>
+                            <h3 class="font-bold text-lg text-slate-800">2025: Era Kinerja</h3>
+                            <p class="text-sm text-slate-600">Fokus pada pengelolaan, pengukuran, dan peningkatan proses secara berkelanjutan.</p>
+                        </div>
+                    </div>
+                     <div class="callout callout-success mt-16">
+                        <p><strong>Pergeseran Fundamental:</strong> R-PermenPANRB memposisikan Proses Bisnis bukan sebagai dokumen statis, melainkan sebagai <strong>aset strategis yang dikelola secara aktif</strong> untuk mendorong kinerja dan efisiensi.</p>
+                    </div>
+                </div>
+            </section>
+
+                        <!-- Slide 5: Fondasi 1: Unsur Proses Bisnis -->
+            <section id="slide5" class="slide bg-grid">
+                <div class="slide-header">
+                    <h2 class="slide-title"><span class="title-prefix">BAGIAN 2: FONDASI & HIERARKI</span>Fondasi 1: Tiga Unsur Proses Bisnis</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-2 gap-8 items-center">
+                        <!-- Diagram -->
+                        <div class="relative w-96 h-96 mx-auto flex items-center justify-center">
+                            <div class="absolute w-96 h-96 bg-sky-100 border-2 border-sky-300 rounded-full flex items-center justify-center">
+                                <span class="text-sky-800 font-semibold">Proses Lainnya</span>
+                            </div>
+                            <div class="absolute w-64 h-64 bg-emerald-100 border-2 border-emerald-300 rounded-full flex items-center justify-center">
+                                <span class="text-emerald-800 font-semibold">Proses Pendukung</span>
+                            </div>
+                            <div class="absolute w-32 h-32 bg-rose-100 border-2 border-rose-300 rounded-full flex items-center justify-center">
+                                <span class="text-rose-800 font-semibold">Proses Utama</span>
+                            </div>
+                        </div>
+                        <!-- Analysis -->
+                        <div class="space-y-4">
+                            <div class="p-4 border-l-4 border-rose-500 bg-rose-50">
+                                <h3 class="font-bold text-rose-800">1. Proses Utama</h3>
+                                <p class="text-sm text-slate-600">Menciptakan aliran nilai utama dan memenuhi kebutuhan pengguna eksternal.</p>
+                            </div>
+                            <div class="p-4 border-l-4 border-emerald-500 bg-emerald-50">
+                                <h3 class="font-bold text-emerald-800">2. Proses Pendukung</h3>
+                                <p class="text-sm text-slate-600">Mengelola operasional dan memastikan proses utama berjalan baik.</p>
+                            </div>
+                            <div class="p-4 border-l-4 border-sky-500 bg-sky-50">
+                                <h3 class="font-bold text-sky-800">3. Proses Lainnya</h3>
+                                <p class="text-sm text-slate-600">Tidak terkait langsung namun memberi nilai tambah bagi pemangku kepentingan.</p>
+                            </div>
+                            <div class="callout callout-warning mt-6">
+                                <p><strong>Pertanyaan Kritis:</strong> Bagaimana klasifikasi ini mengakomodasi proses modern yang bersifat lintas-fungsi dan kolaboratif, yang seringkali tidak pas dalam satu kategori tunggal?</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 6: Fondasi 2: Hierarki Referensi vs. Peta Instansi -->
+            <section id="slide6" class="slide bg-lines">
+                <div class="slide-header">
+                    <h2 class="slide-title"><span class="title-prefix">BAGIAN 2: FONDASI & HIERARKI</span>Fondasi 2: Hierarki Referensi vs. Peta Instansi</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="flex items-center justify-center gap-8">
+                        <!-- Left Column: Perpres -->
+                        <div class="w-2/5 p-6 border-2 border-slate-300 rounded-lg bg-slate-50 shadow-lg">
+                            <h3 class="text-center font-bold text-xl mb-4">Arsitektur Referensi Nasional</h3>
+                            <p class="text-center text-sm text-slate-500 mb-6">(Sesuai Perpres 132/2022 - "Kamus Bersama")</p>
+                            <ul class="space-y-3">
+                                <li class="p-3 bg-white border border-slate-200 rounded-md text-center"><strong class="text-blue-700">Level 1:</strong> Sektor Pemerintahan</li>
+                                <li class="p-3 bg-white border border-slate-200 rounded-md text-center"><strong class="text-blue-700">Level 2:</strong> Urusan Pemerintahan</li>
+                                <li class="p-3 bg-white border border-slate-200 rounded-md text-center"><strong class="text-blue-700">Level 3:</strong> Fungsi Pemerintahan</li>
+                                <li class="p-3 bg-white border border-slate-200 rounded-md text-center"><strong class="text-blue-700">Level 4:</strong> Sub-Fungsi Pemerintahan</li>
+                            </ul>
+                        </div>
+
+                        <div class="text-6xl text-slate-400"><i class="fas fa-arrows-left-right"></i></div>
+                        
+                        <!-- Right Column: R-PermenPANRB -->
+                        <div class="w-1/2 p-6 border-2 border-blue-400 rounded-lg bg-blue-50 shadow-lg">
+                            <h3 class="text-center font-bold text-xl mb-4">Model Peta Proses Bisnis Instansi</h3>
+                            <p class="text-center text-sm text-slate-500 mb-6">(Sesuai R-PermenPANRB - "Implementasi di Lapangan")</p>
+                             <ul class="space-y-2">
+                                <li class="p-2 bg-white border border-blue-200 rounded-md text-center"><strong class="text-blue-800">Tingkat 1:</strong> Enterprise Model <span class="text-slate-500">(Sektor)</span></li>
+                                <li class="p-2 bg-white border border-blue-200 rounded-md text-center"><strong class="text-blue-800">Tingkat 2:</strong> Value Chain <span class="text-slate-500">(Urusan)</span></li>
+                                <li class="p-2 bg-white border border-blue-200 rounded-md text-center"><strong class="text-blue-800">Tingkat 3:</strong> Mega Process <span class="text-slate-500">(Bidang)</span></li>
+                                <li class="p-2 bg-white border border-blue-200 rounded-md text-center"><strong class="text-blue-800">Tingkat 4:</strong> Major Process <span class="text-slate-500">(Fungsi)</span></li>
+                                <li class="p-2 bg-white border border-blue-200 rounded-md text-center font-semibold text-emerald-700">Tingkat 5: Business Process (Cross-Functional)</li>
+                                <li class="p-2 bg-white border border-blue-200 rounded-md text-center font-semibold text-emerald-700">Tingkat 6: Activity (SOP)</li>
+                            </ul>
+                        </div>
+                    </div>
+                     <p class="text-center mt-8 text-slate-600"><strong>Kunci Pemahaman:</strong> R-PermenPANRB menerjemahkan "kamus" referensi nasional menjadi struktur implementasi yang lebih rinci di tingkat instansi.</p>
+                </div>
+            </section>
+
+            <!-- Slide 7: Rekomendasi: Menjaga Hierarki Tetap Hidup -->
+            <section id="slide7" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title"><span class="title-prefix">BAGIAN 2: FONDASI & HIERARKI</span>Rekomendasi: Menjaga Arsitektur Referensi Tetap Hidup</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="flex items-center justify-center gap-12">
+                        <div class="text-center">
+                           <i class="fas fa-sync-alt text-9xl text-blue-500 animate-spin" style="animation-duration: 10s;"></i>
+                        </div>
+                        <div class="w-2/3">
+                            <div class="callout callout-success">
+                                <h3 class="text-xl font-bold mb-2 text-green-800">Arsitektur Referensi Nasional bukanlah dokumen statis.</h3>
+                                <p class="text-slate-600">Untuk menjaga relevansinya, R-PermenPANRB perlu mengakomodasi perubahan dan dinamika pemerintahan.</p>
+                            </div>
+                            <ul class="mt-6 space-y-4 text-lg">
+                                <li class="flex items-start gap-3"><i class="fas fa-check-circle text-green-500 mt-1"></i><div><strong class="font-semibold">Usulkan Mekanisme Pemutakhiran.</strong><p class="text-base text-slate-500">Bentuk mekanisme untuk meninjau dan memperbarui daftar Sektor dan Urusan Pemerintahan secara periodik (misal: setiap 2-3 tahun).</p></div></li>
+                                <li class="flex items-start gap-3"><i class="fas fa-check-circle text-green-500 mt-1"></i><div><strong class="font-semibold">Akomodasi Proses Lintas Sektor.</strong><p class="text-base text-slate-500">Sediakan panduan khusus untuk memetakan proses-proses strategis yang secara inheren melibatkan berbagai urusan atau sektor, seperti penanganan stunting atau investasi.</p></div></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 8: Poin Kritis 1: Keterkaitan Antar Domain SPBE -->
+            <section id="slide8" class="slide bg-spotlight skin-emboss">
+                <div class="slide-header">
+                    <h2 class="slide-title"><span class="title-prefix">BAGIAN 2: FONDASI & HIERARKI</span>Poin Kritis #1: Proses Bisnis Tidak Berdiri Sendiri</h2>
+                </div>
+                <div class="slide-content">
+                    <p class="text-center text-lg mb-6 max-w-4xl mx-auto">Keberhasilan implementasi peta proses bisnis bergantung mutlak pada integrasinya dengan 5 domain Arsitektur SPBE lainnya.</p>
+                    <div class="relative w-full max-w-5xl mx-auto p-8 rounded-lg">
+                        <!-- Connectors -->
+                        <div class="absolute top-1/2 left-1/2 w-px h-2/3 bg-slate-300 -translate-x-1/2 -translate-y-1/2"></div>
+                        <div class="absolute top-1/2 left-1/4 w-1/2 h-px bg-slate-300 -translate-y-1/2"></div>
+                        
+                        <!-- Boxes -->
+                        <div class="relative grid grid-cols-3 grid-rows-2 gap-x-12 gap-y-8 text-center">
+                            <div class="p-3 rounded-md bg-white shadow-md border"><strong class="text-blue-600">Layanan</strong></div>
+                            <div class="p-3 rounded-md bg-white shadow-md border"><strong class="text-blue-600">Aplikasi</strong></div>
+                            <div class="p-3 rounded-md bg-white shadow-md border"><strong class="text-blue-600">Keamanan</strong></div>
+                            <div class="p-3 rounded-md bg-white shadow-md border"><strong class="text-blue-600">Data & Informasi</strong></div>
+                            <div class="p-3 rounded-md bg-white shadow-md border"><strong class="text-blue-600">Infrastruktur</strong></div>
+                            <div class="p-4 rounded-lg bg-yellow-200 shadow-xl border-2 border-yellow-400 font-bold text-yellow-900 ring-4 ring-yellow-200 ring-offset-2"><i class="fas fa-star mr-2"></i>PROSES BISNIS</div>
+                        </div>
+                    </div>
+                    <div class="callout callout-danger mt-8 max-w-5xl mx-auto">
+                        <h3 class="font-bold text-red-800 text-lg">Rekomendasi Wajib:</h3>
+                        <p>R-PermenPANRB **harus memiliki pasal yang mewajibkan** bahwa setiap kegiatan analisis, perancangan ulang, dan implementasi proses bisnis **dilakukan secara terkoordinasi** dengan penanggung jawab 5 domain Arsitektur SPBE lainnya di setiap instansi.</p>
+                    </div>
+                </div>
+            </section>
+
+                        <!-- Slide 9: Fondasi 3: Cascading dari Strategi ke Aksi -->
+            <section id="slide9" class="slide bg-contours">
+                <div class="slide-header">
+                    <h2 class="slide-title"><span class="title-prefix">BAGIAN 2: FONDASI & HIERARKI</span>Fondasi 3: Menurunkan Strategi Menjadi Aksi (Cascading)</h2>
+                </div>
+                <div class="slide-content">
+                    <p class="text-center text-slate-600 mb-8 max-w-4xl mx-auto">Model *Cascading* yang diusulkan bertujuan memastikan setiap aktivitas di level operasional memiliki hubungan yang jelas dengan tujuan strategis nasional.</p>
+                    
+                    <div class="space-y-2 max-w-3xl mx-auto">
+                        <!-- Level 1 -->
+                        <div class="p-4 bg-slate-800 text-white rounded-t-lg text-center shadow-lg">
+                            <h3 class="text-xl font-bold">RPJMD & Rencana Strategis</h3>
+                            <p class="text-sm opacity-80">Visi & Arah Kebijakan Nasional/Instansi</p>
+                        </div>
+                        <div class="flex justify-center"><i class="fas fa-chevron-down text-2xl text-slate-400"></i></div>
+                        
+                        <!-- Level 2 -->
+                        <div class="p-4 bg-blue-700 text-white rounded-lg text-center shadow-lg">
+                            <h3 class="text-lg font-bold">Tugas & Fungsi Organisasi</h3>
+                            <p class="text-sm opacity-80">Penjabaran mandat sesuai peraturan</p>
+                        </div>
+                        <div class="flex justify-center"><i class="fas fa-chevron-down text-2xl text-slate-400"></i></div>
+                        
+                        <!-- Level 3 -->
+                        <div class="p-4 bg-sky-600 text-white rounded-lg text-center shadow-lg">
+                            <h3 class="text-lg font-bold">Peta Proses Bisnis (Level 1-5)</h3>
+                            <p class="text-sm opacity-80">Pemodelan alur kerja lintas fungsi</p>
+                        </div>
+                        <div class="flex justify-center"><i class="fas fa-chevron-down text-2xl text-slate-400"></i></div>
+
+                        <!-- Level 4 -->
+                        <div class="p-4 bg-cyan-500 text-white rounded-b-lg text-center shadow-lg">
+                            <h3 class="text-lg font-bold">Aktivitas & SOP (Level 6)</h3>
+                            <p class="text-sm opacity-80">Langkah-langkah kerja operasional harian</p>
+                        </div>
+                    </div>
+
+                    <div class="callout callout-info mt-10 max-w-3xl mx-auto">
+                        <p><strong>Apresiasi:</strong> Pendekatan ini sangat baik karena menciptakan "benang merah" yang kuat antara perencanaan strategis dengan pelaksanaan teknis di lapangan.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 10: Siklus Hidup Manajemen Proses Bisnis (BPM Lifecycle) -->
+            <section id="slide10" class="slide bg-grid">
+                <div class="slide-header">
+                    <h2 class="slide-title"><span class="title-prefix">BAGIAN 3: METODOLOGI PERBAIKAN</span>Siklus Hidup Manajemen Proses Bisnis</h2>
+                </div>
+                <div class="slide-content">
+                    <p class="text-center text-slate-600 mb-8 max-w-4xl mx-auto">Draf R-PermenPANRB mengadopsi siklus hidup BPM yang sesuai dengan standar praktik terbaik global, memastikan pendekatan yang sistematis dan berkelanjutan.</p>
+                    <div class="relative w-full max-w-5xl mx-auto flex justify-center items-center">
+                        <img src="https://i.ibb.co/L5B7g7c/bpm-lifecycle.png" alt="BPM Lifecycle Diagram" class="max-h-[450px]">
+                    </div>
+                     <div class="callout callout-success mt-8 max-w-5xl mx-auto">
+                        <p><strong>Apresiasi:</strong> Adopsi siklus ini menunjukkan pergeseran dari proyek pemetaan satu kali (*one-off project*) menjadi sebuah **disiplin manajemen yang berkelanjutan** (*continuous improvement*).</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 11: Fokus pada Fase Kritis: Analisis & Rancang Ulang -->
+            <section id="slide11" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title"><span class="title-prefix">BAGIAN 3: METODOLOGI PERBAIKAN</span>Fokus pada Fase Kritis: Analisis & Rancang Ulang</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="flex items-center gap-12">
+                        <div class="w-1/2">
+                            <div class="relative w-full max-w-lg mx-auto flex justify-center items-center">
+                                <img src="https://i.ibb.co/L5B7g7c/bpm-lifecycle.png" alt="BPM Lifecycle Diagram" class="max-h-[400px] opacity-20">
+                                <!-- Overlay and Highlight -->
+                                <div class="absolute top-0 left-0 w-full h-full flex items-center justify-center">
+                                    <div class="w-48 h-48 border-4 border-dashed border-red-500 rounded-full animate-pulse" style="margin-top: -150px; margin-left: -200px;"></div>
+                                    <div class="absolute text-red-700 font-bold" style="margin-top: -150px; margin-left: -200px;">Analisis</div>
+                                    
+                                    <div class="w-48 h-48 border-4 border-dashed border-red-500 rounded-full animate-pulse" style="margin-top: 150px; margin-left: -200px;"></div>
+                                     <div class="absolute text-red-700 font-bold" style="margin-top: 150px; margin-left: -200px;">Rancang Ulang</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="w-1/2">
+                            <h3 class="text-2xl font-bold text-slate-800 mb-4">Tantangan Terbesar di Sektor Publik</h3>
+                            <ul class="space-y-4 text-lg">
+                                <li class="flex items-start gap-3"><i class="fas fa-users-slash text-red-500 mt-1"></i><div><strong class="font-semibold">Resistensi terhadap Perubahan</strong><p class="text-base text-slate-500">Proses yang ada seringkali sudah menjadi "zona nyaman" dan tertanam dalam budaya kerja.</p></div></li>
+                                <li class="flex items-start gap-3"><i class="fas fa-university text-red-500 mt-1"></i><div><strong class="font-semibold">Kekakuan Struktural</strong><p class="text-base text-slate-500">Struktur organisasi yang hierarkis dan silo dapat menghambat perancangan ulang proses yang bersifat lintas-fungsi.</p></div></li>
+                                <li class="flex items-start gap-3"><i class="fas fa-cogs text-red-500 mt-1"></i><div><strong class="font-semibold">Keterbatasan Teknologi</strong><p class="text-base text-slate-500">Ide perbaikan proses seringkali terkendala oleh sistem atau aplikasi yang sudah usang dan sulit diubah.</p></div></li>
+                            </ul>
+                            <div class="callout callout-danger mt-6">
+                                <p><strong>Poin Kunci:</strong> Keberhasilan R-Permen ini akan sangat ditentukan oleh seberapa baik ia membekali instansi untuk **mengatasi tantangan non-teknis** pada fase analisis dan perancangan ulang.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 12: Alat Bantu 1: Matriks Akuntabilitas (RADIN) -->
+            <section id="slide12" class="slide bg-lines">
+                <div class="slide-header">
+                    <h2 class="slide-title"><span class="title-prefix">BAGIAN 3: METODOLOGI PERBAIKAN</span>Alat Bantu #1: Matriks Akuntabilitas (RADIN)</h2>
+                </div>
+                <div class="slide-content">
+                     <div class="grid grid-cols-2 gap-8 items-center">
+                        <div>
+                            <h3 class="text-2xl font-bold text-slate-800 mb-4">Mengatasi Masalah Klasik Birokrasi</h3>
+                            <p class="text-slate-600 mb-6">Matriks RADIN (modifikasi dari RACI) adalah alat yang sangat efektif untuk memperjelas peran dan tanggung jawab, menghilangkan area abu-abu, dan menghentikan praktik "lempar tanggung jawab".</p>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="p-3 bg-blue-100 rounded-md"><strong class="text-blue-800">R</strong> - Recommend (Menyusun/Mengusulkan)</div>
+                                <div class="p-3 bg-green-100 rounded-md"><strong class="text-green-800">A</strong> - Agree (Memeriksa/Menyetujui)</div>
+                                <div class="p-3 bg-amber-100 rounded-md"><strong class="text-amber-800">D</strong> - Decide (Memutuskan)</div>
+                                <div class="p-3 bg-purple-100 rounded-md"><strong class="text-purple-800">I</strong> - Input (Memberi Masukan)</div>
+                                <div class="p-3 bg-slate-100 rounded-md col-span-2"><strong class="text-slate-800">N</strong> - Notified (Diberi Informasi/Tindasan)</div>
+                            </div>
+                        </div>
+                        <div class="p-4 bg-white rounded-lg shadow-2xl border">
+                             <img src="https://i.ibb.co/3zd81q0/radin-matrix.png" alt="Contoh Matriks RADIN" class="w-full object-contain rounded-md">
+                        </div>
+                    </div>
+                    <div class="callout callout-success mt-10">
+                        <p><strong>Apresiasi & Rekomendasi:</strong> Pengenalan alat ini sangat diapresiasi. Disarankan agar **penggunaan Matriks RADIN menjadi bagian wajib** dalam fase analisis untuk setiap proses lintas-fungsi yang dipetakan.</p>
+                    </div>
+                </div>
+            </section>
+            
+                        <!-- Slide 13: Alat Bantu 2: Analisis Nilai Tambah (Value Added) -->
+            <section id="slide13" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title"><span class="title-prefix">BAGIAN 3: METODOLOGI PERBAIKAN</span>Alat Bantu #2: Analisis Nilai Tambah (Efisiensi)</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-2 gap-12 items-center">
+                        <div class="space-y-4">
+                            <h3 class="text-2xl font-bold text-slate-800 mb-4">Menanamkan Mindset Efisiensi</h3>
+                            <p class="text-slate-600 mb-6">Analisis Nilai Tambah memaksa kita untuk mengklasifikasikan setiap langkah dalam sebuah proses, mengidentifikasi pemborosan (*waste*), dan fokus pada aktivitas yang benar-benar penting bagi pengguna layanan.</p>
+                            
+                            <div class="p-4 bg-green-50 border-l-4 border-green-500">
+                                <h4 class="font-bold text-green-800">Value Added (VA)</h4>
+                                <p class="text-sm text-slate-600">Aktivitas yang mengubah bentuk/fungsi dan pelanggan bersedia membayarnya.</p>
+                            </div>
+                            <div class="p-4 bg-amber-50 border-l-4 border-amber-500">
+                                <h4 class="font-bold text-amber-800">Necessary Non-Value Added (NNVA)</h4>
+                                <p class="text-sm text-slate-600">Tidak menambah nilai, tapi wajib karena regulasi, hukum, atau mitigasi risiko.</p>
+                            </div>
+                            <div class="p-4 bg-red-50 border-l-4 border-red-500">
+                                <h4 class="font-bold text-red-800">Non-Value Added (NVA)</h4>
+                                <p class="text-sm text-slate-600">Murni pemborosan (menunggu, pergerakan tidak perlu, pengerjaan ulang).</p>
+                            </div>
+
+                        </div>
+                        <div class="p-4 bg-white rounded-lg shadow-2xl border flex flex-col items-center">
+                            <p class="text-center font-semibold mb-2">Contoh Analisis (dari Dokumen PANRB)</p>
+                             <img src="https://i.ibb.co/h9cM2W9/value-added-analysis.png" alt="Contoh Analisis Nilai Tambah" class="w-full object-contain rounded-md">
+                             <p class="text-xs text-slate-500 mt-2">Sumber: Slide Materi KemenPANRB, Hal. 39</p>
+                        </div>
+                    </div>
+                     <div class="callout callout-success mt-8">
+                        <p><strong>Apresiasi & Rekomendasi:</strong> Alat ini sangat kuat untuk mendorong budaya efisiensi. Disarankan agar **analisis ini menjadi output wajib** dari fase "Analisis Proses Saat Ini" (AS-IS).</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 14: Poin Kritis 2: Jebakan Dokumentasi (SOP) -->
+            <section id="slide14" class="slide bg-spotlight skin-emboss">
+                <div class="slide-header">
+                    <h2 class="slide-title"><span class="title-prefix">BAGIAN 3: METODOLOGI PERBAIKAN</span>Poin Kritis #2: Hindari "Jebakan Dokumentasi"</h2>
+                </div>
+                <div class="slide-content text-center">
+                     <h3 class="text-3xl font-bold text-slate-800 mb-4">Tujuan Akhir Bukanlah Dokumen, Tapi Layanan</h3>
+                     <p class="text-lg text-slate-600 max-w-4xl mx-auto mb-10">Amanat Perpres 132 adalah menghasilkan **layanan digital yang berfungsi dan terintegrasi**, bukan sekadar menghasilkan tumpukan dokumen Peta Proses Bisnis dan SOP yang tebal.</p>
+                     
+                     <div class="flex justify-around items-start">
+                        <!-- Alur yang Salah -->
+                        <div class="w-2/5 p-6 border-2 border-red-300 bg-red-50 rounded-lg shadow-lg">
+                            <h4 class="text-xl font-bold text-red-700 mb-4"><i class="fas fa-times-circle mr-2"></i>Alur Proses yang Berisiko</h4>
+                            <div class="space-y-2 text-left">
+                                <p class="flex items-center gap-2"><i class="fas fa-map-signs text-slate-500"></i>Peta Proses</p>
+                                <div class="flex justify-center"><i class="fas fa-arrow-down text-slate-400"></i></div>
+                                <p class="flex items-center gap-2"><i class="fas fa-file-alt text-slate-500"></i>Dokumen SOP</p>
+                                <div class="flex justify-center"><i class="fas fa-arrow-down text-slate-400"></i></div>
+                                <p class="font-bold text-red-600 bg-red-100 p-2 rounded-md flex items-center gap-2"><i class="fas fa-archive text-red-600"></i>Berhenti di Arsip</p>
+                            </div>
+                        </div>
+
+                        <!-- Alur yang Benar -->
+                        <div class="w-2/5 p-6 border-2 border-green-300 bg-green-50 rounded-lg shadow-lg">
+                             <h4 class="text-xl font-bold text-green-700 mb-4"><i class="fas fa-check-circle mr-2"></i>Alur Proses yang Ideal</h4>
+                             <div class="space-y-2 text-left">
+                                <p class="flex items-center gap-2"><i class="fas fa-map-signs text-slate-500"></i>Peta Proses</p>
+                                <div class="flex justify-center"><i class="fas fa-arrow-down text-slate-400"></i></div>
+                                <p class="flex items-center gap-2"><i class="fas fa-cogs text-slate-500"></i>Blueprint Aplikasi</p>
+                                <div class="flex justify-center"><i class="fas fa-arrow-down text-slate-400"></i></div>
+                                <p class="font-bold text-green-600 bg-green-100 p-2 rounded-md flex items-center gap-2"><i class="fas fa-rocket text-green-600"></i>Layanan Publik Digital</p>
+                            </div>
+                        </div>
+                     </div>
+                     <div class="callout callout-danger mt-10">
+                         <p><strong>Rekomendasi:</strong> R-Permen perlu **menegaskan bahwa Peta Proses Bisnis Level 5 & 6 berfungsi sebagai "spesifikasi fungsional"** untuk pengembangan atau integrasi aplikasi di Domain Aplikasi SPBE.</p>
+                     </div>
+                </div>
+            </section>
+            
+            <!-- Slide 15: Bahasa Universal: Pentingnya Notasi BPMN -->
+            <section id="slide15" class="slide bg-grid">
+                <div class="slide-header">
+                    <h2 class="slide-title"><span class="title-prefix">BAGIAN 3: METODOLOGI PERBAIKAN</span>Bahasa Universal: Mengapa BPMN Sangat Penting?</h2>
+                </div>
+                <div class="slide-content">
+                    <p class="text-center text-slate-600 mb-10 max-w-4xl mx-auto">BPMN (*Business Process Model and Notation*) bukan sekadar "gambar kotak-kotak". Ini adalah **standar global** yang berfungsi sebagai jembatan komunikasi vital.</p>
+                    
+                    <div class="flex justify-around items-center text-center">
+                        <div class="flex flex-col items-center gap-3 w-1/4">
+                            <div class="p-6 bg-white border-2 border-slate-300 rounded-full shadow-lg">
+                                <i class="fas fa-user-tie text-5xl text-slate-600"></i>
+                            </div>
+                            <h3 class="font-semibold text-lg">Analis Kebijakan</h3>
+                            <p class="text-sm text-slate-500">Memahami alur, aturan, dan logika layanan.</p>
+                        </div>
+                        
+                        <div class="flex-1 text-center">
+                            <p class="font-bold text-blue-600">Mencegah Gagal Paham</p>
+                            <div class="w-full h-1 bg-slate-300 my-2 relative">
+                               <div class="absolute top-1/2 left-0 w-full h-1 border-t-2 border-b-2 border-blue-500 border-dashed animate-pulse"></div>
+                            </div>
+                            <p class="text-sm text-slate-500">Menghilangkan ambiguitas saat proses bisnis diterjemahkan menjadi kode aplikasi.</p>
+                        </div>
+
+                        <div class="flex flex-col items-center gap-3 w-1/4">
+                             <div class="p-6 bg-white border-2 border-slate-300 rounded-full shadow-lg">
+                                <i class="fas fa-laptop-code text-5xl text-slate-600"></i>
+                            </div>
+                            <h3 class="font-semibold text-lg">Developer Sistem</h3>
+                            <p class="text-sm text-slate-500">Membangun aplikasi sesuai spesifikasi teknis yang presisi.</p>
+                        </div>
+                    </div>
+
+                    <div class="callout callout-info mt-12">
+                        <p><strong>Rekomendasi:</strong> Perkuat penjelasan peran BPMN dan jadikan **penggunaannya sebagai standar wajib nasional** untuk pemetaan Level 5 & 6. Ini akan memastikan interoperabilitas dan pemahaman yang seragam di seluruh pemerintahan.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 16: Tantangan Mengukur Proses Layanan Publik -->
+            <section id="slide16" class="slide bg-lines">
+                 <div class="slide-header">
+                    <h2 class="slide-title"><span class="title-prefix">BAGIAN 4: PENGUKURAN KINERJA</span>Tantangan: Mengukur Proses Layanan Publik</h2>
+                </div>
+                <div class="slide-content">
+                    <p class="text-center text-slate-600 mb-8">Dokumen R-Permen memperkenalkan metrik kuantitatif dari dunia industri. Meskipun bermanfaat, aplikasinya di sektor publik memerlukan kontekstualisasi yang cermat.</p>
+                    <div class="flex justify-around items-start gap-8">
+                        <!-- Kiri: Industri -->
+                        <div class="w-1/2 p-6 border rounded-lg bg-slate-50 shadow-md">
+                            <h3 class="font-bold text-xl text-slate-800 mb-4 text-center">Dunia Industri (Manufaktur)</h3>
+                            <div class="flex justify-center mb-4"><i class="fas fa-industry text-5xl text-slate-500"></i></div>
+                            <ul class="space-y-2">
+                                <li class="flex gap-2"><i class="fas fa-check text-green-500 mt-1"></i>Proses sangat terstandar dan berulang.</li>
+                                <li class="flex gap-2"><i class="fas fa-check text-green-500 mt-1"></i>Output seragam (misal: panjang sekrup).</li>
+                                <li class="flex gap-2"><i class="fas fa-check text-green-500 mt-1"></i>Batas spesifikasi (toleransi) jelas & terukur.</li>
+                                <li class="flex gap-2"><i class="fas fa-check text-green-500 mt-1"></i>Metrik seperti <strong>Cp dan Cpk</strong> sangat relevan.</li>
+                            </ul>
+                        </div>
+                        <!-- Kanan: Layanan Publik -->
+                        <div class="w-1/2 p-6 border rounded-lg bg-amber-50 shadow-md">
+                            <h3 class="font-bold text-xl text-amber-800 mb-4 text-center">Dunia Layanan Publik</h3>
+                             <div class="flex justify-center mb-4"><i class="fas fa-balance-scale text-5xl text-amber-500"></i></div>
+                             <ul class="space-y-2">
+                                <li class="flex gap-2"><i class="fas fa-times text-red-500 mt-1"></i>Proses melibatkan penilaian & kebijakan.</li>
+                                <li class="flex gap-2"><i class="fas fa-times text-red-500 mt-1"></i>Output bervariasi (misal: kualitas rekomendasi).</li>
+                                <li class="flex gap-2"><i class="fas fa-times text-red-500 mt-1"></i>Batas spesifikasi sulit didefinisikan secara numerik.</li>
+                                <li class="flex gap-2"><i class="fas fa-question text-orange-500 mt-1"></i><strong>Pertanyaan:</strong> Apa "batas toleransi" dari sebuah naskah kebijakan?</li>
+                             </ul>
+                        </div>
+                    </div>
+                     <div class="callout callout-warning mt-8">
+                        <p><strong>Poin Kritis:</strong> Memaksakan penggunaan metrik industri tanpa adaptasi dapat menyebabkan frustrasi, pengukuran yang tidak relevan, dan akhirnya pengabaian terhadap inisiatif pengukuran kinerja proses itu sendiri.</p>
+                    </div>
+                </div>
+            </section>
+            
+                        <!-- Slide 17: Kekuatan Metrik Kualitatif: VoC & VoB -->
+            <section id="slide17" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title"><span class="title-prefix">BAGIAN 4: PENGUKURAN KINERJA</span>Titik Awal Pengukuran: VoC & VoB</h2>
+                </div>
+                <div class="slide-content">
+                    <p class="text-center text-slate-600 mb-10 max-w-4xl mx-auto">Daripada memulai dengan metrik teknis yang kompleks, pengukuran kinerja proses sebaiknya berawal dari dua pertanyaan fundamental yang diwakili oleh *Voice of Customer* (VoC) dan *Voice of Business* (VoB).</p>
+                    <div class="flex justify-around items-stretch gap-8">
+                        <!-- VoC -->
+                        <div class="w-1/2 p-6 border-2 border-sky-300 bg-sky-50 rounded-lg shadow-lg flex flex-col">
+                            <div class="text-center">
+                                <i class="fas fa-users text-5xl text-sky-600 mb-4"></i>
+                                <h3 class="font-bold text-2xl text-sky-800">VoC: Voice of Customer</h3>
+                                <p class="font-semibold text-slate-600 mb-4">(Suara Masyarakat & Pengguna Layanan)</p>
+                            </div>
+                            <hr class="border-sky-200 my-4">
+                            <p class="text-slate-700 font-semibold text-lg text-center mb-4">"Apakah proses ini memberikan apa yang dibutuhkan pengguna secara efektif?"</p>
+                            <ul class="space-y-2 flex-1">
+                                <li class="flex gap-3"><i class="fas fa-check text-sky-500 mt-1"></i>Mudah diakses?</li>
+                                <li class="flex gap-3"><i class="fas fa-check text-sky-500 mt-1"></i>Cepat dan tepat waktu?</li>
+                                <li class="flex gap-3"><i class="fas fa-check text-sky-500 mt-1"></i>Transparan dan jelas?</li>
+                                <li class="flex gap-3"><i class="fas fa-check text-sky-500 mt-1"></i>Hasilnya berkualitas?</li>
+                            </ul>
+                        </div>
+                        <!-- VoB -->
+                        <div class="w-1/2 p-6 border-2 border-indigo-300 bg-indigo-50 rounded-lg shadow-lg flex flex-col">
+                            <div class="text-center">
+                                <i class="fas fa-building-columns text-5xl text-indigo-600 mb-4"></i>
+                                <h3 class="font-bold text-2xl text-indigo-800">VoB: Voice of Business</h3>
+                                 <p class="font-semibold text-slate-600 mb-4">(Kebutuhan Internal & Strategis Organisasi)</p>
+                            </div>
+                            <hr class="border-indigo-200 my-4">
+                            <p class="text-slate-700 font-semibold text-lg text-center mb-4">"Apakah proses ini mendukung pencapaian tujuan organisasi secara efisien?"</p>
+                            <ul class="space-y-2 flex-1">
+                                <li class="flex gap-3"><i class="fas fa-check text-indigo-500 mt-1"></i>Efisien dari segi biaya dan waktu?</li>
+                                <li class="flex gap-3"><i class="fas fa-check text-indigo-500 mt-1"></i>Memenuhi standar kepatuhan & hukum?</li>
+                                <li class="flex gap-3"><i class="fas fa-check text-indigo-500 mt-1"></i>Memitigasi risiko operasional?</li>
+                                <li class="flex gap-3"><i class="fas fa-check text-indigo-500 mt-1"></i>Mendukung pencapaian target kinerja?</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 18: Rekomendasi: Kamus Metrik Kinerja Praktis -->
+            <section id="slide18" class="slide bg-grid">
+                <div class="slide-header">
+                    <h2 class="slide-title"><span class="title-prefix">BAGIAN 4: PENGUKURAN KINERJA</span>Rekomendasi: "Kamus Metrik" Layanan Publik</h2>
+                </div>
+                <div class="slide-content">
+                    <p class="text-center text-slate-600 mb-8 max-w-4xl mx-auto">Untuk menjembatani kebutuhan pengukuran dengan realitas di lapangan, R-PermenPANRB disarankan untuk menyediakan lampiran khusus berisi **kamus metrik kinerja proses yang praktis dan relevan** bagi instansi pemerintah.</p>
+
+                    <div class="p-8 border-2 border-blue-200 bg-white rounded-lg shadow-xl max-w-4xl mx-auto">
+                        <h3 class="text-2xl font-bold text-blue-800 mb-6 text-center"><i class="fas fa-book-open mr-3"></i>Contoh Isi Kamus Metrik</h3>
+                        <div class="grid grid-cols-2 gap-x-8 gap-y-6">
+                            <!-- Metric 1 -->
+                            <div class="flex items-start gap-4">
+                                <i class="fas fa-clock text-3xl text-blue-500 w-10 text-center"></i>
+                                <div>
+                                    <h4 class="font-bold text-lg">Waktu Siklus (Cycle Time)</h4>
+                                    <p class="text-sm text-slate-500">Total waktu dari permintaan layanan diterima hingga output diserahkan ke pengguna.</p>
+                                </div>
+                            </div>
+                            <!-- Metric 2 -->
+                             <div class="flex items-start gap-4">
+                                <i class="fas fa-dollar-sign text-3xl text-green-500 w-10 text-center"></i>
+                                <div>
+                                    <h4 class="font-bold text-lg">Biaya per Proses (Cost per Process)</h4>
+                                    <p class="text-sm text-slate-500">Estimasi total biaya (SDM, material, dll.) yang dihabiskan untuk menyelesaikan satu siklus proses.</p>
+                                </div>
+                            </div>
+                            <!-- Metric 3 -->
+                             <div class="flex items-start gap-4">
+                                <i class="fas fa-exclamation-triangle text-3xl text-red-500 w-10 text-center"></i>
+                                <div>
+                                    <h4 class="font-bold text-lg">Tingkat Kesalahan (Error Rate)</h4>
+                                    <p class="text-sm text-slate-500">Persentase output yang memerlukan perbaikan atau tidak memenuhi standar minimal.</p>
+                                </div>
+                            </div>
+                            <!-- Metric 4 -->
+                             <div class="flex items-start gap-4">
+                                <i class="fas fa-star-half-alt text-3xl text-yellow-500 w-10 text-center"></i>
+                                <div>
+                                    <h4 class="font-bold text-lg">Indeks Kepuasan Pengguna</h4>
+                                    <p class="text-sm text-slate-500">Skor kepuasan yang didapat dari survei langsung kepada penerima layanan.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="callout callout-info mt-8 max-w-4xl mx-auto">
+                        <p><strong>Manfaat:</strong> Kamus ini memberikan **bahasa yang sama** bagi seluruh instansi, **memudahkan perbandingan (benchmarking)**, dan **memfokuskan upaya perbaikan** pada aspek-aspek yang paling berdampak.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 19: Tata Kelola: Menetapkan "Pemilik Proses" -->
+            <section id="slide19" class="slide bg-lines">
+                <div class="slide-header">
+                    <h2 class="slide-title"><span class="title-prefix">BAGIAN 5: FAKTOR KRITIS & TATA KELOLA</span>Tata Kelola: Siapa yang Bertanggung Jawab Atas Proses?</h2>
+                </div>
+                <div class="slide-content">
+                    <p class="text-center text-slate-600 mb-8 max-w-4xl mx-auto">Sebuah proses bisnis, terutama yang lintas-fungsi, tidak akan pernah optimal jika tidak ada satu pihak yang secara jelas memiliki **akuntabilitas dari awal hingga akhir**.</p>
+                    
+                    <div class="flex items-center justify-center gap-8">
+                        <div class="w-1/3 p-6 text-center">
+                            <i class="fas fa-sitemap text-8xl text-red-400 mb-4"></i>
+                            <h3 class="text-xl font-bold">Masalah Umum</h3>
+                            <p>Akuntabilitas terfragmentasi mengikuti struktur silo organisasi, menyebabkan tidak ada yang bertanggung jawab atas kinerja proses secara keseluruhan.</p>
+                        </div>
+                        <i class="fas fa-arrow-right-long text-6xl text-slate-400"></i>
+                        <div class="w-1/2 p-6 bg-green-50 border-2 border-green-300 rounded-lg shadow-lg">
+                            <h3 class="text-xl font-bold text-green-800 mb-4"><i class="fas fa-user-shield mr-2"></i>Rekomendasi: Definisikan Peran "Process Owner"</h3>
+                            <p class="mb-4">R-Permen perlu mendefinisikan peran **"Pemilik Proses"**, yaitu seorang pejabat (bisa Eselon II atau III) yang diberi mandat untuk:</p>
+                            <ul class="space-y-2 list-disc list-inside text-slate-700">
+                                <li>Memantau kinerja proses dari awal hingga akhir.</li>
+                                <li>Menginisiasi dan memimpin upaya perbaikan proses.</li>
+                                <li>Berkoordinasi dengan semua unit kerja yang terlibat.</li>
+                                <li>Melaporkan kinerja proses kepada Pimpinan Instansi melalui **Tim Koordinasi SPBE**.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="callout callout-success mt-10">
+                         <p><strong>Poin Kunci:</strong> Dengan adanya *Process Owner*, manajemen proses bisnis berubah dari sekadar latihan pemetaan menjadi sebuah **mekanisme tata kelola yang aktif dan akuntabel**.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 20: Poin Kritis 3: Aspek Manusia & Manajemen Perubahan -->
+            <section id="slide20" class="slide bg-spotlight skin-emboss">
+                <div class="slide-header">
+                    <h2 class="slide-title"><span class="title-prefix">BAGIAN 5: FAKTOR KRITIS & TATA KELOLA</span>Poin Kritis #3: Perbaikan Proses adalah Proyek Perubahan Budaya</h2>
+                </div>
+                <div class="slide-content">
+                    <p class="text-center text-lg mb-8 max-w-4xl mx-auto">Alat teknis secanggih apapun akan gagal jika aspek **manusia** diabaikan. Mengubah proses berarti mengubah cara kerja, kebiasaan, dan terkadang, kekuasaan.</p>
+                    
+                    <div class="grid grid-cols-3 gap-8 text-center">
+                        <!-- Komunikasi -->
+                        <div class="p-6 bg-white border rounded-lg shadow-lg">
+                            <i class="fas fa-bullhorn text-5xl text-blue-500 mb-4"></i>
+                            <h3 class="text-xl font-bold mb-2">Komunikasi Efektif</h3>
+                            <p class="text-sm text-slate-500">Menjelaskan "mengapa" perubahan ini penting, "apa" manfaatnya bagi pegawai, dan "bagaimana" proses transisinya.</p>
+                        </div>
+                        <!-- Pelibatan -->
+                        <div class="p-6 bg-white border rounded-lg shadow-lg">
+                            <i class="fas fa-users text-5xl text-green-500 mb-4"></i>
+                             <h3 class="text-xl font-bold mb-2">Pelibatan & Partisipasi</h3>
+                            <p class="text-sm text-slate-500">Melibatkan pegawai pelaksana dalam fase analisis dan perancangan ulang untuk menciptakan rasa memiliki (*ownership*).</p>
+                        </div>
+                        <!-- Dukungan Pimpinan -->
+                        <div class="p-6 bg-white border rounded-lg shadow-lg">
+                            <i class="fas fa-user-tie text-5xl text-purple-500 mb-4"></i>
+                             <h3 class="text-xl font-bold mb-2">Dukungan Pimpinan</h3>
+                            <p class="text-sm text-slate-500">Pimpinan instansi harus menjadi sponsor utama, memberikan arahan, mengalokasikan sumber daya, dan mengatasi resistensi.</p>
+                        </div>
+                    </div>
+
+                    <div class="callout callout-danger mt-10">
+                        <h3 class="font-bold text-red-800 text-lg">Rekomendasi Kritis:</h3>
+                        <p>R-PermenPANRB perlu menambahkan **bab atau sub-bab khusus mengenai Manajemen Perubahan**, yang mewajibkan instansi untuk menyusun **rencana komunikasi dan sosialisasi** sebagai bagian tak terpisahkan dari setiap inisiatif perbaikan proses.</p>
+                    </div>
+                </div>
+            </section>
+
+                        <!-- Slide 21: Poin Kritis 4: Integrasi dengan Mesin Kinerja (SAKIP & RB) -->
+            <section id="slide21" class="slide bg-spotlight skin-emboss">
+                <div class="slide-header">
+                    <h2 class="slide-title"><span class="title-prefix">BAGIAN 5: FAKTOR KRITIS & TATA KELOLA</span>Poin Kritis #4: Hubungkan ke "Mesin Kinerja" Pemerintah</h2>
+                </div>
+                <div class="slide-content">
+                    <p class="text-center text-lg mb-8 max-w-4xl mx-auto">Agar Manajemen Proses Bisnis (MPB) menjadi prioritas dan berkelanjutan, kinerjanya harus terintegrasi langsung dengan ekosistem akuntabilitas yang sudah ada.</p>
+                    
+                    <div class="flex items-center justify-center gap-4">
+                        <!-- Input -->
+                        <div class="p-6 bg-white rounded-lg shadow-lg border text-center">
+                            <i class="fas fa-chart-bar text-4xl text-blue-600 mb-2"></i>
+                            <h3 class="font-bold">Pengukuran Kinerja Proses</h3>
+                            <p class="text-sm text-slate-500">(Waktu Siklus, Biaya, Kepuasan, dll.)</p>
+                        </div>
+
+                        <i class="fas fa-arrow-right-long text-5xl text-slate-400 mx-4"></i>
+                        
+                        <!-- Outputs -->
+                        <div class="flex-1 space-y-4">
+                            <div class="p-6 bg-green-50 border-2 border-green-300 rounded-lg shadow-lg">
+                                <h3 class="text-xl font-bold text-green-800"><i class="fas fa-file-signature mr-2"></i>SAKIP (Sistem Akuntabilitas Kinerja)</h3>
+                                <p class="text-slate-600">Hasil pengukuran kinerja proses menjadi **Indikator Kinerja** yang dilaporkan dalam Laporan Kinerja Instansi Pemerintah (LAKIP).</p>
+                            </div>
+                            <div class="p-6 bg-purple-50 border-2 border-purple-300 rounded-lg shadow-lg">
+                                <h3 class="text-xl font-bold text-purple-800"><i class="fas fa-award mr-2"></i>Evaluasi Reformasi Birokrasi (RB)</h3>
+                                <p class="text-slate-600">Tingkat kematangan implementasi MPB menjadi **salah satu komponen penilaian** dalam area perubahan "Tata Laksana".</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="callout callout-danger mt-10">
+                        <h3 class="font-bold text-red-800 text-lg">Rekomendasi Wajib:</h3>
+                        <p>Tambahkan pasal yang **secara eksplisit mewajibkan integrasi hasil pengukuran kinerja proses ke dalam SAKIP dan Penilaian RB**. Ini akan menciptakan insentif kelembagaan yang kuat untuk implementasi yang serius.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 22: Kapasitas Implementasi: SDM, Anggaran, Teknologi -->
+            <section id="slide22" class="slide bg-grid">
+                <div class="slide-header">
+                    <h2 class="slide-title"><span class="title-prefix">BAGIAN 5: FAKTOR KRITIS & TATA KELOLA</span>Realitas Kapasitas Implementasi di Lapangan</h2>
+                </div>
+                <div class="slide-content">
+                    <p class="text-center text-slate-600 mb-10 max-w-4xl mx-auto">Implementasi R-Permen ini bukanlah pekerjaan ringan. Pendekatan "satu ukuran untuk semua" sangat berisiko gagal jika tidak mempertimbangkan perbedaan kapasitas sumber daya yang signifikan antar instansi.</p>
+                    
+                    <div class="grid grid-cols-3 gap-8 text-center">
+                        <!-- SDM -->
+                        <div class="p-8 bg-white border rounded-lg shadow-xl hover:shadow-2xl transition-shadow">
+                            <i class="fas fa-users-cog text-6xl text-blue-500 mb-5"></i>
+                            <h3 class="text-2xl font-bold mb-2">Sumber Daya Manusia</h3>
+                            <p class="text-slate-500">Kebutuhan akan analis proses yang terlatih, fasilitator, dan pakar BPMN yang jumlahnya masih terbatas di lingkungan pemerintahan.</p>
+                        </div>
+                        <!-- Anggaran -->
+                        <div class="p-8 bg-white border rounded-lg shadow-xl hover:shadow-2xl transition-shadow">
+                            <i class="fas fa-wallet text-6xl text-green-500 mb-5"></i>
+                             <h3 class="text-2xl font-bold mb-2">Anggaran</h3>
+                            <p class="text-slate-500">Kebutuhan anggaran khusus untuk pelatihan, sertifikasi, pengadaan *software* pemodelan, atau bahkan bantuan konsultan.</p>
+                        </div>
+                        <!-- Teknologi -->
+                        <div class="p-8 bg-white border rounded-lg shadow-xl hover:shadow-2xl transition-shadow">
+                            <i class="fas fa-server text-6xl text-sky-500 mb-5"></i>
+                             <h3 class="text-2xl font-bold mb-2">Dukungan Teknologi</h3>
+                            <p class="text-slate-500">Kesiapan infrastruktur dan aplikasi untuk mendukung proses bisnis baru yang dirancang ulang agar tidak hanya berakhir di atas kertas.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 23: Rekomendasi: Model Kematangan Bertahap -->
+            <section id="slide23" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title"><span class="title-prefix">BAGIAN 5: FAKTOR KRITIS & TATA KELOLA</span>Rekomendasi: Implementasi Realistis dengan Model Kematangan</h2>
+                </div>
+                <div class="slide-content">
+                    <p class="text-center text-slate-600 mb-8 max-w-4xl mx-auto">Untuk mengatasi perbedaan kapasitas, R-PermenPANRB disarankan mengadopsi **Model Kematangan Implementasi**. Ini memungkinkan adopsi bertahap dan membuat target lebih realistis bagi semua instansi.</p>
+                    
+                    <div class="flex items-end justify-center gap-4 h-80">
+                        <!-- Level 1 -->
+                        <div class="w-1/4 h-1/3 p-4 bg-white border-2 border-slate-300 rounded-lg shadow-lg flex flex-col justify-center text-center">
+                            <p class="text-sm font-bold text-slate-500">LEVEL 1: DASAR</p>
+                            <h3 class="font-semibold text-lg mt-2">Pemetaan Prioritas</h3>
+                            <p class="text-xs text-slate-400 mt-1">Fokus pada pemetaan proses bisnis utama/prioritas (AS-IS).</p>
+                        </div>
+                        <!-- Level 2 -->
+                        <div class="w-1/4 h-2/3 p-4 bg-white border-2 border-blue-300 rounded-lg shadow-lg flex flex-col justify-center text-center">
+                            <p class="text-sm font-bold text-blue-600">LEVEL 2: MENENGAH</p>
+                            <h3 class="font-semibold text-lg mt-2">Analisis & Perbaikan</h3>
+                            <p class="text-xs text-slate-400 mt-1">Melakukan analisis sederhana (RADIN, Value Added) dan perbaikan proses (TO-BE).</p>
+                        </div>
+                        <!-- Level 3 -->
+                        <div class="w-1/4 h-full p-4 bg-white border-2 border-emerald-400 rounded-lg shadow-lg flex flex-col justify-center text-center">
+                            <p class="text-sm font-bold text-emerald-700">LEVEL 3: LANJUTAN</p>
+                            <h3 class="font-semibold text-lg mt-2">Optimalisasi Berkelanjutan</h3>
+                            <p class="text-xs text-slate-400 mt-1">Menerapkan pengukuran kinerja kuantitatif dan rekayasa ulang proses secara sistematis dan terintegrasi.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 24: Rangkuman Rekomendasi Kunci -->
+            <section id="slide24" class="slide bg-lines">
+                 <div class="slide-header">
+                    <h2 class="slide-title"><span class="title-prefix">BAGIAN 6: VISI & PENUTUP</span>Rangkuman Rekomendasi Kunci</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-2 grid-rows-3 gap-x-8 gap-y-6">
+                        <div class="flex items-start gap-4 p-4 bg-white rounded-lg shadow-md border-l-4 border-blue-500">
+                            <i class="fas fa-link text-3xl text-blue-500 w-10 text-center"></i>
+                            <div>
+                                <h3 class="font-bold">Integrasi Wajib Antar Domain</h3>
+                                <p class="text-sm text-slate-500">Wajibkan koordinasi antara tim Proses Bisnis dengan 5 domain SPBE lainnya.</p>
+                            </div>
+                        </div>
+                         <div class="flex items-start gap-4 p-4 bg-white rounded-lg shadow-md border-l-4 border-blue-500">
+                            <i class="fas fa-tasks text-3xl text-blue-500 w-10 text-center"></i>
+                            <div>
+                                <h3 class="font-bold">Integrasi ke SAKIP & RB</h3>
+                                <p class="text-sm text-slate-500">Jadikan kinerja proses sebagai bagian dari penilaian kinerja instansi.</p>
+                            </div>
+                        </div>
+                         <div class="flex items-start gap-4 p-4 bg-white rounded-lg shadow-md border-l-4 border-blue-500">
+                            <i class="fas fa-user-shield text-3xl text-blue-500 w-10 text-center"></i>
+                            <div>
+                                <h3 class="font-bold">Definisikan Peran "Process Owner"</h3>
+                                <p class="text-sm text-slate-500">Ciptakan akuntabilitas yang jelas untuk kinerja proses lintas-fungsi.</p>
+                            </div>
+                        </div>
+                         <div class="flex items-start gap-4 p-4 bg-white rounded-lg shadow-md border-l-4 border-blue-500">
+                            <i class="fas fa-heartbeat text-3xl text-blue-500 w-10 text-center"></i>
+                            <div>
+                                <h3 class="font-bold">Wajibkan Manajemen Perubahan</h3>
+                                <p class="text-sm text-slate-500">Sertakan rencana komunikasi dan sosialisasi dalam setiap inisiatif perbaikan.</p>
+                            </div>
+                        </div>
+                         <div class="flex items-start gap-4 p-4 bg-white rounded-lg shadow-md border-l-4 border-blue-500">
+                            <i class="fas fa-book text-3xl text-blue-500 w-10 text-center"></i>
+                            <div>
+                                <h3 class="font-bold">Lampirkan Kamus Metrik Praktis</h3>
+                                <p class="text-sm text-slate-500">Sediakan panduan pengukuran yang relevan dan aplikatif untuk layanan publik.</p>
+                            </div>
+                        </div>
+                         <div class="flex items-start gap-4 p-4 bg-white rounded-lg shadow-md border-l-4 border-blue-500">
+                            <i class="fas fa-stairs text-3xl text-blue-500 w-10 text-center"></i>
+                            <div>
+                                <h3 class="font-bold">Adopsi Model Kematangan</h3>
+                                <p class="text-sm text-slate-500">Mungkinkan implementasi bertahap yang realistis sesuai kapasitas instansi.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+                        <!-- Slide 25: Visi Jangka Panjang: Menuju "Digital Twin of Government" -->
+            <section id="slide25" class="slide bg-stars skin-holographic">
+                <div class="h-full w-full flex flex-col justify-center items-center text-center p-10" style="background: radial-gradient(ellipse at bottom, #02042b 0%, #000 100%);">
+                    <h2 class="slide-title !text-white" style="text-shadow: 0 2px 10px rgba(0,0,0,0.5);">
+                        <span class="title-prefix !text-cyan-300">BAGIAN 6: VISI & PENUTUP</span>
+                        Visi Jangka Panjang: Dari Peta Statis ke "Digital Twin" Pemerintahan
+                    </h2>
+
+                    <p class="text-xl text-slate-300 mt-4 mb-8 max-w-4xl mx-auto">
+                        Peta Proses Bisnis bukan hanya alat untuk efisiensi hari ini, tetapi fondasi untuk pemerintahan yang lebih cerdas, adaptif, dan prediktif di masa depan.
+                    </p>
+
+                    <div class="w-full max-w-5xl h-80 rounded-lg p-6 relative flex items-center justify-center bg-black bg-opacity-20 border border-cyan-500 shadow-2xl shadow-cyan-500/20">
+                        <!-- Background elements -->
+                        <i class="fas fa-brain text-9xl text-cyan-400 opacity-10 absolute"></i>
+                        
+                        <!-- Content -->
+                        <div class="grid grid-cols-3 gap-8 text-white z-10">
+                            <div class="flex flex-col items-center gap-3">
+                                <div class="p-4 border-2 border-cyan-400 rounded-full">
+                                    <i class="fas fa-drafting-compass text-4xl text-cyan-300"></i>
+                                </div>
+                                <h3 class="font-semibold text-lg">Model Digital</h3>
+                                <p class="text-sm text-slate-400">Menciptakan representasi digital dari seluruh proses operasional pemerintah.</p>
+                            </div>
+                            <div class="flex flex-col items-center gap-3">
+                                <div class="p-4 border-2 border-cyan-400 rounded-full">
+                                    <i class="fas fa-cogs text-4xl text-cyan-300"></i>
+                                </div>
+                                <h3 class="font-semibold text-lg">Simulasi Kebijakan</h3>
+                                <p class="text-sm text-slate-400">Menguji dampak kebijakan baru secara virtual sebelum diimplementasikan di dunia nyata.</p>
+                            </div>
+                            <div class="flex flex-col items-center gap-3">
+                                <div class="p-4 border-2 border-cyan-400 rounded-full">
+                                    <i class="fas fa-chart-pie text-4xl text-cyan-300"></i>
+                                </div>
+                                <h3 class="font-semibold text-lg">Optimalisasi Sumber Daya</h3>
+                                <p class="text-sm text-slate-400">Mengidentifikasi *bottleneck* dan mengalokasikan sumber daya secara prediktif.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="callout callout-info mt-8 !bg-opacity-10 !border-l-cyan-400">
+                        <p class="!text-slate-200"><strong>Rekomendasi Visioner:</strong> Artikulasi visi ini dalam R-PermenPANRB akan mengangkatnya dari dokumen teknis menjadi **dokumen strategis yang mengarahkan transformasi digital nasional**.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 26: Terima Kasih & Diskusi -->
+            <section id="slide26" class="slide bg-dots">
+                <div class="h-full w-full flex flex-col justify-center items-center text-center p-10">
+                    <div class="flex items-center gap-8 mb-10">
+                        <img src="/img/logo-panrb.png" alt="KemenPANRB Logo" class="brand-logo">
+                        <img src="/img/logo-unair-biru.png" alt="UNAIR Logo" class="brand-logo">
+                    </div>
+                    
+                    <h1 class="text-6xl font-bold text-slate-900 tracking-tight">Terima Kasih</h1>
+                    <p class="text-2xl text-slate-600 mt-4">Siap untuk Diskusi & Tanya Jawab</p>
+                    
+                    <div class="mt-16 border-t border-slate-300 pt-8 w-full max-w-2xl">
+                        <p class="text-slate-800 text-2xl font-semibold">Dr. Windijarto, S.E., MBA</p>
+                        <p class="text-slate-600 text-lg">Koordinator RGU Departemen Manajemen</p>
+                        <p class="text-slate-600 text-lg">Fakultas Ekonomi dan Bisnis, Universitas Airlangga</p>
+                        
+                        <div class="mt-4 text-slate-500">
+                            <i class="fas fa-envelope mr-2"></i> windijarto@feb.unair.ac.id (contoh)
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+        </div>
+    </div>
+    <script src="slide.js"></script>
+</body>
+</html>
