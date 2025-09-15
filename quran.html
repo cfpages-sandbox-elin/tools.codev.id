@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quran Categorizer v1.2</title>
+    <title>Quran Categorizer v1.6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">    
     <link rel="stylesheet" href="quran.css">
@@ -186,16 +186,13 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">Add Existing Labels</label>
                             <div class="flex">
                                 <select id="parentLabelSelect" class="flex-1 px-4 py-2 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                    <option value="">Select Parent Label</option>
-                                </select>
-                                <select id="childLabelSelect" class="flex-1 px-4 py-2 border-t border-b border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                    <option value="">Select Child Label</option>
+                                    <option value="">Select Label from Hierarchy...</option>
                                 </select>
                                 <button id="addLabelButton" class="bg-indigo-600 text-white px-4 py-2 rounded-r-lg hover:bg-indigo-700 transition-colors">
                                     <i class="fas fa-plus"></i>
                                 </button>
                             </div>
-                            <p class="mt-1 text-sm text-gray-500">Select a parent label first, then optionally select a child label</p>
+                            <p class="mt-1 text-sm text-gray-500">Select any label (parent, child, or grandchild) to add it.</p>
                         </div>
                         
                         <div>

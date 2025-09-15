@@ -1,4 +1,4 @@
-// quran.js v1.5 clickable label
+// quran.js v1.6 clickable label
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlqWMArBZkIfPWVNP6KuM0wyy2u3zvN3INFKzoQMI5MHiRQHQTVehC-9Mi7HiwK3q86A/exec";
 const CLOUDFLARE_SHEET_API_URL = "/sheet-api"; // For Google Sheets operations
 const CLOUDFLARE_QURAN_API_URL = "/quran-api"; // For Quran scraping
@@ -258,9 +258,8 @@ async function loadLabels() {
         
         if (result.status === 'success') {
             labels = result.data;
-            populateLabelFilters();
-            if (elements.parentLabelSelect) populateParentSelect(elements.parentLabelSelect, labels);
-            if (elements.newLabelParentSelect) populateParentSelect(elements.newLabelParentSelect, labels);
+            // This one function now replaces all the previous populate calls
+            populateAllLabelDropdowns(); 
         } else {
             showError('Failed to load labels: ' + (result.message || 'Unknown error'));
         }
@@ -691,48 +690,53 @@ function populateSurahFilter() {
     });
 }
 
-function populateLabelFilters() {
-    if (!elements.labelFilter) return;
-    
-    elements.labelFilter.innerHTML = '<option value="">All Labels</option>';
-    
-    // FIX: Use uppercase 'PARENT_ID', 'ID', and 'NAME'
-    labels.filter(label => !label.PARENT_ID).forEach(label => {
-        const option = document.createElement('option');
-        option.value = label.ID;
-        option.textContent = label.NAME;
-        elements.labelFilter.appendChild(option);
+function populateAllLabelDropdowns() {
+    // A list of all dropdowns that should contain the full label hierarchy
+    const dropdowns = [
+        elements.labelFilter,
+        elements.parentLabelSelect, // This will be our new single selector
+        elements.newLabelParent,
+        elements.newLabelParentSelect
+    ];
+
+    dropdowns.forEach(select => {
+        if (select) {
+            // Preserve the first "placeholder" option
+            const firstOption = select.options[0];
+            select.innerHTML = '';
+            if (firstOption) {
+                select.appendChild(firstOption);
+            }
+            // Build the rest of the options recursively
+            buildLabelOptionsRecursive(labels, select, null, 0);
+        }
     });
 }
 
-function populateParentSelect(selectElement, labelsList) {
-    if (!selectElement) return;
-    
-    selectElement.innerHTML = '<option value="">Select Parent Label</option>';
-    
-    // FIX: Use uppercase 'PARENT_ID', 'ID', and 'NAME'
-    labelsList.filter(label => !label.PARENT_ID).forEach(label => {
+function buildLabelOptionsRecursive(allLabels, selectElement, parentId = null, depth = 0) {
+    const prefix = '— '.repeat(depth);
+    const children = allLabels.filter(label => label.PARENT_ID === parentId);
+
+    children.forEach(child => {
         const option = document.createElement('option');
-        option.value = label.ID;
-        option.textContent = label.NAME;
+        option.value = child.ID;
+        option.textContent = prefix + child.NAME;
         selectElement.appendChild(option);
+
+        // A-HA! The recursion happens here.
+        buildLabelOptionsRecursive(allLabels, selectElement, child.ID, depth + 1);
     });
 }
 
-function populateChildSelect(parentId) {
-    if (!elements.childLabelSelect) return;
-    
-    elements.childLabelSelect.innerHTML = '<option value="">Select Child Label</option>';
-    
-    if (parentId) {
-        // FIX: Use uppercase 'PARENT_ID', 'ID', and 'NAME'
-        labels.filter(label => label.PARENT_ID === parentId).forEach(label => {
-            const option = document.createElement('option');
-            option.value = label.ID;
-            option.textContent = label.NAME;
-            elements.childLabelSelect.appendChild(option);
-        });
-    }
+function getLabelAndAllDescendants(labelId, allLabels) {
+    let descendantIds = [labelId];
+    const children = allLabels.filter(label => label.PARENT_ID === labelId);
+
+    children.forEach(child => {
+        descendantIds = descendantIds.concat(getLabelAndAllDescendants(child.ID, allLabels));
+    });
+
+    return descendantIds;
 }
 
 // Modal Functions
@@ -1058,41 +1062,23 @@ function showParsedPreview() {
 }
 
 function addSelectedLabel() {
-    if (!elements.parentLabelSelect) {
-        console.error('Parent label select element not found');
+    // The logic is now much simpler
+    const labelId = elements.parentLabelSelect.value;
+    
+    if (!labelId) {
+        showError('Please select a label from the list');
         return;
     }
-    
-    const parentId = elements.parentLabelSelect.value;
-    const childId = elements.childLabelSelect ? elements.childLabelSelect.value : '';
-    
-    if (!parentId) {
-        showError('Please select a parent label');
-        return;
-    }
-    
-    console.log('Adding labels - Parent:', parentId, 'Child:', childId);
-    
-    // Add parent label if not already selected
-    if (!selectedLabels.includes(parentId)) {
-        selectedLabels.push(parentId);
-        console.log('Added parent label:', parentId);
-    }
-    
-    // Add child label if selected and not already selected
-    if (childId && !selectedLabels.includes(childId)) {
-        selectedLabels.push(childId);
-        console.log('Added child label:', childId);
+
+    if (!selectedLabels.includes(labelId)) {
+        selectedLabels.push(labelId);
     }
     
     updateSelectedLabels();
     updateSaveButtonState();
     
-    // Reset selects
+    // Reset the select
     elements.parentLabelSelect.value = '';
-    if (elements.childLabelSelect) {
-        elements.childLabelSelect.innerHTML = '<option value="">Select Child Label</option>';
-    }
     
     showSuccess('Label added successfully!');
 }
@@ -1170,20 +1156,24 @@ function updateSelectedLabels() {
     console.log('Updating selected labels:', selectedLabels);
     
     selectedLabels.forEach(labelId => {
-        // FIX: Use uppercase properties throughout
         const label = labels.find(l => l.ID === labelId);
         if (label) {
-            const isParent = !label.PARENT_ID;
-            const labelTag = document.createElement('span');
-            labelTag.className = `label-tag ${isParent ? 'parent-label' : 'child-label'} flex items-center`;
-            
-            let labelText = label.NAME;
-            if (!isParent && label.PARENT_ID) {
-                const parentLabel = labels.find(l => l.ID === label.PARENT_ID);
+            let labelPath = [label.NAME];
+            let currentLabel = label;
+            while (currentLabel && currentLabel.PARENT_ID) {
+                const parentLabel = labels.find(l => l.ID === currentLabel.PARENT_ID);
                 if (parentLabel) {
-                    labelText = `${parentLabel.NAME} > ${label.NAME}`;
+                    labelPath.unshift(parentLabel.NAME);
+                    currentLabel = parentLabel;
+                } else {
+                    currentLabel = null; // Parent not found, break loop
                 }
             }
+            const labelText = labelPath.join(' > ');
+            
+            const isParent = !label.PARENT_ID; // Styling can still be based on top-level
+            const labelTag = document.createElement('span');
+            labelTag.className = `label-tag ${isParent ? 'parent-label' : 'child-label'} flex items-center`;
             
             labelTag.innerHTML = `
                 ${labelText}
@@ -1586,10 +1576,14 @@ function filterAyahs() {
     
     // Filter by label
     if (labelFilter) {
+        // Get the selected label AND all of its children/grandchildren
+        const relevantLabelIds = getLabelAndAllDescendants(labelFilter, labels);
+        
         filteredAyahs = filteredAyahs.filter(ayah => {
             if (!ayah.LABEL) return false;
             const ayahLabels = ayah.LABEL.split(',').map(label => label.trim());
-            return ayahLabels.includes(labelFilter);
+            // Check if any of the ayah's labels exist in our relevant list
+            return ayahLabels.some(ayahLabelId => relevantLabelIds.includes(ayahLabelId));
         });
     }
     
