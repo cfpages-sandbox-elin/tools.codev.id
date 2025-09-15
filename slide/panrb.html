@@ -79,37 +79,21 @@
             width: auto;
         }
 
-        /* --- BPM Lifecycle Diagram Styles --- */
-        .bpm-lifecycle-wrapper {
+        /* --- BPM Lifecycle Diagram Styles v2 (Simple & Clear) --- */
+        .bpm-cycle-container {
             display: flex;
             justify-content: center;
             align-items: center;
-            width: 100%;
-            height: 100%;
-        }
-        .bpm-lifecycle {
             position: relative;
-            width: 450px;
-            height: 450px;
-            border-radius: 50%;
-            background: conic-gradient(
-                from -18deg,
-                #9333ea 72deg, /* 1. Analyze (Purple) */
-                #be185d 72deg 144deg, /* 2. Model (Pink) */
-                #dc2626 144deg 216deg, /* 3. Execute (Red) */
-                #ea580c 216deg 288deg, /* 4. Monitor (Orange) */
-                #d97706 288deg 360deg /* 5. Optimize (Amber) */
-            );
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 480px; /* Increased size */
+            height: 480px;
+            margin: 1.5rem auto; /* Centering and spacing */
         }
-        .bpm-center {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 50%;
-            height: 50%;
-            background-color: #ffffff; /* Must match slide background */
+        .bpm-cycle-center {
+            width: 160px;
+            height: 160px;
+            background-color: #1e293b;
+            color: white;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -117,53 +101,59 @@
             text-align: center;
             font-size: 1.5rem;
             font-weight: 600;
-            color: #334155;
+            z-index: 2;
         }
-        .bpm-item {
+        .bpm-cycle-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             position: absolute;
-            top: 0;
-            left: 50%;
-            width: 1px;
-            height: 50%;
-            transform-origin: bottom center;
-            transition: opacity 0.4s ease-in-out;
+            width: 120px;
+            height: 120px;
+            text-align: center;
+            transition: transform 0.3s ease;
         }
-        .bpm-number {
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 50px;
-            height: 50px;
-            background-color: #1e293b;
+        .bpm-cycle-item:hover {
+            transform: scale(1.1);
+        }
+        .bpm-cycle-item .number {
+            width: 40px;
+            height: 40px;
+            background-color: #334155;
             color: white;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 1.1rem;
-            border: 5px solid #ffffff; /* This border creates the yin-yang illusion */
-            z-index: 2;
+            font-size: 1rem;
+            margin-bottom: 8px;
+            border: 3px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
-        .bpm-label {
-            position: absolute;
-            top: 60px;
-            left: 0;
-            width: 100px;
-            text-align: center;
-            transform: translateX(-50%) rotate(calc(-1 * var(--rotation)));
-            font-weight: 500;
-            color: white;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+        .bpm-cycle-item .label {
+            font-weight: 600;
+            color: #1e293b;
         }
 
-        /* Highlighting for Slide 11 */
-        .bpm-lifecycle.highlight-critical .bpm-item {
-            opacity: 0.3;
-        }
-        .bpm-lifecycle.highlight-critical .bpm-item.critical-phase {
-            opacity: 1;
+        /* Positioning each item around the circle */
+        .bpm-item-1 { transform: translate(0, -180px); }
+        .bpm-item-2 { transform: translate(165px, -70px); }
+        .bpm-item-3 { transform: translate(130px, 120px); }
+        .bpm-item-4 { transform: translate(-130px, 120px); }
+        .bpm-item-5 { transform: translate(-165px, -70px); }
+
+        /* Connector Lines using ::before pseudo-elements */
+        .bpm-cycle-connector {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 280px; /* Adjust length of the line */
+            height: 2px;
+            background-color: #cbd5e1;
+            transform-origin: left center;
+            z-index: 1;
         }
     </style>
 </head>
@@ -530,7 +520,7 @@
                 </div>
             </section>
             
-            <!-- Slide 10: Metodologi: Siklus Hidup Manajemen Proses Bisnis (REVISED with HTML/CSS) -->
+            <!-- Slide 10: Metodologi: Siklus Hidup Manajemen Proses Bisnis (REVISED v2) -->
             <section id="slide10" class="slide bg-grid">
                 <div class="slide-header">
                     <h2 class="slide-title"><span class="title-prefix">BAGIAN 3: METODOLOGI & ALAT BANTU</span>Metodologi: Siklus Hidup Manajemen Proses Bisnis</h2>
@@ -541,26 +531,45 @@
                         <p>Draf R-PermenPANRB telah mengadopsi kerangka kerja siklus hidup Manajemen Proses Bisnis (BPM) yang selaras dengan praktik terbaik global. Pendekatan ini memastikan bahwa upaya perbaikan proses dilakukan secara sistematis, terstruktur, dan berkelanjutan.</p>
                     </div>
                     
-                    <div class="bpm-lifecycle-wrapper">
-                        <div class="bpm-lifecycle">
-                            <div class="bpm-center">BPM<br>Lifecycle</div>
-                            <div class="bpm-items">
-                                <div class="bpm-item" style="--rotation: 36deg;"><div class="bpm-number">01</div><div class="bpm-label">Analisis</div></div>
-                                <div class="bpm-item" style="--rotation: 108deg;"><div class="bpm-number">02</div><div class="bpm-label">Pemodelan</div></div>
-                                <div class="bpm-item" style="--rotation: 180deg;"><div class="bpm-number">03</div><div class="bpm-label">Implementasi</div></div>
-                                <div class="bpm-item" style="--rotation: 252deg;"><div class="bpm-number">04</div><div class="bpm-label">Pemantauan</div></div>
-                                <div class="bpm-item" style="--rotation: 324deg;"><div class="bpm-number">05</div><div class="bpm-label">Optimalisasi</div></div>
-                            </div>
+                    <div class="bpm-cycle-container">
+                        <div class="bpm-cycle-center">BPM<br>Lifecycle</div>
+                        <!-- Connector lines -->
+                        <div class="bpm-cycle-connector" style="transform: translate(-140px, 0) rotate(270deg) translate(140px, 0);"></div>
+                        <div class="bpm-cycle-connector" style="transform: translate(-140px, 0) rotate(342deg) translate(140px, 0);"></div>
+                        <div class="bpm-cycle-connector" style="transform: translate(-140px, 0) rotate(54deg) translate(140px, 0);"></div>
+                        <div class="bpm-cycle-connector" style="transform: translate(-140px, 0) rotate(126deg) translate(140px, 0);"></div>
+                        <div class="bpm-cycle-connector" style="transform: translate(-140px, 0) rotate(198deg) translate(140px, 0);"></div>
+                        
+                        <!-- Items -->
+                        <div class="bpm-cycle-item bpm-item-1">
+                            <div class="number">01</div>
+                            <div class="label">Analisis</div>
+                        </div>
+                        <div class="bpm-cycle-item bpm-item-2">
+                            <div class="number">02</div>
+                            <div class="label">Pemodelan</div>
+                        </div>
+                        <div class="bpm-cycle-item bpm-item-3">
+                            <div class="number">03</div>
+                            <div class="label">Implementasi</div>
+                        </div>
+                        <div class="bpm-cycle-item bpm-item-4">
+                            <div class="number">04</div>
+                            <div class="label">Pemantauan</div>
+                        </div>
+                        <div class="bpm-cycle-item bpm-item-5">
+                            <div class="number">05</div>
+                            <div class="label">Optimalisasi</div>
                         </div>
                     </div>
 
-                     <div class="callout callout-success mt-8 max-w-5xl mx-auto">
+                     <div class="callout callout-success max-w-5xl mx-auto">
                         <p><strong>Implikasi Positif:</strong> Adopsi siklus ini secara fundamental mengubah pemetaan proses dari sebuah proyek satu kali (<i>one-off project</i>) menjadi sebuah <strong>disiplin manajemen untuk perbaikan berkelanjutan</strong> (<i>continuous improvement</i>).</p>
                     </div>
                 </div>
             </section>
 
-            <!-- Slide 11: Analisis Fase Kritis: Rancang Ulang & Implementasi (REVISED with HTML/CSS) -->
+            <!-- Slide 11: Analisis Fase Kritis: Rancang Ulang & Implementasi (REVISED v2) -->
             <section id="slide11" class="slide bg-dots">
                 <div class="slide-header">
                     <h2 class="slide-title"><span class="title-prefix">BAGIAN 3: METODOLOGI & ALAT BANTU</span>Analisis Fase Kritis: Rancang Ulang & Implementasi</h2>
@@ -571,17 +580,32 @@
                            <h3 class="text-2xl font-bold text-slate-800 mb-4">Observasi Terhadap Siklus BPM</h3>
                             <p class="text-slate-600 mb-6">Meskipun seluruh tahapan penting, pengalaman di sektor publik menunjukkan bahwa fase yang melibatkan perubahan—yaitu **Analisis, Pemodelan (Rancang Ulang), dan Implementasi**—menghadapi tantangan non-teknis terbesar.</p>
                             
-                            <div class="bpm-lifecycle-wrapper">
-                                <div class="bpm-lifecycle highlight-critical">
-                                    <div class="bpm-center">Fase<br>Kritis</div>
-                                    <div class="bpm-items">
-                                        <div class="bpm-item critical-phase" style="--rotation: 36deg;"><div class="bpm-number">01</div><div class="bpm-label">Analisis</div></div>
-                                        <div class="bpm-item critical-phase" style="--rotation: 108deg;"><div class="bpm-number">02</div><div class="bpm-label">Pemodelan</div></div>
-                                        <div class="bpm-item critical-phase" style="--rotation: 180deg;"><div class="bpm-number">03</div><div class="bpm-label">Implementasi</div></div>
-                                        <div class="bpm-item" style="--rotation: 252deg;"><div class="bpm-number">04</div><div class="bpm-label">Pemantauan</div></div>
-                                        <div class="bpm-item" style="--rotation: 324deg;"><div class="bpm-number">05</div><div class="bpm-label">Optimalisasi</div></div>
+                            <!-- Simplified Diagram Highlighting Critical Phases -->
+                            <div class="flex flex-col items-center p-6 bg-slate-50 border rounded-lg">
+                                <div class="flex items-center justify-center gap-2">
+                                    <div class="p-3 text-center rounded-lg bg-red-100 border border-red-300">
+                                        <div class="font-bold text-red-700">Analisis</div>
+                                    </div>
+                                    <i class="fas fa-arrow-right text-red-500"></i>
+                                    <div class="p-3 text-center rounded-lg bg-red-100 border border-red-300">
+                                        <div class="font-bold text-red-700">Rancang Ulang</div>
+                                    </div>
+                                    <i class="fas fa-arrow-right text-red-500"></i>
+                                    <div class="p-3 text-center rounded-lg bg-red-100 border border-red-300">
+                                        <div class="font-bold text-red-700">Implementasi</div>
                                     </div>
                                 </div>
+                                <div class="h-px w-3/4 bg-slate-300 my-4"></div>
+                                <div class="flex items-center justify-center gap-2">
+                                    <div class="p-3 text-center rounded-lg bg-slate-200">
+                                        <div class="font-bold text-slate-600">Pemantauan</div>
+                                    </div>
+                                    <i class="fas fa-sync-alt text-slate-500"></i>
+                                     <div class="p-3 text-center rounded-lg bg-slate-200">
+                                        <div class="font-bold text-slate-600">Optimalisasi</div>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-slate-500 mt-4">Fase Kritis (merah) adalah yang paling rentan terhadap resistensi.</p>
                             </div>
                         </div>
                         <div class="w-1/2">
@@ -986,7 +1010,7 @@
                     <h2 class="slide-title"><span class="title-prefix">BAGIAN 4: PENGUKURAN KINERJA</span>Rekomendasi: Lampiran "Kamus Metrik Layanan Publik"</h2>
                 </div>
                 <div class="slide-content flex flex-col justify-center">
-                    <p class="text-center text-slate-600 mb-8 max-w-4xl mx-auto">Untuk memberikan panduan yang praktis dan aplikatif, R-PermenPANRB sangat disarankan untuk melampirkan **Kamus Metrik Kinerja Proses** yang berfokus pada konteks layanan publik.</p>
+                    <p class="text-center text-slate-600 mb-2 max-w-4xl mx-auto">Untuk memberikan panduan yang praktis dan aplikatif, R-PermenPANRB sangat disarankan untuk melampirkan **Kamus Metrik Kinerja Proses** yang berfokus pada konteks layanan publik.</p>
 
                     <div class="p-8 border-2 border-blue-200 bg-white rounded-lg shadow-xl max-w-4xl mx-auto">
                         <h3 class="text-2xl font-bold text-blue-800 mb-6 text-center"><i class="fas fa-book-open mr-3"></i>Contoh Struktur Kamus Metrik</h3>
@@ -1021,7 +1045,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="callout callout-success mt-8 max-w-4xl mx-auto">
+                    <div class="callout callout-success mt-2 max-w-4xl mx-auto">
                         <p><strong>Manfaat:</strong> Kamus ini akan menciptakan **standardisasi pengukuran**, memudahkan **pembandingan (benchmarking)**, dan memfokuskan upaya perbaikan pada metrik yang paling berdampak.</p>
                     </div>
                 </div>
