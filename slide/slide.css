@@ -1,4 +1,4 @@
-/* === slide.css: The Reusable Layout Engine === */
+/* === slide.css: biar button keluar semua === */
 
 /* --- CORE STRUCTURE & WRAPPER --- */
 #presentation-wrapper {
@@ -464,4 +464,21 @@
 .callout-danger {
     background-color: var(--callout-danger-bg, #fef2f2);
     border-left-color: var(--callout-danger-border, #ef4444);
+}
+
+.nav-arrow, #fullscreen-btn, #download-btn {
+    position: absolute; 
+    width: 44px; 
+    height: 44px; 
+    backdrop-filter: blur(5px);
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    cursor: pointer; 
+    font-size: 1.25rem; 
+    transition: all 0.2s ease-in-out; 
+    z-index: 10; 
 }
