@@ -1,4 +1,4 @@
-// quran.js v1.6 clickable label
+// quran.js v1.6 recursive label filter fix
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlqWMArBZkIfPWVNP6KuM0wyy2u3zvN3INFKzoQMI5MHiRQHQTVehC-9Mi7HiwK3q86A/exec";
 const CLOUDFLARE_SHEET_API_URL = "/sheet-api"; // For Google Sheets operations
 const CLOUDFLARE_QURAN_API_URL = "/quran-api"; // For Quran scraping
@@ -715,7 +715,12 @@ function populateAllLabelDropdowns() {
 
 function buildLabelOptionsRecursive(allLabels, selectElement, parentId = null, depth = 0) {
     const prefix = '— '.repeat(depth);
-    const children = allLabels.filter(label => label.PARENT_ID === parentId);
+    const children = allLabels.filter(label => {
+        if (parentId === null) {
+            return label.PARENT_ID === null || label.PARENT_ID === '';
+        }
+        return label.PARENT_ID === parentId;
+    });
 
     children.forEach(child => {
         const option = document.createElement('option');
@@ -723,7 +728,6 @@ function buildLabelOptionsRecursive(allLabels, selectElement, parentId = null, d
         option.textContent = prefix + child.NAME;
         selectElement.appendChild(option);
 
-        // A-HA! The recursion happens here.
         buildLabelOptionsRecursive(allLabels, selectElement, child.ID, depth + 1);
     });
 }
