@@ -520,50 +520,56 @@
                 </div>
             </section>
             
-            <!-- Slide 10: Metodologi: Siklus Hidup Manajemen Proses Bisnis (REVISED v2) -->
+            <!-- Slide 10: Metodologi: Siklus Hidup Manajemen Proses Bisnis (REVISED v3 - Linear Cycle) -->
             <section id="slide10" class="slide bg-grid">
                 <div class="slide-header">
                     <h2 class="slide-title"><span class="title-prefix">BAGIAN 3: METODOLOGI & ALAT BANTU</span>Metodologi: Siklus Hidup Manajemen Proses Bisnis</h2>
                 </div>
                 <div class="slide-content flex flex-col justify-center">
-                    <div class="callout callout-info mb-8 max-w-4xl mx-auto">
+                    <div class="callout callout-info mb-10 max-w-4xl mx-auto">
                         <h3 class="font-bold text-xl text-blue-800 mb-2">Apresiasi Terhadap Metodologi</h3>
                         <p>Draf R-PermenPANRB telah mengadopsi kerangka kerja siklus hidup Manajemen Proses Bisnis (BPM) yang selaras dengan praktik terbaik global. Pendekatan ini memastikan bahwa upaya perbaikan proses dilakukan secara sistematis, terstruktur, dan berkelanjutan.</p>
                     </div>
                     
-                    <div class="bpm-cycle-container">
-                        <div class="bpm-cycle-center">BPM<br>Lifecycle</div>
-                        <!-- Connector lines -->
-                        <div class="bpm-cycle-connector" style="transform: translate(-140px, 0) rotate(270deg) translate(140px, 0);"></div>
-                        <div class="bpm-cycle-connector" style="transform: translate(-140px, 0) rotate(342deg) translate(140px, 0);"></div>
-                        <div class="bpm-cycle-connector" style="transform: translate(-140px, 0) rotate(54deg) translate(140px, 0);"></div>
-                        <div class="bpm-cycle-connector" style="transform: translate(-140px, 0) rotate(126deg) translate(140px, 0);"></div>
-                        <div class="bpm-cycle-connector" style="transform: translate(-140px, 0) rotate(198deg) translate(140px, 0);"></div>
+                    <!-- Simplified Linear Cycle Diagram -->
+                    <div class="flex flex-col items-center justify-center space-y-4">
+                        <div class="flex items-center justify-center gap-4">
+                            <div class="p-4 text-center rounded-lg bg-white border-2 border-purple-300 shadow-lg w-48">
+                                <div class="font-bold text-purple-700">1. Analisis</div>
+                            </div>
+                            <i class="fas fa-arrow-right text-3xl text-slate-400"></i>
+                            <div class="p-4 text-center rounded-lg bg-white border-2 border-pink-300 shadow-lg w-48">
+                                <div class="font-bold text-pink-700">2. Pemodelan</div>
+                            </div>
+                            <i class="fas fa-arrow-right text-3xl text-slate-400"></i>
+                            <div class="p-4 text-center rounded-lg bg-white border-2 border-red-300 shadow-lg w-48">
+                                <div class="font-bold text-red-700">3. Implementasi</div>
+                            </div>
+                        </div>
+
+                        <!-- Downward arrow to show the cycle continues -->
+                        <div class="w-full flex justify-end pr-24">
+                             <i class="fas fa-long-arrow-alt-down text-3xl text-slate-400 transform -rotate-45"></i>
+                        </div>
                         
-                        <!-- Items -->
-                        <div class="bpm-cycle-item bpm-item-1">
-                            <div class="number">01</div>
-                            <div class="label">Analisis</div>
-                        </div>
-                        <div class="bpm-cycle-item bpm-item-2">
-                            <div class="number">02</div>
-                            <div class="label">Pemodelan</div>
-                        </div>
-                        <div class="bpm-cycle-item bpm-item-3">
-                            <div class="number">03</div>
-                            <div class="label">Implementasi</div>
-                        </div>
-                        <div class="bpm-cycle-item bpm-item-4">
-                            <div class="number">04</div>
-                            <div class="label">Pemantauan</div>
-                        </div>
-                        <div class="bpm-cycle-item bpm-item-5">
-                            <div class="number">05</div>
-                            <div class="label">Optimalisasi</div>
+                        <div class="flex items-center justify-center gap-4">
+                             <div class="p-4 text-center rounded-lg bg-white border-2 border-amber-300 shadow-lg w-48">
+                                <div class="font-bold text-amber-700">5. Optimalisasi</div>
+                            </div>
+                            <i class="fas fa-arrow-left text-3xl text-slate-400"></i>
+                            <div class="p-4 text-center rounded-lg bg-white border-2 border-orange-300 shadow-lg w-48">
+                                <div class="font-bold text-orange-700">4. Pemantauan</div>
+                            </div>
+                             <!-- Upward looping arrow -->
+                            <div class="relative w-48 h-16">
+                                <div class="absolute -left-12 bottom-0 h-16 w-px bg-slate-300"></div>
+                                <div class="absolute -left-12 top-0 w-24 h-px bg-slate-300"></div>
+                                <i class="fas fa-long-arrow-alt-up text-3xl text-slate-400 absolute -left-12 top-0 -mt-3"></i>
+                            </div>
                         </div>
                     </div>
 
-                     <div class="callout callout-success max-w-5xl mx-auto">
+                     <div class="callout callout-success max-w-5xl mx-auto mt-10">
                         <p><strong>Implikasi Positif:</strong> Adopsi siklus ini secara fundamental mengubah pemetaan proses dari sebuah proyek satu kali (<i>one-off project</i>) menjadi sebuah <strong>disiplin manajemen untuk perbaikan berkelanjutan</strong> (<i>continuous improvement</i>).</p>
                     </div>
                 </div>
