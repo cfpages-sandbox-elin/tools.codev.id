@@ -1,4 +1,4 @@
-// slide.js v1.0 biar tombol download ke hide pas fullscreen
+// slide.js v1.0 biar tombol2 ke hide pas fullscreen
 document.addEventListener('DOMContentLoaded', function () {
     // --- ELEMENT SELECTORS ---
     const presentationContainer = document.getElementById('presentation-container');
@@ -245,12 +245,13 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- FULLSCREEN CHANGE LISTENER ---
     function handleFullscreenChange() {
         const downloadButton = document.getElementById('download-btn');
+        const fullscreenButton = document.getElementById('fullscreen-btn');
         if (document.fullscreenElement) {
-            // Saat masuk fullscreen, sembunyikan tombol download
             downloadButton.style.display = 'none';
+            fullscreenButton.style.display = 'none'; 
         } else {
-            // Saat keluar dari fullscreen, tampilkan kembali tombol download
-            downloadButton.style.display = 'flex'; // Gunakan 'flex' sesuai styling aslinya
+            downloadButton.style.display = 'flex';
+            fullscreenButton.style.display = 'flex'; 
         }
     }
 
