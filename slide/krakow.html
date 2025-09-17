@@ -1110,29 +1110,58 @@
                 </div>
             </section>
             
-            <!-- Slide 16: Variables - Relationships -->
+            <!-- Slide 16 (REDESIGNED): Visualizing Variable Relationships -->
             <section id="slide16" class="slide bg-dots">
                 <div class="slide-header">
-                    <h2 class="slide-title">Variable Relationships</h2>
+                    <h2 class="slide-title">Visualizing Variable Relationships</h2>
                 </div>
                 <div class="slide-content">
                     <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-200">
-                        <div class="text-center">
-                            <div class="inline-block p-4 bg-blue-100 rounded-lg">
-                                <p class="font-semibold text-blue-800">Independent Variable</p>
-                                <p class="text-slate-700">Training Method</p>
-                            </div>
-                            <div class="my-3">
-                                <i class="fas fa-arrow-down text-2xl text-blue-600"></i>
-                            </div>
-                            <div class="inline-block p-4 bg-green-100 rounded-lg">
-                                <p class="font-semibold text-green-800">Dependent Variable</p>
-                                <p class="text-slate-700">Employee Performance</p>
-                            </div>
+                        
+                        <!-- The Full Hypothesis -->
+                        <div class="mb-6">
+                            <p class="font-semibold text-slate-800 mb-2">Let's Deconstruct Our Hypothesis:</p>
+                            <p class="text-slate-700 italic text-center p-3 bg-slate-50 rounded-lg">
+                                "Employees who participate in <span class="font-bold text-blue-800">interactive training (IV)</span> will demonstrate higher <span class="font-bold text-green-800">performance scores (DV)</span> ... when controlling for <span class="font-bold text-amber-800">years of experience (CV)</span>. This relationship will be stronger for <span class="font-bold text-purple-800">highly motivated employees (MV)</span>."
+                            </p>
                         </div>
-                        <div class="mt-6 p-4 bg-slate-50 rounded-lg">
-                            <p class="font-semibold text-slate-800 mb-2">Hypothesis Example:</p>
-                            <p class="text-slate-700 italic">"Employees who participate in interactive training (IV) will demonstrate higher performance scores (DV) than those who receive lecture-based training, when controlling for years of experience (CV). This relationship will be stronger for highly motivated employees (MV)."</p>
+
+                        <!-- The Visual Diagram -->
+                        <div class="text-center">
+
+                            <!-- Moderating Variable (The "Dimmer Switch") -->
+                            <div class="mb-2">
+                                <div class="inline-block p-3 bg-purple-100 rounded-lg border border-purple-200">
+                                    <p class="font-semibold text-purple-800">Moderating Variable (MV)</p>
+                                    <p class="text-slate-700">Employee Motivation</p>
+                                </div>
+                                <p class="text-sm text-slate-500 mt-1">This acts like a dimmer switch on the relationship.</p>
+                                <i class="fas fa-arrow-down text-2xl text-purple-400"></i>
+                            </div>
+
+                            <!-- Core IV -> DV Relationship -->
+                            <div class="flex justify-center items-center space-x-4">
+                                <div class="p-4 bg-blue-100 rounded-lg w-48">
+                                    <p class="font-semibold text-blue-800">Independent Variable (IV)</p>
+                                    <p class="text-slate-700">Training Method</p>
+                                </div>
+                                <div class="text-3xl text-slate-600 font-bold relative px-2">
+                                    <i class="fas fa-arrow-right"></i>
+                                </div>
+                                <div class="p-4 bg-green-100 rounded-lg w-48">
+                                    <p class="font-semibold text-green-800">Dependent Variable (DV)</p>
+                                    <p class="text-slate-700">Performance Score</p>
+                                </div>
+                            </div>
+
+                            <!-- Control Variable (The "Foundation") -->
+                            <div class="mt-4 pt-4 border-t border-dashed">
+                                <div class="inline-block p-3 bg-amber-100 rounded-lg border border-amber-200">
+                                    <p class="font-semibold text-amber-800">Control Variable (CV)</p>
+                                    <p class="text-slate-700">Years of Experience</p>
+                                </div>
+                                <p class="text-sm text-slate-500 mt-1">This is kept constant to ensure a fair comparison.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
