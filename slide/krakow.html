@@ -216,56 +216,70 @@
                 <div class="slide-header">
                     <h2 class="slide-title">Research Process Flow</h2>
                 </div>
-                <div class="slide-content flex flex-col justify-center items-center">
-                    <div class="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-4 text-center">
+                <div class="slide-content flex flex-col justify-center items-center h-full">
+                    <!-- Flex container for the flowchart steps -->
+                    <div class="w-full flex flex-col md:flex-row items-center justify-center gap-y-4 gap-x-2 lg:gap-x-4">
+
+                        <!-- Step 1: Identify Problem -->
+                        <div class="flex flex-col items-center text-center">
+                            <div class="w-32 h-32 lg:w-36 lg:h-36 rounded-full bg-blue-50 border-2 border-blue-400 shadow-lg flex flex-col justify-center items-center p-2">
+                                <i class="fas fa-search-plus text-3xl lg:text-4xl text-blue-700 mb-2"></i>
+                                <span class="font-semibold text-blue-800 text-sm">Identify Problem</span>
+                            </div>
+                        </div>
+
+                        <!-- Arrow -->
+                        <div class="text-3xl text-slate-400 rotate-90 md:rotate-0">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+
+                        <!-- Step 2: Set Goals & Questions -->
+                        <div class="flex flex-col items-center text-center">
+                            <div class="w-32 h-32 lg:w-36 lg:h-36 rounded-full bg-blue-50 border-2 border-blue-400 shadow-lg flex flex-col justify-center items-center p-2">
+                                <i class="fas fa-bullseye text-3xl lg:text-4xl text-blue-700 mb-2"></i>
+                                <span class="font-semibold text-blue-800 text-sm leading-tight">Set Goals & Questions</span>
+                            </div>
+                        </div>
+
+                        <!-- Arrow -->
+                        <div class="text-3xl text-slate-400 rotate-90 md:rotate-0">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+
+                        <!-- Step 3: Formulate Hypotheses -->
+                        <div class="flex flex-col items-center text-center">
+                            <div class="w-32 h-32 lg:w-36 lg:h-36 rounded-full bg-blue-50 border-2 border-blue-400 shadow-lg flex flex-col justify-center items-center p-2">
+                                <i class="fas fa-flask text-3xl lg:text-4xl text-blue-700 mb-2"></i>
+                                <span class="font-semibold text-blue-800 text-sm">Formulate Hypotheses</span>
+                            </div>
+                        </div>
+
+                        <!-- Arrow -->
+                        <div class="text-3xl text-slate-400 rotate-90 md:rotate-0">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
                         
-                        <!-- Step 1 -->
-                        <div class="flex flex-col items-center">
-                            <div class="w-20 h-20 rounded-full bg-blue-100 border-2 border-blue-500 text-blue-700 flex flex-col items-center justify-center font-semibold p-2 shadow">
-                                <i class="fas fa-search-plus text-2xl mb-1"></i>
-                                <span class="text-xs">Identify Problem</span>
-                            </div>
-                        </div>
-
-                        <div class="text-2xl text-slate-400 md:rotate-0 rotate-90"><i class="fas fa-chevron-right"></i></div>
-                        
-                        <!-- Step 2 -->
-                        <div class="flex flex-col items-center">
-                            <div class="w-20 h-20 rounded-full bg-blue-100 border-2 border-blue-500 text-blue-700 flex flex-col items-center justify-center font-semibold p-2 shadow">
-                                <i class="fas fa-bullseye text-2xl mb-1"></i>
-                                <span class="text-xs">Set Goals & Questions</span>
-                            </div>
-                        </div>
-
-                        <div class="text-2xl text-slate-400 md:rotate-0 rotate-90"><i class="fas fa-chevron-right"></i></div>
-
-                        <!-- Step 3 -->
-                        <div class="flex flex-col items-center">
-                            <div class="w-20 h-20 rounded-full bg-blue-100 border-2 border-blue-500 text-blue-700 flex flex-col items-center justify-center font-semibold p-2 shadow">
-                                <i class="fas fa-flask text-2xl mb-1"></i>
-                                <span class="text-xs">Formulate Hypotheses</span>
+                        <!-- Step 4: Design Methodology -->
+                        <div class="flex flex-col items-center text-center">
+                            <div class="w-32 h-32 lg:w-36 lg:h-36 rounded-full bg-blue-50 border-2 border-blue-400 shadow-lg flex flex-col justify-center items-center p-2">
+                                <i class="fas fa-drafting-compass text-3xl lg:text-4xl text-blue-700 mb-2"></i>
+                                <span class="font-semibold text-blue-800 text-sm">Design Methodology</span>
                             </div>
                         </div>
                         
-                        <div class="text-2xl text-slate-400 md:rotate-0 rotate-90"><i class="fas fa-chevron-right"></i></div>
+                        <!-- Arrow -->
+                        <div class="text-3xl text-slate-400 rotate-90 md:rotate-0">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
 
-                        <!-- Step 4 -->
-                        <div class="flex flex-col items-center">
-                            <div class="w-20 h-20 rounded-full bg-blue-100 border-2 border-blue-500 text-blue-700 flex flex-col items-center justify-center font-semibold p-2 shadow">
-                                <i class="fas fa-drafting-compass text-2xl mb-1"></i>
-                                <span class="text-xs">Design Methodology</span>
+                        <!-- Step 5: Collect & Analyze Data -->
+                        <div class="flex flex-col items-center text-center">
+                            <div class="w-32 h-32 lg:w-36 lg:h-36 rounded-full bg-blue-50 border-2 border-blue-400 shadow-lg flex flex-col justify-center items-center p-2">
+                                <i class="fas fa-chart-bar text-3xl lg:text-4xl text-blue-700 mb-2"></i>
+                                <span class="font-semibold text-blue-800 text-sm leading-tight">Collect & Analyze Data</span>
                             </div>
                         </div>
 
-                        <div class="text-2xl text-slate-400 md:rotate-0 rotate-90"><i class="fas fa-chevron-right"></i></div>
-                        
-                        <!-- Step 5 -->
-                        <div class="flex flex-col items-center">
-                            <div class="w-20 h-20 rounded-full bg-blue-100 border-2 border-blue-500 text-blue-700 flex flex-col items-center justify-center font-semibold p-2 shadow">
-                                <i class="fas fa-chart-bar text-2xl mb-1"></i>
-                                <span class="text-xs">Collect & Analyze Data</span>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </section>
