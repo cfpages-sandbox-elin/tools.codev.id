@@ -1167,58 +1167,67 @@
                 </div>
             </section>
             
-            <!-- Slide 17 (MODIFIED): Testing Hypotheses - Process -->
+            <!-- Slide 17 (REDESIGNED): A Practical Guide to Hypothesis Testing -->
             <section id="slide17" class="slide bg-grid">
                 <div class="slide-header">
-                    <h2 class="slide-title">Hypothesis Testing Process</h2>
+                    <h2 class="slide-title">A Practical Guide to Hypothesis Testing</h2>
                 </div>
                 <div class="slide-content">
-                    <ol class="space-y-3">
-                        <li class="flex">
+                    
+                    <div class="callout callout-info mb-4">
+                        <p><span class="font-semibold text-lg">The Analogy: A Court Trial</span><br>Think of hypothesis testing as a trial for an idea. The Null Hypothesis (H₀) is the defendant, presumed innocent (no effect) until proven guilty beyond a reasonable doubt.</p>
+                    </div>
+
+                    <div class="space-y-3">
+                        <!-- Step 1 -->
+                        <div class="flex">
                             <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold mr-3 flex-shrink-0">1</div>
                             <div>
-                                <h4 class="font-semibold">State Hypotheses</h4>
-                                <p class="text-slate-700">Formulate null (H₀) and alternative (H₁) hypotheses</p>
+                                <h4 class="font-semibold">State the Hypotheses (The Charges)</h4>
+                                <p class="text-sm text-slate-700"><span class="font-semibold">H₀ (Presumed Innocent):</span> Leadership style has <span class="font-bold">no effect</span> on employee retention.</p>
+                                <p class="text-sm text-slate-700"><span class="font-semibold">H₁ (The Accusation):</span> Leadership style <span class="font-bold">does have an effect</span> on employee retention.</p>
                             </div>
-                        </li>
-                        <li class="flex">
+                        </div>
+                        
+                        <!-- Step 2 -->
+                        <div class="flex">
                             <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold mr-3 flex-shrink-0">2</div>
                             <div>
-                                <h4 class="font-semibold">Set Significance Level</h4>
-                                <p class="text-slate-700">Determine alpha (α), typically 0.05</p>
+                                <h4 class="font-semibold">Set the Significance Level (The Standard of Proof)</h4>
+                                <p class="text-sm text-slate-700">We set our alpha (α) to 0.05. This is our "beyond a reasonable doubt" threshold. It means we're willing to accept a 5% chance of being wrong if we reject H₀.</p>
                             </div>
-                        </li>
-                        <li class="flex">
+                        </div>
+
+                        <!-- Step 3 -->
+                        <div class="flex">
                             <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold mr-3 flex-shrink-0">3</div>
                             <div>
-                                <h4 class="font-semibold">Select Appropriate Test</h4>
-                                <p class="text-slate-700">Choose statistical test based on data type and research design</p>
+                                <h4 class="font-semibold">Collect Data (Gather Evidence)</h4>
+                                <p class="text-sm text-slate-700">We collect retention data from 100 teams with transformational leaders and 100 teams with transactional leaders. We will use a t-test to compare them.</p>
                             </div>
-                        </li>
-                        <li class="flex">
+                        </div>
+
+                        <!-- Step 4 & 5 -->
+                        <div class="flex">
                             <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold mr-3 flex-shrink-0">4</div>
                             <div>
-                                <h4 class="font-semibold">Calculate Test Statistic</h4>
-                                <p class="text-slate-700">Compute value from sample data using statistical software</p>
+                                <h4 class="font-semibold">Calculate P-Value & Make a Decision (The Verdict)</h4>
+                                <p class="text-sm text-slate-700">Our statistical software analyzes the data and gives us a <span class="font-bold">p-value of 0.03</span>.</p>
+                                <div class="mt-1 p-2 bg-amber-50 rounded-lg text-center">
+                                    <p class="font-semibold">Is the p-value (0.03) less than alpha (0.05)? <span class="font-bold text-green-700">YES.</span></p>
+                                    <p class="text-slate-800">The evidence is strong enough to meet our standard. We <span class="font-bold">reject the null hypothesis (H₀)</span>.</p>
+                                </div>
                             </div>
-                        </li>
-                        <li class="flex">
+                        </div>
+
+                        <!-- Step 6 -->
+                        <div class="flex">
                             <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold mr-3 flex-shrink-0">5</div>
                             <div>
-                                <h4 class="font-semibold">Make Decision</h4>
-                                <p class="text-slate-700">Compare p-value to α or test statistic to critical value</p>
+                                <h4 class="font-semibold">Interpret the Results (The Sentence)</h4>
+                                <p class="text-sm text-slate-700">We have found a <span class="font-bold">statistically significant</span> difference. We can conclude that leadership style does have an effect on employee retention, supporting our alternative hypothesis.</p>
                             </div>
-                        </li>
-                        <li class="flex">
-                            <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold mr-3 flex-shrink-0">6</div>
-                            <div>
-                                <h4 class="font-semibold">Interpret Results</h4>
-                                <p class="text-slate-700">Draw conclusions about the hypothesis</p>
-                            </div>
-                        </li>
-                    </ol>
-                    <div class="mt-6 text-center p-3 bg-slate-50 rounded-lg">
-                        <p class="text-sm text-slate-700"><span class="font-semibold">Common Tools:</span> This process is typically performed using software like <span class="font-semibold">SPSS, R, Stata,</span> or <span class="font-semibold">Python</span>.</p>
+                        </div>
                     </div>
                 </div>
             </section>
