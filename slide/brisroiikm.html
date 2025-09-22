@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan SROI & IKM - Program BRI Peduli Kya-Kya</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="slide.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* THEME: BRI Corporate Blue */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f4f8; /* Light grey-blue background */
+            color: #1e293b; /* Slate 800 for body text */
+        }
+        #presentation-container {
+            border-color: #e2e8f0; /* Slate 200 border */
+        }
+        .slide {
+            background-color: #ffffff;
+        }
+        .slide-title { 
+            color: #0f172a; /* Slate 900 for titles */
+        }
+        .slide-title::after { 
+            background-color: #0056b3; /* BRI's primary blue */
+        }
+        .title-prefix { 
+            color: #007bff; /* A slightly lighter, vibrant blue */
+        }
+        .nav-arrow, #fullscreen-btn, #download-btn {
+            background-color: rgba(255, 255, 255, 0.7);
+            color: #334155;
+            border-color: rgba(0,0,0,0.05);
+        }
+        .nav-arrow:hover, #fullscreen-btn:hover, #download-btn:hover {
+            background-color: #0056b3;
+            color: white;
+        }
+        #slide-counter {
+            background-color: rgba(15, 23, 42, 0.8);
+            color: #e2e8f0;
+        }
+        .content-list li > i {
+            color: #0056b3;
+        }
+        /* Chart Theme */
+        .css-chart-container {
+            background-color: #f8fafc;
+            border-color: #e2e8f0;
+        }
+        .chart-bar { background-color: #007bff; }
+        .chart-bar:nth-child(2), .chart-bar:nth-child(4) { background-color: #0056b3; }
+        .chart-arrow { color: #0056b3; }
+
+        /* Theme Variables for CSS libraries */
+        :root {
+            --theme-pattern-color: #0056b3;
+            --theme-pattern-color-light: #6ea8ff;
+            --callout-info-bg: #eef6ff;
+            --callout-info-border: #007bff;
+            --callout-success-bg: #f0fdf4;
+            --callout-success-border: #22c55e;
+            --callout-warning-bg: #fffbeb;
+            --callout-warning-border: #f59e0b;
+            --callout-danger-bg: #fef2f2;
+            --callout-danger-border: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <div id="presentation-wrapper">
+        <div id="presentation-container">
+            <!-- Navigation -->
+            <div class="nav-arrow" id="prev-slide"><i class="fas fa-chevron-left"></i></div>
+            <div class="nav-arrow" id="next-slide"><i class="fas fa-chevron-right"></i></div>
+            <div id="slide-counter">1 / 22</div>
+            <div id="fullscreen-btn" title="Toggle Fullscreen"><i class="fas fa-expand"></i></div>
+            <div id="download-btn" class="nav-arrow" title="Download as PDF"><i class="fas fa-download"></i></div>
+            
+            <!-- Lightbox container -->
+            <div id="lightbox">
+                <span id="lightbox-close">&times;</span>
+                <img id="lightbox-img" src="" alt="Zoomed Image">
+            </div>
+            
+            <!-- SLIDES START HERE -->
+
+            <!-- Slide 1: Halaman Judul -->
+            <section id="slide1" class="slide active bg-dots">
+                <div class="h-full w-full flex flex-col justify-center items-center text-center p-10" style="background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(240, 244, 248, 1) 100%);">
+                    <div class="flex items-center gap-8 mb-8">
+                        <img src="/img/logo-bri.png" alt="BRI Logo" class="h-16">
+                        <img src="/img/logo-biru-unair.png" alt="UNAIR Logo" class="h-20">
+                    </div>
+                    <p class="text-xl font-medium text-slate-600 mb-2">Laporan Hasil Penilaian</p>
+                    <h1 class="text-5xl font-bold text-slate-900 tracking-tight leading-tight">Social Return on Investment (SROI) &<br>Indeks Kepuasan Masyarakat (IKM)</h1>
+                    <p class="text-2xl font-normal text-slate-700 mt-4">Program Bantuan Pengembangan Kawasan Wisata Kya-Kya, Surabaya</p>
+                    
+                    <div class="mt-12 border-t border-slate-300 pt-6 w-full max-w-3xl">
+                        <p class="text-slate-500 text-md mb-1">Disusun oleh:</p>
+                        <p class="text-slate-800 text-lg font-semibold">Laboratorium Pengembangan Manajemen dan Bisnis (LPMB) FEB Universitas Airlangga</p>
+                        <p class="text-slate-500 text-md mt-4">September 2025</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 2: Agenda Presentasi -->
+            <section id="slide2" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Agenda: Alur Presentasi</h2>
+                </div>
+                <div class="slide-content">
+                    <ul class="content-list space-y-6">
+                        <li>
+                            <i class="fas fa-ruler-combined fa-2x w-8 text-center"></i>
+                            <div>
+                                <h3 class="text-2xl font-semibold text-slate-800">Konteks & Metodologi</h3>
+                                <p class="text-slate-600">Memahami latar belakang, tujuan, dan kerangka kerja yang digunakan dalam penilaian.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-table fa-2x w-8 text-center"></i>
+                            <div>
+                                <h3 class="text-2xl font-semibold text-slate-800">Ringkasan Data Survei</h3>
+                                <p class="text-slate-600">Menyajikan data kunci yang diperoleh dari 30 responden di lapangan.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-chart-line fa-2x w-8 text-center"></i>
+                            <div>
+                                <h3 class="text-2xl font-semibold text-slate-800">Analisis Dampak (SROI)</h3>
+                                <p class="text-slate-600">Mengukur nilai sosial dan ekonomi yang dihasilkan oleh program.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-smile fa-2x w-8 text-center"></i>
+                            <div>
+                                <h3 class="text-2xl font-semibold text-slate-800">Analisis Kepuasan (IKM)</h3>
+                                <p class="text-slate-600">Menganalisis tingkat kepuasan stakeholder terhadap pelaksanaan program.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-lightbulb fa-2x w-8 text-center"></i>
+                            <div>
+                                <h3 class="text-2xl font-semibold text-slate-800">Kesimpulan & Rekomendasi</h3>
+                                <p class="text-slate-600">Merangkum temuan dan memberikan saran strategis yang dapat ditindaklanjuti.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Slide 3: Latar Belakang & Tujuan -->
+            <section id="slide3" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Pendahuluan: Latar Belakang & Tujuan</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-2 gap-12 items-start">
+                        <!-- Kolom Latar Belakang -->
+                        <div>
+                            <div class="flex items-center gap-3 mb-4">
+                                <i class="fas fa-hands-helping text-3xl text-blue-600"></i>
+                                <h3 class="text-2xl font-semibold text-slate-800">Latar Belakang Program</h3>
+                            </div>
+                            <p class="text-slate-600 text-lg leading-relaxed">
+                                Sebagai bagian dari komitmen Tanggung Jawab Sosial & Lingkungan (TJSL), program **BRI Peduli** memberikan intervensi strategis di kawasan wisata Kya-Kya, Surabaya.
+                                <br><br>
+                                Bantuan difokuskan pada penyediaan aset operasional seperti **meja, kursi, dan tenda** untuk meningkatkan kapasitas dan kenyamanan bagi pedagang serta pengunjung.
+                            </p>
+                        </div>
+
+                        <!-- Kolom Tujuan Penilaian -->
+                        <div>
+                            <div class="flex items-center gap-3 mb-4">
+                                <i class="fas fa-bullseye text-3xl text-blue-600"></i>
+                                <h3 class="text-2xl font-semibold text-slate-800">Tujuan Penilaian</h3>
+                            </div>
+                             <ul class="content-list space-y-4">
+                                <li>
+                                    <i class="fas fa-calculator"></i>
+                                    <p class="text-slate-600 text-lg">**Menghitung nilai dampak sosial (SROI)** program secara kuantitatif dan objektif.</p>
+                                </li>
+                                <li>
+                                    <i class="fas fa-check-to-slot"></i>
+                                    <p class="text-slate-600 text-lg">**Mengukur tingkat kepuasan masyarakat (IKM)** terhadap pelaksanaan program.</p>
+                                </li>
+                                <li>
+                                    <i class="fas fa-directions"></i>
+                                    <p class="text-slate-600 text-lg">**Menyediakan rekomendasi strategis** berbasis data untuk peningkatan kinerja program.</p>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 4 START -->
+
+            <!-- Slide 4: Kerangka Kerja Penilaian -->
+            <section id="slide4" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Metodologi: Kerangka Kerja Penilaian</h2>
+                </div>
+                <div class="slide-content flex flex-col justify-center">
+                    <div class="grid grid-cols-3 gap-8 text-center mb-8">
+                        <!-- Step 1 -->
+                        <div class="flex flex-col items-center">
+                            <div class="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center mb-4 border-2 border-blue-200">
+                                <i class="fas fa-database text-4xl text-blue-600"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold text-slate-800">Pengumpulan Data</h3>
+                            <p class="text-slate-600">Survei kuantitatif dan kualitatif kepada 30 responden (pedagang & pengelola).</p>
+                        </div>
+                        
+                        <!-- Step 2 -->
+                        <div class="flex flex-col items-center">
+                            <div class="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center mb-4 border-2 border-blue-200">
+                                <i class="fas fa-magnifying-glass-chart text-4xl text-blue-600"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold text-slate-800">Analisis Data</h3>
+                            <p class="text-slate-600">Perhitungan dampak menggunakan kerangka SROI dan pengukuran kepuasan via IKM.</p>
+                        </div>
+
+                        <!-- Step 3 -->
+                        <div class="flex flex-col items-center">
+                            <div class="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center mb-4 border-2 border-blue-200">
+                                <i class="fas fa-lightbulb text-4xl text-blue-600"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold text-slate-800">Rekomendasi</h3>
+                            <p class="text-slate-600">Merumuskan saran strategis berdasarkan temuan data yang telah diolah.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="callout callout-info mt-8">
+                        <p class="text-lg">Penilaian mengacu pada kerangka kerja **Social Return on Investment (SROI)** untuk mengukur dampak dan **PermenPAN-RB No. 14 Tahun 2017** untuk mengukur Indeks Kepuasan Masyarakat (IKM).</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 5: Profil Responden -->
+            <section id="slide5" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Ringkasan Data: Profil Responden</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-2 gap-12 items-center">
+                        <!-- Chart 1: Peran Responden -->
+                        <div>
+                            <h3 class="text-2xl font-semibold text-slate-800 text-center mb-4">Peran Responden</h3>
+                            <div class="flex justify-around items-center text-center">
+                                <div>
+                                    <p class="text-6xl font-bold text-blue-600">97%</p>
+                                    <p class="text-xl text-slate-700 mt-2"><i class="fas fa-store mr-2"></i>Pedagang</p>
+                                </div>
+                                <div>
+                                    <p class="text-6xl font-bold text-slate-500">3%</p>
+                                    <p class="text-xl text-slate-700 mt-2"><i class="fas fa-users-cog mr-2"></i>Pengelola</p>
+                                </div>
+                            </div>
+                            <p class="text-center text-slate-500 mt-8">Total N = 30 Responden</p>
+                        </div>
+
+                        <!-- Chart 2: Kelompok Usia -->
+                        <div>
+                            <h3 class="text-2xl font-semibold text-slate-800 text-center mb-4">Distribusi Usia Responden</h3>
+                            <div class="space-y-4">
+                                <!-- Bar 1 -->
+                                <div class="flex items-center">
+                                    <p class="w-28 text-slate-600 font-medium">36-50 tahun</p>
+                                    <div class="flex-1 bg-slate-200 rounded-full h-8">
+                                        <div class="bg-blue-600 h-8 rounded-full text-white flex items-center justify-end pr-3" style="width: 53%;">53%</div>
+                                    </div>
+                                </div>
+                                <!-- Bar 2 -->
+                                <div class="flex items-center">
+                                    <p class="w-28 text-slate-600 font-medium">20-35 tahun</p>
+                                    <div class="flex-1 bg-slate-200 rounded-full h-8">
+                                        <div class="bg-sky-500 h-8 rounded-full text-white flex items-center justify-end pr-3" style="width: 27%;">27%</div>
+                                    </div>
+                                </div>
+                                <!-- Bar 3 -->
+                                <div class="flex items-center">
+                                    <p class="w-28 text-slate-600 font-medium">> 50 tahun</p>
+                                    <div class="flex-1 bg-slate-200 rounded-full h-8">
+                                        <div class="bg-slate-400 h-8 rounded-full text-white flex items-center justify-end pr-3" style="width: 20%;">20%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 6: Data Kunci: Pendapatan -->
+            <section id="slide6" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Ringkasan Data: Dampak Terhadap Pendapatan Harian</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+                        <!-- Stat Card 1: Rata-rata -->
+                        <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                            <h3 class="text-xl font-semibold text-slate-700 mb-3">Pendapatan Rata-Rata</h3>
+                            <p class="text-slate-500">Sebelum Program</p>
+                            <p class="text-3xl font-bold text-slate-800 mb-4">Rp 519.000</p>
+                            <i class="fas fa-arrow-down text-blue-500 text-2xl"></i>
+                            <p class="text-slate-500 mt-4">Sesudah Program</p>
+                            <p class="text-4xl font-bold text-blue-600">Rp 950.000</p>
+                        </div>
+                        
+                        <!-- Stat Card 2: Median -->
+                        <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                            <h3 class="text-xl font-semibold text-slate-700 mb-3">Pendapatan Median (Nilai Tengah)</h3>
+                             <p class="text-slate-500">Sebelum Program</p>
+                            <p class="text-3xl font-bold text-slate-800 mb-4">Rp 350.000</p>
+                            <i class="fas fa-arrow-down text-blue-500 text-2xl"></i>
+                            <p class="text-slate-500 mt-4">Sesudah Program</p>
+                            <p class="text-4xl font-bold text-blue-600">Rp 500.000</p>
+                        </div>
+
+                        <!-- Stat Card 3: Peningkatan -->
+                         <div class="bg-blue-600 text-white p-6 rounded-lg flex flex-col justify-center">
+                            <h3 class="text-xl font-semibold mb-3">Rata-Rata Peningkatan</h3>
+                            <div class="flex items-center justify-center gap-4">
+                                <i class="fas fa-arrow-trend-up text-5xl"></i>
+                                <p class="text-7xl font-bold">+83%</p>
+                            </div>
+                            <p class="mt-4 text-blue-100">Program berhasil meningkatkan pendapatan rata-rata pedagang secara signifikan.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- SLIDE 6 END -->
+            <!-- SLIDE 7 START -->
+
+            <!-- Slide 7: Data Kunci: Pelanggan -->
+            <section id="slide7" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Ringkasan Data: Dampak Terhadap Jumlah Pelanggan</h2>
+                </div>
+                <div class="slide-content flex items-center">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 w-full">
+                        <!-- Stat Card 1: Perbandingan Rata-rata -->
+                        <div class="bg-slate-50 p-8 rounded-lg border border-slate-200 text-center">
+                            <h3 class="text-2xl font-semibold text-slate-700 mb-4">Jumlah Pelanggan Rata-Rata (per Hari)</h3>
+                            <div class="flex justify-around items-center">
+                                <div>
+                                    <p class="text-slate-500 text-lg">Sebelum</p>
+                                    <p class="text-6xl font-bold text-slate-800">35</p>
+                                    <p class="text-slate-500 text-lg">Orang</p>
+                                </div>
+                                <i class="fas fa-arrow-right-long text-blue-500 text-5xl mx-4"></i>
+                                <div>
+                                    <p class="text-slate-500 text-lg">Sesudah</p>
+                                    <p class="text-6xl font-bold text-blue-600">51</p>
+                                    <p class="text-slate-500 text-lg">Orang</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stat Card 2: Peningkatan -->
+                        <div class="bg-blue-600 text-white p-8 rounded-lg flex flex-col justify-center text-center">
+                            <h3 class="text-2xl font-semibold mb-3">Rata-Rata Peningkatan</h3>
+                            <div class="flex items-center justify-center gap-4">
+                                <i class="fas fa-users text-5xl"></i>
+                                <p class="text-7xl font-bold">+16</p>
+                            </div>
+                            <p class="mt-4 text-blue-100 text-xl">Rata-rata penambahan pelanggan per pedagang setiap harinya.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 8: Data Kunci: Faktor Eksternal -->
+            <section id="slide8" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Ringkasan Data: Persepsi Faktor Eksternal</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                        <!-- Deadweight Card -->
+                        <div class="callout callout-warning h-full">
+                             <div class="flex items-start gap-4 mb-3">
+                                <i class="fas fa-person-running text-4xl text-amber-500 w-10 text-center"></i>
+                                <div>
+                                    <h3 class="text-2xl font-semibold text-amber-800">Deadweight (Beban)</h3>
+                                    <p class="text-amber-700 text-lg">Dampak yang akan tetap terjadi *tanpa* adanya program.</p>
+                                </div>
+                            </div>
+                            <div class="text-center my-8">
+                                <p class="text-7xl font-bold text-amber-600">36%</p>
+                                <p class="text-slate-600 mt-2 text-lg">Responden merasa 36% peningkatan akan terjadi secara alami (misal: karena tren wisata).</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Attribution Card -->
+                        <div class="callout callout-info h-full">
+                            <div class="flex items-start gap-4 mb-3">
+                                <i class="fas fa-arrows-split-up-and-left text-4xl text-sky-500 w-10 text-center"></i>
+                                <div>
+                                    <h3 class="text-2xl font-semibold text-sky-800">Attribution (Atribusi)</h3>
+                                    <p class="text-sky-700 text-lg">Kontribusi pihak lain terhadap pencapaian dampak.</p>
+                                </div>
+                            </div>
+                            <div class="text-center my-8">
+                                <p class="text-7xl font-bold text-sky-600">57%</p>
+                                <p class="text-slate-600 mt-2 text-lg">Responden merasa 57% dampak juga dikontribusikan oleh pihak lain (misal: Pemkot, komunitas).</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 9: Analisis SROI: Peningkatan Pendapatan -->
+            <section id="slide9" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Analisis SROI: Visualisasi Peningkatan Pendapatan</h2>
+                </div>
+                <div class="slide-content flex items-center">
+                   <div class="w-full grid grid-cols-3 gap-8 items-center">
+                        <!-- Bar Chart -->
+                        <div class="col-span-2">
+                            <h3 class="text-xl font-semibold text-center text-slate-700 mb-4">Perbandingan Pendapatan Harian Rata-Rata per Pedagang</h3>
+                            <div class="w-full flex justify-around items-end h-80 px-4">
+                                <!-- Bar Sebelum -->
+                                <div class="w-1/3 text-center">
+                                    <p class="font-bold text-2xl text-slate-800">Rp 519.000</p>
+                                    <div class="bg-slate-300 h-40 rounded-t-lg mt-2 relative">
+                                        <p class="absolute -bottom-8 left-0 right-0 font-semibold text-slate-600 text-lg">Sebelum Program</p>
+                                    </div>
+                                </div>
+                                <!-- Bar Sesudah -->
+                                <div class="w-1/3 text-center">
+                                     <p class="font-bold text-3xl text-blue-700">Rp 950.000</p>
+                                    <div class="bg-blue-600 h-72 rounded-t-lg mt-2 relative">
+                                         <p class="absolute -bottom-8 left-0 right-0 font-semibold text-blue-800 text-lg">Sesudah Program</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Analysis Callout -->
+                        <div class="bg-green-50 p-6 rounded-lg border-l-4 border-green-500">
+                             <div class="flex items-center gap-4">
+                                <i class="fas fa-circle-check text-5xl text-green-600"></i>
+                                <div>
+                                    <h3 class="text-2xl font-bold text-green-800">Peningkatan 83%</h3>
+                                    <p class="text-green-700 mt-1 text-lg">Program secara efektif berhasil hampir **menggandakan** pendapatan harian rata-rata para pedagang.</p>
+                                </div>
+                            </div>
+                            <p class="text-slate-600 mt-4">Peningkatan ini menjadi dasar utama dalam perhitungan nilai moneter untuk analisis SROI.</p>
+                        </div>
+                   </div>
+                </div>
+            </section>
+            
+            <!-- SLIDE 9 END -->
+            <!-- SLIDE 10 START -->
+
+            <!-- Slide 10: Analisis SROI: Perhitungan Nilai Dampak -->
+            <section id="slide10" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Analisis SROI: Langkah 1 - Monetisasi Dampak Kotor</h2>
+                </div>
+                <div class="slide-content flex flex-col justify-center">
+                    <h3 class="text-2xl font-semibold text-slate-800 text-center mb-6">Menghitung Proyeksi Nilai Ekonomi Selama 1 Tahun</h3>
+                    
+                    <div class="grid grid-cols-5 items-center text-center gap-4">
+                        <!-- Box 1 -->
+                        <div class="bg-slate-50 p-4 rounded-lg h-full">
+                            <p class="text-slate-500">Peningkatan Rerata Pendapatan Harian</p>
+                            <p class="text-3xl font-bold text-slate-800 mt-2">Rp 431.000</p>
+                        </div>
+                        
+                        <i class="fas fa-xmark text-2xl text-slate-400"></i>
+                        
+                        <!-- Box 2 -->
+                        <div class="bg-slate-50 p-4 rounded-lg h-full">
+                             <p class="text-slate-500">Jumlah Pedagang (Aktif)</p>
+                            <p class="text-3xl font-bold text-slate-800 mt-2">29</p>
+                        </div>
+                        
+                        <i class="fas fa-xmark text-2xl text-slate-400"></i>
+                        
+                        <!-- Box 3 -->
+                        <div class="bg-slate-50 p-4 rounded-lg h-full">
+                             <p class="text-slate-500">Periode Proyeksi</p>
+                            <p class="text-3xl font-bold text-slate-800 mt-2">365 Hari</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 text-center">
+                        <i class="fas fa-equals text-4xl text-blue-600"></i>
+                    </div>
+
+                    <div class="bg-blue-50 border-t-4 border-blue-500 p-6 rounded-lg mt-8 text-center shadow-lg">
+                        <p class="text-xl font-semibold text-blue-800">Total Nilai Dampak Kotor (Gross Impact Value)</p>
+                        <p class="text-6xl font-bold text-blue-700 mt-2 tracking-tight">Rp 4,55 Miliar</p>
+                        <p class="text-blue-900 opacity-80 mt-2">Ini adalah total nilai ekonomi yang dihasilkan sebelum mempertimbangkan faktor eksternal.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 11: Analisis SROI: Penyesuaian Dampak Bersih -->
+            <section id="slide11" class="slide bg-dots">
+                 <div class="slide-header">
+                    <h2 class="slide-title">Analisis SROI: Langkah 2 - Penyesuaian Dampak Bersih</h2>
+                </div>
+                <div class="slide-content flex flex-col justify-center">
+                    <div class="w-full max-w-4xl mx-auto">
+                        <div class="text-center">
+                            <p class="text-lg text-slate-600">Nilai Dampak Kotor</p>
+                            <p class="text-4xl font-bold text-slate-800">Rp 4.557.535.000</p>
+                        </div>
+
+                        <div class="flex justify-center items-start mt-4">
+                            <!-- Deadweight Column -->
+                            <div class="w-1/2 text-center px-4">
+                                <i class="fas fa-minus-circle text-3xl text-amber-500"></i>
+                                <h3 class="text-xl font-semibold text-amber-700 mt-2">Dikurangi Deadweight (36%)</h3>
+                                <p class="text-2xl font-bold text-amber-600">(Rp 1.640.712.600)</p>
+                            </div>
+                            <!-- Attribution Column -->
+                            <div class="w-1/2 text-center px-4 border-l border-slate-300">
+                                 <i class="fas fa-minus-circle text-3xl text-sky-500"></i>
+                                <h3 class="text-xl font-semibold text-sky-700 mt-2">Dikurangi Atribusi (57%)</h3>
+                                <p class="text-2xl font-bold text-sky-600">(Rp 2.597.794.950)</p>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 text-center">
+                            <i class="fas fa-equals text-4xl text-green-600"></i>
+                        </div>
+
+                        <div class="bg-green-50 border-t-4 border-green-500 p-6 rounded-lg mt-6 text-center shadow-lg">
+                            <p class="text-xl font-semibold text-green-800">Total Nilai Dampak Bersih (Net Impact Value)</p>
+                            <p class="text-6xl font-bold text-green-700 mt-2 tracking-tight">Rp 319 Juta</p>
+                            <p class="text-green-900 opacity-80 mt-2">Ini adalah nilai dampak yang dapat diatribusikan secara langsung kepada program BRI Peduli.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 12: Hasil Akhir: Rasio SROI -->
+            <section id="slide12" class="slide bg-grid">
+                <div class="h-full w-full flex flex-col justify-center items-center text-center p-10 skin-brushed-metal" style="background: radial-gradient(circle, #003d7a 0%, #002e5c 100%);">
+                    <p class="text-3xl font-medium text-slate-300 mb-4">Hasil Akhir Analisis</p>
+                    <h2 class="text-8xl font-bold text-white tracking-tight" style="line-height: 1.1;">Social Return on Investment</h2>
+
+                    <div class="my-10 bg-white/10 backdrop-blur-sm rounded-xl p-8 border border-white/20">
+                        <p class="text-2xl text-white">Rasio SROI</p>
+                        <p class="font-bold text-white" style="font-size: 10rem; line-height: 1;">1 : 2.12</p>
+                    </div>
+
+                    <div class="callout callout-success max-w-4xl" style="background-color: rgba(240, 253, 244, 0.9);">
+                        <p class="text-2xl text-green-800 leading-snug">
+                            Artinya, setiap **Rp 1** yang diinvestasikan oleh BRI dalam program bantuan Kya-Kya, berhasil menciptakan **nilai sosial dan ekonomi sebesar Rp 2,12** bagi para penerima manfaat.
+                        </p>
+                    </div>
+                    <p class="text-slate-400 text-sm mt-4">*Perhitungan rasio berdasarkan asumsi nilai investasi program sebesar Rp 150.000.000.</p>
+                </div>
+            </section>
+
+            <!-- SLIDE 12 END -->
+            <!-- SLIDE 13 START -->
+
+            <!-- Slide 13: Hasil Akhir: Skor IKM -->
+            <section id="slide13" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Hasil Akhir: Skor Indeks Kepuasan Masyarakat (IKM)</h2>
+                </div>
+                <div class="slide-content flex flex-col justify-center items-center text-center">
+                    <div class="relative w-96 h-48 overflow-hidden">
+                        <div class="absolute top-0 left-0 w-full h-full border-4 border-slate-200 rounded-t-full" style="border-bottom: 0;"></div>
+                        <div class="absolute top-0 left-0 w-full h-full border-4 border-blue-600 rounded-t-full origin-bottom-center" style="border-bottom: 0; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 100%); transform: rotate(143deg);"></div>
+                        <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-800 rounded-full"></div>
+                    </div>
+                    <p class="text-9xl font-bold text-blue-700 -mt-10 tracking-tighter">84.7</p>
+                    <p class="text-4xl font-semibold text-slate-800 mt-2">Kategori: <span class="text-blue-600">SANGAT BAIK</span> (A)</p>
+                    
+                    <div class="callout callout-info max-w-3xl mt-8">
+                        <p class="text-xl text-sky-800">Skor ini menunjukkan bahwa secara keseluruhan, para penerima manfaat **sangat puas** dengan pelaksanaan program bantuan yang diberikan oleh BRI Peduli.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 14: Peringkat Unsur Pelayanan IKM -->
+            <section id="slide14" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Analisis IKM: Peringkat Unsur Pelayanan</h2>
+                </div>
+                <div class="slide-content">
+                    <p class="text-center text-slate-600 text-lg mb-6">Skor Konversi (Skala 25-100) diurutkan dari tertinggi ke terendah.</p>
+                    <div class="space-y-3 max-w-4xl mx-auto">
+                        <!-- Bar 1 -->
+                        <div class="flex items-center">
+                            <p class="w-56 text-slate-600 font-medium">Kualitas Hasil Program</p>
+                            <div class="flex-1 bg-green-100 rounded-full h-10">
+                                <div class="bg-green-500 h-10 rounded-full text-white flex items-center justify-between px-3 font-semibold" style="width: 95%;"><span><i class="fas fa-star mr-2"></i>Kualitas Hasil</span><span>95.0</span></div>
+                            </div>
+                        </div>
+                        <!-- Bar 2 -->
+                        <div class="flex items-center">
+                            <p class="w-56 text-slate-600 font-medium">Sikap & Pelayanan Tim</p>
+                            <div class="flex-1 bg-green-100 rounded-full h-10">
+                                <div class="bg-green-500 h-10 rounded-full text-white flex items-center justify-between px-3 font-semibold" style="width: 92.5%;"><span><i class="fas fa-star mr-2"></i>Sikap Tim</span><span>92.5</span></div>
+                            </div>
+                        </div>
+                        <!-- Bar 3 -->
+                        <div class="flex items-center">
+                            <p class="w-56 text-slate-600 font-medium">Kemampuan Tim</p>
+                            <div class="flex-1 bg-green-100 rounded-full h-10">
+                                <div class="bg-green-500 h-10 rounded-full text-white flex items-center justify-between px-3 font-semibold" style="width: 90%;"><span><i class="fas fa-star mr-2"></i>Kemampuan Tim</span><span>90.0</span></div>
+                            </div>
+                        </div>
+                        <!-- Bar 4 -->
+                        <div class="flex items-center">
+                            <p class="w-56 text-slate-600 font-medium">Fasilitas Pendukung</p>
+                            <div class="flex-1 bg-slate-200 rounded-full h-10">
+                                <div class="bg-sky-500 h-10 rounded-full text-white flex items-center justify-between px-3 font-semibold" style="width: 87.5%;"><span>Fasilitas</span><span>87.5</span></div>
+                            </div>
+                        </div>
+                        <!-- Bar 5 -->
+                        <div class="flex items-center">
+                            <p class="w-56 text-slate-600 font-medium">Kemudahan Syarat</p>
+                            <div class="flex-1 bg-slate-200 rounded-full h-10">
+                                <div class="bg-sky-500 h-10 rounded-full text-white flex items-center justify-between px-3 font-semibold" style="width: 85%;"><span>Syarat</span><span>85.0</span></div>
+                            </div>
+                        </div>
+                        <!-- Bar 6 -->
+                        <div class="flex items-center">
+                            <p class="w-56 text-slate-600 font-medium">Kejelasan Proses</p>
+                            <div class="flex-1 bg-slate-200 rounded-full h-10">
+                                <div class="bg-sky-500 h-10 rounded-full text-white flex items-center justify-between px-3 font-semibold" style="width: 82.5%;"><span>Proses</span><span>82.5</span></div>
+                            </div>
+                        </div>
+                        <!-- Bar 7 -->
+                        <div class="flex items-center">
+                            <p class="w-56 text-slate-600 font-medium">Kecepatan Pelaksanaan</p>
+                            <div class="flex-1 bg-amber-100 rounded-full h-10">
+                                <div class="bg-amber-500 h-10 rounded-full text-white flex items-center justify-between px-3 font-semibold" style="width: 80%;"><span><i class="fas fa-triangle-exclamation mr-2"></i>Kecepatan</span><span>80.0</span></div>
+                            </div>
+                        </div>
+                        <!-- Bar 8 -->
+                        <div class="flex items-center">
+                            <p class="w-56 text-slate-600 font-medium">Penanganan Keluhan</p>
+                            <div class="flex-1 bg-amber-100 rounded-full h-10">
+                                <div class="bg-amber-500 h-10 rounded-full text-white flex items-center justify-between px-3 font-semibold" style="width: 77.5%;"><span><i class="fas fa-triangle-exclamation mr-2"></i>Keluhan</span><span>77.5</span></div>
+                            </div>
+                        </div>
+                        <!-- Bar 9 -->
+                        <div class="flex items-center">
+                            <p class="w-56 text-slate-600 font-medium">Kewajaran Biaya</p>
+                            <div class="flex-1 bg-amber-100 rounded-full h-10">
+                                <div class="bg-amber-500 h-10 rounded-full text-white flex items-center justify-between px-3 font-semibold" style="width: 72.5%;"><span><i class="fas fa-triangle-exclamation mr-2"></i>Biaya</span><span>72.5</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 15: Kekuatan Program (Unsur IKM Tertinggi) -->
+            <section id="slide15" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Analisis IKM: Kekuatan Utama Program</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <!-- Strength 1 -->
+                        <div class="bg-green-50 p-6 rounded-lg border-t-4 border-green-500 h-full">
+                            <div class="flex flex-col items-center text-center">
+                                <i class="fas fa-gem text-4xl text-green-600"></i>
+                                <h3 class="text-2xl font-semibold text-green-800 mt-3">Kualitas Hasil Program</h3>
+                                <p class="text-5xl font-bold text-green-700">95.0</p>
+                                <blockquote class="mt-4 text-slate-600 italic border-l-4 border-green-300 pl-4">
+                                    "Meja dan kursinya bagus, kokoh. Pengunjung jadi lebih nyaman dan betah duduk lama."
+                                </blockquote>
+                            </div>
+                        </div>
+                        <!-- Strength 2 -->
+                        <div class="bg-green-50 p-6 rounded-lg border-t-4 border-green-500 h-full">
+                            <div class="flex flex-col items-center text-center">
+                                <i class="fas fa-handshake-angle text-4xl text-green-600"></i>
+                                <h3 class="text-2xl font-semibold text-green-800 mt-3">Sikap & Pelayanan Tim</h3>
+                                <p class="text-5xl font-bold text-green-700">92.5</p>
+                                 <blockquote class="mt-4 text-slate-600 italic border-l-4 border-green-300 pl-4">
+                                    "Tim dari BRI sangat ramah, sopan, dan benar-benar mau mendengarkan masukan dari kami para pedagang."
+                                </blockquote>
+                            </div>
+                        </div>
+                        <!-- Strength 3 -->
+                        <div class="bg-green-50 p-6 rounded-lg border-t-4 border-green-500 h-full">
+                            <div class="flex flex-col items-center text-center">
+                                <i class="fas fa-user-gear text-4xl text-green-600"></i>
+                                <h3 class="text-2xl font-semibold text-green-800 mt-3">Kemampuan Tim</h3>
+                                <p class="text-5xl font-bold text-green-700">90.0</p>
+                                 <blockquote class="mt-4 text-slate-600 italic border-l-4 border-green-300 pl-4">
+                                    "Prosesnya jelas dan tim pelaksana sangat profesional dalam menjalankan program dari awal sampai akhir."
+                                </blockquote>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SLIDE 15 END -->
+            <!-- SLIDE 16 START -->
+
+            <!-- Slide 16: Area Perbaikan (Unsur IKM Terendah) -->
+            <section id="slide16" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Analisis IKM: Area Potensial untuk Perbaikan</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <!-- Area 1 -->
+                        <div class="bg-amber-50 p-6 rounded-lg border-t-4 border-amber-500 h-full">
+                            <div class="flex flex-col items-center text-center">
+                                <i class="fas fa-hourglass-half text-4xl text-amber-600"></i>
+                                <h3 class="text-2xl font-semibold text-amber-800 mt-3">Kecepatan Pelaksanaan</h3>
+                                <p class="text-5xl font-bold text-amber-700">80.0</p>
+                                <blockquote class="mt-4 text-slate-600 italic border-l-4 border-amber-300 pl-4">
+                                    "Prosesnya agak lama dari pengajuan sampai barangnya datang, tapi hasilnya memuaskan."
+                                </blockquote>
+                            </div>
+                        </div>
+                        <!-- Area 2 -->
+                        <div class="bg-amber-50 p-6 rounded-lg border-t-4 border-amber-500 h-full">
+                            <div class="flex flex-col items-center text-center">
+                                <i class="fas fa-headset text-4xl text-amber-600"></i>
+                                <h3 class="text-2xl font-semibold text-amber-800 mt-3">Penanganan Keluhan</h3>
+                                <p class="text-5xl font-bold text-amber-700">77.5</p>
+                                 <blockquote class="mt-4 text-slate-600 italic border-l-4 border-amber-300 pl-4">
+                                    "Setelah serah terima, agak bingung mau lapor ke mana kalau ada kursi yang mulai rusak."
+                                </blockquote>
+                            </div>
+                        </div>
+                        <!-- Area 3 -->
+                        <div class="bg-amber-50 p-6 rounded-lg border-t-4 border-amber-500 h-full">
+                            <div class="flex flex-col items-center text-center">
+                                <i class="fas fa-receipt text-4xl text-amber-600"></i>
+                                <h3 class="text-2xl font-semibold text-amber-800 mt-3">Kewajaran Biaya</h3>
+                                <p class="text-5xl font-bold text-amber-700">72.5</p>
+                                 <blockquote class="mt-4 text-slate-600 italic border-l-4 border-amber-300 pl-4">
+                                    "Ada iuran awal untuk perawatan, nilainya wajar tapi sosialisasinya bisa lebih jelas lagi."
+                                </blockquote>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 17: Suara Stakeholder (Temuan Kualitatif) -->
+            <section id="slide17" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Analisis Kualitatif: Suara dari Penerima Manfaat</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <!-- Kolom Apresiasi -->
+                        <div class="bg-green-50 p-8 rounded-lg border-l-4 border-green-500">
+                             <div class="flex items-center gap-4 mb-6">
+                                <i class="fas fa-comments text-4xl text-green-600"></i>
+                                <h3 class="text-3xl font-semibold text-green-800">Apresiasi Utama</h3>
+                            </div>
+                            <div class="space-y-6">
+                                <div class="callout callout-success" style="background-color: white;">
+                                    <p class="text-lg text-slate-700">"Sangat berpengaruh, terutama untuk **kenyamanan pengunjung**. Mereka jadi bisa tinggal lebih lama dan memesan lebih banyak."</p>
+                                </div>
+                                 <div class="callout callout-success" style="background-color: white;">
+                                    <p class="text-lg text-slate-700">"Dengan adanya tambahan meja kursi, omzet harian kami **meningkat signifikan**. Sangat membantu sekali."</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Kolom Kekhawatiran -->
+                        <div class="bg-red-50 p-8 rounded-lg border-l-4 border-red-500">
+                             <div class="flex items-center gap-4 mb-6">
+                                <i class="fas fa-comment-dots text-4xl text-red-600"></i>
+                                <h3 class="text-3xl font-semibold text-red-800">Kekhawatiran & Masukan</h3>
+                            </div>
+                            <div class="space-y-6">
+                                <div class="callout callout-danger" style="background-color: white;">
+                                    <p class="text-lg text-slate-700">"Beberapa meja dan kursi **cepat rusak**, tendanya juga. Mungkin materialnya kurang cocok untuk pemakaian setiap hari."</p>
+                                </div>
+                                <div class="callout callout-danger" style="background-color: white;">
+                                    <p class="text-lg text-slate-700">"Kami berharap ada **dukungan setelah serah terima**, terutama jika ada kendala atau kerusakan pada aset yang diberikan."</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 18: Ringkasan Temuan Kunci -->
+            <section id="slide18" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Kesimpulan: Ringkasan Temuan Kunci</h2>
+                </div>
+                <div class="slide-content">
+                    <ul class="content-list space-y-6">
+                        <li>
+                            <i class="fas fa-rocket fa-2x w-8 text-center text-green-600"></i>
+                            <div>
+                                <h3 class="text-2xl font-semibold text-slate-800">Rasio SROI Sangat Positif (1 : 2.12)</h3>
+                                <p class="text-slate-600 text-lg">Program ini terbukti **efektif secara finansial dan sosial**, menciptakan nilai lebih dari dua kali lipat dari investasi awal.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-award fa-2x w-8 text-center text-green-600"></i>
+                            <div>
+                                <h3 class="text-2xl font-semibold text-slate-800">Kepuasan Penerima Manfaat Sangat Baik (IKM: 84.7)</h3>
+                                <p class="text-slate-600 text-lg">Penerima manfaat sangat mengapresiasi **kualitas hasil program** dan **profesionalisme tim pelaksana** dari BRI.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-tools fa-2x w-8 text-center text-amber-600"></i>
+                            <div>
+                                <h3 class="text-2xl font-semibold text-slate-800">Isu Kualitas & Durabilitas Aset</h3>
+                                <p class="text-slate-600 text-lg">Temuan kualitatif menyoroti adanya kekhawatiran mengenai **daya tahan aset** dalam penggunaan jangka panjang dan perlunya **mekanisme dukungan pasca-program**.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- SLIDE 18 END -->
+            <!-- SLIDE 19 START -->
+
+            <!-- Slide 19: Rekomendasi #1: Jangka Pendek -->
+            <section id="slide19" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Rekomendasi #1: Tindak Lanjut Jangka Pendek</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <!-- Rekomendasi 1 -->
+                        <div class="bg-blue-50 p-8 rounded-lg border-t-4 border-blue-500 h-full">
+                            <div class="flex items-start gap-4">
+                                <i class="fas fa-clipboard-check text-5xl text-blue-600 w-12"></i>
+                                <div>
+                                    <h3 class="text-2xl font-semibold text-blue-800">Audit & Inventarisasi Kondisi Aset</h3>
+                                    <p class="text-slate-600 mt-3 text-lg">Melakukan pengecekan kondisi terkini dari seluruh aset (meja, kursi, tenda) yang telah diserahkan untuk memetakan tingkat kerusakan dan kebutuhan perbaikan.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Rekomendasi 2 -->
+                        <div class="bg-blue-50 p-8 rounded-lg border-t-4 border-blue-500 h-full">
+                            <div class="flex items-start gap-4">
+                                <i class="fas fa-screwdriver-wrench text-5xl text-blue-600 w-12"></i>
+                                <div>
+                                    <h3 class="text-2xl font-semibold text-blue-800">Pembentukan Skema Perawatan & Dukungan</h3>
+                                    <p class="text-slate-600 mt-3 text-lg">Membuat alur komunikasi yang jelas (misalnya, contact person atau grup) bagi pedagang untuk melaporkan kerusakan dan menyusun skema perawatan rutin bersama komunitas.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Slide 20: Rekomendasi #2: Jangka Panjang -->
+            <section id="slide20" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Rekomendasi #2: Perbaikan Strategis Jangka Panjang</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <!-- Rekomendasi 1 -->
+                        <div class="bg-slate-50 p-8 rounded-lg border-t-4 border-slate-500 h-full">
+                            <div class="flex items-start gap-4">
+                                <i class="fas fa-shield-halved text-5xl text-slate-600 w-12"></i>
+                                <div>
+                                    <h3 class="text-2xl font-semibold text-slate-800">Peningkatan Spesifikasi Material Aset</h3>
+                                    <p class="text-slate-600 mt-3 text-lg">Untuk program serupa di masa depan, pertimbangkan untuk menggunakan material yang lebih tahan cuaca dan lebih kokoh (*heavy-duty*) untuk memastikan durabilitas aset dalam jangka panjang.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Rekomendasi 2 -->
+                        <div class="bg-slate-50 p-8 rounded-lg border-t-4 border-slate-500 h-full">
+                             <div class="flex items-start gap-4">
+                                <i class="fas fa-users text-5xl text-slate-600 w-12"></i>
+                                <div>
+                                    <h3 class="text-2xl font-semibold text-slate-800">Pelibatan Komunitas dalam Pengadaan</h3>
+                                    <p class="text-slate-600 mt-3 text-lg">Melibatkan perwakilan pedagang dalam proses pemilihan vendor atau spesifikasi barang untuk meningkatkan rasa memiliki (*ownership*) dan memastikan aset sesuai dengan kebutuhan nyata di lapangan.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 21: Penutup & Langkah Selanjutnya -->
+            <section id="slide21" class="slide bg-dots">
+                <div class="h-full w-full flex flex-col justify-center items-center text-center p-10">
+                    <div class="flex items-center gap-8 mb-8">
+                        <img src="/img/logo-bri.png" alt="BRI Logo" class="h-16">
+                        <img src="/img/logo-biru-unair.png" alt="UNAIR Logo" class="h-20">
+                    </div>
+                    <h2 class="text-6xl font-bold text-slate-900 tracking-tight">Terima Kasih</h2>
+                    <p class="text-xl text-slate-600 mt-4 max-w-3xl">Kami berterima kasih atas kepercayaan yang diberikan oleh PT Bank Rakyat Indonesia (Persero), Tbk. kepada kami untuk melaksanakan penilaian ini. Kami siap untuk berdiskusi lebih lanjut.</p>
+                    
+                    <div class="mt-12 border-t border-slate-300 pt-8 w-full max-w-4xl">
+                        <p class="text-slate-800 text-2xl font-semibold">LPMB FEB Universitas Airlangga</p>
+                        <div class="flex justify-center items-center gap-8 mt-4 text-slate-600 text-lg">
+                            <span><i class="fas fa-envelope mr-2"></i> lpmb@feb.unair.ac.id</span>
+                            <span><i class="fas fa-phone mr-2"></i> (031) 503 8393</span>
+                            <span><i class="fas fa-globe mr-2"></i> feb.unair.ac.id</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide 22: Q & A (Tanya Jawab) -->
+            <section id="slide22" class="slide bg-grid">
+                <div class="h-full w-full flex flex-col justify-center items-center text-center p-10 skin-brushed-metal" style="background: radial-gradient(circle, #003d7a 0%, #002e5c 100%);">
+                     <i class="fas fa-comments text-8xl text-white/50 mb-8"></i>
+                    <h2 class="text-8xl font-bold text-white tracking-tight">Q & A</h2>
+                    <p class="text-3xl font-medium text-slate-300 mt-4">Sesi Diskusi dan Tanya Jawab</p>
+                </div>
+            </section>
+
+            <!-- SLIDE 22 END -->            
+
+        </div>
+    </div>
+    
+    <script src="slide.js"></script>
+</body>
+</html>
