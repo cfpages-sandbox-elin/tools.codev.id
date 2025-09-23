@@ -102,7 +102,7 @@
                 <div class="h-full w-full flex flex-col justify-center items-center text-center p-10" style="background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(240, 244, 248, 1) 100%);">
                     <div class="flex items-center gap-8 mb-8">
                         <img src="/img/logo-bri.png" alt="BRI Logo" class="h-16">
-                        <img src="/img/logo-biru-unair.png" alt="UNAIR Logo" class="h-20">
+                        <img src="/img/logo-unair-biru.png" alt="UNAIR Logo" class="h-20">
                     </div>
                     <p class="text-xl font-medium text-slate-600 mb-2">Laporan Hasil Penilaian</p>
                     <h1 class="text-5xl font-bold text-slate-900 tracking-tight leading-tight">Social Return on Investment (SROI) &<br>Indeks Kepuasan Masyarakat (IKM)</h1>
@@ -206,8 +206,6 @@
                     </div>
                 </div>
             </section>
-
-            <!-- SLIDE 4 START -->
 
             <!-- Slide 4: Kerangka Kerja Penilaian -->
             <section id="slide4" class="slide bg-dots">
@@ -343,9 +341,6 @@
                     </div>
                 </div>
             </section>
-            
-            <!-- SLIDE 6 END -->
-            <!-- SLIDE 7 START -->
 
             <!-- Slide 7: Data Kunci: Pelanggan -->
             <section id="slide7" class="slide bg-dots">
@@ -468,9 +463,6 @@
                 </div>
             </section>
             
-            <!-- SLIDE 9 END -->
-            <!-- SLIDE 10 START -->
-
             <!-- Slide 10: Analisis SROI: Perhitungan Nilai Dampak -->
             <section id="slide10" class="slide bg-dots">
                 <div class="slide-header">
@@ -515,41 +507,34 @@
                 </div>
             </section>
             
-            <!-- Slide 11: Analisis SROI: Penyesuaian Dampak Bersih -->
+            <!-- Slide 11: Analisis SROI: Menghitung Dampak Bersih & Present Value -->
             <section id="slide11" class="slide bg-dots">
                  <div class="slide-header">
-                    <h2 class="slide-title">Analisis SROI: Langkah 2 - Penyesuaian Dampak Bersih</h2>
+                    <h2 class="slide-title">Analisis SROI: Langkah 2 - Menghitung Nilai Dampak Kini</h2>
                 </div>
                 <div class="slide-content flex flex-col justify-center">
-                    <div class="w-full max-w-4xl mx-auto">
+                    <div class="w-full max-w-5xl mx-auto">
+                        <!-- Bagian Atas: Perhitungan Dampak Bersih -->
                         <div class="text-center">
-                            <p class="text-lg text-slate-600">Nilai Dampak Kotor</p>
-                            <p class="text-4xl font-bold text-slate-800">Rp 4.557.535.000</p>
+                            <p class="text-lg text-slate-600">Nilai Dampak Kotor (1 Tahun)</p>
+                            <p class="text-4xl font-bold text-slate-800">Rp 4.55 Miliar</p>
+                             <p class="text-2xl text-slate-500 mt-2">Dikurangi Faktor Eksternal (Deadweight & Atribusi)</p>
+                             <i class="fas fa-arrow-down text-3xl text-slate-400 my-2"></i>
+                            <p class="text-lg text-slate-600">Nilai Dampak Bersih (1 Tahun)</p>
+                            <p class="text-5xl font-bold text-blue-700">Rp 319 Juta</p>
                         </div>
 
-                        <div class="flex justify-center items-start mt-4">
-                            <!-- Deadweight Column -->
-                            <div class="w-1/2 text-center px-4">
-                                <i class="fas fa-minus-circle text-3xl text-amber-500"></i>
-                                <h3 class="text-xl font-semibold text-amber-700 mt-2">Dikurangi Deadweight (36%)</h3>
-                                <p class="text-2xl font-bold text-amber-600">(Rp 1.640.712.600)</p>
+                        <hr class="my-6">
+                        
+                        <!-- Bagian Bawah: Perhitungan Present Value -->
+                         <div class="text-center">
+                            <p class="text-lg text-slate-600">Didiskontokan dengan Social WACC 10% untuk mendapatkan nilai hari ini</p>
+                            <i class="fas fa-arrow-down text-3xl text-green-500 my-2"></i>
+                            <div class="bg-green-50 border-t-4 border-green-500 p-6 rounded-lg mt-2 shadow-lg">
+                                <p class="text-xl font-semibold text-green-800">Present Value (PV) dari Dampak Bersih</p>
+                                <p class="text-6xl font-bold text-green-700 mt-2 tracking-tight">Rp 290 Juta</p>
+                                <p class="text-green-900 opacity-80 mt-2">Angka inilah yang digunakan untuk menghitung rasio SROI akhir.</p>
                             </div>
-                            <!-- Attribution Column -->
-                            <div class="w-1/2 text-center px-4 border-l border-slate-300">
-                                 <i class="fas fa-minus-circle text-3xl text-sky-500"></i>
-                                <h3 class="text-xl font-semibold text-sky-700 mt-2">Dikurangi Atribusi (57%)</h3>
-                                <p class="text-2xl font-bold text-sky-600">(Rp 2.597.794.950)</p>
-                            </div>
-                        </div>
-
-                        <div class="mt-6 text-center">
-                            <i class="fas fa-equals text-4xl text-green-600"></i>
-                        </div>
-
-                        <div class="bg-green-50 border-t-4 border-green-500 p-6 rounded-lg mt-6 text-center shadow-lg">
-                            <p class="text-xl font-semibold text-green-800">Total Nilai Dampak Bersih (Net Impact Value)</p>
-                            <p class="text-6xl font-bold text-green-700 mt-2 tracking-tight">Rp 319 Juta</p>
-                            <p class="text-green-900 opacity-80 mt-2">Ini adalah nilai dampak yang dapat diatribusikan secara langsung kepada program BRI Peduli.</p>
                         </div>
                     </div>
                 </div>
@@ -563,20 +548,17 @@
 
                     <div class="my-10 bg-white/10 backdrop-blur-sm rounded-xl p-8 border border-white/20">
                         <p class="text-2xl text-white">Rasio SROI</p>
-                        <p class="font-bold text-white" style="font-size: 10rem; line-height: 1;">1 : 2.12</p>
+                        <p class="font-bold text-white" style="font-size: 10rem; line-height: 1;">1 : 0.89</p>
                     </div>
 
-                    <div class="callout callout-success max-w-4xl" style="background-color: rgba(240, 253, 244, 0.9);">
-                        <p class="text-2xl text-green-800 leading-snug">
-                            Artinya, setiap **Rp 1** yang diinvestasikan oleh BRI dalam program bantuan Kya-Kya, berhasil menciptakan **nilai sosial dan ekonomi sebesar Rp 2,12** bagi para penerima manfaat.
+                    <div class="callout callout-warning max-w-4xl" style="background-color: rgba(255, 251, 235, 0.9);">
+                        <p class="text-2xl text-amber-800 leading-snug">
+                            Artinya, setelah memperhitungkan biaya modal sosial (social discount rate 10%), setiap **Rp 1** yang diinvestasikan oleh BRI berhasil mengembalikan **nilai sosial dan ekonomi setara Rp 0,89**.
                         </p>
                     </div>
-                    <p class="text-slate-400 text-sm mt-4">*Perhitungan rasio berdasarkan asumsi nilai investasi program sebesar Rp 150.000.000.</p>
+                    <p class="text-slate-400 text-sm mt-4">*Perhitungan rasio berdasarkan nilai realisasi investasi program sebesar Rp 326.000.000.</p>
                 </div>
             </section>
-
-            <!-- SLIDE 12 END -->
-            <!-- SLIDE 13 START -->
 
             <!-- Slide 13: Hasil Akhir: Skor IKM -->
             <section id="slide13" class="slide bg-dots">
@@ -717,9 +699,6 @@
                 </div>
             </section>
 
-            <!-- SLIDE 15 END -->
-            <!-- SLIDE 16 START -->
-
             <!-- Slide 16: Area Perbaikan (Unsur IKM Terendah) -->
             <section id="slide16" class="slide bg-dots">
                 <div class="slide-header">
@@ -813,10 +792,10 @@
                 <div class="slide-content">
                     <ul class="content-list space-y-6">
                         <li>
-                            <i class="fas fa-rocket fa-2x w-8 text-center text-green-600"></i>
+                            <i class="fas fa-coins fa-2x w-8 text-center text-green-600"></i>
                             <div>
-                                <h3 class="text-2xl font-semibold text-slate-800">Rasio SROI Sangat Positif (1 : 2.12)</h3>
-                                <p class="text-slate-600 text-lg">Program ini terbukti **efektif secara finansial dan sosial**, menciptakan nilai lebih dari dua kali lipat dari investasi awal.</p>
+                                <h3 class="text-2xl font-semibold text-slate-800">Dampak Ekonomi Signifikan bagi Penerima Manfaat</h3>
+                                <p class="text-slate-600 text-lg">Program secara nyata berhasil **menggandakan pendapatan harian** dan **meningkatkan jumlah pelanggan**, menghasilkan nilai bersih sebesar **Rp 319 Juta** dalam 1 tahun.</p>
                             </div>
                         </li>
                         <li>
@@ -827,18 +806,15 @@
                             </div>
                         </li>
                         <li>
-                            <i class="fas fa-tools fa-2x w-8 text-center text-amber-600"></i>
+                            <i class="fas fa-chart-pie fa-2x w-8 text-center text-amber-600"></i>
                             <div>
-                                <h3 class="text-2xl font-semibold text-slate-800">Isu Kualitas & Durabilitas Aset</h3>
-                                <p class="text-slate-600 text-lg">Temuan kualitatif menyoroti adanya kekhawatiran mengenai **daya tahan aset** dalam penggunaan jangka panjang dan perlunya **mekanisme dukungan pasca-program**.</p>
+                                <h3 class="text-2xl font-semibold text-slate-800">Rasio SROI (1 : 0.89) Menunjukkan Ruang Peningkatan Efisiensi</h3>
+                                <p class="text-slate-600 text-lg">Meskipun dampak bagi penerima manfaat besar, rasio SROI menunjukkan bahwa **efisiensi investasi perlu dioptimalkan**. Isu **durabilitas aset** menjadi faktor kunci yang mempengaruhi *return* jangka panjang.</p>
                             </div>
                         </li>
                     </ul>
                 </div>
             </section>
-
-            <!-- SLIDE 18 END -->
-            <!-- SLIDE 19 START -->
 
             <!-- Slide 19: Rekomendasi #1: Jangka Pendek -->
             <section id="slide19" class="slide bg-dots">
@@ -909,7 +885,7 @@
                 <div class="h-full w-full flex flex-col justify-center items-center text-center p-10">
                     <div class="flex items-center gap-8 mb-8">
                         <img src="/img/logo-bri.png" alt="BRI Logo" class="h-16">
-                        <img src="/img/logo-biru-unair.png" alt="UNAIR Logo" class="h-20">
+                        <img src="/img/logo-unair-biru.png" alt="UNAIR Logo" class="h-20">
                     </div>
                     <h2 class="text-6xl font-bold text-slate-900 tracking-tight">Terima Kasih</h2>
                     <p class="text-xl text-slate-600 mt-4 max-w-3xl">Kami berterima kasih atas kepercayaan yang diberikan oleh PT Bank Rakyat Indonesia (Persero), Tbk. kepada kami untuk melaksanakan penilaian ini. Kami siap untuk berdiskusi lebih lanjut.</p>
@@ -933,8 +909,6 @@
                     <p class="text-3xl font-medium text-slate-300 mt-4">Sesi Diskusi dan Tanya Jawab</p>
                 </div>
             </section>
-
-            <!-- SLIDE 22 END -->            
 
         </div>
     </div>
