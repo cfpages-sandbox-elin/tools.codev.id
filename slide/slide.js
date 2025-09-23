@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- CORE FUNCTIONS ---
     function formatMarkdownFormatting() {
         // Selector yang lebih spesifik dan aman
-        const elements = document.querySelectorAll('.slide-content p, .slide-content li, .slide-content h3, .slide-content h4, .callout p, .callout li, .callout h3, .slide-title h2');
+        const elements = document.querySelectorAll('.slide-content p, .slide-content li, .slide-content h3, .slide-content h4, .callout p, p, .callout li, .callout h3, .slide-title h2');
         
         elements.forEach(el => {
             let html = el.innerHTML;
