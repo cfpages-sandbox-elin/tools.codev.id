@@ -515,13 +515,33 @@
                 <div class="slide-content flex flex-col justify-center">
                     <div class="w-full max-w-5xl mx-auto">
                         <!-- Bagian Atas: Perhitungan Dampak Bersih -->
-                        <div class="text-center">
-                            <p class="text-lg text-slate-600">Nilai Dampak Kotor (1 Tahun)</p>
-                            <p class="text-4xl font-bold text-slate-800">Rp 4.55 Miliar</p>
-                             <p class="text-2xl text-slate-500 mt-2">Dikurangi Faktor Eksternal (Deadweight & Atribusi)</p>
-                             <i class="fas fa-arrow-down text-3xl text-slate-400 my-2"></i>
-                            <p class="text-lg text-slate-600">Nilai Dampak Bersih (1 Tahun)</p>
-                            <p class="text-5xl font-bold text-blue-700">Rp 319 Juta</p>
+                        <div class="grid grid-cols-5 items-center text-center gap-2">
+                            <!-- Start -->
+                            <div class="p-4">
+                                <p class="text-lg text-slate-600">Dampak Kotor</p>
+                                <p class="text-4xl font-bold text-slate-800">Rp 4.55 M</p>
+                            </div>
+                            <!-- Subtraction -->
+                            <div class="p-4">
+                                <i class="fas fa-minus-circle text-4xl text-amber-500"></i>
+                                <p class="mt-2 text-lg text-amber-700 font-semibold">Deadweight (36%)</p>
+                                <p class="text-2xl font-bold text-amber-600">(Rp 1.64 M)</p>
+                            </div>
+                            <!-- Subtraction -->
+                            <div class="p-4">
+                                <i class="fas fa-minus-circle text-4xl text-sky-500"></i>
+                                <p class="mt-2 text-lg text-sky-700 font-semibold">Atribusi (57%)</p>
+                                <p class="text-2xl font-bold text-sky-600">(Rp 2.60 M)</p>
+                            </div>
+                            <!-- Equals -->
+                            <div class="p-4">
+                                <i class="fas fa-equals text-4xl text-blue-600"></i>
+                            </div>
+                            <!-- Result -->
+                             <div class="p-4">
+                                <p class="text-lg text-slate-600">Dampak Bersih</p>
+                                <p class="text-5xl font-bold text-blue-700">Rp 319 Jt</p>
+                            </div>
                         </div>
 
                         <hr class="my-6">
@@ -530,7 +550,7 @@
                          <div class="text-center">
                             <p class="text-lg text-slate-600">Didiskontokan dengan Social WACC 10% untuk mendapatkan nilai hari ini</p>
                             <i class="fas fa-arrow-down text-3xl text-green-500 my-2"></i>
-                            <div class="bg-green-50 border-t-4 border-green-500 p-6 rounded-lg mt-2 shadow-lg">
+                            <div class="bg-green-50 border-t-4 border-green-500 p-6 rounded-lg mt-2 shadow-lg max-w-2xl mx-auto">
                                 <p class="text-xl font-semibold text-green-800">Present Value (PV) dari Dampak Bersih</p>
                                 <p class="text-6xl font-bold text-green-700 mt-2 tracking-tight">Rp 290 Juta</p>
                                 <p class="text-green-900 opacity-80 mt-2">Angka inilah yang digunakan untuk menghitung rasio SROI akhir.</p>
@@ -640,63 +660,63 @@
                     <div class="space-y-3 max-w-4xl mx-auto">
                         <!-- Bar 1 -->
                         <div class="flex items-center">
-                            <p class="w-56 text-slate-600 font-medium">Kualitas Hasil Program</p>
+                            <p class="w-64 text-slate-600 font-medium">Kualitas Hasil Program</p>
                             <div class="flex-1 bg-green-100 rounded-full h-10">
                                 <div class="bg-green-500 h-10 rounded-full text-white flex items-center justify-between px-3 font-semibold" style="width: 95%;"><span><i class="fas fa-star mr-2"></i>Kualitas Hasil</span><span>95.0</span></div>
                             </div>
                         </div>
                         <!-- Bar 2 -->
                         <div class="flex items-center">
-                            <p class="w-56 text-slate-600 font-medium">Sikap & Pelayanan Tim</p>
+                            <p class="w-64 text-slate-600 font-medium">Sikap & Pelayanan Tim</p>
                             <div class="flex-1 bg-green-100 rounded-full h-10">
                                 <div class="bg-green-500 h-10 rounded-full text-white flex items-center justify-between px-3 font-semibold" style="width: 92.5%;"><span><i class="fas fa-star mr-2"></i>Sikap Tim</span><span>92.5</span></div>
                             </div>
                         </div>
                         <!-- Bar 3 -->
                         <div class="flex items-center">
-                            <p class="w-56 text-slate-600 font-medium">Kemampuan Tim</p>
+                            <p class="w-64 text-slate-600 font-medium">Kemampuan Tim Pelaksana</p>
                             <div class="flex-1 bg-green-100 rounded-full h-10">
                                 <div class="bg-green-500 h-10 rounded-full text-white flex items-center justify-between px-3 font-semibold" style="width: 90%;"><span><i class="fas fa-star mr-2"></i>Kemampuan Tim</span><span>90.0</span></div>
                             </div>
                         </div>
                         <!-- Bar 4 -->
                         <div class="flex items-center">
-                            <p class="w-56 text-slate-600 font-medium">Fasilitas Pendukung</p>
+                            <p class="w-64 text-slate-600 font-medium">Fasilitas Pendukung</p>
                             <div class="flex-1 bg-slate-200 rounded-full h-10">
                                 <div class="bg-sky-500 h-10 rounded-full text-white flex items-center justify-between px-3 font-semibold" style="width: 87.5%;"><span>Fasilitas</span><span>87.5</span></div>
                             </div>
                         </div>
                         <!-- Bar 5 -->
                         <div class="flex items-center">
-                            <p class="w-56 text-slate-600 font-medium">Kemudahan Syarat</p>
+                            <p class="w-64 text-slate-600 font-medium">Kemudahan Syarat</p>
                             <div class="flex-1 bg-slate-200 rounded-full h-10">
                                 <div class="bg-sky-500 h-10 rounded-full text-white flex items-center justify-between px-3 font-semibold" style="width: 85%;"><span>Syarat</span><span>85.0</span></div>
                             </div>
                         </div>
                         <!-- Bar 6 -->
                         <div class="flex items-center">
-                            <p class="w-56 text-slate-600 font-medium">Kejelasan Proses</p>
+                            <p class="w-64 text-slate-600 font-medium">Kejelasan Proses</p>
                             <div class="flex-1 bg-slate-200 rounded-full h-10">
                                 <div class="bg-sky-500 h-10 rounded-full text-white flex items-center justify-between px-3 font-semibold" style="width: 82.5%;"><span>Proses</span><span>82.5</span></div>
                             </div>
                         </div>
                         <!-- Bar 7 -->
                         <div class="flex items-center">
-                            <p class="w-56 text-slate-600 font-medium">Kecepatan Pelaksanaan</p>
+                            <p class="w-64 text-slate-600 font-medium">Kecepatan Pelaksanaan</p>
                             <div class="flex-1 bg-amber-100 rounded-full h-10">
                                 <div class="bg-amber-500 h-10 rounded-full text-white flex items-center justify-between px-3 font-semibold" style="width: 80%;"><span><i class="fas fa-triangle-exclamation mr-2"></i>Kecepatan</span><span>80.0</span></div>
                             </div>
                         </div>
                         <!-- Bar 8 -->
                         <div class="flex items-center">
-                            <p class="w-56 text-slate-600 font-medium">Penanganan Keluhan</p>
+                            <p class="w-64 text-slate-600 font-medium">Penanganan Keluhan</p>
                             <div class="flex-1 bg-amber-100 rounded-full h-10">
                                 <div class="bg-amber-500 h-10 rounded-full text-white flex items-center justify-between px-3 font-semibold" style="width: 77.5%;"><span><i class="fas fa-triangle-exclamation mr-2"></i>Keluhan</span><span>77.5</span></div>
                             </div>
                         </div>
                         <!-- Bar 9 -->
                         <div class="flex items-center">
-                            <p class="w-56 text-slate-600 font-medium">Kewajaran Biaya</p>
+                            <p class="w-64 text-slate-600 font-medium">Kewajaran Biaya</p>
                             <div class="flex-1 bg-amber-100 rounded-full h-10">
                                 <div class="bg-amber-500 h-10 rounded-full text-white flex items-center justify-between px-3 font-semibold" style="width: 72.5%;"><span><i class="fas fa-triangle-exclamation mr-2"></i>Biaya</span><span>72.5</span></div>
                             </div>
