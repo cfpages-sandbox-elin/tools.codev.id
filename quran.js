@@ -1,4 +1,4 @@
-// quran.js v1.7 and new
+// quran.js v1.7 and new + hapus obsolete code
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlqWMArBZkIfPWVNP6KuM0wyy2u3zvN3INFKzoQMI5MHiRQHQTVehC-9Mi7HiwK3q86A/exec";
 const CLOUDFLARE_SHEET_API_URL = "/sheet-api"; // For Google Sheets operations
 const CLOUDFLARE_QURAN_API_URL = "/quran-api"; // For Quran scraping
@@ -157,14 +157,6 @@ function setupEventListeners() {
             } else {
                 if (elements.newLabelParent) elements.newLabelParent.classList.add('hidden');
             }
-        });
-    }
-    
-    // Parent label change
-    if (elements.parentLabelSelect) {
-        elements.parentLabelSelect.addEventListener('change', () => {
-            const parentId = elements.parentLabelSelect.value;
-            populateChildSelect(parentId);
         });
     }
 }
