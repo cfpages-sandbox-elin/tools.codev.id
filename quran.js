@@ -1,4 +1,4 @@
-// quran.js v1.6 recursive label filter fix
+// quran.js v1.7 and new
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlqWMArBZkIfPWVNP6KuM0wyy2u3zvN3INFKzoQMI5MHiRQHQTVehC-9Mi7HiwK3q86A/exec";
 const CLOUDFLARE_SHEET_API_URL = "/sheet-api"; // For Google Sheets operations
 const CLOUDFLARE_QURAN_API_URL = "/quran-api"; // For Quran scraping
@@ -154,7 +154,6 @@ function setupEventListeners() {
         elements.newLabelType.addEventListener('change', () => {
             if (elements.newLabelType.value === 'child') {
                 if (elements.newLabelParent) elements.newLabelParent.classList.remove('hidden');
-                populateParentSelect(elements.newLabelParent, labels);
             } else {
                 if (elements.newLabelParent) elements.newLabelParent.classList.add('hidden');
             }
@@ -1110,29 +1109,22 @@ async function createNewLabel() {
         return;
     }
     
-    // FIX: Create the object with uppercase properties to match the data structure
     const newLabel = {
         ID: labelId,
         NAME: labelName.toUpperCase(),
-        PARENT_ID: parentId || "" // Use empty string for no parent, as Google Sheets does
+        PARENT_ID: parentId || ""
     };
     
-    console.log('Attempting to create and save new label:', newLabel);
-    
-    // FEATURE: Save the new label to the Google Sheet
     const success = await saveLabelToSheet(newLabel);
 
     if (!success) {
         showError('Failed to save new label. Please try again.');
-        return; // Stop execution if saving failed
+        return;
     }
     
-    // If successful, update the local state and UI
     labels.push(newLabel);
     
-    populateLabelFilters();
-    if (elements.parentLabelSelect) populateParentSelect(elements.parentLabelSelect, labels);
-    if (elements.newLabelParentSelect) populateParentSelect(elements.newLabelParentSelect, labels);
+    populateAllLabelDropdowns();
     
     selectedLabels.push(labelId);
     updateSelectedLabels();
@@ -1406,54 +1398,57 @@ function deleteAyah(ayahId) {
 }
 
 // Labels Management Functions
-function addNewLabel() {
+async function addNewLabel() {
     if (!elements.newLabelNameInput) {
         console.error('New label name input element not found');
         return;
     }
     
     const labelName = elements.newLabelNameInput.value.trim();
-    
     if (!labelName) {
         showError('Please enter a label name');
         return;
     }
     
     const parentId = elements.newLabelParentSelect ? elements.newLabelParentSelect.value : null;
-    
-    // Generate a simple ID from the label name
     const labelId = labelName.toLowerCase().replace(/\s+/g, '-');
     
-    // Check if label already exists
-    if (labels.some(label => label.id === labelId)) {
-        showError('Label already exists');
+    if (labels.some(label => label.ID === labelId)) {
+        showError('Label with this ID already exists');
         return;
     }
     
-    // Add new label
     const newLabel = {
-        id: labelId,
-        name: labelName.toUpperCase(),
-        parentId: parentId || null
+        ID: labelId,
+        NAME: labelName.toUpperCase(),
+        // Use empty string for consistency with how Google Sheets handles blank cells
+        PARENT_ID: parentId || ""
     };
     
-    console.log('Creating new label in management section:', newLabel);
-    
-    labels.push(newLabel);
-    
-    // Update UI
-    populateLabelFilters();
-    if (elements.parentLabelSelect) populateParentSelect(elements.parentLabelSelect, labels);
-    if (elements.newLabelParentSelect) populateParentSelect(elements.newLabelParentSelect, labels);
-    
-    // Reset input
-    elements.newLabelNameInput.value = '';
-    if (elements.newLabelParentSelect) elements.newLabelParentSelect.value = '';
-    
-    // Refresh labels hierarchy
-    displayLabelsHierarchy();
-    
-    showSuccess('Label created successfully!');
+    console.log('Attempting to save new label from management section:', newLabel);
+
+    // --- START: UPGRADED LOGIC ---
+
+    // Save the new label to the Google Sheet using our existing helper function
+    const success = await saveLabelToSheet(newLabel);
+
+    if (success) {
+        // If the save was successful, update the UI
+        labels.push(newLabel);
+        
+        populateAllLabelDropdowns();
+        
+        elements.newLabelNameInput.value = '';
+        if (elements.newLabelParentSelect) elements.newLabelParentSelect.value = '';
+        
+        displayLabelsHierarchy();
+        
+        showSuccess('Label saved successfully!');
+    } else {
+        // If the save failed, inform the user
+        showError('Failed to save the label to the sheet. Please check your connection and try again.');
+    }
+    // --- END: UPGRADED LOGIC ---
 }
 
 function displayLabelsHierarchy() {
@@ -1532,10 +1527,8 @@ function deleteLabel(labelId) {
     if (confirm('Are you sure you want to delete this label?')) {
         console.log('Deleting label:', labelId);
         
-        // Remove label
-        labels = labels.filter(label => label.id !== labelId);
+        labels = labels.filter(label => label.ID !== labelId);
         
-        // Remove from any ayahs that use it
         ayahs.forEach(ayah => {
             if (ayah.LABEL) {
                 const ayahLabels = ayah.LABEL.split(',').map(label => label.trim());
@@ -1544,10 +1537,8 @@ function deleteLabel(labelId) {
             }
         });
         
-        // Update UI
-        populateLabelFilters();
-        if (elements.parentLabelSelect) populateParentSelect(elements.parentLabelSelect, labels);
-        if (elements.newLabelParentSelect) populateParentSelect(elements.newLabelParentSelect, labels);
+        populateAllLabelDropdowns();
+
         displayLabelsHierarchy();
         
         showSuccess('Label deleted successfully');
