@@ -507,76 +507,53 @@
                 </div>
             </section>
             
-            <!-- Slide 11: Analisis SROI: Menghitung Dampak Bersih & Present Value -->
+            <!-- Slide 11: Analisis SROI: Proyeksi Nilai Dampak 5 Tahun -->
             <section id="slide11" class="slide bg-dots">
                  <div class="slide-header">
-                    <h2 class="slide-title">Analisis SROI: Langkah 2 - Menghitung Nilai Dampak Kini</h2>
+                    <h2 class="slide-title">Analisis SROI: Proyeksi Nilai Dampak 5 Tahun (Kya-Kya)</h2>
                 </div>
                 <div class="slide-content flex flex-col justify-center">
-                    <div class="w-full max-w-5xl mx-auto">
-                        <!-- Bagian Atas: Perhitungan Dampak Bersih -->
-                        <div class="grid grid-cols-5 items-center text-center gap-2">
-                            <!-- Start -->
-                            <div class="p-4">
-                                <p class="text-lg text-slate-600">Dampak Kotor</p>
-                                <p class="text-4xl font-bold text-slate-800">Rp 4.55 M</p>
-                            </div>
-                            <!-- Subtraction -->
-                            <div class="p-4">
-                                <i class="fas fa-minus-circle text-4xl text-amber-500"></i>
-                                <p class="mt-2 text-lg text-amber-700 font-semibold">Deadweight (36%)</p>
-                                <p class="text-2xl font-bold text-amber-600">(Rp 1.64 M)</p>
-                            </div>
-                            <!-- Subtraction -->
-                            <div class="p-4">
-                                <i class="fas fa-minus-circle text-4xl text-sky-500"></i>
-                                <p class="mt-2 text-lg text-sky-700 font-semibold">Atribusi (57%)</p>
-                                <p class="text-2xl font-bold text-sky-600">(Rp 2.60 M)</p>
-                            </div>
-                            <!-- Equals -->
-                            <div class="p-4">
-                                <i class="fas fa-equals text-4xl text-blue-600"></i>
-                            </div>
-                            <!-- Result -->
-                             <div class="p-4">
-                                <p class="text-lg text-slate-600">Dampak Bersih</p>
-                                <p class="text-5xl font-bold text-blue-700">Rp 319 Jt</p>
-                            </div>
-                        </div>
-
-                        <hr class="my-6">
-                        
-                        <!-- Bagian Bawah: Perhitungan Present Value -->
-                         <div class="text-center">
-                            <p class="text-lg text-slate-600">Didiskontokan dengan Social WACC 10% untuk mendapatkan nilai hari ini</p>
-                            <i class="fas fa-arrow-down text-3xl text-green-500 my-2"></i>
-                            <div class="bg-green-50 border-t-4 border-green-500 p-6 rounded-lg mt-2 shadow-lg max-w-2xl mx-auto">
-                                <p class="text-xl font-semibold text-green-800">Present Value (PV) dari Dampak Bersih</p>
-                                <p class="text-6xl font-bold text-green-700 mt-2 tracking-tight">Rp 290 Juta</p>
-                                <p class="text-green-900 opacity-80 mt-2">Angka inilah yang digunakan untuk menghitung rasio SROI akhir.</p>
-                            </div>
-                        </div>
+                    <div class="callout callout-info mb-6">
+                        <p>Dengan asumsi dampak bersih tahunan sebesar **Rp 319 Juta**, nilai tersebut diproyeksikan selama 5 tahun dan didiskontokan dengan Social WACC 10% untuk mendapatkan nilai kini (Present Value).</p>
                     </div>
+                    <table class="w-full text-lg text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100">
+                                <th class="p-3">Tahun</th>
+                                <th class="p-3">Nilai Dampak Bersih</th>
+                                <th class="p-3">Faktor Diskonto (10%)</th>
+                                <th class="p-3 font-semibold">Present Value (PV)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b"><td class="p-3">Tahun 1</td><td class="p-3">Rp 319.010.450</td><td class="p-3">0.909</td><td class="p-3">Rp 290.009.500</td></tr>
+                            <tr class="border-b"><td class="p-3">Tahun 2</td><td class="p-3">Rp 319.010.450</td><td class="p-3">0.826</td><td class="p-3">Rp 263.645.000</td></tr>
+                            <tr class="border-b"><td class="p-3">Tahun 3</td><td class="p-3">Rp 319.010.450</td><td class="p-3">0.751</td><td class="p-3">Rp 239.677.272</td></tr>
+                            <tr class="border-b"><td class="p-3">Tahun 4</td><td class="p-3">Rp 319.010.450</td><td class="p-3">0.683</td><td class="p-3">Rp 217.888.429</td></tr>
+                            <tr class="border-b"><td class="p-3">Tahun 5</td><td class="p-3">Rp 319.010.450</td><td class="p-3">0.621</td><td class="p-3">Rp 198.080.390</td></tr>
+                            <tr class="bg-slate-200 font-bold"><td class="p-3" colspan="3">Total Present Value (PV) Kumulatif</td><td class="p-3 text-blue-700">Rp 1.209.300.591</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </section>
             
             <!-- Slide 12: Hasil Akhir: Rasio SROI -->
             <section id="slide12" class="slide bg-grid">
                 <div class="h-full w-full flex flex-col justify-center items-center text-center p-10 skin-brushed-metal" style="background: radial-gradient(circle, #003d7a 0%, #002e5c 100%);">
-                    <p class="text-3xl font-medium text-slate-300 mb-4">Hasil Akhir Analisis</p>
-                    <h2 class="text-8xl font-bold text-white tracking-tight" style="line-height: 1.1;">Social Return on Investment</h2>
+                    <p class="text-3xl font-medium text-slate-300 mb-4">Hasil Akhir SROI (Proyeksi 5 Tahun)</p>
+                    <h2 class="text-8xl font-bold text-white tracking-tight" style="line-height: 1.1;">Program Bantuan Kya-Kya</h2>
 
                     <div class="my-10 bg-white/10 backdrop-blur-sm rounded-xl p-8 border border-white/20">
                         <p class="text-2xl text-white">Rasio SROI</p>
-                        <p class="font-bold text-white" style="font-size: 10rem; line-height: 1;">1 : 0.89</p>
+                        <p class="font-bold text-white" style="font-size: 10rem; line-height: 1;">1 : 3.71</p>
                     </div>
 
-                    <div class="callout callout-warning max-w-4xl" style="background-color: rgba(255, 251, 235, 0.9);">
-                        <p class="text-2xl text-amber-800 leading-snug">
-                            Artinya, setelah memperhitungkan biaya modal sosial (social discount rate 10%), setiap **Rp 1** yang diinvestasikan oleh BRI berhasil mengembalikan **nilai sosial dan ekonomi setara Rp 0,89**.
+                    <div class="callout callout-success max-w-4xl" style="background-color: rgba(240, 253, 244, 0.9);">
+                        <p class="text-2xl text-green-800 leading-snug">
+                            Artinya, setiap **Rp 1** yang diinvestasikan oleh BRI, diproyeksikan akan menciptakan **nilai sosial dan ekonomi sebesar Rp 3,71** selama 5 tahun ke depan.
                         </p>
                     </div>
-                    <p class="text-slate-400 text-sm mt-4">*Perhitungan rasio berdasarkan nilai realisasi investasi program sebesar Rp 326.000.000.</p>
+                    <p class="text-slate-400 text-sm mt-4">*Perhitungan berdasarkan nilai investasi Rp 326.000.000 dan PV kumulatif 5 tahun.</p>
                 </div>
             </section>
 
@@ -1107,26 +1084,21 @@
             <!-- Slide 28: Perhitungan SROI: Jalur Kewirausahaan -->
             <section id="slide28" class="slide bg-dots">
                 <div class="slide-header">
-                    <h2 class="slide-title">Perhitungan SROI: Jalur Kewirausahaan</h2>
+                    <h2 class="slide-title">Proyeksi SROI 5 Tahun: Jalur Kewirausahaan</h2>
                 </div>
                 <div class="slide-content">
-                    <div class="callout callout-info mb-6">
-                        <h4 class="font-bold text-sky-800"><i class="fas fa-calculator mr-2"></i>Proksi Finansial yang Digunakan</h4>
-                        <p class="text-sky-900">Nilai dampak diukur dari **pengurangan ketergantungan finansial** pada keluarga/bantuan sosial, yang secara langsung mencerminkan peningkatan kemandirian ekonomi. Rata-rata: **Rp 785.000 / bulan** per peserta.</p>
-                    </div>
-                    
-                    <div class="w-full max-w-5xl mx-auto mt-8">
-                        <!-- Perhitungan -->
-                        <div class="grid grid-cols-5 items-center text-center gap-2">
-                            <div class="p-4"><p class="text-lg text-slate-600">Dampak Kotor<br>(1 Tahun)</p><p class="text-4xl font-bold text-slate-800">Rp 82.4 Jt</p></div>
-                            <div class="p-4"><i class="fas fa-minus-circle text-4xl text-amber-500"></i><p class="mt-2 text-lg text-amber-700 font-semibold">Deadweight (51%)</p><p class="text-2xl font-bold text-amber-600">(Rp 42.0 Jt)</p></div>
-                            <div class="p-4"><i class="fas fa-minus-circle text-4xl text-sky-500"></i><p class="mt-2 text-lg text-sky-700 font-semibold">Atribusi (61%)</p><p class="text-2xl font-bold text-sky-600">(Rp 50.3 Jt)</p></div>
-                            <div class="p-4"><i class="fas fa-equals text-4xl text-red-600"></i></div>
-                            <div class="p-4"><p class="text-lg text-slate-600">Dampak Bersih</p><p class="text-5xl font-bold text-red-700">-Rp 9.9 Jt</p></div>
-                        </div>
-
-                        <p class="text-center text-red-700 italic mt-4">Hasil negatif menunjukkan bahwa nilai Deadweight dan Atribusi yang dipersepsikan oleh peserta melebihi nilai dampak kotor yang dihitung.</p>
-                    </div>
+                    <p class="text-center text-lg mb-4">Dengan dampak bersih tahunan **-Rp 9.9 Juta**, berikut adalah proyeksi nilai kini (PV) selama 5 tahun.</p>
+                     <table class="w-full text-lg text-left border-collapse">
+                        <thead><tr class="bg-slate-100"><th class="p-3">Tahun</th><th class="p-3">Nilai Dampak Bersih</th><th class="p-3">Faktor Diskonto (10%)</th><th class="p-3 font-semibold">Present Value (PV)</th></tr></thead>
+                        <tbody>
+                            <tr class="border-b"><td class="p-3">Tahun 1</td><td class="p-3 text-red-600">(Rp 9.9 Juta)</td><td class="p-3">0.909</td><td class="p-3 text-red-600">(Rp 9.0 Juta)</td></tr>
+                            <tr class="border-b"><td class="p-3">Tahun 2</td><td class="p-3 text-red-600">(Rp 9.9 Juta)</td><td class="p-3">0.826</td><td class="p-3 text-red-600">(Rp 8.2 Juta)</td></tr>
+                            <tr class="border-b"><td class="p-3">Tahun 3</td><td class="p-3 text-red-600">(Rp 9.9 Juta)</td><td class="p-3">0.751</td><td class="p-3 text-red-600">(Rp 7.4 Juta)</td></tr>
+                            <tr class="border-b"><td class="p-3">Tahun 4</td><td class="p-3 text-red-600">(Rp 9.9 Juta)</td><td class="p-3">0.683</td><td class="p-3 text-red-600">(Rp 6.8 Juta)</td></tr>
+                            <tr class="border-b"><td class="p-3">Tahun 5</td><td class="p-3 text-red-600">(Rp 9.9 Juta)</td><td class="p-3">0.621</td><td class="p-3 text-red-600">(Rp 6.1 Juta)</td></tr>
+                            <tr class="bg-slate-200 font-bold"><td class="p-3" colspan="3">Total PV Kumulatif</td><td class="p-3 text-red-700">(Rp 37.5 Juta)</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </section>
             
@@ -1169,33 +1141,28 @@
             <!-- Slide 31: Perhitungan SROI: Jalur Administrasi & Pekerja -->
             <section id="slide31" class="slide bg-dots">
                 <div class="slide-header">
-                    <h2 class="slide-title">Perhitungan SROI: Jalur Administrasi & Pekerja</h2>
+                    <h2 class="slide-title">Proyeksi SROI 5 Tahun: Jalur Administrasi</h2>
                 </div>
                 <div class="slide-content">
-                    <div class="callout callout-info mb-6">
-                        <h4 class="font-bold text-sky-800"><i class="fas fa-calculator mr-2"></i>Proksi Finansial yang Digunakan</h4>
-                        <p class="text-sky-900">Nilai dampak diukur dari **rata-rata gaji bulanan yang diterima**, yang secara langsung mencerminkan nilai ekonomi dari keterampilan baru yang diperoleh. Rata-rata: **Rp 2.925.000 / bulan** per peserta yang bekerja.</p>
-                    </div>
-                    
-                    <div class="w-full max-w-5xl mx-auto mt-8">
-                        <!-- Perhitungan -->
-                        <div class="grid grid-cols-5 items-center text-center gap-2">
-                            <div class="p-4"><p class="text-lg text-slate-600">Dampak Kotor<br>(1 Tahun)</p><p class="text-4xl font-bold text-slate-800">Rp 140.4 Jt</p></div>
-                            <div class="p-4"><i class="fas fa-minus-circle text-4xl text-amber-500"></i><p class="mt-2 text-lg text-amber-700 font-semibold">Deadweight (59%)</p><p class="text-2xl font-bold text-amber-600">(Rp 82.8 Jt)</p></div>
-                            <div class="p-4"><i class="fas fa-minus-circle text-4xl text-sky-500"></i><p class="mt-2 text-lg text-sky-700 font-semibold">Atribusi (66%)</p><p class="text-2xl font-bold text-sky-600">(Rp 92.7 Jt)</p></div>
-                            <div class="p-4"><i class="fas fa-equals text-4xl text-red-600"></i></div>
-                            <div class="p-4"><p class="text-lg text-slate-600">Dampak Bersih</p><p class="text-5xl font-bold text-red-700">-Rp 35.1 Jt</p></div>
-                        </div>
-                        
-                         <p class="text-center text-red-700 italic mt-4">Sama seperti jalur wirausaha, nilai faktor eksternal yang tinggi menyebabkan nilai bersih menjadi negatif.</p>
-                    </div>
+                    <p class="text-center text-lg mb-4">Dengan dampak bersih tahunan **-Rp 35.1 Juta**, berikut adalah proyeksi nilai kini (PV) selama 5 tahun.</p>
+                     <table class="w-full text-lg text-left border-collapse">
+                        <thead><tr class="bg-slate-100"><th class="p-3">Tahun</th><th class="p-3">Nilai Dampak Bersih</th><th class="p-3">Faktor Diskonto (10%)</th><th class="p-3 font-semibold">Present Value (PV)</th></tr></thead>
+                        <tbody>
+                            <tr class="border-b"><td class="p-3">Tahun 1</td><td class="p-3 text-red-600">(Rp 35.1 Juta)</td><td class="p-3">0.909</td><td class="p-3 text-red-600">(Rp 31.9 Juta)</td></tr>
+                            <tr class="border-b"><td class="p-3">Tahun 2</td><td class="p-3 text-red-600">(Rp 35.1 Juta)</td><td class="p-3">0.826</td><td class="p-3 text-red-600">(Rp 29.0 Juta)</td></tr>
+                            <tr class="border-b"><td class="p-3">Tahun 3</td><td class="p-3 text-red-600">(Rp 35.1 Juta)</td><td class="p-3">0.751</td><td class="p-3 text-red-600">(Rp 26.4 Juta)</td></tr>
+                            <tr class="border-b"><td class="p-3">Tahun 4</td><td class="p-3 text-red-600">(Rp 35.1 Juta)</td><td class="p-3">0.683</td><td class="p-3 text-red-600">(Rp 24.0 Juta)</td></tr>
+                            <tr class="border-b"><td class="p-3">Tahun 5</td><td class="p-3 text-red-600">(Rp 35.1 Juta)</td><td class="p-3">0.621</td><td class="p-3 text-red-600">(Rp 21.8 Juta)</td></tr>
+                            <tr class="bg-slate-200 font-bold"><td class="p-3" colspan="3">Total PV Kumulatif</td><td class="p-3 text-red-700">(Rp 133.1 Juta)</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </section>
             
             <!-- Slide 32: Hasil SROI Gabungan untuk Program 2 -->
             <section id="slide32" class="slide bg-grid">
                 <div class="h-full w-full flex flex-col justify-center items-center text-center p-10 skin-brushed-metal" style="background: radial-gradient(circle, #003d7a 0%, #002e5c 100%);">
-                    <p class="text-3xl font-medium text-slate-300 mb-4">Hasil SROI Gabungan Program 2</p>
+                    <p class="text-3xl font-medium text-slate-300 mb-4">Hasil SROI Gabungan (Proyeksi 5 Tahun)</p>
                     <h2 class="text-8xl font-bold text-white tracking-tight" style="line-height: 1.1;">Pelatihan Disabilitas</h2>
 
                     <div class="my-10 bg-white/10 backdrop-blur-sm rounded-xl p-8 border border-white/20">
@@ -1205,10 +1172,9 @@
 
                     <div class="callout callout-danger max-w-4xl" style="background-color: rgba(254, 242, 242, 0.9);">
                         <p class="text-2xl text-red-800 leading-snug">
-                           Karena persepsi **Deadweight & Atribusi yang sangat tinggi** (rata-rata >50%), nilai dampak bersih yang dapat diatribusikan ke program menjadi negatif. Ini menunjukkan program ini lebih dilihat sebagai **pendukung (enabler)** daripada pencipta dampak utama.
+                           Bahkan dalam proyeksi 5 tahun, persepsi **Deadweight & Atribusi yang sangat tinggi** membuat nilai dampak bersih yang dapat diatribusikan ke program tetap negatif. Ini memperkuat kesimpulan bahwa peran strategis program adalah sebagai **pendukung (enabler)**.
                         </p>
                     </div>
-                    <p class="text-slate-400 text-sm mt-4">*Perhitungan didasarkan pada dampak bersih gabungan dari kedua jalur.</p>
                 </div>
             </section>
 
@@ -1534,39 +1500,35 @@
                 </div>
             </section>
             
-            <!-- Slide 43: Perhitungan SROI: Pasar Gentan -->
+            <!-- Slide 43: Hasil Akhir SROI: Proyeksi Nilai Dampak 5 Tahun -->
             <section id="slide43" class="slide bg-dots">
                 <div class="slide-header">
-                    <h2 class="slide-title">Hasil Akhir: Rasio SROI Pasar Gentan</h2>
+                    <h2 class="slide-title">Hasil Akhir SROI: Proyeksi Nilai Dampak 5 Tahun (Pasar Gentan)</h2>
                 </div>
                 <div class="slide-content flex flex-col justify-center">
-                    <div class="w-full max-w-5xl mx-auto">
-                        <!-- Perhitungan -->
-                        <div class="grid grid-cols-5 items-center text-center gap-2">
-                            <div class="p-4"><p class="text-lg text-slate-600">Dampak Kotor<br>(1 Thn, 24 Pedagang)</p><p class="text-4xl font-bold text-slate-800">Rp 823 Jt</p></div>
-                            <div class="p-4"><i class="fas fa-minus-circle text-4xl text-amber-500"></i><p class="mt-2 text-lg text-amber-700 font-semibold">Deadweight (41%)</p><p class="text-2xl font-bold text-amber-600">(Rp 337 Jt)</p></div>
-                            <div class="p-4"><i class="fas fa-minus-circle text-4xl text-sky-500"></i><p class="mt-2 text-lg text-sky-700 font-semibold">Atribusi (51%)</p><p class="text-2xl font-bold text-sky-600">(Rp 419 Jt)</p></div>
-                            <div class="p-4"><i class="fas fa-equals text-4xl text-blue-600"></i></div>
-                            <div class="p-4"><p class="text-lg text-slate-600">Dampak Bersih</p><p class="text-5xl font-bold text-blue-700">Rp 67 Jt</p></div>
+                    <div class="callout callout-info mb-6">
+                        <p>Dengan asumsi dampak bersih tahunan sebesar **Rp 65.9 Juta**, nilai tersebut diproyeksikan selama 5 tahun dan didiskontokan dengan Social WACC 10%.</p>
+                    </div>
+                     <table class="w-full text-lg text-left border-collapse">
+                        <thead><tr class="bg-slate-100"><th class="p-3">Tahun</th><th class="p-3">Nilai Dampak Bersih</th><th class="p-3">Faktor Diskonto (10%)</th><th class="p-3 font-semibold">Present Value (PV)</th></tr></thead>
+                        <tbody>
+                            <tr class="border-b"><td class="p-3">Tahun 1</td><td class="p-3">Rp 65.875.200</td><td class="p-3">0.909</td><td class="p-3">Rp 59.886.545</td></tr>
+                            <tr class="border-b"><td class="p-3">Tahun 2</td><td class="p-3">Rp 65.875.200</td><td class="p-3">0.826</td><td class="p-3">Rp 54.442.314</td></tr>
+                            <tr class="border-b"><td class="p-3">Tahun 3</td><td class="p-3">Rp 65.875.200</td><td class="p-3">0.751</td><td class="p-3">Rp 49.493.013</td></tr>
+                            <tr class="border-b"><td class="p-3">Tahun 4</td><td class="p-3">Rp 65.875.200</td><td class="p-3">0.683</td><td class="p-3">Rp 44.993.648</td></tr>
+                            <tr class="border-b"><td class="p-3">Tahun 5</td><td class="p-3">Rp 65.875.200</td><td class="p-3">0.621</td><td class="p-3">Rp 40.903.316</td></tr>
+                            <tr class="bg-slate-200 font-bold"><td class="p-3" colspan="3">Total Present Value (PV) Kumulatif</td><td class="p-3 text-blue-700">Rp 249.718.836</td></tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="grid grid-cols-2 gap-8 mt-6 items-center">
+                        <div>
+                            <p class="text-lg text-slate-600">Nilai Investasi Awal</p>
+                            <p class="text-4xl font-bold text-slate-800">Rp 117.317.000</p>
                         </div>
-
-                        <hr class="my-6">
-                        
-                        <!-- Rasio SROI -->
-                        <div class="grid grid-cols-3 items-center text-center">
-                             <div>
-                                <p class="text-lg text-slate-600">PV Dampak Bersih<br>(WACC Sosial 10%)</p>
-                                <p class="text-4xl font-bold text-green-700">Rp 61 Juta</p>
-                            </div>
-                            <div>
-                                <i class="fas fa-divide text-4xl text-slate-400"></i>
-                                 <p class="text-lg text-slate-600 mt-2">Nilai Investasi</p>
-                                <p class="text-4xl font-bold text-slate-800">Rp 117 Juta</p>
-                            </div>
-                            <div class="bg-green-500 text-white p-6 rounded-lg">
-                                <p class="text-xl font-semibold">Rasio SROI</p>
-                                <p class="text-7xl font-bold tracking-tight">1 : 0.52</p>
-                            </div>
+                        <div class="bg-green-500 text-white p-6 rounded-lg text-center">
+                            <p class="text-xl font-semibold">Rasio SROI (5 Tahun)</p>
+                            <p class="text-7xl font-bold tracking-tight">1 : 2.13</p>
                         </div>
                     </div>
                 </div>
