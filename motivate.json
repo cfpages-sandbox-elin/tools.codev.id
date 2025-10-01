@@ -23,7 +23,6 @@
       "options": [
         { "value": "male", "label": "Male" },
         { "value": "female", "label": "Female" },
-        { "value": "non-binary", "label": "Non-binary" },
         { "value": "prefer-not", "label": "Prefer not to say" }
       ]
     },
