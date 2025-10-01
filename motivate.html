@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MotivateMe - Discover Your Inner Drive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .progress-segment { transition: width 0.5s ease; }
+        .emoji-bounce { animation: bounce 2s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .hover-lift { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .hover-lift:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="bg-white min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="px-6 py-4 border-b border-gray-100">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <span class="text-2xl emoji-bounce">🚀</span>
+                <h1 class="text-xl font-semibold text-gray-800">MotivateMe</h1>
+            </div>
+            <div class="text-sm text-gray-500">
+                <span id="progressText">0%</span> Complete
+            </div>
+        </div>
+    </header>
+
+    <!-- Progress Bar -->
+    <div class="w-full h-1 bg-gray-100">
+        <div id="progressBar" class="h-full bg-gradient-to-r from-blue-400 to-purple-500 progress-segment" style="width: 0%"></div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex items-center justify-center px-6 py-12">
+        <div class="max-w-2xl w-full">
+            <!-- Welcome Screen -->
+            <div id="welcomeScreen" class="text-center fade-in">
+                <div class="mb-8">
+                    <span class="text-6xl emoji-bounce">💪</span>
+                </div>
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Discover Your Inner Drive</h2>
+                <p class="text-lg text-gray-600 mb-8">Answer a few questions to unlock your personal motivation blueprint. This journey is all about you!</p>
+                <button id="startBtn" class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-8 py-3 rounded-full font-medium hover-lift">
+                    Start Your Journey <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+
+            <!-- Question Container -->
+            <div id="questionContainer" class="hidden fade-in">
+                <div class="mb-6">
+                    <span id="questionEmoji" class="text-4xl mb-4 block text-center"></span>
+                    <h3 id="questionText" class="text-2xl font-semibold text-gray-800 mb-2"></h3>
+                    <p id="questionSubtext" class="text-gray-600"></p>
+                </div>
+
+                <!-- Answer Options -->
+                <div id="answerContainer" class="mb-8">
+                    <!-- Dynamic content will be inserted here -->
+                </div>
+
+                <!-- Navigation -->
+                <div class="flex justify-between">
+                    <button id="prevBtn" class="px-6 py-2 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-50 transition">
+                        <i class="fas fa-arrow-left mr-2"></i> Previous
+                    </button>
+                    <button id="nextBtn" class="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full hover-lift">
+                        Next <i class="fas fa-arrow-right ml-2"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Screen -->
+            <div id="resultsScreen" class="hidden fade-in">
+                <div class="text-center mb-8">
+                    <span class="text-6xl emoji-bounce">🎉</span>
+                </div>
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Your Personal Motivation Blueprint</h2>
+                <div id="motivationResults" class="bg-gray-50 rounded-2xl p-8 mb-8 text-left">
+                    <!-- Dynamic content will be inserted here -->
+                </div>
+                <div class="flex justify-center space-x-4">
+                    <button id="restartBtn" class="px-6 py-2 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-50 transition">
+                        <i class="fas fa-redo mr-2"></i> Start Over
+                    </button>
+                    <button id="saveBtn" class="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full hover-lift">
+                        <i class="fas fa-download mr-2"></i> Save Results
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="px-6 py-4 text-center text-sm text-gray-500">
+        <p>© 2023 MotivateMe. Empowering you to achieve your potential.</p>
+    </footer>
+
+    <script src="motivate.js"></script>
+</body>
+</html>

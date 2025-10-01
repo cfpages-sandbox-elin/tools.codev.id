@@ -1,0 +1,261 @@
+{
+  "questions": [
+    {
+      "id": "welcome",
+      "type": "welcome",
+      "emoji": "👋",
+      "text": "Welcome to your motivation journey!",
+      "subtext": "Let's start by getting to know you better."
+    },
+    {
+      "id": "name",
+      "type": "text",
+      "emoji": "👤",
+      "text": "What's your name?",
+      "subtext": "We'll personalize your experience based on your name."
+    },
+    {
+      "id": "gender",
+      "type": "radio",
+      "emoji": "⚧️",
+      "text": "How do you identify?",
+      "subtext": "This helps us tailor the motivation approach to you.",
+      "options": [
+        { "value": "male", "label": "Male" },
+        { "value": "female", "label": "Female" },
+        { "value": "non-binary", "label": "Non-binary" },
+        { "value": "prefer-not", "label": "Prefer not to say" }
+      ]
+    },
+    {
+      "id": "age",
+      "type": "select",
+      "emoji": "🎂",
+      "text": "What's your age range?",
+      "subtext": "Different life stages come with different motivators.",
+      "options": [
+        { "value": "under-18", "label": "Under 18" },
+        { "value": "18-24", "label": "18-24" },
+        { "value": "25-34", "label": "25-34" },
+        { "value": "35-44", "label": "35-44" },
+        { "value": "45-54", "label": "45-54" },
+        { "value": "55-64", "label": "55-64" },
+        { "value": "65+", "label": "65+" }
+      ]
+    },
+    {
+      "id": "occupation",
+      "type": "text",
+      "emoji": "💼",
+      "text": "What do you do for work or study?",
+      "subtext": "Your occupation helps us understand your daily context."
+    },
+    {
+      "id": "life_situation",
+      "type": "select",
+      "emoji": "🏠",
+      "text": "How would you describe your current life situation?",
+      "subtext": "This helps us understand your context better.",
+      "options": [
+        { "value": "student", "label": "Student" },
+        { "value": "early-career", "label": "Early in my career" },
+        { "value": "mid-career", "label": "Mid-career professional" },
+        { "value": "senior", "label": "Senior/Leadership position" },
+        { "value": "entrepreneur", "label": "Business owner/Entrepreneur" },
+        { "value": "freelancer", "label": "Freelancer/Self-employed" },
+        { "value": "parent", "label": "Stay-at-home parent" },
+        { "value": "retired", "label": "Retired" },
+        { "value": "transitioning", "label": "In transition between roles" }
+      ]
+    },
+    {
+      "id": "primary_goal",
+      "type": "text",
+      "emoji": "🎯",
+      "text": "What's the main goal you're working toward right now?",
+      "subtext": "Be specific - this helps us tailor your motivation."
+    },
+    {
+      "id": "goal_timeline",
+      "type": "select",
+      "emoji": "📅",
+      "text": "When do you hope to achieve this goal?",
+      "subtext": "Timeline affects motivation strategy.",
+      "options": [
+        { "value": "1-month", "label": "Within 1 month" },
+        { "value": "3-months", "label": "Within 3 months" },
+        { "value": "6-months", "label": "Within 6 months" },
+        { "value": "1-year", "label": "Within 1 year" },
+        { "value": "2-years", "label": "Within 2 years" },
+        { "value": "5-years", "label": "Within 5 years" },
+        { "value": "no-timeline", "label": "No specific timeline" }
+      ]
+    },
+    {
+      "id": "motivation_challenge",
+      "type": "select",
+      "emoji": "🤔",
+      "text": "What's your biggest motivation challenge right now?",
+      "subtext": "Understanding obstacles helps us overcome them.",
+      "options": [
+        { "value": "procrastination", "label": "Procrastination" },
+        { "value": "lack-clarity", "label": "Lack of clarity about goals" },
+        { "value": "overwhelm", "label": "Feeling overwhelmed" },
+        { "value": "self-doubt", "label": "Self-doubt" },
+        { "value": "burnout", "label": "Burnout" },
+        { "value": "external-pressure", "label": "Too much external pressure" },
+        { "value": "lack-reward", "label": "Lack of immediate rewards" },
+        { "value": "perfectionism", "label": "Perfectionism" }
+      ]
+    },
+    {
+      "id": "personal_values",
+      "type": "checkbox",
+      "emoji": "💎",
+      "text": "Which values are most important to you? (Select up to 5)",
+      "subtext": "Your values are the foundation of intrinsic motivation.",
+      "options": [
+        { "value": "achievement", "label": "Achievement" },
+        { "value": "creativity", "label": "Creativity" },
+        { "value": "security", "label": "Security" },
+        { "value": "freedom", "label": "Freedom" },
+        { "value": "growth", "label": "Personal growth" },
+        { "value": "relationships", "label": "Relationships" },
+        { "value": "contribution", "label": "Making a difference" },
+        { "value": "recognition", "label": "Recognition" },
+        { "value": "adventure", "label": "Adventure" },
+        { "value": "balance", "label": "Work-life balance" }
+      ]
+    },
+    {
+      "id": "strengths",
+      "type": "text",
+      "emoji": "💪",
+      "text": "What are your top 3 strengths?",
+      "subtext": "Knowing your strengths builds self-efficacy."
+    },
+    {
+      "id": "success_factors",
+      "type": "checkbox",
+      "emoji": "✨",
+      "text": "What helps you succeed? (Select all that apply)",
+      "subtext": "Understanding your success patterns helps replicate them.",
+      "options": [
+        { "value": "routine", "label": "Having a routine" },
+        { "value": "accountability", "label": "Accountability to others" },
+        { "value": "rewards", "label": "Rewarding myself" },
+        { "value": "breaks", "label": "Taking regular breaks" },
+        { "value": "planning", "label": "Detailed planning" },
+        { "value": "flexibility", "label": "Flexibility in approach" },
+        { "value": "environment", "label": "The right environment" },
+        { "value": "support", "label": "Support from others" }
+      ]
+    },
+    {
+      "id": "motivation_sources",
+      "type": "checkbox",
+      "emoji": "🔋",
+      "text": "Where do you typically draw motivation from?",
+      "subtext": "Knowing your sources helps us amplify them.",
+      "options": [
+        { "value": "internal-drive", "label": "Internal drive" },
+        { "value": "competition", "label": "Competition" },
+        { "value": "recognition", "label": "Recognition from others" },
+        { "value": "helping-others", "label": "Helping others" },
+        { "value": "personal-growth", "label": "Personal growth" },
+        { "value": "financial-reward", "label": "Financial rewards" },
+        { "value": "fear-failure", "label": "Fear of failure" },
+        { "value": "passion", "label": "Passion for the work" }
+      ]
+    },
+    {
+      "id": "goal_benefits",
+      "type": "text",
+      "emoji": "🎁",
+      "text": "What benefits will achieving your goal bring to YOU personally?",
+      "subtext": "Focus on how this impacts your life directly."
+    },
+    {
+      "id": "impact_others",
+      "type": "text",
+      "emoji": "🌍",
+      "text": "How might achieving your goal positively impact others?",
+      "subtext": "Connecting to a larger purpose enhances motivation."
+    },
+    {
+      "id": "unique_qualities",
+      "type": "text",
+      "emoji": "🌟",
+      "text": "What makes you uniquely suited to achieve this goal?",
+      "subtext": "Recognizing your unique value builds confidence."
+    },
+    {
+      "id": "past_successes",
+      "type": "text",
+      "emoji": "🏆",
+      "text": "Describe a past success you're proud of and why it mattered to you.",
+      "subtext": "Reflecting on past achievements builds self-efficacy."
+    },
+    {
+      "id": "support_system",
+      "type": "checkbox",
+      "emoji": "🤝",
+      "text": "Who's in your support system?",
+      "subtext": "Social connections are powerful motivators.",
+      "options": [
+        { "value": "family", "label": "Family" },
+        { "value": "friends", "label": "Friends" },
+        { "value": "mentor", "label": "Mentor" },
+        { "value": "colleagues", "label": "Colleagues" },
+        { "value": "community", "label": "Community group" },
+        { "value": "online-group", "label": "Online community" },
+        { "value": "professional", "label": "Professional network" },
+        { "value": "none", "label": "I don't have a support system" }
+      ]
+    },
+    {
+      "id": "daily_routine",
+      "type": "text",
+      "emoji": "⏰",
+      "text": "Describe your typical daily routine.",
+      "subtext": "This helps us identify optimal motivation integration points."
+    },
+    {
+      "id": "energy_patterns",
+      "type": "select",
+      "emoji": "⚡",
+      "text": "When do you have the most energy during the day?",
+      "subtext": "Working with your natural energy boosts effectiveness.",
+      "options": [
+        { "value": "morning", "label": "Morning (6am-12pm)" },
+        { "value": "midday", "label": "Midday (12pm-3pm)" },
+        { "value": "afternoon", "label": "Afternoon (3pm-6pm)" },
+        { "value": "evening", "label": "Evening (6pm-10pm)" },
+        { "value": "night", "label": "Night (10pm-6am)" },
+        { "value": "varies", "label": "It varies day to day" }
+      ]
+    },
+    {
+      "id": "motivation_reminders",
+      "type": "checkbox",
+      "emoji": "📱",
+      "text": "How would you like to receive motivation reminders?",
+      "subtext": "Consistent reinforcement builds lasting motivation.",
+      "options": [
+        { "value": "daily-email", "label": "Daily email" },
+        { "value": "weekly-email", "label": "Weekly email" },
+        { "value": "phone-notification", "label": "Phone notifications" },
+        { "value": "text-message", "label": "Text messages" },
+        { "value": "calendar-reminder", "label": "Calendar reminders" },
+        { "value": "none", "label": "I don't want reminders" }
+      ]
+    },
+    {
+      "id": "final_thoughts",
+      "type": "textarea",
+      "emoji": "💭",
+      "text": "Is there anything else you'd like to share about your motivation journey?",
+      "subtext": "Sometimes the most important insights come from you."
+    }
+  ]
+}
