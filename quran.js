@@ -1,4 +1,4 @@
-// quran.js v1.7 and new + labelfromstring + autocreate from string
+// quran.js v1.8
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlqWMArBZkIfPWVNP6KuM0wyy2u3zvN3INFKzoQMI5MHiRQHQTVehC-9Mi7HiwK3q86A/exec";
 const CLOUDFLARE_SHEET_API_URL = "/sheet-api"; // For Google Sheets operations
 const CLOUDFLARE_QURAN_API_URL = "/quran-api"; // For Quran scraping
@@ -15,6 +15,7 @@ let labels = [];
 let selectedLabels = [];
 let editingAyahId = null;
 let parsedAyahData = null;
+let editingLabelId = null;
 
 // DOM Elements - will be initialized after DOM loads
 let elements = {};
@@ -82,6 +83,12 @@ function initializeElements() {
         labelsHierarchy: document.getElementById('labelsHierarchy'),
         labelStringInput: document.getElementById('labelStringInput'),
         addLabelsFromStringButton: document.getElementById('addLabelsFromStringButton'),
+        editLabelModal: document.getElementById('editLabelModal'),
+        closeEditLabelModal: document.getElementById('closeEditLabelModal'),
+        editLabelNameInput: document.getElementById('editLabelNameInput'),
+        editLabelParentSelect: document.getElementById('editLabelParentSelect'),
+        cancelEditLabelButton: document.getElementById('cancelEditLabelButton'),
+        saveLabelChangesButton: document.getElementById('saveLabelChangesButton'),
         
         // Parsed ayah preview
         parsedPreview: document.getElementById('parsedPreview'),
@@ -145,6 +152,9 @@ function setupEventListeners() {
     
     // Labels management
     if (elements.addNewLabelButton) elements.addNewLabelButton.addEventListener('click', addNewLabel);
+    if (elements.closeEditLabelModal) elements.closeEditLabelModal.addEventListener('click', closeEditLabelModal);
+    if (elements.cancelEditLabelButton) elements.cancelEditLabelButton.addEventListener('click', closeEditLabelModal);
+    if (elements.saveLabelChangesButton) elements.saveLabelChangesButton.addEventListener('click', saveLabelChanges);
     
     // Search and filter
     if (elements.searchInput) elements.searchInput.addEventListener('input', filterAyahs);
@@ -1530,65 +1540,59 @@ function displayLabelsHierarchy() {
     elements.labelsHierarchy.innerHTML = '';
     
     // Get parent labels
-    const parentLabels = labels.filter(label => !label.parentId);
+    const parentLabels = labels.filter(label => !label.PARENT_ID || label.PARENT_ID === '');
     
     if (parentLabels.length === 0) {
         elements.labelsHierarchy.innerHTML = '<p class="text-gray-500">No labels created yet.</p>';
         return;
     }
     
-    parentLabels.forEach(parentLabel => {
-        // Create parent label element
-        const parentDiv = document.createElement('div');
-        parentDiv.className = 'mb-4';
+    const buildHierarchyHtml = (parentId = null) => {
+        const children = labels.filter(label => (parentId === null ? (!label.PARENT_ID || label.PARENT_ID === '') : label.PARENT_ID === parentId));
         
-        const parentHeader = document.createElement('div');
-        parentHeader.className = 'flex items-center justify-between p-2 bg-indigo-50 rounded-lg';
-        parentHeader.innerHTML = `
-            <div class="flex items-center">
-                <span class="font-medium text-indigo-700">${parentLabel.name}</span>
-            </div>
-            <button class="delete-label text-red-600 hover:text-red-800" data-id="${parentLabel.id}">
-                <i class="fas fa-trash"></i>
-            </button>
-        `;
+        if (children.length === 0) return '';
         
-        parentDiv.appendChild(parentHeader);
+        let html = `<div class="${parentId ? 'ml-6 mt-2' : ''}">`;
         
-        // Get child labels
-        const childLabels = labels.filter(label => label.parentId === parentLabel.id);
-        
-        if (childLabels.length > 0) {
-            const childrenDiv = document.createElement('div');
-            childrenDiv.className = 'ml-6 mt-2';
-            
-            childLabels.forEach(childLabel => {
-                const childDiv = document.createElement('div');
-                childDiv.className = 'flex items-center justify-between p-2 bg-indigo-25 rounded-lg mb-2';
-                childDiv.innerHTML = `
+        children.forEach(label => {
+            html += `
+                <div class="flex items-center justify-between p-2 ${parentId ? 'bg-indigo-25' : 'bg-indigo-50'} rounded-lg mb-2">
                     <div class="flex items-center">
-                        <i class="fas fa-arrow-right text-indigo-500 mr-2"></i>
-                        <span>${childLabel.name}</span>
+                        ${parentId ? '<i class="fas fa-arrow-right text-indigo-500 mr-2"></i>' : ''}
+                        <span class="font-medium ${parentId ? '' : 'text-indigo-700'}">${label.NAME}</span>
                     </div>
-                    <button class="delete-label text-red-600 hover:text-red-800" data-id="${childLabel.id}">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                `;
-                
-                childrenDiv.appendChild(childDiv);
-            });
-            
-            parentDiv.appendChild(childrenDiv);
-        }
+                    <div class="flex items-center space-x-3">
+                        <button class="edit-label text-blue-600 hover:text-blue-800" data-id="${label.ID}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="delete-label text-red-600 hover:text-red-800" data-id="${label.ID}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            // Recursive call to build for grandchildren, etc.
+            html += buildHierarchyHtml(label.ID);
+        });
         
-        elements.labelsHierarchy.appendChild(parentDiv);
-    });
-    
-    // Add event listeners to delete buttons
+        html += '</div>';
+        return html;
+    };
+
+    elements.labelsHierarchy.innerHTML = buildHierarchyHtml();
+
+    // Add event listeners to the new buttons
     document.querySelectorAll('.delete-label').forEach(button => {
         button.addEventListener('click', () => {
             const labelId = button.getAttribute('data-id');
             deleteLabel(labelId);
+        });
+    });
+
+    document.querySelectorAll('.edit-label').forEach(button => {
+        button.addEventListener('click', () => {
+            const labelId = button.getAttribute('data-id');
+            openEditLabelModal(labelId);
         });
     });
 }
@@ -1612,6 +1616,93 @@ function deleteLabel(labelId) {
         displayLabelsHierarchy();
         
         showSuccess('Label deleted successfully');
+    }
+}
+
+function openEditLabelModal(labelId) {
+    editingLabelId = labelId;
+    const labelToEdit = labels.find(l => l.ID === labelId);
+
+    if (!labelToEdit) {
+        showError('Label not found for editing.');
+        return;
+    }
+
+    // Populate the form fields
+    elements.editLabelNameInput.value = labelToEdit.NAME;
+
+    // Populate the parent dropdown
+    const parentSelect = elements.editLabelParentSelect;
+    parentSelect.innerHTML = '<option value="">None (Top-Level Parent)</option>';
+    // Exclude the label itself and its descendants from the list of potential parents
+    const forbiddenIds = getLabelAndAllDescendants(labelId, labels);
+    const possibleParents = labels.filter(l => !forbiddenIds.includes(l.ID));
+    buildLabelOptionsRecursive(possibleParents, parentSelect, null, 0);
+    
+    parentSelect.value = labelToEdit.PARENT_ID || '';
+
+    // Show the modal
+    elements.editLabelModal.classList.remove('hidden');
+}
+
+function closeEditLabelModal() {
+    elements.editLabelModal.classList.add('hidden');
+    editingLabelId = null;
+}
+
+async function saveLabelChanges() {
+    if (!editingLabelId) return;
+
+    const newName = elements.editLabelNameInput.value.trim().toUpperCase();
+    const newParentId = elements.editLabelParentSelect.value || "";
+
+    if (!newName) {
+        showError('Label name cannot be empty.');
+        return;
+    }
+
+    const payload = {
+        ID: editingLabelId,
+        NAME: newName,
+        PARENT_ID: newParentId,
+        action: 'editLabel'
+    };
+    
+    // We need a new API function to handle this
+    const success = await saveLabelEditToSheet(payload);
+
+    if (success) {
+        // Update local state
+        const labelIndex = labels.findIndex(l => l.ID === editingLabelId);
+        if (labelIndex !== -1) {
+            labels[labelIndex].NAME = newName;
+            labels[labelIndex].PARENT_ID = newParentId;
+        }
+
+        // Refresh all UI components
+        populateAllLabelDropdowns();
+        displayLabelsHierarchy();
+        displayAyahs(ayahs); // Refresh main view to update any path changes in labels
+
+        closeEditLabelModal();
+        showSuccess('Label updated successfully!');
+    } else {
+        showError('Failed to update label.');
+    }
+}
+
+async function saveLabelEditToSheet(payload) {
+    try {
+        const response = await fetch(`${CLOUDFLARE_SHEET_API_URL}?url=${encodeURIComponent(GOOGLE_SCRIPT_URL)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        return result.status === 'success';
+    } catch (error) {
+        console.error('Error saving label edit:', error);
+        return false;
     }
 }
 
