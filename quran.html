@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quran Categorizer v1.6</title>
+    <title>Quran Categorizer v1.7</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">    
     <link rel="stylesheet" href="quran.css">
@@ -179,6 +179,15 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">Selected Labels</label>
                             <div id="labelsContainer" class="min-h-[2.5rem] p-3 bg-gray-50 rounded-lg border border-gray-200">
                                 <!-- Selected labels will appear here -->
+                            </div>
+                            <div class="my-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Add Labels by ID (comma-separated)</label>
+                                <div class="flex">
+                                    <input type="text" id="labelStringInput" placeholder="e.g., allah,prophets,kafir" class="flex-1 px-4 py-2 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                    <button id="addLabelsFromStringButton" class="bg-indigo-600 text-white px-4 py-2 rounded-r-lg hover:bg-indigo-700 transition-colors">
+                                        <i class="fas fa-plus mr-1"></i> Add
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         

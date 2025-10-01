@@ -1,4 +1,4 @@
-// quran.js v1.7 and new + hapus obsolete code
+// quran.js v1.7 and new + labelfromstring
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlqWMArBZkIfPWVNP6KuM0wyy2u3zvN3INFKzoQMI5MHiRQHQTVehC-9Mi7HiwK3q86A/exec";
 const CLOUDFLARE_SHEET_API_URL = "/sheet-api"; // For Google Sheets operations
 const CLOUDFLARE_QURAN_API_URL = "/quran-api"; // For Quran scraping
@@ -80,6 +80,8 @@ function initializeElements() {
         newLabelParentSelect: document.getElementById('newLabelParentSelect'),
         addNewLabelButton: document.getElementById('addNewLabelButton'),
         labelsHierarchy: document.getElementById('labelsHierarchy'),
+        labelStringInput: document.getElementById('labelStringInput'),
+        addLabelsFromStringButton: document.getElementById('addLabelsFromStringButton'),
         
         // Parsed ayah preview
         parsedPreview: document.getElementById('parsedPreview'),
@@ -138,6 +140,7 @@ function setupEventListeners() {
     if (elements.parseButton) elements.parseButton.addEventListener('click', parsePastedAyah);
     if (elements.saveButton) elements.saveButton.addEventListener('click', saveAyah);
     if (elements.addLabelButton) elements.addLabelButton.addEventListener('click', addSelectedLabel);
+    if (elements.addLabelsFromStringButton) elements.addLabelsFromStringButton.addEventListener('click', addLabelsFromString);
     if (elements.createLabelButton) elements.createLabelButton.addEventListener('click', createNewLabel);
     
     // Labels management
@@ -1076,6 +1079,56 @@ function addSelectedLabel() {
     elements.parentLabelSelect.value = '';
     
     showSuccess('Label added successfully!');
+}
+
+function addLabelsFromString() {
+    if (!elements.labelStringInput) return;
+
+    const inputString = elements.labelStringInput.value.trim();
+    if (!inputString) {
+        showError('Please enter one or more label IDs separated by commas.');
+        return;
+    }
+
+    // Split the string, and trim whitespace from each potential ID
+    const potentialIds = inputString.split(',').map(id => id.trim());
+
+    const invalidIds = [];
+    let labelsAddedCount = 0;
+
+    potentialIds.forEach(id => {
+        if (!id) return; // Skip empty strings (e.g., from a trailing comma)
+
+        // Check if a label with this ID actually exists
+        const labelExists = labels.some(label => label.ID === id);
+
+        if (labelExists) {
+            // Check if it's not already selected
+            if (!selectedLabels.includes(id)) {
+                selectedLabels.push(id);
+                labelsAddedCount++;
+            }
+        } else {
+            // If it doesn't exist, keep track of it for the error message
+            invalidIds.push(id);
+        }
+    });
+
+    // Update the UI
+    updateSelectedLabels();
+    updateSaveButtonState();
+
+    // Clear the input field for the next use
+    elements.labelStringInput.value = '';
+
+    // Provide feedback to the user
+    if (labelsAddedCount > 0) {
+        showSuccess(`${labelsAddedCount} label(s) were added.`);
+    }
+
+    if (invalidIds.length > 0) {
+        showError(`The following label IDs were not found: ${invalidIds.join(', ')}`);
+    }
 }
 
 async function createNewLabel() {
