@@ -1,4 +1,4 @@
-// quran.js v1.7 and new + labelfromstring
+// quran.js v1.7 and new + labelfromstring + autocreate from string
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzlqWMArBZkIfPWVNP6KuM0wyy2u3zvN3INFKzoQMI5MHiRQHQTVehC-9Mi7HiwK3q86A/exec";
 const CLOUDFLARE_SHEET_API_URL = "/sheet-api"; // For Google Sheets operations
 const CLOUDFLARE_QURAN_API_URL = "/quran-api"; // For Quran scraping
@@ -1081,7 +1081,7 @@ function addSelectedLabel() {
     showSuccess('Label added successfully!');
 }
 
-function addLabelsFromString() {
+async function addLabelsFromString() {
     if (!elements.labelStringInput) return;
 
     const inputString = elements.labelStringInput.value.trim();
@@ -1090,44 +1090,69 @@ function addLabelsFromString() {
         return;
     }
 
-    // Split the string, and trim whitespace from each potential ID
-    const potentialIds = inputString.split(',').map(id => id.trim());
+    const potentialIds = inputString.split(',').map(id => id.trim().toLowerCase()).filter(id => id);
 
-    const invalidIds = [];
-    let labelsAddedCount = 0;
+    const addedLabels = [];
+    const createdLabels = [];
+    const failedLabels = [];
 
-    potentialIds.forEach(id => {
-        if (!id) return; // Skip empty strings (e.g., from a trailing comma)
-
-        // Check if a label with this ID actually exists
+    // Use a for...of loop to handle async operations correctly inside the loop
+    for (const id of potentialIds) {
         const labelExists = labels.some(label => label.ID === id);
 
         if (labelExists) {
-            // Check if it's not already selected
+            // It's an existing label, just add it if not already selected
             if (!selectedLabels.includes(id)) {
                 selectedLabels.push(id);
-                labelsAddedCount++;
+                addedLabels.push(id);
             }
         } else {
-            // If it doesn't exist, keep track of it for the error message
-            invalidIds.push(id);
-        }
-    });
+            // --- NEW LOGIC: This is a new label, let's create it! ---
+            console.log(`Label ID '${id}' not found. Attempting to auto-create.`);
+            
+            // 1. Create the new label object
+            const newLabel = {
+                ID: id,
+                NAME: id.toUpperCase(),
+                PARENT_ID: "" // Create it as a top-level parent label
+            };
 
-    // Update the UI
+            // 2. Save it to the Google Sheet
+            const success = await saveLabelToSheet(newLabel);
+
+            if (success) {
+                // 3. If saved successfully, update our local data and select it
+                labels.push(newLabel); // Add to the main labels array
+                selectedLabels.push(id); // Add to the current Ayah's labels
+                createdLabels.push(id);
+            } else {
+                // If saving failed, track it as an error
+                failedLabels.push(id);
+            }
+        }
+    }
+
+    // --- UI Updates and User Feedback ---
     updateSelectedLabels();
     updateSaveButtonState();
 
+    // CRITICAL: Refresh all dropdowns to include the newly created labels
+    if (createdLabels.length > 0) {
+        populateAllLabelDropdowns();
+    }
+    
     // Clear the input field for the next use
     elements.labelStringInput.value = '';
 
-    // Provide feedback to the user
-    if (labelsAddedCount > 0) {
-        showSuccess(`${labelsAddedCount} label(s) were added.`);
+    // Provide detailed feedback to the user
+    if (addedLabels.length > 0) {
+        showSuccess(`${addedLabels.length} existing label(s) added.`);
     }
-
-    if (invalidIds.length > 0) {
-        showError(`The following label IDs were not found: ${invalidIds.join(', ')}`);
+    if (createdLabels.length > 0) {
+        showSuccess(`${createdLabels.length} new label(s) created and added: ${createdLabels.join(', ')}`);
+    }
+    if (failedLabels.length > 0) {
+        showError(`Failed to create the following new labels: ${failedLabels.join(', ')}`);
     }
 }
 
