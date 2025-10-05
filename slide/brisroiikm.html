@@ -241,6 +241,56 @@
                 </div>
             </section>
 
+            <!-- Slide Teori: Konsep dan Formula Penghitungan SROI -->
+            <section id="slide-teori-sroi" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Teori: Konsep dan Formula Penghitungan SROI</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="space-y-8">
+                        <!-- Deadweight -->
+                        <div class="bg-amber-50 p-6 rounded-lg border-l-4 border-amber-500">
+                            <h3 class="text-2xl font-semibold text-amber-800 mb-4"><i class="fas fa-person-running mr-2"></i>Deadweight (Beban)</h3>
+                            <p class="text-slate-700 mb-4">Dampak yang akan terjadi tanpa adanya program (bukan nilai tambah dari program).</p>
+                            <div class="bg-white p-4 rounded border border-amber-200">
+                                <p class="font-semibold text-slate-700 mb-2">Formula:</p>
+                                <p class="text-lg text-slate-700">Nilai Deadweight = Total Dampak Kotor × Persentase Deadweight</p>
+                            </div>
+                            <p class="text-sm text-slate-600 mt-3">Contoh: Jika total dampak kotor Rp 1 Miliar dan 30% dianggap deadweight, maka nilai deadweight = Rp 300 Juta</p>
+                        </div>
+                        
+                        <!-- Attribution -->
+                        <div class="bg-sky-50 p-6 rounded-lg border-l-4 border-sky-500">
+                            <h3 class="text-2xl font-semibold text-sky-800 mb-4"><i class="fas fa-arrows-split-up-and-left mr-2"></i>Attribution (Atribusi)</h3>
+                            <p class="text-slate-700 mb-4">Proporsi dampak yang dapat dikaitkan dengan program dibandingkan dengan faktor lain.</p>
+                            <div class="bg-white p-4 rounded border border-sky-200">
+                                <p class="font-semibold text-slate-700 mb-2">Formula:</p>
+                                <p class="text-lg text-slate-700">Nilai Atribusi = Total Dampak Kotor × Persentase Atribusi</p>
+                            </div>
+                            <p class="text-sm text-slate-600 mt-3">Contoh: Jika total dampak kotor Rp 1 Miliar dan 50% dianggap kontribusi program, maka nilai atribusi = Rp 500 Juta</p>
+                        </div>
+                        
+                        <!-- Drop-off -->
+                        <div class="bg-red-50 p-6 rounded-lg border-l-4 border-red-500">
+                            <h3 class="text-2xl font-semibold text-red-800 mb-4"><i class="fas fa-chart-line-down mr-2"></i>Drop-off (Penurunan)</h3>
+                            <p class="text-slate-700 mb-4">Penurunan dampak seiring waktu, dihitung berdasarkan durasi dampak masih berlaku.</p>
+                            <div class="bg-white p-4 rounded border border-red-200">
+                                <p class="font-semibold text-slate-700 mb-2">Formula:</p>
+                                <p class="text-lg text-slate-700">Dampak per Bulan = Total Dampak Kotor ÷ 12</p>
+                                <p class="text-lg text-slate-700">Nilai Drop-off = Dampak per Bulan × Rata-rata Waktu Drop-off</p>
+                            </div>
+                            <p class="text-sm text-slate-600 mt-3">Contoh: Jika dampak kotor Rp 1 Miliar/tahun dan rata-rata drop-off 6 bulan, maka nilai drop-off = (Rp 1M ÷ 12) × 6 = Rp 500 Juta</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 bg-blue-50 border-t-4 border-blue-500 p-6 rounded-lg">
+                        <h3 class="text-xl font-semibold text-blue-800 mb-3">Formula SROI Akhir</h3>
+                        <p class="text-lg text-slate-700">Dampak Bersih = Total Dampak Kotor - Deadweight - Atribusi - Drop-off</p>
+                        <p class="text-lg text-slate-700">SROI = (Total Dampak Bersih ÷ Total Investasi) × 100%</p>
+                    </div>
+                </div>
+            </section>
+
             <!-- Slide 5: Pemetaan Ekosistem Stakeholder -->
             <section id="slide5" class="slide bg-dots">
                 <div class="slide-header">
@@ -644,6 +694,153 @@
                 </div>
             </section>
 
+            <!-- Slide Perhitungan Deadweight (Penjual) -->
+            <section id="slide-deadweight-penjual" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Perhitungan Deadweight: Perspektif Penjual</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="callout callout-info mb-6">
+                        <p class="text-lg text-sky-900">Menghitung nilai deadweight berdasarkan persepsi pedagang tentang dampak yang akan terjadi tanpa program.</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Data Responden -->
+                        <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                            <h3 class="text-xl font-semibold text-slate-800 mb-4">Data dari Responden</h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between">
+                                    <p class="text-slate-700">Total Dampak Kotor Tahunan:</p>
+                                    <p class="font-bold text-slate-800">Rp 4.550.000.000</p>
+                                </div>
+                                <div class="flex justify-between">
+                                    <p class="text-slate-700">Rata-rata Persentase Deadweight:</p>
+                                    <p class="font-bold text-slate-800">36%</p>
+                                </div>
+                                <div class="flex justify-between">
+                                    <p class="text-slate-700">Jumlah Responden:</p>
+                                    <p class="font-bold text-slate-800">30</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Perhitungan -->
+                        <div class="bg-amber-50 p-6 rounded-lg border-t-4 border-amber-500">
+                            <h3 class="text-xl font-semibold text-amber-800 mb-4">Perhitungan Deadweight</h3>
+                            <div class="space-y-3">
+                                <p class="text-slate-700">Formula: Total Dampak Kotor × Persentase Deadweight</p>
+                                <div class="bg-white p-4 rounded border border-amber-200">
+                                    <p class="text-slate-700">Rp 4.550.000.000 × 36%</p>
+                                    <p class="text-2xl font-bold text-amber-700">Rp 1.638.000.000</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 bg-amber-100 p-4 rounded-lg">
+                        <p class="text-lg text-amber-800">Nilai deadweight untuk pedagang adalah <span class="font-bold">Rp 1.638.000.000</span>, yang akan dikurangkan dari total dampak kotor.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide Perhitungan Attribution (Penjual) -->
+            <section id="slide-attribution-penjual" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Perhitungan Attribution: Perspektif Penjual</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="callout callout-info mb-6">
+                        <p class="text-lg text-sky-900">Menghitung nilai atribusi berdasarkan persepsi pedagang tentang kontribusi pihak lain terhadap dampak.</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Data Responden -->
+                        <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                            <h3 class="text-xl font-semibold text-slate-800 mb-4">Data dari Responden</h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between">
+                                    <p class="text-slate-700">Total Dampak Kotor Tahunan:</p>
+                                    <p class="font-bold text-slate-800">Rp 4.550.000.000</p>
+                                </div>
+                                <div class="flex justify-between">
+                                    <p class="text-slate-700">Rata-rata Persentase Atribusi:</p>
+                                    <p class="font-bold text-slate-800">57%</p>
+                                </div>
+                                <div class="flex justify-between">
+                                    <p class="text-slate-700">Jumlah Responden:</p>
+                                    <p class="font-bold text-slate-800">30</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Perhitungan -->
+                        <div class="bg-sky-50 p-6 rounded-lg border-t-4 border-sky-500">
+                            <h3 class="text-xl font-semibold text-sky-800 mb-4">Perhitungan Attribution</h3>
+                            <div class="space-y-3">
+                                <p class="text-slate-700">Formula: Total Dampak Kotor × Persentase Atribusi</p>
+                                <div class="bg-white p-4 rounded border border-sky-200">
+                                    <p class="text-slate-700">Rp 4.550.000.000 × 57%</p>
+                                    <p class="text-2xl font-bold text-sky-700">Rp 2.593.500.000</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 bg-sky-100 p-4 rounded-lg">
+                        <p class="text-lg text-sky-800">Nilai atribusi untuk pedagang adalah <span class="font-bold">Rp 2.593.500.000</span>, yang akan dikurangkan dari total dampak kotor.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide Perhitungan Drop-off (Penjual) -->
+            <section id="slide-dropoff-penjual" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Perhitungan Drop-off: Perspektif Penjual</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="callout callout-info mb-6">
+                        <p class="text-lg text-sky-900">Menghitung nilai drop-off berdasarkan durasi dampak masih berlaku menurut persepsi pedagang.</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Data Responden -->
+                        <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                            <h3 class="text-xl font-semibold text-slate-800 mb-4">Data dari Responden</h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between">
+                                    <p class="text-slate-700">Total Dampak Kotor Tahunan:</p>
+                                    <p class="font-bold text-slate-800">Rp 4.550.000.000</p>
+                                </div>
+                                <div class="flex justify-between">
+                                    <p class="text-slate-700">Dampak per Bulan:</p>
+                                    <p class="font-bold text-slate-800">Rp 379.166.667</p>
+                                </div>
+                                <div class="flex justify-between">
+                                    <p class="text-slate-700">Rata-rata Waktu Drop-off:</p>
+                                    <p class="font-bold text-slate-800">9.5 bulan</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Perhitungan -->
+                        <div class="bg-red-50 p-6 rounded-lg border-t-4 border-red-500">
+                            <h3 class="text-xl font-semibold text-red-800 mb-4">Perhitungan Drop-off</h3>
+                            <div class="space-y-3">
+                                <p class="text-slate-700">Formula: Dampak per Bulan × Rata-rata Waktu Drop-off</p>
+                                <div class="bg-white p-4 rounded border border-red-200">
+                                    <p class="text-slate-700">Rp 379.166.667 × 9.5</p>
+                                    <p class="text-2xl font-bold text-red-700">Rp 3.602.083.333</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 bg-red-100 p-4 rounded-lg">
+                        <p class="text-lg text-red-800">Nilai drop-off untuk pedagang adalah <span class="font-bold">Rp 3.602.083.333</span>, yang akan dikurangkan dari total dampak kotor.</p>
+                    </div>
+                </div>
+            </section>
+
             <!-- Slide 8a: Perhitungan Deadweight, Atribusi, dan Drop-off (Penjual) - DIPERBAIKI -->
             <section id="slide8a" class="slide bg-dots">
                 <div class="slide-header">
@@ -1013,6 +1210,153 @@
                 </div>
             </section>
 
+            <!-- Slide Perhitungan Deadweight (Pengunjung) -->
+            <section id="slide-deadweight-pengunjung" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Perhitungan Deadweight: Perspektif Pengunjung</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="callout callout-info mb-6">
+                        <p class="text-lg text-sky-900">Menghitung nilai deadweight berdasarkan persepsi pengunjung tentang dampak yang akan terjadi tanpa program.</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Data Responden -->
+                        <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                            <h3 class="text-xl font-semibold text-slate-800 mb-4">Data dari Responden</h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between">
+                                    <p class="text-slate-700">Total Dampak Kotor Tahunan:</p>
+                                    <p class="font-bold text-slate-800">Rp 295.200</p>
+                                </div>
+                                <div class="flex justify-between">
+                                    <p class="text-slate-700">Rata-rata Persentase Deadweight:</p>
+                                    <p class="font-bold text-slate-800">52%</p>
+                                </div>
+                                <div class="flex justify-between">
+                                    <p class="text-slate-700">Jumlah Responden:</p>
+                                    <p class="font-bold text-slate-800">18</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Perhitungan -->
+                        <div class="bg-amber-50 p-6 rounded-lg border-t-4 border-amber-500">
+                            <h3 class="text-xl font-semibold text-amber-800 mb-4">Perhitungan Deadweight</h3>
+                            <div class="space-y-3">
+                                <p class="text-slate-700">Formula: Total Dampak Kotor × Persentase Deadweight</p>
+                                <div class="bg-white p-4 rounded border border-amber-200">
+                                    <p class="text-slate-700">Rp 295.200 × 52%</p>
+                                    <p class="text-2xl font-bold text-amber-700">Rp 153.504</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 bg-amber-100 p-4 rounded-lg">
+                        <p class="text-lg text-amber-800">Nilai deadweight untuk pengunjung adalah <span class="font-bold">Rp 153.504</span>, yang akan dikurangkan dari total dampak kotor.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide Perhitungan Attribution (Pengunjung) -->
+            <section id="slide-attribution-pengunjung" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Perhitungan Attribution: Perspektif Pengunjung</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="callout callout-info mb-6">
+                        <p class="text-lg text-sky-900">Menghitung nilai atribusi berdasarkan persepsi pengunjung tentang kontribusi pihak lain terhadap dampak.</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Data Responden -->
+                        <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                            <h3 class="text-xl font-semibold text-slate-800 mb-4">Data dari Responden</h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between">
+                                    <p class="text-slate-700">Total Dampak Kotor Tahunan:</p>
+                                    <p class="font-bold text-slate-800">Rp 295.200</p>
+                                </div>
+                                <div class="flex justify-between">
+                                    <p class="text-slate-700">Rata-rata Persentase Atribusi:</p>
+                                    <p class="font-bold text-slate-800">56%</p>
+                                </div>
+                                <div class="flex justify-between">
+                                    <p class="text-slate-700">Jumlah Responden:</p>
+                                    <p class="font-bold text-slate-800">18</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Perhitungan -->
+                        <div class="bg-sky-50 p-6 rounded-lg border-t-4 border-sky-500">
+                            <h3 class="text-xl font-semibold text-sky-800 mb-4">Perhitungan Attribution</h3>
+                            <div class="space-y-3">
+                                <p class="text-slate-700">Formula: Total Dampak Kotor × Persentase Atribusi</p>
+                                <div class="bg-white p-4 rounded border border-sky-200">
+                                    <p class="text-slate-700">Rp 295.200 × 56%</p>
+                                    <p class="text-2xl font-bold text-sky-700">Rp 165.312</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 bg-sky-100 p-4 rounded-lg">
+                        <p class="text-lg text-sky-800">Nilai atribusi untuk pengunjung adalah <span class="font-bold">Rp 165.312</span>, yang akan dikurangkan dari total dampak kotor.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Slide Perhitungan Drop-off (Pengunjung) -->
+            <section id="slide-dropoff-pengunjung" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Perhitungan Drop-off: Perspektif Pengunjung</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="callout callout-info mb-6">
+                        <p class="text-lg text-sky-900">Menghitung nilai drop-off berdasarkan durasi dampak masih berlaku menurut persepsi pengunjung.</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Data Responden -->
+                        <div class="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                            <h3 class="text-xl font-semibold text-slate-800 mb-4">Data dari Responden</h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between">
+                                    <p class="text-slate-700">Total Dampak Kotor Tahunan:</p>
+                                    <p class="font-bold text-slate-800">Rp 295.200</p>
+                                </div>
+                                <div class="flex justify-between">
+                                    <p class="text-slate-700">Dampak per Bulan:</p>
+                                    <p class="font-bold text-slate-800">Rp 24.600</p>
+                                </div>
+                                <div class="flex justify-between">
+                                    <p class="text-slate-700">Rata-rata Waktu Drop-off:</p>
+                                    <p class="font-bold text-slate-800">14.2 bulan</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Perhitungan -->
+                        <div class="bg-red-50 p-6 rounded-lg border-t-4 border-red-500">
+                            <h3 class="text-xl font-semibold text-red-800 mb-4">Perhitungan Drop-off</h3>
+                            <div class="space-y-3">
+                                <p class="text-slate-700">Formula: Dampak per Bulan × Rata-rata Waktu Drop-off</p>
+                                <div class="bg-white p-4 rounded border border-red-200">
+                                    <p class="text-slate-700">Rp 24.600 × 14.2</p>
+                                    <p class="text-2xl font-bold text-red-700">Rp 349.320</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 bg-red-100 p-4 rounded-lg">
+                        <p class="text-lg text-red-800">Nilai drop-off untuk pengunjung adalah <span class="font-bold">Rp 349.320</span>, yang akan dikurangkan dari total dampak kotor.</p>
+                    </div>
+                </div>
+            </section>
+
             <!-- Slide 9a: Data Kunci: Faktor Eksternal dan Drop-off Pengunjung -->
             <section id="slide9a" class="slide bg-dots">
                 <div class="slide-header">
@@ -1241,6 +1585,71 @@
                             <tr class="bg-slate-200 font-bold"><td class="p-3" colspan="3">Total PV Kumulatif (Pengunjung)</td><td class="p-3 text-red-700">(Rp 893.041)</td></tr>
                         </tbody>
                     </table>
+                </div>
+            </section>
+
+            <!-- Slide Total Perhitungan Deadweight, Attribution, dan Drop-off -->
+            <section id="slide-total-penyesuaian" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Total Perhitungan Deadweight, Attribution, dan Drop-off</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="callout callout-info mb-6">
+                        <p class="text-lg text-sky-900">Menghitung total nilai penyesuaian dari kedua kelompok stakeholder (penjual dan pengunjung).</p>
+                    </div>
+                    
+                    <table class="w-full text-lg text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100">
+                                <th class="p-3">Faktor Penyesuaian</th>
+                                <th class="p-3">Penjual</th>
+                                <th class="p-3">Pengunjung</th>
+                                <th class="p-3">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b">
+                                <td class="p-3 font-semibold">Deadweight</td>
+                                <td class="p-3">Rp 1.638.000.000</td>
+                                <td class="p-3">Rp 153.504</td>
+                                <td class="p-3 font-bold">Rp 1.638.153.504</td>
+                            </tr>
+                            <tr class="border-b">
+                                <td class="p-3 font-semibold">Attribution</td>
+                                <td class="p-3">Rp 2.593.500.000</td>
+                                <td class="p-3">Rp 165.312</td>
+                                <td class="p-3 font-bold">Rp 2.593.665.312</td>
+                            </tr>
+                            <tr class="border-b">
+                                <td class="p-3 font-semibold">Drop-off</td>
+                                <td class="p-3">Rp 3.602.083.333</td>
+                                <td class="p-3">Rp 349.320</td>
+                                <td class="p-3 font-bold">Rp 3.602.432.653</td>
+                            </tr>
+                            <tr class="bg-blue-100 font-bold text-blue-800">
+                                <td class="p-3" colspan="3">Total Penyesuaian</td>
+                                <td class="p-3 text-2xl">Rp 7.834.251.469</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="mt-8 bg-blue-50 border-t-4 border-blue-500 p-6 rounded-lg">
+                        <h3 class="text-xl font-semibold text-blue-800 mb-3">Perhitungan Dampak Bersih</h3>
+                        <div class="grid grid-cols-2 gap-8">
+                            <div>
+                                <p class="text-slate-700">Total Dampak Kotor:</p>
+                                <p class="text-2xl font-bold text-slate-800">Rp 4.550.295.200</p>
+                            </div>
+                            <div>
+                                <p class="text-slate-700">Total Penyesuaian:</p>
+                                <p class="text-2xl font-bold text-red-700">-Rp 7.834.251.469</p>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-center">
+                            <p class="text-slate-700">Dampak Bersih:</p>
+                            <p class="text-4xl font-bold text-red-700">-Rp 3.283.956.269</p>
+                        </div>
+                    </div>
                 </div>
             </section>
 
