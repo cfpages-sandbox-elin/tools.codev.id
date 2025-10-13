@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan SROI & IKM - Program BRI Peduli</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="slide.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* THEME: BRI Corporate Blue */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f4f8; /* Light grey-blue background */
+            color: #1e293b; /* Slate 800 for body text */
+        }
+        #presentation-container {
+            border-color: #e2e8f0; /* Slate 200 border */
+        }
+        .slide {
+            background-color: #ffffff;
+        }
+        .slide-title { 
+            color: #0f172a; /* Slate 900 for titles */
+        }
+        .slide-title::after { 
+            background-color: #0056b3; /* BRI's primary blue */
+        }
+        .title-prefix { 
+            color: #007bff; /* A slightly lighter, vibrant blue */
+        }
+        .nav-arrow, #fullscreen-btn, #download-btn {
+            background-color: rgba(255, 255, 255, 0.7);
+            color: #334155;
+            border-color: rgba(0,0,0,0.05);
+        }
+        .nav-arrow:hover, #fullscreen-btn:hover, #download-btn:hover {
+            background-color: #0056b3;
+            color: white;
+        }
+        #slide-counter {
+            background-color: rgba(15, 23, 42, 0.8);
+            color: #e2e8f0;
+        }
+        .content-list li > i {
+            color: #0056b3;
+        }
+        /* Chart Theme */
+        .css-chart-container {
+            background-color: #f8fafc;
+            border-color: #e2e8f0;
+        }
+        .chart-bar { background-color: #007bff; }
+        .chart-bar:nth-child(2), .chart-bar:nth-child(4) { background-color: #0056b3; }
+        .chart-arrow { color: #0056b3; }
+
+        /* Theme Variables for CSS libraries */
+        :root {
+            --theme-pattern-color: #0056b3;
+            --theme-pattern-color-light: #6ea8ff;
+            --callout-info-bg: #eef6ff;
+            --callout-info-border: #007bff;
+            --callout-success-bg: #f0fdf4;
+            --callout-success-border: #22c55e;
+            --callout-warning-bg: #fffbeb;
+            --callout-warning-border: #f59e0b;
+            --callout-danger-bg: #fef2f2;
+            --callout-danger-border: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <div id="presentation-wrapper">
+        <div id="presentation-container">
+            <!-- Navigation will be handled by slide.js -->
+            <div class="nav-arrow" id="prev-slide"><i class="fas fa-chevron-left"></i></div>
+            <div class="nav-arrow" id="next-slide"><i class="fas fa-chevron-right"></i></div>
+            <div id="slide-counter">1 / 3</div>
+            <div id="fullscreen-btn" title="Toggle Fullscreen"><i class="fas fa-expand"></i></div>
+            <div id="download-btn" title="Download as PDF"><i class="fas fa-download"></i></div>
+            
+            <!-- SLIDES START HERE -->
+
+            <!-- BAGIAN 1 - SLIDE 1: Judul Presentasi -->
+            <section id="slide1" class="slide active bg-dots">
+                <div class="h-full w-full flex flex-col justify-center items-center text-center p-10" style="background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(240, 244, 248, 1) 100%);">
+                    <div class="flex items-center gap-8 mb-8">
+                        <!-- Note: Added Danantara Logo -->
+                        <img src="/img/logo-danantara.png" alt="Danantara Logo" class="h-14">
+                        <img src="/img/logo-bri.png" alt="BRI Logo" class="h-16">
+                        <img src="/img/logo-unair-biru.png" alt="UNAIR Logo" class="h-20">
+                    </div>
+                    <p class="text-xl font-medium text-slate-600 mb-2">Laporan Hasil Penilaian Dampak</p>
+                    <h1 class="text-5xl font-bold text-slate-900 tracking-tight leading-tight">Social Return on Investment (SROI) &<br>Indeks Kepuasan Masyarakat (IKM)</h1>
+                    <p class="text-2xl font-normal text-slate-700 mt-4">Portofolio Program TJSL BRI Peduli (JAWA)</p>
+                    
+                    <div class="mt-12 border-t border-slate-300 pt-6 w-full max-w-3xl">
+                        <p class="text-slate-500 text-md mb-1">Disusun oleh:</p>
+                        <p class="text-slate-800 text-lg font-semibold">Laboratorium Pengembangan Manajemen dan Bisnis (LPMB) FEB Universitas Airlangga</p>
+                        <p class="text-slate-500 text-md mt-4">September 2025</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BAGIAN 1 - SLIDE 2: Ringkasan Eksekutif -->
+            <section id="slide2" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Ringkasan Eksekutif: Puncak Temuan</h2>
+                </div>
+                <div class="slide-content flex flex-col justify-center">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        
+                        <!-- Kinerja Dampak -->
+                        <div class="callout callout-success">
+                             <div class="flex items-start gap-4">
+                                <i class="fas fa-rocket text-5xl text-green-600 w-12 text-center"></i>
+                                <div>
+                                    <h3 class="text-2xl font-bold text-green-800">Kinerja Dampak Luar Biasa</h3>
+                                    <p class="text-lg text-slate-700 mt-2">Lima dari enam program menghasilkan **SROI positif**, dengan rasio efisiensi mencapai hingga **18,22:1**, membuktikan TJSL adalah investasi strategis.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Kualitas Eksekusi -->
+                        <div class="callout callout-success">
+                            <div class="flex items-start gap-4">
+                                <i class="fas fa-award text-5xl text-green-600 w-12 text-center"></i>
+                                <div>
+                                    <h3 class="text-2xl font-bold text-green-800">Kualitas Eksekusi Sangat Baik</h3>
+                                    <p class="text-lg text-slate-700 mt-2">Skor IKM gabungan portofolio mencapai **91,58** (Kategori A), menunjukkan kualitas pelaksanaan program yang konsisten dan sangat memuaskan di lapangan.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dua Model Sukses -->
+                        <div class="callout callout-info">
+                            <div class="flex items-start gap-4">
+                                <i class="fas fa-sitemap text-5xl text-sky-600 w-12 text-center"></i>
+                                <div>
+                                    <h3 class="text-2xl font-bold text-sky-800">Dua Model Sukses Teridentifikasi</h3>
+                                    <p class="text-lg text-slate-700 mt-2">Ditemukan dua model utama: **"Akselerator Ekosistem"** (SROI tinggi) dan **"Transformasi Individu"** (Dampak Absolut terbesar).</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bukti Kuantitatif -->
+                        <div class="callout callout-info">
+                           <div class="flex items-start gap-4">
+                                <i class="fas fa-chart-pie text-5xl text-sky-600 w-12 text-center"></i>
+                                <div>
+                                    <h3 class="text-2xl font-bold text-sky-800">Bukti Kuantitatif "Memberi Makna"</h3>
+                                    <p class="text-lg text-slate-700 mt-2">Analisis SROI memberikan data yang kuat dan terukur untuk mendukung narasi korporat BRI **"Memberi Makna Indonesia"**.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BAGIAN 1 - SLIDE 3: Memahami Metrik -->
+            <section id="slide3" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Memahami Metrik Kami: SROI & IKM</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                        
+                        <!-- SROI Explanation -->
+                        <div class="bg-blue-50 p-8 rounded-lg border-t-4 border-blue-500">
+                            <div class="text-center mb-6">
+                                <h3 class="text-3xl font-bold text-blue-800">SROI</h3>
+                                <p class="text-lg text-slate-600">Social Return on Investment</p>
+                            </div>
+                            <div class="flex items-center justify-center gap-4 text-center">
+                                <div class="w-24">
+                                    <i class="fas fa-coins text-5xl text-blue-600"></i>
+                                    <p class="mt-2 font-semibold">Rp 1<br>Investasi</p>
+                                </div>
+                                <i class="fas fa-arrow-right-long text-4xl text-slate-400"></i>
+                                <div class="w-24">
+                                    <i class="fas fa-hand-holding-dollar text-5xl text-green-600"></i>
+                                    <p class="mt-2 font-semibold">Rp X<br>Nilai Dampak</p>
+                                </div>
+                            </div>
+                            <p class="mt-6 text-center text-lg text-slate-700">**Menjawab:** "Seberapa efisien investasi sosial kita dalam menciptakan nilai sosial dan ekonomi?"</p>
+                        </div>
+                        
+                        <!-- IKM Explanation -->
+                        <div class="bg-slate-50 p-8 rounded-lg border-t-4 border-slate-500">
+                             <div class="text-center mb-6">
+                                <h3 class="text-3xl font-bold text-slate-800">IKM</h3>
+                                <p class="text-lg text-slate-600">Indeks Kepuasan Masyarakat</p>
+                            </div>
+                            <div class="flex justify-between items-end text-center h-24">
+                                <div class="text-red-500"><i class="far fa-frown text-4xl"></i><p>D</p></div>
+                                <div class="text-amber-500"><i class="far fa-meh text-4xl"></i><p>C</p></div>
+                                <div class="text-sky-500"><i class="far fa-smile text-4xl"></i><p>B</p></div>
+                                <div class="text-green-500"><i class="far fa-laugh-beam text-4xl"></i><p>A</p></div>
+                            </div>
+                             <div class="w-full bg-slate-200 h-2 rounded-full mt-2">
+                                <div class="bg-gradient-to-r from-red-500 via-sky-500 to-green-500 h-2 rounded-full"></div>
+                            </div>
+                            <p class="mt-6 text-center text-lg text-slate-700">**Menjawab:** "Seberapa baik kualitas pelaksanaan program kita dari sudut pandang penerima manfaat?"</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BAGIAN 2 - SLIDE 4: Peta Kinerja Dampak (SROI Antar Program) -->
+            <section id="slide4" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Peta Kinerja Dampak: SROI Antar Program</h2>
+                </div>
+                <div class="slide-content">
+                    <p class="text-center text-slate-600 text-lg mb-6">Rasio yang menunjukkan nilai sosial-ekonomi yang dihasilkan untuk setiap Rp 1 investasi.</p>
+                    <div class="w-full max-w-5xl mx-auto space-y-4">
+                        <!-- Program 1: Pasar Gentan -->
+                        <div class="flex items-center gap-4">
+                            <p class="w-64 text-slate-700 font-medium text-right">Pasar Gentan, Sleman</p>
+                            <div class="flex-1 bg-blue-100 rounded-lg h-12">
+                                <div class="bg-blue-600 h-12 rounded-lg text-white flex items-center justify-between px-4 font-bold text-xl" style="width: 100%;">
+                                    <span><i class="fas fa-rocket mr-2"></i>18,22 : 1</span>
+                                    <span>Sangat Efisien</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Program 2: Pelatihan Ekspor -->
+                        <div class="flex items-center gap-4">
+                            <p class="w-64 text-slate-700 font-medium text-right">Pelatihan Ekspor, Jakarta</p>
+                            <div class="flex-1 bg-blue-100 rounded-lg h-12">
+                                <div class="bg-blue-600 h-12 rounded-lg text-white flex items-center justify-between px-4 font-bold text-xl" style="width: 77.6%;">
+                                    <span><i class="fas fa-globe-americas mr-2"></i>14,15 : 1</span>
+                                    <span>Sangat Efisien</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Program 3: Kya-Kya -->
+                        <div class="flex items-center gap-4">
+                            <p class="w-64 text-slate-700 font-medium text-right">Wisata Kya-Kya, Surabaya</p>
+                            <div class="flex-1 bg-sky-100 rounded-lg h-12">
+                                <div class="bg-sky-500 h-12 rounded-lg text-white flex items-center justify-between px-4 font-bold text-xl" style="width: 24.1%;">
+                                    <span>4,39 : 1</span>
+                                    <span>Solid</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Program 4: Alat Membatik -->
+                        <div class="flex items-center gap-4">
+                            <p class="w-64 text-slate-700 font-medium text-right">Alat Membatik, Blitar</p>
+                            <div class="flex-1 bg-sky-100 rounded-lg h-12">
+                                <div class="bg-sky-500 h-12 rounded-lg text-white flex items-center justify-between px-4 font-bold text-xl" style="width: 21.5%;">
+                                    <span>3,92 : 1</span>
+                                    <span>Solid</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Program 5: Pelatihan Disabilitas -->
+                        <div class="flex items-center gap-4">
+                            <p class="w-64 text-slate-700 font-medium text-right">Pelatihan Disabilitas, Jakarta</p>
+                            <div class="flex-1 bg-slate-200 rounded-lg h-12">
+                                <div class="bg-slate-500 h-12 rounded-lg text-white flex items-center justify-between px-4 font-bold text-xl" style="width: 7.2%;">
+                                    <span>1,32 : 1</span>
+                                    <span>Positif</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="callout callout-info mt-8">
+                        <p class="text-lg text-sky-900"><i class="fas fa-lightbulb mr-2"></i>**Insight:** Program yang berfokus pada penghapusan *bottleneck* kritis dalam sebuah ekosistem (seperti infrastruktur pasar atau akses pengetahuan ekspor) menunjukkan daya ungkit (leverage) finansial yang tertinggi.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- BAGIAN 2 - SLIDE 5: Peta Kualitas Eksekusi (IKM Antar Program) -->
+            <section id="slide5" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Peta Kualitas Eksekusi: IKM Antar Program</h2>
+                </div>
+                <div class="slide-content">
+                    <p class="text-center text-slate-600 text-lg mb-6">Skor kepuasan penerima manfaat (skala 100), di mana >88.31 adalah "Sangat Baik".</p>
+                    <div class="w-full max-w-5xl mx-auto space-y-4">
+                        <!-- Program 1: Alat Membatik -->
+                        <div class="flex items-center gap-4">
+                            <p class="w-64 text-slate-700 font-medium text-right">Alat Membatik, Blitar</p>
+                            <div class="flex-1 bg-green-100 rounded-lg h-12">
+                                <div class="bg-green-600 h-12 rounded-lg text-white flex items-center justify-between px-4 font-bold text-xl" style="width: 97.78%;">
+                                    <span><i class="fas fa-award mr-2"></i>97,78</span>
+                                    <span>Sangat Baik</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Program 2: Pengelolaan Kopi -->
+                        <div class="flex items-center gap-4">
+                            <p class="w-64 text-slate-700 font-medium text-right">Pengelolaan Kopi, Banyuwangi</p>
+                            <div class="flex-1 bg-green-100 rounded-lg h-12">
+                                <div class="bg-green-600 h-12 rounded-lg text-white flex items-center justify-between px-4 font-bold text-xl" style="width: 94.76%;">
+                                    <span>94,76</span>
+                                    <span>Sangat Baik</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Program 3: Pelatihan Disabilitas -->
+                        <div class="flex items-center gap-4">
+                            <p class="w-64 text-slate-700 font-medium text-right">Pelatihan Disabilitas, Jakarta</p>
+                            <div class="flex-1 bg-green-100 rounded-lg h-12">
+                                <div class="bg-green-600 h-12 rounded-lg text-white flex items-center justify-between px-4 font-bold text-xl" style="width: 91.85%;">
+                                    <span>91,85</span>
+                                    <span>Sangat Baik</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Program 4: Pasar Gentan -->
+                        <div class="flex items-center gap-4">
+                            <p class="w-64 text-slate-700 font-medium text-right">Pasar Gentan, Sleman</p>
+                            <div class="flex-1 bg-green-100 rounded-lg h-12">
+                                <div class="bg-green-600 h-12 rounded-lg text-white flex items-center justify-between px-4 font-bold text-xl" style="width: 90.57%;">
+                                    <span>90,57</span>
+                                    <span>Sangat Baik</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Program 5: Kya-Kya -->
+                        <div class="flex items-center gap-4">
+                            <p class="w-64 text-slate-700 font-medium text-right">Wisata Kya-Kya, Surabaya</p>
+                            <div class="flex-1 bg-green-100 rounded-lg h-12">
+                                <div class="bg-green-600 h-12 rounded-lg text-white flex items-center justify-between px-4 font-bold text-xl" style="width: 88.66%;">
+                                    <span>88,66</span>
+                                    <span>Sangat Baik</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Program 6: Pelatihan Ekspor -->
+                        <div class="flex items-center gap-4">
+                            <p class="w-64 text-slate-700 font-medium text-right">Pelatihan Ekspor, Jakarta</p>
+                            <div class="flex-1 bg-sky-100 rounded-lg h-12">
+                                <div class="bg-sky-600 h-12 rounded-lg text-white flex items-center justify-between px-4 font-bold text-xl" style="width: 85.83%;">
+                                    <span>85,83</span>
+                                    <span>Baik</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                     <div class="callout callout-success mt-8">
+                        <p class="text-lg text-green-900"><i class="fas fa-lightbulb mr-2"></i>**Insight:** Semua program dieksekusi dengan sangat baik, menunjukkan konsistensi kualitas operasional yang tinggi. Program dengan intervensi paling konkret dan terfokus (Bantuan Alat) cenderung mendapatkan skor kepuasan tertinggi.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- BAGIAN 2 - SLIDE 6: Tiga Model Keberhasilan TJSL -->
+            <section id="slide6" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Analisis Strategis: Tiga Model Keberhasilan TJSL</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <!-- Model 1 -->
+                        <div class="bg-blue-50 p-6 rounded-lg border-t-4 border-blue-600 h-full flex flex-col">
+                            <h3 class="text-2xl font-bold text-blue-800">I. Akselerator Ekosistem</h3>
+                            <p class="text-slate-600 text-lg mt-2">Menghilangkan satu *bottleneck* kritis dalam ekosistem yang sudah ada.</p>
+                            <div class="mt-4">
+                                <span class="bg-blue-200 text-blue-800 font-semibold px-3 py-1 rounded-full">SROI Sangat Tinggi</span>
+                                <span class="bg-green-200 text-green-800 font-semibold px-3 py-1 rounded-full">Efek Berganda</span>
+                            </div>
+                            <div class="mt-auto pt-4">
+                                <p class="font-semibold text-slate-700">Contoh Program:</p>
+                                <p class="text-slate-600"><i class="fas fa-check-circle text-blue-500 mr-2"></i>Pasar Gentan (18,22:1)</p>
+                                <p class="text-slate-600"><i class="fas fa-check-circle text-blue-500 mr-2"></i>Pelatihan Ekspor (14,15:1)</p>
+                            </div>
+                        </div>
+                        <!-- Model 2 -->
+                        <div class="bg-sky-50 p-6 rounded-lg border-t-4 border-sky-600 h-full flex flex-col">
+                            <h3 class="text-2xl font-bold text-sky-800">II. Katalisator Pemberdayaan</h3>
+                            <p class="text-slate-600 text-lg mt-2">Menyediakan aset produktif atau fasilitas untuk komunitas yang terdefinisi.</p>
+                            <div class="mt-4">
+                                <span class="bg-sky-200 text-sky-800 font-semibold px-3 py-1 rounded-full">SROI Solid</span>
+                                <span class="bg-green-200 text-green-800 font-semibold px-3 py-1 rounded-full">Dampak Komunal</span>
+                            </div>
+                             <div class="mt-auto pt-4">
+                                <p class="font-semibold text-slate-700">Contoh Program:</p>
+                                <p class="text-slate-600"><i class="fas fa-check-circle text-sky-500 mr-2"></i>Wisata Kya-Kya (4,39:1)</p>
+                                <p class="text-slate-600"><i class="fas fa-check-circle text-sky-500 mr-2"></i>Alat Membatik (3,92:1)</p>
+                            </div>
+                        </div>
+                        <!-- Model 3 -->
+                        <div class="bg-slate-50 p-6 rounded-lg border-t-4 border-slate-600 h-full flex flex-col">
+                            <h3 class="text-2xl font-bold text-slate-800">III. Transformasi Individu</h3>
+                            <p class="text-slate-600 text-lg mt-2">Investasi intensif untuk mengubah lintasan hidup individu dalam konteks yang sulit.</p>
+                            <div class="mt-4">
+                                <span class="bg-slate-200 text-slate-800 font-semibold px-3 py-1 rounded-full">SROI Moderat</span>
+                                <span class="bg-green-200 text-green-800 font-semibold px-3 py-1 rounded-full">Dampak Absolut Tinggi</span>
+                            </div>
+                             <div class="mt-auto pt-4">
+                                <p class="font-semibold text-slate-700">Contoh Program:</p>
+                                <p class="text-slate-600"><i class="fas fa-check-circle text-slate-500 mr-2"></i>Pelatihan Disabilitas (1,32:1)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- BAGIAN 2 - SLIDE 7: Pembelajaran Kunci Lintas Program -->
+            <section id="slide7" class="slide bg-dots">
+                <div class="slide-header">
+                    <h2 class="slide-title">Pembelajaran Kunci Lintas Program</h2>
+                </div>
+                <div class="slide-content">
+                    <ul class="content-list space-y-6">
+                        <li>
+                            <i class="fas fa-bullseye fa-2x w-8 text-center text-blue-600"></i>
+                            <div>
+                                <h3 class="text-2xl font-semibold text-slate-800">Intervensi "Kecil & Tepat Sasaran" Menciptakan Dampak Masif</h3>
+                                <p class="text-slate-600 text-lg">Program dengan investasi terkecil (Pasar Gentan, Pelatihan Ekspor) justru menghasilkan SROI tertinggi. Kuncinya bukan "berapa banyak" dana, melainkan "seberapa tepat" intervensi dalam mengatasi *bottleneck* krusial.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-users-gear fa-2x w-8 text-center text-blue-600"></i>
+                            <div>
+                                <h3 class="text-2xl font-semibold text-slate-800">Kualitas Eksekusi di Lapangan adalah Pembeda Utama</h3>
+                                <p class="text-slate-600 text-lg">Skor IKM yang konsisten tinggi, terutama pada unsur "Sikap Tim Pelaksana", membuktikan bahwa faktor manusia (tim BRI & mitra yang profesional dan empatik) adalah fondasi keberhasilan program dan kepuasan penerima manfaat.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-sitemap fa-2x w-8 text-center text-blue-600"></i>
+                            <div>
+                                <h3 class="text-2xl font-semibold text-slate-800">Ukur Dampak Ekosistem, Bukan Hanya Penerima Langsung</h3>
+                                <p class="text-slate-600 text-lg">Nilai dampak terbesar seringkali datang dari *multiplier effect* kepada stakeholder sekunder (pemasok, pengunjung, pekerja informal). Analisis yang hanya berfokus pada penerima manfaat langsung akan meremehkan nilai sejati dari investasi sosial.</p>
+                            </div>
+                        </li>
+                         <li>
+                            <i class="fas fa-handshake fa-2x w-8 text-center text-blue-600"></i>
+                            <div>
+                                <h3 class="text-2xl font-semibold text-slate-800">Sinergi dengan Mitra Lokal adalah Kunci Keberlanjutan</h3>
+                                <p class="text-slate-600 text-lg">Program yang paling berhasil (Pasar Gentan, Kya-Kya) adalah yang dijalankan dalam kemitraan erat dengan pemerintah daerah atau komunitas lokal, memastikan relevansi dan keberlanjutan pasca-program.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- BAGIAN 3.A - SLIDE 8: Profil & Investasi Pasar Gentan -->
+            <section id="slide8" class="slide bg-dots">
+                <div class="slide-header">
+                    <p class="title-prefix">Studi Kasus #1: Efisiensi Tertinggi</p>
+                    <h2 class="slide-title">Program Revitalisasi Sarana Pasar Gentan, Sleman</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                        <!-- Kolom Kiri: Konteks -->
+                        <div>
+                            <div class="flex items-center gap-3 mb-4">
+                                <i class="fas fa-question-circle text-3xl text-blue-600"></i>
+                                <h3 class="text-2xl font-semibold text-slate-800">Tantangan & Intervensi</h3>
+                            </div>
+                            <p class="text-slate-600 text-lg leading-relaxed mb-4">
+                                **Tantangan:** Pasar Gentan kalah saing dengan pasar modern karena fasilitas yang kurang nyaman (panas, minim penerangan) dan kurang profesional.
+                            </p>
+                            <p class="text-slate-600 text-lg leading-relaxed">
+                                **Intervensi BRI:** Memberikan bantuan aset terfokus pada dua area kunci:
+                            </p>
+                            <ul class="content-list mt-4 space-y-2">
+                                <li><i class="fas fa-fan"></i>**Kenyamanan:** Kipas angin, kursi tunggu, troli belanja.</li>
+                                <li><i class="fas fa-sign"></i>**Profesionalisme:** Papan nama pedagang, papan denah, sound system.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Kolom Kanan: Investasi -->
+                        <div class="bg-blue-600 text-white p-8 rounded-lg flex flex-col justify-center text-center shadow-2xl">
+                            <h3 class="text-2xl font-semibold opacity-80">Total Investasi</h3>
+                            <p class="text-7xl font-bold tracking-tight my-2">Rp 117,3 Juta</p>
+                            <p class="text-blue-100 mt-2">Investasi yang relatif kecil, ditargetkan untuk mengatasi *bottleneck* paling krusial di ekosistem pasar.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- BAGIAN 3.A - SLIDE 9: Hasil Dampak (SROI) Pasar Gentan -->
+            <section id="slide9" class="slide bg-dots">
+                <div class="slide-header">
+                     <p class="title-prefix">Studi Kasus #1: Pasar Gentan</p>
+                    <h2 class="slide-title">Hasil Dampak (SROI): Efisiensi Luar Biasa</h2>
+                </div>
+                <div class="slide-content flex items-center justify-center">
+                    <div class="w-full max-w-4xl text-center">
+                        <div class="bg-blue-50 border-t-4 border-blue-500 p-8 rounded-lg shadow-lg">
+                            <p class="text-2xl font-semibold text-blue-800">Rasio SROI (5 Tahun)</p>
+                            <p class="text-9xl font-bold text-blue-700 my-2 tracking-tighter">18,22 : 1</p>
+                            <p class="text-xl text-slate-700 max-w-3xl mx-auto">Setiap **Rp 1** yang diinvestasikan berhasil menciptakan nilai sosial dan ekonomi sebesar **Rp 18,22** bagi seluruh ekosistem pasar.</p>
+                        </div>
+                        
+                        <h3 class="text-2xl font-semibold text-slate-800 mt-8 mb-4">Pendorong Nilai Utama (Key Value Drivers)</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="bg-slate-50 p-4 rounded-lg">
+                                <p class="text-lg font-bold text-slate-700">1. Peningkatan Kenyamanan Pengunjung</p>
+                                <p class="text-slate-600">Menyumbang nilai terbesar, membuktikan investasi pada *customer experience* sangat berdampak.</p>
+                            </div>
+                             <div class="bg-slate-50 p-4 rounded-lg">
+                                <p class="text-lg font-bold text-slate-700">2. Multiplier Effect ke Pemasok</p>
+                                <p class="text-slate-600">Peningkatan omzet pedagang mengalir ke hulu, menghidupkan rantai pasok lokal.</p>
+                            </div>
+                             <div class="bg-slate-50 p-4 rounded-lg">
+                                <p class="text-lg font-bold text-slate-700">3. Peningkatan Profit Pedagang</p>
+                                <p class="text-slate-600">Dampak ekonomi langsung yang signifikan bagi penerima manfaat utama.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BAGIAN 3.A - SLIDE 10: Kualitas Eksekusi (IKM) Pasar Gentan -->
+            <section id="slide10" class="slide bg-dots">
+                <div class="slide-header">
+                     <p class="title-prefix">Studi Kasus #1: Pasar Gentan</p>
+                    <h2 class="slide-title">Kualitas Eksekusi (IKM): Kepuasan 360°</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                        <!-- IKM Gabungan -->
+                        <div class="col-span-1 bg-green-500 text-white p-6 rounded-lg flex flex-col justify-center items-center text-center">
+                             <p class="text-xl font-semibold">IKM Gabungan</p>
+                             <p class="text-8xl font-bold">90,57</p>
+                             <p class="text-2xl font-semibold bg-white/20 px-3 py-1 rounded-full">SANGAT BAIK</p>
+                        </div>
+                        
+                        <!-- Analisis per Stakeholder -->
+                        <div class="col-span-3">
+                            <h3 class="text-2xl font-semibold text-slate-800 mb-4">Skor Kepuasan per Kelompok Stakeholder</h3>
+                             <div class="space-y-4">
+                                <!-- Paguyuban -->
+                                <div class="flex items-center gap-4">
+                                    <p class="w-32 text-slate-600 font-medium text-right">Paguyuban</p>
+                                    <div class="flex-1 bg-green-100 rounded-full h-10"><div class="bg-green-600 h-10 rounded-full text-white flex items-center justify-between px-3 font-semibold" style="width: 99.07%;"><span>99,07</span><i class="fas fa-star"></i></div></div>
+                                </div>
+                                <!-- Pembeli -->
+                                <div class="flex items-center gap-4">
+                                    <p class="w-32 text-slate-600 font-medium text-right">Pembeli</p>
+                                    <div class="flex-1 bg-green-100 rounded-full h-10"><div class="bg-green-600 h-10 rounded-full text-white flex items-center justify-between px-3 font-semibold" style="width: 93.33%;"><span>93,33</span><i class="fas fa-star"></i></div></div>
+                                </div>
+                                <!-- Pedagang -->
+                                <div class="flex items-center gap-4">
+                                    <p class="w-32 text-slate-600 font-medium text-right">Pedagang</p>
+                                    <div class="flex-1 bg-green-100 rounded-full h-10"><div class="bg-green-600 h-10 rounded-full text-white flex items-center justify-between px-3 font-semibold" style="width: 88.18%;"><span>88,18</span><i class="fas fa-star"></i></div></div>
+                                </div>
+                            </div>
+                             <p class="text-slate-600 italic mt-6">**Temuan:** Kepuasan sangat tinggi di semua lini, terutama dari **Paguyuban** yang merasa proses koordinasi jauh lebih mudah, dan **Pembeli** yang merasakan langsung peningkatan kenyamanan.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- BAGIAN 3.A - SLIDE 11: Kesimpulan & Pembelajaran Pasar Gentan -->
+            <section id="slide11" class="slide bg-dots">
+                <div class="slide-header">
+                     <p class="title-prefix">Studi Kasus #1: Pasar Gentan</p>
+                    <h2 class="slide-title">Kesimpulan & Pembelajaran Kunci</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="callout callout-success">
+                         <h3 class="text-2xl font-bold text-green-800">Model "Akselerator Ekosistem" Sangat Berhasil</h3>
+                         <p class="text-lg text-slate-700 mt-2">Program ini adalah contoh sempurna bagaimana investasi yang relatif kecil, jika ditempatkan pada titik simpul ekonomi yang tepat (pasar tradisional), dapat melepaskan nilai sosial dan ekonomi yang terpendam dalam skala besar.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+                        <div>
+                            <h4 class="text-xl font-semibold text-slate-800 mb-3"><i class="fas fa-lightbulb text-blue-600 mr-2"></i>Pembelajaran #1</h4>
+                            <p class="text-lg text-slate-600">Fokus pada **pengalaman pelanggan (pengunjung)** adalah pendorong nilai sosial yang sangat kuat dan secara tidak langsung menciptakan nilai ekonomi terbesar.</p>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-semibold text-slate-800 mb-3"><i class="fas fa-lightbulb text-blue-600 mr-2"></i>Pembelajaran #2</h4>
+                             <p class="text-lg text-slate-600">Model ini sangat efisien dan memiliki potensi replikasi yang tinggi. Program **"Revitalisasi Pasar Rakyat"** dapat menjadi program unggulan tematik TJSL BRI secara nasional.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BAGIAN 3.B - SLIDE 12: Profil & Investasi Pelatihan Ekspor -->
+            <section id="slide12" class="slide bg-dots">
+                <div class="slide-header">
+                    <p class="title-prefix">Studi Kasus #2: Efisiensi Tinggi</p>
+                    <h2 class="slide-title">Program Pelatihan & Sertifikasi Ekspor, Jakarta</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                        <!-- Kolom Kiri: Konteks -->
+                        <div>
+                            <div class="flex items-center gap-3 mb-4">
+                                <i class="fas fa-lock text-3xl text-blue-600"></i>
+                                <h3 class="text-2xl font-semibold text-slate-800">Tantangan & Intervensi</h3>
+                            </div>
+                            <p class="text-slate-600 text-lg leading-relaxed mb-4">
+                                **Tantangan:** Banyak UMK memiliki produk berkualitas, namun "terkunci" di pasar domestik karena kurangnya pengetahuan prosedur ekspor dan kredibilitas (sertifikasi).
+                            </p>
+                            <p class="text-slate-600 text-lg leading-relaxed">
+                                **Intervensi BRI:** Memberikan "kunci" untuk membuka pasar global melalui:
+                            </p>
+                            <ul class="content-list mt-4 space-y-2">
+                                <li><i class="fas fa-book-open"></i>**Modal Pengetahuan:** Pelatihan daring intensif mengenai standardisasi, logistik, dan pemasaran ekspor.</li>
+                                <li><i class="fas fa-certificate"></i>**Modal Kredibilitas:** Fasilitasi untuk mendapatkan sertifikasi produk yang diakui secara internasional.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Kolom Kanan: Investasi -->
+                        <div class="bg-blue-600 text-white p-8 rounded-lg flex flex-col justify-center text-center shadow-2xl">
+                            <h3 class="text-2xl font-semibold opacity-80">Total Investasi</h3>
+                            <p class="text-7xl font-bold tracking-tight my-2">Rp 90 Juta</p>
+                            <p class="text-blue-100 mt-2">Investasi yang sangat terfokus pada aset tak berwujud (pengetahuan & sertifikasi) untuk 30 peserta UMK.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- BAGIAN 3.B - SLIDE 13: Hasil Dampak (SROI) Pelatihan Ekspor -->
+            <section id="slide13" class="slide bg-dots">
+                <div class="slide-header">
+                     <p class="title-prefix">Studi Kasus #2: Pelatihan Ekspor</p>
+                    <h2 class="slide-title">Hasil Dampak (SROI): Leverage Luar Biasa</h2>
+                </div>
+                <div class="slide-content flex items-center justify-center">
+                    <div class="w-full max-w-4xl text-center">
+                        <div class="bg-blue-50 border-t-4 border-blue-500 p-8 rounded-lg shadow-lg">
+                            <p class="text-2xl font-semibold text-blue-800">Rasio SROI (5 Tahun)</p>
+                            <p class="text-9xl font-bold text-blue-700 my-2 tracking-tighter">14,15 : 1</p>
+                            <p class="text-xl text-slate-700 max-w-3xl mx-auto">Setiap **Rp 1** yang diinvestasikan pada pengetahuan ekspor berhasil membuka nilai ekonomi sebesar **Rp 14,15**.</p>
+                        </div>
+                        
+                        <h3 class="text-2xl font-semibold text-slate-800 mt-8 mb-4">Pendorong Nilai Utama (Key Value Drivers)</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="bg-slate-50 p-4 rounded-lg">
+                                <p class="text-lg font-bold text-slate-700">1. Peningkatan Profit UMK</p>
+                                <p class="text-slate-600">Keberhasilan beberapa alumni menembus pasar ekspor dengan volume besar menjadi pendorong utama.</p>
+                            </div>
+                             <div class="bg-slate-50 p-4 rounded-lg">
+                                <p class="text-lg font-bold text-slate-700">2. Multiplier Effect ke Pemasok</p>
+                                <p class="text-slate-600">Peningkatan produksi UMK ekspor secara langsung meningkatkan pesanan ke pemasok bahan baku lokal.</p>
+                            </div>
+                             <div class="bg-slate-50 p-4 rounded-lg">
+                                <p class="text-lg font-bold text-slate-700">3. Kontribusi Ekonomi Nasional</p>
+                                <p class="text-slate-600">Peningkatan devisa negara dan penerimaan pajak menjadi kontributor nilai yang signifikan di tingkat makro.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BAGIAN 3.B - SLIDE 14: Kualitas Eksekusi (IKM) Pelatihan Ekspor -->
+            <section id="slide14" class="slide bg-dots">
+                <div class="slide-header">
+                     <p class="title-prefix">Studi Kasus #2: Pelatihan Ekspor</p>
+                    <h2 class="slide-title">Kualitas Eksekusi (IKM): Berhasil Namun Menantang</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                        <!-- IKM Gabungan -->
+                        <div class="col-span-1 bg-sky-500 text-white p-6 rounded-lg flex flex-col justify-center items-center text-center">
+                             <p class="text-xl font-semibold">IKM Gabungan</p>
+                             <p class="text-8xl font-bold">85,83</p>
+                             <p class="text-2xl font-semibold bg-white/20 px-3 py-1 rounded-full">BAIK</p>
+                        </div>
+                        
+                        <!-- Analisis per Unsur -->
+                        <div class="col-span-3">
+                            <h3 class="text-2xl font-semibold text-slate-800 mb-4">Analisis Unsur Pelayanan</h3>
+                            <div class="space-y-4">
+                                <div class="callout callout-success">
+                                    <h4 class="font-bold text-green-800">Kekuatan Utama <i class="fas fa-arrow-up"></i></h4>
+                                    <p class="text-slate-700">Peserta sangat puas dengan **Sikap & Kemampuan Mentor/Narasumber** (Skor 3,64 & 3,55), menunjukkan kualitas SDM program sangat tinggi.</p>
+                                </div>
+                                <div class="callout callout-warning">
+                                    <h4 class="font-bold text-amber-800">Area Perbaikan <i class="fas fa-arrow-down"></i></h4>
+                                    <p class="text-slate-700">Skor lebih moderat pada **Kewajaran Biaya** (3,18) dan **Kesesuaian Durasi/Materi** (3,27), mengindikasikan adanya biaya tak terduga pasca-pelatihan dan keinginan untuk materi yang lebih mendalam.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- BAGIAN 3.B - SLIDE 15: Kesimpulan & Pembelajaran Pelatihan Ekspor -->
+            <section id="slide15" class="slide bg-dots">
+                <div class="slide-header">
+                     <p class="title-prefix">Studi Kasus #2: Pelatihan Ekspor</p>
+                    <h2 class="slide-title">Kesimpulan & Pembelajaran Kunci</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="callout callout-success">
+                         <h3 class="text-2xl font-bold text-green-800">Model "Modal Pengetahuan" Terbukti Sangat Efisien</h3>
+                         <p class="text-lg text-slate-700 mt-2">Investasi pada aset tak berwujud (pengetahuan) untuk membuka akses ke pasar bernilai tambah tinggi adalah strategi TJSL dengan daya ungkit finansial yang sangat besar.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+                        <div>
+                            <h4 class="text-xl font-semibold text-slate-800 mb-3"><i class="fas fa-lightbulb text-blue-600 mr-2"></i>Pembelajaran #1</h4>
+                            <p class="text-lg text-slate-600">**Variabilitas Hasil Tinggi.** Keberhasilan program sangat didorong oleh beberapa alumni yang *superstar*. Ini menunjukkan perlunya pendekatan berjenjang (*tiered approach*) untuk memfasilitasi lebih banyak peserta mencapai kesuksesan.</p>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-semibold text-slate-800 mb-3"><i class="fas fa-lightbulb text-blue-600 mr-2"></i>Pembelajaran #2</h4>
+                             <p class="text-lg text-slate-600">**Dukungan Pasca-Pelatihan adalah Krusial.** Kepuasan yang lebih rendah pada aspek biaya dan durasi menandakan bahwa perjalanan ekspor tidak berhenti setelah pelatihan. Dukungan lanjutan (mentoring, hibah sertifikasi) sangat diperlukan.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BAGIAN 3.C - SLIDE 16: Profil & Investasi Wisata Kya-Kya -->
+            <section id="slide16" class="slide bg-dots">
+                <div class="slide-header">
+                    <p class="title-prefix">Studi Kasus #3: Kinerja Solid & Seimbang</p>
+                    <h2 class="slide-title">Program Pengembangan Wisata Kya-Kya, Surabaya</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                        <!-- Kolom Kiri: Konteks -->
+                        <div>
+                            <div class="flex items-center gap-3 mb-4">
+                                <i class="fas fa-store-slash text-3xl text-blue-600"></i>
+                                <h3 class="text-2xl font-semibold text-slate-800">Tantangan & Intervensi</h3>
+                            </div>
+                            <p class="text-slate-600 text-lg leading-relaxed mb-4">
+                                **Tantangan:** Kawasan wisata kuliner Kya-Kya yang diinisiasi Pemkot Surabaya memiliki potensi besar, namun terkendala kurangnya fasilitas dasar yang membuat pengunjung kurang nyaman dan durasi kunjungan singkat.
+                            </p>
+                            <p class="text-slate-600 text-lg leading-relaxed">
+                                **Intervensi BRI:** Bertindak sebagai katalisator dengan menyediakan "Paket Fasilitas Dasar" untuk meningkatkan *visitor experience*:
+                            </p>
+                            <ul class="content-list mt-4 space-y-2">
+                                <li><i class="fas fa-chair"></i>**Fasilitas Duduk:** Meja, kursi, dan tenda payung.</li>
+                                <li><i class="fas fa-volume-up"></i>**Fasilitas Pendukung Acara:** Sound system, signage, dan dekorasi.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Kolom Kanan: Investasi -->
+                        <div class="bg-blue-600 text-white p-8 rounded-lg flex flex-col justify-center text-center shadow-2xl">
+                            <h3 class="text-2xl font-semibold opacity-80">Total Investasi</h3>
+                            <p class="text-7xl font-bold tracking-tight my-2">Rp 326 Juta</p>
+                            <p class="text-blue-100 mt-2">Investasi pada infrastruktur publik untuk mendukung dan mengakselerasi inisiatif pemerintah daerah.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- BAGIAN 3.C - SLIDE 17: Hasil Dampak (SROI) Wisata Kya-Kya -->
+            <section id="slide17" class="slide bg-dots">
+                <div class="slide-header">
+                     <p class="title-prefix">Studi Kasus #3: Wisata Kya-Kya</p>
+                    <h2 class="slide-title">Hasil Dampak (SROI): Katalisator Ekonomi Lokal</h2>
+                </div>
+                <div class="slide-content flex items-center justify-center">
+                    <div class="w-full max-w-4xl text-center">
+                        <div class="bg-blue-50 border-t-4 border-blue-500 p-8 rounded-lg shadow-lg">
+                            <p class="text-2xl font-semibold text-blue-800">Rasio SROI (5 Tahun)</p>
+                            <p class="text-9xl font-bold text-blue-700 my-2 tracking-tighter">4,39 : 1</p>
+                            <p class="text-xl text-slate-700 max-w-3xl mx-auto">Setiap **Rp 1** investasi pada fasilitas dasar berhasil mengkatalisasi nilai ekonomi sebesar **Rp 4,39** bagi ekosistem sekitar.</p>
+                        </div>
+                        
+                        <h3 class="text-2xl font-semibold text-slate-800 mt-8 mb-4">Pendorong Nilai Utama (Key Value Drivers)</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-slate-50 p-4 rounded-lg">
+                                <p class="text-lg font-bold text-slate-700">1. Peningkatan Profit Pedagang UMK</p>
+                                <p class="text-slate-600">Fasilitas yang lebih nyaman secara langsung meningkatkan *dwell time* (lama kunjungan) dan volume transaksi.</p>
+                            </div>
+                             <div class="bg-slate-50 p-4 rounded-lg">
+                                <p class="text-lg font-bold text-slate-700">2. Peningkatan Pendapatan Sektor Informal</p>
+                                <p class="text-slate-600">Peningkatan keramaian menciptakan peluang ekonomi baru bagi komunitas sekitar, terutama juru parkir.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BAGIAN 3.C - SLIDE 18: Kualitas Eksekusi (IKM) Wisata Kya-Kya -->
+            <section id="slide18" class="slide bg-dots">
+                <div class="slide-header">
+                     <p class="title-prefix">Studi Kasus #3: Wisata Kya-Kya</p>
+                    <h2 class="slide-title">Kualitas Eksekusi (IKM): Kepuasan Tinggi & Kolaboratif</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                        <!-- IKM Gabungan -->
+                        <div class="col-span-1 bg-green-500 text-white p-6 rounded-lg flex flex-col justify-center items-center text-center">
+                             <p class="text-xl font-semibold">IKM Gabungan</p>
+                             <p class="text-8xl font-bold">88,66</p>
+                             <p class="text-2xl font-semibold bg-white/20 px-3 py-1 rounded-full">SANGAT BAIK</p>
+                        </div>
+                        
+                        <!-- Analisis per Stakeholder -->
+                        <div class="col-span-3">
+                            <h3 class="text-2xl font-semibold text-slate-800 mb-4">Skor Kepuasan per Kelompok Stakeholder</h3>
+                             <div class="space-y-4">
+                                <!-- Pengunjung -->
+                                <div class="flex items-center gap-4">
+                                    <p class="w-32 text-slate-600 font-medium text-right">Pengunjung</p>
+                                    <div class="flex-1 bg-green-100 rounded-full h-10"><div class="bg-green-600 h-10 rounded-full text-white flex items-center justify-between px-3 font-semibold" style="width: 91.23%;"><span>91,23</span><i class="fas fa-star"></i></div></div>
+                                </div>
+                                <!-- Pengelola -->
+                                <div class="flex items-center gap-4">
+                                    <p class="w-32 text-slate-600 font-medium text-right">Pengelola</p>
+                                    <div class="flex-1 bg-green-100 rounded-full h-10"><div class="bg-green-600 h-10 rounded-full text-white flex items-center justify-between px-3 font-semibold" style="width: 88.89%;"><span>88,89</span><i class="fas fa-star"></i></div></div>
+                                </div>
+                                <!-- Pedagang -->
+                                <div class="flex items-center gap-4">
+                                    <p class="w-32 text-slate-600 font-medium text-right">Pedagang</p>
+                                    <div class="flex-1 bg-sky-100 rounded-full h-10"><div class="bg-sky-600 h-10 rounded-full text-white flex items-center justify-between px-3 font-semibold" style="width: 87.05%;"><span>87,05</span><i class="fas fa-star-half-alt"></i></div></div>
+                                </div>
+                            </div>
+                             <p class="text-slate-600 italic mt-6">**Temuan:** Kepuasan tertinggi datang dari **Pengunjung**, yang secara langsung merasakan manfaat kenyamanan. Ini memvalidasi keberhasilan investasi pada *customer experience*.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- BAGIAN 3.C - SLIDE 19: Kesimpulan & Pembelajaran Wisata Kya-Kya -->
+            <section id="slide19" class="slide bg-dots">
+                <div class="slide-header">
+                     <p class="title-prefix">Studi Kasus #3: Wisata Kya-Kya</p>
+                    <h2 class="slide-title">Kesimpulan & Pembelajaran Kunci</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="callout callout-success">
+                         <h3 class="text-2xl font-bold text-green-800">Model "Katalisator Pemberdayaan" Terbukti Efektif</h3>
+                         <p class="text-lg text-slate-700 mt-2">Investasi pada aset fisik dasar yang mendukung ekosistem UMK terbukti menjadi model yang andal, menciptakan dampak ekonomi yang solid (SROI 4,39:1) dan kepuasan yang tinggi (IKM 88,66).</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+                        <div>
+                            <h4 class="text-xl font-semibold text-slate-800 mb-3"><i class="fas fa-lightbulb text-blue-600 mr-2"></i>Pembelajaran #1</h4>
+                            <p class="text-lg text-slate-600">**Sinergi dengan Pemerintah Daerah Menggandakan Dampak.** Keberhasilan program ini sangat bergantung pada sinergi dengan inisiatif Pemkot Surabaya. Peran BRI sebagai akselerator, bukan inisiator tunggal, terbukti sangat efektif.</p>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-semibold text-slate-800 mb-3"><i class="fas fa-lightbulb text-blue-600 mr-2"></i>Pembelajaran #2</h4>
+                             <p class="text-lg text-slate-600">**Pentingnya Penguatan Sinergi Bisnis.** Analisis SROI berhasil mengkuantifikasi potensi akuisisi nasabah. Potensi *shared value* ini perlu digarap secara lebih sistematis melalui "Paket Onboarding Ekosistem BRI" (Akuisisi QRIS, Penawaran KUR).</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BAGIAN 3.D - SLIDE 20: Profil & Investasi Alat Membatik -->
+            <section id="slide20" class="slide bg-dots">
+                <div class="slide-header">
+                    <p class="title-prefix">Studi Kasus #4: Eksekusi Terbaik</p>
+                    <h2 class="slide-title">Program Bantuan Alat Membatik "Gadisku 2", Blitar</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                        <!-- Kolom Kiri: Konteks -->
+                        <div>
+                            <div class="flex items-center gap-3 mb-4">
+                                <i class="fas fa-tools text-3xl text-blue-600"></i>
+                                <h3 class="text-2xl font-semibold text-slate-800">Tantangan & Intervensi</h3>
+                            </div>
+                            <p class="text-slate-600 text-lg leading-relaxed mb-4">
+                                **Tantangan:** UPT PSBR Blitar memiliki program pelatihan membatik yang potensial untuk remaja disabilitas, namun terhambat oleh **keterbatasan jumlah dan kualitas peralatan**, yang membatasi kapasitas produksi dan kualitas hasil.
+                            </p>
+                            <p class="text-slate-600 text-lg leading-relaxed">
+                                **Intervensi BRI:** Memberikan solusi yang sangat terfokus dan langsung pada akar masalah:
+                            </p>
+                            <ul class="content-list mt-4 space-y-2">
+                                <li><i class="fas fa-palette"></i>**Bantuan Aset Produktif:** Menyediakan set peralatan membatik modern (meja canting, kompor, canting elektrik) dan bahan baku awal.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Kolom Kanan: Investasi -->
+                        <div class="bg-blue-600 text-white p-8 rounded-lg flex flex-col justify-center text-center shadow-2xl">
+                            <h3 class="text-2xl font-semibold opacity-80">Total Investasi</h3>
+                            <p class="text-7xl font-bold tracking-tight my-2">Rp 50 Juta</p>
+                            <p class="text-blue-100 mt-2">Investasi yang sangat spesifik dan efisien, langsung ditujukan untuk menghilangkan *bottleneck* produksi.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- BAGIAN 3.D - SLIDE 21: Hasil Dampak (SROI) Alat Membatik -->
+            <section id="slide21" class="slide bg-dots">
+                <div class="slide-header">
+                     <p class="title-prefix">Studi Kasus #4: Alat Membatik</p>
+                    <h2 class="slide-title">Hasil Dampak (SROI): Efisiensi Pemberdayaan</h2>
+                </div>
+                <div class="slide-content flex items-center justify-center">
+                    <div class="w-full max-w-4xl text-center">
+                        <div class="bg-blue-50 border-t-4 border-blue-500 p-8 rounded-lg shadow-lg">
+                            <p class="text-2xl font-semibold text-blue-800">Rasio SROI (Proyeksi 3 Tahun)</p>
+                            <p class="text-9xl font-bold text-blue-700 my-2 tracking-tighter">3,92 : 1</p>
+                            <p class="text-xl text-slate-700 max-w-3xl mx-auto">Setiap **Rp 1** yang diinvestasikan pada alat produksi berhasil menciptakan nilai sosial dan ekonomi sebesar **Rp 3,92**.</p>
+                        </div>
+                        
+                        <h3 class="text-2xl font-semibold text-slate-800 mt-8 mb-4">Pendorong Nilai Utama (Key Value Drivers)</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-slate-50 p-4 rounded-lg">
+                                <p class="text-lg font-bold text-slate-700">1. Peningkatan Kapasitas & Kualitas Produksi</p>
+                                <p class="text-slate-600">Peningkatan volume produksi (>100%) dan kualitas produk menjadi pendorong nilai ekonomi terbesar bagi UPT PSBR.</p>
+                            </div>
+                             <div class="bg-slate-50 p-4 rounded-lg">
+                                <p class="text-lg font-bold text-slate-700">2. Peningkatan Keterampilan & Kesejahteraan Perajin</p>
+                                <p class="text-slate-600">Peningkatan *soft skills* (kepercayaan diri) dan *hard skills* (teknik membatik) menyumbang nilai sosial yang sangat signifikan.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BAGIAN 3.D - SLIDE 22: Kualitas Eksekusi (IKM) Alat Membatik -->
+            <section id="slide22" class="slide bg-dots">
+                <div class="slide-header">
+                     <p class="title-prefix">Studi Kasus #4: Alat Membatik</p>
+                    <h2 class="slide-title">Kualitas Eksekusi (IKM): Nyaris Sempurna</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                        <!-- IKM Gabungan -->
+                        <div class="col-span-1 bg-green-500 text-white p-6 rounded-lg flex flex-col justify-center items-center text-center">
+                             <p class="text-xl font-semibold">IKM Gabungan</p>
+                             <p class="text-8xl font-bold">97,78</p>
+                             <p class="text-2xl font-semibold bg-white/20 px-3 py-1 rounded-full">SANGAT BAIK</p>
+                        </div>
+                        
+                        <!-- Analisis per Unsur -->
+                        <div class="col-span-3">
+                            <h3 class="text-2xl font-semibold text-slate-800 mb-4">Skor Sempurna (4.00 / 4.00) Diberikan Pada:</h3>
+                             <div class="space-y-4">
+                                <div class="callout callout-success">
+                                    <h4 class="font-bold text-green-800"><i class="fas fa-gem mr-2"></i>Kualitas Alat dan Bahan Baku</h4>
+                                    <p class="text-slate-700">Bantuan dinilai benar-benar sesuai dengan kebutuhan produksi.</p>
+                                </div>
+                                <div class="callout callout-success">
+                                    <h4 class="font-bold text-green-800"><i class="fas fa-shipping-fast mr-2"></i>Kecepatan Distribusi</h4>
+                                    <p class="text-slate-700">Proses pengiriman dan serah terima dinilai sangat cepat dan efisien.</p>
+                                </div>
+                                <div class="callout callout-success">
+                                    <h4 class="font-bold text-green-800"><i class="fas fa-handshake-angle mr-2"></i>Profesionalisme Tim Pelaksana</h4>
+                                    <p class="text-slate-700">Sikap dan efisiensi tim BRI mendapatkan apresiasi tertinggi.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- BAGIAN 3.D - SLIDE 23: Kesimpulan & Pembelajaran Alat Membatik -->
+            <section id="slide23" class="slide bg-dots">
+                <div class="slide-header">
+                     <p class="title-prefix">Studi Kasus #4: Alat Membatik</p>
+                    <h2 class="slide-title">Kesimpulan & Pembelajaran Kunci</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="callout callout-success">
+                         <h3 class="text-2xl font-bold text-green-800">Teladan Eksekusi Program: Tepat Sasaran & Berkualitas</h3>
+                         <p class="text-lg text-slate-700 mt-2">Program ini adalah *best practice* dalam pelaksanaan program TJSL. Keberhasilannya terletak pada ketepatan identifikasi masalah, ketepatan solusi (bantuan aset), dan eksekusi yang sempurna di lapangan.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+                        <div>
+                            <h4 class="text-xl font-semibold text-slate-800 mb-3"><i class="fas fa-lightbulb text-blue-600 mr-2"></i>Pembelajaran #1</h4>
+                            <p class="text-lg text-slate-600">**Model "Bantuan Aset Produktif" sangat efektif** untuk kelompok rentan yang memiliki program vokasional. Mengatasi hambatan alat adalah *leverage* yang kuat untuk membuka potensi produksi dan kemandirian.</p>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-semibold text-slate-800 mb-3"><i class="fas fa-lightbulb text-blue-600 mr-2"></i>Pembelajaran #2</h4>
+                             <p class="text-lg text-slate-600">**Kemitraan dengan institusi lokal yang kredibel (UPT PSBR) adalah kunci.** BRI tidak perlu membangun program dari nol, melainkan bertindak sebagai akselerator bagi inisiatif yang sudah berjalan dan memiliki akses langsung ke penerima manfaat.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BAGIAN 3.E - SLIDE 24: Profil & Investasi Pelatihan Disabilitas -->
+            <section id="slide24" class="slide bg-dots">
+                <div class="slide-header">
+                    <p class="title-prefix">Studi Kasus #5: Dampak Absolut Terbesar</p>
+                    <h2 class="slide-title">Program Pelatihan & Magang untuk Disabilitas, Jakarta</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                        <!-- Kolom Kiri: Konteks -->
+                        <div>
+                            <div class="flex items-center gap-3 mb-4">
+                                <i class="fas fa-road-barrier text-3xl text-blue-600"></i>
+                                <h3 class="text-2xl font-semibold text-slate-800">Tantangan & Intervensi</h3>
+                            </div>
+                            <p class="text-slate-600 text-lg leading-relaxed mb-4">
+                                **Tantangan:** Penyandang disabilitas menghadapi hambatan signifikan untuk masuk ke dunia kerja, mulai dari kurangnya keterampilan yang relevan, rendahnya kepercayaan diri, hingga stigma di masyarakat.
+                            </p>
+                            <p class="text-slate-600 text-lg leading-relaxed">
+                                **Intervensi BRI:** Memberikan program *end-to-end* yang intensif untuk menjembatani kesenjangan ini:
+                            </p>
+                            <ul class="content-list mt-4 space-y-2">
+                                <li><i class="fas fa-laptop-code"></i>**Pelatihan Keterampilan:** Pelatihan daring intensif di jalur Administrasi dan Kewirausahaan.</li>
+                                <li><i class="fas fa-building-user"></i>**Jembatan ke Dunia Kerja:** Fasilitasi program magang di perusahaan mitra untuk memberikan pengalaman praktis.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Kolom Kanan: Investasi -->
+                        <div class="bg-blue-600 text-white p-8 rounded-lg flex flex-col justify-center text-center shadow-2xl">
+                            <h3 class="text-2xl font-semibold opacity-80">Total Investasi</h3>
+                            <p class="text-7xl font-bold tracking-tight my-2">Rp 1,98 Miliar</p>
+                            <p class="text-blue-100 mt-2">Investasi skala besar yang ditujukan untuk transformasi hidup 90 peserta secara mendalam.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- BAGIAN 3.E - SLIDE 25: Hasil Dampak (SROI) Pelatihan Disabilitas -->
+            <section id="slide25" class="slide bg-dots">
+                <div class="slide-header">
+                     <p class="title-prefix">Studi Kasus #5: Pelatihan Disabilitas</p>
+                    <h2 class="slide-title">Hasil Dampak (SROI): Transformasi Hidup</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-2 gap-8 items-center">
+                        <!-- SROI Ratio -->
+                        <div class="text-center">
+                            <div class="bg-blue-50 border-t-4 border-blue-500 p-8 rounded-lg shadow-lg">
+                                <p class="text-2xl font-semibold text-blue-800">Rasio SROI (5 Tahun)</p>
+                                <p class="text-9xl font-bold text-blue-700 my-2 tracking-tighter">1,32 : 1</p>
+                                <p class="text-xl text-slate-700">Meskipun moderat, rasio positif ini sangat signifikan mengingat tingginya faktor *deadweight* (59%) & *attribution* (67%) dalam konteks ini.</p>
+                            </div>
+                        </div>
+                        <!-- Absolute NPV -->
+                        <div class="text-center">
+                            <div class="bg-green-50 border-t-4 border-green-500 p-8 rounded-lg shadow-lg">
+                                <p class="text-2xl font-semibold text-green-800">Nilai Dampak Absolut (NPV)</p>
+                                <p class="text-8xl font-bold text-green-700 my-2 tracking-tighter">Rp 2,61 M</p>
+                                <p class="text-xl text-slate-700">Ini adalah **penciptaan nilai sosial-ekonomi bersih terbesar** di antara semua program yang dievaluasi.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="callout callout-success mt-8">
+                        <p class="text-lg text-green-900"><i class="fas fa-lightbulb mr-2"></i>**Pendorong Nilai Utama:** Transformasi fundamental **76% peserta dari mayoritas pengangguran menjadi individu berpenghasilan**, yang secara langsung mengurangi beban ketergantungan keluarga.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BAGIAN 3.E - SLIDE 26: Kualitas Eksekusi (IKM) Pelatihan Disabilitas -->
+            <section id="slide26" class="slide bg-dots">
+                <div class="slide-header">
+                     <p class="title-prefix">Studi Kasus #5: Pelatihan Disabilitas</p>
+                    <h2 class="slide-title">Kualitas Eksekusi (IKM): Pengalaman Positif & Inklusif</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                        <!-- IKM Gabungan -->
+                        <div class="col-span-1 bg-green-500 text-white p-6 rounded-lg flex flex-col justify-center items-center text-center">
+                             <p class="text-xl font-semibold">IKM Gabungan</p>
+                             <p class="text-8xl font-bold">91,85</p>
+                             <p class="text-2xl font-semibold bg-white/20 px-3 py-1 rounded-full">SANGAT BAIK</p>
+                        </div>
+                        
+                        <!-- Analisis per Unsur -->
+                        <div class="col-span-3">
+                            <h3 class="text-2xl font-semibold text-slate-800 mb-4">Temuan Kunci dari Peserta & Keluarga</h3>
+                             <div class="space-y-4">
+                                <div class="callout callout-success">
+                                    <h4 class="font-bold text-green-800">Kekuatan Utama <i class="fas fa-arrow-up"></i></h4>
+                                    <p class="text-slate-700">Peserta sangat puas dengan **dukungan mentor, fleksibilitas program daring, dan kualitas platform digital**. Peserta Jalur Administrasi bahkan memberikan skor nyaris sempurna (99,00).</p>
+                                </div>
+                                <div class="callout callout-warning">
+                                    <h4 class="font-bold text-amber-800">Area Perbaikan <i class="fas fa-arrow-down"></i></h4>
+                                    <p class="text-slate-700">Keluarga menyoroti adanya **beban biaya tak terduga (kuota internet)**. Peserta Kewirausahaan mengharapkan materi yang lebih mendalam dan aplikatif.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- BAGIAN 3.E - SLIDE 27: Kesimpulan & Pembelajaran Pelatihan Disabilitas -->
+            <section id="slide27" class="slide bg-dots">
+                <div class="slide-header">
+                     <p class="title-prefix">Studi Kasus #5: Pelatihan Disabilitas</p>
+                    <h2 class="slide-title">Kesimpulan & Pembelajaran Kunci</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="callout callout-success">
+                         <h3 class="text-2xl font-bold text-green-800">Model "Transformasi Individu" yang Sangat Berdampak</h3>
+                         <p class="text-lg text-slate-700 mt-2">Meskipun SROI moderat, program ini adalah investasi sosial paling murni dan berdampak dalam skala absolut. Keberhasilannya tidak diukur dari efisiensi, melainkan dari **kekuatan "kisah perubahan"** yang dihasilkan dan komitmen pada misi inklusi sosial.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+                        <div>
+                            <h4 class="text-xl font-semibold text-slate-800 mb-3"><i class="fas fa-lightbulb text-blue-600 mr-2"></i>Pembelajaran #1</h4>
+                            <p class="text-lg text-slate-600">**Nilai Tambah Kritis (Critical Added Value).** Fakta bahwa program tetap menghasilkan SROI positif meski *deadweight & attribution* sangat tinggi membuktikan bahwa intervensi BRI memberikan dorongan krusial yang memungkinkan semua faktor lain menjadi efektif.</p>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-semibold text-slate-800 mb-3"><i class="fas fa-lightbulb text-blue-600 mr-2"></i>Pembelajaran #2</h4>
+                             <p class="text-lg text-slate-600">**Pentingnya Komponen Magang & Ekosistem.** Keberhasilan program sangat bergantung pada kombinasi pelatihan (teori) dan magang (praktik), serta dukungan ekosistem (keluarga). Penguatan jembatan ke dunia kerja dan keterlibatan keluarga perlu menjadi fokus utama.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BAGIAN 3.F - SLIDE 28: Profil & Investasi Pengelolaan Kopi -->
+            <section id="slide28" class="slide bg-dots">
+                <div class="slide-header">
+                    <p class="title-prefix">Studi Kasus #6: Rantai Nilai Terintegrasi</p>
+                    <h2 class="slide-title">Program Pengelolaan Kopi, Banyuwangi</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                        <!-- Kolom Kiri: Konteks -->
+                        <div>
+                            <div class="flex items-center gap-3 mb-4">
+                                <i class="fas fa-link-slash text-3xl text-blue-600"></i>
+                                <h3 class="text-2xl font-semibold text-slate-800">Tantangan & Intervensi</h3>
+                            </div>
+                            <p class="text-slate-600 text-lg leading-relaxed mb-4">
+                                **Tantangan:** Petani kopi Ijen terjebak dalam rantai nilai yang terputus. Mereka terpaksa menjual biji kopi mentah (*green bean*) dengan harga rendah karena tidak memiliki teknologi pasca panen untuk mengolahnya.
+                            </p>
+                            <p class="text-slate-600 text-lg leading-relaxed">
+                                **Intervensi BRI:** Menyambung rantai nilai dengan memberikan teknologi inti di tingkat komunitas (koperasi ITC):
+                            </p>
+                            <ul class="content-list mt-4 space-y-2">
+                                <li><i class="fas fa-fire-alt"></i>**Alat Pengolahan:** Mesin *roaster* dan *grinder* untuk mengubah biji mentah menjadi produk bernilai tambah.</li>
+                                <li><i class="fas fa-balance-scale"></i>**Alat Kontrol Kualitas:** Timbangan digital dan alat ukur kadar air.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Kolom Kanan: Investasi -->
+                        <div class="bg-blue-600 text-white p-8 rounded-lg flex flex-col justify-center text-center shadow-2xl">
+                            <h3 class="text-2xl font-semibold opacity-80">Total Investasi</h3>
+                            <p class="text-7xl font-bold tracking-tight my-2">Rp 62,5 Juta</p>
+                            <p class="text-blue-100 mt-2">Investasi teknologi yang terfokus untuk membuka potensi ekonomi di seluruh rantai nilai kopi.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- BAGIAN 3.F - SLIDE 29: Hasil Dampak (SROI) Pengelolaan Kopi -->
+            <section id="slide29" class="slide bg-dots">
+                <div class="slide-header">
+                     <p class="title-prefix">Studi Kasus #6: Pengelolaan Kopi</p>
+                    <h2 class="slide-title">Hasil Dampak (SROI): Efek Domino di Seluruh Ekosistem</h2>
+                </div>
+                <div class="slide-content flex items-center justify-center">
+                    <div class="w-full max-w-4xl text-center">
+                        <div class="bg-blue-50 border-t-4 border-blue-500 p-8 rounded-lg shadow-lg">
+                            <p class="text-2xl font-semibold text-blue-800">Rasio SROI (Proyeksi 7 Tahun)</p>
+                            <p class="text-9xl font-bold text-blue-700 my-2 tracking-tighter">7,35 : 1</p>
+                            <p class="text-xl text-slate-700 max-w-3xl mx-auto">Setiap **Rp 1** investasi pada teknologi pasca panen berhasil menciptakan nilai ekonomi sebesar **Rp 7,35** yang menyebar di ekosistem agrowisata.</p>
+                        </div>
+                        
+                        <h3 class="text-2xl font-semibold text-slate-800 mt-8 mb-4">Pendorong Nilai Utama (Key Value Drivers)</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="bg-slate-50 p-4 rounded-lg">
+                                <p class="text-lg font-bold text-slate-700">1. Penciptaan Nilai Tambah (Pengelola)</p>
+                                <p class="text-slate-600">Kemampuan mengolah kopi menciptakan nilai ekonomi terbesar di tingkat hilir.</p>
+                            </div>
+                             <div class="bg-slate-50 p-4 rounded-lg">
+                                <p class="text-lg font-bold text-slate-700">2. Peningkatan Pendapatan Petani</p>
+                                <p class="text-slate-600">Petani menerima harga jual premium, menangkap kembali nilai yang sebelumnya hilang.</p>
+                            </div>
+                             <div class="bg-slate-50 p-4 rounded-lg">
+                                <p class="text-lg font-bold text-slate-700">3. Sinergi dengan Pariwisata</p>
+                                <p class="text-slate-600">Penciptaan produk wisata "Coffee Trail" membuka aliran pendapatan baru bagi pemandu wisata lokal.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BAGIAN 3.F - SLIDE 30: Kualitas Eksekusi (IKM) Pengelolaan Kopi -->
+            <section id="slide30" class="slide bg-dots">
+                <div class="slide-header">
+                     <p class="title-prefix">Studi Kasus #6: Pengelolaan Kopi</p>
+                    <h2 class="slide-title">Kualitas Eksekusi (IKM): Kepuasan di Hulu dan Hilir</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                        <!-- IKM Gabungan -->
+                        <div class="col-span-1 bg-green-500 text-white p-6 rounded-lg flex flex-col justify-center items-center text-center">
+                             <p class="text-xl font-semibold">IKM Gabungan</p>
+                             <p class="text-8xl font-bold">94,76</p>
+                             <p class="text-2xl font-semibold bg-white/20 px-3 py-1 rounded-full">SANGAT BAIK</p>
+                        </div>
+                        
+                        <!-- Analisis per Stakeholder -->
+                        <div class="col-span-3">
+                            <h3 class="text-2xl font-semibold text-slate-800 mb-4">Skor Kepuasan per Kelompok Stakeholder</h3>
+                             <div class="space-y-4">
+                                <!-- Pembeli/Distributor -->
+                                <div class="flex items-center gap-4">
+                                    <p class="w-48 text-slate-600 font-medium text-right">Pembeli/Distributor</p>
+                                    <div class="flex-1 bg-green-100 rounded-full h-10"><div class="bg-green-600 h-10 rounded-full text-white flex items-center justify-between px-3 font-semibold" style="width: 95.31%;"><span>95,31</span><i class="fas fa-star"></i></div></div>
+                                </div>
+                                <!-- Petani/Pengelola -->
+                                <div class="flex items-center gap-4">
+                                    <p class="w-48 text-slate-600 font-medium text-right">Petani/Pengelola</p>
+                                    <div class="flex-1 bg-green-100 rounded-full h-10"><div class="bg-green-600 h-10 rounded-full text-white flex items-center justify-between px-3 font-semibold" style="width: 94.44%;"><span>94,44</span><i class="fas fa-star"></i></div></div>
+                                </div>
+                            </div>
+                             <p class="text-slate-600 italic mt-6">**Temuan:** Kepuasan sangat tinggi baik di tingkat **hulu (petani/pengelola)** maupun **hilir (pembeli)**. Ini membuktikan bahwa program berhasil meningkatkan kualitas produk akhir yang dihargai oleh pasar.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- BAGIAN 3.F - SLIDE 31: Kesimpulan & Pembelajaran Pengelolaan Kopi -->
+            <section id="slide31" class="slide bg-dots">
+                <div class="slide-header">
+                     <p class="title-prefix">Studi Kasus #6: Pengelolaan Kopi</p>
+                    <h2 class="slide-title">Kesimpulan & Pembelajaran Kunci</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="callout callout-success">
+                         <h3 class="text-2xl font-bold text-green-800">Model "Rantai Nilai Terintegrasi" yang Sangat Strategis</h3>
+                         <p class="text-lg text-slate-700 mt-2">Program ini adalah contoh cemerlang bagaimana investasi teknologi pada satu titik rantai nilai dapat menciptakan efek domino positif yang mengalir ke hulu (petani), hilir (pemasaran), dan bahkan ke sektor lain (pariwisata).</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+                        <div>
+                            <h4 class="text-xl font-semibold text-slate-800 mb-3"><i class="fas fa-lightbulb text-blue-600 mr-2"></i>Pembelajaran #1</h4>
+                            <p class="text-lg text-slate-600">**Sinergi Agribisnis dan Pariwisata** adalah *multiplier* yang kuat. Program pemberdayaan agribisnis di destinasi wisata harus secara proaktif dirancang untuk menciptakan produk wisata baru.</p>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-semibold text-slate-800 mb-3"><i class="fas fa-lightbulb text-blue-600 mr-2"></i>Pembelajaran #2</h4>
+                             <p class="text-lg text-slate-600">**Lengkapi Bantuan Alat dengan Kapasitas Bisnis.** Setelah kapasitas produksi meningkat, tantangan berikutnya adalah branding, pengemasan, dan pemasaran. Program lanjutan yang fokus pada aspek bisnis ini akan mengakselerasi realisasi dampak ekonomi.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BAGIAN 4 - SLIDE 32: Analisis Dampak Lintas Sektor -->
+            <section id="slide32" class="slide bg-dots">
+                <div class="slide-header">
+                    <p class="title-prefix">Sintesis Portofolio</p>
+                    <h2 class="slide-title">Analisis Dampak Lintas Sektor</h2>
+                </div>
+                <div class="slide-content">
+                    <p class="text-center text-slate-600 text-lg mb-8">Secara agregat, keenam program berhasil menciptakan dampak positif yang konsisten di tiga pilar utama pembangunan.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        
+                        <!-- Dampak Sosial -->
+                        <div class="bg-blue-50 p-6 rounded-lg border-t-4 border-blue-600">
+                            <h3 class="text-2xl font-bold text-blue-800 mb-4"><i class="fas fa-users mr-2"></i>Dampak Sosial</h3>
+                            <ul class="space-y-3 text-slate-700">
+                                <li><i class="fas fa-check-circle text-blue-500 mr-2"></i>**Peningkatan Kapasitas & Keterampilan:** Inti dari program pelatihan dan hasil sekunder dari bantuan aset.</li>
+                                <li><i class="fas fa-handshake-angle text-blue-500 mr-2"></i>**Peningkatan Inklusi Sosial & Kepercayaan Diri:** Terutama bagi kelompok rentan (disabilitas).</li>
+                                <li><i class="fas fa-people-group text-blue-500 mr-2"></i>**Penguatan Kohesi Komunitas:** Terlihat jelas di program berbasis lokasi (Pasar, Kya-Kya).</li>
+                                <li><i class="fas fa-palette text-blue-500 mr-2"></i>**Pelestarian Budaya Lokal:** Dampak ikutan dari program Batik, Kopi, dan Kya-Kya.</li>
+                            </ul>
+                        </div>
+                        
+                        <!-- Dampak Ekonomi -->
+                        <div class="bg-green-50 p-6 rounded-lg border-t-4 border-green-600">
+                            <h3 class="text-2xl font-bold text-green-800 mb-4"><i class="fas fa-dollar-sign mr-2"></i>Dampak Ekonomi</h3>
+                            <ul class="space-y-3 text-slate-700">
+                                <li><i class="fas fa-arrow-trend-up text-green-500 mr-2"></i>**Peningkatan Pendapatan & Profitabilitas UMK:** Outcome utama di hampir semua program.</li>
+                                <li><i class="fas fa-briefcase text-green-500 mr-2"></i>**Penciptaan Lapangan Kerja Baru:** Baik formal (alumni) maupun informal (parkir).</li>
+                                <li><i class="fas fa-cogs text-green-500 mr-2"></i>**Peningkatan Efisiensi & Produktivitas:** Terutama pada program bantuan alat.</li>
+                                <li><i class="fas fa-sitemap text-green-500 mr-2"></i>**Efek Berganda ke Rantai Pasok:** Dampak signifikan ke pemasok lokal.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Dampak Lingkungan -->
+                        <div class="bg-yellow-50 p-6 rounded-lg border-t-4 border-yellow-600">
+                            <h3 class="text-2xl font-bold text-yellow-800 mb-4"><i class="fas fa-leaf mr-2"></i>Dampak Lingkungan</h3>
+                            <ul class="space-y-3 text-slate-700">
+                                <li><i class="fas fa-bolt text-yellow-500 mr-2"></i>**Peningkatan Efisiensi Sumber Daya:** Penggunaan mesin modern mengurangi konsumsi bahan bakar.</li>
+                                <li><i class="fas fa-recycle text-yellow-500 mr-2"></i>**Potensi Pengurangan Limbah:** Peningkatan kualitas proses mengurangi produk gagal.</li>
+                                <li><i class="fas fa-seedling text-yellow-500 mr-2"></i>**Peningkatan Kesadaran Lingkungan:** Terutama melalui program yang menyentuh standar internasional.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- BAGIAN 4 - SLIDE 33: Implikasi Strategis untuk BRI -->
+            <section id="slide33" class="slide bg-dots">
+                <div class="slide-header">
+                    <p class="title-prefix">Beyond Philanthropy</p>
+                    <h2 class="slide-title">Implikasi Strategis untuk BRI</h2>
+                </div>
+                <div class="slide-content">
+                    <ul class="content-list space-y-6">
+                        <li>
+                            <i class="fas fa-bullhorn fa-2x w-8 text-center text-blue-600"></i>
+                            <div>
+                                <h3 class="text-2xl font-semibold text-slate-800">Bukti Kuantitatif Narasi "Memberi Makna Indonesia"</h3>
+                                <p class="text-slate-600 text-lg">Hasil SROI adalah data kuat untuk komunikasi ESG, Laporan Tahunan, dan presentasi investor, mengubah tagline dari aspirasi menjadi **pencapaian terukur**.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-shield-halved fa-2x w-8 text-center text-blue-600"></i>
+                            <div>
+                                <h3 class="text-2xl font-semibold text-slate-800">TJSL sebagai Alat Mitigasi Risiko Reputasi</h3>
+                                <p class="text-slate-600 text-lg">Investasi yang berdampak nyata pada ekonomi rakyat (Pasar, UMK) membangun *goodwill* dan *social license to operate* yang menjadi benteng pertahanan saat krisis.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-flask fa-2x w-8 text-center text-blue-600"></i>
+                            <div>
+                                <h3 class="text-2xl font-semibold text-slate-800">TJSL sebagai "Laboratorium Inovasi" & Pipeline Bisnis</h3>
+                                <p class="text-slate-600 text-lg">Program seperti Pelatihan Ekspor dan revitalisasi pasar secara langsung menciptakan **pipeline nasabah KUR dan pengguna QRIS**, mengubah fungsi TJSL dari pusat biaya menjadi pusat inovasi strategis.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- BAGIAN 4 - SLIDE 34: Rekomendasi & Rencana Aksi -->
+            <section id="slide34" class="slide bg-dots">
+                <div class="slide-header">
+                    <p class="title-prefix">Actionable Insights</p>
+                    <h2 class="slide-title">Rekomendasi & Rencana Aksi Portofolio</h2>
+                </div>
+                <div class="slide-content">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <!-- Jangka Pendek -->
+                        <div class="bg-blue-50 p-6 rounded-lg border-l-4 border-blue-500">
+                            <h3 class="text-2xl font-bold text-blue-800 mb-3">Jangka Pendek (0-6 Bulan)</h3>
+                            <p class="font-semibold text-lg text-slate-800">Fondasi & Quick Wins</p>
+                            <ul class="mt-4 space-y-2 text-slate-700 list-disc list-inside">
+                                <li>Diseminasi hasil evaluasi internal.</li>
+                                <li>Standardisasi proses *onboarding* mitra.</li>
+                                <li>Buat POS untuk sinergi dengan unit bisnis.</li>
+                                <li>Luncurkan "Klinik Ekspor" pasca-pelatihan.</li>
+                            </ul>
+                        </div>
+                        <!-- Jangka Menengah -->
+                        <div class="bg-sky-50 p-6 rounded-lg border-l-4 border-sky-500">
+                            <h3 class="text-2xl font-bold text-sky-800 mb-3">Jangka Menengah (6-18 Bulan)</h3>
+                            <p class="font-semibold text-lg text-slate-800">Skalabilitas & Efisiensi</p>
+                             <ul class="mt-4 space-y-2 text-slate-700 list-disc list-inside">
+                                <li>Replikasi model **"BRI Pasar Juara"** secara nasional.</li>
+                                <li>Kembangkan program pelatihan berjenjang (Dasar & Lanjutan).</li>
+                                <li>Mulai digitalisasi manajemen program TJSL.</li>
+                                <li>Bangun kemitraan strategis dengan ekosistem pemasaran UMK.</li>
+                            </ul>
+                        </div>
+                        <!-- Jangka Panjang -->
+                        <div class="bg-slate-50 p-6 rounded-lg border-l-4 border-slate-500">
+                            <h3 class="text-2xl font-bold text-slate-800 mb-3">Jangka Panjang (18+ Bulan)</h3>
+                            <p class="font-semibold text-lg text-slate-800">Integrasi & Kepemimpinan</p>
+                             <ul class="mt-4 space-y-2 text-slate-700 list-disc list-inside">
+                                <li>Integrasikan **SROI & IKM sebagai KPI** resmi TJSL.</li>
+                                <li>Bangun **"Impact Data Warehouse"** & Dashboard Analitik.</li>
+                                <li>Transisi menuju model **Shared Value (CSV)** yang lebih dalam.</li>
+                                <li>Publikasikan Laporan Dampak Tahunan sebagai standar ESG.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BAGIAN 5 - SLIDE 35: Terima Kasih -->
+            <section id="slide35" class="slide bg-dots">
+                <div class="h-full w-full flex flex-col justify-center items-center text-center p-10">
+                    <div class="flex items-center gap-8 mb-8">
+                        <img src="/img/logo-danantara.png" alt="Danantara Logo" class="h-14">
+                        <img src="/img/logo-bri.png" alt="BRI Logo" class="h-16">
+                        <img src="/img/logo-unair-biru.png" alt="UNAIR Logo" class="h-20">
+                    </div>
+                    <h2 class="text-6xl font-bold text-slate-900 tracking-tight">Terima Kasih</h2>
+                    <p class="text-xl text-slate-600 mt-4 max-w-4xl">
+                        Evaluasi ini membuktikan bahwa portofolio program TJSL BRI Peduli tidak hanya berhasil, tetapi juga dieksekusi dengan sangat baik, menciptakan nilai sosial dan ekonomi yang signifikan dan terukur.
+                    </p>
+                    <p class="text-xl text-slate-600 mt-2 max-w-4xl">
+                        Kami berterima kasih atas kepercayaan yang diberikan dan siap untuk berdiskusi lebih lanjut mengenai temuan dan rekomendasi strategis ini.
+                    </p>
+                    
+                    <div class="mt-12 border-t border-slate-300 pt-8 w-full max-w-4xl">
+                        <p class="text-slate-800 text-2xl font-semibold">LPMB FEB Universitas Airlangga</p>
+                        <div class="flex flex-wrap justify-center items-center gap-x-8 gap-y-2 mt-4 text-slate-600 text-lg">
+                            <span><i class="fas fa-envelope mr-2"></i> lpmb@feb.unair.ac.id</span>
+                            <span><i class="fas fa-phone mr-2"></i> (031) 503 8393</span>
+                            <span><i class="fas fa-globe mr-2"></i> feb.unair.ac.id</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BAGIAN 5 - SLIDE 36: Q & A (Tanya Jawab) -->
+            <section id="slide36" class="slide bg-grid">
+                <div class="h-full w-full flex flex-col justify-center items-center text-center p-10 skin-brushed-metal" style="background: radial-gradient(circle, #003d7a 0%, #002e5c 100%);">
+                     <i class="fas fa-comments text-8xl text-white/50 mb-8"></i>
+                    <h2 class="text-8xl font-bold text-white tracking-tight">Q & A</h2>
+                    <p class="text-3xl font-medium text-slate-300 mt-4">Sesi Diskusi dan Tanya Jawab</p>
+                </div>
+            </section>
+
+            <!-- SLIDES END HERE -->
+        </div>
+    </div>
+    
+    <script src="slide.js"></script>
+</body>
+</html>
