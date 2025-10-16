@@ -94,14 +94,16 @@
                 <h2 class="text-2xl font-semibold text-slate-700">Page Extractor</h2>
                 <p class="text-slate-500 mt-1">Select pages or page ranges from one or more PDFs to create new documents.</p>
             </div>
-            <div class="border-b pb-6 mb-6">
-                <label class="block text-sm font-medium text-slate-700 mb-2">1. Upload PDF(s) or ZIP</label>
-                <input id="extract-file-upload" type="file" multiple class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100" accept=".pdf,.zip">
+            <div class="border-b pb-6 mb-6 flex justify-between items-end">
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-slate-700 mb-2">1. Upload PDF(s) or ZIP</label>
+                    <input id="extract-file-upload" type="file" multiple class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100" accept=".pdf,.zip">
+                </div>
+                <div class="ml-4">
+                    <button id="extract-button" type="button" disabled class="px-8 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:bg-slate-400 disabled:cursor-not-allowed">Extract Pages</button>
+                </div>
             </div>
-            <div id="extract-files-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6"></div>
-            <div class="flex items-center justify-center mb-6">
-                <button id="extract-button" type="button" disabled class="px-8 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:bg-slate-400 disabled:cursor-not-allowed">Extract Pages</button>
-            </div>
+            <div id="extract-files-list" class="mb-6 overflow-x-auto"></div>
             <div id="extract-status" class="text-center mb-4 min-h-[2rem]"></div>
             <div id="extract-results" class="text-center"></div>
         </div>

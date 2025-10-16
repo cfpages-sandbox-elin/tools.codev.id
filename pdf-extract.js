@@ -1,4 +1,4 @@
-// pdf-extract.js improve extract
+// pdf-extract.js improve extract css
 const { PDFDocument: PDFLibExtractDoc } = PDFLib;
 document.addEventListener('DOMContentLoaded', () => {
     // Check if the necessary elements for the extract tool exist
@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Function to render PDF thumbnails
     async function renderPdfThumbnails(file, fileIndex) {
         const fileContainer = document.createElement('div');
-        fileContainer.className = 'p-3 border rounded-lg bg-slate-50 flex flex-col space-y-2';
+        fileContainer.className = 'file-container';
         fileContainer.id = `file-container-${fileIndex}`;
         
         // File name
@@ -26,16 +26,16 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Page selection input
         const inputContainer = document.createElement('div');
-        inputContainer.className = 'flex items-center';
+        inputContainer.className = 'flex items-center mt-2';
         inputContainer.innerHTML = `
             <label for="pages-${fileIndex}" class="text-xs text-slate-600 mr-2">Pages:</label>
             <input type="text" id="pages-${fileIndex}" data-file-index="${fileIndex}" class="flex-grow pl-2 pr-2 py-1 text-sm border-gray-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 rounded-md" placeholder="e.g., 1, 3-5">
         `;
         fileContainer.appendChild(inputContainer);
         
-        // Thumbnails container
+        // Thumbnails container with wrapping layout
         const thumbnailsContainer = document.createElement('div');
-        thumbnailsContainer.className = 'flex flex-wrap gap-2 mt-2';
+        thumbnailsContainer.className = 'thumbnails-container';
         thumbnailsContainer.id = `thumbnails-${fileIndex}`;
         fileContainer.appendChild(thumbnailsContainer);
         
@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Create page container
                 const pageContainer = document.createElement('div');
-                pageContainer.className = 'relative group';
+                pageContainer.className = 'page-container';
                 
                 // Add canvas
                 canvas.className = 'border border-gray-300 rounded cursor-pointer hover:border-teal-500';

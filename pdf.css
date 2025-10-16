@@ -1,4 +1,4 @@
-/* --- pdf.css --- */
+/* --- pdf.css add extract css --- */
 .spinner { border: 4px solid rgba(0,0,0,.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: #09f; animation: spin 1s ease infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -66,4 +66,43 @@
     bottom: -6px;
     right: -6px;
     cursor: se-resize;
+}
+
+/* Update the extract files list to display horizontally */
+#extract-files-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Update the file container to allow horizontal wrapping for pages */
+.file-container {
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    background-color: #f8fafc;
+}
+
+/* Update the thumbnails container to display in a grid that wraps */
+.thumbnails-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    width: 100%;
+    justify-content: flex-start;
+}
+
+/* Update page container styling */
+.page-container {
+    flex: 0 0 auto; /* Don't grow or shrink, base size on content */
+    position: relative;
+    max-width: 150px; /* Limit max width for better layout */
+}
+
+/* Optional: Make canvas responsive within its container */
+.page-container canvas {
+    width: 100%;
+    height: auto;
+    display: block;
 }
