@@ -334,7 +334,7 @@ const aiTextProviders = {
                 performance: { latency: 'Moderate', tokensPerSecond: null },
             },
             {
-                id: 'o3-pro-2025-06-10',
+                id: 'o3-pro',
                 name: 'o3-pro',
                 developer: 'OpenAI',
                 provider: 'OpenAI',
@@ -350,7 +350,7 @@ const aiTextProviders = {
                 performance: { latency: 'Moderate', tokensPerSecond: null },
             },
             {
-                id: 'gpt-4o-2024-08-06',
+                id: 'gpt-4o',
                 name: 'GPT-4o',
                 developer: 'OpenAI',
                 provider: 'OpenAI',
@@ -382,7 +382,7 @@ const aiTextProviders = {
                 performance: { latency: 'Fast', tokensPerSecond: null },
             },
             {
-                id: 'gpt-4o-mini-2024-07-18',
+                id: 'gpt-4o-mini',
                 name: 'GPT-4o mini',
                 developer: 'OpenAI',
                 provider: 'OpenAI',
