@@ -390,3 +390,14 @@ logToConsole("article-main.js evaluating. Setting up DOMContentLoaded listener."
 document.addEventListener('DOMContentLoaded', initializeApp, { once: true });
 
 console.log("article-main.js loaded (v8.18 Humanize content)");
+
+// Global error handler for unhandled promise rejections
+window.addEventListener('unhandledrejection', event => {
+  if (event.reason && typeof event.reason.message === 'string' && event.reason.message.includes('A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received')) {
+    logToConsole(
+      'An unhandled promise rejection was caught, likely from a browser extension. This is often benign and can be ignored if the application is functioning correctly.',
+      'warn'
+    );
+    event.preventDefault(); // Prevent the browser from logging the original error
+  }
+});
