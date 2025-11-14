@@ -1300,8 +1300,14 @@ export async function onRequest({ request, env }) {
                         type: 'permission_error'
                     }, 403); // Return 403 Forbidden to the frontend
                 }
-
-                // For all other errors (e.g., 5xx), throw to be caught as a server error
+                if (apiResponse.status === 429) {
+                     console.warn(`API Quota/Rate Limit Error (429) for ${providerKey}: ${errorDetail}`);
+                     return jsonResponse({
+                        success: false,
+                        error: errorDetail,
+                        type: 'quota_error'
+                    }, 429);
+                }
                 throw new Error(`API Error (${apiResponse.status}): ${errorDetail}`);
             }
             

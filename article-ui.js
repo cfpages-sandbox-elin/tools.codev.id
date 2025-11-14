@@ -1,4 +1,4 @@
-// article-ui.js (v8.24 multiple providers)
+// article-ui.js (v8.24 multiple providers + fix model default selection)
 import { languageOptions, defaultSettings } from './article-config.js';
 import { getState, updateState, getBulkPlan, addProviderToState, removeProviderFromState, updateProviderInState, updateCustomModelState, getCustomModelState } from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2 } from './article-helpers.js';
@@ -288,8 +288,10 @@ function createAiProviderRow(providerState, index) {
     providerSelect.className = 'compact-select text-sm';
     populateSelect(providerSelect, Object.keys(ALL_PROVIDERS_CONFIG.text), providerState.provider);
     providerSelect.addEventListener('change', (e) => {
-        updateProviderInState(index, 'provider', e.target.value);
-        renderAiProviderRows(); // Re-render to update model list and specs
+        const newProvider = e.target.value;
+        updateProviderInState(index, 'provider', newProvider);
+        updateProviderInState(index, 'model', '');
+        renderAiProviderRows();
         checkApiStatus();
     });
 
@@ -297,7 +299,7 @@ function createAiProviderRow(providerState, index) {
     const modelSelect = document.createElement('select');
     modelSelect.className = 'compact-select text-sm';
     const availableModels = ALL_PROVIDERS_CONFIG.text[providerState.provider]?.models.map(m => m.id) || [];
-    populateSelect(modelSelect, availableModels, providerState.model);
+    populateSelect(modelSelect, availableModels, providerState.model, !providerState.model, "-- Select a Model --");
     modelSelect.addEventListener('change', (e) => {
         updateProviderInState(index, 'model', e.target.value);
         renderAiProviderRows(); // Re-render to update specs
@@ -382,10 +384,23 @@ export async function checkApiStatus() {
         if(getElement('apiStatusDiv')) getElement('apiStatusDiv').innerHTML = `<span class="status-ok">✅ Ready (${providerKey})</span>`;
         logToConsole(`API Status OK for ${providerKey} (${model})`, 'success');
     } catch (error) {
-        console.error("API Status Check Failed:", error);
-        logToConsole(`API Status Error: ${error.message}`, 'error');
-        const displayError = error.message.includes(':') ? error.message.substring(error.message.indexOf(':') + 1).trim() : error.message;
-        if(getElement('apiStatusDiv')) getElement('apiStatusDiv').innerHTML = `<span class="status-error">❌ Error: ${displayError.substring(0, 30)}</span>`;
+        console.warn("API Status Check Failed:", error); // Changed from error to warn
+        let displayMessage = '';
+        let technicalDetails = error.message; // NEW: Use the full message
+        if (error.status === 401) {
+            displayMessage = `❌ Invalid API Key. Please check the key in your Cloudflare Worker configuration.`;
+        } else if (error.status === 403) {
+            displayMessage = `❌ Permission Denied. This could be due to the server's region being blocked by the API provider.`;
+        } else if (error.status === 429) {
+            displayMessage = `❌ Quota Exceeded. Please check your billing details and plan limits with the API provider.`;
+        } else {
+            displayMessage = `❌ Tool Error. Could not connect to the AI provider. This might be a temporary issue with the tool's server.`;
+        }
+        
+        logToConsole(`API Status Error: ${technicalDetails}`, 'warn'); 
+        if(getElement('apiStatusDiv')) {
+            getElement('apiStatusDiv').innerHTML = `<span class="status-error" title="Full Details: ${technicalDetails}">${displayMessage}</span>`;
+        }
     } finally {
         showElement(getElement('apiStatusIndicator'), false);
     }
