@@ -23,8 +23,8 @@ const elementIdMap = {
     bulkModeCheckbox: 'bulkModeCheckbox',
     bulkKeywordsContainer: 'bulkKeywordsContainer',
     bulkKeywords: 'bulkKeywords',
-    generateIdeasBtn: 'generateIdeasBtn', 
-    ideasLoadingIndicator: 'ideasLoadingIndicator', 
+    generateIdeasBtn: 'generateIdeasBtn',
+    ideasLoadingIndicator: 'ideasLoadingIndicator',
     ideasProgressContainer: 'ideasProgressContainer',
     ideasProgressBar: 'ideasProgressBar',
     ideasProgressText: 'ideasProgressText',
@@ -93,9 +93,9 @@ const elementIdMap = {
     generationProgressDiv: 'generationProgress',
     currentSectionNumSpan: 'currentSectionNum',
     totalSectionNumSpan: 'totalSectionNum',
-    uploadProgressContainer: 'uploadProgressContainer', 
-    uploadProgressBar: 'uploadProgressBar', 
-    uploadProgressText: 'uploadProgressText', 
+    uploadProgressContainer: 'uploadProgressContainer',
+    uploadProgressBar: 'uploadProgressBar',
+    uploadProgressText: 'uploadProgressText',
     step3Section: 'step3',
     articleOutputContainer: 'article_output_container',
     generatedArticleTextarea: 'generated_article',
@@ -103,8 +103,8 @@ const elementIdMap = {
     previewHtmlCheckbox: 'preview_html_checkbox',
     enableSpinningBtn: 'enableSpinningBtn',
     spinLoadingIndicator: 'spinLoadingIndicator',
-    pauseSpinBtn: 'pauseSpinBtn', 
-    stopSpinBtn: 'stopSpinBtn',   
+    pauseSpinBtn: 'pauseSpinBtn',
+    stopSpinBtn: 'stopSpinBtn',
     step4Section: 'step4',
     spinSelectedBtn: 'spinSelectedBtn',
     spinActionLoadingIndicator: 'spinActionLoadingIndicator',
@@ -162,7 +162,7 @@ export function cacheDomElements() {
             domElements[key] = element;
         } else {
             logToConsole(`Failed to cache element with ID: '${htmlId}' (JS Key: ${key})`, 'error');
-            domElements[key] = null; 
+            domElements[key] = null;
         }
     }
 
@@ -216,11 +216,11 @@ export function getElement(id) {
                 return liveElementOne;
             }
         }
-        if (id !== 'spunArticleDisplay' && id !== 'pauseSpinBtn' && id !== 'stopSpinBtn' && id !== 'ideasLoadingIndicator' && id !== 'generateIdeasBtn') { 
+        if (id !== 'spunArticleDisplay' && id !== 'pauseSpinBtn' && id !== 'stopSpinBtn' && id !== 'ideasLoadingIndicator' && id !== 'generateIdeasBtn') {
             logToConsole(`Element/NodeList '${id}' not found. This might be expected if the UI section is hidden.`, 'debug');
         }
     }
-    return element; 
+    return element;
 }
 
 // --- UI Update Functions ---
@@ -237,7 +237,7 @@ function populateSelect(selectElement, options, selectedValue = null, addEmptyOp
     if (selectedValue !== null && selectedValue !== undefined && valueExists) {
         selectElement.value = selectedValue;
     } else if (selectElement.options.length > 0) {
-        selectElement.selectedIndex = 0; 
+        selectElement.selectedIndex = 0;
     }
     return optionsAdded;
 }
@@ -246,13 +246,19 @@ export function renderAiProviderRows() {
     const container = getElement('aiProviderContainer');
     if (!container) return;
 
+    // Do not attempt to render if the configs haven't been loaded yet.
+    if (Object.keys(ALL_PROVIDERS_CONFIG.text).length === 0) {
+        logToConsole("Render AI providers skipped: configs not yet loaded.", "info");
+        return;
+    }
+
     const state = getState();
     container.innerHTML = ''; // Clear existing rows
 
     // If no providers in state (e.g., first load), add one
     if (!state.textProviders || state.textProviders.length === 0) {
-        addProviderToState(); // Function from article-state.js
-        return; // The state change will trigger a re-render
+        addProviderToState(); // This will trigger a re-render
+        return;
     }
 
     state.textProviders.forEach((providerState, index) => {
@@ -276,7 +282,7 @@ function createAiProviderRow(providerState, index) {
     // --- Column 1: Provider & Model Selection ---
     const selectionDiv = document.createElement('div');
     selectionDiv.className = 'flex flex-col space-y-2';
-    
+
     // Provider Select
     const providerSelect = document.createElement('select');
     providerSelect.className = 'compact-select text-sm';
@@ -286,7 +292,7 @@ function createAiProviderRow(providerState, index) {
         renderAiProviderRows(); // Re-render to update model list and specs
         checkApiStatus();
     });
-    
+
     // Model Select
     const modelSelect = document.createElement('select');
     modelSelect.className = 'compact-select text-sm';
@@ -361,17 +367,17 @@ export async function checkApiStatus() {
     const statusDiv = getElement('apiStatusDiv');
     const statusIndicator = getElement('apiStatusIndicator');
     if (!statusDiv) { return; }
-    statusDiv.innerHTML = ''; 
-    showElement(statusIndicator, false); 
+    statusDiv.innerHTML = '';
+    showElement(statusIndicator, false);
     if (!providerKey) { statusDiv.innerHTML = `<span class="status-error">Select Provider</span>`; logToConsole("API Status Check skipped: Provider missing.", "warn"); return; }
     if (!model && !state.useCustomTextModel) { statusDiv.innerHTML = `<span class="status-error">Select Model</span>`; logToConsole("API Status Check skipped: Model missing (standard).", "warn"); return; }
     if (state.useCustomTextModel && !model) { statusDiv.innerHTML = `<span class="status-error">Enter Custom Model</span>`; logToConsole("API Status Check skipped: Model missing (custom).", "warn"); return; }
 
     logToConsole(`Checking API Status for Provider: ${providerKey}, Model: ${model} (Custom: ${state.useCustomTextModel})`, "info");
     statusDiv.innerHTML = `<span class="status-checking">Checking ${providerKey} (${model.length > 20 ? model.substring(0,20)+'...' : model})...</span>`;
-    showElement(statusIndicator, true); 
+    showElement(statusIndicator, true);
     try {
-        const result = await callAI('check_status', { providerKey, model }, null, null); 
+        const result = await callAI('check_status', { providerKey, model }, null, null);
         if (!result?.success) { throw new Error(result?.error || `Status check failed`); }
         if(getElement('apiStatusDiv')) getElement('apiStatusDiv').innerHTML = `<span class="status-ok">✅ Ready (${providerKey})</span>`;
         logToConsole(`API Status OK for ${providerKey} (${model})`, 'success');
@@ -381,7 +387,7 @@ export async function checkApiStatus() {
         const displayError = error.message.includes(':') ? error.message.substring(error.message.indexOf(':') + 1).trim() : error.message;
         if(getElement('apiStatusDiv')) getElement('apiStatusDiv').innerHTML = `<span class="status-error">❌ Error: ${displayError.substring(0, 30)}</span>`;
     } finally {
-        showElement(getElement('apiStatusIndicator'), false); 
+        showElement(getElement('apiStatusIndicator'), false);
     }
 }
 
@@ -395,7 +401,7 @@ export function populateImageModels(setDefault = false) {
 
     if (!imageModelSelect || !imageAspectRatioSelect || !useCustomCheckbox || !customInput) { logToConsole("Missing elements for populateImageModels.", "error"); return; }
 
-    if (!providerKey || !imageProviders[providerKey]) {
+    if (!providerKey || !ALL_PROVIDERS_CONFIG.image[providerKey]) {
         imageModelSelect.innerHTML = '<option value="">-- Select Provider --</option>';
         imageAspectRatioSelect.innerHTML = '<option value="">-- N/A --</option>';
         disableElement(imageModelSelect, true);
@@ -415,7 +421,7 @@ export function populateImageModels(setDefault = false) {
     populateSelect(imageModelSelect, models);
     const validAspectRatio = aspectRatios.includes(aspectRatioFromState) ? aspectRatioFromState : aspectRatios[0];
     populateSelect(imageAspectRatioSelect, aspectRatios, validAspectRatio);
-    disableElement(imageAspectRatioSelect, false); 
+    disableElement(imageAspectRatioSelect, false);
 
     let modelToSelectInDropdown = '';
     if (state.useCustomImageModel) {
@@ -450,7 +456,7 @@ export function toggleCustomModelUI(type) {
 
     const isChecked = useCustomCheckbox.checked;
     disableElement(modelSelect, isChecked);
-    showElement(customInput, isChecked); 
+    showElement(customInput, isChecked);
     customInput.classList.toggle('custom-input-visible', isChecked);
 
     if (!isChecked) {
@@ -469,11 +475,11 @@ export function populateLanguagesUI(state) {
     }
     const options = Object.keys(languageOptions).map(k => ({ value: k, text: languageOptions[k].name }));
     populateSelect(languageSelect, options, state.language);
-    populateDialectsUI(state); 
+    populateDialectsUI(state);
 }
 
 export function populateDialectsUI(state) {
-    const selectedLangKey = state.language; 
+    const selectedLangKey = state.language;
     const dialectSelect = getElement('dialectSelect');
     const customLanguageInput = getElement('customLanguageInput');
 
@@ -500,7 +506,7 @@ export function populateDialectsUI(state) {
     const dialectToSelect = dialects.includes(dialectFromState) ? dialectFromState : (dialects.length > 0 ? dialects[0] : '');
 
     if (dialects.length > 0) {
-        populateSelect(dialectSelect, dialects, dialectToSelect, false); 
+        populateSelect(dialectSelect, dialects, dialectToSelect, false);
         disableElement(dialectSelect, false);
     } else {
         dialectSelect.innerHTML = '<option value="">-- N/A --</option>';
@@ -521,11 +527,11 @@ export function updateUIBasedOnMode(isBulkMode) {
     const generatePlanBtn = getElement('generatePlanBtn');
     const batchSizeContainer = getElement('batchSizeContainer');
     const step1_5Section = getElement('step1_5Section');
-    
+
     // Single mode elements
     showElement(singleKeywordGroup, !isBulkMode);
     showElement(generateSingleBtn, !isBulkMode);
-    
+
     // Bulk mode elements
     showElement(bulkKeywordsContainer, isBulkMode);
     showElement(generatePlanBtn, isBulkMode);
@@ -537,42 +543,42 @@ export function updateUIBasedOnMode(isBulkMode) {
         showElement(step3Section, false);
         showElement(step4Section, false);
 
-        const currentPlan = getBulkPlan(); 
+        const currentPlan = getBulkPlan();
         const planningTableBody = getElement('planningTableBody');
-        const planExists = currentPlan && currentPlan.length > 0 && 
-                           planningTableBody && planningTableBody.children.length > 0 && 
+        const planExists = currentPlan && currentPlan.length > 0 &&
+                           planningTableBody && planningTableBody.children.length > 0 &&
                            planningTableBody.children[0].textContent !== "No plan generated or loaded.";
-        showElement(step1_5Section, planExists); 
+        showElement(step1_5Section, planExists);
 
         if(formatSelect) {
             disableElement(formatSelect, true);
             // Value already set to 'markdown' by the event listener in article-main.js
-            // formatSelect.value = 'markdown'; 
+            // formatSelect.value = 'markdown';
         }
 
     } else {
         // Switching TO Single Mode: Show single-mode workflow sections based on their state
-        showElement(step1_5Section, false); 
+        showElement(step1_5Section, false);
 
         const articleStructureTextarea = getElement('articleStructureTextarea');
         if (articleStructureTextarea) articleStructureTextarea.value = appState.articleStructure || '';
-        
+
         const generatedArticleTextarea = getElement('generatedArticleTextarea');
         if (generatedArticleTextarea) generatedArticleTextarea.value = appState.generatedArticleContent || '';
-        
-        const spunArticleDisplay = getElement('spunArticleDisplay'); 
+
+        const spunArticleDisplay = getElement('spunArticleDisplay');
 
         showElement(step2Section, (appState.articleStructure || '').trim() !== '');
         showElement(step3Section, (appState.generatedArticleContent || '').trim() !== '');
-        showElement(step4Section, 
-            (appState.generatedArticleContent || '').trim() !== '' && 
-            (spunArticleDisplay?.textContent || '').trim() !== '' 
+        showElement(step4Section,
+            (appState.generatedArticleContent || '').trim() !== '' &&
+            (spunArticleDisplay?.textContent || '').trim() !== ''
         );
-        
+
         if(formatSelect) {
             disableElement(formatSelect, false);
             // The format in appState should have been restored by the event listener in article-main.js
-            formatSelect.value = appState.format; 
+            formatSelect.value = appState.format;
             logToConsole(`Format select value set to: ${appState.format} for single mode.`, 'debug');
         }
     }
@@ -583,7 +589,7 @@ export function updateCounts(text) {
     const charCountEl = getElement('charCountDisplay');
     if (!wordCountEl || !charCountEl) return;
 
-    const textContent = text || ''; 
+    const textContent = text || '';
     const wordCount = textContent.trim() === '' ? 0 : textContent.trim().split(/\s+/).filter(Boolean).length;
     const charCount = textContent.length;
 
@@ -606,7 +612,7 @@ export function updateStructureCountDisplay(structureText) {
 export function updateUIFromState(state) {
     logToConsole("Updating UI from loaded state...", "info");
     if (!state) { logToConsole("Cannot update UI: state is null.", "error"); return; }
-    if (Object.keys(domElements).length === 0 && Object.keys(elementIdMap).length > 0) { 
+    if (Object.keys(domElements).length === 0 && Object.keys(elementIdMap).length > 0) {
         logToConsole("DOM elements not cached, attempting now before UI update.", "warn");
         cacheDomElements();
         if (Object.keys(domElements).length === 0 && Object.keys(elementIdMap).length > 0){
@@ -624,7 +630,7 @@ export function updateUIFromState(state) {
 
     const audienceInputElement = getElement('audienceInput'); if(audienceInputElement) audienceInputElement.value = state.audience || defaultSettings.audience;
     const readerNameInputElement = getElement('readerNameInput'); if(readerNameInputElement) readerNameInputElement.value = state.readerName || defaultSettings.readerName;
-    const humanizeContentCheckbox = getElement('humanizeContentCheckbox'); if(humanizeContentCheckbox) humanizeContentCheckbox.checked = state.humanizeContent ?? defaultSettings.humanizeContent; 
+    const humanizeContentCheckbox = getElement('humanizeContentCheckbox'); if(humanizeContentCheckbox) humanizeContentCheckbox.checked = state.humanizeContent ?? defaultSettings.humanizeContent;
     const toneSelectElement = getElement('toneSelect'); if(toneSelectElement) toneSelectElement.value = state.tone || defaultSettings.tone;
     const customToneInputElement = getElement('customToneInput'); if(customToneInputElement) customToneInputElement.value = state.customTone || '';
     const genderSelectElement = getElement('genderSelect'); if(genderSelectElement) genderSelectElement.value = state.gender || defaultSettings.gender;
@@ -633,7 +639,7 @@ export function updateUIFromState(state) {
     const sitemapUrlInputElement = getElement('sitemapUrlInput'); if(sitemapUrlInputElement) sitemapUrlInputElement.value = state.sitemapUrl || defaultSettings.sitemapUrl;
     const customSpecsInputElement = getElement('customSpecsInput'); if(customSpecsInputElement) customSpecsInputElement.value = state.customSpecs || defaultSettings.customSpecs;
 
-    populateLanguagesUI(state); 
+    populateLanguagesUI(state);
 
     const savedPurposes = state.purpose || defaultSettings.purpose;
     let showPurposeUrl = false; let showPurposeCta = false;
@@ -669,27 +675,27 @@ export function updateUIFromState(state) {
     if (!state.useCustomImageModel && currentImageModel && state.imageModel !== currentImageModel) updatesToState.imageModel = currentImageModel;
     if (currentImageAspect && state.imageAspectRatio !== currentImageAspect) updatesToState.imageAspectRatio = currentImageAspect;
     if (currentLanguage && state.language !== currentLanguage) updatesToState.language = currentLanguage;
-    
+
     if (currentLanguage !== 'custom' && currentDialect && currentDialect !== "" && state.dialect !== currentDialect && (languageOptions[currentLanguage]?.dialects || []).includes(currentDialect)) {
         updatesToState.dialect = currentDialect;
     } else if (currentLanguage !== 'custom' && (!(languageOptions[currentLanguage]?.dialects || []).includes(state.dialect) || state.dialect === "" ) ) {
         updatesToState.dialect = (languageOptions[currentLanguage]?.dialects || [])[0] || '';
     }
 
-    if (Object.keys(updatesToState).length > 0) { 
-        updateState(updatesToState); 
-        state = getState(); 
+    if (Object.keys(updatesToState).length > 0) {
+        updateState(updatesToState);
+        state = getState();
     }
-    
+
     if(getElement('imageOptionsContainer')) showElement(getElement('imageOptionsContainer'), state.generateImages);
     toggleGithubOptions();
-    
+
     const articleTitleInputElement = getElement('articleTitleInput'); if (articleTitleInputElement) articleTitleInputElement.value = state.articleTitle || '';
     const linkTypeToggleElement = getElement('linkTypeToggle'); if(linkTypeToggleElement) linkTypeToggleElement.checked = !(state.linkTypeInternal ?? defaultSettings.linkTypeInternal);
     const linkTypeTextElement = getElement('linkTypeText'); if(linkTypeTextElement) linkTypeTextElement.textContent = (state.linkTypeInternal ?? defaultSettings.linkTypeInternal) ? 'Internal' : 'External';
-    
+
     const articleStructureTextarea = getElement('articleStructureTextarea');
-    let initialStructure = ''; 
+    let initialStructure = '';
     if (articleStructureTextarea) {
         if (state.articleStructure && !state.bulkMode) {
             initialStructure = state.articleStructure;
@@ -701,12 +707,12 @@ export function updateUIFromState(state) {
         } else {
              articleStructureTextarea.value = '';
             //  if (!state.bulkMode) showElement(getElement('step2Section'), false); // Visibility handled by updateUIBasedOnMode
-        } 
+        }
     }
     updateStructureCountDisplay(initialStructure);
 
     const generatedArticleTextarea = getElement('generatedArticleTextarea');
-    let initialArticleContent = ''; 
+    let initialArticleContent = '';
     if (generatedArticleTextarea) {
         if (state.generatedArticleContent && !state.bulkMode) {
              initialArticleContent = state.generatedArticleContent;
@@ -718,10 +724,10 @@ export function updateUIFromState(state) {
         }
     }
     updateCounts(initialArticleContent);
-    
-    updateUIBasedOnMode(state.bulkMode); 
 
-    if (state.bulkMode) { 
+    updateUIBasedOnMode(state.bulkMode);
+
+    if (state.bulkMode) {
         const currentBulkPlanItems = getBulkPlan(); // Use imported function
         if (currentBulkPlanItems.length > 0) {
             renderPlanningTable(currentBulkPlanItems);
@@ -754,7 +760,7 @@ export function renderPlanningTable(plan) {
     if (hasCompletedArticles && downloadBtn) {
         showElement(downloadBtn, true);
     }
-    
+
     plan.forEach((item, index) => {
         const row = tableBody.insertRow();
         row.dataset.index = index;
@@ -794,7 +800,7 @@ export function renderPlanningTable(plan) {
         intentInput.classList.add('compact-input', 'p-1', 'text-xs', 'w-full');
         cell.appendChild(intentInput);
         cell.classList.add('px-3', 'py-2');
-        
+
         cell = row.insertCell();
         cell.classList.add('px-3', 'py-2', 'whitespace-nowrap', 'text-xs');
         updatePlanItemStatusUI(row, item.status || 'Pending', item.error);
@@ -807,10 +813,10 @@ export function updatePlanItemStatusUI(rowElementOrIndex, status, errorMsg = nul
     const tableBody = getElement('planningTableBody');
     if (!tableBody) return;
     if (typeof rowElementOrIndex === 'number') { row = tableBody.querySelector(`tr[data-index="${rowElementOrIndex}"]`); }
-    else { row = rowElementOrIndex; } 
+    else { row = rowElementOrIndex; }
     if (!row || row.cells.length < 6) { return; }
     const statusCell = row.cells[5]; if (!statusCell) return;
-    statusCell.className = 'px-3 py-2 whitespace-nowrap text-xs'; statusCell.title = ''; 
+    statusCell.className = 'px-3 py-2 whitespace-nowrap text-xs'; statusCell.title = '';
     const statusText = status || 'Pending';
     switch (statusText.toLowerCase().split('(')[0].trim()) { case 'pending': statusCell.textContent = 'Pending'; statusCell.classList.add('status-pending'); break; case 'generating': statusCell.textContent = 'Generating...'; statusCell.classList.add('status-generating'); break; case 'uploading': statusCell.textContent = 'Uploading...'; statusCell.classList.add('status-uploading'); break; case 'completed': statusCell.textContent = 'Completed'; statusCell.classList.add('status-completed'); if (statusText.includes('Image Upload Failed')) { statusCell.textContent = 'Completed (Img Fail)'; statusCell.classList.remove('status-completed'); statusCell.classList.add('status-warn', 'text-yellow-600'); statusCell.title = errorMsg || 'One or more image uploads failed.'; } break; case 'failed': statusCell.classList.add('status-failed'); if (errorMsg) { const shortError = errorMsg.length > 30 ? errorMsg.substring(0, 30) + '...' : errorMsg; statusCell.textContent = `Failed: ${shortError}`; statusCell.title = errorMsg; } else { statusCell.textContent = 'Failed'; } break; default: statusCell.textContent = statusText; statusCell.classList.add('status-pending'); break; }
 }
@@ -836,11 +842,11 @@ export function toggleGithubOptions() {
         const checkedRadio = Array.from(imageStorageRadios).find(r => r.checked);
         if (checkedRadio) storageType = checkedRadio.value;
     }
-    
+
     const githubOptionsContainer = getElement('githubOptionsContainer');
     const generateImagesCheckbox = getElement('generateImagesCheckbox');
     const generateImages = generateImagesCheckbox ? generateImagesCheckbox.checked : false;
-    
+
     if (githubOptionsContainer) showElement(githubOptionsContainer, generateImages && storageType === 'github');
 }
 
@@ -851,6 +857,10 @@ export function displaySitemapUrlsUI(urls = []) {
     listDiv.innerHTML = '';
     urls.forEach(url => { const div = document.createElement('div'); div.textContent = url; div.title = url; listDiv.appendChild(div); });
     logToConsole(`Displayed ${urls.length} sitemap URLs.`, 'info');
+}
+
+export function getProviderConfig(type) {
+    return ALL_PROVIDERS_CONFIG[type];
 }
 
 console.log("article-ui.js loaded (v8.18 Humanize content)");
