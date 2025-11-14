@@ -13,6 +13,16 @@ export const languageOptions = {
     "custom": { name: "Custom...", dialects: [], defaultPath: "/articles/" }
 };
 
+// --- Image Providers Configuration ---
+export const imageProviders = {
+    google: {
+        aspectRatios: ["1:1", "3:4", "4:3", "9:16", "16:9"]
+    },
+    openai: {
+        aspectRatios: ["1024x1024", "1792x1024", "1024x1792"]
+    }
+};
+
 // --- Storage Keys ---
 export const storageKeys = {
     SITEMAP: 'aiArticleSpinner_sitemapUrls_v1',
