@@ -302,6 +302,38 @@ const aiTextProviders = {
     openai: {
         models: [
             {
+                id: 'gpt-5-pro',
+                name: 'GPT-5 pro',
+                developer: 'OpenAI',
+                provider: 'OpenAI',
+                description: 'The most intelligent and precise version of GPT-5, ideal for tasks requiring deep understanding and accuracy.',
+                modality: ['text'],
+                parameters: 'Unknown',
+                contextWindow: 128000,
+                maxOutputTokens: 16384,
+                knowledgeCutoff: null, // Often updated, check docs
+                pricing: { currency: 'USD', unit: 'per_1m_tokens', input: 10.00, output: 40.00, tiers: null },
+                rateLimits: null, // Tier-dependent, check docs
+                features: { vision: false, toolUse: true, jsonMode: true, extendedThinking: true, multilingual: true },
+                performance: { latency: 'Moderate', tokensPerSecond: null },
+            },
+            {
+                id: 'gpt-5.1',
+                name: 'GPT-5.1',
+                developer: 'OpenAI',
+                provider: 'OpenAI',
+                description: "The best model for coding and agentic tasks with configurable reasoning effort.",
+                modality: ['text', 'code'],
+                parameters: 'Unknown',
+                contextWindow: 128000,
+                maxOutputTokens: 16384,
+                knowledgeCutoff: null, // Often updated, check docs
+                pricing: { currency: 'USD', unit: 'per_1m_tokens', input: 5.00, output: 20.00, tiers: null },
+                rateLimits: null, // Tier-dependent, check docs
+                features: { vision: false, toolUse: true, jsonMode: true, extendedThinking: true, multilingual: true },
+                performance: { latency: 'Moderate', tokensPerSecond: null },
+            },
+            {
                 id: 'o3-pro-2025-06-10',
                 name: 'o3-pro',
                 developer: 'OpenAI',
@@ -334,6 +366,22 @@ const aiTextProviders = {
                 performance: { latency: 'Fast', tokensPerSecond: null },
             },
             {
+                id: 'gpt-5-mini',
+                name: 'GPT-5 mini',
+                developer: 'OpenAI',
+                provider: 'OpenAI',
+                description: 'A faster, cost-efficient version of GPT-5 for well-defined or high-volume tasks.',
+                modality: ['text'],
+                parameters: 'Unknown',
+                contextWindow: 128000,
+                maxOutputTokens: 16384,
+                knowledgeCutoff: null, // Often updated, check docs
+                pricing: { currency: 'USD', unit: 'per_1m_tokens', input: 0.25, output: 1.00, tiers: null },
+                rateLimits: null, // Tier-dependent, check docs
+                features: { vision: false, toolUse: true, jsonMode: true, extendedThinking: false, multilingual: true },
+                performance: { latency: 'Fast', tokensPerSecond: null },
+            },
+            {
                 id: 'gpt-4o-mini-2024-07-18',
                 name: 'GPT-4o mini',
                 developer: 'OpenAI',
@@ -347,6 +395,22 @@ const aiTextProviders = {
                 pricing: { currency: 'USD', unit: 'per_1m_tokens', input: 0.15, output: 0.60, tiers: [{ name: 'vision_pricing', input: 0.075, output: null, notes: "Pricing for vision input." }] },
                 rateLimits: { requestsPerMinute: 10000, tokensPerMinute: 10000000, requestsPerDay: null, tokensPerDay: 1000000000, notes: null },
                 features: { vision: true, toolUse: true, jsonMode: true, extendedThinking: false, multilingual: true },
+                performance: { latency: 'Fastest', tokensPerSecond: null },
+            },
+            {
+                id: 'gpt-5-nano',
+                name: 'GPT-5 nano',
+                developer: 'OpenAI',
+                provider: 'OpenAI',
+                description: 'The fastest and most cost-efficient version of GPT-5, optimized for speed in simple tasks.',
+                modality: ['text'],
+                parameters: 'Unknown',
+                contextWindow: 128000,
+                maxOutputTokens: 16384,
+                knowledgeCutoff: null, // Often updated, check docs
+                pricing: { currency: 'USD', unit: 'per_1m_tokens', input: 0.05, output: 0.20, tiers: null },
+                rateLimits: null, // Tier-dependent, check docs
+                features: { vision: false, toolUse: true, jsonMode: true, extendedThinking: false, multilingual: true },
                 performance: { latency: 'Fastest', tokensPerSecond: null },
             },
         ]
