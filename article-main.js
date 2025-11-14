@@ -47,7 +47,7 @@ function initializeApp() {
     logToConsole("DOMContentLoaded event fired. Initializing application...", "info");
     cacheDomElements();
 
-    const criticalElementsCheck = [ 'aiProviderSelect', 'languageSelect', 'apiStatusDiv', 'audienceInput', 'bulkModeCheckbox' ];
+    const criticalElementsCheck = [ 'languageSelect', 'apiStatusDiv', 'audienceInput', 'bulkModeCheckbox' ];
     let criticalMissing = false;
     criticalElementsCheck.forEach(jsKey => { if (!getElement(jsKey)) { logToConsole(`FATAL: Critical element with JS key '${jsKey}' missing after cache attempt. Cannot initialize UI.`, "error"); criticalMissing = true; } });
     if (criticalMissing) { return; }
