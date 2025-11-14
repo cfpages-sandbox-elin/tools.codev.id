@@ -455,7 +455,7 @@ export function toggleCustomModelUI(type) {
 
     if (!isChecked) {
         const providerKey = getState()[type === 'text' ? 'textProvider' : 'imageProvider'];
-        const providerConfig = type === 'text' ? textProviders[providerKey] : imageProviders[providerKey];
+        const providerConfig = type === 'text' ? ALL_PROVIDERS_CONFIG.text[providerKey] : ALL_PROVIDERS_CONFIG.image[providerKey];
         const hasModels = providerConfig?.models?.length > 0;
         disableElement(modelSelect, !hasModels);
     }
