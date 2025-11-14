@@ -154,6 +154,28 @@ export function addBulkArticle(filename, content) {
     saveBulkArticlesState();
 }
 
+// --- Provider Management ---
+export function addProviderToState() {
+    const defaultProvider = { provider: 'google', model: '', useCustom: false, customModel: '' };
+    appState.textProviders = appState.textProviders || [];
+    appState.textProviders.push(defaultProvider);
+    saveState();
+}
+
+export function removeProviderFromState(index) {
+    if (appState.textProviders && appState.textProviders.length > 1 && appState.textProviders[index]) {
+        appState.textProviders.splice(index, 1);
+        saveState();
+    }
+}
+
+export function updateProviderInState(index, key, value) {
+    if (appState.textProviders && appState.textProviders[index]) {
+        appState.textProviders[index][key] = value;
+        saveState();
+    }
+}
+
 // --- Reset State ---
 export function resetAllData() {
     if (confirm("Are you sure you want to reset ALL settings, custom models, and bulk progress? This cannot be undone.")) {
