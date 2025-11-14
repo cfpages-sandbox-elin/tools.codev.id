@@ -1282,6 +1282,26 @@ export async function onRequest({ request, env }) {
 
             if (!apiResponse.ok) {
                 const errorDetail = responseData?.error?.message || JSON.stringify(responseData);
+
+                // NEW: Handle specific client-side errors (API keys, permissions)
+                if (apiResponse.status === 401) {
+                    console.warn(`API Authentication Error (401) for ${providerKey}: ${errorDetail}`);
+                    return jsonResponse({
+                        success: false,
+                        error: 'The API key is invalid or has been revoked.',
+                        type: 'auth_error'
+                    }, 401); // Return 401 Unauthorized to the frontend
+                }
+                if (apiResponse.status === 403) {
+                     console.warn(`API Permission Error (403) for ${providerKey}: ${errorDetail}`);
+                     return jsonResponse({
+                        success: false,
+                        error: errorDetail.includes('Country') ? 'The API provider has blocked this server\'s region.' : 'The API key lacks permissions for this model.',
+                        type: 'permission_error'
+                    }, 403); // Return 403 Forbidden to the frontend
+                }
+
+                // For all other errors (e.g., 5xx), throw to be caught as a server error
                 throw new Error(`API Error (${apiResponse.status}): ${errorDetail}`);
             }
             

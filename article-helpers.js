@@ -1,4 +1,4 @@
-// article-helpers.js v8.15 (better html parser)
+// article-helpers.js v8.24 (better info)
 import { CLOUDFLARE_FUNCTION_URL } from './article-config.js';
 
 // --- Logging ---
@@ -68,7 +68,6 @@ export function slugify(text) {
 
 // --- AI/API Call Helper ---
 export async function callAI(action, payload, loadingIndicator = null, buttonToDisable = null) {
-    // ... (implementation same as before) ...
     const fullPayload = { action, ...payload };
     logToConsole(`Sending action '${action}' to backend...`, 'info');
     if (loadingIndicator) showLoading(loadingIndicator, true);
@@ -76,12 +75,37 @@ export async function callAI(action, payload, loadingIndicator = null, buttonToD
     try {
         const response = await fetch(CLOUDFLARE_FUNCTION_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(fullPayload) });
         const data = await response.json();
-        if (!response.ok || !data.success) { const errorMsg = data.error || `Request failed with status ${response.status}`; if (response.status === 429) logToConsole(`Rate limit hit during action '${action}'.`, 'warn'); else if (response.status >= 500) logToConsole(`Server error (${response.status}) during action '${action}'.`, 'warn'); throw new Error(errorMsg); }
+        if (!response.ok || !data.success) {
+            const errorMsg = data.error || `Request failed with status ${response.status}`;
+            
+            // NEW: Differentiated logging based on the error type
+            if (response.status === 401 || response.status === 403) {
+                // This is an expected, user-fixable error. Log as a warning.
+                logToConsole(`Configuration issue for action '${action}': ${errorMsg}`, 'warn');
+            } else if (response.status === 429) { 
+                logToConsole(`Rate limit hit during action '${action}'.`, 'warn'); 
+            } else if (response.status >= 500) { 
+                logToConsole(`Server error (${response.status}) during action '${action}'.`, 'error'); 
+            }
+            
+            // Create a structured error to pass more info to the UI
+            const structuredError = new Error(errorMsg);
+            structuredError.status = response.status; // Pass the status code
+            throw structuredError;
+        }
         logToConsole(`Action '${action}' successful.`, 'success');
         return data;
-    } catch (error) { console.error(`Action '${action}' Failed:`, error); logToConsole(`Error during action '${action}': ${error.message}`, 'error'); return { success: false, error: error.message }; }
+    } catch (error) { 
+        console.error(`Action '${action}' Failed:`, error); 
+        // Log only if it hasn't been logged already by the differentiated logic
+        if (![401, 403, 429].includes(error.status) && !(error.message.includes('Server error'))) {
+            logToConsole(`Error during action '${action}': ${error.message}`, 'error');
+        }
+        return { success: false, error: error.message, status: error.status }; 
+    }
     finally { if (loadingIndicator) showLoading(loadingIndicator, false); if (buttonToDisable) disableElement(buttonToDisable, false); else disableActionButtons(false); }
 }
+
 async function fetchWithRetry(url, options) { console.warn("Using dummy fetchWithRetry"); return fetch(url, options); } // Dummy
 
 // --- Model Helpers ---
