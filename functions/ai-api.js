@@ -941,21 +941,35 @@ const aiAudioProviders = {
 const createOpenAICompatibleHandler = (apiKeyEnvVar, endpointUrl, extraHeaders = {}) => ({
     apiKeyEnvVar,
     text: {
-        buildRequest: (modelConfig, apiKey, prompt, isCheck) => {
+        buildRequest: (modelConfig, apiKey, prompt, isCheck, env, providerKey) => {
+            let finalEndpointUrl;
+            let finalModelString = modelConfig.id;
+
+            // DYNAMIC ENDPOINT: Check if AI Gateway is configured
+            if (env.CF_ACCOUNT_ID && env.CF_GATEWAY_ID) {
+                // Use the NEW universal /compat endpoint
+                finalEndpointUrl = `https://gateway.ai.cloudflare.com/v1/${env.CF_ACCOUNT_ID}/${env.CF_GATEWAY_ID}/compat/chat/completions`;
+                // Prepend the provider to the model name, as required by the /compat endpoint
+                finalModelString = `${providerKey}/${modelConfig.id}`;
+                console.log(`Routing ${providerKey} request via Cloudflare AI Gateway with model: ${finalModelString}`);
+            } else {
+                // Fallback to the direct URL if gateway is not configured
+                finalEndpointUrl = endpointUrl;
+            }
+
             const maxTokensValue = isCheck ? 10 : (modelConfig.maxOutputTokens || 4096);
-            
             const maxTokensParam = modelConfig.useMaxCompletionTokens
                 ? { max_completion_tokens: maxTokensValue }
                 : { max_tokens: maxTokensValue };
 
             const body = {
-                model: modelConfig.id,
+                model: finalModelString,
                 messages: [{ role: 'user', content: prompt }],
-                ...maxTokensParam, // Spread the correct parameter object here
+                ...maxTokensParam,
                 temperature: isCheck ? 0.1 : 0.7,
             };
             return {
-                url: endpointUrl,
+                url: finalEndpointUrl,
                 options: {
                     method: 'POST',
                     headers: {
@@ -1242,7 +1256,7 @@ export async function onRequest({ request, env }) {
             if (!modalityHandler) return jsonResponse({ success: false, error: `${modality} generation not supported by ${providerKey}.` }, 400);
 
             const payload = modality === 'image' ? { prompt, ...otherParams } : (isCheck ? checkPrompt : prompt);
-            const { url, options } = modalityHandler.buildRequest(modelConfig, apiKey, payload, isCheck);
+            const { url, options } = modalityHandler.buildRequest(modelConfig, apiKey, payload, isCheck, env, providerKey);
 
             console.log(`${isCheck ? 'Checking status' : 'Generating ' + modality} for ${providerKey} (${model})...`);
 
