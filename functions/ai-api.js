@@ -962,7 +962,7 @@ const createOpenAICompatibleHandler = (apiKeyEnvVar, endpointUrl, extraHeaders =
                 model: finalModelString,
                 messages: [{ role: 'user', content: prompt }],
                 ...maxTokensParam,
-                ...(!isCheck && { temperature: 0.7 })
+                ...(!useGateway && { temperature: isCheck ? 0.1 : 0.7 })
             };
             return {
                 url: finalEndpointUrl,

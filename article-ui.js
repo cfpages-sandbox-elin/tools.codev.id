@@ -1,4 +1,4 @@
-// article-ui.js (v8.24 new save state)
+// article-ui.js (v8.24 new save state2)
 import { languageOptions, defaultSettings } from './article-config.js';
 import { getState, updateState, getBulkPlan, addProviderToState, removeProviderFromState, updateProviderInState, updateCustomModelState, getCustomModelState } from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2, delay } from './article-helpers.js';
@@ -295,10 +295,15 @@ function createAiProviderRow(providerState, index) {
     const modelSelect = document.createElement('select');
     modelSelect.className = 'compact-select text-sm';
     const availableModels = ALL_PROVIDERS_CONFIG.text[providerState.provider]?.models.map(m => m.id) || [];
+    if (providerState.model && !availableModels.includes(providerState.model)) {
+        logToConsole(`Saved model "${providerState.model}" not found for provider "${providerState.provider}". Resetting model selection.`, 'warn');
+        providerState.model = ''; 
+        updateProviderInState(index, 'model', ''); 
+    }
     populateSelect(modelSelect, availableModels, providerState.model, !providerState.model, "-- Select a Model --");
     modelSelect.addEventListener('change', (e) => {
         updateProviderInState(index, 'model', e.target.value);
-        renderAiProviderRows(); // Re-render to update specs
+        renderAiProviderRows();
         checkApiStatus();
     });
 
