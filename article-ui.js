@@ -1,4 +1,4 @@
-// article-ui.js (v8.24 add 400 error + delay + hapus2)
+// article-ui.js (v8.24 new save state)
 import { languageOptions, defaultSettings } from './article-config.js';
 import { getState, updateState, getBulkPlan, addProviderToState, removeProviderFromState, updateProviderInState, updateCustomModelState, getCustomModelState } from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2, delay } from './article-helpers.js';
@@ -653,92 +653,114 @@ export function updateUIFromState(state) {
     }
     renderAiProviderRows();
 
-    const keywordInput = getElement('keywordInput'); if (keywordInput) keywordInput.value = state.keyword || '';
-    const bulkModeCheckbox = getElement('bulkModeCheckbox'); if (bulkModeCheckbox) bulkModeCheckbox.checked = state.bulkMode || defaultSettings.bulkMode;
+    const keywordInput = getElement('keywordInput'); 
+    if (keywordInput) keywordInput.value = state.keyword ?? defaultSettings.keyword;
+
+    const bulkModeCheckbox = getElement('bulkModeCheckbox'); 
+    if (bulkModeCheckbox) bulkModeCheckbox.checked = state.bulkMode ?? defaultSettings.bulkMode;
+    
     const bulkKeywordsTextarea = getElement('bulkKeywords');
-    if (bulkKeywordsTextarea && state.bulkKeywordsContent) {
-        bulkKeywordsTextarea.value = state.bulkKeywordsContent;
+    if (bulkKeywordsTextarea) {
+        bulkKeywordsTextarea.value = state.bulkKeywordsContent ?? defaultSettings.bulkKeywordsContent;
     }
 
-    const audienceInputElement = getElement('audienceInput'); if(audienceInputElement) audienceInputElement.value = state.audience || defaultSettings.audience;
-    const readerNameInputElement = getElement('readerNameInput'); if(readerNameInputElement) readerNameInputElement.value = state.readerName || defaultSettings.readerName;
-    const humanizeContentCheckbox = getElement('humanizeContentCheckbox'); if(humanizeContentCheckbox) humanizeContentCheckbox.checked = state.humanizeContent ?? defaultSettings.humanizeContent;
-    const toneSelectElement = getElement('toneSelect'); if(toneSelectElement) toneSelectElement.value = state.tone || defaultSettings.tone;
-    const customToneInputElement = getElement('customToneInput'); if(customToneInputElement) customToneInputElement.value = state.customTone || '';
-    const genderSelectElement = getElement('genderSelect'); if(genderSelectElement) genderSelectElement.value = state.gender || defaultSettings.gender;
-    const ageSelectElement = getElement('ageSelect'); if(ageSelectElement) ageSelectElement.value = state.age || defaultSettings.age;
-    const formatSelectElement = getElement('formatSelect'); if(formatSelectElement) formatSelectElement.value = state.format || defaultSettings.format;
-    const sitemapUrlInputElement = getElement('sitemapUrlInput'); if(sitemapUrlInputElement) sitemapUrlInputElement.value = state.sitemapUrl || defaultSettings.sitemapUrl;
-    const customSpecsInputElement = getElement('customSpecsInput'); if(customSpecsInputElement) customSpecsInputElement.value = state.customSpecs || defaultSettings.customSpecs;
+    const audienceInputElement = getElement('audienceInput'); 
+    if(audienceInputElement) audienceInputElement.value = state.audience ?? defaultSettings.audience;
+
+    const readerNameInputElement = getElement('readerNameInput'); 
+    if(readerNameInputElement) readerNameInputElement.value = state.readerName ?? defaultSettings.readerName;
+
+    const humanizeContentCheckbox = getElement('humanizeContentCheckbox'); 
+    if(humanizeContentCheckbox) humanizeContentCheckbox.checked = state.humanizeContent ?? defaultSettings.humanizeContent;
+
+    const toneSelectElement = getElement('toneSelect'); 
+    if(toneSelectElement) toneSelectElement.value = state.tone ?? defaultSettings.tone;
+
+    const customToneInputElement = getElement('customToneInput'); 
+    if(customToneInputElement) customToneInputElement.value = state.customTone ?? defaultSettings.customTone;
+
+    const genderSelectElement = getElement('genderSelect'); 
+    if(genderSelectElement) genderSelectElement.value = state.gender ?? defaultSettings.gender;
+
+    const ageSelectElement = getElement('ageSelect'); 
+    if(ageSelectElement) ageSelectElement.value = state.age ?? defaultSettings.age;
+
+    const formatSelectElement = getElement('formatSelect'); 
+    if(formatSelectElement) formatSelectElement.value = state.format ?? defaultSettings.format;
+
+    const sitemapUrlInputElement = getElement('sitemapUrlInput'); 
+    if(sitemapUrlInputElement) sitemapUrlInputElement.value = state.sitemapUrl ?? defaultSettings.sitemapUrl;
+
+    const customSpecsInputElement = getElement('customSpecsInput'); 
+    if(customSpecsInputElement) customSpecsInputElement.value = state.customSpecs ?? defaultSettings.customSpecs;
 
     populateLanguagesUI(state);
 
-    const savedPurposes = state.purpose || defaultSettings.purpose;
+    const savedPurposes = state.purpose ?? defaultSettings.purpose;
     let showPurposeUrl = false; let showPurposeCta = false;
     const purposeCheckboxes = getElement('purposeCheckboxes');
     if(purposeCheckboxes) { purposeCheckboxes.forEach(cb => { cb.checked = savedPurposes.includes(cb.value); if (cb.checked) { if (cb.value === 'Promote URL') showPurposeUrl = true; if (cb.value.startsWith('Promote') || cb.value === 'Generate Leads') showPurposeCta = true; } }); }
-    const purposeUrlInputElement = getElement('purposeUrlInput'); if(purposeUrlInputElement) purposeUrlInputElement.value = state.purposeUrl || defaultSettings.purposeUrl;
-    const purposeCtaInputElement = getElement('purposeCtaInput'); if(purposeCtaInputElement) purposeCtaInputElement.value = state.purposeCta || defaultSettings.purposeCta;
+    
+    const purposeUrlInputElement = getElement('purposeUrlInput'); 
+    if(purposeUrlInputElement) purposeUrlInputElement.value = state.purposeUrl ?? defaultSettings.purposeUrl;
+
+    const purposeCtaInputElement = getElement('purposeCtaInput'); 
+    if(purposeCtaInputElement) purposeCtaInputElement.value = state.purposeCta ?? defaultSettings.purposeCta;
+    
     showElement(getElement('purposeUrlInput'), showPurposeUrl);
     showElement(getElement('purposeCtaInput'), showPurposeCta);
     if(getElement('customToneInput')) showElement(getElement('customToneInput'), state.tone === 'custom');
 
-    const generateImagesCheckboxElement = getElement('generateImagesCheckbox'); if (generateImagesCheckboxElement) generateImagesCheckboxElement.checked = state.generateImages || defaultSettings.generateImages;
-    const numImagesSelectElement = getElement('numImagesSelect'); if(numImagesSelectElement) numImagesSelectElement.value = state.numImages || defaultSettings.numImages;
-    const imageSubjectInputElement = getElement('imageSubjectInput'); if(imageSubjectInputElement) imageSubjectInputElement.value = state.imageSubject || defaultSettings.imageSubject;
-    const imageStyleSelectElement = getElement('imageStyleSelect'); if(imageStyleSelectElement) imageStyleSelectElement.value = state.imageStyle || defaultSettings.imageStyle;
-    const imageStyleModifiersInputElement = getElement('imageStyleModifiersInput'); if(imageStyleModifiersInputElement) imageStyleModifiersInputElement.value = state.imageStyleModifiers || defaultSettings.imageStyleModifiers;
-    const imageTextInputElement = getElement('imageTextInput'); if(imageTextInputElement) imageTextInputElement.value = state.imageText || defaultSettings.imageText;
-    const storageValue = state.imageStorage || defaultSettings.imageStorage;
+    const generateImagesCheckboxElement = getElement('generateImagesCheckbox'); 
+    if (generateImagesCheckboxElement) generateImagesCheckboxElement.checked = state.generateImages ?? defaultSettings.generateImages;
+
+    const numImagesSelectElement = getElement('numImagesSelect'); 
+    if(numImagesSelectElement) numImagesSelectElement.value = state.numImages ?? defaultSettings.numImages;
+
+    const imageSubjectInputElement = getElement('imageSubjectInput'); 
+    if(imageSubjectInputElement) imageSubjectInputElement.value = state.imageSubject ?? defaultSettings.imageSubject;
+
+    const imageStyleSelectElement = getElement('imageStyleSelect'); 
+    if(imageStyleSelectElement) imageStyleSelectElement.value = state.imageStyle ?? defaultSettings.imageStyle;
+
+    const imageStyleModifiersInputElement = getElement('imageStyleModifiersInput'); 
+    if(imageStyleModifiersInputElement) imageStyleModifiersInputElement.value = state.imageStyleModifiers ?? defaultSettings.imageStyleModifiers;
+
+    const imageTextInputElement = getElement('imageTextInput'); 
+    if(imageTextInputElement) imageTextInputElement.value = state.imageText ?? defaultSettings.imageText;
+
+    const storageValue = state.imageStorage ?? defaultSettings.imageStorage;
     const imageStorageRadios = getElement('imageStorageRadios');
     let radioFound = false;
     if (imageStorageRadios) { imageStorageRadios.forEach(radio => { if (radio.value === storageValue) { radio.checked = true; radioFound = true; } }); if (!radioFound && imageStorageRadios.length > 0) { imageStorageRadios[0].checked = true; } }
-    const githubRepoUrlInputElement = getElement('githubRepoUrlInput'); if(githubRepoUrlInputElement) githubRepoUrlInputElement.value = state.githubRepoUrl || defaultSettings.githubRepoUrl;
-    const githubCustomPathInputElement = getElement('githubCustomPathInput'); if(githubCustomPathInputElement) githubCustomPathInputElement.value = state.githubCustomPath || defaultSettings.githubCustomPath;
+    
+    const githubRepoUrlInputElement = getElement('githubRepoUrlInput'); 
+    if(githubRepoUrlInputElement) githubRepoUrlInputElement.value = state.githubRepoUrl ?? defaultSettings.githubRepoUrl;
 
-    const currentTextModel = getElement('aiModelSelect')?.value;
-    const currentImageModel = getElement('imageModelSelect')?.value;
-    const currentImageAspect = getElement('imageAspectRatioSelect')?.value;
-    const currentLanguage = getElement('languageSelect')?.value;
-    const currentDialect = getElement('dialectSelect')?.value;
+    const githubCustomPathInputElement = getElement('githubCustomPathInput'); 
+    if(githubCustomPathInputElement) githubCustomPathInputElement.value = state.githubCustomPath ?? defaultSettings.githubCustomPath;
 
-    const updatesToState = {};
-    if (!state.useCustomTextModel && currentTextModel && state.textModel !== currentTextModel) updatesToState.textModel = currentTextModel;
-    if (!state.useCustomImageModel && currentImageModel && state.imageModel !== currentImageModel) updatesToState.imageModel = currentImageModel;
-    if (currentImageAspect && state.imageAspectRatio !== currentImageAspect) updatesToState.imageAspectRatio = currentImageAspect;
-    if (currentLanguage && state.language !== currentLanguage) updatesToState.language = currentLanguage;
+    // --- End of Corrections ---
 
-    if (currentLanguage !== 'custom' && currentDialect && currentDialect !== "" && state.dialect !== currentDialect && (languageOptions[currentLanguage]?.dialects || []).includes(currentDialect)) {
-        updatesToState.dialect = currentDialect;
-    } else if (currentLanguage !== 'custom' && (!(languageOptions[currentLanguage]?.dialects || []).includes(state.dialect) || state.dialect === "" ) ) {
-        updatesToState.dialect = (languageOptions[currentLanguage]?.dialects || [])[0] || '';
-    }
+    populateImageModels(); // This populates based on state, which is now correct.
 
-    if (Object.keys(updatesToState).length > 0) {
-        updateState(updatesToState);
-        state = getState();
-    }
+    const articleTitleInputElement = getElement('articleTitleInput'); 
+    if (articleTitleInputElement) articleTitleInputElement.value = state.articleTitle ?? '';
 
-    if(getElement('imageOptionsContainer')) showElement(getElement('imageOptionsContainer'), state.generateImages);
-    toggleGithubOptions();
-
-    const articleTitleInputElement = getElement('articleTitleInput'); if (articleTitleInputElement) articleTitleInputElement.value = state.articleTitle || '';
-    const linkTypeToggleElement = getElement('linkTypeToggle'); if(linkTypeToggleElement) linkTypeToggleElement.checked = !(state.linkTypeInternal ?? defaultSettings.linkTypeInternal);
-    const linkTypeTextElement = getElement('linkTypeText'); if(linkTypeTextElement) linkTypeTextElement.textContent = (state.linkTypeInternal ?? defaultSettings.linkTypeInternal) ? 'Internal' : 'External';
+    const linkTypeToggleElement = getElement('linkTypeToggle'); 
+    if(linkTypeToggleElement) linkTypeToggleElement.checked = !(state.linkTypeInternal ?? defaultSettings.linkTypeInternal);
+    
+    const linkTypeTextElement = getElement('linkTypeText'); 
+    if(linkTypeTextElement) linkTypeTextElement.textContent = (state.linkTypeInternal ?? defaultSettings.linkTypeInternal) ? 'Internal' : 'External';
 
     const articleStructureTextarea = getElement('articleStructureTextarea');
     let initialStructure = '';
     if (articleStructureTextarea) {
-        if (state.articleStructure && !state.bulkMode) {
-            initialStructure = state.articleStructure;
+        if (!state.bulkMode) {
+            initialStructure = state.articleStructure ?? '';
             articleStructureTextarea.value = initialStructure;
-            // showElement(getElement('step2Section'), true); // Visibility handled by updateUIBasedOnMode
-            if(getElement('structureContainer')) showElement(getElement('structureContainer'), true);
-            const toggleBtn = getElement('toggleStructureVisibilityBtn');
-            if (toggleBtn) toggleBtn.textContent = 'Hide';
         } else {
              articleStructureTextarea.value = '';
-            //  if (!state.bulkMode) showElement(getElement('step2Section'), false); // Visibility handled by updateUIBasedOnMode
         }
     }
     updateStructureCountDisplay(initialStructure);
@@ -746,13 +768,11 @@ export function updateUIFromState(state) {
     const generatedArticleTextarea = getElement('generatedArticleTextarea');
     let initialArticleContent = '';
     if (generatedArticleTextarea) {
-        if (state.generatedArticleContent && !state.bulkMode) {
-             initialArticleContent = state.generatedArticleContent;
+        if (!state.bulkMode) {
+             initialArticleContent = state.generatedArticleContent ?? '';
              generatedArticleTextarea.value = initialArticleContent;
-            //  if (initialArticleContent) showElement(getElement('step3Section'), true); // Visibility handled by updateUIBasedOnMode
         } else {
              generatedArticleTextarea.value = '';
-            //  if (!state.bulkMode) showElement(getElement('step3Section'), false); // Visibility handled by updateUIBasedOnMode
         }
     }
     updateCounts(initialArticleContent);
@@ -760,14 +780,14 @@ export function updateUIFromState(state) {
     updateUIBasedOnMode(state.bulkMode);
 
     if (state.bulkMode) {
-        const currentBulkPlanItems = getBulkPlan(); // Use imported function
+        const currentBulkPlanItems = getBulkPlan();
         if (currentBulkPlanItems.length > 0) {
             renderPlanningTable(currentBulkPlanItems);
-            showElement(getElement('step1_5Section'), true); // Show if plan exists
+            showElement(getElement('step1_5Section'), true);
         } else {
             const tableBody = getElement('planningTableBody');
-            if (tableBody) tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-gray-500 py-4">No plan generated or loaded.</td></tr>';
-             if(getElement('step1_5Section')) showElement(getElement('step1_5Section'), false); // Hide if plan is empty
+            if (tableBody) tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500 py-4">No plan generated or loaded.</td></tr>';
+             if(getElement('step1_5Section')) showElement(getElement('step1_5Section'), false);
         }
     }
     checkApiStatus();
