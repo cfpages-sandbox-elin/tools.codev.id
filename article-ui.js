@@ -1,4 +1,4 @@
-// article-ui.js (v8.24 multiple providers + fix model default selection + better check status wait)
+// article-ui.js (v8.24 multiple providers + fix model default selection + better check status wait + add await delay)
 import { languageOptions, defaultSettings } from './article-config.js';
 import { getState, updateState, getBulkPlan, addProviderToState, removeProviderFromState, updateProviderInState, updateCustomModelState, getCustomModelState } from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2 } from './article-helpers.js';
@@ -361,10 +361,9 @@ export async function checkApiStatus() {
     const firstProviderState = state.textProviders[0];
     const statusDiv = getElement('apiStatusDiv');
     const statusIndicator = getElement('apiStatusIndicator');
-    
+
     if (!statusDiv) return;
 
-    // Show the loading spinner immediately
     showElement(statusIndicator, true);
 
     if (!firstProviderState) {
@@ -381,16 +380,16 @@ export async function checkApiStatus() {
     if (!model) {
         statusDiv.innerHTML = `<span class="status-error">Select a Model</span>`;
         logToConsole("API Status Check skipped: Model missing.", "warn");
-        showElement(statusIndicator, false); // Hide spinner on early exit
+        showElement(statusIndicator, false);
         return;
     }
 
     logToConsole(`Checking API Status for Provider: ${providerKey}, Model: ${model}`, "info");
     statusDiv.innerHTML = `<span class="status-checking">Checking ${providerKey}...</span>`;
-    
+    await delay(10);
     try {
         const result = await callAI('check_status', { providerKey, model }, null, null);
-        if (!result?.success) { 
+        if (!result?.success) {
              const error = new Error(result?.error || `Status check failed`);
              error.status = result?.status || 500;
              throw error;
@@ -410,7 +409,7 @@ export async function checkApiStatus() {
         } else {
             displayMessage = `❌ Connection Error. The tool's server might be temporarily down.`;
         }
-        
+
         logToConsole(`API Status Error: ${technicalDetails}`, 'warn');
         if(statusDiv) {
             statusDiv.innerHTML = `<span class="status-error" title="Full Details: ${technicalDetails}">${displayMessage}</span>`;
