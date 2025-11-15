@@ -1,4 +1,4 @@
-// article-ui.js (v8.24 multiple providers + fix model default selection)
+// article-ui.js (v8.24 multiple providers + fix model default selection + better check status wait)
 import { languageOptions, defaultSettings } from './article-config.js';
 import { getState, updateState, getBulkPlan, addProviderToState, removeProviderFromState, updateProviderInState, updateCustomModelState, getCustomModelState } from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2 } from './article-helpers.js';
@@ -358,51 +358,65 @@ function createAiProviderRow(providerState, index) {
 
 export async function checkApiStatus() {
     const state = getState();
-    // For simplicity, we'll check the status of the *first* provider in the list.
     const firstProviderState = state.textProviders[0];
-    if (!firstProviderState) {
-        logToConsole("No providers selected for API status check.", "warn");
-        return;
-    }
-    const providerKey = firstProviderState.provider;
-    const model = firstProviderState.useCustom ? firstProviderState.customModel : firstProviderState.model;
     const statusDiv = getElement('apiStatusDiv');
     const statusIndicator = getElement('apiStatusIndicator');
-    if (!statusDiv) { return; }
-    statusDiv.innerHTML = '';
-    showElement(statusIndicator, false);
-    if (!providerKey) { statusDiv.innerHTML = `<span class="status-error">Select Provider</span>`; logToConsole("API Status Check skipped: Provider missing.", "warn"); return; }
-    if (!model && !state.useCustomTextModel) { statusDiv.innerHTML = `<span class="status-error">Select Model</span>`; logToConsole("API Status Check skipped: Model missing (standard).", "warn"); return; }
-    if (state.useCustomTextModel && !model) { statusDiv.innerHTML = `<span class="status-error">Enter Custom Model</span>`; logToConsole("API Status Check skipped: Model missing (custom).", "warn"); return; }
+    
+    if (!statusDiv) return;
 
-    logToConsole(`Checking API Status for Provider: ${providerKey}, Model: ${model} (Custom: ${state.useCustomTextModel})`, "info");
-    statusDiv.innerHTML = `<span class="status-checking">Checking ${providerKey} (${model.length > 20 ? model.substring(0,20)+'...' : model})...</span>`;
+    // Show the loading spinner immediately
     showElement(statusIndicator, true);
+
+    if (!firstProviderState) {
+        logToConsole("No providers configured for API status check.", "warn");
+        statusDiv.innerHTML = `<span class="status-error">Add a Provider</span>`;
+        showElement(statusIndicator, false);
+        return;
+    }
+
+    const providerKey = firstProviderState.provider;
+    const model = firstProviderState.useCustom ? firstProviderState.customModel : firstProviderState.model;
+
+    if (!providerKey) { statusDiv.innerHTML = `<span class="status-error">Select Provider</span>`; logToConsole("API Status Check skipped: Provider missing.", "warn"); return; }
+    if (!model) {
+        statusDiv.innerHTML = `<span class="status-error">Select a Model</span>`;
+        logToConsole("API Status Check skipped: Model missing.", "warn");
+        showElement(statusIndicator, false); // Hide spinner on early exit
+        return;
+    }
+
+    logToConsole(`Checking API Status for Provider: ${providerKey}, Model: ${model}`, "info");
+    statusDiv.innerHTML = `<span class="status-checking">Checking ${providerKey}...</span>`;
+    
     try {
         const result = await callAI('check_status', { providerKey, model }, null, null);
-        if (!result?.success) { throw new Error(result?.error || `Status check failed`); }
-        if(getElement('apiStatusDiv')) getElement('apiStatusDiv').innerHTML = `<span class="status-ok">✅ Ready (${providerKey})</span>`;
-        logToConsole(`API Status OK for ${providerKey} (${model})`, 'success');
+        if (!result?.success) { 
+             const error = new Error(result?.error || `Status check failed`);
+             error.status = result?.status || 500;
+             throw error;
+        }
+        statusDiv.innerHTML = `<span class="status-ok">✅ Ready (${providerKey})</span>`;
+        logToConsole(`API Status OK for ${providerKey}`, 'success');
     } catch (error) {
-        console.warn("API Status Check Failed:", error); // Changed from error to warn
         let displayMessage = '';
-        let technicalDetails = error.message; // NEW: Use the full message
+        let technicalDetails = error.message;
+
         if (error.status === 401) {
-            displayMessage = `❌ Invalid API Key. Please check the key in your Cloudflare Worker configuration.`;
+            displayMessage = `❌ Invalid API Key.`;
         } else if (error.status === 403) {
-            displayMessage = `❌ Permission Denied. This could be due to the server's region being blocked by the API provider.`;
+            displayMessage = `❌ Permission Denied (Region Blocked).`;
         } else if (error.status === 429) {
-            displayMessage = `❌ Quota Exceeded. Please check your billing details and plan limits with the API provider.`;
+            displayMessage = `❌ Quota Exceeded. Please check your billing.`;
         } else {
-            displayMessage = `❌ Tool Error. Could not connect to the AI provider. This might be a temporary issue with the tool's server.`;
+            displayMessage = `❌ Connection Error. The tool's server might be temporarily down.`;
         }
         
-        logToConsole(`API Status Error: ${technicalDetails}`, 'warn'); 
-        if(getElement('apiStatusDiv')) {
-            getElement('apiStatusDiv').innerHTML = `<span class="status-error" title="Full Details: ${technicalDetails}">${displayMessage}</span>`;
+        logToConsole(`API Status Error: ${technicalDetails}`, 'warn');
+        if(statusDiv) {
+            statusDiv.innerHTML = `<span class="status-error" title="Full Details: ${technicalDetails}">${displayMessage}</span>`;
         }
     } finally {
-        showElement(getElement('apiStatusIndicator'), false);
+        showElement(statusIndicator, false);
     }
 }
 

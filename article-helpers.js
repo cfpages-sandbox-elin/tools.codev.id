@@ -1,4 +1,4 @@
-// article-helpers.js v8.24 (better info)
+// article-helpers.js v8.24 (better info + error2warn)
 import { CLOUDFLARE_FUNCTION_URL } from './article-config.js';
 
 // --- Logging ---
@@ -95,13 +95,13 @@ export async function callAI(action, payload, loadingIndicator = null, buttonToD
         }
         logToConsole(`Action '${action}' successful.`, 'success');
         return data;
-    } catch (error) { 
-        console.error(`Action '${action}' Failed:`, error); 
-        // Log only if it hasn't been logged already by the differentiated logic
+    } catch (error) {
+        console.warn(`Action '${action}' resulted in a handled error:`, error);
+        
         if (![401, 403, 429].includes(error.status) && !(error.message.includes('Server error'))) {
             logToConsole(`Error during action '${action}': ${error.message}`, 'error');
         }
-        return { success: false, error: error.message, status: error.status }; 
+        return { success: false, error: error.message, status: error.status };
     }
     finally { if (loadingIndicator) showLoading(loadingIndicator, false); if (buttonToDisable) disableElement(buttonToDisable, false); else disableActionButtons(false); }
 }
