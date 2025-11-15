@@ -6,7 +6,7 @@
  * It combines both the API logic and the configuration into a single file to
  * prevent module resolution errors during the build process.
  *
- * Actions: 'generate', 'check_status', 'fetch_sitemap', 'generate_image', 'upload_image'
+ * Actions: 'generate', 'check_status', 'generate_image', 'upload_image'
  * Endpoint: /ai-api
  */
 const createOpenRouterModel = (modelData) => ({
@@ -1141,47 +1141,6 @@ export async function onRequest({ request, env }) {
             urls.push(url);
         }
         return urls;
-    }
-
-    if (action === 'fetch_sitemap') {
-        const { sitemapUrl } = requestData;
-        if (!sitemapUrl) {
-            return jsonResponse({ success: false, error: 'Missing sitemapUrl' }, 400);
-        }
-        try {
-            console.log(`Fetching sitemap: ${sitemapUrl}`);
-            const response = await fetchWithRetry(sitemapUrl, { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; CloudflareWorker/1.0; +http://www.google.com/bot.html)' } });
-
-            if (!response.ok) {
-                throw new Error(`Fetch failed with status ${response.status}: ${response.statusText}`);
-            }
-
-            const xmlText = await response.text();
-            const allUrls = parseSitemapXml(xmlText);
-
-            const finalUrls = allUrls.filter(url => !url.endsWith('.xml'));
-            const sitemapIndexUrls = allUrls.filter(url => url.endsWith('.xml'));
-
-            for (const indexUrl of sitemapIndexUrls.slice(0, 5)) {
-                try {
-                    console.log(`Fetching nested sitemap index: ${indexUrl}`);
-                    const indexResponse = await fetchWithRetry(indexUrl, { headers: { 'User-Agent': 'Mozilla/5.0 ...'} });
-                    if (indexResponse.ok) {
-                        const indexXmlText = await indexResponse.text();
-                        finalUrls.push(...parseSitemapXml(indexXmlText).filter(url => !url.endsWith('.xml')));
-                    }
-                } catch (indexError) {
-                    console.warn(`Failed to parse nested sitemap index ${indexUrl}: ${indexError.message}`);
-                }
-            }
-
-            console.log(`Successfully parsed ${finalUrls.length} page URLs from ${sitemapUrl}`);
-            return jsonResponse({ success: true, urls: finalUrls });
-
-        } catch (error) {
-            console.error(`Sitemap fetch/parse error: ${error.message}`);
-            return jsonResponse({ success: false, error: `Sitemap error: ${error.message}` }, 500);
-        }
     }
 
     if (action === 'upload_image') {
