@@ -1,4 +1,4 @@
-// article-ui.js (v8.24 add 400 error + delay)
+// article-ui.js (v8.24 add 400 error + delay + hapus2)
 import { languageOptions, defaultSettings } from './article-config.js';
 import { getState, updateState, getBulkPlan, addProviderToState, removeProviderFromState, updateProviderInState, updateCustomModelState, getCustomModelState } from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2, delay } from './article-helpers.js';
@@ -10,10 +10,6 @@ let domElements = {}; // Keep private to this module
 // Map JS variable names to actual HTML IDs
 const elementIdMap = {
     aiConfigSection: 'aiConfigSection',
-    aiProviderSelect: 'ai_provider',
-    aiModelSelect: 'ai_model',
-    useCustomAiModelCheckbox: 'useCustomAiModel',
-    customAiModelInput: 'customAiModel',
     apiStatusDiv: 'apiStatus',
     apiStatusIndicator: 'apiStatusIndicator',
     aiProviderContainer: 'aiProviderContainer',

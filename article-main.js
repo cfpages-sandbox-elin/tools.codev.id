@@ -1,4 +1,4 @@
-// article-main.js (v8.24 munculin text area + new fetch sitemap)
+// article-main.js (v8.24 munculin text area + new fetch sitemap + hapus2)
 import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
 import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
 import {
@@ -78,10 +78,6 @@ async function initializeApp() {
 
 // --- Listener setup functions ---
 function setupConfigurationListeners() {
-    const aiProviderSelect = getElement('aiProviderSelect');
-    const aiModelSelect = getElement('aiModelSelect');
-    const useCustomAiModelCheckbox = getElement('useCustomAiModelCheckbox');
-    const customAiModelInput = getElement('customAiModelInput');
     const imageProviderSelect = getElement('imageProviderSelect');
     const imageModelSelect = getElement('imageModelSelect');
     const useCustomImageModelCheckbox = getElement('useCustomImageModelCheckbox');
@@ -92,38 +88,7 @@ function setupConfigurationListeners() {
     forceReloadBtn?.addEventListener('click', () => { logToConsole("Attempting hard refresh...", "warn"); location.reload(true); });
     resetDataBtn?.addEventListener('click', resetAllData);
 
-    aiModelSelect?.addEventListener('change', (e) => {
-        if (!getElement('useCustomAiModelCheckbox')?.checked) {
-            const selectedModel = e.target.value;
-            if (selectedModel) { updateState({ textModel: selectedModel }); checkApiStatus(); }
-        }
-    });
-
-    useCustomAiModelCheckbox?.addEventListener('change', () => {
-        const isChecked = useCustomAiModelCheckbox.checked;
-        updateState({ useCustomTextModel: isChecked });
-        toggleCustomModelUI('text');
-        if (isChecked) {
-            const currentCustomModel = getElement('customAiModelInput')?.value.trim() || '';
-            updateState({ customTextModel: currentCustomModel });
-            updateCustomModelState('text', getState().textProvider, currentCustomModel);
-        } else {
-            updateState({ textModel: getElement('aiModelSelect')?.value || '' });
-        }
-        checkApiStatus();
-    });
-
-    customAiModelInput?.addEventListener('blur', (e) => {
-        if (getElement('useCustomAiModelCheckbox')?.checked) {
-            const provider = getState().textProvider;
-            const customModelName = e.target.value.trim();
-            updateCustomModelState('text', provider, customModelName);
-            updateState({ customTextModel: customModelName });
-            checkApiStatus();
-        }
-    });
-
-     imageProviderSelect?.addEventListener('change', (e) => {
+    imageProviderSelect?.addEventListener('change', (e) => {
          const newProvider = e.target.value;
          const defaultAspectRatio = imageProviders[newProvider]?.aspectRatios?.[0] || '1:1';
          updateState({ imageProvider: newProvider, imageModel: '', imageAspectRatio: defaultAspectRatio, useCustomImageModel: false });
@@ -132,17 +97,17 @@ function setupConfigurationListeners() {
          const defaultImageModel = getElement('imageModelSelect')?.value || '';
          updateState({ imageModel: defaultImageModel });
          toggleCustomModelUI('image');
-     });
+    });
 
-     imageModelSelect?.addEventListener('change', (e) => {
+    imageModelSelect?.addEventListener('change', (e) => {
          if (!getElement('useCustomImageModelCheckbox')?.checked) {
              const selectedModel = e.target.value;
              if (selectedModel) { updateState({ imageModel: selectedModel }); }
          }
-     });
+    });
     getElement('imageAspectRatioSelect')?.addEventListener('change', (e) => { updateState({ imageAspectRatio: e.target.value }); });
 
-     useCustomImageModelCheckbox?.addEventListener('change', () => {
+    useCustomImageModelCheckbox?.addEventListener('change', () => {
          const isChecked = useCustomImageModelCheckbox.checked;
          updateState({ useCustomImageModel: isChecked });
          toggleCustomModelUI('image');
@@ -153,16 +118,16 @@ function setupConfigurationListeners() {
         } else {
             updateState({ imageModel: getElement('imageModelSelect')?.value || '' });
         }
-     });
+    });
 
-     customImageModelInput?.addEventListener('blur', (e) => {
+    customImageModelInput?.addEventListener('blur', (e) => {
          if (getElement('useCustomImageModelCheckbox')?.checked) {
              const provider = getState().imageProvider;
              const customModelName = e.target.value.trim();
              updateCustomModelState('image', provider, customModelName);
              updateState({ customImageModel: customModelName });
          }
-     });
+    });
 }
 
 function setupStep1Listeners() {
