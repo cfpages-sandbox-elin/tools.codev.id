@@ -253,7 +253,9 @@ function setupStep1Listeners() {
         { id: 'imageStyleModifiersInput', stateKey: 'imageStyleModifiers', event: 'blur' },
         { id: 'imageTextInput', stateKey: 'imageText', event: 'blur' },
         { id: 'githubRepoUrlInput', stateKey: 'githubRepoUrl', event: 'blur' },
-        { id: 'githubCustomPathInput', stateKey: 'githubCustomPath', event: 'blur' } ];
+        { id: 'githubCustomPathInput', stateKey: 'githubCustomPath', event: 'blur' },
+        { id: 'batchSizeInput', stateKey: 'batchSize', event: 'blur' }
+    ];
     inputsToSave.forEach(item => {
         const element = getElement(item.id);
         element?.addEventListener(item.event, (e) => {

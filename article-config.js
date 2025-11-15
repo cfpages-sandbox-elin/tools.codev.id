@@ -69,6 +69,7 @@ export const defaultSettings = {
     bulkKeywordsContent: '', 
     sitemapFetchedUrl: '', 
     sitemapUrls: [],
+    batchSize: 30,
 };
 
 console.log("article-config.js loaded (v8.18 Humanize content)");
