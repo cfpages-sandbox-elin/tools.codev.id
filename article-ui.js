@@ -1,7 +1,7 @@
-// article-ui.js (v8.24 add 400 error)
+// article-ui.js (v8.24 add 400 error + delay)
 import { languageOptions, defaultSettings } from './article-config.js';
 import { getState, updateState, getBulkPlan, addProviderToState, removeProviderFromState, updateProviderInState, updateCustomModelState, getCustomModelState } from './article-state.js';
-import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2 } from './article-helpers.js';
+import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2, delay } from './article-helpers.js';
 
 // --- DOM Element References (Centralized) ---
 let ALL_PROVIDERS_CONFIG = { text: {}, image: {} };
