@@ -1,4 +1,4 @@
-// article-single.js (v8.24 multi ai provider)
+// article-single.js (v8.24 fix generate) - CORRECTED
 import { getState, updateState } from './article-state.js';
 import { logToConsole, callAI, getArticleOutlinesV2, constructImagePrompt, sanitizeFilename, slugify, showLoading, disableElement, delay, showElement } from './article-helpers.js';
 import { getElement, updateProgressBar, hideProgressBar, updateStructureCountDisplay, updateCounts } from './article-ui.js';
@@ -11,11 +11,17 @@ let singleModeImagesToUpload = [];
 // --- Generate Structure (and Title if needed) ---
 export async function handleGenerateStructure() {
     logToConsole("handleGenerateStructure called", "info");
-    const state = getState(); // Get current state *before* clearing
+    const state = getState();
+    const primaryProvider = state.textProviders[0];
+    if (!primaryProvider || !primaryProvider.provider || !primaryProvider.model) {
+        alert("Please configure a valid AI Provider and select a model in the 'AI Configuration' section.");
+        logToConsole("Single generation failed: No primary provider configured.", "error");
+        return;
+    }
     const ui = {
         keywordInput: getElement('keywordInput'),
         articleTitleInput: getElement('articleTitleInput'),
-        articleStructureTextarea: getElement('articleStructureTextarea'), // JS Key is 'articleStructureTextarea'
+        articleStructureTextarea: getElement('articleStructureTextarea'),
         step2Section: getElement('step2Section'),
         structureContainer: getElement('structureContainer'),
         toggleStructureVisibilityBtn: getElement('toggleStructureVisibilityBtn'),
@@ -31,47 +37,47 @@ export async function handleGenerateStructure() {
         return;
     }
 
-    // --- Generate Title Logic (remains the same) ---
     let articleTitle = ui.articleTitleInput.value.trim();
     if (!articleTitle) {
         logToConsole('Article title is blank, generating one...', 'info');
         const titlePrompt = getSingleTitlePrompt();
-        const titlePayload = { providerKey: state.textProvider, model: state.textModel, prompt: titlePrompt };
+        const titlePayload = { 
+            providerKey: primaryProvider.provider, 
+            model: primaryProvider.model, 
+            prompt: titlePrompt 
+        };
+        
         showLoading(ui.loadingIndicator, true); disableElement(ui.button, true);
         const titleResult = await callAI('generate', titlePayload, null, null);
-        showLoading(ui.loadingIndicator, false); // Hide loader after title attempt
+        showLoading(ui.loadingIndicator, false);
 
         if (titleResult?.success && titleResult.text) {
             articleTitle = titleResult.text.trim().replace(/^"|"$/g, '');
             logToConsole(`Generated Title: ${articleTitle}`, 'success');
             ui.articleTitleInput.value = articleTitle;
-            updateState({ articleTitle: articleTitle }); // Save title state
+            updateState({ articleTitle: articleTitle });
         } else {
             logToConsole('Failed to generate article title.', 'error');
             alert('Failed to generate article title. Please provide one manually or try again.');
-            disableElement(ui.button, false); // Re-enable button
+            disableElement(ui.button, false);
             return;
         }
     } else {
-        // Save manually entered title to state
         updateState({ articleTitle: articleTitle });
     }
-    // --- End Title Logic ---
 
-
-    // --- *** Clear Existing Structure Before Generating New One *** ---
     logToConsole("Clearing previous structure...", "info");
     ui.articleStructureTextarea.value = '';
     updateState({ articleStructure: '' });
-    updateStructureCountDisplay(''); // Update count display
-    // Optionally hide Step 2 until new structure is generated? Or leave visible?
-    // showElement(getElement('step2Section'), false);
-    // --- End Clear Structure ---
+    updateStructureCountDisplay('');
 
-    // --- 2. Generate Structure ---
     logToConsole('Generating article structure...', 'info');
     const structurePrompt = getSingleStructurePrompt(articleTitle);
-    const structurePayload = { providerKey: state.textProvider, model: state.textModel, prompt: structurePrompt };
+    const structurePayload = { 
+        providerKey: primaryProvider.provider, 
+        model: primaryProvider.model, 
+        prompt: structurePrompt 
+    };
     showLoading(ui.loadingIndicator, true); disableElement(ui.button, true);
     const structureResult = await callAI('generate', structurePayload, null, null);
     showLoading(ui.loadingIndicator, false); disableElement(ui.button, false);
@@ -80,10 +86,7 @@ export async function handleGenerateStructure() {
         const generatedStructure = structureResult.text;
         logToConsole('Structure generated successfully.', 'success');
         ui.articleStructureTextarea.value = generatedStructure;
-        updateState({ articleStructure: generatedStructure }); // Save raw structure
-        logToConsole('Saved generated structure to state.', 'info');
-
-        // *** Update the structure count display ***
+        updateState({ articleStructure: generatedStructure });
         updateStructureCountDisplay(generatedStructure);
 
         showElement(getElement('step2Section'), true);
@@ -96,13 +99,20 @@ export async function handleGenerateStructure() {
         logToConsole('Failed to generate structure.', 'error');
         alert(`Failed to generate structure. Error: ${structureResult?.error || 'Unknown error'}`);
         showElement(getElement('step2Section'), false);
-        updateStructureCountDisplay(''); // Clear count on failure
+        updateStructureCountDisplay('');
     }
 }
 
 // --- Generate Full Article (Single Mode - Incremental) ---
 export async function handleGenerateArticle() {
     const state = getState();
+    const primaryProvider = state.textProviders[0];
+    if (!primaryProvider || !primaryProvider.provider || !primaryProvider.model) {
+        alert("Please configure a valid AI Provider and select a model in the 'AI Configuration' section.");
+        logToConsole("Single generation failed: No primary provider configured.", "error");
+        return;
+    }
+
     const ui = {
         articleStructureTextarea: getElement('articleStructureTextarea'),
         generatedArticleTextarea: getElement('generatedArticleTextarea'),
@@ -154,7 +164,12 @@ export async function handleGenerateArticle() {
             logToConsole(`Processing Section ${i+1}/${outlineSections.length}: "${section.heading}"`, 'info');
 
             const textPrompt = getSingleSectionTextPrompt(section, previousSectionContent, articleTitle);
-            const textPayload = { providerKey: state.textProvider, model: state.textModel, prompt: textPrompt };
+            const textPayload = { 
+                providerKey: primaryProvider.provider, 
+                model: primaryProvider.model, 
+                prompt: textPrompt 
+            };
+            
             const textResult = await callAI('generate', textPayload, null, null);
             if (!textResult?.success || !textResult.text) { throw new Error(`Text generation failed for section ${i + 1} ("${section.heading}"): ${textResult?.error || 'No text returned'}`); }
 
@@ -237,7 +252,6 @@ export async function handleGenerateArticle() {
 
 
 // --- Build Payload Functions (Single Mode Specific Helpers) ---
-// Note: buildSingleImagePayload remains as it's more of a data-gathering function for the generic constructImagePrompt helper.
 function buildSingleImagePayload(sectionContent, sectionHeading, articleTitle, sectionIndex) {
     const state = getState();
     const baseFilename = sanitizeFilename(`${slugify(articleTitle)}-${slugify(sectionTitle)}`);
@@ -250,16 +264,13 @@ function buildSingleImagePayload(sectionContent, sectionHeading, articleTitle, s
     };
     const imagePrompt = constructImagePrompt(sectionContent, sectionTitle, imageSettings);
 
-    // Dynamically get model based on custom state for image
     const imageModel = state.useCustomImageModel ? state.customImageModel : state.imageModel;
 
     return {
         providerKey: state.imageProvider,
-        model: imageModel, // Use potentially custom model
+        model: imageModel,
         prompt: imagePrompt,
         filename: filename,
-        // Backend should handle numImages > 1 if needed by provider
-        // numImages: state.numImages || 1, // Generally backend generates 1 per call
         aspectRatio: state.imageAspectRatio,
     };
 }
@@ -386,4 +397,4 @@ function replacePlaceholderInTextarea(textarea, placeholderId, filename, finalIm
     }
 }
 
-console.log("article-single.js loaded (v8.18 Humanize content)");
+console.log("article-single.js loaded (v8.24 fix generate)");
