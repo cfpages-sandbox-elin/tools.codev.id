@@ -945,15 +945,11 @@ const createOpenAICompatibleHandler = (apiKeyEnvVar, endpointUrl, extraHeaders =
             let finalEndpointUrl;
             let finalModelString = modelConfig.id;
 
-            // DYNAMIC ENDPOINT: Check if AI Gateway is configured
             if (env.CF_ACCOUNT_ID && env.CF_GATEWAY_ID) {
-                // Use the NEW universal /compat endpoint
                 finalEndpointUrl = `https://gateway.ai.cloudflare.com/v1/${env.CF_ACCOUNT_ID}/${env.CF_GATEWAY_ID}/compat/chat/completions`;
-                // Prepend the provider to the model name, as required by the /compat endpoint
                 finalModelString = `${providerKey}/${modelConfig.id}`;
                 console.log(`Routing ${providerKey} request via Cloudflare AI Gateway with model: ${finalModelString}`);
             } else {
-                // Fallback to the direct URL if gateway is not configured
                 finalEndpointUrl = endpointUrl;
             }
 
@@ -966,7 +962,7 @@ const createOpenAICompatibleHandler = (apiKeyEnvVar, endpointUrl, extraHeaders =
                 model: finalModelString,
                 messages: [{ role: 'user', content: prompt }],
                 ...maxTokensParam,
-                temperature: isCheck ? 0.1 : 0.7,
+                ...(!isCheck && { temperature: 0.7 })
             };
             return {
                 url: finalEndpointUrl,
