@@ -1,4 +1,4 @@
-// article-ui.js (v8.24 multiple providers + fix model default selection + better check status wait + add await delay)
+// article-ui.js (v8.24 multiple providers + fix model default selection + better check status wait + add await delay2)
 import { languageOptions, defaultSettings } from './article-config.js';
 import { getState, updateState, getBulkPlan, addProviderToState, removeProviderFromState, updateProviderInState, updateCustomModelState, getCustomModelState } from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2 } from './article-helpers.js';
@@ -376,7 +376,13 @@ export async function checkApiStatus() {
     const providerKey = firstProviderState.provider;
     const model = firstProviderState.useCustom ? firstProviderState.customModel : firstProviderState.model;
 
-    if (!providerKey) { statusDiv.innerHTML = `<span class="status-error">Select Provider</span>`; logToConsole("API Status Check skipped: Provider missing.", "warn"); return; }
+    if (!providerKey) {
+        statusDiv.innerHTML = `<span class="status-error">Select a Provider</span>`;
+        logToConsole("API Status Check skipped: Provider key is missing.", "warn");
+        showElement(statusIndicator, false);
+        return;
+    }
+
     if (!model) {
         statusDiv.innerHTML = `<span class="status-error">Select a Model</span>`;
         logToConsole("API Status Check skipped: Model missing.", "warn");
