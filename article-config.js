@@ -1,5 +1,4 @@
-// article-config.js (v8.18 Humanize content)
-
+// article-config.js (v8.24 fix save state)
 export const CLOUDFLARE_FUNCTION_URL = '/ai-api';
 export const GITHUB_API_BASE = 'https://api.github.com';
 
@@ -34,26 +33,40 @@ export const storageKeys = {
 
 // --- Default Application Settings ---
 export const defaultSettings = {
-    textProvider: 'google',
+    // AI Configuration
+    textProviders: [{ provider: 'openai', model: 'gpt-5-mini', useCustom: false, customModel: '' }],
     imageProvider: 'google',
+    imageModel: 'imagen-3.0-generate-002',
+    useCustomImageModel: false,
+    customImageModel: '',
+    
+    // Article Specifications
+    keyword: '',
+    bulkMode: false,
+    bulkKeywordsContent: '',
     language: 'English',
+    customLanguage: '',
     dialect: 'Default',
     audience: 'General Audience',
-    readerName: '',
-    tone: 'Informative',
     gender: '',
     age: '',
-    purpose: ['Inform'], 
+    readerName: '',
+    humanizeContent: true,
+    tone: 'Informative',
+    customTone: '',
+    purpose: ['Inform'],
     purposeUrl: '',
     purposeCta: '',
-    format: 'html', 
+    format: 'html',
     formatSingleMode: 'html',
     sitemapUrl: '',
     customSpecs: '',
-    humanizeContent: true,
+    batchSize: 30,
+
+    // Image Generation
     generateImages: false,
     numImages: 1,
-    imageAspectRatio: '1:1', 
+    imageAspectRatio: '1:1',
     imageSubject: '',
     imageStyle: '',
     imageStyleModifiers: '',
@@ -61,15 +74,16 @@ export const defaultSettings = {
     imageStorage: 'base64',
     githubRepoUrl: '',
     githubCustomPath: '',
-    linkTypeInternal: true, 
-    bulkMode: false,
+
+    // Internal Linking & Workflow
+    linkTypeInternal: true,
+    sitemapFetchedUrl: '',
+    sitemapUrls: [],
+    
+    // Article Content State
     articleTitle: '',
     articleStructure: '',
     generatedArticleContent: '',
-    bulkKeywordsContent: '', 
-    sitemapFetchedUrl: '', 
-    sitemapUrls: [],
-    batchSize: 30,
 };
 
 console.log("article-config.js loaded (v8.18 Humanize content)");
