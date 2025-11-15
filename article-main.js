@@ -1,4 +1,4 @@
-// article-main.js (v8.24 munculin text area)
+// article-main.js (v8.24 munculin text area + new fetch sitemap)
 import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
 import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
 import {
@@ -221,7 +221,50 @@ function setupStep1Listeners() {
     getElement('purposeCtaInput')?.addEventListener('blur', (e) => updateState({ purposeCta: e.target.value }));
     generateImagesCheckbox?.addEventListener('change', (e) => { const generate = e.target.checked; updateState({ generateImages: generate }); showElement(getElement('imageOptionsContainer'), generate); if (generate) { populateImageModels(); } toggleGithubOptions(); });
     if (imageStorageRadios) { imageStorageRadios.forEach(radio => { radio.addEventListener('change', (e) => { if (e.target.checked) { const storageType = e.target.value; updateState({ imageStorage: storageType }); toggleGithubOptions(); } }); }); } else { logToConsole("Could not attach listeners to imageStorageRadios (not found).", "warn"); }
-    fetchSitemapBtn?.addEventListener('click', async () => { const url = sitemapUrlInput?.value.trim(); if (!url) { alert('Please enter a Sitemap URL.'); return; } showLoading(sitemapLoadingIndicator, true); disableElement(fetchSitemapBtn, true); try { const parsedUrls = await fetchAndParseSitemap(url); updateState({ sitemapUrls: parsedUrls, sitemapFetchedUrl: url }); displaySitemapUrlsUI(parsedUrls); } catch (error) { logToConsole(`Sitemap fetch failed: ${error.message}`, 'error'); alert(`Failed to fetch or parse sitemap: ${error.message}`); updateState({ sitemapUrls: [], sitemapFetchedUrl: '' }); displaySitemapUrlsUI([]); } finally { showLoading(sitemapLoadingIndicator, false); disableElement(fetchSitemapBtn, false); } });
+    fetchSitemapBtn?.addEventListener('click', async () => {
+        const url = sitemapUrlInput?.value.trim();
+        if (!url) {
+            alert('Please enter a website URL (e.g., example.com).');
+            return;
+        }
+
+        showLoading(sitemapLoadingIndicator, true);
+        disableElement(fetchSitemapBtn, true);
+        logToConsole(`Starting sitemap discovery for: ${url}`, 'info');
+
+        try {
+            // NEW: Call the dedicated sitemap discovery function
+            const response = await fetch('/fetch-sitemap', { // Use the route you set for the new worker
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ baseUrl: url })
+            });
+
+            const result = await response.json();
+
+            // Log the discovery process details from the backend
+            if (result.log && Array.isArray(result.log)) {
+                result.log.forEach(logLine => logToConsole(`[Sitemap Discovery] ${logLine}`, 'info'));
+            }
+
+            if (!response.ok || !result.success) {
+                throw new Error(result.error || `Sitemap discovery failed with status ${response.status}`);
+            }
+
+            const parsedUrls = result.urls || [];
+            updateState({ sitemapUrls: parsedUrls, sitemapFetchedUrl: url });
+            displaySitemapUrlsUI(parsedUrls);
+
+        } catch (error) {
+            logToConsole(`Sitemap discovery failed: ${error.message}`, 'error');
+            alert(`Failed to discover sitemap(s): ${error.message}`);
+            updateState({ sitemapUrls: [], sitemapFetchedUrl: '' });
+            displaySitemapUrlsUI([]);
+        } finally {
+            showLoading(sitemapLoadingIndicator, false);
+            disableElement(fetchSitemapBtn, false);
+        }
+    });
 
     bulkKeywordsTextarea?.addEventListener('blur', () => {
         logToConsole("Bulk keywords textarea lost focus. Cleaning and updating content...", "info");
