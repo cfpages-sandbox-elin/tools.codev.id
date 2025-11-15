@@ -1,4 +1,4 @@
-// article-ui.js (v8.24 multiple providers + fix model default selection + better check status wait + add await delay2)
+// article-ui.js (v8.24 add 400 error)
 import { languageOptions, defaultSettings } from './article-config.js';
 import { getState, updateState, getBulkPlan, addProviderToState, removeProviderFromState, updateProviderInState, updateCustomModelState, getCustomModelState } from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2 } from './article-helpers.js';
@@ -412,6 +412,8 @@ export async function checkApiStatus() {
             displayMessage = `❌ Permission Denied (Region Blocked).`;
         } else if (error.status === 429) {
             displayMessage = `❌ Quota Exceeded. Please check your billing.`;
+        } else if (error.status === 400) {
+            displayMessage = `❌ Model Parameter Error. The tool may need an update for this specific model.`;
         } else {
             displayMessage = `❌ Connection Error. The tool's server might be temporarily down.`;
         }

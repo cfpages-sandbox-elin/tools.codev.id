@@ -316,6 +316,7 @@ const aiTextProviders = {
                 rateLimits: null, // Tier-dependent, check docs
                 features: { vision: false, toolUse: true, jsonMode: true, extendedThinking: true, multilingual: true },
                 performance: { latency: 'Moderate', tokensPerSecond: null },
+                useMaxCompletionTokens: true
             },
             {
                 id: 'gpt-5.1',
@@ -332,6 +333,7 @@ const aiTextProviders = {
                 rateLimits: null, // Tier-dependent, check docs
                 features: { vision: false, toolUse: true, jsonMode: true, extendedThinking: true, multilingual: true },
                 performance: { latency: 'Moderate', tokensPerSecond: null },
+                useMaxCompletionTokens: true
             },
             {
                 id: 'o3-pro',
@@ -380,6 +382,7 @@ const aiTextProviders = {
                 rateLimits: null, // Tier-dependent, check docs
                 features: { vision: false, toolUse: true, jsonMode: true, extendedThinking: false, multilingual: true },
                 performance: { latency: 'Fast', tokensPerSecond: null },
+                useMaxCompletionTokens: true
             },
             {
                 id: 'gpt-4o-mini',
@@ -412,6 +415,7 @@ const aiTextProviders = {
                 rateLimits: null, // Tier-dependent, check docs
                 features: { vision: false, toolUse: true, jsonMode: true, extendedThinking: false, multilingual: true },
                 performance: { latency: 'Fastest', tokensPerSecond: null },
+                useMaxCompletionTokens: true
             },
         ]
     },
@@ -938,10 +942,16 @@ const createOpenAICompatibleHandler = (apiKeyEnvVar, endpointUrl, extraHeaders =
     apiKeyEnvVar,
     text: {
         buildRequest: (modelConfig, apiKey, prompt, isCheck) => {
+            const maxTokensValue = isCheck ? 10 : (modelConfig.maxOutputTokens || 4096);
+            
+            const maxTokensParam = modelConfig.useMaxCompletionTokens
+                ? { max_completion_tokens: maxTokensValue }
+                : { max_tokens: maxTokensValue };
+
             const body = {
                 model: modelConfig.id,
                 messages: [{ role: 'user', content: prompt }],
-                max_tokens: isCheck ? 10 : (modelConfig.maxOutputTokens || 4096),
+                ...maxTokensParam, // Spread the correct parameter object here
                 temperature: isCheck ? 0.1 : 0.7,
             };
             return {
@@ -1242,7 +1252,14 @@ export async function onRequest({ request, env }) {
             if (!apiResponse.ok) {
                 const errorDetail = responseData?.error?.message || JSON.stringify(responseData);
 
-                // NEW: Handle specific client-side errors (API keys, permissions)
+                if (apiResponse.status === 400) {
+                    console.warn(`API Bad Request (400) for ${providerKey}: ${errorDetail}`);
+                    return jsonResponse({
+                        success: false,
+                        error: errorDetail,
+                        type: 'bad_request'
+                    }, 400);
+                }
                 if (apiResponse.status === 401) {
                     console.warn(`API Authentication Error (401) for ${providerKey}: ${errorDetail}`);
                     return jsonResponse({

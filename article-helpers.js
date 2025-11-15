@@ -1,4 +1,4 @@
-// article-helpers.js v8.24 (better info + error2warn)
+// article-helpers.js v8.24 (better info + add 400 error)
 import { CLOUDFLARE_FUNCTION_URL } from './article-config.js';
 
 // --- Logging ---
@@ -78,19 +78,14 @@ export async function callAI(action, payload, loadingIndicator = null, buttonToD
         if (!response.ok || !data.success) {
             const errorMsg = data.error || `Request failed with status ${response.status}`;
             
-            // NEW: Differentiated logging based on the error type
-            if (response.status === 401 || response.status === 403) {
-                // This is an expected, user-fixable error. Log as a warning.
+            if ([400, 401, 403, 429].includes(response.status)) {
                 logToConsole(`Configuration issue for action '${action}': ${errorMsg}`, 'warn');
-            } else if (response.status === 429) { 
-                logToConsole(`Rate limit hit during action '${action}'.`, 'warn'); 
             } else if (response.status >= 500) { 
                 logToConsole(`Server error (${response.status}) during action '${action}'.`, 'error'); 
             }
             
-            // Create a structured error to pass more info to the UI
             const structuredError = new Error(errorMsg);
-            structuredError.status = response.status; // Pass the status code
+            structuredError.status = response.status;
             throw structuredError;
         }
         logToConsole(`Action '${action}' successful.`, 'success');
@@ -98,7 +93,7 @@ export async function callAI(action, payload, loadingIndicator = null, buttonToD
     } catch (error) {
         console.warn(`Action '${action}' resulted in a handled error:`, error);
         
-        if (![401, 403, 429].includes(error.status) && !(error.message.includes('Server error'))) {
+        if (![400, 401, 403, 429].includes(error.status) && !(error.message.includes('Server error'))) {
             logToConsole(`Error during action '${action}': ${error.message}`, 'error');
         }
         return { success: false, error: error.message, status: error.status };
