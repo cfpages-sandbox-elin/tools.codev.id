@@ -944,10 +944,12 @@ const createOpenAICompatibleHandler = (apiKeyEnvVar, endpointUrl, extraHeaders =
         buildRequest: (modelConfig, apiKey, prompt, isCheck, env, providerKey) => {
             let finalEndpointUrl;
             let finalModelString = modelConfig.id;
+            let isUsingGateway = false;
 
             if (env.CF_ACCOUNT_ID && env.CF_GATEWAY_ID) {
                 finalEndpointUrl = `https://gateway.ai.cloudflare.com/v1/${env.CF_ACCOUNT_ID}/${env.CF_GATEWAY_ID}/compat/chat/completions`;
                 finalModelString = `${providerKey}/${modelConfig.id}`;
+                isUsingGateway = true;
                 console.log(`Routing ${providerKey} request via Cloudflare AI Gateway with model: ${finalModelString}`);
             } else {
                 finalEndpointUrl = endpointUrl;
@@ -962,8 +964,12 @@ const createOpenAICompatibleHandler = (apiKeyEnvVar, endpointUrl, extraHeaders =
                 model: finalModelString,
                 messages: [{ role: 'user', content: prompt }],
                 ...maxTokensParam,
-                ...(!useGateway && { temperature: isCheck ? 0.1 : 0.7 })
             };
+
+            if (!isUsingGateway) {
+                body.temperature = isCheck ? 0.1 : 0.7;
+            }
+
             return {
                 url: finalEndpointUrl,
                 options: {
