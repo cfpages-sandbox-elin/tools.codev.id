@@ -1,4 +1,4 @@
-// article-helpers.js v8.24 (better info + add 400 error)
+// article-helpers.js v8.24 (better info + add 400 error + numbering heading)
 import { CLOUDFLARE_FUNCTION_URL } from './article-config.js';
 
 // --- Logging ---
@@ -449,21 +449,16 @@ function parseMarkdownStructureV2(markdownString) {
     const lines = markdownString.split('\n');
     const sections = [];
     let currentSection = null;
-    let paragraphBuffer = []; // To accumulate lines of a paragraph
+    let paragraphBuffer = [];
 
-    // Regex for primary headings (Markdown # or Bolded List Item like "- **I. ...**")
-    const primaryHeadingRegex = /^(?:(#{1,4})\s+(.*)|(\s*[-*]\s*\*\*)(.*?)(\*\*))/;
-    // Regex for secondary points (indented list items)
+    const primaryHeadingRegex = /^(?:(#{1,4})\s+(.*)|(\s*[-*]\s*\*\*)(.*?)(\*\*)|(\d+\.\s+)(.*))/;
     const pointRegex = /^(\s+)([-*]|\d+\.|[a-zA-Z]\.|[IVXLCDM]+\.)\s+(.*)/;
-
-    // Regex for inline syntax
     const inlineSyntaxRegex = /(\*\*[^\*]+\*\*)|(__[^_]+__)|(\*[^\*]+\*)|(_[^_]+_)|(`[^`]+`)|(\[(.+?)\]\((.+?)\))/g;
 
     lines.forEach(line => {
         const trimmedLine = line.trim();
 
         if (trimmedLine.length === 0) {
-            // An empty line often indicates a paragraph break
             if (paragraphBuffer.length > 0) {
                 processParagraphBuffer();
             }
@@ -473,29 +468,24 @@ function parseMarkdownStructureV2(markdownString) {
         let primaryMatch = line.match(primaryHeadingRegex);
 
         if (primaryMatch) {
-            // Process any pending paragraph buffer before starting a new section
             if (paragraphBuffer.length > 0) {
                 processParagraphBuffer();
             }
 
-            // Extract heading text (group 2 for #, group 4 for bolded list)
-            const headingText = (primaryMatch[2] || primaryMatch[4])?.trim();
+            const headingText = (primaryMatch[2] || primaryMatch[4] || primaryMatch[7])?.trim();
 
-            if (headingText && headingText.length > 1) { // Basic validation
-                // Push previous section if exists
+            if (headingText && headingText.length > 1) {
                 if (currentSection) {
                     sections.push(currentSection);
                 }
-                // Start new section
                 currentSection = { heading: headingText, points: [] };
                 logToConsole(`Markdown V2: Found Heading: "${headingText}"`, "debug");
             }
-            return; // This line was a heading, move to the next
+            return;
         }
 
         let pointMatch = line.match(pointRegex);
         if (pointMatch) {
-             // Process any pending paragraph buffer before adding a point
              if (paragraphBuffer.length > 0) {
                  processParagraphBuffer();
              }
@@ -503,16 +493,12 @@ function parseMarkdownStructureV2(markdownString) {
             if (currentSection) {
                 const pointText = pointMatch[3].trim();
                  if (pointText) {
-                     // Extract inline syntax from the point text
                      const { cleanText, inlineSyntax } = extractInlineSyntax(pointText);
                      currentSection.points.push({ text: cleanText, inlineSyntax: inlineSyntax });
                      logToConsole(`Markdown V2: Found Point: "${cleanText}"`, "debug");
                  }
             } else {
-                 // Handle points before any heading (e.g., initial list) - maybe treat as a section?
-                 // For now, log a warning or add to a default section if needed.
                  logToConsole(`Markdown V2: Found Point before first heading: "${trimmedLine}"`, "warn");
-                 // Optionally add to a default "Introduction" section or similar
                  if (!sections[0] || sections[0].heading !== 'Introduction') {
                       sections.unshift({ heading: 'Introduction', points: [] });
                  }
@@ -522,19 +508,16 @@ function parseMarkdownStructureV2(markdownString) {
                       sections[0].points.push({ text: cleanText, inlineSyntax: inlineSyntax });
                   }
             }
-            return; // This line was a point, move to the next
+            return;
         }
 
-        // If the line is not a heading or a point, consider it part of a paragraph
         paragraphBuffer.push(line);
     });
 
-    // Process any remaining paragraph buffer after the loop
     if (paragraphBuffer.length > 0) {
         processParagraphBuffer();
     }
 
-    // Push the last section if it exists
     if (currentSection) {
         sections.push(currentSection);
     }
@@ -542,22 +525,15 @@ function parseMarkdownStructureV2(markdownString) {
      logToConsole(`Finished Markdown parsing V2. Found ${sections.length} sections.`, "info");
     return sections;
 
-    // --- Helper function to process accumulated paragraph lines ---
+    // --- Helper functions (processParagraphBuffer, extractInlineSyntax) remain unchanged ---
     function processParagraphBuffer() {
         const paragraphText = paragraphBuffer.join('\n').trim();
         if (paragraphText) {
-            // Extract inline syntax from the paragraph text
             const { cleanText, inlineSyntax } = extractInlineSyntax(paragraphText);
-
-            // Decide where to add the paragraph.
-            // If there's a current section, add it as a point (or a special paragraph type?)
-            // For now, let's add paragraphs as points to the current section if one exists.
-            // If no current section, it's an introductory paragraph.
             if (currentSection) {
-                 currentSection.points.push({ text: cleanText, inlineSyntax: inlineSyntax, type: 'paragraph' }); // Added type for clarity
+                 currentSection.points.push({ text: cleanText, inlineSyntax: inlineSyntax, type: 'paragraph' });
                  logToConsole(`Markdown V2: Added Paragraph to section "${currentSection.heading}": "${cleanText.substring(0, 100)}..."`, "debug");
             } else {
-                // Add to a default "Introduction" section if it doesn't exist
                 if (!sections[0] || sections[0].heading !== 'Introduction') {
                      sections.unshift({ heading: 'Introduction', points: [] });
                 }
@@ -565,71 +541,48 @@ function parseMarkdownStructureV2(markdownString) {
                 logToConsole(`Markdown V2: Added Introductory Paragraph: "${cleanText.substring(0, 100)}..."`, "debug");
             }
         }
-        paragraphBuffer = []; // Clear the buffer
+        paragraphBuffer = [];
     }
 
-    // --- Helper function to extract inline syntax ---
     function extractInlineSyntax(text) {
         const inlineSyntax = [];
         let cleanText = text;
         let match;
-
-        // Use a loop with exec() to find all matches
         while ((match = inlineSyntaxRegex.exec(text)) !== null) {
             const fullMatch = match[0];
             const index = match.index;
-
-            // Determine the type of syntax and the text it applies to
             let type = 'unknown';
-            let content = fullMatch; // Default to the full match
-
-            if (match[1] || match[2]) { // Bold
+            let content = fullMatch;
+            if (match[1] || match[2]) {
                 type = 'bold';
                 content = fullMatch.replace(/\*\*/g, '').replace(/__/g, '');
-            } else if (match[3] || match[4]) { // Italic
+            } else if (match[3] || match[4]) {
                 type = 'italic';
                  content = fullMatch.replace(/\*/g, '').replace(/_/g, '');
-            } else if (match[5]) { // Code span
+            } else if (match[5]) {
                 type = 'code';
                  content = fullMatch.replace(/`/g, '');
-            } else if (match[6]) { // Link [text](url)
+            } else if (match[6]) {
                 type = 'link';
-                content = match[7]; // The link text
+                content = match[7];
                 inlineSyntax.push({
                      type: 'link-url',
-                     content: match[8], // The URL
-                     index: index + match[0].indexOf('(') + 1 // Position of the URL
+                     content: match[8],
+                     index: index + match[0].indexOf('(') + 1
                 });
             }
-
-             inlineSyntax.push({
-                 type: type,
-                 content: content,
-                 index: index
-             });
+             inlineSyntax.push({ type: type, content: content, index: index });
         }
-
-        // Create clean text by removing the syntax markers (This is a simplified approach)
-        // A more robust approach would be to build the clean text character by character,
-        // skipping the syntax markers, to handle nested syntax correctly.
-        // For now, let's do a simple regex replacement for common markers.
         cleanText = text
-            .replace(/\*\*/g, '') // Remove bold markers
+            .replace(/\*\*/g, '')
             .replace(/__/g, '')
-            .replace(/\*/g, '')  // Remove italic markers
+            .replace(/\*/g, '')
             .replace(/_/g, '')
-            .replace(/`/g, '');  // Remove code span markers
-         // Simple link syntax removal - might need refinement for complex cases
+            .replace(/`/g, '');
          cleanText = cleanText.replace(/\[(.+?)\]\((.+?)\)/g, '$1');
-
-
-        // Sort inline syntax by index for easier reapplication later
         inlineSyntax.sort((a, b) => a.index - b.index);
-
-
         return { cleanText, inlineSyntax };
     }
-
 }
 
 console.log("article-helpers.js v8.15 better html parser.");
