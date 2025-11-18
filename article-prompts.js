@@ -1,4 +1,4 @@
-// article-prompts.js
+// article-prompts.js v8.24 upgrade prompt
 
 import { getState, getBulkPlan } from './article-state.js';
 import { languageOptions } from './article-config.js';
@@ -150,70 +150,50 @@ export function getIdeaPrompt(seedKeyword, questionType, questionDetail) {
     const audience = state.audience;
 
     return `You are an expert keyword researcher helping to generate article ideas.
-Given the primary seed keyword: "[SEED_KEYWORD]"
-And focusing on the "[QUESTION_TYPE]" aspect, specifically: ${questionDetail}
+        Given the primary seed keyword: "[SEED_KEYWORD]"
+        And focusing on the "[QUESTION_TYPE]" aspect, specifically: ${questionDetail}
 
-Generate a diverse list of 5 to 10 related long-tail keywords or article ideas.
-These keywords should be relevant for an audience interested in "${audience}" and the content will be in ${language}.
-Ensure the keywords are practical for creating distinct article topics.
+        Generate a diverse list of 5 to 10 related long-tail keywords or article ideas.
+        These keywords should be relevant for an audience interested in "${audience}" and the content will be in ${language}.
+        Ensure the keywords are practical for creating distinct article topics.
 
-Output ONLY a comma-separated list of the generated keywords. Do not include numbering, bullet points, or any introductory/concluding text.
+        Output ONLY a comma-separated list of the generated keywords. Do not include numbering, bullet points, or any introductory/concluding text.
 
-Example for a seed keyword "Sustainable Gardening" and "What" aspect:
-What is organic pest control, What are companion planting techniques, What is soil testing for gardens, What are drought-tolerant plants, What tools are needed for sustainable gardening
+        Example for a seed keyword "Sustainable Gardening" and "What" aspect:
+        What is organic pest control, What are companion planting techniques, What is soil testing for gardens, What are drought-tolerant plants, What tools are needed for sustainable gardening
 
-Seed Keyword: "${seedKeyword}"
-Language: ${language}
-Target Audience: ${audience}
-Aspect: ${questionType}
-`;
+        Seed Keyword: "${seedKeyword}"
+        Language: ${language}
+        Target Audience: ${audience}
+        Aspect: ${questionType}
+    `;
 }
 
 // --- Spinner Prompts ---
 
-export function getSpintaxPrompt(textToSpin, isSentence = false) {
+function getSpintaxPrompt(textToSpin, isSentence = false) {
     const state = getState();
     const language = state.language === 'custom' ? state.customLanguage : languageOptions[state.language]?.name || state.language;
-    const dialect = state.dialect;
-    const tone = state.tone === 'custom' ? state.customTone : state.tone;
+    
+    return `You are a text rephraser. Your task is to generate several variations of the given text while maintaining its original meaning.
 
-    if (isSentence) {
-        return `Take the following text (which is a single sentence without its final punctuation) and generate 3-6 variations (or as much as possible) that mean the same thing, suitable for spintax. Focus on rephrasing or reordering sentence components (subject, predicate, object, information) as shown in the example.
+    Instructions:
+    - The text will be provided without its final punctuation.
+    - Generate several diverse variations, as many as you can, minimum 2 variations, maximum as much as you can, go for maximum all the time.
+    - Maintain the original language: ${language}.
+    - IMPORTANT: Respond ONLY with a valid JSON array of strings. Do not include any other text, explanations, or markdown formatting.
 
-        Example:
-        Text to Spin (without punctuation): Budi makan soto di rumah makan
-        Spintax Output (without punctuation): {Budi makan soto di rumah makan|Di rumah makan Budi makan soto|Di rumah makan soto dimakan Budi|Budi di rumah makan makan soto|Soto dimakan Budi di rumah makan|Soto di rumah makan dimakan Budi}
+    Example Input:
+    "The quick brown fox jumps over the lazy dog"
 
-        Instructions:
-        - Generate 3-6 variations.
-        - Maintain the original meaning.
-        - Maintain the specified Language (${language}${dialect ? `, ${dialect} dialect` : ''}) and Tone (${tone}).
-        - Output Format: Return ONLY the spintax string in the format {original|variation1|variation2|...}.
-        - The output should NOT include the final punctuation mark that was removed from the original text.
+    Example Output:
+    ["Over the lazy dog, the quick brown fox jumps", "A fast, brown fox leaps over the sleepy dog", "The lazy dog was jumped over by the quick brown fox"]
 
-        Text to Spin (without punctuation):
-        ---
-        ${textToSpin}
-        ---`;
-    } else { // For selected text (phrase)
-        return `Take the following text and generate 3-6 variations that mean the same thing, suitable for spintax. Exclude the final punctuation mark from the generated spintax.
-
-        Example:
-        Text to Spin: Budi makan soto di rumah makan.
-        Spintax Output: {Budi makan soto di rumah makan|Di rumah makan Budi makan soto|Di rumah makan soto dimakan Budi|Budi di rumah makan makan soto|Soto dimakan Budi di rumah makan|Soto di rumah makan dimakan Budi}
-
-        Instructions:
-        - Generate 3-6 variations.
-        - Maintain the original meaning.
-        - Maintain the specified Language (${language}${dialect ? `, ${dialect} dialect` : ''}) and Tone (${tone}).
-        - Output Format: Return ONLY the spintax string in the format {original|variation1|variation2|...}.
-        - DO NOT include the final punctuation mark from the original text in the spintax output.
-
-        Text to Spin:
-        ---
-        ${textToSpin}
-        ---`;
-    }
+    Text to Spin:
+    ---
+    ${textToSpin}
+    ---`;
 }
+
 
 console.log("article-prompts.js loaded");

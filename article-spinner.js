@@ -1,17 +1,146 @@
-// article-spinner.js (v8.21 refactor prompts)
-
+// article-spinner.js (v8.24 html json reliability upgrade)
 import { getState, updateState } from './article-state.js';
-import { logToConsole, callAI, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
-import { getElement } from './article-ui.js'; // Keep this import for getElement
-import { languageOptions } from './article-config.js'; // Import language options if needed for context
+import { logToConsole, callAI, delay, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
+import { getElement } from './article-ui.js';
+import { languageOptions } from './article-config.js';
 import { getSpintaxPrompt } from './article-prompts.js';
 
-let selectedTextInfo = null; // Store { text: '...', range: Range }
-
-// --- Pause/Stop Control Variables ---
+let selectedTextInfo = null;
 let isSpinning = false;
 let isPaused = false;
 let stopSpinning = false;
+
+function constructSpintax(originalText, variationsArray) {
+    if (!Array.isArray(variationsArray) || variationsArray.length === 0) {
+        return originalText; // Return original if AI response is invalid
+    }
+    // Filter out duplicates and the original text itself
+    const uniqueVariations = [...new Set(variationsArray)].filter(v => v.trim() !== originalText.trim());
+    const allOptions = [originalText.trim(), ...uniqueVariations];
+    return `{${allOptions.join('|')}}`;
+}
+
+async function callAISafe(textToSpin, providerConfig) {
+    const prompt = getSpintaxPrompt(textToSpin);
+    const payload = {
+        providerKey: providerConfig.provider,
+        model: providerConfig.model,
+        prompt: prompt
+    };
+
+    const result = await callAI('generate', payload, null, null);
+
+    if (result?.success && result.text) {
+        try {
+            // Attempt to find a JSON array within the response
+            const jsonMatch = result.text.match(/\[.*\]/s);
+            if (jsonMatch) {
+                const parsed = JSON.parse(jsonMatch[0]);
+                return constructSpintax(textToSpin, parsed);
+            }
+            throw new Error("No JSON array found in AI response.");
+        } catch (e) {
+            logToConsole(`Failed to parse JSON from AI, falling back. Error: ${e.message}`, 'warn');
+            return textToSpin; // Fallback to original text if JSON parsing fails
+        }
+    }
+    logToConsole(`AI spinning failed for text. Appending original: "${textToSpin}"`, 'error');
+    return textToSpin; // Fallback for failed AI call
+}
+
+// --- Automatic Article Spinning ---
+export async function handleSpinArticle(generatedTextarea, spunDisplay) {
+    logToConsole("Starting HTML-aware article spinning...", "info");
+    isSpinning = true; isPaused = false; stopSpinning = false;
+
+    const state = getState();
+    const primaryProvider = state.textProviders[0];
+    if (!primaryProvider || !primaryProvider.provider || !primaryProvider.model) {
+        alert("Please configure a valid AI Provider and select a model before spinning.");
+        logToConsole("Spinning failed: No primary provider configured.", "error");
+        return;
+    }
+
+    const articleHtml = generatedTextarea.value;
+    spunDisplay.innerHTML = ''; // Clear display
+
+    const loadingIndicator = getElement('spinActionLoadingIndicator');
+    const spinArticleBtn = getElement('enableSpinningBtn');
+    const pauseSpinBtn = getElement('pauseSpinBtn');
+    const stopSpinBtn = getElement('stopSpinBtn');
+
+    disableElement(spinArticleBtn, true);
+    disableElement(pauseSpinBtn, false);
+    disableElement(stopSpinBtn, false);
+    showLoading(loadingIndicator, true);
+
+    // Use DOMParser to safely handle HTML
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(articleHtml, 'text/html');
+    const allNodes = doc.body.querySelectorAll('*'); // Get all elements
+
+    // Process nodes sequentially to update the display progressively
+    for (const node of allNodes) {
+        // Find text nodes that are direct children of the current element
+        const childTextNodes = Array.from(node.childNodes).filter(child => child.nodeType === Node.TEXT_NODE && child.textContent.trim().length > 0);
+
+        for (const textNode of childTextNodes) {
+            if (stopSpinning) break;
+            await checkPause(); // Handle pause/resume
+            if (stopSpinning) break;
+
+            const originalText = textNode.textContent;
+            const parentTag = node.tagName.toLowerCase();
+            const isHeading = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(parentTag);
+
+            if (isHeading) {
+                // For headings, spin the entire text content as one block
+                const spintaxResult = await callAISafe(originalText.trim(), primaryProvider);
+                textNode.textContent = spintaxResult;
+            } else {
+                // For other elements, split text into sentences
+                const sentences = originalText.match(/([^\.!\?]+[\.!\?]+)|([^\.!\?]+$)/g) || [];
+                let newTextContent = '';
+                for (const sentence of sentences) {
+                    const trimmedSentence = sentence.trim();
+                    if (!trimmedSentence) continue;
+
+                    const punctuationMatch = trimmedSentence.match(/[\.!\?]+$/);
+                    const punctuation = punctuationMatch ? punctuationMatch[0] : '';
+                    const sentenceToSpin = trimmedSentence.replace(/[\.!\?]+$/, '').trim();
+
+                    if (sentenceToSpin) {
+                        const spintaxResult = await callAISafe(sentenceToSpin, primaryProvider);
+                        newTextContent += spintaxResult + punctuation + ' ';
+                    } else {
+                        newTextContent += punctuation + ' '; // Append only punctuation if that's all there was
+                    }
+                    spunDisplay.innerHTML = doc.body.innerHTML; // Update UI progressively
+                    await delay(50);
+                }
+                textNode.textContent = newTextContent;
+            }
+            spunDisplay.innerHTML = doc.body.innerHTML; // Update UI after processing a text node
+        }
+        if (stopSpinning) break;
+    }
+
+    spunDisplay.innerHTML = doc.body.innerHTML; // Final update
+    finishSpinning(spinArticleBtn, pauseSpinBtn, stopSpinBtn, loadingIndicator, spunDisplay);
+}
+
+function finishSpinning(spinBtn, pauseBtn, stopBtn, loader, display) {
+    isSpinning = false;
+    isPaused = false;
+    stopSpinning = false;
+
+    disableElement(spinBtn, false);
+    disableElement(pauseBtn, true);
+    disableElement(stopBtn, true);
+    showLoading(loader, false);
+    logToConsole("Automatic article spinning finished.", "info");
+    highlightSpintax(display);
+}
 
 // --- Spintax Highlighting ---
 export function highlightSpintax(element) {
@@ -90,236 +219,55 @@ export function handleSelection() {
 
 // --- Spin Selected Text ---
 export async function handleSpinSelectedText() {
+    if (!selectedTextInfo || !selectedTextInfo.text) {
+         logToConsole("Spin button clicked but no valid text found.", "warn");
+         return;
+    }
+    const state = getState();
+    const primaryProvider = state.textProviders[0];
+    if (!primaryProvider || !primaryProvider.provider || !primaryProvider.model) {
+        alert("Please configure a valid AI Provider and select a model before spinning.");
+        logToConsole("Spinning failed: No primary provider configured.", "error");
+        return;
+    }
     const spinSelectedBtn = getElement('spinSelectedBtn');
     const spunArticleDisplay = getElement('spunArticleDisplay');
     const loadingIndicator = getElement('spinActionLoadingIndicator');
 
-    if (!selectedTextInfo || !selectedTextInfo.text || !spinSelectedBtn || !spunArticleDisplay) {
-         logToConsole("Spin button clicked but no valid text/elements found.", "warn");
-         return;
-    }
-
     const textToSpin = selectedTextInfo.text;
-    const state = getState(); // Get current language/tone settings
-    
-    // REFACTORED
-    const prompt = getSpintaxPrompt(textToSpin, false);
+    const spintaxResult = await callAISafe(textToSpin, primaryProvider);
 
-     const payload = {
-        providerKey: state.textProvider, // Use main text provider
-        model: state.textModel,       // Use main text model
-        prompt: prompt
-    };
-     logToConsole(`--- Spinning Text Prompt ---\n${prompt}\n---------------------------------`);
-    const result = await callAI('generate', payload, loadingIndicator, spinSelectedBtn); // Pass button to disable
-
-    if (result?.success && result.text) {
-        let spintaxResult = result.text.trim();
-
-        // Basic cleanup: remove leading/trailing curly braces if AI added them unexpectedly
-        if (spintaxResult.startsWith('{') && spintaxResult.endsWith('}')) {
-            // Check if it looks like valid spintax before removing braces
-            if (spintaxResult.includes('|')) {
-                // Keep braces if it's valid spintax
-            } else {
-                // If no pipe, it's likely not valid spintax, remove braces
-                spintaxResult = spintaxResult.substring(1, spintaxResult.length - 1).trim();
-            }
-        } else {
-            // If no braces, just use the result as a single option wrapped in braces
-            spintaxResult = `{${spintaxResult}}`;
-        }
-
-        const selection = window.getSelection();
-        if (selection && selectedTextInfo.range) {
-            try {
-                 // Restore the selection using the stored range before inserting
-                 selection.removeAllRanges();
-                 selection.addRange(selectedTextInfo.range);
-
-                 // Use insertHTML if available for better structure preservation, else fallback
-                 if (document.queryCommandSupported('insertHTML')) {
-                    document.execCommand('insertHTML', false, spintaxResult);
-                 } else if (document.queryCommandSupported('insertText')) {
-                     logToConsole("insertHTML not supported, using insertText (might lose formatting).", "warn");
-                     document.execCommand('insertText', false, spintaxResult);
-                 } else {
-                     // Manual fallback (less reliable)
-                     selectedTextInfo.range.deleteContents();
-                     selectedTextInfo.range.insertNode(document.createTextNode(spintaxResult));
-                 }
-
-                logToConsole(`Inserted spintax: ${spintaxResult}`, 'success');
-                highlightSpintax(spunArticleDisplay); // Re-highlight after modification
-
-            } catch (e) {
-                logToConsole(`Error replacing selection with spintax: ${e}`, 'error');
-                alert("Error applying spintax. The content might not have updated correctly.");
-            } finally {
-                 // Clear selection state after attempting replacement
-                 selectedTextInfo = null;
-                 disableElement(spinSelectedBtn, true); // Disable button after use
-                 selection.removeAllRanges(); // Deselect text
-            }
-        } else {
-             logToConsole("Could not restore selection range to insert spintax.", 'error');
-             alert("Could not apply spintax. Please try selecting the text again.");
+    const selection = window.getSelection();
+    if (selection && selectedTextInfo.range) {
+        try {
+             selection.removeAllRanges();
+             selection.addRange(selectedTextInfo.range);
+             document.execCommand('insertHTML', false, spintaxResult);
+             logToConsole(`Inserted spintax: ${spintaxResult}`, 'success');
+             highlightSpintax(spunArticleDisplay);
+        } catch (e) {
+            logToConsole(`Error replacing selection with spintax: ${e}`, 'error');
+        } finally {
+             selectedTextInfo = null;
              disableElement(spinSelectedBtn, true);
+             selection.removeAllRanges();
         }
-    } else {
-         // callAI already showed an error message
-         logToConsole("Spinning failed.", "error");
-         disableElement(spinSelectedBtn, true);
     }
 }
 
-// --- Automatic Article Spinning ---
-export async function handleSpinArticle(generatedTextarea, spunDisplay) {
-    logToConsole("Starting automatic article spinning...", "info");
-    isSpinning = true;
-    isPaused = false;
-    stopSpinning = false;
-
-    const articleText = generatedTextarea.value;
-    spunDisplay.textContent = ''; // Clear the spun display area
-
-    const loadingIndicator = getElement('spinActionLoadingIndicator');
-    const spinArticleBtn = getElement('enableSpinningBtn'); // Spin Article button
-    const pauseSpinBtn = getElement('pauseSpinBtn'); // New Pause button
-    const stopSpinBtn = getElement('stopSpinBtn'); // New Stop button
-
-    disableElement(spinArticleBtn, true); // Disable Spin Article button
-    disableElement(pauseSpinBtn, false); // Enable Pause button
-    disableElement(stopSpinBtn, false); // Enable Stop button
-    showLoading(loadingIndicator, true); // Show loading indicator
-
-    // Refined Sentence Extraction
-    // This regex attempts to split by . ! ? followed by a space or end of string ($),
-    // but avoids splitting if a dot is NOT followed by a space (like in URLs).
-    // It also handles cases where a sentence might start without a preceding space.
-    const sentences = articleText.match(/([^.!?]+[.!?]+(?=\s|$)|[^.!?]+$)/g) || [];
-
-    let processedText = '';
-
-    for (let i = 0; i < sentences.length; i++) {
-        let sentence = sentences[i];
-
-        // Check for stop request at the beginning of each sentence processing
-        if (stopSpinning) {
-            logToConsole("Spinning stopped by user.", "info");
-            break; // Exit loop if stop is requested
-        }
-
-        // Pause logic
-        if (isPaused) {
-            logToConsole("Spinning paused...", "info");
-            disableElement(pauseSpinBtn, false);
-            disableElement(stopSpinBtn, false);
-            await new Promise(resolve => {
-                const interval = setInterval(() => {
-                    if (!isPaused) {
-                        clearInterval(interval);
-                        logToConsole("Spinning resumed.", "info");
-                        resolve();
-                    }
-                     if (stopSpinning) {
-                         clearInterval(interval);
-                         logToConsole("Spinning stopped by user during pause.", "info");
-                         resolve();
-                     }
-                }, 100); // Check every 100ms
-            });
-             if (stopSpinning) break; // Check again after resuming
-        }
-
-        // More careful sentence boundary check based on context
-        // If it's not the very first sentence and there's no space before it in the original text,
-        // it's likely not a new sentence. This is a heuristic and might need further tuning.
-        const originalIndex = articleText.indexOf(sentence, processedText.length);
-        if (i > 0 && originalIndex > 0 && articleText[originalIndex - 1] !== ' ' && articleText[originalIndex - 1] !== '\n') {
-            // If no space before and not the first sentence, append to the previous one (heuristics)
-            spunDisplay.textContent += sentence; // Append without adding a space
-            processedText += sentence;
-            logToConsole(`Appended potential non-sentence part: "${sentence}"`, 'debug');
-            continue; // Skip spinning this part as a separate sentence
-        }
-
-        sentence = sentence.trim();
-        if (!sentence) continue;
-
-        // Extract punctuation at the end of the sentence
-        const punctuationMatch = sentence.match(/[.!?]+$/);
-        const punctuation = punctuationMatch ? punctuationMatch[0] : '';
-        const sentenceWithoutPunctuation = sentence.replace(/[.!?]+$/, '').trim();
-
-        if (!sentenceWithoutPunctuation) {
-             // If only punctuation was found, just append it and continue
-             spunDisplay.textContent += punctuation + ' ';
-             processedText += punctuation + ' ';
-             continue;
-        }
-
-        const state = getState();
-        const prompt = getSpintaxPrompt(sentenceWithoutPunctuation, true); // REFACTORED
-
-        const payload = {
-            providerKey: state.textProvider,
-            model: state.textModel,
-            prompt: prompt
-        };
-
-        logToConsole(`--- Spinning Sentence ---`, 'info');
-        logToConsole(`Original: "${sentence}"`, 'debug');
-        logToConsole(`Prompting AI for: "${sentenceWithoutPunctuation}"`, 'debug');
-
-        const result = await callAI('generate', payload); // No need to pass button/indicator here, handled by the main function
-
-        if (result?.success && result.text) {
-            let spintaxResult = result.text.trim();
-
-            // Basic cleanup: remove leading/trailing curly braces if AI added them unexpectedly
-            if (spintaxResult.startsWith('{') && spintaxResult.endsWith('}')) {
-                 // Check if it looks like valid spintax before removing braces
-                 if (spintaxResult.includes('|')) {
-                     // Keep braces if it's valid spintax
-                 } else {
-                     // If no pipe, it's likely not valid spintax, remove braces
-                     spintaxResult = spintaxResult.substring(1, spintaxResult.length - 1).trim();
-                 }
-            } else {
-                // If no braces, just use the result as a single option wrapped in braces
-                 spintaxResult = `{${spintaxResult}}`;
-            }
-
-
-            // Append the generated spintax followed by the original punctuation and a space
-            spunDisplay.textContent += spintaxResult + punctuation + ' ';
-            processedText += spintaxResult + punctuation + ' ';
-            logToConsole(`Appended Spintax + Punctuation: "${spintaxResult}${punctuation}"`, 'success');
-
-        } else {
-             // If AI call failed, append the original sentence as is
-             spunDisplay.textContent += sentence + ' ';
-             processedText += sentence + ' ';
-             logToConsole(`AI spinning failed for sentence. Appending original: "${sentence}"`, 'error');
-        }
-
-        // Add a small delay to show progress and avoid overwhelming the UI/AI
-        if (!stopSpinning && !isPaused) { // Only delay if not stopping or pausing
-            await new Promise(resolve => setTimeout(resolve, 100)); // Adjust delay as needed
-        }
+async function checkPause() {
+    if (isPaused) {
+        logToConsole("Spinning paused...", "info");
+        return new Promise(resolve => {
+            const interval = setInterval(() => {
+                if (!isPaused || stopSpinning) {
+                    clearInterval(interval);
+                    if (!stopSpinning) logToConsole("Spinning resumed.", "info");
+                    resolve();
+                }
+            }, 100);
+        });
     }
-
-    isSpinning = false;
-    isPaused = false;
-    stopSpinning = false; // Reset stop flag
-
-    disableElement(spinArticleBtn, false); // Re-enable Spin Article button
-    disableElement(pauseSpinBtn, true); // Disable Pause button
-    disableElement(stopSpinBtn, true); // Disable Stop button
-    showLoading(loadingIndicator, false); // Hide loading indicator
-    logToConsole("Automatic article spinning finished.", "info");
-    highlightSpintax(spunDisplay); // Highlight spintax in the final output
 }
 
 // --- Pause Spinning ---
@@ -361,4 +309,4 @@ export function stopSpinningProcess() {
     }
 }
 
-console.log("article-spinner.js v8.21 loaded"); // v8.21 refactor prompts
+console.log("article-spinner.js v8.24 loaded");
