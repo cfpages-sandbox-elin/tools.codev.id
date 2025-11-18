@@ -1,5 +1,4 @@
 // article-prompts.js v8.24 upgrade prompt
-
 import { getState, getBulkPlan } from './article-state.js';
 import { languageOptions } from './article-config.js';
 
@@ -170,8 +169,7 @@ export function getIdeaPrompt(seedKeyword, questionType, questionDetail) {
 }
 
 // --- Spinner Prompts ---
-
-function getSpintaxPrompt(textToSpin, isSentence = false) {
+export function getSpintaxPrompt(textToSpin, isSentence = false) {
     const state = getState();
     const language = state.language === 'custom' ? state.customLanguage : languageOptions[state.language]?.name || state.language;
     
