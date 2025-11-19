@@ -1,4 +1,4 @@
-// article-spinner.js (v8.24 html json reliability upgrade)
+// article-spinner.js (v9 html json reliability upgrade)
 import { getState, updateState } from './article-state.js';
 import { logToConsole, callAI, delay, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
 import { getElement } from './article-ui.js';
@@ -9,6 +9,339 @@ let selectedTextInfo = null;
 let isSpinning = false;
 let isPaused = false;
 let stopSpinning = false;
+let articleBlocks = [];
+let variationColumnCount = 1; // Default 1 variation column
+
+export function prepareSpinnerUI(htmlContent) {
+    logToConsole("Parsing article for structural spinning...", "info");
+    articleBlocks = [];
+    variationColumnCount = 1; // Reset
+    
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlContent, 'text/html');
+    
+    // Iterate through top-level elements in body
+    Array.from(doc.body.childNodes).forEach(node => {
+        if (node.nodeType !== Node.ELEMENT_NODE) return;
+
+        const tagName = node.tagName.toLowerCase();
+        const block = {
+            type: tagName,
+            startTag: `<${tagName}>`,
+            endTag: `</${tagName}>`,
+            segments: []
+        };
+
+        // Attributes (like class or id) should be preserved in startTag
+        if (node.attributes.length > 0) {
+            const attrs = Array.from(node.attributes).map(a => `${a.name}="${a.value}"`).join(' ');
+            block.startTag = `<${tagName} ${attrs}>`;
+        }
+
+        if (['ul', 'ol'].includes(tagName)) {
+            // List handling: Each LI is a segment
+            Array.from(node.children).forEach(li => {
+                if (li.tagName.toLowerCase() === 'li') {
+                    block.segments.push({
+                        original: li.innerHTML.trim(), // Keep inner HTML of LI (e.g. bolding)
+                        variations: [''],
+                        isListRequest: true // Marker for rendering
+                    });
+                }
+            });
+        } else if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tagName)) {
+            // Heading handling: Whole text is one segment
+            block.segments.push({
+                original: node.innerHTML.trim(),
+                variations: ['']
+            });
+        } else {
+            // Paragraph/Div handling: Split into sentences
+            // Regex splits by punctuation (.?!) followed by space or end of string.
+            // Keeps the delimiter in the result.
+            const text = node.innerHTML.trim();
+            // Complex split to keep delimiters attached to the preceding sentence
+            const rawSentences = text.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) || [text];
+            
+            rawSentences.forEach(s => {
+                if(s.trim()) {
+                    block.segments.push({
+                        original: s.trim(),
+                        variations: ['']
+                    });
+                }
+            });
+        }
+
+        if (block.segments.length > 0) {
+            articleBlocks.push(block);
+        }
+    });
+
+    renderSpinnerGrid();
+    logToConsole(`Parsed ${articleBlocks.length} blocks. Ready for spinning.`, "success");
+}
+
+function renderSpinnerGrid() {
+    const container = getElement('spinnerContainer');
+    container.innerHTML = '';
+
+    articleBlocks.forEach((block, blockIndex) => {
+        const blockDiv = document.createElement('div');
+        blockDiv.className = 'spinner-block';
+
+        // Start Tag visual
+        const startTagDiv = document.createElement('div');
+        startTagDiv.className = 'spinner-tag';
+        startTagDiv.textContent = block.startTag;
+        blockDiv.appendChild(startTagDiv);
+
+        // Segments
+        block.segments.forEach((segment, segIndex) => {
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'segment-row';
+
+            // Column 1: Original (Read-only/Reference)
+            const origContainer = createBox(segment.original, true, blockIndex, segIndex, -1);
+            rowDiv.appendChild(origContainer);
+
+            // Dynamic Variation Columns
+            for (let i = 0; i < variationColumnCount; i++) {
+                const val = segment.variations[i] || '';
+                const varContainer = createBox(val, false, blockIndex, segIndex, i);
+                rowDiv.appendChild(varContainer);
+            }
+
+            blockDiv.appendChild(rowDiv);
+        });
+
+        // End Tag visual
+        const endTagDiv = document.createElement('div');
+        endTagDiv.className = 'spinner-tag-end';
+        endTagDiv.textContent = block.endTag;
+        blockDiv.appendChild(endTagDiv);
+
+        container.appendChild(blockDiv);
+    });
+}
+
+function createBox(content, isOriginal, blockIndex, segIndex, varIndex) {
+    const container = document.createElement('div');
+    container.className = 'segment-box-container';
+
+    // Prefix visual for lists
+    let prefix = '';
+    if (articleBlocks[blockIndex].type === 'ul') prefix = '• ';
+    if (articleBlocks[blockIndex].type === 'ol') prefix = `${segIndex + 1}. `;
+
+    const textarea = document.createElement('textarea');
+    textarea.className = `segment-textarea ${isOriginal ? 'original' : 'variation'}`;
+    textarea.value = content;
+    
+    if (isOriginal) {
+        // If it's original, we might want to allow editing to fix splitting errors, 
+        // but updating state needs to be handled. For now, let's allow edit.
+        textarea.addEventListener('input', (e) => {
+             articleBlocks[blockIndex].segments[segIndex].original = e.target.value;
+        });
+    } else {
+        textarea.placeholder = "AI will generate here...";
+        textarea.addEventListener('input', (e) => {
+            // Ensure array index exists
+            if (!articleBlocks[blockIndex].segments[segIndex].variations[varIndex]) {
+                articleBlocks[blockIndex].segments[segIndex].variations[varIndex] = '';
+            }
+            articleBlocks[blockIndex].segments[segIndex].variations[varIndex] = e.target.value;
+        });
+    }
+
+    // Actions Bar
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'segment-actions';
+
+    // Token Count
+    const tokenSpan = document.createElement('span');
+    tokenSpan.className = 'token-count';
+    tokenSpan.textContent = `~${Math.ceil(content.length / 4)} toks`;
+    textarea.addEventListener('input', () => {
+        tokenSpan.textContent = `~${Math.ceil(textarea.value.length / 4)} toks`;
+    });
+
+    actionsDiv.appendChild(tokenSpan);
+
+    // Generate Button (Only for variations)
+    if (!isOriginal) {
+        const genBtn = document.createElement('button');
+        genBtn.className = 'gen-btn';
+        genBtn.innerHTML = content ? '🔄' : '⚡'; // Refresh if content exists, Bolt if empty
+        genBtn.title = "Generate this variation";
+        genBtn.onclick = () => generateSingleVariation(blockIndex, segIndex, varIndex, textarea, genBtn);
+        actionsDiv.appendChild(genBtn);
+    }
+
+    container.appendChild(textarea);
+    container.appendChild(actionsDiv);
+    return container;
+}
+
+export function addVariationColumn() {
+    variationColumnCount++;
+    // Update data structure to ensure arrays are big enough
+    articleBlocks.forEach(block => {
+        block.segments.forEach(seg => {
+            if (seg.variations.length < variationColumnCount) {
+                seg.variations.push('');
+            }
+        });
+    });
+    renderSpinnerGrid(); // Re-render UI
+}
+
+export async function generateSingleVariation(blockIndex, segIndex, varIndex, textarea, btn) {
+    const state = getState();
+    const primaryProvider = state.textProviders[0];
+    
+    if (!primaryProvider || !primaryProvider.model) {
+        alert("Please select an AI Model in the configuration section first.");
+        return;
+    }
+
+    const originalText = articleBlocks[blockIndex].segments[segIndex].original;
+    
+    // Visual Feedback
+    btn.textContent = '⏳';
+    disableElement(btn, true);
+    textarea.classList.add('opacity-50');
+
+    try {
+        // Construct a prompt specific to rewriting a single sentence/fragment
+        const prompt = `Rewrite the following text in ${state.language} (${state.tone} tone). Keep the meaning but change words/structure. Output ONLY the rewritten text.
+        
+        Original: "${originalText}"`;
+
+        const payload = {
+            providerKey: primaryProvider.provider,
+            model: primaryProvider.model,
+            prompt: prompt
+        };
+
+        const result = await callAI('generate', payload);
+
+        if (result?.success && result.text) {
+            const newText = result.text.replace(/^"|"$/g, '').trim(); // Remove quotes if AI adds them
+            textarea.value = newText;
+            // Update State
+            articleBlocks[blockIndex].segments[segIndex].variations[varIndex] = newText;
+            
+            // Trigger input event to update token count
+            textarea.dispatchEvent(new Event('input'));
+            
+            btn.textContent = '🔄'; // Reset to refresh icon
+        } else {
+            btn.textContent = '❌';
+        }
+    } catch (e) {
+        console.error(e);
+        btn.textContent = '❌';
+    } finally {
+        disableElement(btn, false);
+        textarea.classList.remove('opacity-50');
+    }
+}
+
+export async function handleBulkGenerate() {
+    const state = getState();
+    const primaryProvider = state.textProviders[0];
+    
+    if (!primaryProvider) { alert("No AI provider."); return; }
+    if (!confirm("This will generate variations for all empty boxes in the visible columns. Continue?")) return;
+
+    const generateQueue = [];
+
+    // Collect all empty variation slots
+    articleBlocks.forEach((block, bIdx) => {
+        block.segments.forEach((seg, sIdx) => {
+            for (let vIdx = 0; vIdx < variationColumnCount; vIdx++) {
+                if (!seg.variations[vIdx] || seg.variations[vIdx].trim() === '') {
+                    generateQueue.push({ bIdx, sIdx, vIdx });
+                }
+            }
+        });
+    });
+
+    logToConsole(`Bulk generating ${generateQueue.length} variations...`, 'info');
+
+    // Process in chunks to avoid hitting rate limits instantly
+    const CHUNK_SIZE = 5; 
+    for (let i = 0; i < generateQueue.length; i += CHUNK_SIZE) {
+        const chunk = generateQueue.slice(i, i + CHUNK_SIZE);
+        const promises = chunk.map(item => {
+            // Find the DOM elements to update visual state
+            // Note: This is a bit hacky, ideally we bind ID, but relying on re-render is expensive.
+            // We will just call the logic function directly.
+            // In a real app, we'd update state then re-render. 
+            // To keep it simple, we trigger the button click logic programmatically if possible,
+            // or just call the API helper.
+            
+            // Re-selecting the element for visual updates:
+            const blocks = document.querySelectorAll('.spinner-block');
+            const rows = blocks[item.bIdx].querySelectorAll('.segment-row');
+            const containers = rows[item.sIdx].querySelectorAll('.segment-box-container');
+            // Index 0 is Original, so Var 0 is Index 1
+            const container = containers[item.vIdx + 1]; 
+            const textarea = container.querySelector('textarea');
+            const btn = container.querySelector('.gen-btn');
+
+            return generateSingleVariation(item.bIdx, item.sIdx, item.vIdx, textarea, btn);
+        });
+
+        await Promise.all(promises);
+        await delay(500); // Delay between chunks
+    }
+    logToConsole("Bulk generation complete.", 'success');
+}
+
+export function compileSpintax() {
+    let finalSpintax = "";
+
+    articleBlocks.forEach(block => {
+        // Open Tag
+        if (block.type === 'ul' || block.type === 'ol') {
+            finalSpintax += block.startTag + '\n';
+            block.segments.forEach(seg => {
+                // For lists, the variations are the inner content of LI
+                const vars = seg.variations.filter(v => v.trim() !== '');
+                const spintax = vars.length > 0 
+                    ? `{${seg.original}|${vars.join('|')}}` 
+                    : seg.original;
+                finalSpintax += `  <li>${spintax}</li>\n`;
+            });
+            finalSpintax += block.endTag + '\n\n';
+        } else {
+            // Normal Paragraphs / Headings
+            finalSpintax += block.startTag; // e.g. <p>
+            
+            block.segments.forEach(seg => {
+                const vars = seg.variations.filter(v => v.trim() !== '');
+                const spintax = vars.length > 0 
+                    ? `{${seg.original}|${vars.join('|')}}` 
+                    : seg.original;
+                // Add space after sentence, unless it's the last one (simplification)
+                finalSpintax += spintax + " "; 
+            });
+
+            finalSpintax = finalSpintax.trim(); // Remove trailing space
+            finalSpintax += block.endTag + '\n\n';
+        }
+    });
+
+    const outputArea = getElement('finalSpintaxOutput');
+    outputArea.value = finalSpintax;
+    showElement(getElement('step5Section'), true);
+    
+    // Scroll to step 5
+    getElement('step5Section').scrollIntoView({ behavior: 'smooth' });
+}
 
 function constructSpintax(originalText, variationsArray) {
     if (!Array.isArray(variationsArray) || variationsArray.length === 0) {

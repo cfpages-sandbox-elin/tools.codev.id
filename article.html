@@ -3,53 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Article Generator & Spinner v8.19</title>
+    <title>AI Article Generator & Spinner v9.00</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <style>
-        /* Styles identical to v8.1 */
-        body { font-family: 'Inter', sans-serif; @apply bg-gray-100 text-gray-800; }
-        input, textarea, button { padding: 0 5px !important;}
-        button, input, optgroup, select, textarea { border: 2px solid; }
-        .compact-section { @apply bg-white p-4 mb-4 rounded-lg shadow-md; }
-        .compact-label { @apply block text-sm font-medium text-gray-700 mb-1 whitespace-nowrap; }
-        .compact-input, .compact-select, .compact-textarea { @apply block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm; }
-        .custom-input-visible { @apply compact-input mt-1; }
-        .compact-button { @apply inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed; }
-        .reset-button { @apply inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500; }
-        .reload-button { @apply inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-500 hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400; }
-        .spintax-level-1 { color: #007bff; } .spintax-level-2 { color: #28a745; } .spintax-level-3 { color: #dc3545; } .spintax-pipe { color: #ffc107; font-weight: bold; }
-        .compact-textarea::-webkit-scrollbar { display: none; } .compact-textarea { -ms-overflow-style: none; scrollbar-width: none; }
-        .input-group { @apply mb-3; }
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #6366f1; border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; display: inline-block; margin-left: 6px; vertical-align: middle; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #consoleLogContainer { @apply compact-section mt-4 bg-gray-800 text-white p-3; }
-        #consoleLog { @apply text-xs h-32 overflow-y-auto whitespace-pre-wrap break-all font-mono; }
-        .log-error { @apply text-red-400; } .log-warn { @apply text-yellow-400; } .log-info { @apply text-blue-300; } .log-success { @apply text-green-400; }
-        .status-ok { @apply text-green-600 font-semibold; } .status-error { @apply text-red-600 font-semibold; } .status-checking { @apply text-yellow-600 italic; }
-        #sitemapUrlsList { @apply text-xs max-h-32 overflow-y-auto border border-gray-200 bg-gray-50 p-2 rounded mt-1; }
-        #sitemapUrlsList div { @apply mb-1 truncate; }
-        .toggle-switch { @apply relative inline-flex items-center h-6 rounded-full w-11 cursor-pointer; }
-        .toggle-switch input { @apply sr-only; }
-        .toggle-switch .slider { @apply absolute inset-0 bg-gray-300 rounded-full transition-colors duration-200 ease-in-out; }
-        .toggle-switch input:checked + .slider { @apply bg-indigo-600; }
-        .toggle-switch .dot { @apply absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-200 ease-in-out; }
-        .toggle-switch input:checked + .slider .dot { @apply transform translate-x-5; }
-        .multi-select-container { @apply block w-full p-2 border border-gray-300 rounded-md shadow-sm bg-white; }
-        .multi-select-container label { @apply flex items-center space-x-2 text-sm cursor-pointer mb-1; }
-        .multi-select-container input[type="checkbox"] { @apply rounded text-indigo-600 focus:ring-indigo-500 h-4 w-4; }
-        #imageOptionsContainer, #githubOptionsContainer { @apply mt-3 border-t pt-3 border-gray-200; }
-        .image-option-group, .github-option-group { @apply grid grid-cols-3 items-center gap-x-2 mb-2; }
-        #uploadProgressContainer { @apply w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mt-2 hidden; }
-        #uploadProgressBar { @apply bg-indigo-600 h-2.5 rounded-full transition-all duration-300 ease-out; width: 0%; }
-        #planningTableContainer { @apply mt-4 overflow-x-auto; }
-        #planningTable { @apply min-w-full divide-y divide-gray-200 text-sm; }
-        #planningTable thead th { @apply px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider bg-gray-50; }
-        #planningTable tbody tr:nth-child(even) { @apply bg-gray-50; }
-        #planningTable tbody td { @apply px-3 py-2 whitespace-nowrap; }
-        #planningTable input[type="text"] { @apply compact-input p-1 text-xs; }
-        .status-pending { @apply text-gray-500; } .status-generating { @apply text-yellow-600 italic; } .status-completed { @apply text-green-600 font-semibold; } .status-failed { @apply text-red-600 font-semibold; } .status-uploading { @apply text-blue-600 italic; }
-    </style>
+    <link rel="stylesheet" href="article.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
@@ -57,7 +14,9 @@
 <body class="p-4 max-w-5xl mx-auto">
 
     <div class="flex justify-between items-center mb-4">
-        <h1 class="text-2xl font-bold text-indigo-700">AI Article Generator & Spinner 🖼️ (v8.24)</h1>
+        <h1 class="text-2xl font-bold text-indigo-700">
+            AI Article Generator & Spinner 🖼️ (v9.00)
+        </h1>
         <div class="space-x-2">
              <button id="forceReloadBtn" class="reload-button" title="Attempt to bypass cache and reload all resources">Force Reload 🔄</button>
              <button id="resetDataBtn" class="reset-button">Reset All Data ⚠️</button>
@@ -393,24 +352,46 @@
             </div>
         </div> 
         <div class="mt-2 flex justify-between items-center"> 
-            <label class="flex items-center space-x-2 text-sm cursor-pointer"> <input type="checkbox" id="preview_html_checkbox" class="rounded text-indigo-600 focus:ring-indigo-500"> <span>Preview HTML</span> </label> 
-            <button id="enableSpinningBtn" class="compact-button"> Spin Article 🔄 <span id="spinLoadingIndicator" class="hidden"><span class="loader"></span></span> </button>
-            <button id="pauseSpinBtn" class="compact-button bg-yellow-500 hover:bg-yellow-600" disabled> Pause Spinning </button> <!-- Initially disabled -->
-            <button id="stopSpinBtn" class="compact-button bg-red-500 hover:bg-red-600" disabled> Stop Spinning 🛑 </button>   <!-- Initially disabled -->
+            <label class="flex items-center space-x-2 text-sm cursor-pointer"> 
+                <input type="checkbox" id="preview_html_checkbox" class="rounded text-indigo-600 focus:ring-indigo-500"> <span>Preview HTML</span> 
+            </label> 
+            <button id="prepareSpinnerBtn" class="compact-button bg-purple-600 hover:bg-purple-700"> 
+            Split Paragraphs & Sentences ✂️ 
+            </button>
         </div> 
     </section>
 
-    <section id="step4" class="compact-section hidden"> 
-        <h2 class="text-lg font-semibold mb-3 text-gray-600 border-b pb-2">Step 4: Spin Content 🌀</h2> 
-        <p class="text-sm text-gray-600 mb-2">Select text in the article area below, then click the "Spin Selected Text" button.</p> 
-        <div class="mb-2 text-right"> 
-            <button id="spinSelectedBtn" class="compact-button" disabled> Spin Selected Text ✨ <span id="spinActionLoadingIndicator" class="hidden"><span class="loader"></span></span> </button> 
-        </div> 
-        <label for="spun_article_display" class="compact-label">Spinnable Article (Editable):</label> 
-        <div id="spin_output_container" class="border border-gray-300 rounded-md p-2 bg-gray-50 min-h-[200px] max-h-[450px] overflow-y-auto"> 
-            <div id="spun_article_display" contenteditable="true" class="compact-textarea w-full h-full border-none focus:outline-none focus:ring-0 min-h-[200px]" placeholder="Article content will appear here for spinning..."></div> 
-        </div> 
-        <p class="text-xs text-gray-500 mt-2">Spintax: <code class="bg-gray-200 px-1 rounded">{opt1|opt2}</code> Nested: <code class="bg-gray-200 px-1 rounded">{opt1|{nest1|nest2}|opt3}</code>.</p> 
+    <section id="step4" class="compact-section hidden">
+        <div class="flex justify-between items-center mb-3 border-b pb-2">
+            <h2 class="text-lg font-semibold text-gray-600">Step 4: Sentence Variations 🔀</h2>
+            <div class="space-x-2">
+                <button id="addVariationColumnBtn" class="compact-button bg-blue-500 hover:bg-blue-600 text-xs">
+                    + Add Variation Column
+                </button>
+                <button id="bulkGenerateBtn" class="compact-button bg-indigo-600 hover:bg-indigo-700 text-xs">
+                    ⚡ Generate Empty Variations
+                </button>
+            </div>
+        </div>
+        
+        <div id="spinnerContainer" class="overflow-x-auto pb-4">
+            <!-- Dynamic content goes here -->
+        </div>
+
+        <div class="mt-4 text-right">
+            <button id="compileSpintaxBtn" class="compact-button bg-green-600 hover:bg-green-700">
+                Compile Spintax & Proceed to Step 5 ➡️
+            </button>
+        </div>
+    </section>
+
+    <section id="step5" class="compact-section hidden">
+        <h2 class="text-lg font-semibold mb-3 text-gray-600 border-b pb-2">Step 5: Final Spintax Output 🌀</h2>
+        <p class="text-sm text-gray-600 mb-2">Copy this code into your posting tool.</p>
+        <textarea id="finalSpintaxOutput" class="step-5-output" readonly></textarea>
+        <div class="mt-2 text-right">
+            <button id="copySpintaxBtn" class="compact-button">Copy to Clipboard 📋</button>
+        </div>
     </section>
 
     <div id="consoleLogContainer"> 

@@ -1,4 +1,4 @@
-// article-main.js (v8.24 munculin text area + new fetch sitemap + hapus2)
+// article-main.js (v9)
 import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
 import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
 import {
@@ -11,7 +11,7 @@ import { languageOptions, imageProviders, defaultSettings } from './article-conf
 import { handleGenerateStructure, handleGenerateArticle } from './article-single.js';
 import { prepareKeywords, handleGeneratePlan, handleStartBulkGeneration, handleDownloadZip } from './article-bulk.js';
 import { handleGenerateIdeas } from './article-ideas.js';
-import { handleSpinSelectedText, handleSelection, highlightSpintax, handleSpinArticle, pauseSpinning, stopSpinningProcess } from './article-spinner.js';
+import { prepareSpinnerUI, addVariationColumn, handleBulkGenerate, compileSpintax } from './article-spinner.js';
 
 function addProviderToState() {
     const currentState = getState();
@@ -310,9 +310,7 @@ function setupStep3Listeners() {
     const previewHtmlCheckbox = getElement('previewHtmlCheckbox');
     const generatedArticleTextarea = getElement('generatedArticleTextarea');
     const htmlPreviewDiv = getElement('htmlPreviewDiv');
-    const enableSpinningBtn = getElement('enableSpinningBtn');
-    const pauseSpinBtn = getElement('pauseSpinBtn');
-    const stopSpinBtn = getElement('stopSpinBtn');
+    const prepareSpinnerBtn = getElement('prepareSpinnerBtn');
 
     if (enableSpinningBtn) {
         enableSpinningBtn.textContent = ' Spin Article 🔄 ';
@@ -331,44 +329,40 @@ function setupStep3Listeners() {
         }
     });
 
-    enableSpinningBtn?.addEventListener('click', () => {
-        const generatedTextarea = getElement('generatedArticleTextarea');
-        const spunDisplay = getElement('spunArticleDisplay');
-        const step4 = getElement('step4Section');
-
-        if (generatedTextarea && spunDisplay && step4) {
-             logToConsole("Spin Article button clicked.", 'info');
-             showElement(step4, true);
-             handleSpinArticle(generatedTextarea, spunDisplay);
-        } else {
-             logToConsole("Could not start spinning - required elements missing.", 'error');
-             alert("Error starting spinning process. Please check console.");
-        }
-    });
-
-    pauseSpinBtn?.addEventListener('click', pauseSpinning);
-    stopSpinBtn?.addEventListener('click', stopSpinningProcess);
-
     generatedArticleTextarea?.addEventListener('input', (e) => {
         const currentContent = e.target.value;
         updateCounts(currentContent);
         if (getState().generatedArticleContent !== currentContent) { updateState({ generatedArticleContent: currentContent }); }
     });
+
+    prepareSpinnerBtn?.addEventListener('click', () => {
+        const articleContent = generatedArticleTextarea.value;
+        if(!articleContent.trim()) {
+            alert("Please generate an article first.");
+            return;
+        }
+        showElement(getElement('step4Section'), true);
+        prepareSpinnerUI(articleContent);
+        showElement(getElement('step3Section'), false); 
+    });
 }
 
 function setupStep4Listeners() {
-    const spunArticleDisplay = getElement('spunArticleDisplay');
-    const spinSelectedBtn = getElement('spinSelectedBtn');
+    const addVariationColumnBtn = getElement('addVariationColumnBtn');
+    const bulkGenerateBtn = getElement('bulkGenerateBtn');
+    const compileSpintaxBtn = getElement('compileSpintaxBtn');
+    const copySpintaxBtn = getElement('copySpintaxBtn');
 
-    spunArticleDisplay?.addEventListener('input', () => highlightSpintax(spunArticleDisplay));
-    spunArticleDisplay?.addEventListener('mouseup', handleSelection);
-    spunArticleDisplay?.addEventListener('keyup', handleSelection);
-    spunArticleDisplay?.addEventListener('focus', handleSelection);
-    spinSelectedBtn?.addEventListener('click', handleSpinSelectedText);
-
-     if(spunArticleDisplay?.textContent) {
-         highlightSpintax(spunArticleDisplay);
-     }
+    addVariationColumnBtn?.addEventListener('click', addVariationColumn);
+    bulkGenerateBtn?.addEventListener('click', handleBulkGenerate);
+    compileSpintaxBtn?.addEventListener('click', compileSpintax);
+    
+    copySpintaxBtn?.addEventListener('click', () => {
+        const textarea = getElement('finalSpintaxOutput');
+        textarea.select();
+        document.execCommand('copy');
+        alert("Spintax copied to clipboard!");
+    });
 }
 
 function setupBulkModeListeners() {
