@@ -1,4 +1,4 @@
-// article-main.js (v9)
+// article-main.js (v9.01 - Removed Bad Reference)
 import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
 import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
 import {
@@ -11,6 +11,7 @@ import { languageOptions, imageProviders, defaultSettings } from './article-conf
 import { handleGenerateStructure, handleGenerateArticle } from './article-single.js';
 import { prepareKeywords, handleGeneratePlan, handleStartBulkGeneration, handleDownloadZip } from './article-bulk.js';
 import { handleGenerateIdeas } from './article-ideas.js';
+// NOTE: We removed old spinner imports (highlightSpintax, handleSpinSelectedText, handleSpinArticle)
 import { prepareSpinnerUI, addVariationColumn, handleBulkGenerate, compileSpintax } from './article-spinner.js';
 
 function addProviderToState() {
@@ -312,10 +313,6 @@ function setupStep3Listeners() {
     const htmlPreviewDiv = getElement('htmlPreviewDiv');
     const prepareSpinnerBtn = getElement('prepareSpinnerBtn');
 
-    if (enableSpinningBtn) {
-        enableSpinningBtn.textContent = ' Spin Article 🔄 ';
-    }
-
     previewHtmlCheckbox?.addEventListener('change', (e) => {
         const showPreview = e.target.checked;
         showElement(generatedArticleTextarea, !showPreview);
@@ -394,7 +391,7 @@ function setupBulkModeListeners() {
 logToConsole("article-main.js evaluating. Setting up DOMContentLoaded listener.", "debug");
 document.addEventListener('DOMContentLoaded', initializeApp, { once: true });
 
-console.log("article-main.js loaded (v8.18 Humanize content)");
+console.log("article-main.js loaded (v9.01 Refactor)");
 
 // Global error handler for unhandled promise rejections
 window.addEventListener('unhandledrejection', event => {

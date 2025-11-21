@@ -1,11 +1,10 @@
-// article-ui.js (v8.24 new save state2)
+// article-ui.js (v9.01 - Updated ID Map)
 import { languageOptions, defaultSettings } from './article-config.js';
 import { getState, updateState, getBulkPlan, addProviderToState, removeProviderFromState, updateProviderInState, updateCustomModelState, getCustomModelState } from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2, delay } from './article-helpers.js';
 
-// --- DOM Element References (Centralized) ---
 let ALL_PROVIDERS_CONFIG = { text: {}, image: {} };
-let domElements = {}; // Keep private to this module
+let domElements = {}; 
 
 // Map JS variable names to actual HTML IDs
 const elementIdMap = {
@@ -92,20 +91,27 @@ const elementIdMap = {
     uploadProgressContainer: 'uploadProgressContainer',
     uploadProgressBar: 'uploadProgressBar',
     uploadProgressText: 'uploadProgressText',
+    
+    // Step 3
     step3Section: 'step3',
     articleOutputContainer: 'article_output_container',
     generatedArticleTextarea: 'generated_article',
     htmlPreviewDiv: 'html_preview',
     previewHtmlCheckbox: 'preview_html_checkbox',
-    enableSpinningBtn: 'enableSpinningBtn',
-    spinLoadingIndicator: 'spinLoadingIndicator',
-    pauseSpinBtn: 'pauseSpinBtn',
-    stopSpinBtn: 'stopSpinBtn',
+    prepareSpinnerBtn: 'prepareSpinnerBtn', // NEW
+
+    // Step 4
     step4Section: 'step4',
-    spinSelectedBtn: 'spinSelectedBtn',
-    spinActionLoadingIndicator: 'spinActionLoadingIndicator',
-    spinOutputContainer: 'spin_output_container',
-    spunArticleDisplay: 'spun_article_display',
+    addVariationColumnBtn: 'addVariationColumnBtn', // NEW
+    bulkGenerateBtn: 'bulkGenerateBtn', // NEW
+    spinnerContainer: 'spinnerContainer', // NEW
+    compileSpintaxBtn: 'compileSpintaxBtn', // NEW
+
+    // Step 5
+    step5Section: 'step5',
+    finalSpintaxOutput: 'finalSpintaxOutput', // NEW
+    copySpintaxBtn: 'copySpintaxBtn', // NEW
+
     consoleLogContainer: 'consoleLogContainer',
     consoleLog: 'consoleLog',
     structureCountDisplay: 'structureCountDisplay',
@@ -113,13 +119,11 @@ const elementIdMap = {
     charCountDisplay: 'charCountDisplay'
 };
 
-// Keys for elements retrieved with querySelectorAll
 const querySelectorAllKeys = {
     purposeCheckboxes: 'input[name="purpose"]',
     imageStorageRadios: 'input[name="imageStorage"]'
 };
 
-// Keys for elements retrieved with querySelector
 const querySelectorKeys = {
     planningTableBody: '#planningTable tbody'
 };
@@ -132,9 +136,8 @@ export async function initializeProviderUI() {
             ALL_PROVIDERS_CONFIG.text = result.textProviders;
             ALL_PROVIDERS_CONFIG.image = result.imageProviders;
             logToConsole("Successfully loaded all provider configurations.", "success");
-            // Now render the UI with the loaded state
             renderAiProviderRows();
-            populateImageModels(); // This can now use the fetched config
+            populateImageModels(); 
         } else {
             throw new Error(result.error || "Failed to fetch configurations.");
         }
@@ -147,42 +150,36 @@ export async function initializeProviderUI() {
 
 export function cacheDomElements() {
     logToConsole("Attempting to cache DOM elements...", "info");
-    let allFound = true;
-    domElements = {}; // Reset before caching
+    domElements = {}; 
 
-    // Cache elements by ID using the map
     for (const key in elementIdMap) {
         const htmlId = elementIdMap[key];
         const element = document.getElementById(htmlId);
         if (element) {
             domElements[key] = element;
         } else {
-            logToConsole(`Failed to cache element with ID: '${htmlId}' (JS Key: ${key})`, 'error');
+            // Only log error if it's not a step that might be hidden/generated
+            if(!['step4Section', 'step5Section', 'spinnerContainer'].includes(key)) {
+                 logToConsole(`Failed to cache element with ID: '${htmlId}' (JS Key: ${key})`, 'warn');
+            }
             domElements[key] = null;
         }
     }
 
-    // Cache elements using querySelectorAll
     for (const key in querySelectorAllKeys) {
         const selector = querySelectorAllKeys[key];
         const elements = document.querySelectorAll(selector);
         if (elements && elements.length > 0) { domElements[key] = elements; }
-        else { logToConsole(`Failed/Empty cache for querySelectorAll: ${selector} (JS Key: ${key})`, 'warn'); domElements[key] = null; }
+        else { domElements[key] = null; }
     }
 
-    // Cache elements using querySelector
     for (const key in querySelectorKeys) {
         const selector = querySelectorKeys[key];
         const element = document.querySelector(selector);
         if (element) { domElements[key] = element; }
-        else { logToConsole(`Failed to cache element with querySelector: ${selector} (JS Key: ${key})`, 'error'); domElements[key] = null; }
+        else { domElements[key] = null; }
     }
-
-    const idKeys = Object.keys(elementIdMap);
-    const failedIdCount = idKeys.filter(key => domElements[key] === null).length;
-
-    if (failedIdCount === 0) { logToConsole("All getElementById elements cached successfully.", "success"); }
-    else { logToConsole(`${failedIdCount}/${idKeys.length} getElementById elements failed to cache! UI may malfunction.`, "error"); }
+    logToConsole("DOM elements caching complete.", "info");
 }
 
 export function getElement(id) {
@@ -212,17 +209,13 @@ export function getElement(id) {
                 return liveElementOne;
             }
         }
-        if (id !== 'spunArticleDisplay' && id !== 'pauseSpinBtn' && id !== 'stopSpinBtn' && id !== 'ideasLoadingIndicator' && id !== 'generateIdeasBtn') {
-            logToConsole(`Element/NodeList '${id}' not found. This might be expected if the UI section is hidden.`, 'debug');
-        }
+        return null;
     }
     return element;
 }
 
-// --- UI Update Functions ---
 function populateSelect(selectElement, options, selectedValue = null, addEmptyOption = false, emptyText = "-- Select --") {
     if (!selectElement) { return 0; }
-    const elementName = selectElement.id || selectElement.name || 'Unnamed Select';
     selectElement.innerHTML = '';
     let optionsAdded = 0;
     if (addEmptyOption) { const emptyOpt = document.createElement('option'); emptyOpt.value = ""; emptyOpt.textContent = emptyText; selectElement.appendChild(emptyOpt); optionsAdded++; }
@@ -241,19 +234,13 @@ function populateSelect(selectElement, options, selectedValue = null, addEmptyOp
 export function renderAiProviderRows() {
     const container = getElement('aiProviderContainer');
     if (!container) return;
-
-    // Do not attempt to render if the configs haven't been loaded yet.
-    if (Object.keys(ALL_PROVIDERS_CONFIG.text).length === 0) {
-        logToConsole("Render AI providers skipped: configs not yet loaded.", "info");
-        return;
-    }
+    if (Object.keys(ALL_PROVIDERS_CONFIG.text).length === 0) return;
 
     const state = getState();
-    container.innerHTML = ''; // Clear existing rows
+    container.innerHTML = '';
 
-    // If no providers in state (e.g., first load), add one
     if (!state.textProviders || state.textProviders.length === 0) {
-        addProviderToState(); // This will trigger a re-render
+        addProviderToState();
         return;
     }
 
@@ -262,24 +249,20 @@ export function renderAiProviderRows() {
         container.appendChild(row);
     });
 
-    // Add event listener for the "Add Provider" button
     getElement('addProviderBtn')?.addEventListener('click', () => {
          addProviderToState();
-         renderAiProviderRows(); // Re-render after adding
+         renderAiProviderRows();
     });
 }
 
-// Helper function to create a single row (this is the core of the new UI)
 function createAiProviderRow(providerState, index) {
     const row = document.createElement('div');
     row.className = 'grid grid-cols-1 md:grid-cols-4 gap-x-4 p-3 border rounded-md bg-gray-50/50 shadow-sm';
     row.dataset.index = index;
 
-    // --- Column 1: Provider & Model Selection ---
     const selectionDiv = document.createElement('div');
     selectionDiv.className = 'flex flex-col space-y-2';
 
-    // Provider Select
     const providerSelect = document.createElement('select');
     providerSelect.className = 'compact-select text-sm';
     populateSelect(providerSelect, Object.keys(ALL_PROVIDERS_CONFIG.text), providerState.provider);
@@ -291,15 +274,16 @@ function createAiProviderRow(providerState, index) {
         checkApiStatus();
     });
 
-    // Model Select
     const modelSelect = document.createElement('select');
     modelSelect.className = 'compact-select text-sm';
     const availableModels = ALL_PROVIDERS_CONFIG.text[providerState.provider]?.models.map(m => m.id) || [];
+    
     if (providerState.model && !availableModels.includes(providerState.model)) {
         logToConsole(`Saved model "${providerState.model}" not found for provider "${providerState.provider}". Resetting model selection.`, 'warn');
         providerState.model = ''; 
         updateProviderInState(index, 'model', ''); 
     }
+
     populateSelect(modelSelect, availableModels, providerState.model, !providerState.model, "-- Select a Model --");
     modelSelect.addEventListener('change', (e) => {
         updateProviderInState(index, 'model', e.target.value);
@@ -311,8 +295,6 @@ function createAiProviderRow(providerState, index) {
     selectionDiv.appendChild(providerSelect);
     selectionDiv.appendChild(modelSelect);
 
-
-    // --- Column 2 & 3: Model Specifications ---
     const specsDiv = document.createElement('div');
     specsDiv.className = 'md:col-span-2 text-xs text-gray-600 grid grid-cols-2 gap-x-4 gap-y-1 items-center mt-2 md:mt-0';
     const modelConfig = ALL_PROVIDERS_CONFIG.text[providerState.provider]?.models.find(m => m.id === providerState.model);
@@ -333,15 +315,13 @@ function createAiProviderRow(providerState, index) {
         specsDiv.innerHTML = `<p class="text-gray-400 col-span-2">Select a model to see details.</p>`;
     }
 
-
-    // --- Column 4: Actions (Remove button) ---
     const actionDiv = document.createElement('div');
     actionDiv.className = 'flex items-center justify-end mt-2 md:mt-0';
     const removeBtn = document.createElement('button');
     removeBtn.className = 'reset-button text-xs !py-1 !px-2';
-    removeBtn.innerHTML = `× Remove`; // Use an 'x' for a cleaner look
+    removeBtn.innerHTML = `× Remove`;
     if (getState().textProviders.length <= 1) {
-        disableElement(removeBtn, true); // Don't allow removing the last one
+        disableElement(removeBtn, true);
     }
     removeBtn.addEventListener('click', () => {
         removeProviderFromState(index);
@@ -393,7 +373,9 @@ export async function checkApiStatus() {
 
     logToConsole(`Checking API Status for Provider: ${providerKey}, Model: ${model}`, "info");
     statusDiv.innerHTML = `<span class="status-checking">Checking ${providerKey}...</span>`;
+
     await delay(10);
+
     try {
         const result = await callAI('check_status', { providerKey, model }, null, null);
         if (!result?.success) {
@@ -407,14 +389,14 @@ export async function checkApiStatus() {
         let displayMessage = '';
         let technicalDetails = error.message;
 
-        if (error.status === 401) {
+        if (error.status === 400) {
+            displayMessage = `❌ Model Parameter Error. The tool may need an update for this specific model.`;
+        } else if (error.status === 401) {
             displayMessage = `❌ Invalid API Key.`;
         } else if (error.status === 403) {
             displayMessage = `❌ Permission Denied (Region Blocked).`;
         } else if (error.status === 429) {
             displayMessage = `❌ Quota Exceeded. Please check your billing.`;
-        } else if (error.status === 400) {
-            displayMessage = `❌ Model Parameter Error. The tool may need an update for this specific model.`;
         } else {
             displayMessage = `❌ Connection Error. The tool's server might be temporarily down.`;
         }
@@ -436,7 +418,7 @@ export function populateImageModels(setDefault = false) {
     const useCustomCheckbox = getElement('useCustomImageModelCheckbox');
     const customInput = getElement('customImageModelInput');
 
-    if (!imageModelSelect || !imageAspectRatioSelect || !useCustomCheckbox || !customInput) { logToConsole("Missing elements for populateImageModels.", "error"); return; }
+    if (!imageModelSelect || !imageAspectRatioSelect || !useCustomCheckbox || !customInput) { return; }
 
     if (!providerKey || !ALL_PROVIDERS_CONFIG.image[providerKey]) {
         imageModelSelect.innerHTML = '<option value="">-- Select Provider --</option>';
@@ -521,7 +503,6 @@ export function populateDialectsUI(state) {
     const customLanguageInput = getElement('customLanguageInput');
 
     if (!dialectSelect) {
-         logToConsole("Dialect select ('dialectSelect') element not found. Cannot populate dialects.", "error");
          if(customLanguageInput) showElement(customLanguageInput, false);
          return;
     }
@@ -532,7 +513,7 @@ export function populateDialectsUI(state) {
         showElement(customLanguageInput, showCustom);
         customLanguageInput.classList.toggle('custom-input-visible', showCustom);
         if (showCustom) { customLanguageInput.value = state.customLanguage || ''; }
-     } else if (showCustom) { logToConsole("Custom language selected, but input element ('customLanguageInput') not found.", "warn"); }
+     }
 
     if (!selectedLangKey) { dialectSelect.innerHTML = '<option value="">-- Select Language --</option>'; return; }
     else if (selectedLangKey === 'custom') { dialectSelect.innerHTML = '<option value="">-- N/A --</option>'; return; }
@@ -552,8 +533,7 @@ export function populateDialectsUI(state) {
 }
 
 export function updateUIBasedOnMode(isBulkMode) {
-    logToConsole(`Setting UI for Bulk Mode: ${isBulkMode}`, 'info');
-    const appState = getState(); // Get the current canonical state
+    const appState = getState();
     const singleKeywordGroup = getElement('keywordInput')?.closest('.input-group');
     const generateSingleBtn = getElement('generateSingleBtn');
     const step2Section = getElement('step2Section');
@@ -565,17 +545,14 @@ export function updateUIBasedOnMode(isBulkMode) {
     const batchSizeContainer = getElement('batchSizeContainer');
     const step1_5Section = getElement('step1_5Section');
 
-    // Single mode elements
     showElement(singleKeywordGroup, !isBulkMode);
     showElement(generateSingleBtn, !isBulkMode);
 
-    // Bulk mode elements
     showElement(bulkKeywordsContainer, isBulkMode);
     showElement(generatePlanBtn, isBulkMode);
     showElement(batchSizeContainer, isBulkMode);
 
     if (isBulkMode) {
-        // Switching TO Bulk Mode: Hide single-mode workflow sections
         showElement(step2Section, false);
         showElement(step3Section, false);
         showElement(step4Section, false);
@@ -589,12 +566,9 @@ export function updateUIBasedOnMode(isBulkMode) {
 
         if(formatSelect) {
             disableElement(formatSelect, true);
-            // Value already set to 'markdown' by the event listener in article-main.js
-            // formatSelect.value = 'markdown';
         }
 
     } else {
-        // Switching TO Single Mode: Show single-mode workflow sections based on their state
         showElement(step1_5Section, false);
 
         const articleStructureTextarea = getElement('articleStructureTextarea');
@@ -603,20 +577,14 @@ export function updateUIBasedOnMode(isBulkMode) {
         const generatedArticleTextarea = getElement('generatedArticleTextarea');
         if (generatedArticleTextarea) generatedArticleTextarea.value = appState.generatedArticleContent || '';
 
-        const spunArticleDisplay = getElement('spunArticleDisplay');
-
         showElement(step2Section, (appState.articleStructure || '').trim() !== '');
         showElement(step3Section, (appState.generatedArticleContent || '').trim() !== '');
-        showElement(step4Section,
-            (appState.generatedArticleContent || '').trim() !== '' &&
-            (spunArticleDisplay?.textContent || '').trim() !== ''
-        );
+        // Step 4 shown only when spinner is prepared, not just based on text existence
+        showElement(step4Section, false); 
 
         if(formatSelect) {
             disableElement(formatSelect, false);
-            // The format in appState should have been restored by the event listener in article-main.js
             formatSelect.value = appState.format;
-            logToConsole(`Format select value set to: ${appState.format} for single mode.`, 'debug');
         }
     }
 }
@@ -648,13 +616,9 @@ export function updateStructureCountDisplay(structureText) {
 
 export function updateUIFromState(state) {
     logToConsole("Updating UI from loaded state...", "info");
-    if (!state) { logToConsole("Cannot update UI: state is null.", "error"); return; }
+    if (!state) return;
     if (Object.keys(domElements).length === 0 && Object.keys(elementIdMap).length > 0) {
-        logToConsole("DOM elements not cached, attempting now before UI update.", "warn");
         cacheDomElements();
-        if (Object.keys(domElements).length === 0 && Object.keys(elementIdMap).length > 0){
-             logToConsole("DOM elements still not cached. Cannot update UI.", "error"); return;
-        }
     }
     renderAiProviderRows();
 
@@ -745,9 +709,7 @@ export function updateUIFromState(state) {
     const githubCustomPathInputElement = getElement('githubCustomPathInput'); 
     if(githubCustomPathInputElement) githubCustomPathInputElement.value = state.githubCustomPath ?? defaultSettings.githubCustomPath;
 
-    // --- End of Corrections ---
-
-    populateImageModels(); // This populates based on state, which is now correct.
+    populateImageModels(); 
 
     const articleTitleInputElement = getElement('articleTitleInput'); 
     if (articleTitleInputElement) articleTitleInputElement.value = state.articleTitle ?? '';
@@ -802,7 +764,7 @@ export function updateUIFromState(state) {
 export function renderPlanningTable(plan) {
     const tableBody = getElement('planningTableBody');
     const downloadBtn = getElement('downloadBulkZipBtn');
-    if (!tableBody) { logToConsole("Planning table body not found.", "error"); return; }
+    if (!tableBody) return;
 
     if(downloadBtn) showElement(downloadBtn, false);
 
@@ -812,7 +774,6 @@ export function renderPlanningTable(plan) {
         return;
     }
 
-    // Check for completed articles to decide if the download button should be shown
     const hasCompletedArticles = plan.some(item => item.status?.startsWith('Completed'));
     if (hasCompletedArticles && downloadBtn) {
         showElement(downloadBtn, true);
@@ -862,7 +823,6 @@ export function renderPlanningTable(plan) {
         cell.classList.add('px-3', 'py-2', 'whitespace-nowrap', 'text-xs');
         updatePlanItemStatusUI(row, item.status || 'Pending', item.error);
     });
-    logToConsole(`Rendered planning table with ${plan.length} items.`, 'info');
 }
 
 export function updatePlanItemStatusUI(rowElementOrIndex, status, errorMsg = null) {
@@ -894,7 +854,7 @@ export function hideProgressBar(barElement, containerElement, textElement) {
 
 export function toggleGithubOptions() {
     const imageStorageRadios = getElement('imageStorageRadios');
-    let storageType = 'base64'; // Default
+    let storageType = 'base64'; 
     if (imageStorageRadios) {
         const checkedRadio = Array.from(imageStorageRadios).find(r => r.checked);
         if (checkedRadio) storageType = checkedRadio.value;
@@ -909,7 +869,7 @@ export function toggleGithubOptions() {
 
 export function displaySitemapUrlsUI(urls = []) {
     const listDiv = getElement('sitemapUrlsListDiv');
-    if (!listDiv) { logToConsole("Sitemap list element not found for UI update.", "warn"); return; }
+    if (!listDiv) return;
     if (!urls || urls.length === 0) { listDiv.innerHTML = `<em class="text-gray-400">No sitemap loaded or no URLs found.</em>`; return; }
     listDiv.innerHTML = '';
     urls.forEach(url => { const div = document.createElement('div'); div.textContent = url; div.title = url; listDiv.appendChild(div); });
@@ -919,5 +879,3 @@ export function displaySitemapUrlsUI(urls = []) {
 export function getProviderConfig(type) {
     return ALL_PROVIDERS_CONFIG[type];
 }
-
-console.log("article-ui.js loaded (v8.18 Humanize content)");
