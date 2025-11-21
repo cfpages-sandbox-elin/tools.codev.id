@@ -1,4 +1,4 @@
-/* Styles identical to v8.1 */
+/* Styles identical to v9.02 */
 body { font-family: 'Inter', sans-serif; @apply bg-gray-100 text-gray-800; }
 input, textarea, button { padding: 0 5px !important;}
 button, input, optgroup, select, textarea { border: 2px solid; }
@@ -45,17 +45,54 @@ button, input, optgroup, select, textarea { border: 2px solid; }
 .spinner-tag { @apply font-mono text-xs text-gray-400 select-none mb-1 block; }
 .spinner-tag-end { @apply font-mono text-xs text-gray-400 select-none mt-1 block text-right; }
 
-.segment-row { @apply flex gap-2 mb-2 items-start; }
-.segment-box-container { @apply flex-1 min-w-[200px] relative; }
-
-.segment-textarea { @apply w-full p-2 text-sm border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500 min-h-[60px] resize-y; }
-.segment-textarea.original { @apply bg-gray-50 border-gray-300; }
-.segment-textarea.variation { @apply bg-white border-indigo-200; }
-
-.segment-actions { @apply flex justify-between items-center mt-1; }
-.token-count { @apply text-[10px] text-gray-400; }
-
 .gen-btn { @apply text-xs bg-indigo-100 text-indigo-700 hover:bg-indigo-200 px-2 py-0.5 rounded cursor-pointer select-none; }
 .add-var-col-btn { @apply compact-button bg-green-600 hover:bg-green-700 text-white text-xs mb-4; }
 
 .step-5-output { @apply w-full h-64 font-mono text-sm p-2 border border-gray-300 rounded; }
+
+/* Force side-by-side layout and prevent wrapping */
+.segment-row { 
+    @apply flex flex-row gap-2 mb-2 items-start w-full; 
+}
+
+/* Allow containers to grow equally and prevent them from forcing a wrap */
+.segment-box-container { 
+    @apply flex-1 min-w-0 relative; /* min-w-0 is critical for flex children */
+}
+
+/* Remove scrollbar and handle resize via JS */
+.segment-textarea { 
+    @apply w-full p-2 text-sm border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500 resize-none overflow-hidden leading-relaxed;
+    min-height: 3rem;
+}
+
+/* Visuals for original vs variation */
+.segment-textarea.original { @apply bg-gray-50 border-gray-300 text-gray-600; }
+.segment-textarea.variation { @apply bg-white border-indigo-300 text-gray-800 shadow-sm; }
+.segment-actions { @apply flex justify-between items-center mt-1; }
+.token-count { @apply text-[10px] text-gray-400; }
+
+/* --- Collapsible Section Styles --- */
+.section-header { 
+    @apply flex justify-between items-center cursor-pointer select-none transition-colors duration-200 rounded-t-lg -mx-4 -mt-4 p-4;
+}
+.section-header:hover {
+    @apply bg-gray-50;
+}
+.section-header h2, .section-header h3 {
+    @apply m-0; /* Reset margins for clean alignment */
+}
+/* Icon rotation for open/closed state */
+.chevron-icon {
+    @apply w-5 h-5 text-gray-400 transition-transform duration-200 transform;
+}
+.compact-section.collapsed .chevron-icon {
+    @apply -rotate-90;
+}
+.compact-section.collapsed .section-body {
+    @apply hidden;
+}
+/* Ensure body has padding to match the removed negative margins of header */
+.section-body {
+    @apply mt-4; 
+}

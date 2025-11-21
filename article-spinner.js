@@ -1,4 +1,4 @@
-// article-spinner.js (v9.01 - Structural Spinner Clean)
+// article-spinner.js (v9.02 - Structural Spinner Clean)
 import { getState } from './article-state.js';
 import { logToConsole, callAI, delay, showElement, disableElement, showLoading } from './article-helpers.js';
 import { getElement } from './article-ui.js';
@@ -133,19 +133,28 @@ function createBox(content, isOriginal, blockIndex, segIndex, varIndex) {
     const textarea = document.createElement('textarea');
     textarea.className = `segment-textarea ${isOriginal ? 'original' : 'variation'}`;
     textarea.value = content;
-    
+
+    const autoResize = () => {
+        textarea.style.height = 'auto';
+        textarea.style.height = (textarea.scrollHeight + 2) + 'px'; // +2 for border safety
+    };
+
+    textarea.addEventListener('input', autoResize);
+    setTimeout(autoResize, 0);
+
     if (isOriginal) {
         textarea.addEventListener('input', (e) => {
              articleBlocks[blockIndex].segments[segIndex].original = e.target.value;
+             autoResize();
         });
     } else {
         textarea.placeholder = "AI will generate here...";
         textarea.addEventListener('input', (e) => {
-            // Ensure array index exists
             if (!articleBlocks[blockIndex].segments[segIndex].variations[varIndex]) {
                 articleBlocks[blockIndex].segments[segIndex].variations[varIndex] = '';
             }
             articleBlocks[blockIndex].segments[segIndex].variations[varIndex] = e.target.value;
+            autoResize();
         });
     }
 
@@ -163,7 +172,7 @@ function createBox(content, isOriginal, blockIndex, segIndex, varIndex) {
 
     actionsDiv.appendChild(tokenSpan);
 
-    // Generate Button (Only for variations)
+    // Generate Button
     if (!isOriginal) {
         const genBtn = document.createElement('button');
         genBtn.className = 'gen-btn';

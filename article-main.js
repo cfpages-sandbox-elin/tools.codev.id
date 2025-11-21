@@ -1,4 +1,4 @@
-// article-main.js (v9.01 - Removed Bad Reference)
+// article-main.js (v9.02 - Removed Bad Reference)
 import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
 import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
 import {
@@ -74,7 +74,18 @@ async function initializeApp() {
     logToConsole("Final assertion of UI mode...", "info");
     updateUIBasedOnMode(getState().bulkMode);
 
+    setupCollapsibleSections(); // Add this line
     logToConsole("Application Initialized successfully.", "success");
+}
+
+function setupCollapsibleSections() {
+    const headers = document.querySelectorAll('.section-header');
+    headers.forEach(header => {
+        header.addEventListener('click', () => {
+            const section = header.closest('.compact-section');
+            section.classList.toggle('collapsed');
+        });
+    });
 }
 
 // --- Listener setup functions ---
