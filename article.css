@@ -1,4 +1,4 @@
-/* Styles identical to v9.02 */
+/* Styles identical to v9.020 */
 body { font-family: 'Inter', sans-serif; @apply bg-gray-100 text-gray-800; }
 input, textarea, button { padding: 0 5px !important;}
 button, input, optgroup, select, textarea { border: 2px solid; }
@@ -82,9 +82,14 @@ button, input, optgroup, select, textarea { border: 2px solid; }
 .section-header h2, .section-header h3 {
     @apply m-0; /* Reset margins for clean alignment */
 }
-/* Icon rotation for open/closed state */
 .chevron-icon {
-    @apply w-5 h-5 text-gray-400 transition-transform duration-200 transform;
+    /* Force specific dimensions */
+    width: 20px !important;
+    height: 20px !important;
+    /* Keep existing styles */
+    @apply text-gray-400 transition-transform duration-200 transform;
+    /* Prevent it from shrinking in flex containers */
+    flex-shrink: 0; 
 }
 .compact-section.collapsed .chevron-icon {
     @apply -rotate-90;
