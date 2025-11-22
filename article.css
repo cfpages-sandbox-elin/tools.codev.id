@@ -1,5 +1,4 @@
-/* Standard CSS overrides for layout and behavior */
-
+/* 9.03 nested */
 body { font-family: 'Inter', sans-serif; }
 
 /* Keep Tailwind @apply for utilities that work if you are using the CDN correctly, 
@@ -151,3 +150,26 @@ button, input, optgroup, select, textarea { border: 2px solid; }
 .loader { border: 4px solid #f3f3f3; border-top: 4px solid #6366f1; border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; display: inline-block; margin-left: 6px; vertical-align: middle; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 .hidden { display: none; }
+
+/* Indentation for nested structures */
+.depth-0 { margin-left: 0; }
+.depth-1 { margin-left: 1.5rem; border-left: 2px solid #e5e7eb; padding-left: 0.5rem; }
+.depth-2 { margin-left: 3rem; border-left: 2px solid #e5e7eb; padding-left: 0.5rem; }
+.depth-3 { margin-left: 4.5rem; border-left: 2px solid #e5e7eb; padding-left: 0.5rem; }
+
+/* structural tags (ul, li, p) are mostly visual cues now */
+.structure-tag {
+    font-family: monospace;
+    color: #9ca3af;
+    font-size: 0.75rem;
+    user-select: none;
+    padding: 2px 0;
+}
+
+/* Ensure spinner blocks contain the flow */
+.spinner-block {
+    @apply mb-6 p-4 border-2 border-dashed border-gray-300 rounded-lg bg-white;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}

@@ -1,4 +1,4 @@
-// article-prompts.js v8.24 upgrade prompt
+// article-prompts.js v9.03 centralization
 import { getState, getBulkPlan } from './article-state.js';
 import { languageOptions } from './article-config.js';
 
@@ -169,6 +169,36 @@ export function getIdeaPrompt(seedKeyword, questionType, questionDetail) {
 }
 
 // --- Spinner Prompts ---
+
+// NEW: Prompt for Step 4 "Generate Single Variation" with shuffling instructions
+export function getSpinnerVariationPrompt(originalText, existingVariations = []) {
+    const state = getState();
+    
+    let prompt = `Task: Rewrite the following text snippet in ${state.language} (${state.tone} tone).\n\n`;
+    
+    prompt += `CRITICAL INSTRUCTIONS (STRUCTURAL SHUFFLING):\n`;
+    prompt += `1. Keep the EXACT meaning of the original.\n`;
+    prompt += `2. RADICALLY CHANGE the sentence structure. Do not just replace synonyms.\n`;
+    prompt += `3. SHUFFLE the positions of the Subject, Object, Place, and Time components.\n`;
+    prompt += `4. Switch between Active and Passive voice (e.g., "A ate B" -> "B was eaten by A").\n`;
+    prompt += `5. Use Fronting (move the end of the sentence to the beginning) if appropriate.\n`;
+    prompt += `6. Keep HTML tags (like <b>, <i>) if present in the original, but rewrite the text content around them.\n`;
+
+    if (existingVariations.length > 0) {
+        prompt += `\nCONTEXT (AVOID these structures):\n`;
+        prompt += `The following variations already exist. You MUST generate a sentence structure DIFFERENT from these:\n`;
+        existingVariations.forEach((v, i) => {
+            prompt += `- ${v}\n`;
+        });
+    }
+
+    prompt += `\nOriginal Text:\n"${originalText}"\n`;
+    prompt += `\nOutput ONLY the new rewritten text snippet. No explanations.`;
+
+    return prompt;
+}
+
+// Existing prompt for JSON generation (optional/legacy use)
 export function getSpintaxPrompt(textToSpin, isSentence = false) {
     const state = getState();
     const language = state.language === 'custom' ? state.customLanguage : languageOptions[state.language]?.name || state.language;
@@ -192,6 +222,5 @@ export function getSpintaxPrompt(textToSpin, isSentence = false) {
     ${textToSpin}
     ---`;
 }
-
 
 console.log("article-prompts.js loaded");
