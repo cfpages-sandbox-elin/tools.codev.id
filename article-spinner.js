@@ -1,4 +1,4 @@
-// article-spinner.js (v9.02 - Structural Spinner Clean)
+// article-spinner.js (v9.02 - better single prompt)
 import { getState } from './article-state.js';
 import { logToConsole, callAI, delay, showElement, disableElement, showLoading } from './article-helpers.js';
 import { getElement } from './article-ui.js';
@@ -211,17 +211,37 @@ export async function generateSingleVariation(blockIndex, segIndex, varIndex, te
         return;
     }
 
-    const originalText = articleBlocks[blockIndex].segments[segIndex].original;
+    const segmentData = articleBlocks[blockIndex].segments[segIndex];
+    const originalText = segmentData.original;
     
+    const existingVariations = segmentData.variations
+        .filter((val, idx) => idx !== varIndex && val && val.trim() !== "");
+
     // Visual Feedback
     btn.textContent = '⏳';
     disableElement(btn, true);
     textarea.classList.add('opacity-50');
 
     try {
-        const prompt = `Rewrite the following text in ${state.language} (${state.tone} tone). Keep the meaning but change words/structure. Output ONLY the rewritten text.
+        let prompt = `Task: Rewrite the following sentence in ${state.language} (${state.tone} tone).\n\n`;
         
-        Original: "${originalText}"`;
+        prompt += `CRITICAL INSTRUCTIONS (STRUCTURAL SHUFFLING):\n`;
+        prompt += `1. Keep the EXACT meaning of the original.\n`;
+        prompt += `2. RADICALLY CHANGE the sentence structure. Do not just replace synonyms.\n`;
+        prompt += `3. SHUFFLE the positions of the Subject, Object, Place, and Time.\n`;
+        prompt += `4. Switch between Active and Passive voice (e.g., "A ate B" -> "B was eaten by A").\n`;
+        prompt += `5. Use Fronting (move the end of the sentence to the beginning).\n`;
+
+        if (existingVariations.length > 0) {
+            prompt += `\nCONTEXT (AVOID these structures):\n`;
+            prompt += `The following variations already exist. You MUST generate a sentence structure DIFFERENT from these:\n`;
+            existingVariations.forEach((v, i) => {
+                prompt += `- ${v}\n`;
+            });
+        }
+
+        prompt += `\nOriginal Sentence:\n"${originalText}"\n`;
+        prompt += `\nOutput ONLY the new rewritten sentence. No explanations.`;
 
         const payload = {
             providerKey: primaryProvider.provider,
