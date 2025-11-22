@@ -79,7 +79,7 @@ async function initializeApp() {
 }
 
 function setupCollapsibleSections() {
-    document.body.addEventListener('click', (e) => {
+    document.addEventListener('click', (e) => {
         const header = e.target.closest('.section-header');
         if (header) {
             const section = header.closest('.compact-section');

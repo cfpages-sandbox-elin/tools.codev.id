@@ -1,104 +1,153 @@
-/* Styles identical to v9.020 */
-body { font-family: 'Inter', sans-serif; @apply bg-gray-100 text-gray-800; }
-input, textarea, button { padding: 0 5px !important;}
+/* Standard CSS overrides for layout and behavior */
+
+body { font-family: 'Inter', sans-serif; }
+
+/* Keep Tailwind @apply for utilities that work if you are using the CDN correctly, 
+   but strictly define structure below */
+
+input, textarea, button { padding: 0 5px !important; }
 button, input, optgroup, select, textarea { border: 2px solid; }
-.compact-section { @apply bg-white p-4 mb-4 rounded-lg shadow-md; }
-.compact-label { @apply block text-sm font-medium text-gray-700 mb-1 whitespace-nowrap; }
-.compact-input, .compact-select, .compact-textarea { @apply block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm; }
-.custom-input-visible { @apply compact-input mt-1; }
-.compact-button { @apply inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed; }
-.reset-button { @apply inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500; }
-.reload-button { @apply inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-500 hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400; }
-.spintax-level-1 { color: #007bff; } .spintax-level-2 { color: #28a745; } .spintax-level-3 { color: #dc3545; } .spintax-pipe { color: #ffc107; font-weight: bold; }
-.compact-textarea::-webkit-scrollbar { display: none; } .compact-textarea { -ms-overflow-style: none; scrollbar-width: none; }
-.input-group { @apply mb-3; }
-.loader { border: 4px solid #f3f3f3; border-top: 4px solid #6366f1; border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; display: inline-block; margin-left: 6px; vertical-align: middle; }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-#consoleLogContainer { @apply compact-section mt-4 bg-gray-800 text-white p-3; }
-#consoleLog { @apply text-xs h-32 overflow-y-auto whitespace-pre-wrap break-all font-mono; }
-.log-error { @apply text-red-400; } .log-warn { @apply text-yellow-400; } .log-info { @apply text-blue-300; } .log-success { @apply text-green-400; }
-.status-ok { @apply text-green-600 font-semibold; } .status-error { @apply text-red-600 font-semibold; } .status-checking { @apply text-yellow-600 italic; }
-#sitemapUrlsList { @apply text-xs max-h-32 overflow-y-auto border border-gray-200 bg-gray-50 p-2 rounded mt-1; }
-#sitemapUrlsList div { @apply mb-1 truncate; }
-.toggle-switch { @apply relative inline-flex items-center h-6 rounded-full w-11 cursor-pointer; }
-.toggle-switch input { @apply sr-only; }
-.toggle-switch .slider { @apply absolute inset-0 bg-gray-300 rounded-full transition-colors duration-200 ease-in-out; }
-.toggle-switch input:checked + .slider { @apply bg-indigo-600; }
-.toggle-switch .dot { @apply absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-200 ease-in-out; }
-.toggle-switch input:checked + .slider .dot { @apply transform translate-x-5; }
-.multi-select-container { @apply block w-full p-2 border border-gray-300 rounded-md shadow-sm bg-white; }
-.multi-select-container label { @apply flex items-center space-x-2 text-sm cursor-pointer mb-1; }
-.multi-select-container input[type="checkbox"] { @apply rounded text-indigo-600 focus:ring-indigo-500 h-4 w-4; }
-#imageOptionsContainer, #githubOptionsContainer { @apply mt-3 border-t pt-3 border-gray-200; }
-.image-option-group, .github-option-group { @apply grid grid-cols-3 items-center gap-x-2 mb-2; }
-#uploadProgressContainer { @apply w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700 mt-2 hidden; }
-#uploadProgressBar { @apply bg-indigo-600 h-2.5 rounded-full transition-all duration-300 ease-out; width: 0%; }
-#planningTableContainer { @apply mt-4 overflow-x-auto; }
-#planningTable { @apply min-w-full divide-y divide-gray-200 text-sm; }
-#planningTable thead th { @apply px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider bg-gray-50; }
-#planningTable tbody tr:nth-child(even) { @apply bg-gray-50; }
-#planningTable tbody td { @apply px-3 py-2 whitespace-nowrap; }
-#planningTable input[type="text"] { @apply compact-input p-1 text-xs; }
-.status-pending { @apply text-gray-500; } .status-generating { @apply text-yellow-600 italic; } .status-completed { @apply text-green-600 font-semibold; } .status-failed { @apply text-red-600 font-semibold; } .status-uploading { @apply text-blue-600 italic; }
-/* New Spinner UI Styles */
-.spinner-block { @apply mb-6 p-4 border-2 border-dashed border-gray-300 rounded-lg bg-white; }
-.spinner-tag { @apply font-mono text-xs text-gray-400 select-none mb-1 block; }
-.spinner-tag-end { @apply font-mono text-xs text-gray-400 select-none mt-1 block text-right; }
 
-.gen-btn { @apply text-xs bg-indigo-100 text-indigo-700 hover:bg-indigo-200 px-2 py-0.5 rounded cursor-pointer select-none; }
-.add-var-col-btn { @apply compact-button bg-green-600 hover:bg-green-700 text-white text-xs mb-4; }
-
-.step-5-output { @apply w-full h-64 font-mono text-sm p-2 border border-gray-300 rounded; }
-
-/* Force side-by-side layout and prevent wrapping */
-.segment-row { 
-    @apply flex flex-nowrap gap-2 mb-2 items-start w-full; 
+/* --- Spinner Layout (Standard CSS to ensure side-by-side) --- */
+.spinner-block {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    border: 2px dashed #d1d5db; /* gray-300 */
+    border-radius: 0.5rem;
+    background-color: white;
 }
 
-/* Ensure children shrink/grow properly */
-.segment-box-container { 
-    @apply flex-1 min-w-0 relative; 
-    /* min-w-0 is vital for flex children to shrink below content size */
+.spinner-tag, .spinner-tag-end {
+    font-family: monospace;
+    font-size: 0.75rem;
+    color: #9ca3af; /* gray-400 */
+    user-select: none;
+    display: block;
+}
+.spinner-tag { margin-bottom: 0.25rem; }
+.spinner-tag-end { margin-top: 0.25rem; text-align: right; }
+
+/* CRITICAL FIX: Flexbox for side-by-side */
+.segment-row {
+    display: flex;
+    flex-direction: row; /* Force horizontal */
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    align-items: flex-start;
+    width: 100%;
+    flex-wrap: nowrap; /* Prevent wrapping */
 }
 
-/* Remove scrollbar and handle resize via JS */
-.segment-textarea { 
-    @apply w-full p-2 text-sm border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500 resize-none overflow-hidden leading-relaxed;
+/* CRITICAL FIX: Box sizing */
+.segment-box-container {
+    flex: 1 1 0%; /* Grow, Shrink, Basis 0 */
+    min-width: 0; /* Allow shrinking below content size */
+    position: relative;
+}
+
+.segment-textarea {
+    width: 100%;
+    padding: 0.5rem;
+    font-size: 0.875rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    resize: none;
+    overflow: hidden;
+    line-height: 1.5;
     min-height: 3rem;
+    box-sizing: border-box; /* Ensure padding doesn't add to width */
 }
 
-/* Visuals for original vs variation */
-.segment-textarea.original { @apply bg-gray-50 border-gray-300 text-gray-600; }
-.segment-textarea.variation { @apply bg-white border-indigo-300 text-gray-800 shadow-sm; }
-.segment-actions { @apply flex justify-between items-center mt-1; }
-.token-count { @apply text-[10px] text-gray-400; }
+.segment-textarea:focus {
+    outline: none;
+    border-color: #6366f1; /* indigo-500 */
+    box-shadow: 0 0 0 1px #6366f1;
+}
 
-/* --- Collapsible Section Styles --- */
-.section-header { 
-    @apply flex justify-between items-center cursor-pointer select-none transition-colors duration-200 rounded-t-lg -mx-4 -mt-4 p-4;
+.segment-textarea.original { background-color: #f9fafb; border-color: #d1d5db; color: #4b5563; }
+.segment-textarea.variation { background-color: white; border-color: #a5b4fc; color: #1f2937; }
+
+.segment-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 0.25rem;
 }
-.section-header:hover {
-    @apply bg-gray-50;
+
+.token-count { font-size: 10px; color: #9ca3af; }
+
+.gen-btn {
+    font-size: 0.75rem;
+    background-color: #e0e7ff; /* indigo-100 */
+    color: #4338ca; /* indigo-700 */
+    padding: 2px 6px;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    user-select: none;
+    border: none;
 }
-.section-header h2, .section-header h3 {
-    @apply m-0; /* Reset margins for clean alignment */
+.gen-btn:hover { background-color: #c7d2fe; }
+
+/* --- Collapsible Sections (Standard CSS) --- */
+.compact-section {
+    background-color: white;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    /* Undo parent padding to span full width */
+    margin: -1rem -1rem 0 -1rem; 
+    padding: 1rem;
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+    transition: background-color 0.2s;
+}
+
+.section-header:hover { background-color: #f9fafb; }
+
+.section-header h2, .section-header h3 { margin: 0; font-size: 1.125rem; font-weight: 600; color: #4b5563; }
+
+.section-body {
+    margin-top: 1rem;
+    /* CRITICAL FIX: Default is block */
+    display: block; 
+}
+
+/* Icon Styling */
 .chevron-icon {
-    /* Force specific dimensions */
     width: 20px !important;
     height: 20px !important;
-    /* Keep existing styles */
-    @apply text-gray-400 transition-transform duration-200 transform;
-    /* Prevent it from shrinking in flex containers */
-    flex-shrink: 0; 
+    color: #9ca3af;
+    transition: transform 0.2s;
+    transform: rotate(0deg);
 }
-.compact-section.collapsed .chevron-icon {
-    @apply -rotate-90;
-}
+
+/* --- COLLAPSED STATE --- */
+/* When the parent has 'collapsed', hide body and rotate icon */
 .compact-section.collapsed .section-body {
-    @apply hidden;
+    display: none !important;
 }
-/* Ensure body has padding to match the removed negative margins of header */
-.section-body {
-    @apply mt-4; 
+
+.compact-section.collapsed .chevron-icon {
+    transform: rotate(-90deg);
 }
+
+/* --- Existing Helpers (Keep these) --- */
+.compact-label { display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; white-space: nowrap; }
+.compact-input, .compact-select, .compact-textarea { display: block; width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); font-size: 0.875rem; }
+.compact-button { display: inline-flex; align-items: center; padding: 0.375rem 0.75rem; border: 1px solid transparent; font-size: 0.875rem; font-weight: 500; border-radius: 0.375rem; color: white; background-color: #4f46e5; cursor: pointer; }
+.compact-button:hover { background-color: #4338ca; }
+.compact-button:disabled { opacity: 0.5; cursor: not-allowed; }
+.reset-button { display: inline-flex; align-items: center; padding: 0.375rem 0.75rem; border: 1px solid transparent; font-size: 0.875rem; font-weight: 500; border-radius: 0.375rem; color: white; background-color: #dc2626; }
+.reload-button { display: inline-flex; align-items: center; padding: 0.375rem 0.75rem; border: 1px solid transparent; font-size: 0.875rem; font-weight: 500; border-radius: 0.375rem; color: white; background-color: #eab308; }
+.loader { border: 4px solid #f3f3f3; border-top: 4px solid #6366f1; border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; display: inline-block; margin-left: 6px; vertical-align: middle; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.hidden { display: none; }
