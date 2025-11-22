@@ -79,12 +79,14 @@ async function initializeApp() {
 }
 
 function setupCollapsibleSections() {
-    const headers = document.querySelectorAll('.section-header');
-    headers.forEach(header => {
-        header.addEventListener('click', () => {
+    document.body.addEventListener('click', (e) => {
+        const header = e.target.closest('.section-header');
+        if (header) {
             const section = header.closest('.compact-section');
-            section.classList.toggle('collapsed');
-        });
+            if (section) {
+                section.classList.toggle('collapsed');
+            }
+        }
     });
 }
 

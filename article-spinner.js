@@ -102,7 +102,7 @@ function renderSpinnerGrid() {
             const rowDiv = document.createElement('div');
             rowDiv.className = 'segment-row';
 
-            // Column 1: Original (Read-only/Reference)
+            // Column 1: Original
             const origContainer = createBox(segment.original, true, blockIndex, segIndex, -1);
             rowDiv.appendChild(origContainer);
 

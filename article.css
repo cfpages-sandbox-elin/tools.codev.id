@@ -52,12 +52,13 @@ button, input, optgroup, select, textarea { border: 2px solid; }
 
 /* Force side-by-side layout and prevent wrapping */
 .segment-row { 
-    @apply flex flex-row gap-2 mb-2 items-start w-full; 
+    @apply flex flex-nowrap gap-2 mb-2 items-start w-full; 
 }
 
-/* Allow containers to grow equally and prevent them from forcing a wrap */
+/* Ensure children shrink/grow properly */
 .segment-box-container { 
-    @apply flex-1 min-w-0 relative; /* min-w-0 is critical for flex children */
+    @apply flex-1 min-w-0 relative; 
+    /* min-w-0 is vital for flex children to shrink below content size */
 }
 
 /* Remove scrollbar and handle resize via JS */
