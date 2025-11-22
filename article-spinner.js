@@ -1,4 +1,4 @@
-// article-spinner.js (v9.02 - better single prompt)
+// article-spinner.js (v9.02 - better single prompt + handle bulk)
 import { getState } from './article-state.js';
 import { logToConsole, callAI, delay, showElement, disableElement, showLoading } from './article-helpers.js';
 import { getElement } from './article-ui.js';
@@ -278,26 +278,25 @@ export async function handleBulkGenerate() {
 
     const generateQueue = [];
 
-    // Collect all empty variation slots
-    articleBlocks.forEach((block, bIdx) => {
-        block.segments.forEach((seg, sIdx) => {
-            for (let vIdx = 0; vIdx < variationColumnCount; vIdx++) {
+    for (let vIdx = 0; vIdx < variationColumnCount; vIdx++) {
+        articleBlocks.forEach((block, bIdx) => {
+            block.segments.forEach((seg, sIdx) => {
+                // Only add if it doesn't exist or is empty
                 if (!seg.variations[vIdx] || seg.variations[vIdx].trim() === '') {
                     generateQueue.push({ bIdx, sIdx, vIdx });
                 }
-            }
+            });
         });
-    });
+    }
 
-    logToConsole(`Bulk generating ${generateQueue.length} variations...`, 'info');
+    logToConsole(`Bulk generating ${generateQueue.length} variations (Column-wise priority)...`, 'info');
 
-    // Process in chunks
+    // Process in chunks to avoid hitting rate limits
     const CHUNK_SIZE = 5; 
     for (let i = 0; i < generateQueue.length; i += CHUNK_SIZE) {
         const chunk = generateQueue.slice(i, i + CHUNK_SIZE);
         const promises = chunk.map(item => {
-            // Note: Re-querying DOM here is necessary because render might have happened
-            // Ideally we would have ID refs, but this works for this scale.
+            // Re-query DOM elements to handle updates
             const blocks = document.querySelectorAll('.spinner-block');
             if (!blocks[item.bIdx]) return null;
             
@@ -316,7 +315,7 @@ export async function handleBulkGenerate() {
         });
 
         await Promise.all(promises);
-        await delay(500); 
+        await delay(500); // Delay between chunks
     }
     logToConsole("Bulk generation complete.", 'success');
 }
