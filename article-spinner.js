@@ -1,4 +1,4 @@
-// article-spinner.js (v9.03 - new ver)
+// article-spinner.js (v9.03 - new ver + floating gen)
 import { getState } from './article-state.js';
 import { logToConsole, callAI, delay, showElement, disableElement, showLoading } from './article-helpers.js';
 import { getElement } from './article-ui.js';
@@ -152,6 +152,11 @@ function createBox(content, isOriginal, itemIndex, varIndex) {
     const container = document.createElement('div');
     container.className = 'segment-box-container';
 
+    // 1. Create Wrapper for Relative Positioning
+    const wrapper = document.createElement('div');
+    wrapper.className = 'input-wrapper';
+
+    // 2. Create Textarea
     const textarea = document.createElement('textarea');
     textarea.className = `segment-textarea ${isOriginal ? 'original' : 'variation'}`;
     textarea.value = content;
@@ -164,6 +169,18 @@ function createBox(content, isOriginal, itemIndex, varIndex) {
     textarea.addEventListener('input', autoResize);
     setTimeout(autoResize, 0);
 
+    // 3. Create Floating Button (if variation)
+    let genBtn = null;
+    if (!isOriginal) {
+        genBtn = document.createElement('button');
+        genBtn.className = 'floating-gen-btn';
+        genBtn.innerHTML = content ? '🔄' : '⚡'; 
+        genBtn.title = "Generate this variation";
+        genBtn.onclick = () => generateSingleVariation(itemIndex, varIndex, textarea, genBtn);
+        wrapper.appendChild(genBtn);
+    }
+
+    // Logic for updating content/state
     if (isOriginal) {
         textarea.addEventListener('input', (e) => {
              spinnerItems[itemIndex].original = e.target.value;
@@ -172,38 +189,35 @@ function createBox(content, isOriginal, itemIndex, varIndex) {
     } else {
         textarea.placeholder = "AI will generate here...";
         textarea.addEventListener('input', (e) => {
-            // Ensure array size
-            while(spinnerItems[itemIndex].variations.length <= varIndex) {
-                spinnerItems[itemIndex].variations.push('');
+            if (!spinnerItems[itemIndex].variations[varIndex]) {
+                // Fill sparse array if needed
+                while(spinnerItems[itemIndex].variations.length <= varIndex) {
+                    spinnerItems[itemIndex].variations.push('');
+                }
             }
             spinnerItems[itemIndex].variations[varIndex] = e.target.value;
+            
+            // Update button icon based on content
+            if (genBtn) {
+                genBtn.innerHTML = e.target.value ? '🔄' : '⚡';
+            }
             autoResize();
         });
     }
 
-    // Actions Bar
-    const actionsDiv = document.createElement('div');
-    actionsDiv.className = 'segment-actions';
+    // Assemble: Wrapper contains Textarea + Button
+    wrapper.appendChild(textarea);
+    container.appendChild(wrapper);
 
-    const tokenSpan = document.createElement('span');
+    // 4. Token Count (Outside wrapper, below box)
+    const tokenSpan = document.createElement('div'); // div for block display
     tokenSpan.className = 'token-count';
     tokenSpan.textContent = `~${Math.ceil(content.length / 4)} toks`;
     textarea.addEventListener('input', () => {
         tokenSpan.textContent = `~${Math.ceil(textarea.value.length / 4)} toks`;
     });
-    actionsDiv.appendChild(tokenSpan);
+    container.appendChild(tokenSpan);
 
-    if (!isOriginal) {
-        const genBtn = document.createElement('button');
-        genBtn.className = 'gen-btn';
-        genBtn.innerHTML = content ? '🔄' : '⚡'; 
-        genBtn.title = "Generate this variation";
-        genBtn.onclick = () => generateSingleVariation(itemIndex, varIndex, textarea, genBtn);
-        actionsDiv.appendChild(genBtn);
-    }
-
-    container.appendChild(textarea);
-    container.appendChild(actionsDiv);
     return container;
 }
 

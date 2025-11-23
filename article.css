@@ -1,4 +1,4 @@
-/* 9.03 nested */
+/* 9.03 nested + floating gen */
 body { font-family: 'Inter', sans-serif; }
 
 /* Keep Tailwind @apply for utilities that work if you are using the CDN correctly, 
@@ -39,14 +39,23 @@ button, input, optgroup, select, textarea { border: 2px solid; }
 
 /* CRITICAL FIX: Box sizing */
 .segment-box-container {
-    flex: 1 1 0%; /* Grow, Shrink, Basis 0 */
-    min-width: 0; /* Allow shrinking below content size */
+    flex: 1 1 0%;
+    min-width: 0;
     position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Wrapper to hold textarea and floating button */
+.input-wrapper {
+    position: relative;
+    width: 100%;
 }
 
 .segment-textarea {
     width: 100%;
     padding: 0.5rem;
+    padding-right: 2.5rem !important; 
     font-size: 0.875rem;
     border: 1px solid #d1d5db;
     border-radius: 0.375rem;
@@ -54,12 +63,12 @@ button, input, optgroup, select, textarea { border: 2px solid; }
     overflow: hidden;
     line-height: 1.5;
     min-height: 3rem;
-    box-sizing: border-box; /* Ensure padding doesn't add to width */
+    box-sizing: border-box;
 }
 
 .segment-textarea:focus {
     outline: none;
-    border-color: #6366f1; /* indigo-500 */
+    border-color: #6366f1;
     box-shadow: 0 0 0 1px #6366f1;
 }
 
@@ -73,7 +82,35 @@ button, input, optgroup, select, textarea { border: 2px solid; }
     margin-top: 0.25rem;
 }
 
-.token-count { font-size: 10px; color: #9ca3af; }
+.floating-gen-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    z-index: 10;
+    font-size: 0.75rem;
+    background-color: #e0e7ff; /* indigo-100 */
+    color: #4338ca; /* indigo-700 */
+    padding: 2px 6px;
+    border-radius: 0.25rem;
+    border: 1px solid #c7d2fe;
+    cursor: pointer;
+    user-select: none;
+    opacity: 0.7;
+    transition: all 0.2s;
+}
+
+.floating-gen-btn:hover { 
+    opacity: 1;
+    background-color: #c7d2fe;
+    transform: scale(1.05);
+}
+
+.token-count { 
+    font-size: 10px; 
+    color: #9ca3af; 
+    margin-top: 2px;
+    padding-left: 2px;
+}
 
 .gen-btn {
     font-size: 0.75rem;
@@ -153,9 +190,9 @@ button, input, optgroup, select, textarea { border: 2px solid; }
 
 /* Indentation for nested structures */
 .depth-0 { margin-left: 0; }
-.depth-1 { margin-left: 1.5rem; border-left: 2px solid #e5e7eb; padding-left: 0.5rem; }
-.depth-2 { margin-left: 3rem; border-left: 2px solid #e5e7eb; padding-left: 0.5rem; }
-.depth-3 { margin-left: 4.5rem; border-left: 2px solid #e5e7eb; padding-left: 0.5rem; }
+.depth-1 { margin-left: .5rem; border-left: 2px solid #e5e7eb; padding-left: 0.5rem; }
+.depth-2 { margin-left: 1rem; border-left: 2px solid #e5e7eb; padding-left: 0.5rem; }
+.depth-3 { margin-left: 1.5rem; border-left: 2px solid #e5e7eb; padding-left: 0.5rem; }
 
 /* structural tags (ul, li, p) are mostly visual cues now */
 .structure-tag {
