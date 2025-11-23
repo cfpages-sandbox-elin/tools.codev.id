@@ -1,4 +1,4 @@
-// article-spinner.js (v9.04 - Recursive Parsing + Sentence Splitting)
+// article-spinner.js (v9.05 - Atomic Anchor Protection)
 import { getState } from './article-state.js';
 import { logToConsole, callAI, delay, showElement, disableElement, showLoading } from './article-helpers.js';
 import { getElement } from './article-ui.js';
@@ -14,7 +14,7 @@ let stopSpinning = false;
 // --- 1. Parser Logic (Recursive) ---
 
 export function prepareSpinnerUI(htmlContent) {
-    logToConsole("Parsing article with recursive nesting & sentence splitting...", "info");
+    logToConsole("Parsing article with atomic anchor protection...", "info");
     spinnerItems = [];
     variationColumnCount = 1; 
     
@@ -31,7 +31,7 @@ export function prepareSpinnerUI(htmlContent) {
 // Recursive function to walk the DOM
 function processNodes(parentNode, depth) {
     const childNodes = Array.from(parentNode.childNodes);
-    let inlineBuffer = []; // To hold text, <b>, <i>, etc. before hitting a block
+    let inlineBuffer = []; // To hold text, <b>, <i>, <a> etc. before hitting a block
 
     // Helper to flush inline buffer to Content Segments
     const flushBuffer = () => {
@@ -42,7 +42,7 @@ function processNodes(parentNode, depth) {
             return n.nodeType === Node.TEXT_NODE ? n.textContent : n.outerHTML;
         }).join('');
 
-        // 2. Safely split into sentences
+        // 2. Safely split into sentences (Protecting <a> tags)
         if (rawHtml.trim()) {
             const sentences = splitHtmlSentences(rawHtml);
             sentences.forEach(s => {
@@ -61,13 +61,12 @@ function processNodes(parentNode, depth) {
 
     childNodes.forEach(node => {
         if (node.nodeType === Node.TEXT_NODE) {
-            // Only push if it has actual text (or whitespace that matters? trim mostly)
-            // We allow whitespace to be accumulated to separate inline tags
             if (node.textContent) {
                 inlineBuffer.push(node);
             }
         } else if (node.nodeType === Node.ELEMENT_NODE) {
             const tagName = node.tagName.toLowerCase();
+            // Note: <a> is intentionally excluded here so it goes into inlineBuffer
             const isBlock = ['p', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'br', 'hr'].includes(tagName);
 
             if (isBlock) {
@@ -83,7 +82,6 @@ function processNodes(parentNode, depth) {
                 spinnerItems.push({ type: 'structure', html: openTag, depth: depth });
 
                 // 3. Recurse into the block
-                // If it's a self-closing tag like <br>, don't recurse
                 if (!['br', 'hr', 'img'].includes(tagName)) {
                     processNodes(node, depth + (tagName === 'ul' || tagName === 'ol' ? 1 : 0));
                     
@@ -92,36 +90,48 @@ function processNodes(parentNode, depth) {
                 }
 
             } else {
-                // It's an inline element (b, i, span, a, strong, em)
-                // Add it to the buffer to be kept together with surrounding text
+                // Inline elements (b, i, span, a, strong, em) added to buffer
                 inlineBuffer.push(node);
             }
         }
     });
 
-    // Final flush for any trailing text in this node
     flushBuffer();
 }
 
-// --- Helper: Split HTML String into Sentences Safely ---
+// --- Helper: Split HTML String into Sentences Safely (Updated) ---
 function splitHtmlSentences(htmlString) {
-    // 1. Mask HTML tags to protect them from being split
-    // We replace <...> with a placeholder __TAG_0__, __TAG_1__, etc.
-    const tags = [];
-    const maskedString = htmlString.replace(/<[^>]+>/g, (match) => {
-        tags.push(match);
-        return `__TAG_${tags.length - 1}__`;
+    const atomicPlaceholders = [];
+    const tagPlaceholders = [];
+
+    // 1. Mask Atomic Elements (specifically <a> tags and their content)
+    // We capture the whole <a ...>...</a> block so punctuation inside doesn't trigger split
+    let maskedString = htmlString.replace(/<a\b[^>]*>[\s\S]*?<\/a>/gi, (match) => {
+        atomicPlaceholders.push(match);
+        return `__ATOMIC_${atomicPlaceholders.length - 1}__`;
     });
 
-    // 2. Split by sentence delimiters
+    // 2. Mask remaining standalone HTML tags (like <b>, </b>, <br>)
+    maskedString = maskedString.replace(/<[^>]+>/g, (match) => {
+        tagPlaceholders.push(match);
+        return `__TAG_${tagPlaceholders.length - 1}__`;
+    });
+
+    // 3. Split by sentence delimiters
     // Regex looks for . ! ? followed by space or end of string
     const rawSentences = maskedString.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) || [maskedString];
 
-    // 3. Restore tags in each sentence
+    // 4. Restore tags and atomic blocks
     const restoredSentences = rawSentences.map(sentence => {
-        return sentence.replace(/__TAG_(\d+)__/g, (match, index) => {
-            return tags[parseInt(index)];
+        // Restore generic tags first
+        let s = sentence.replace(/__TAG_(\d+)__/g, (match, index) => {
+            return tagPlaceholders[parseInt(index)];
         });
+        // Restore atomic blocks (links) last to ensure they stay whole
+        s = s.replace(/__ATOMIC_(\d+)__/g, (match, index) => {
+            return atomicPlaceholders[parseInt(index)];
+        });
+        return s;
     });
 
     return restoredSentences;
@@ -168,7 +178,6 @@ function createBox(content, isOriginal, itemIndex, varIndex) {
     const container = document.createElement('div');
     container.className = 'segment-box-container';
 
-    // Wrapper for positioning
     const wrapper = document.createElement('div');
     wrapper.className = 'input-wrapper';
 
@@ -218,7 +227,6 @@ function createBox(content, isOriginal, itemIndex, varIndex) {
     wrapper.appendChild(textarea);
     container.appendChild(wrapper);
 
-    // Token Count
     const tokenSpan = document.createElement('div');
     tokenSpan.className = 'token-count';
     tokenSpan.textContent = `~${Math.ceil(content.length / 4)} toks`;
@@ -264,7 +272,6 @@ export async function generateSingleVariation(itemIndex, varIndex, textarea, btn
     textarea.classList.add('opacity-50');
 
     try {
-        // Use the centralized prompt function
         const prompt = getSpinnerVariationPrompt(originalText, existingVariations);
 
         const payload = {
@@ -281,7 +288,6 @@ export async function generateSingleVariation(itemIndex, varIndex, textarea, btn
             spinnerItems[itemIndex].variations[varIndex] = newText;
             textarea.dispatchEvent(new Event('input'));
             
-            // Update button icon
             btn.innerHTML = '🔄'; 
         } else {
             btn.textContent = '❌';
@@ -320,15 +326,8 @@ export async function handleBulkGenerate() {
     for (let i = 0; i < generateQueue.length; i += CHUNK_SIZE) {
         const chunk = generateQueue.slice(i, i + CHUNK_SIZE);
         const promises = chunk.map(q => {
-            // DOM finding logic based on hierarchy
-            // .spinner-block -> (structure/content divs) -> (content div has segment-row)
-            // This is slightly complex because structure items are siblings of content items in the main block.
-            
-            // Reliable lookup:
             const mainBlock = getElement('spinnerContainer').querySelector('.spinner-block');
             const rowDiv = mainBlock.children[q.index]; 
-            
-            // Inside rowDiv, children are: 0=Orig, 1=Var0, 2=Var1...
             const boxContainer = rowDiv.children[q.vIdx + 1];
             const textarea = boxContainer.querySelector('textarea');
             const btn = boxContainer.querySelector('.floating-gen-btn');
@@ -357,8 +356,6 @@ export function compileSpintax() {
             } else {
                 finalSpintax += item.original;
             }
-            // Add space for flow, unless it ends with specific chars? 
-            // Generally safe to add space for sentences.
             finalSpintax += " "; 
         }
     });
