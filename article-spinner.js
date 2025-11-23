@@ -1,12 +1,10 @@
-// article-spinner.js (v9.03 - new ver + floating gen)
+// article-spinner.js (v9.04 - Recursive Parsing + Sentence Splitting)
 import { getState } from './article-state.js';
 import { logToConsole, callAI, delay, showElement, disableElement, showLoading } from './article-helpers.js';
 import { getElement } from './article-ui.js';
 import { getSpinnerVariationPrompt } from './article-prompts.js';
 
 // --- Data Structure ---
-// instead of blocks, we now have a flat list of "Items" that represent the flow
-// Item types: 'structure' (tags) | 'content' (editable text)
 let spinnerItems = []; 
 let variationColumnCount = 1; 
 let isSpinning = false;
@@ -16,7 +14,7 @@ let stopSpinning = false;
 // --- 1. Parser Logic (Recursive) ---
 
 export function prepareSpinnerUI(htmlContent) {
-    logToConsole("Parsing article with recursive nesting strategy...", "info");
+    logToConsole("Parsing article with recursive nesting & sentence splitting...", "info");
     spinnerItems = [];
     variationColumnCount = 1; 
     
@@ -35,27 +33,27 @@ function processNodes(parentNode, depth) {
     const childNodes = Array.from(parentNode.childNodes);
     let inlineBuffer = []; // To hold text, <b>, <i>, etc. before hitting a block
 
-    // Helper to flush inline buffer to a Content Segment
+    // Helper to flush inline buffer to Content Segments
     const flushBuffer = () => {
         if (inlineBuffer.length === 0) return;
         
-        // Join the buffer HTML
+        // 1. Join the buffer into a single raw HTML string
         const rawHtml = inlineBuffer.map(n => {
             return n.nodeType === Node.TEXT_NODE ? n.textContent : n.outerHTML;
         }).join('');
 
-        // Split into sentences if it's a long block, or keep as is for list items
-        // For simplicity and stability with HTML tags, we generally avoid splitting 
-        // if it contains HTML tags, OR we use a smarter regex. 
-        // For v9.03, we will TREAT THE BUFFER AS ONE SEGMENT to protect tag integrity (like <b>).
-        // Splitting <li><b>Bold</b> text</li> is very hard to do safely without breaking tags.
-        
+        // 2. Safely split into sentences
         if (rawHtml.trim()) {
-            spinnerItems.push({
-                type: 'content',
-                original: rawHtml.trim(),
-                variations: [''],
-                depth: depth
+            const sentences = splitHtmlSentences(rawHtml);
+            sentences.forEach(s => {
+                if (s.trim()) {
+                    spinnerItems.push({
+                        type: 'content',
+                        original: s.trim(),
+                        variations: [''],
+                        depth: depth
+                    });
+                }
             });
         }
         inlineBuffer = [];
@@ -63,7 +61,9 @@ function processNodes(parentNode, depth) {
 
     childNodes.forEach(node => {
         if (node.nodeType === Node.TEXT_NODE) {
-            if (node.textContent.trim()) {
+            // Only push if it has actual text (or whitespace that matters? trim mostly)
+            // We allow whitespace to be accumulated to separate inline tags
+            if (node.textContent) {
                 inlineBuffer.push(node);
             }
         } else if (node.nodeType === Node.ELEMENT_NODE) {
@@ -93,7 +93,7 @@ function processNodes(parentNode, depth) {
 
             } else {
                 // It's an inline element (b, i, span, a, strong, em)
-                // Add it to the buffer to be part of the text box
+                // Add it to the buffer to be kept together with surrounding text
                 inlineBuffer.push(node);
             }
         }
@@ -103,6 +103,30 @@ function processNodes(parentNode, depth) {
     flushBuffer();
 }
 
+// --- Helper: Split HTML String into Sentences Safely ---
+function splitHtmlSentences(htmlString) {
+    // 1. Mask HTML tags to protect them from being split
+    // We replace <...> with a placeholder __TAG_0__, __TAG_1__, etc.
+    const tags = [];
+    const maskedString = htmlString.replace(/<[^>]+>/g, (match) => {
+        tags.push(match);
+        return `__TAG_${tags.length - 1}__`;
+    });
+
+    // 2. Split by sentence delimiters
+    // Regex looks for . ! ? followed by space or end of string
+    const rawSentences = maskedString.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) || [maskedString];
+
+    // 3. Restore tags in each sentence
+    const restoredSentences = rawSentences.map(sentence => {
+        return sentence.replace(/__TAG_(\d+)__/g, (match, index) => {
+            return tags[parseInt(index)];
+        });
+    });
+
+    return restoredSentences;
+}
+
 // --- 2. Renderer Logic ---
 
 function renderSpinnerGrid() {
@@ -110,31 +134,23 @@ function renderSpinnerGrid() {
     if (!container) return;
     container.innerHTML = '';
 
-    // We wrap the whole thing in a main block style or just render flow
     const mainBlock = document.createElement('div');
-    mainBlock.className = 'spinner-block'; // Use the dashed box style for the container
+    mainBlock.className = 'spinner-block'; 
 
     spinnerItems.forEach((item, index) => {
         if (item.type === 'structure') {
             const div = document.createElement('div');
             div.className = `structure-tag depth-${item.depth}`;
             div.textContent = item.html;
-            // Visual tweak: make </li> and </ul> align nicely
-            if (item.html.startsWith('</')) {
-                // div.style.marginTop = '-5px'; 
-            }
             mainBlock.appendChild(div);
         } 
         else if (item.type === 'content') {
-            // It's a content row
             const rowDiv = document.createElement('div');
             rowDiv.className = `segment-row depth-${item.depth}`;
             
-            // Original Box
             const origContainer = createBox(item.original, true, index, -1);
             rowDiv.appendChild(origContainer);
 
-            // Variation Columns
             for (let i = 0; i < variationColumnCount; i++) {
                 const val = item.variations[i] || '';
                 const varContainer = createBox(val, false, index, i);
@@ -152,11 +168,10 @@ function createBox(content, isOriginal, itemIndex, varIndex) {
     const container = document.createElement('div');
     container.className = 'segment-box-container';
 
-    // 1. Create Wrapper for Relative Positioning
+    // Wrapper for positioning
     const wrapper = document.createElement('div');
     wrapper.className = 'input-wrapper';
 
-    // 2. Create Textarea
     const textarea = document.createElement('textarea');
     textarea.className = `segment-textarea ${isOriginal ? 'original' : 'variation'}`;
     textarea.value = content;
@@ -169,7 +184,7 @@ function createBox(content, isOriginal, itemIndex, varIndex) {
     textarea.addEventListener('input', autoResize);
     setTimeout(autoResize, 0);
 
-    // 3. Create Floating Button (if variation)
+    // Generate Button (Floating inside wrapper)
     let genBtn = null;
     if (!isOriginal) {
         genBtn = document.createElement('button');
@@ -180,7 +195,6 @@ function createBox(content, isOriginal, itemIndex, varIndex) {
         wrapper.appendChild(genBtn);
     }
 
-    // Logic for updating content/state
     if (isOriginal) {
         textarea.addEventListener('input', (e) => {
              spinnerItems[itemIndex].original = e.target.value;
@@ -189,15 +203,11 @@ function createBox(content, isOriginal, itemIndex, varIndex) {
     } else {
         textarea.placeholder = "AI will generate here...";
         textarea.addEventListener('input', (e) => {
-            if (!spinnerItems[itemIndex].variations[varIndex]) {
-                // Fill sparse array if needed
-                while(spinnerItems[itemIndex].variations.length <= varIndex) {
-                    spinnerItems[itemIndex].variations.push('');
-                }
+            while(spinnerItems[itemIndex].variations.length <= varIndex) {
+                spinnerItems[itemIndex].variations.push('');
             }
             spinnerItems[itemIndex].variations[varIndex] = e.target.value;
             
-            // Update button icon based on content
             if (genBtn) {
                 genBtn.innerHTML = e.target.value ? '🔄' : '⚡';
             }
@@ -205,12 +215,11 @@ function createBox(content, isOriginal, itemIndex, varIndex) {
         });
     }
 
-    // Assemble: Wrapper contains Textarea + Button
     wrapper.appendChild(textarea);
     container.appendChild(wrapper);
 
-    // 4. Token Count (Outside wrapper, below box)
-    const tokenSpan = document.createElement('div'); // div for block display
+    // Token Count
+    const tokenSpan = document.createElement('div');
     tokenSpan.className = 'token-count';
     tokenSpan.textContent = `~${Math.ceil(content.length / 4)} toks`;
     textarea.addEventListener('input', () => {
@@ -225,7 +234,6 @@ function createBox(content, isOriginal, itemIndex, varIndex) {
 
 export function addVariationColumn() {
     variationColumnCount++;
-    // Ensure data structure is ready
     spinnerItems.forEach(item => {
         if (item.type === 'content') {
             while (item.variations.length < variationColumnCount) {
@@ -248,7 +256,6 @@ export async function generateSingleVariation(itemIndex, varIndex, textarea, btn
     const item = spinnerItems[itemIndex];
     const originalText = item.original;
     
-    // Context Awareness
     const existingVariations = item.variations
         .filter((val, idx) => idx !== varIndex && val && val.trim() !== "");
 
@@ -257,7 +264,7 @@ export async function generateSingleVariation(itemIndex, varIndex, textarea, btn
     textarea.classList.add('opacity-50');
 
     try {
-        // CHANGED: Use the centralized prompt function
+        // Use the centralized prompt function
         const prompt = getSpinnerVariationPrompt(originalText, existingVariations);
 
         const payload = {
@@ -273,7 +280,9 @@ export async function generateSingleVariation(itemIndex, varIndex, textarea, btn
             textarea.value = newText;
             spinnerItems[itemIndex].variations[varIndex] = newText;
             textarea.dispatchEvent(new Event('input'));
-            btn.textContent = '🔄'; 
+            
+            // Update button icon
+            btn.innerHTML = '🔄'; 
         } else {
             btn.textContent = '❌';
         }
@@ -295,7 +304,6 @@ export async function handleBulkGenerate() {
 
     const generateQueue = [];
 
-    // Column-first priority
     for (let vIdx = 0; vIdx < variationColumnCount; vIdx++) {
         spinnerItems.forEach((item, index) => {
             if (item.type === 'content') {
@@ -312,26 +320,18 @@ export async function handleBulkGenerate() {
     for (let i = 0; i < generateQueue.length; i += CHUNK_SIZE) {
         const chunk = generateQueue.slice(i, i + CHUNK_SIZE);
         const promises = chunk.map(q => {
-            // Re-query for safety
-            const allRows = document.querySelectorAll('.segment-row'); 
-            // Note: Because 'structure' items take up indices in spinnerItems but are NOT segment-rows in DOM if we aren't careful...
-            // Actually, renderSpinnerGrid renders structure divs and segment-row divs in strict order.
-            // BUT, let's be safer. We know the item index. We can find the textarea by traversing spinnerItems visually?
-            // The easiest way is to just find the N-th .segment-row? NO, because structure items are in the list.
+            // DOM finding logic based on hierarchy
+            // .spinner-block -> (structure/content divs) -> (content div has segment-row)
+            // This is slightly complex because structure items are siblings of content items in the main block.
             
-            // Better: Recalculate DOM position.
-            // Or easier: Just call the API logic and update State, then update Value if element exists.
+            // Reliable lookup:
+            const mainBlock = getElement('spinnerContainer').querySelector('.spinner-block');
+            const rowDiv = mainBlock.children[q.index]; 
             
-            // Let's try to find the element.
-            // spinnerItems[q.index] corresponds to the child at index `q.index` inside `.spinner-block`
-            const container = getElement('spinnerContainer').querySelector('.spinner-block');
-            const rowDiv = container.children[q.index]; 
-            
-            // Inside rowDiv, the textareas are: 0=Orig, 1=Var0, 2=Var1...
-            // So VarIndex V corresponds to child V+1.
+            // Inside rowDiv, children are: 0=Orig, 1=Var0, 2=Var1...
             const boxContainer = rowDiv.children[q.vIdx + 1];
             const textarea = boxContainer.querySelector('textarea');
-            const btn = boxContainer.querySelector('.gen-btn');
+            const btn = boxContainer.querySelector('.floating-gen-btn');
 
             return generateSingleVariation(q.index, q.vIdx, textarea, btn);
         });
@@ -357,10 +357,9 @@ export function compileSpintax() {
             } else {
                 finalSpintax += item.original;
             }
-            // Add a space for safety if it's sentence flow, but HTML tags usually handle spacing.
-            // For strict HTML preservation, we don't add arbitrary spaces unless it was there.
-            // But usually a space after text is good.
-            // finalSpintax += " "; 
+            // Add space for flow, unless it ends with specific chars? 
+            // Generally safe to add space for sentences.
+            finalSpintax += " "; 
         }
     });
 
