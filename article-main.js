@@ -1,4 +1,4 @@
-// article-main.js (v9.09 - bulk)
+// article-main.js (v9.09 - bulk + gakruh)
 import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
 import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
 import {
@@ -379,39 +379,39 @@ function setupStep4Listeners() {
         alert("Spintax copied to clipboard!");
     });
 
-    scrollToStep5Btn?.addEventListener('click', () => {
-        const step5 = getElement('step5Section');
-        if(step5) {
-            const compileBtn = getElement('compileSpintaxBtn');
-            compileBtn.scrollIntoView({ behavior: 'smooth' });
-        }
-    });
-
+    // NEW: Dynamic Scroll Logic
     if (scrollToStep5Btn && step4Section && step5Section) {
-        // 1. Click Logic: Toggle based on current state text
+        // 1. Click Logic
         scrollToStep5Btn.addEventListener('click', () => {
-            if (scrollToStep5Btn.textContent.includes('Step 5')) {
-                step5Section.scrollIntoView({ behavior: 'smooth' });
-            } else {
-                // Scroll back to top of Step 4
+            if (scrollToStep5Btn.textContent.includes('Step 4')) {
+                // User wants to go UP to Step 4 header
                 const header = step4Section.querySelector('.section-header');
                 if(header) header.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                // User wants to go DOWN
+                if (step5Section.classList.contains('hidden')) {
+                    // If Step 5 isn't ready, scroll to the Compile button instead
+                    compileSpintaxBtn.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    // Step 5 is ready, go there
+                    step5Section.scrollIntoView({ behavior: 'smooth' });
+                }
             }
         });
 
-        // 2. Observer Logic: Watch Step 5
+        // 2. Observer Logic
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
-                // If Step 5 is visible (or nearly visible)
-                if (entry.isIntersecting) {
+                // Only flip the arrow UP if Step 5 is actually visible on screen AND not hidden via CSS
+                if (entry.isIntersecting && !step5Section.classList.contains('hidden')) {
                     scrollToStep5Btn.innerHTML = '⬆️ Scroll to Step 4';
-                    scrollToStep5Btn.classList.replace('bg-gray-600', 'bg-indigo-600'); // Visual cue
+                    scrollToStep5Btn.classList.replace('bg-gray-600', 'bg-indigo-600'); 
                 } else {
                     scrollToStep5Btn.innerHTML = '⬇️ Scroll to Step 5';
                     scrollToStep5Btn.classList.replace('bg-indigo-600', 'bg-gray-600');
                 }
             });
-        }, { threshold: 0.1 }); // Trigger when 10% of Step 5 is visible
+        }, { threshold: 0.1 });
 
         observer.observe(step5Section);
     }

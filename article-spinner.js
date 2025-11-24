@@ -1,4 +1,4 @@
-// article-spinner.js (v9.09 - Fixed updateState Import)
+// article-spinner.js (v9.09 - Fixed updateState Import + gakruh)
 import { getState, updateState } from './article-state.js';
 import { logToConsole, callAI, delay, showElement, disableElement, showLoading } from './article-helpers.js';
 import { getElement } from './article-ui.js';
@@ -449,6 +449,5 @@ export function compileSpintax() {
         outputArea.value = finalSpintax.trim();
         showElement(getElement('step5Section'), true);
         getElement('step5Section').scrollIntoView({ behavior: 'smooth' });
-        showElement(getElement('scrollToStep5Btn'), false);
     }
 }
