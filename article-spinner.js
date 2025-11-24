@@ -1,5 +1,5 @@
-// article-spinner.js (v9.09 - Bulk Gen Fix + Progress Safety)
-import { getState } from './article-state.js';
+// article-spinner.js (v9.09 - Fixed updateState Import)
+import { getState, updateState } from './article-state.js';
 import { logToConsole, callAI, delay, showElement, disableElement, showLoading } from './article-helpers.js';
 import { getElement } from './article-ui.js';
 import { getSpinnerVariationPrompt, getBatchSpinnerPrompt } from './article-prompts.js';
@@ -286,16 +286,11 @@ export async function generateSingleVariation(itemIndex, varIndex, textarea, btn
     }
 }
 
-// --- Helper to find DOM elements safely using Data Attribute ---
 function getBoxElements(itemIndex, varIndex) {
-    // Search specifically for the row with the matching index
     const rowDiv = getElement('spinnerContainer').querySelector(`.segment-row[data-item-index="${itemIndex}"]`);
     if (!rowDiv) return null;
-    
-    // Inside the row: 0=Original, 1=Var0, 2=Var1...
     const boxContainer = rowDiv.children[varIndex + 1]; 
     if (!boxContainer) return null;
-
     const textarea = boxContainer.querySelector('textarea');
     const btn = boxContainer.querySelector('.floating-gen-btn');
     return { textarea, btn };
@@ -335,7 +330,6 @@ export async function handleBulkGenerate() {
     if (!primaryProvider) { alert("No AI provider."); return; }
     if (!confirm("This will generate variations for all empty boxes. Continue?")) return;
 
-    // 1. Collect Tasks
     const generateQueue = [];
     for (let vIdx = 0; vIdx < variationColumnCount; vIdx++) {
         spinnerItems.forEach((item, index) => {
@@ -352,7 +346,6 @@ export async function handleBulkGenerate() {
 
     logToConsole(`Bulk generating ${generateQueue.length} variations...`, 'info');
 
-    // 2. UI Setup
     const progressContainer = getElement('bulkSpinnerProgressContainer');
     const progressBar = getElement('bulkSpinnerProgressBar');
     if (progressContainer) showElement(progressContainer, true);
@@ -366,17 +359,14 @@ export async function handleBulkGenerate() {
     };
     updateProgress();
 
-    // 3. Batch Processing
     const BATCH_SIZE = 5; 
     for (let i = 0; i < generateQueue.length; i += BATCH_SIZE) {
         const batch = generateQueue.slice(i, i + BATCH_SIZE);
         const itemsForPrompt = batch.map(task => ({ text: task.original, avoid: task.avoid }));
         
-        // Use new batch prompt
         const prompt = getBatchSpinnerPrompt(itemsForPrompt, state.language, state.tone);
         const payload = { providerKey: primaryProvider.provider, model: primaryProvider.model, prompt: prompt };
 
-        // Set loading state
         batch.forEach(task => setBoxState(task.index, task.vIdx, 'loading'));
 
         try {
@@ -394,7 +384,6 @@ export async function handleBulkGenerate() {
                 }
             }
 
-            // Update UI with Results
             batch.forEach((task, batchIndex) => {
                 const generatedText = resultsArray[batchIndex];
                 if (generatedText && typeof generatedText === 'string') {
