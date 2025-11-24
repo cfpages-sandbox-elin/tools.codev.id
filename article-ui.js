@@ -1,4 +1,4 @@
-// article-ui.js (v9.08 - add remove)
+// article-ui.js (v9.10 powerful step 3)
 import { languageOptions, defaultSettings } from './article-config.js';
 import { getState, updateState, getBulkPlan, addProviderToState, removeProviderFromState, updateProviderInState, updateCustomModelState, getCustomModelState } from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2, delay } from './article-helpers.js';
@@ -95,6 +95,11 @@ const elementIdMap = {
     // Step 3
     step3Section: 'step3',
     articleOutputContainer: 'article_output_container',
+    visualEditorWrapper: 'visualEditorWrapper',
+    visualEditorContainer: 'visualEditorContainer',
+    editorToolbar: 'editorToolbar',
+    sourceHtmlTextarea: 'sourceHtmlTextarea',
+    sourceMdTextarea: 'sourceMdTextarea',
     generatedArticleTextarea: 'generated_article',
     htmlPreviewDiv: 'html_preview',
     previewHtmlCheckbox: 'preview_html_checkbox',

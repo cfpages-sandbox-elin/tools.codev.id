@@ -1,4 +1,4 @@
-// article-main.js (v9.09 - bulk + gakruh)
+// article-main.js (v9.10 powerful step 3)
 import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
 import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
 import {
@@ -11,6 +11,7 @@ import { languageOptions, imageProviders, defaultSettings } from './article-conf
 import { handleGenerateStructure, handleGenerateArticle } from './article-single.js';
 import { prepareKeywords, handleGeneratePlan, handleStartBulkGeneration, handleDownloadZip } from './article-bulk.js';
 import { handleGenerateIdeas } from './article-ideas.js';
+import { initStep3Editor, setViewMode, setupEditorToolbar } from './article-editor.js';
 import { prepareSpinnerUI, addVariationColumn, removeVariationColumn, handleBulkGenerate, compileSpintax, loadSpinnerData } from './article-spinner.js';
 
 function addProviderToState() {
@@ -321,39 +322,46 @@ function setupStep2Listeners() {
 }
 
 function setupStep3Listeners() {
-    const previewHtmlCheckbox = getElement('previewHtmlCheckbox');
-    const generatedArticleTextarea = getElement('generatedArticleTextarea');
-    const htmlPreviewDiv = getElement('htmlPreviewDiv');
     const prepareSpinnerBtn = getElement('prepareSpinnerBtn');
+    const generatedArticleTextarea = getElement('generatedArticleTextarea');
 
-    previewHtmlCheckbox?.addEventListener('change', (e) => {
-        const showPreview = e.target.checked;
-        showElement(generatedArticleTextarea, !showPreview);
-        showElement(htmlPreviewDiv, showPreview);
-        if (showPreview && htmlPreviewDiv && generatedArticleTextarea) {
-            let unsafeHTML = generatedArticleTextarea.value;
-            let sanitizedHTML = unsafeHTML.replace(/<script.*?>.*?<\/script>/gis, '');
-             sanitizedHTML = sanitizedHTML.replace(/onerror=\".*?\"/gi, '');
-             sanitizedHTML = sanitizedHTML.replace(/onload=\".*?\"/gi, '');
-            htmlPreviewDiv.innerHTML = sanitizedHTML;
-        }
+    // Initialize Toolbar once
+    setupEditorToolbar();
+
+    // View Mode Buttons
+    document.querySelectorAll('.view-mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const mode = btn.dataset.mode;
+            setViewMode(mode);
+        });
     });
 
+    // Observer to detect when content is generated and Step 3 is shown
+    // Or better: Hook into the 'input' event of the hidden textarea if article-single triggers it
     generatedArticleTextarea?.addEventListener('input', (e) => {
-        const currentContent = e.target.value;
-        updateCounts(currentContent);
-        if (getState().generatedArticleContent !== currentContent) { updateState({ generatedArticleContent: currentContent }); }
+        const content = e.target.value;
+        const state = getState();
+        // Initialize the visual editor with the new content
+        initStep3Editor(content, state.format);
+        updateCounts(content);
     });
 
+    // Existing Spinner Trigger
     prepareSpinnerBtn?.addEventListener('click', () => {
-        const articleContent = generatedArticleTextarea.value;
-        if(!articleContent.trim()) {
+        // Get content from the active view
+        let finalContent = '';
+        const state = getState(); // check which view is active? 
+        // Just grab from the hidden main textarea which is synced
+        finalContent = generatedArticleTextarea.value;
+
+        if(!finalContent.trim()) {
             alert("Please generate an article first.");
             return;
         }
         showElement(getElement('step4Section'), true);
         showElement(getElement('scrollToStep5Btn'), true);
-        prepareSpinnerUI(articleContent);
+        prepareSpinnerUI(finalContent);
+        showElement(getElement('step3Section'), false); 
     });
 }
 

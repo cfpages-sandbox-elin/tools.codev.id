@@ -1,4 +1,4 @@
-// article-single.js (v8.24 fix generate) - CORRECTED
+// article-single.js (v9.10 powerful step 3)
 import { getState, updateState } from './article-state.js';
 import { logToConsole, callAI, getArticleOutlinesV2, constructImagePrompt, sanitizeFilename, slugify, showLoading, disableElement, delay, showElement } from './article-helpers.js';
 import { getElement, updateProgressBar, hideProgressBar, updateStructureCountDisplay, updateCounts } from './article-ui.js';
@@ -175,10 +175,10 @@ export async function handleGenerateArticle() {
 
             const currentSectionText = textResult.text.trim() + (outputFormat === 'html' ? '\n\n' : '\n\n');
             combinedArticleContent += currentSectionText; // Append to combined content
-            ui.generatedArticleTextarea.value = combinedArticleContent; // Update textarea visually
-            updateState({ generatedArticleContent: combinedArticleContent }); // Update state
-            // *** FIX: Call updateCounts after updating content ***
-            updateCounts(combinedArticleContent); // Update counts display
+            ui.generatedArticleTextarea.value = combinedArticleContent;
+            ui.generatedArticleTextarea.dispatchEvent(new Event('input'));
+            updateState({ generatedArticleContent: combinedArticleContent });
+            updateCounts(combinedArticleContent);
 
             previousSectionContent = currentSectionText;
 
@@ -200,20 +200,20 @@ export async function handleGenerateArticle() {
                         imagePlaceholder = outputFormat === 'html' ? `<img src="data:image/png;base64,${imageResult.imageData}" alt="${altText}" class="mx-auto my-4 rounded shadow">\n\n` : `![${altText}](data:image/png;base64,${imageResult.imageData})\n\n`;
                         logToConsole(`Image for section ${i + 1} embedded as base64.`, 'success');
                     }
-                    combinedArticleContent += imagePlaceholder; // Append placeholder
-                    ui.generatedArticleTextarea.value = combinedArticleContent; // Update textarea again
-                    updateState({ generatedArticleContent: combinedArticleContent }); // Update state
-                    // *** FIX: Call updateCounts again after adding placeholder/image ***
-                    updateCounts(combinedArticleContent); // Update counts display
+                    combinedArticleContent += imagePlaceholder;
+                    ui.generatedArticleTextarea.value = combinedArticleContent;
+                    ui.generatedArticleTextarea.dispatchEvent(new Event('input'));
+                    updateState({ generatedArticleContent: combinedArticleContent });
+                    updateCounts(combinedArticleContent);
 
                 } else {
                     logToConsole(`Failed image gen section ${i + 1}. Error: ${imageResult?.error || 'Unknown'}`, 'warn');
                     imagePlaceholder = outputFormat === 'html' ? `\n\n<!-- Image generation failed -->\n\n` : `\n\n[Image generation failed]\n\n`;
-                    combinedArticleContent += imagePlaceholder; // Append failure message
-                    ui.generatedArticleTextarea.value = combinedArticleContent; // Update textarea
-                    updateState({ generatedArticleContent: combinedArticleContent }); // Update state
-                    // *** FIX: Call updateCounts again after adding failure message ***
-                     updateCounts(combinedArticleContent); // Update counts display
+                    combinedArticleContent += imagePlaceholder;
+                    ui.generatedArticleTextarea.value = combinedArticleContent;
+                    ui.generatedArticleTextarea.dispatchEvent(new Event('input'));
+                    updateState({ generatedArticleContent: combinedArticleContent });
+                    updateCounts(combinedArticleContent);
                 }
             }
             ui.generatedArticleTextarea.scrollTop = ui.generatedArticleTextarea.scrollHeight;

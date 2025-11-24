@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Article Generator & Spinner v9.05</title>
+    <title>AI Article Generator & Spinner v9.10</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link rel="stylesheet" href="article.css">
@@ -15,7 +15,7 @@
 
     <div class="flex justify-between items-center mb-4">
         <h1 class="text-2xl font-bold text-indigo-700">
-            AI Article Generator & Spinner 🖼️ (v9.05)
+            AI Article Generator & Spinner 🖼️ (v9.10)
         </h1>
         <div class="space-x-2">
              <button id="forceReloadBtn" class="reload-button" title="Attempt to bypass cache and reload all resources">Force Reload 🔄</button>
@@ -361,21 +361,50 @@
             <h2 class="text-lg font-semibold text-gray-600">Step 3: Review & Edit Article 📝</h2> 
             <svg class="chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
         </div>
+        
         <div class="section-body">
-            <label for="generated_article" class="compact-label">Generated Article (Editable):</label> 
-            <div id="article_output_container" class="border border-gray-300 rounded-md p-1 bg-gray-50 min-h-[200px] max-h-[450px] overflow-y-auto"> 
-                <textarea id="generated_article" rows="12" class="compact-textarea w-full h-full border-none focus:ring-0 bg-transparent" placeholder="AI will generate the full article here..."></textarea> 
-                <div id="html_preview" class="prose max-w-none hidden p-2"></div> 
-                <div class="text-xs text-right text-gray-500 mt-1 pr-1">
+            <!-- View Mode Buttons -->
+            <div class="flex gap-2 mb-2">
+                <button class="compact-button bg-indigo-600 text-white view-mode-btn" data-mode="visual">Visual Editor 👁️</button>
+                <button class="compact-button bg-white text-gray-700 border-gray-300 hover:bg-gray-50 view-mode-btn" data-mode="html">HTML Source </> </button>
+                <button class="compact-button bg-white text-gray-700 border-gray-300 hover:bg-gray-50 view-mode-btn" data-mode="markdown">Markdown ⬇️</button>
+            </div>
+
+            <!-- Visual Editor Area -->
+            <div id="visualEditorWrapper">
+                <!-- Toolbar -->
+                <div id="editorToolbar">
+                    <button class="toolbar-btn" data-command="bold" title="Bold">B</button>
+                    <button class="toolbar-btn" data-command="italic" title="Italic">I</button>
+                    <button class="toolbar-btn" data-command="underline" title="Underline">U</button>
+                    <div class="w-px h-6 bg-gray-300 mx-1"></div>
+                    <button class="toolbar-btn" data-command="formatBlock" data-arg="H2" title="Heading 2">H2</button>
+                    <button class="toolbar-btn" data-command="formatBlock" data-arg="H3" title="Heading 3">H3</button>
+                    <button class="toolbar-btn" data-command="formatBlock" data-arg="P" title="Paragraph">P</button>
+                    <div class="w-px h-6 bg-gray-300 mx-1"></div>
+                    <button class="toolbar-btn" data-command="insertUnorderedList" title="Bullet List">• List</button>
+                    <button class="toolbar-btn" data-command="insertOrderedList" title="Number List">1. List</button>
+                    <div class="w-px h-6 bg-gray-300 mx-1"></div>
+                    <button class="toolbar-btn" data-command="createLink" title="Link">🔗</button>
+                </div>
+                
+                <!-- Draggable Block Container -->
+                <div id="visualEditorContainer"></div>
+            </div>
+
+            <!-- Source Textareas (Hidden by default) -->
+            <textarea id="sourceHtmlTextarea" rows="12" class="compact-textarea font-mono text-sm hidden" placeholder="HTML Source..."></textarea>
+            <textarea id="sourceMdTextarea" rows="12" class="compact-textarea font-mono text-sm hidden" placeholder="Markdown Source..."></textarea>
+            
+            <!-- This hidden textarea keeps compatibility with other scripts that look for 'generated_article' -->
+            <textarea id="generated_article" class="hidden"></textarea> 
+
+            <div class="mt-4 flex justify-between items-center"> 
+                <div class="text-xs text-gray-500">
                     <span id="wordCountDisplay">Words: 0</span> | <span id="charCountDisplay">Chars: 0</span>
                 </div>
-            </div> 
-            <div class="mt-2 flex justify-between items-center"> 
-                <label class="flex items-center space-x-2 text-sm cursor-pointer"> 
-                    <input type="checkbox" id="preview_html_checkbox" class="rounded text-indigo-600 focus:ring-indigo-500"> <span>Preview HTML</span> 
-                </label> 
                 <button id="prepareSpinnerBtn" class="compact-button bg-purple-600 hover:bg-purple-700"> 
-                Split Paragraphs & Sentences ✂️ 
+                    Split Paragraphs & Sentences ✂️ 
                 </button>
             </div>
         </div>
@@ -449,6 +478,7 @@
     <script type="module" src="article-prompts.js"></script>
     <script type="module" src="article-single.js"></script>
     <script type="module" src="article-bulk.js"></script>
+    <script type="module" src="article-editor.js"></script>
     <script type="module" src="article-ideas.js"></script>
     <script type="module" src="article-spinner.js"></script>
     <script type="module" src="article-main.js"></script>
