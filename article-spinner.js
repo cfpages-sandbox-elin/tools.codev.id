@@ -80,14 +80,12 @@ function renderSpinnerGrid() {
     if (!container) return;
     container.innerHTML = '';
 
-    // We will group items visually based on depth-0 blocks
     let currentGroupDiv = null;
     let currentGroupBody = null;
 
     const startNewGroup = (tagLabel) => {
-        // Create Container
-        currentGroupDiv = document.createElement('div');
-        currentGroupDiv.className = 'spinner-group';
+        const newGroupDiv = document.createElement('div');
+        newGroupDiv.className = 'spinner-group';
 
         // Create Header
         const header = document.createElement('header');
@@ -96,16 +94,23 @@ function renderSpinnerGrid() {
             <span class="group-tag">${tagLabel}</span>
             <svg class="chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
         `;
-        // Add collapse click
-        header.addEventListener('click', () => currentGroupDiv.classList.toggle('collapsed'));
-        currentGroupDiv.appendChild(header);
+        
+        header.addEventListener('click', () => {
+            newGroupDiv.classList.toggle('collapsed');
+        });
+        
+        newGroupDiv.appendChild(header);
 
         // Create Body
-        currentGroupBody = document.createElement('div');
-        currentGroupBody.className = 'group-body';
-        currentGroupDiv.appendChild(currentGroupBody);
+        const newGroupBody = document.createElement('div');
+        newGroupBody.className = 'group-body';
+        newGroupDiv.appendChild(newGroupBody);
 
-        container.appendChild(currentGroupDiv);
+        container.appendChild(newGroupDiv);
+
+        // Update outer references so the loop knows where to put content
+        currentGroupDiv = newGroupDiv;
+        currentGroupBody = newGroupBody;
     };
 
     // If we have loose content at start, create a default group
@@ -119,7 +124,7 @@ function renderSpinnerGrid() {
             startNewGroup(item.html); // Start new visual group
         }
 
-        // Determine where to append: current group body or directly to container (if something weird happens)
+        // Determine where to append
         const targetContainer = currentGroupBody || container;
 
         if (item.type === 'structure') {
