@@ -1,4 +1,4 @@
-// article-spinner.js (v9.07 - Persistence + Compact UI)
+// article-spinner.js (v9.08 - Persistence + Compact UI)
 import { getState, updateState } from './article-state.js';
 import { logToConsole, callAI, delay, showElement, disableElement, showLoading } from './article-helpers.js';
 import { getElement } from './article-ui.js';
@@ -30,6 +30,9 @@ export function loadSpinnerData(state) {
         // Show the section
         const section = getElement('step4Section');
         if (section) showElement(section, true);
+
+        const scrollBtn = getElement('scrollToStep5Btn');
+        if (scrollBtn) showElement(scrollBtn, true);
     }
 }
 

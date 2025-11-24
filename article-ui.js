@@ -1,4 +1,4 @@
-// article-ui.js (v9.05 - add remove)
+// article-ui.js (v9.08 - add remove)
 import { languageOptions, defaultSettings } from './article-config.js';
 import { getState, updateState, getBulkPlan, addProviderToState, removeProviderFromState, updateProviderInState, updateCustomModelState, getCustomModelState } from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2, delay } from './article-helpers.js';
@@ -581,8 +581,9 @@ export function updateUIBasedOnMode(isBulkMode) {
 
         showElement(step2Section, (appState.articleStructure || '').trim() !== '');
         showElement(step3Section, (appState.generatedArticleContent || '').trim() !== '');
-        // Step 4 shown only when spinner is prepared, not just based on text existence
-        showElement(step4Section, false); 
+        
+        const hasSpinnerData = appState.spinnerData && Array.isArray(appState.spinnerData) && appState.spinnerData.length > 0;
+        showElement(step4Section, hasSpinnerData); 
 
         if(formatSelect) {
             disableElement(formatSelect, false);
