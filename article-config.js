@@ -1,4 +1,4 @@
-// article-config.js (v8.24 fix save state)
+// article-config.js (v9.07 fix save state)
 export const CLOUDFLARE_FUNCTION_URL = '/ai-api';
 export const GITHUB_API_BASE = 'https://api.github.com';
 
@@ -84,6 +84,10 @@ export const defaultSettings = {
     articleTitle: '',
     articleStructure: '',
     generatedArticleContent: '',
+
+    // Spinner State
+    spinnerData: [], 
+    spinnerVariationCount: 1
 };
 
 console.log("article-config.js loaded (v8.18 Humanize content)");

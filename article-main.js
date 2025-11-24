@@ -1,4 +1,4 @@
-// article-main.js (v9.05 - add remove)
+// article-main.js (v9.07 - save state spinner)
 import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
 import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
 import {
@@ -11,7 +11,7 @@ import { languageOptions, imageProviders, defaultSettings } from './article-conf
 import { handleGenerateStructure, handleGenerateArticle } from './article-single.js';
 import { prepareKeywords, handleGeneratePlan, handleStartBulkGeneration, handleDownloadZip } from './article-bulk.js';
 import { handleGenerateIdeas } from './article-ideas.js';
-import { prepareSpinnerUI, addVariationColumn, removeVariationColumn, handleBulkGenerate, compileSpintax } from './article-spinner.js';
+import { prepareSpinnerUI, addVariationColumn, removeVariationColumn, handleBulkGenerate, compileSpintax, loadSpinnerData } from './article-spinner.js';
 
 function addProviderToState() {
     const currentState = getState();
@@ -58,6 +58,7 @@ async function initializeApp() {
     const initialState = loadState();
     logToConsole("Applying loaded state to UI...", "info");
     updateUIFromState(initialState);
+    loadSpinnerData(initialState); 
 
     const addProviderBtn = getElement('addProviderBtn');
     addProviderBtn?.addEventListener('click', addProviderToState);
