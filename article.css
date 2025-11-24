@@ -152,6 +152,30 @@ button, input, optgroup, select, textarea { border: 2px solid; }
 .compact-section.collapsed .section-body { display: none !important; }
 .compact-section.collapsed .chevron-icon { transform: rotate(-90deg); }
 
+/* Scroll to Bottom Button */
+.floating-scroll-btn {
+    position: fixed;
+    bottom: 2rem;
+    left: 2rem;
+    z-index: 40; /* Below modals, above content */
+    padding: 0.75rem 1rem;
+    background-color: #4b5563; /* gray-600 */
+    color: white;
+    border-radius: 9999px; /* pill shape */
+    font-size: 0.875rem;
+    font-weight: 600;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: all 0.2s;
+    border: 2px solid white;
+    cursor: pointer;
+    display: none; /* Hidden by default, shown via JS when Step 4 is active */
+}
+
+.floating-scroll-btn:hover {
+    background-color: #1f2937; /* gray-800 */
+    transform: translateY(-2px);
+}
+
 /* Step 5 Fixes */
 .step-5-output {
     width: 100%;

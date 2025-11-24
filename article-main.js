@@ -352,8 +352,8 @@ function setupStep3Listeners() {
             return;
         }
         showElement(getElement('step4Section'), true);
+        showElement(getElement('scrollToStep5Btn'), true);
         prepareSpinnerUI(articleContent);
-        showElement(getElement('step3Section'), false); 
     });
 }
 
@@ -363,6 +363,7 @@ function setupStep4Listeners() {
     const bulkGenerateBtn = getElement('bulkGenerateBtn');
     const compileSpintaxBtn = getElement('compileSpintaxBtn');
     const copySpintaxBtn = getElement('copySpintaxBtn');
+    const scrollToStep5Btn = getElement('scrollToStep5Btn');
 
     addVariationColumnBtn?.addEventListener('click', addVariationColumn);
     removeVariationColumnBtn?.addEventListener('click', removeVariationColumn);
@@ -374,6 +375,14 @@ function setupStep4Listeners() {
         textarea.select();
         document.execCommand('copy');
         alert("Spintax copied to clipboard!");
+    });
+
+    scrollToStep5Btn?.addEventListener('click', () => {
+        const step5 = getElement('step5Section');
+        if(step5) {
+            const compileBtn = getElement('compileSpintaxBtn');
+            compileBtn.scrollIntoView({ behavior: 'smooth' });
+        }
     });
 }
 

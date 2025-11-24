@@ -107,6 +107,7 @@ const elementIdMap = {
     bulkGenerateBtn: 'bulkGenerateBtn',
     spinnerContainer: 'spinnerContainer',
     compileSpintaxBtn: 'compileSpintaxBtn',
+    scrollToStep5Btn: 'scrollToStep5Btn',
 
     // Step 5
     step5Section: 'step5',
