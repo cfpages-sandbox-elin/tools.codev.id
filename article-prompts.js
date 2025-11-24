@@ -223,4 +223,28 @@ export function getSpintaxPrompt(textToSpin, isSentence = false) {
     ---`;
 }
 
+// Batch generation prompt
+export function getBatchSpinnerPrompt(items, language, tone) {
+    // items structure: [{ id: 0, text: "...", avoid: ["..."] }, ...]
+    
+    return `You are a high-performance text rewriter.
+    
+    Task: Rewrite the following ${items.length} sentences in ${language} (${tone} tone).
+    
+    CRITICAL INSTRUCTIONS:
+    1. Return ONLY a valid JSON Array of strings.
+    2. The array must contain exactly ${items.length} strings.
+    3. Order must match the input order exactly.
+    4. Apply Structural Shuffling (Active<->Passive, Fronting, changing word order) for every sentence.
+    5. Maintain HTML tags (<b>, <i>, etc.) if present.
+    
+    Input Data (JSON):
+    ${JSON.stringify(items, null, 2)}
+    
+    Output Format Example:
+    ["Rewritten sentence 1", "Rewritten sentence 2", ...]
+    
+    Your JSON Response:`;
+}
+
 console.log("article-prompts.js loaded");

@@ -108,6 +108,8 @@ const elementIdMap = {
     spinnerContainer: 'spinnerContainer',
     compileSpintaxBtn: 'compileSpintaxBtn',
     scrollToStep5Btn: 'scrollToStep5Btn',
+    bulkSpinnerProgressContainer: 'bulkSpinnerProgressContainer',
+    bulkSpinnerProgressBar: 'bulkSpinnerProgressBar',
 
     // Step 5
     step5Section: 'step5',

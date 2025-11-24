@@ -1,8 +1,8 @@
-// article-spinner.js (v9.08 - Persistence + Compact UI)
+// article-spinner.js (v9.09 - bulk)
 import { getState, updateState } from './article-state.js';
 import { logToConsole, callAI, delay, showElement, disableElement, showLoading } from './article-helpers.js';
 import { getElement } from './article-ui.js';
-import { getSpinnerVariationPrompt } from './article-prompts.js';
+import { getSpinnerVariationPrompt, getBatchSpinnerPrompt } from './article-prompts.js'; 
 
 let spinnerItems = []; 
 let variationColumnCount = 1; 
@@ -180,6 +180,7 @@ function renderSpinnerGrid() {
         else if (item.type === 'content') {
             const rowDiv = document.createElement('div');
             rowDiv.className = `segment-row depth-${item.depth}`;
+            rowDiv.dataset.itemIndex = index;
             
             const origContainer = createBox(item.original, true, index, -1);
             rowDiv.appendChild(origContainer);
@@ -350,45 +351,160 @@ export async function handleBulkGenerate() {
     if (!primaryProvider) { alert("No AI provider."); return; }
     if (!confirm("This will generate variations for all empty boxes. Continue?")) return;
 
+    // 1. Collect all tasks (Column-wise priority)
     const generateQueue = [];
-
     for (let vIdx = 0; vIdx < variationColumnCount; vIdx++) {
         spinnerItems.forEach((item, index) => {
             if (item.type === 'content') {
                 if (!item.variations[vIdx] || item.variations[vIdx].trim() === '') {
-                    generateQueue.push({ index, vIdx });
+                    // Collect context (existing variations) for uniqueness
+                    const existingVars = item.variations.filter((v, i) => i !== vIdx && v && v.trim() !== "");
+                    generateQueue.push({ 
+                        index, 
+                        vIdx, 
+                        original: item.original,
+                        avoid: existingVars 
+                    });
                 }
             }
         });
     }
 
+    if (generateQueue.length === 0) {
+        alert("No empty variation boxes found.");
+        return;
+    }
+
     logToConsole(`Bulk generating ${generateQueue.length} variations...`, 'info');
 
-    const CHUNK_SIZE = 5; 
-    for (let i = 0; i < generateQueue.length; i += CHUNK_SIZE) {
-        const chunk = generateQueue.slice(i, i + CHUNK_SIZE);
-        const promises = chunk.map(q => {
-            const mainBlock = getElement('spinnerContainer').querySelector('.spinner-block');
-            // DOM index matching... assumes order preservation
-            // Safe way: iterate groups, then rows
-            // Actually, simpler to just trigger logic and not update button visual strictly if DOM search fails
-            // But for now, let's rely on data update + save.
-            
-            return generateSingleVariation(q.index, q.vIdx, { value: '', classList: { add:()=>{}, remove:()=>{} }, dispatchEvent: ()=>{} }, { textContent: '' })
-                .then(() => {
-                    // Since we passed dummy elements, we must force a re-render to show results visually
-                    // optimization: only re-render at end? No, user wants progress.
-                    // We can update state directly in logic, but we need UI update.
-                    // Let's just re-render the grid after every chunk.
-                });
-        });
+    // 2. Setup Progress Bar
+    const progressContainer = getElement('bulkSpinnerProgressContainer');
+    const progressBar = getElement('bulkSpinnerProgressBar');
+    showElement(progressContainer, true);
+    let completedCount = 0;
+    const updateProgress = () => {
+        const pct = Math.round((completedCount / generateQueue.length) * 100);
+        progressBar.style.width = `${pct}%`;
+        progressBar.textContent = `${pct}% (${completedCount}/${generateQueue.length})`;
+    };
+    updateProgress();
 
-        await Promise.all(promises);
-        renderSpinnerGrid(); // Refresh UI to show new data
-        saveSpinnerState(); // SAVE STATE
-        await delay(500); 
+    // 3. Process in Batches
+    const BATCH_SIZE = 5; // Send 5 sentences at once
+    
+    for (let i = 0; i < generateQueue.length; i += BATCH_SIZE) {
+        const batch = generateQueue.slice(i, i + BATCH_SIZE);
+        
+        // Prepare payload for AI
+        // items structure: [{ text: "...", avoid: ["..."] }]
+        const itemsForPrompt = batch.map(task => ({
+            text: task.original,
+            avoid: task.avoid
+        }));
+
+        const prompt = getBatchSpinnerPrompt(itemsForPrompt, state.language, state.tone);
+        
+        const payload = {
+            providerKey: primaryProvider.provider,
+            model: primaryProvider.model,
+            prompt: prompt
+        };
+
+        // Visual feedback: set loading state for specific boxes
+        batch.forEach(task => setBoxState(task.index, task.vIdx, 'loading'));
+
+        try {
+            const result = await callAI('generate', payload);
+            
+            let resultsArray = [];
+            if (result?.success && result.text) {
+                try {
+                    // Try to parse JSON array
+                    const jsonMatch = result.text.match(/\[.*\]/s);
+                    if (jsonMatch) {
+                        resultsArray = JSON.parse(jsonMatch[0]);
+                    }
+                } catch (e) {
+                    logToConsole("JSON parse failed for batch. Falling back...", "warn");
+                }
+            }
+
+            // 4. Map results back to UI
+            batch.forEach((task, batchIndex) => {
+                const generatedText = resultsArray[batchIndex];
+                
+                if (generatedText && typeof generatedText === 'string') {
+                    const cleanText = generatedText.replace(/^"|"$/g, '').trim();
+                    
+                    // Update Data
+                    spinnerItems[task.index].variations[task.vIdx] = cleanText;
+                    
+                    // Update UI
+                    updateBoxValue(task.index, task.vIdx, cleanText);
+                    setBoxState(task.index, task.vIdx, 'success');
+                } else {
+                    setBoxState(task.index, task.vIdx, 'error');
+                    logToConsole(`Failed to generate for item ${task.index}`, "error");
+                }
+                completedCount++;
+            });
+
+        } catch (e) {
+            console.error(e);
+            batch.forEach(task => setBoxState(task.index, task.vIdx, 'error'));
+            completedCount += batch.length;
+        }
+
+        updateProgress();
+        saveSpinnerState(); // Save progress incrementally
+        
+        // Small delay to allow UI repaint and avoid rate limits
+        await delay(300);
     }
+
+    // Finish
     logToConsole("Bulk generation complete.", 'success');
+    await delay(1000);
+    showElement(progressContainer, false); // Hide progress bar
+}
+
+function getBoxElements(itemIndex, varIndex) {
+    // Find row by data attribute directly
+    const rowDiv = getElement('spinnerContainer').querySelector(`.segment-row[data-item-index="${itemIndex}"]`);
+    
+    if (!rowDiv) return null;
+    
+    const boxContainer = rowDiv.children[varIndex + 1]; 
+    const textarea = boxContainer.querySelector('textarea');
+    const btn = boxContainer.querySelector('.floating-gen-btn');
+    return { textarea, btn };
+}
+
+function setBoxState(itemIndex, varIndex, state) {
+    const els = getBoxElements(itemIndex, varIndex);
+    if (!els) return;
+    const { textarea, btn } = els;
+
+    if (state === 'loading') {
+        btn.textContent = '⏳';
+        disableElement(btn, true);
+        textarea.classList.add('opacity-50');
+    } else if (state === 'success') {
+        btn.innerHTML = '🔄';
+        disableElement(btn, false);
+        textarea.classList.remove('opacity-50');
+    } else if (state === 'error') {
+        btn.textContent = '❌';
+        disableElement(btn, false);
+        textarea.classList.remove('opacity-50');
+    }
+}
+
+function updateBoxValue(itemIndex, varIndex, value) {
+    const els = getBoxElements(itemIndex, varIndex);
+    if (!els) return;
+    els.textarea.value = value;
+    els.textarea.dispatchEvent(new Event('input')); // Trigger resize/count
 }
 
 // --- 4. Compiler Logic ---

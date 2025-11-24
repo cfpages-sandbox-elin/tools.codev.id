@@ -1,4 +1,4 @@
-// article-main.js (v9.07 - save state spinner)
+// article-main.js (v9.09 - bulk)
 import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
 import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
 import {
@@ -364,6 +364,8 @@ function setupStep4Listeners() {
     const compileSpintaxBtn = getElement('compileSpintaxBtn');
     const copySpintaxBtn = getElement('copySpintaxBtn');
     const scrollToStep5Btn = getElement('scrollToStep5Btn');
+    const step4Section = getElement('step4Section');
+    const step5Section = getElement('step5Section');
 
     addVariationColumnBtn?.addEventListener('click', addVariationColumn);
     removeVariationColumnBtn?.addEventListener('click', removeVariationColumn);
@@ -384,6 +386,35 @@ function setupStep4Listeners() {
             compileBtn.scrollIntoView({ behavior: 'smooth' });
         }
     });
+
+    if (scrollToStep5Btn && step4Section && step5Section) {
+        // 1. Click Logic: Toggle based on current state text
+        scrollToStep5Btn.addEventListener('click', () => {
+            if (scrollToStep5Btn.textContent.includes('Step 5')) {
+                step5Section.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                // Scroll back to top of Step 4
+                const header = step4Section.querySelector('.section-header');
+                if(header) header.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+
+        // 2. Observer Logic: Watch Step 5
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                // If Step 5 is visible (or nearly visible)
+                if (entry.isIntersecting) {
+                    scrollToStep5Btn.innerHTML = '⬆️ Scroll to Step 4';
+                    scrollToStep5Btn.classList.replace('bg-gray-600', 'bg-indigo-600'); // Visual cue
+                } else {
+                    scrollToStep5Btn.innerHTML = '⬇️ Scroll to Step 5';
+                    scrollToStep5Btn.classList.replace('bg-indigo-600', 'bg-gray-600');
+                }
+            });
+        }, { threshold: 0.1 }); // Trigger when 10% of Step 5 is visible
+
+        observer.observe(step5Section);
+    }
 }
 
 function setupBulkModeListeners() {
