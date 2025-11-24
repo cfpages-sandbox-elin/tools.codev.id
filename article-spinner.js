@@ -1,4 +1,4 @@
-// article-spinner.js (v9.09 - Fixed updateState Import + gakruh)
+// article-spinner.js (v9.09 - Fixed updateState Import + compile warn)
 import { getState, updateState } from './article-state.js';
 import { logToConsole, callAI, delay, showElement, disableElement, showLoading } from './article-helpers.js';
 import { getElement } from './article-ui.js';
@@ -415,6 +415,61 @@ export async function handleBulkGenerate() {
 }
 
 export function compileSpintax() {
+    // --- 1. Validation Check ---
+    let firstEmptyInfo = null;
+
+    // Iterate to find the first empty variation box
+    for (let i = 0; i < spinnerItems.length; i++) {
+        const item = spinnerItems[i];
+        if (item.type === 'content') {
+            for (let v = 0; v < variationColumnCount; v++) {
+                // Check if undefined, null, or whitespace only
+                if (!item.variations[v] || item.variations[v].trim() === '') {
+                    firstEmptyInfo = { itemIndex: i, varIndex: v };
+                    break;
+                }
+            }
+        }
+        if (firstEmptyInfo) break; // Stop searching after first match
+    }
+
+    // --- 2. Handle Empty State ---
+    if (firstEmptyInfo) {
+        const proceed = confirm(`⚠️ Warning: Found empty variation boxes.\n\nDo you want to compile anyway?\n\n- Click OK to Ignore and Compile.\n- Click Cancel to jump to the first empty box.`);
+        
+        if (!proceed) {
+            // User wants to fix it. Find the element.
+            const container = getElement('spinnerContainer');
+            // Use data attribute to find specific row
+            const rowDiv = container.querySelector(`.segment-row[data-item-index="${firstEmptyInfo.itemIndex}"]`);
+            
+            if (rowDiv) {
+                // Important: Check if parent group is collapsed and open it
+                const groupDiv = rowDiv.closest('.spinner-group');
+                if (groupDiv && groupDiv.classList.contains('collapsed')) {
+                    groupDiv.classList.remove('collapsed');
+                }
+
+                // Find the specific box (Index + 1 because of Original column)
+                const boxContainer = rowDiv.children[firstEmptyInfo.varIndex + 1];
+                const textarea = boxContainer.querySelector('textarea');
+                
+                // Scroll and Focus
+                textarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                textarea.focus();
+                
+                // Add a temporary red flash to highlight it
+                textarea.style.transition = "background-color 0.3s";
+                textarea.style.backgroundColor = "#fee2e2"; // light red
+                setTimeout(() => {
+                    textarea.style.backgroundColor = ""; // reset
+                }, 1000);
+            }
+            return; // Stop compilation
+        }
+    }
+
+    // --- 3. Compilation Logic (Existing) ---
     let finalSpintax = "";
     spinnerItems.forEach(item => {
         if (item.type === 'structure') {
