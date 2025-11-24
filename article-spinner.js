@@ -394,21 +394,63 @@ export function compileSpintax() {
     let finalSpintax = "";
     spinnerItems.forEach(item => {
         if (item.type === 'structure') {
-            finalSpintax += item.html + '\n';
-        } else if (item.type === 'content') {
-            const vars = item.variations.filter(v => v && v.trim() !== '');
-            if (vars.length > 0) {
-                finalSpintax += `{${item.original}|${vars.join('|')}}`;
-            } else {
-                finalSpintax += item.original;
+            const tag = item.tagName || ''; // e.g., 'p', 'ul', 'li'
+            
+            if (item.isBlockStart) {
+                // OPENING TAGS
+                finalSpintax += item.html;
+                
+                // Only add newline after opening UL/OL
+                if (['ul', 'ol'].includes(tag)) {
+                    finalSpintax += '\n';
+                }
+                // P, H1-H6, LI remain inline (no newline added here)
+            } 
+            else if (item.isBlockEnd) {
+                // CLOSING TAGS
+                finalSpintax += item.html;
+
+                if (['ul', 'ol'].includes(tag)) {
+                    finalSpintax += '\n\n'; // Extra space after list ends
+                } else if (tag === 'li') {
+                    finalSpintax += '\n'; // Simple newline after list item
+                } else {
+                    // P, H1-H6, DIV, etc.
+                    finalSpintax += '\n\n'; // Double newline to separate paragraphs
+                }
             }
+            else {
+                // Self-closing or other structure (br, hr)
+                finalSpintax += item.html + '\n';
+            }
+        } 
+        else if (item.type === 'content') {
+            const vars = item.variations.filter(v => v && v.trim() !== '');
+            let spintaxSegment = "";
+            
+            if (vars.length > 0) {
+                spintaxSegment = `{${item.original}|${vars.join('|')}}`;
+            } else {
+                spintaxSegment = item.original;
+            }
+            
+            finalSpintax += spintaxSegment;
             finalSpintax += " "; 
         }
     });
+
+    finalSpintax = finalSpintax.replace(/\s+<\/p>/gi, '</p>');
+    finalSpintax = finalSpintax.replace(/\s+<\/h/gi, '</h');
+    finalSpintax = finalSpintax.replace(/\s+<\/li>/gi, '</li>');
+    finalSpintax = finalSpintax.replace(/\n{3,}/g, '\n\n');
+
     const outputArea = getElement('finalSpintaxOutput');
     if(outputArea) {
-        outputArea.value = finalSpintax;
+        outputArea.value = finalSpintax.trim();
         showElement(getElement('step5Section'), true);
         getElement('step5Section').scrollIntoView({ behavior: 'smooth' });
+        
+        // Hide the "Scroll to Step 5" button since we are there now
+        showElement(getElement('scrollToStep5Btn'), false);
     }
 }
