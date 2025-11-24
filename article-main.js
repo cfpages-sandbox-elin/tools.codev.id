@@ -1,4 +1,4 @@
-// article-main.js (v9.10 powerful step 3)
+// article-main.js (v9.10 powerful step 3 v2)
 import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
 import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
 import {
@@ -11,7 +11,7 @@ import { languageOptions, imageProviders, defaultSettings } from './article-conf
 import { handleGenerateStructure, handleGenerateArticle } from './article-single.js';
 import { prepareKeywords, handleGeneratePlan, handleStartBulkGeneration, handleDownloadZip } from './article-bulk.js';
 import { handleGenerateIdeas } from './article-ideas.js';
-import { initStep3Editor, setViewMode, setupEditorToolbar } from './article-editor.js';
+import { initStep3Editor, setViewMode, setupEditorToolbar, loadEditorFromState } from './article-editor.js';
 import { prepareSpinnerUI, addVariationColumn, removeVariationColumn, handleBulkGenerate, compileSpintax, loadSpinnerData } from './article-spinner.js';
 
 function addProviderToState() {
@@ -63,6 +63,9 @@ async function initializeApp() {
 
     const addProviderBtn = getElement('addProviderBtn');
     addProviderBtn?.addEventListener('click', addProviderToState);
+    loadSpinnerData(initialState); 
+    
+    loadEditorFromState();
 
     setupStep4Listeners();
     logToConsole("Setting up other event listeners...", "info");

@@ -1,11 +1,21 @@
-// article-editor.js (v1.0 - Block Editor)
+// article-editor.js (v1.01 - State Loading Support)
 import { getElement } from './article-ui.js';
 import { logToConsole, showElement } from './article-helpers.js';
 import { updateState, getState } from './article-state.js';
 
 let draggedBlock = null;
 
-// --- 1. Initialization ---
+// --- 1. Initialization & State Loading ---
+
+// NEW: Called by main.js on app load
+export function loadEditorFromState() {
+    const state = getState();
+    // Only initialize if there is content and Step 3 isn't in Bulk Mode
+    if (state.generatedArticleContent && state.generatedArticleContent.trim() !== '' && !state.bulkMode) {
+        logToConsole("Restoring Visual Editor content...", "info");
+        initStep3Editor(state.generatedArticleContent, state.format || 'html');
+    }
+}
 
 export function initStep3Editor(content, initialFormat) {
     const visualContainer = getElement('visualEditorContainer');
@@ -23,11 +33,14 @@ export function initStep3Editor(content, initialFormat) {
     // Render the visual blocks
     renderVisualBlocks(htmlContent);
     
-    // Update source textareas
-    updateSourceViews();
-
-    // Set default view to Visual
-    setViewMode('visual');
+    // Update source textareas so they match immediately
+    const container = getElement('visualEditorContainer');
+    // Check if we actually rendered anything
+    if (container.children.length > 0) {
+        updateSourceViews();
+        // Set default view to Visual
+        setViewMode('visual');
+    }
 }
 
 // --- 2. Block Rendering ---
@@ -105,10 +118,14 @@ function createEditorBlock(elementNode, container) {
 export function setupEditorToolbar() {
     const buttons = document.querySelectorAll('.toolbar-btn');
     buttons.forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        // Prevent duplicate listeners if called multiple times
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        
+        newBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            const command = btn.dataset.command;
-            const arg = btn.dataset.arg || null;
+            const command = newBtn.dataset.command;
+            const arg = newBtn.dataset.arg || null;
             
             if (command === 'createLink') {
                 const url = prompt('Enter link URL:');
@@ -132,10 +149,10 @@ export function setViewMode(mode) {
     const mdArea = getElement('sourceMdTextarea');
     const toolbar = getElement('editorToolbar');
 
-    showElement(visual, mode === 'visual');
-    showElement(htmlArea, mode === 'html');
-    showElement(mdArea, mode === 'markdown');
-    showElement(toolbar, mode === 'visual');
+    if (visual) showElement(visual, mode === 'visual');
+    if (htmlArea) showElement(htmlArea, mode === 'html');
+    if (mdArea) showElement(mdArea, mode === 'markdown');
+    if (toolbar) showElement(toolbar, mode === 'visual');
 
     // Button Active States
     document.querySelectorAll('.view-mode-btn').forEach(btn => {
@@ -145,7 +162,6 @@ export function setViewMode(mode) {
 
     // If switching TO visual, re-render from source
     if (mode === 'visual') {
-        // Check which source was active
         if (!htmlArea.classList.contains('hidden')) {
             renderVisualBlocks(htmlArea.value);
         } else if (!mdArea.classList.contains('hidden')) {
@@ -160,18 +176,6 @@ function updateSourceViews() {
     
     Array.from(container.children).forEach(wrapper => {
         const content = wrapper.querySelector('.block-content');
-        // Get the inner HTML of the contenteditable div. 
-        // Note: contenteditable often adds wrapper divs, we try to get the semantic tag inside if possible
-        // But for simplicity in this block editor, we act as if the block-content IS the tag container.
-        
-        // Actually, extracting exactly what's inside:
-        // Since we appended a clone node (e.g. <p>...</p>), innerHTML of block-content is <p>...</p>
-        // However, contenteditable editing might change structure.
-        // Simpler approach: Grab innerText if it's raw, or innerHTML.
-        
-        // Robust way: The user edits inside the <p>. 
-        // Browser creates <div class="block-content"><p>Text</p></div>
-        // We want the <p>Text</p>.
         fullHtml += content.innerHTML + '\n\n';
     });
 
@@ -181,19 +185,16 @@ function updateSourceViews() {
     if (htmlArea) htmlArea.value = fullHtml.trim();
     if (mdArea) mdArea.value = htmlToMarkdown(fullHtml.trim());
     
-    // Also update the "Generate Article" textarea for spinners downstream
-    const mainOutput = getElement('generated_article'); // Maps to generatedArticleTextarea
+    // Sync to the hidden main textarea used by other modules
+    const mainOutput = getElement('generated_article');
     if (mainOutput) {
-        // Use whatever format was selected in Step 1 preferences if possible, 
-        // otherwise default to what is currently dominant? 
-        // Let's verify Step 1 format.
         const state = getState();
         if (state.format === 'markdown') {
             mainOutput.value = mdArea.value;
         } else {
             mainOutput.value = htmlArea.value;
         }
-        // Trigger input event on main output to update counts
+        // Trigger input event to update counts in UI
         mainOutput.dispatchEvent(new Event('input'));
     }
 }
@@ -236,16 +237,11 @@ function setupDragAndDrop(container) {
         if (dragSrcEl !== this) {
             // Swap DOM positions
             const parent = this.parentNode;
-            const next = this.nextSibling === dragSrcEl ? this : this.nextSibling;
+            // Simple insert before logic for block reordering
+            // Determine if dropping above or below based on index is safer, 
+            // but for now, standard insertBefore works for reordering.
+            // We just insert the dragged element before the drop target.
             parent.insertBefore(dragSrcEl, this);
-            // If moving down
-            // Simple swap logic is complex with insertBefore. 
-            // Easier: Swap innerHTML? No, breaks listeners.
-            // Better: Insert After.
-            
-            // For this simple implementation, standard sortable logic:
-            // If index of dragSrc < index of this, insertAfter.
-            // We basically moved dragSrcEl to position of `this`.
         }
         return false;
     }
@@ -282,31 +278,32 @@ function moveBlock(wrapper, direction) {
     }
 }
 
-// --- 6. Converters (Simple Regex-based) ---
+// --- 6. Converters ---
 
 function markdownToHtml(md) {
-    // Very basic converter for preview purposes
+    if (!md) return '';
     let html = md;
+    // Headers
     html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
     html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
     html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
-    html = html.replace(/^\* (.*$)/gim, '<ul><li>$1</li></ul>'); // naive list
-    html = html.replace(/^- (.*$)/gim, '<ul><li>$1</li></ul>'); // naive list
-    // Fix naive list: join adjacent uls
+    // Lists
+    html = html.replace(/^\s*[-*]\s+(.*$)/gim, '<ul><li>$1</li></ul>'); 
+    html = html.replace(/^\s*\d+\.\s+(.*$)/gim, '<ol><li>$1</li></ol>');
+    // Fix adjacent lists
     html = html.replace(/<\/ul>\s*<ul>/gim, '');
-    
-    html = html.replace(/\*\*(.*)\*\*/gim, '<b>$1</b>');
-    html = html.replace(/\*(.*)\*/gim, '<i>$1</i>');
+    html = html.replace(/<\/ol>\s*<ol>/gim, '');
+    // Formatting
+    html = html.replace(/\*\*(.*?)\*\*/gim, '<b>$1</b>');
+    html = html.replace(/\*(.*?)\*/gim, '<i>$1</i>');
+    html = html.replace(/\[(.*?)\]\((.*?)\)/gim, '<a href="$2">$1</a>');
     html = html.replace(/\n/gim, '<br>');
     
-    // Wrap text not in tags with p? 
-    // For this editor, we assume AI gives structured MD.
-    // Fallback for raw text
     return html;
 }
 
 function htmlToMarkdown(html) {
-    // Basic converter
+    if (!html) return '';
     let md = html;
     md = md.replace(/<h1>(.*?)<\/h1>/gim, '# $1\n');
     md = md.replace(/<h2>(.*?)<\/h2>/gim, '## $1\n');
@@ -315,8 +312,11 @@ function htmlToMarkdown(html) {
     md = md.replace(/<strong>(.*?)<\/strong>/gim, '**$1**');
     md = md.replace(/<i>(.*?)<\/i>/gim, '*$1*');
     md = md.replace(/<em>(.*?)<\/em>/gim, '*$1*');
+    md = md.replace(/<a href="(.*?)">(.*?)<\/a>/gim, '[$2]($1)');
     md = md.replace(/<ul>/gim, '');
     md = md.replace(/<\/ul>/gim, '');
+    md = md.replace(/<ol>/gim, '');
+    md = md.replace(/<\/ol>/gim, '');
     md = md.replace(/<li>(.*?)<\/li>/gim, '- $1\n');
     md = md.replace(/<p>(.*?)<\/p>/gim, '$1\n\n');
     md = md.replace(/<br>/gim, '\n');
