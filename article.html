@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Article Generator & Spinner v9.02</title>
+    <title>AI Article Generator & Spinner v9.05</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link rel="stylesheet" href="article.css">
@@ -15,7 +15,7 @@
 
     <div class="flex justify-between items-center mb-4">
         <h1 class="text-2xl font-bold text-indigo-700">
-            AI Article Generator & Spinner 🖼️ (v9.00)
+            AI Article Generator & Spinner 🖼️ (v9.05)
         </h1>
         <div class="space-x-2">
              <button id="forceReloadBtn" class="reload-button" title="Attempt to bypass cache and reload all resources">Force Reload 🔄</button>
@@ -388,15 +388,17 @@
         </div>
         <div class="section-body">
             <div class="flex justify-end space-x-2 mb-4">
+                <button id="removeVariationColumnBtn" class="compact-button bg-red-500 hover:bg-red-600 text-xs">
+                    - Delete Column
+                </button>
                 <button id="addVariationColumnBtn" class="compact-button bg-blue-500 hover:bg-blue-600 text-xs">
-                    + Add Variation Column
+                    + Add Column
                 </button>
                 <button id="bulkGenerateBtn" class="compact-button bg-indigo-600 hover:bg-indigo-700 text-xs">
-                    ⚡ Generate Empty Variations
+                    ⚡ Generate Empty
                 </button>
             </div>
-        
-        
+            
             <div id="spinnerContainer" class="overflow-x-auto pb-4">
                 <!-- Dynamic content goes here -->
             </div>
@@ -423,7 +425,7 @@
         </div>
     </section>
 
-    <section id="consoleLogSection" class="compact-section">
+    <section id="consoleLogSection" class="compact-section collapsed">
         <div class="section-header">
             <h3 class="text-md font-semibold text-gray-400">Console Log 🪵</h3>
             <svg class="chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>

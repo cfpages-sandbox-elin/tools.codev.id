@@ -1,4 +1,4 @@
-// article-spinner.js (v9.05 - Atomic Anchor Protection)
+// article-spinner.js (v9.06 - Groups + Horizontal Scroll + Delete)
 import { getState } from './article-state.js';
 import { logToConsole, callAI, delay, showElement, disableElement, showLoading } from './article-helpers.js';
 import { getElement } from './article-ui.js';
@@ -14,127 +14,63 @@ let stopSpinning = false;
 // --- 1. Parser Logic (Recursive) ---
 
 export function prepareSpinnerUI(htmlContent) {
-    logToConsole("Parsing article with atomic anchor protection...", "info");
+    logToConsole("Parsing article...", "info");
     spinnerItems = [];
     variationColumnCount = 1; 
-    
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlContent, 'text/html');
-    
-    // Start recursive processing from body
     processNodes(doc.body, 0);
-
     renderSpinnerGrid();
-    logToConsole(`Parsed ${spinnerItems.filter(i => i.type === 'content').length} editable segments.`, "success");
+    logToConsole(`Parsed ${spinnerItems.filter(i => i.type === 'content').length} segments.`, "success");
 }
 
 // Recursive function to walk the DOM
 function processNodes(parentNode, depth) {
     const childNodes = Array.from(parentNode.childNodes);
-    let inlineBuffer = []; // To hold text, <b>, <i>, <a> etc. before hitting a block
-
-    // Helper to flush inline buffer to Content Segments
+    let inlineBuffer = []; 
     const flushBuffer = () => {
         if (inlineBuffer.length === 0) return;
-        
-        // 1. Join the buffer into a single raw HTML string
-        const rawHtml = inlineBuffer.map(n => {
-            return n.nodeType === Node.TEXT_NODE ? n.textContent : n.outerHTML;
-        }).join('');
-
-        // 2. Safely split into sentences (Protecting <a> tags)
+        const rawHtml = inlineBuffer.map(n => n.nodeType === Node.TEXT_NODE ? n.textContent : n.outerHTML).join('');
         if (rawHtml.trim()) {
             const sentences = splitHtmlSentences(rawHtml);
-            sentences.forEach(s => {
-                if (s.trim()) {
-                    spinnerItems.push({
-                        type: 'content',
-                        original: s.trim(),
-                        variations: [''],
-                        depth: depth
-                    });
-                }
-            });
+            sentences.forEach(s => { if (s.trim()) {
+                spinnerItems.push({ type: 'content', original: s.trim(), variations: [''], depth: depth });
+            }});
         }
         inlineBuffer = [];
     };
-
     childNodes.forEach(node => {
-        if (node.nodeType === Node.TEXT_NODE) {
-            if (node.textContent) {
-                inlineBuffer.push(node);
-            }
-        } else if (node.nodeType === Node.ELEMENT_NODE) {
+        if (node.nodeType === Node.TEXT_NODE) { if (node.textContent) inlineBuffer.push(node); } 
+        else if (node.nodeType === Node.ELEMENT_NODE) {
             const tagName = node.tagName.toLowerCase();
-            // Note: <a> is intentionally excluded here so it goes into inlineBuffer
             const isBlock = ['p', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'br', 'hr'].includes(tagName);
-
             if (isBlock) {
-                // 1. Flush any pending inline text before this block
                 flushBuffer();
-
-                // 2. Handle the Block
                 let openTag = `<${tagName}`;
                 Array.from(node.attributes).forEach(attr => openTag += ` ${attr.name}="${attr.value}"`);
                 openTag += '>';
-
-                // Add Open Tag Structure
-                spinnerItems.push({ type: 'structure', html: openTag, depth: depth });
-
-                // 3. Recurse into the block
+                spinnerItems.push({ type: 'structure', html: openTag, depth: depth, isBlockStart: true, tagName: tagName }); // Mark start
                 if (!['br', 'hr', 'img'].includes(tagName)) {
                     processNodes(node, depth + (tagName === 'ul' || tagName === 'ol' ? 1 : 0));
-                    
-                    // Add Close Tag Structure
-                    spinnerItems.push({ type: 'structure', html: `</${tagName}>`, depth: depth });
+                    spinnerItems.push({ type: 'structure', html: `</${tagName}>`, depth: depth, isBlockEnd: true }); // Mark end
                 }
-
-            } else {
-                // Inline elements (b, i, span, a, strong, em) added to buffer
-                inlineBuffer.push(node);
-            }
+            } else { inlineBuffer.push(node); }
         }
     });
-
     flushBuffer();
 }
 
 // --- Helper: Split HTML String into Sentences Safely (Updated) ---
 function splitHtmlSentences(htmlString) {
-    const atomicPlaceholders = [];
-    const tagPlaceholders = [];
-
-    // 1. Mask Atomic Elements (specifically <a> tags and their content)
-    // We capture the whole <a ...>...</a> block so punctuation inside doesn't trigger split
-    let maskedString = htmlString.replace(/<a\b[^>]*>[\s\S]*?<\/a>/gi, (match) => {
-        atomicPlaceholders.push(match);
-        return `__ATOMIC_${atomicPlaceholders.length - 1}__`;
-    });
-
-    // 2. Mask remaining standalone HTML tags (like <b>, </b>, <br>)
-    maskedString = maskedString.replace(/<[^>]+>/g, (match) => {
-        tagPlaceholders.push(match);
-        return `__TAG_${tagPlaceholders.length - 1}__`;
-    });
-
-    // 3. Split by sentence delimiters
-    // Regex looks for . ! ? followed by space or end of string
+    const atomicPlaceholders = []; const tagPlaceholders = [];
+    let maskedString = htmlString.replace(/<a\b[^>]*>[\s\S]*?<\/a>/gi, (match) => { atomicPlaceholders.push(match); return `__ATOMIC_${atomicPlaceholders.length - 1}__`; });
+    maskedString = maskedString.replace(/<[^>]+>/g, (match) => { tagPlaceholders.push(match); return `__TAG_${tagPlaceholders.length - 1}__`; });
     const rawSentences = maskedString.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) || [maskedString];
-
-    // 4. Restore tags and atomic blocks
-    const restoredSentences = rawSentences.map(sentence => {
-        // Restore generic tags first
-        let s = sentence.replace(/__TAG_(\d+)__/g, (match, index) => {
-            return tagPlaceholders[parseInt(index)];
-        });
-        // Restore atomic blocks (links) last to ensure they stay whole
-        s = s.replace(/__ATOMIC_(\d+)__/g, (match, index) => {
-            return atomicPlaceholders[parseInt(index)];
-        });
+    return rawSentences.map(sentence => {
+        let s = sentence.replace(/__TAG_(\d+)__/g, (m, i) => tagPlaceholders[parseInt(i)]);
+        s = s.replace(/__ATOMIC_(\d+)__/g, (m, i) => atomicPlaceholders[parseInt(i)]);
         return s;
     });
-
-    return restoredSentences;
 }
 
 // --- 2. Renderer Logic ---
@@ -144,15 +80,53 @@ function renderSpinnerGrid() {
     if (!container) return;
     container.innerHTML = '';
 
-    const mainBlock = document.createElement('div');
-    mainBlock.className = 'spinner-block'; 
+    // We will group items visually based on depth-0 blocks
+    let currentGroupDiv = null;
+    let currentGroupBody = null;
+
+    const startNewGroup = (tagLabel) => {
+        // Create Container
+        currentGroupDiv = document.createElement('div');
+        currentGroupDiv.className = 'spinner-group';
+
+        // Create Header
+        const header = document.createElement('header');
+        header.className = 'group-header';
+        header.innerHTML = `
+            <span class="group-tag">${tagLabel}</span>
+            <svg class="chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        `;
+        // Add collapse click
+        header.addEventListener('click', () => currentGroupDiv.classList.toggle('collapsed'));
+        currentGroupDiv.appendChild(header);
+
+        // Create Body
+        currentGroupBody = document.createElement('div');
+        currentGroupBody.className = 'group-body';
+        currentGroupDiv.appendChild(currentGroupBody);
+
+        container.appendChild(currentGroupDiv);
+    };
+
+    // If we have loose content at start, create a default group
+    if (spinnerItems.length > 0 && !spinnerItems[0].isBlockStart) {
+        startNewGroup('Intro / Text');
+    }
 
     spinnerItems.forEach((item, index) => {
+        // Detect Start of Top-Level Block
+        if (item.type === 'structure' && item.isBlockStart && item.depth === 0) {
+            startNewGroup(item.html); // Start new visual group
+        }
+
+        // Determine where to append: current group body or directly to container (if something weird happens)
+        const targetContainer = currentGroupBody || container;
+
         if (item.type === 'structure') {
             const div = document.createElement('div');
             div.className = `structure-tag depth-${item.depth}`;
             div.textContent = item.html;
-            mainBlock.appendChild(div);
+            targetContainer.appendChild(div);
         } 
         else if (item.type === 'content') {
             const rowDiv = document.createElement('div');
@@ -167,11 +141,9 @@ function renderSpinnerGrid() {
                 rowDiv.appendChild(varContainer);
             }
             
-            mainBlock.appendChild(rowDiv);
+            targetContainer.appendChild(rowDiv);
         }
     });
-
-    container.appendChild(mainBlock);
 }
 
 function createBox(content, isOriginal, itemIndex, varIndex) {
@@ -193,7 +165,6 @@ function createBox(content, isOriginal, itemIndex, varIndex) {
     textarea.addEventListener('input', autoResize);
     setTimeout(autoResize, 0);
 
-    // Generate Button (Floating inside wrapper)
     let genBtn = null;
     if (!isOriginal) {
         genBtn = document.createElement('button');
@@ -210,16 +181,13 @@ function createBox(content, isOriginal, itemIndex, varIndex) {
              autoResize();
         });
     } else {
-        textarea.placeholder = "AI will generate here...";
+        textarea.placeholder = "AI...";
         textarea.addEventListener('input', (e) => {
             while(spinnerItems[itemIndex].variations.length <= varIndex) {
                 spinnerItems[itemIndex].variations.push('');
             }
             spinnerItems[itemIndex].variations[varIndex] = e.target.value;
-            
-            if (genBtn) {
-                genBtn.innerHTML = e.target.value ? '🔄' : '⚡';
-            }
+            if (genBtn) genBtn.innerHTML = e.target.value ? '🔄' : '⚡';
             autoResize();
         });
     }
@@ -252,6 +220,30 @@ export function addVariationColumn() {
     renderSpinnerGrid(); 
 }
 
+export function removeVariationColumn() {
+    if (variationColumnCount <= 1) {
+        alert("You must have at least one variation column.");
+        return;
+    }
+    if (!confirm(`Are you sure you want to delete the last column (Column ${variationColumnCount})? Data in this column will be lost.`)) {
+        return;
+    }
+
+    variationColumnCount--;
+    
+    // Clean up data
+    spinnerItems.forEach(item => {
+        if (item.type === 'content') {
+            // Remove items beyond the new count
+            if (item.variations.length > variationColumnCount) {
+                item.variations.length = variationColumnCount;
+            }
+        }
+    });
+    
+    renderSpinnerGrid();
+}
+
 export async function generateSingleVariation(itemIndex, varIndex, textarea, btn) {
     const state = getState();
     const primaryProvider = state.textProviders[0];
@@ -273,13 +265,7 @@ export async function generateSingleVariation(itemIndex, varIndex, textarea, btn
 
     try {
         const prompt = getSpinnerVariationPrompt(originalText, existingVariations);
-
-        const payload = {
-            providerKey: primaryProvider.provider,
-            model: primaryProvider.model,
-            prompt: prompt
-        };
-
+        const payload = { providerKey: primaryProvider.provider, model: primaryProvider.model, prompt: prompt };
         const result = await callAI('generate', payload);
 
         if (result?.success && result.text) {
@@ -287,7 +273,6 @@ export async function generateSingleVariation(itemIndex, varIndex, textarea, btn
             textarea.value = newText;
             spinnerItems[itemIndex].variations[varIndex] = newText;
             textarea.dispatchEvent(new Event('input'));
-            
             btn.innerHTML = '🔄'; 
         } else {
             btn.textContent = '❌';
@@ -326,9 +311,37 @@ export async function handleBulkGenerate() {
     for (let i = 0; i < generateQueue.length; i += CHUNK_SIZE) {
         const chunk = generateQueue.slice(i, i + CHUNK_SIZE);
         const promises = chunk.map(q => {
-            const mainBlock = getElement('spinnerContainer').querySelector('.spinner-block');
-            const rowDiv = mainBlock.children[q.index]; 
-            const boxContainer = rowDiv.children[q.vIdx + 1];
+            // Lookup via DOM logic (a bit brittle but works given we render strictly)
+            // We find the spinner-group, then find the row inside.
+            // Since spinnerItems are linear but DOM is grouped... 
+            // It's safer to re-use single logic or just update state and re-render.
+            // But we want animation.
+            
+            // Let's assume the user won't collapse groups WHILE generating.
+            // We need to find the textarea corresponding to spinnerItems[q.index]
+            
+            // Find all textareas in the whole container
+            const allTextareas = getElement('spinnerContainer').querySelectorAll('.segment-textarea');
+            // Filter for those that are variations at specific indices? No.
+            
+            // Since DOM structure matches spinnerItems *order* (just wrapped in groups)
+            // we can iterate. BUT structure items don't have textareas.
+            // Let's filter items that are 'content' to map to textareas?
+            // No, because structure items are divs.
+            
+            // Robust way: Store the DOM ID in the item during render? No.
+            // Robust way: Just use the raw index.
+            // The N-th "content" item in spinnerItems corresponds to the N-th ".segment-row" in the DOM.
+            
+            const contentItems = spinnerItems.filter(i => i.type === 'content');
+            const contentIndex = contentItems.indexOf(spinnerItems[q.index]);
+            
+            const domRows = document.querySelectorAll('.segment-row');
+            const targetRow = domRows[contentIndex];
+            
+            if (!targetRow) return null;
+            
+            const boxContainer = targetRow.children[q.vIdx + 1];
             const textarea = boxContainer.querySelector('textarea');
             const btn = boxContainer.querySelector('.floating-gen-btn');
 
@@ -345,7 +358,6 @@ export async function handleBulkGenerate() {
 
 export function compileSpintax() {
     let finalSpintax = "";
-
     spinnerItems.forEach(item => {
         if (item.type === 'structure') {
             finalSpintax += item.html + '\n';
@@ -359,7 +371,6 @@ export function compileSpintax() {
             finalSpintax += " "; 
         }
     });
-
     const outputArea = getElement('finalSpintaxOutput');
     if(outputArea) {
         outputArea.value = finalSpintax;

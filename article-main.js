@@ -1,4 +1,4 @@
-// article-main.js (v9.02 - Removed Bad Reference)
+// article-main.js (v9.05 - add remove)
 import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
 import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
 import {
@@ -11,8 +11,7 @@ import { languageOptions, imageProviders, defaultSettings } from './article-conf
 import { handleGenerateStructure, handleGenerateArticle } from './article-single.js';
 import { prepareKeywords, handleGeneratePlan, handleStartBulkGeneration, handleDownloadZip } from './article-bulk.js';
 import { handleGenerateIdeas } from './article-ideas.js';
-// NOTE: We removed old spinner imports (highlightSpintax, handleSpinSelectedText, handleSpinArticle)
-import { prepareSpinnerUI, addVariationColumn, handleBulkGenerate, compileSpintax } from './article-spinner.js';
+import { prepareSpinnerUI, addVariationColumn, removeVariationColumn, handleBulkGenerate, compileSpintax } from './article-spinner.js';
 
 function addProviderToState() {
     const currentState = getState();
@@ -359,11 +358,13 @@ function setupStep3Listeners() {
 
 function setupStep4Listeners() {
     const addVariationColumnBtn = getElement('addVariationColumnBtn');
+    const removeVariationColumnBtn = getElement('removeVariationColumnBtn');
     const bulkGenerateBtn = getElement('bulkGenerateBtn');
     const compileSpintaxBtn = getElement('compileSpintaxBtn');
     const copySpintaxBtn = getElement('copySpintaxBtn');
 
     addVariationColumnBtn?.addEventListener('click', addVariationColumn);
+    removeVariationColumnBtn?.addEventListener('click', removeVariationColumn);
     bulkGenerateBtn?.addEventListener('click', handleBulkGenerate);
     compileSpintaxBtn?.addEventListener('click', compileSpintax);
     

@@ -1,56 +1,73 @@
-/* 9.03 nested + floating gen */
+/* article.css v9.06 */
 body { font-family: 'Inter', sans-serif; }
-
-/* Keep Tailwind @apply for utilities that work if you are using the CDN correctly, 
-   but strictly define structure below */
 
 input, textarea, button { padding: 0 5px !important; }
 button, input, optgroup, select, textarea { border: 2px solid; }
 
-/* --- Spinner Layout (Standard CSS to ensure side-by-side) --- */
-.spinner-block {
-    margin-bottom: 1.5rem;
-    padding: 1rem;
-    border: 2px dashed #d1d5db; /* gray-300 */
+/* --- Spinner Layout (Horizontal Scroll Support) --- */
+
+/* The main container handles the horizontal scroll */
+#spinnerContainer {
+    overflow-x: auto; /* Allow horizontal scrolling */
+    padding-bottom: 1rem; /* Space for scrollbar */
+}
+
+/* Individual Groups (e.g., a Paragraph or List) */
+.spinner-group {
+    margin-bottom: 1rem;
+    border: 2px dashed #d1d5db;
     border-radius: 0.5rem;
     background-color: white;
+    min-width: fit-content; /* Ensure it grows with content */
 }
 
-.spinner-tag, .spinner-tag-end {
-    font-family: monospace;
-    font-size: 0.75rem;
-    color: #9ca3af; /* gray-400 */
+/* Group Header (Collapsible Trigger) */
+.group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background-color: #f3f4f6;
+    border-bottom: 1px dashed #d1d5db;
+    cursor: pointer;
     user-select: none;
+    border-radius: 0.375rem 0.375rem 0 0;
+}
+.group-header:hover { background-color: #e5e7eb; }
+.group-tag { font-family: monospace; font-weight: bold; color: #6b7280; font-size: 0.875rem; }
+
+/* Group Body */
+.group-body {
+    padding: 1rem;
     display: block;
 }
-.spinner-tag { margin-bottom: 0.25rem; }
-.spinner-tag-end { margin-top: 0.25rem; text-align: right; }
+.spinner-group.collapsed .group-body { display: none; }
+.spinner-group.collapsed .group-header { border-bottom: none; border-radius: 0.5rem; }
+.spinner-group.collapsed .chevron-icon { transform: rotate(-90deg); }
 
-/* CRITICAL FIX: Flexbox for side-by-side */
+/* Segment Row */
 .segment-row {
     display: flex;
-    flex-direction: row; /* Force horizontal */
-    gap: 0.5rem;
-    margin-bottom: 0.5rem;
+    flex-direction: row;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
     align-items: flex-start;
-    width: 100%;
-    flex-wrap: nowrap; /* Prevent wrapping */
+    /* Use max-content so rows don't wrap; they extend to the right */
+    width: max-content; 
 }
 
-/* CRITICAL FIX: Box sizing */
+/* Box Container (Fixed Min Width) */
 .segment-box-container {
-    flex: 1 1 0%;
-    min-width: 0;
+    /* Fixed width logic: Grow, Shrink, Basis */
+    flex: 0 0 320px; /* FIX: Force minimum width of 320px per column */
+    width: 320px;    /* Fallback */
     position: relative;
     display: flex;
     flex-direction: column;
 }
 
-/* Wrapper to hold textarea and floating button */
-.input-wrapper {
-    position: relative;
-    width: 100%;
-}
+/* Wrapper & Textarea */
+.input-wrapper { position: relative; width: 100%; }
 
 .segment-textarea {
     width: 100%;
@@ -65,118 +82,61 @@ button, input, optgroup, select, textarea { border: 2px solid; }
     min-height: 3rem;
     box-sizing: border-box;
 }
-
-.segment-textarea:focus {
-    outline: none;
-    border-color: #6366f1;
-    box-shadow: 0 0 0 1px #6366f1;
-}
-
+.segment-textarea:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 1px #6366f1; }
 .segment-textarea.original { background-color: #f9fafb; border-color: #d1d5db; color: #4b5563; }
 .segment-textarea.variation { background-color: white; border-color: #a5b4fc; color: #1f2937; }
 
-.segment-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 0.25rem;
-}
-
+/* Buttons & Labels */
 .floating-gen-btn {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    z-index: 10;
-    font-size: 0.75rem;
-    background-color: #e0e7ff; /* indigo-100 */
-    color: #4338ca; /* indigo-700 */
-    padding: 2px 6px;
-    border-radius: 0.25rem;
-    border: 1px solid #c7d2fe;
-    cursor: pointer;
-    user-select: none;
-    opacity: 0.7;
-    transition: all 0.2s;
+    position: absolute; top: 6px; right: 6px; z-index: 10;
+    font-size: 0.75rem; background-color: #e0e7ff; color: #4338ca;
+    padding: 2px 6px; border-radius: 0.25rem; border: 1px solid #c7d2fe;
+    cursor: pointer; user-select: none; opacity: 0.7; transition: all 0.2s;
+}
+.floating-gen-btn:hover { opacity: 1; background-color: #c7d2fe; transform: scale(1.05); }
+
+.token-count { font-size: 10px; color: #9ca3af; margin-top: 2px; padding-left: 2px; }
+
+.structure-tag {
+    font-family: monospace; color: #9ca3af; font-size: 0.75rem;
+    user-select: none; padding: 2px 0;
 }
 
-.floating-gen-btn:hover { 
-    opacity: 1;
-    background-color: #c7d2fe;
-    transform: scale(1.05);
-}
+/* Indentation */
+.depth-0 { margin-left: 0; }
+.depth-1 { margin-left: .5rem; border-left: 2px solid #e5e7eb; padding-left: 0.5rem; }
+.depth-2 { margin-left: 1rem; border-left: 2px solid #e5e7eb; padding-left: 0.5rem; }
+.depth-3 { margin-left: 1.5rem; border-left: 2px solid #e5e7eb; padding-left: 0.5rem; }
 
-.token-count { 
-    font-size: 10px; 
-    color: #9ca3af; 
-    margin-top: 2px;
-    padding-left: 2px;
-}
-
-.gen-btn {
-    font-size: 0.75rem;
-    background-color: #e0e7ff; /* indigo-100 */
-    color: #4338ca; /* indigo-700 */
-    padding: 2px 6px;
-    border-radius: 0.25rem;
-    cursor: pointer;
-    user-select: none;
-    border: none;
-}
-.gen-btn:hover { background-color: #c7d2fe; }
-
-/* --- Collapsible Sections (Standard CSS) --- */
+/* --- Main Sections --- */
 .compact-section {
-    background-color: white;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    border-radius: 0.5rem;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    background-color: white; padding: 1rem; margin-bottom: 1rem;
+    border-radius: 0.5rem; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
-
 .section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    user-select: none;
-    /* Undo parent padding to span full width */
-    margin: -1rem -1rem 0 -1rem; 
-    padding: 1rem;
-    border-top-left-radius: 0.5rem;
-    border-top-right-radius: 0.5rem;
+    display: flex; justify-content: space-between; align-items: center;
+    cursor: pointer; user-select: none; margin: -1rem -1rem 0 -1rem; padding: 1rem;
+    border-top-left-radius: 0.5rem; border-top-right-radius: 0.5rem;
     transition: background-color 0.2s;
 }
-
 .section-header:hover { background-color: #f9fafb; }
-
 .section-header h2, .section-header h3 { margin: 0; font-size: 1.125rem; font-weight: 600; color: #4b5563; }
+.section-body { margin-top: 1rem; display: block; }
 
-.section-body {
-    margin-top: 1rem;
-    /* CRITICAL FIX: Default is block */
-    display: block; 
+.chevron-icon { width: 20px !important; height: 20px !important; color: #9ca3af; transition: transform 0.2s; transform: rotate(0deg); }
+.compact-section.collapsed .section-body { display: none !important; }
+.compact-section.collapsed .chevron-icon { transform: rotate(-90deg); }
+
+/* Step 5 Fixes */
+.step-5-output {
+    width: 100%;
+    height: 16rem;
+    font-family: monospace; font-size: 0.875rem;
+    padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem;
+    box-sizing: border-box; /* Vital for matching container width */
 }
 
-/* Icon Styling */
-.chevron-icon {
-    width: 20px !important;
-    height: 20px !important;
-    color: #9ca3af;
-    transition: transform 0.2s;
-    transform: rotate(0deg);
-}
-
-/* --- COLLAPSED STATE --- */
-/* When the parent has 'collapsed', hide body and rotate icon */
-.compact-section.collapsed .section-body {
-    display: none !important;
-}
-
-.compact-section.collapsed .chevron-icon {
-    transform: rotate(-90deg);
-}
-
-/* --- Existing Helpers (Keep these) --- */
+/* Helpers */
 .compact-label { display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.25rem; white-space: nowrap; }
 .compact-input, .compact-select, .compact-textarea { display: block; width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); font-size: 0.875rem; }
 .compact-button { display: inline-flex; align-items: center; padding: 0.375rem 0.75rem; border: 1px solid transparent; font-size: 0.875rem; font-weight: 500; border-radius: 0.375rem; color: white; background-color: #4f46e5; cursor: pointer; }
@@ -187,26 +147,3 @@ button, input, optgroup, select, textarea { border: 2px solid; }
 .loader { border: 4px solid #f3f3f3; border-top: 4px solid #6366f1; border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; display: inline-block; margin-left: 6px; vertical-align: middle; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 .hidden { display: none; }
-
-/* Indentation for nested structures */
-.depth-0 { margin-left: 0; }
-.depth-1 { margin-left: .5rem; border-left: 2px solid #e5e7eb; padding-left: 0.5rem; }
-.depth-2 { margin-left: 1rem; border-left: 2px solid #e5e7eb; padding-left: 0.5rem; }
-.depth-3 { margin-left: 1.5rem; border-left: 2px solid #e5e7eb; padding-left: 0.5rem; }
-
-/* structural tags (ul, li, p) are mostly visual cues now */
-.structure-tag {
-    font-family: monospace;
-    color: #9ca3af;
-    font-size: 0.75rem;
-    user-select: none;
-    padding: 2px 0;
-}
-
-/* Ensure spinner blocks contain the flow */
-.spinner-block {
-    @apply mb-6 p-4 border-2 border-dashed border-gray-300 rounded-lg bg-white;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}

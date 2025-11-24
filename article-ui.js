@@ -1,4 +1,4 @@
-// article-ui.js (v9.01 - Updated ID Map)
+// article-ui.js (v9.05 - add remove)
 import { languageOptions, defaultSettings } from './article-config.js';
 import { getState, updateState, getBulkPlan, addProviderToState, removeProviderFromState, updateProviderInState, updateCustomModelState, getCustomModelState } from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2, delay } from './article-helpers.js';
@@ -98,14 +98,15 @@ const elementIdMap = {
     generatedArticleTextarea: 'generated_article',
     htmlPreviewDiv: 'html_preview',
     previewHtmlCheckbox: 'preview_html_checkbox',
-    prepareSpinnerBtn: 'prepareSpinnerBtn', // NEW
+    prepareSpinnerBtn: 'prepareSpinnerBtn',
 
     // Step 4
     step4Section: 'step4',
-    addVariationColumnBtn: 'addVariationColumnBtn', // NEW
-    bulkGenerateBtn: 'bulkGenerateBtn', // NEW
-    spinnerContainer: 'spinnerContainer', // NEW
-    compileSpintaxBtn: 'compileSpintaxBtn', // NEW
+    addVariationColumnBtn: 'addVariationColumnBtn',
+    removeVariationColumnBtn: 'removeVariationColumnBtn',
+    bulkGenerateBtn: 'bulkGenerateBtn',
+    spinnerContainer: 'spinnerContainer',
+    compileSpintaxBtn: 'compileSpintaxBtn',
 
     // Step 5
     step5Section: 'step5',
