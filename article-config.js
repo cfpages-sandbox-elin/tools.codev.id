@@ -1,4 +1,4 @@
-// article-config.js (v9.07 fix save state)
+// article-config.js (v9.11 google scraping)
 export const CLOUDFLARE_FUNCTION_URL = '/ai-api';
 export const GITHUB_API_BASE = 'https://api.github.com';
 
@@ -90,4 +90,21 @@ export const defaultSettings = {
     spinnerVariationCount: 1
 };
 
-console.log("article-config.js loaded (v8.18 Humanize content)");
+export const keywordScraperConfig = {
+    languages: {
+        "en": {
+            name: "English (Global)",
+            code: "en",
+            gl: "us", // Google Location (Geo)
+            questions: ["what", "who", "where", "when", "why", "how", "can", "is"]
+        },
+        "id": {
+            name: "Indonesia",
+            code: "id",
+            gl: "id",
+            questions: ["apa", "siapa", "dimana", "kapan", "kenapa", "mengapa", "bagaimana", "cara"]
+        }
+    }
+};
+
+console.log("article-config.js loaded (v9.11 G Scraper)");

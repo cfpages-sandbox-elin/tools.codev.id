@@ -1,4 +1,4 @@
-// article-ui.js (v9.10 tabbed flow + FIX)
+// article-ui.js (v9.11 google scraping)
 import { languageOptions, defaultSettings } from './article-config.js';
 import { getState, updateState, getBulkPlan, addProviderToState, removeProviderFromState, updateProviderInState, updateCustomModelState, getCustomModelState } from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2, delay } from './article-helpers.js';
@@ -16,11 +16,13 @@ const elementIdMap = {
     // Tabs
     spintaxTabBtn: 'spintaxTabBtn',
     bulkTabBtn: 'bulkTabBtn',
+    // Step 1
     step1Section: 'step1',
     step1Header: 'step1Header',
     keywordInput: 'keyword',
     bulkKeywordsContainer: 'bulkKeywordsContainer',
     bulkKeywords: 'bulkKeywords',
+    ideaLangSelect: 'ideaLangSelect',
     generateIdeasBtn: 'generateIdeasBtn',
     ideasLoadingIndicator: 'ideasLoadingIndicator',
     ideasProgressContainer: 'ideasProgressContainer',
@@ -66,6 +68,7 @@ const elementIdMap = {
     planLoadingIndicator: 'planLoadingIndicator',
     resetDataBtn: 'resetDataBtn',
     forceReloadBtn: 'forceReloadBtn',
+    // Step 1.5
     step1_5Section: 'step1_5',
     planningTableContainer: 'planningTableContainer',
     startBulkGenerationBtn: 'startBulkGenerationBtn',
@@ -78,6 +81,7 @@ const elementIdMap = {
     bulkUploadProgressContainer: 'bulkUploadProgressContainer',
     bulkUploadProgressBar: 'bulkUploadProgressBar',
     bulkUploadProgressText: 'bulkUploadProgressText',
+    // Step 2
     step2Section: 'step2',
     articleTitleInput: 'articleTitle',
     structureContainer: 'structureContainer',

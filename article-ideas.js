@@ -1,133 +1,143 @@
-// article-ideas.js v8.21 refactor prompts
+// article-ideas.js (v9.0 Google Scraper Edition)
 import { getState, updateState } from './article-state.js';
-import { logToConsole, callAI, delay, disableElement, showLoading, showElement } from './article-helpers.js';
+import { logToConsole, delay, disableElement, showLoading, showElement } from './article-helpers.js';
 import { getElement, updateProgressBar } from './article-ui.js';
-import { getIdeaPrompt } from './article-prompts.js';
+import { keywordScraperConfig } from './article-config.js';
 
-const W_H_QUESTIONS = {
-    "Who": "keywords that explore 'Who is related to/affected by/involved with [SEED_KEYWORD]?' or 'Who is the target audience for [SEED_KEYWORD]?'",
-    "What": "keywords that explore 'What is [SEED_KEYWORD]?' or 'What are the components/types/aspects/features of [SEED_KEYWORD]?'",
-    "When": "keywords that explore 'When is [SEED_KEYWORD] relevant/used/happening?' or 'What is the history/timeline/seasonality of [SEED_KEYWORD]?'",
-    "Where": "keywords that explore 'Where is [SEED_KEYWORD] found/applicable/relevant/used?' or 'Where can one learn about/get [SEED_KEYWORD]?'",
-    "Why": "keywords that explore 'Why is [SEED_KEYWORD] important/used/beneficial?' or 'What are the reasons/motivations/problems solved by [SEED_KEYWORD]?'",
-    "How": "keywords that explore 'How does [SEED_KEYWORD] work?' or 'How to use/do/achieve/fix/learn [SEED_KEYWORD]?' or 'What are methods/techniques related to [SEED_KEYWORD]?'"
-};
-
-function parseIdeaResponse(responseText) {
-    if (!responseText || typeof responseText !== 'string') return [];
-    return responseText
-        .split(',')
-        .map(kw => kw.trim().replace(/^["']+|["']+$|^\d+\.\s*|^\-\s*|^\*\s*/g, '')) // Clean quotes, list markers
-        .filter(kw => kw.length > 2); // Filter out very short/empty results
+// Helper to batch array processing
+function chunkArray(array, size) {
+    const result = [];
+    for (let i = 0; i < array.length; i += size) {
+        result.push(array.slice(i, i + size));
+    }
+    return result;
 }
-
-function cleanAndUniqueKeywords(keywords) {
-    const cleaned = keywords
-        .map(kw => kw
-            .replace(/\(\d+\)/g, '') // Remove numbers in parentheses
-            .replace(/\s+/g, ' ')   // Collapse whitespace
-            .trim()
-        )
-        .filter(kw => kw.length > 0);
-    return [...new Set(cleaned)];
-}
-
 
 export async function handleGenerateIdeas() {
-    logToConsole("Starting article idea generation...", "info");
+    logToConsole("Starting Google Suggest scraping...", "info");
+    
     const ui = {
         bulkKeywordsTextarea: getElement('bulkKeywords'),
         generateIdeasBtn: getElement('generateIdeasBtn'),
-        ideasLoadingIndicator: getElement('ideasLoadingIndicator'),
-        // Add new UI elements
+        ideaLangSelect: getElement('ideaLangSelect'),
+        loadingIndicator: getElement('ideasLoadingIndicator'),
         progressContainer: getElement('ideasProgressContainer'),
         progressBar: getElement('ideasProgressBar'),
         progressText: getElement('ideasProgressText')
     };
 
-    if (!ui.bulkKeywordsTextarea || !ui.generateIdeasBtn || !ui.progressContainer) {
-        logToConsole("Required UI elements for idea generation are missing.", "error");
-        alert("Error: Could not find necessary UI elements for idea generation.");
+    if (!ui.bulkKeywordsTextarea || !ui.ideaLangSelect) {
+        logToConsole("UI elements missing for idea generation.", "error");
         return;
     }
 
-    const existingKeywords = ui.bulkKeywordsTextarea.value.split('\n').map(kw => kw.trim()).filter(kw => kw.length > 0);
-    const seedKeyword = existingKeywords[0];
-
-    if (!seedKeyword) {
-        alert("Please enter at least one seed keyword in the 'Bulk Keywords' area to generate ideas.");
-        logToConsole("Seed keyword missing for idea generation.", "warn");
+    // 1. Get Seed Keyword
+    const rawInput = ui.bulkKeywordsTextarea.value.trim();
+    if (!rawInput) {
+        alert("Please enter a seed keyword in the text area first.");
         return;
     }
+    // Take the first line as the seed
+    const seedKeyword = rawInput.split('\n')[0].trim();
+    
+    // 2. Get Settings
+    const langKey = ui.ideaLangSelect.value; // 'en' or 'id'
+    const config = keywordScraperConfig.languages[langKey] || keywordScraperConfig.languages['en'];
+    
+    logToConsole(`Scraping ideas for seed: "${seedKeyword}" (${config.name})...`, "info");
 
-    logToConsole(`Generating ideas based on seed keyword: "${seedKeyword}"`, "info");
+    // 3. Generate Query List
+    let queriesToFetch = [];
 
+    // A. Base seed
+    queriesToFetch.push(seedKeyword);
+
+    // B. Alphabet (A-Z) -> "seed a", "seed b"...
+    const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
+    alphabet.forEach(char => {
+        queriesToFetch.push(`${seedKeyword} ${char}`);
+    });
+
+    // C. Questions (5W1H) -> "what seed", "how seed"...
+    if (config.questions) {
+        config.questions.forEach(q => {
+            queriesToFetch.push(`${q} ${seedKeyword}`);
+        });
+    }
+
+    logToConsole(`Generated ${queriesToFetch.length} search patterns to check.`, "info");
+
+    // 4. Execute Scraping
     disableElement(ui.generateIdeasBtn, true);
-    showLoading(ui.ideasLoadingIndicator, true);
-    // Initialize and show the progress bar
-    updateProgressBar(ui.progressBar, ui.progressContainer, ui.progressText, 0, 1, "Initializing...");
+    showLoading(ui.loadingIndicator, true);
+    showElement(ui.progressContainer, true);
+    showElement(ui.progressText, true);
 
-    const state = getState();
-    let allGeneratedKeywords = [];
-    const questionEntries = Object.entries(W_H_QUESTIONS);
-    const totalSteps = questionEntries.length;
+    let allSuggestions = new Set();
+    
+    // Batching: Send 5 queries per request to backend
+    const batches = chunkArray(queriesToFetch, 5);
+    let processedBatches = 0;
 
     try {
-        for (let i = 0; i < totalSteps; i++) {
-            const [questionType, questionDetail] = questionEntries[i];
-            
-            // Update status text for the current step
-            ui.progressText.textContent = `Generating ideas for "${questionType}"... (${i + 1}/${totalSteps})`;
-            logToConsole(`Generating ideas for aspect: ${questionType}`, "info");
-            
-            // REFACTORED
-            const prompt = getIdeaPrompt(seedKeyword, questionType, questionDetail.replace(/\[SEED_KEYWORD\]/g, seedKeyword));
-            const payload = {
-                providerKey: state.textProvider,
-                model: state.textModel,
-                prompt: prompt
-            };
+        for (const batch of batches) {
+            // Update UI
+            processedBatches++;
+            const pct = Math.round((processedBatches / batches.length) * 100);
+            updateProgressBar(ui.progressBar, ui.progressContainer, ui.progressText, processedBatches, batches.length, "Scraping batch ");
 
-            const result = await callAI('generate', payload, null, null); 
+            // Call Backend
+            const response = await fetch('/google-browser', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    queries: batch,
+                    lang: config.code,
+                    gl: config.gl
+                })
+            });
 
-            if (result?.success && result.text) {
-                const parsedKeywords = parseIdeaResponse(result.text);
-                logToConsole(`Generated ${parsedKeywords.length} ideas for ${questionType}: ${parsedKeywords.join('; ')}`, "info");
-                allGeneratedKeywords.push(...parsedKeywords);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && Array.isArray(data.suggestions)) {
+                    data.suggestions.forEach(s => allSuggestions.add(s));
+                }
             } else {
-                logToConsole(`Failed to generate ideas for ${questionType}. Error: ${result?.error || 'No text returned'}`, "error");
+                logToConsole(`Batch failed: ${response.status}`, "warn");
             }
-            
-            // Update progress bar after each step
-            const progressPercent = Math.round(((i + 1) / totalSteps) * 100);
-            ui.progressBar.style.width = `${progressPercent}%`;
 
+            // Polite delay to prevent backend/google rate limiting
             await delay(300); 
         }
 
-        ui.progressText.textContent = 'Finalizing and de-duplicating keyword list...';
-        const uniqueGeneratedKeywords = cleanAndUniqueKeywords(allGeneratedKeywords);
-        const combinedKeywords = [...existingKeywords, ...uniqueGeneratedKeywords];
-        const finalUniqueKeywords = cleanAndUniqueKeywords(combinedKeywords);
+        // 5. Finalize
+        const uniqueList = Array.from(allSuggestions);
+        // Filter out the exact seed if desired, or keep it.
+        // Let's sort them alphabetically
+        uniqueList.sort();
 
-        const newTextareaValue = finalUniqueKeywords.join('\n');
-        ui.bulkKeywordsTextarea.value = newTextareaValue;
-        updateState({ bulkKeywordsContent: newTextareaValue }); // Save cleaned list to state
+        // Append to existing text area (or replace? usually append is safer so user doesn't lose other stuff)
+        // User prompt implied using it for planning, so let's put the seed at top, then results.
+        
+        const finalText = [seedKeyword, ...uniqueList].join('\n');
+        ui.bulkKeywordsTextarea.value = finalText;
+        
+        // Update state
+        updateState({ bulkKeywordsContent: finalText });
 
-        logToConsole(`Idea generation complete. Total unique keywords: ${finalUniqueKeywords.length}. Populated bulk keywords textarea.`, "success");
-        alert(`Generated ${uniqueGeneratedKeywords.length} new unique ideas. The keyword list has been updated.`);
+        logToConsole(`Scraping complete. Found ${uniqueList.length} unique keywords.`, "success");
+        ui.progressText.textContent = `Done! Found ${uniqueList.length} keywords.`;
 
     } catch (error) {
-        logToConsole(`An error occurred during idea generation: ${error.message}`, 'error');
-        alert('An error occurred during idea generation. Please check the console log.');
+        logToConsole(`Scraping error: ${error.message}`, 'error');
+        alert(`Error generating ideas: ${error.message}`);
     } finally {
-        // Hide all indicators
-        showLoading(ui.ideasLoadingIndicator, false);
+        showLoading(ui.loadingIndicator, false);
         disableElement(ui.generateIdeasBtn, false);
-        showElement(ui.progressContainer, false);
-        showElement(ui.progressText, false);
-        ui.progressBar.style.width = '0%';
+        // Keep progress bar shown for a moment to say "Done"
+        setTimeout(() => {
+            showElement(ui.progressContainer, false);
+            showElement(ui.progressText, false);
+        }, 3000);
     }
 }
-
-console.log("article-ideas.js (v8.21 refactor prompts)");
