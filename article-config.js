@@ -1,4 +1,4 @@
-// article-config.js (v9.11 google scraping)
+// article-config.js (v9.11 google scraping++)
 export const CLOUDFLARE_FUNCTION_URL = '/ai-api';
 export const GITHUB_API_BASE = 'https://api.github.com';
 
@@ -22,6 +22,27 @@ export const imageProviders = {
     }
 };
 
+// --- Keyword Scraper Configuration ---
+// Updated for 5W + 2H (Added "how to")
+export const keywordScraperConfig = {
+    languages: {
+        "en": {
+            name: "English (Global)",
+            code: "en",
+            gl: "us",
+            // Added "how to"
+            questions: ["what", "who", "where", "when", "why", "how", "how to", "can", "is", "best", "top"]
+        },
+        "id": {
+            name: "Indonesia",
+            code: "id",
+            gl: "id",
+            // "cara" is essentially "how to". Added "apakah" (is/can).
+            questions: ["apa", "siapa", "dimana", "kapan", "kenapa", "mengapa", "bagaimana", "cara", "apakah", "tips"]
+        }
+    }
+};
+
 // --- Storage Keys ---
 export const storageKeys = {
     SITEMAP: 'aiArticleSpinner_sitemapUrls_v1',
@@ -33,14 +54,12 @@ export const storageKeys = {
 
 // --- Default Application Settings ---
 export const defaultSettings = {
-    // AI Configuration
     textProviders: [{ provider: 'openai', model: 'gpt-5-mini', useCustom: false, customModel: '' }],
     imageProvider: 'google',
     imageModel: 'imagen-3.0-generate-002',
     useCustomImageModel: false,
     customImageModel: '',
     
-    // Article Specifications
     keyword: '',
     bulkMode: false,
     bulkKeywordsContent: '',
@@ -63,7 +82,6 @@ export const defaultSettings = {
     customSpecs: '',
     batchSize: 30,
 
-    // Image Generation
     generateImages: false,
     numImages: 1,
     imageAspectRatio: '1:1',
@@ -75,36 +93,16 @@ export const defaultSettings = {
     githubRepoUrl: '',
     githubCustomPath: '',
 
-    // Internal Linking & Workflow
     linkTypeInternal: true,
     sitemapFetchedUrl: '',
     sitemapUrls: [],
     
-    // Article Content State
     articleTitle: '',
     articleStructure: '',
     generatedArticleContent: '',
-
-    // Spinner State
+    
     spinnerData: [], 
     spinnerVariationCount: 1
 };
 
-export const keywordScraperConfig = {
-    languages: {
-        "en": {
-            name: "English (Global)",
-            code: "en",
-            gl: "us", // Google Location (Geo)
-            questions: ["what", "who", "where", "when", "why", "how", "can", "is"]
-        },
-        "id": {
-            name: "Indonesia",
-            code: "id",
-            gl: "id",
-            questions: ["apa", "siapa", "dimana", "kapan", "kenapa", "mengapa", "bagaimana", "cara"]
-        }
-    }
-};
-
-console.log("article-config.js loaded (v9.11 G Scraper)");
+console.log("article-config.js loaded (v9.11 GScraper+)");

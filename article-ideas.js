@@ -1,20 +1,11 @@
-// article-ideas.js (v9.0 Google Scraper Edition)
+// article-ideas.js (v9.11 One-by-One Scraper)
 import { getState, updateState } from './article-state.js';
 import { logToConsole, delay, disableElement, showLoading, showElement } from './article-helpers.js';
 import { getElement, updateProgressBar } from './article-ui.js';
 import { keywordScraperConfig } from './article-config.js';
 
-// Helper to batch array processing
-function chunkArray(array, size) {
-    const result = [];
-    for (let i = 0; i < array.length; i += size) {
-        result.push(array.slice(i, i + size));
-    }
-    return result;
-}
-
 export async function handleGenerateIdeas() {
-    logToConsole("Starting Google Suggest scraping...", "info");
+    logToConsole("Starting Google Suggest scraping (Sequential Mode)...", "info");
     
     const ui = {
         bulkKeywordsTextarea: getElement('bulkKeywords'),
@@ -37,7 +28,6 @@ export async function handleGenerateIdeas() {
         alert("Please enter a seed keyword in the text area first.");
         return;
     }
-    // Take the first line as the seed
     const seedKeyword = rawInput.split('\n')[0].trim();
     
     // 2. Get Settings
@@ -49,8 +39,8 @@ export async function handleGenerateIdeas() {
     // 3. Generate Query List
     let queriesToFetch = [];
 
-    // A. Base seed
-    queriesToFetch.push(seedKeyword);
+    // A. Base seed WITH SPACE (Important: triggers specific suggestions)
+    queriesToFetch.push(seedKeyword + ' '); 
 
     // B. Alphabet (A-Z) -> "seed a", "seed b"...
     const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
@@ -58,40 +48,34 @@ export async function handleGenerateIdeas() {
         queriesToFetch.push(`${seedKeyword} ${char}`);
     });
 
-    // C. Questions (5W1H) -> "what seed", "how seed"...
+    // C. Questions (5W+2H) -> "what seed", "how to seed"...
     if (config.questions) {
         config.questions.forEach(q => {
             queriesToFetch.push(`${q} ${seedKeyword}`);
         });
     }
 
-    logToConsole(`Generated ${queriesToFetch.length} search patterns to check.`, "info");
+    logToConsole(`Generated ${queriesToFetch.length} search patterns. Executing sequential fetch...`, "info");
 
-    // 4. Execute Scraping
+    // 4. Execute Scraping (One by One)
     disableElement(ui.generateIdeasBtn, true);
     showLoading(ui.loadingIndicator, true);
     showElement(ui.progressContainer, true);
     showElement(ui.progressText, true);
 
     let allSuggestions = new Set();
-    
-    // Batching: Send 5 queries per request to backend
-    const batches = chunkArray(queriesToFetch, 5);
-    let processedBatches = 0;
+    let completedRequests = 0;
 
     try {
-        for (const batch of batches) {
-            // Update UI
-            processedBatches++;
-            const pct = Math.round((processedBatches / batches.length) * 100);
-            updateProgressBar(ui.progressBar, ui.progressContainer, ui.progressText, processedBatches, batches.length, "Scraping batch ");
-
-            // Call Backend
+        // Loop through every single query
+        for (const singleQuery of queriesToFetch) {
+            // Call Backend with a single item array
+            // We don't use chunking anymore. This reduces Cloudflare CPU time per request.
             const response = await fetch('/google-browser', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    queries: batch,
+                    queries: [singleQuery], // Send as array of 1
                     lang: config.code,
                     gl: config.gl
                 })
@@ -103,26 +87,26 @@ export async function handleGenerateIdeas() {
                     data.suggestions.forEach(s => allSuggestions.add(s));
                 }
             } else {
-                logToConsole(`Batch failed: ${response.status}`, "warn");
+                logToConsole(`Fetch failed for "${singleQuery}"`, "warn");
             }
 
-            // Polite delay to prevent backend/google rate limiting
-            await delay(300); 
+            // Update UI
+            completedRequests++;
+            const pct = Math.round((completedRequests / queriesToFetch.length) * 100);
+            updateProgressBar(ui.progressBar, ui.progressContainer, ui.progressText, completedRequests, queriesToFetch.length, "Fetching ");
+
+            // Small delay to be polite to Google (even though we are proxying) and allow UI updates
+            await delay(150); 
         }
 
         // 5. Finalize
         const uniqueList = Array.from(allSuggestions);
-        // Filter out the exact seed if desired, or keep it.
-        // Let's sort them alphabetically
         uniqueList.sort();
 
-        // Append to existing text area (or replace? usually append is safer so user doesn't lose other stuff)
-        // User prompt implied using it for planning, so let's put the seed at top, then results.
-        
+        // Update Textarea: Seed first, then results
         const finalText = [seedKeyword, ...uniqueList].join('\n');
         ui.bulkKeywordsTextarea.value = finalText;
         
-        // Update state
         updateState({ bulkKeywordsContent: finalText });
 
         logToConsole(`Scraping complete. Found ${uniqueList.length} unique keywords.`, "success");
@@ -134,7 +118,7 @@ export async function handleGenerateIdeas() {
     } finally {
         showLoading(ui.loadingIndicator, false);
         disableElement(ui.generateIdeasBtn, false);
-        // Keep progress bar shown for a moment to say "Done"
+
         setTimeout(() => {
             showElement(ui.progressContainer, false);
             showElement(ui.progressText, false);
