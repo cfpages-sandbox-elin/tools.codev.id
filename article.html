@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Article Generator & Spinner v9.10</title>
+    <title>AI Article Generator & Spinner v9.11</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link rel="stylesheet" href="article.css">
@@ -197,6 +197,7 @@
                     <textarea id="custom_specs" rows="2" class="compact-textarea col-span-5" placeholder="Any other specific instructions..."></textarea> 
                 </div> 
             </div>
+
             <div class="mt-4 pt-4 border-t border-gray-200"> 
                 <div class="flex items-center mb-3"> 
                     <input type="checkbox" id="generateImages" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mr-2"> 
@@ -286,7 +287,8 @@
                         <p class="text-xs text-gray-500 mt-1">Default path based on language (e.g., /articles/ or /artikel/).</p> 
                     </div> 
                 </div> 
-            </div> 
+            </div>
+
             <div class="mt-4 flex justify-end items-center gap-x-4"> 
                 <div id="batchSizeContainer" class="hidden items-center gap-x-2">
                     <label for="batchSizeInput" class="compact-label !mb-0">Batch Size 📦:</label>
@@ -305,6 +307,7 @@
         </div>
         <div class="section-body">
             <p class="text-sm text-gray-600 mb-2">Review and optionally edit the generated plan before starting bulk generation.</p> 
+            
             <div id="planningTableContainer"> 
                 <table id="planningTable" class="min-w-full divide-y divide-gray-200 text-sm"> 
                     <thead> 
@@ -319,17 +322,50 @@
                     </thead> 
                     <tbody class="bg-white divide-y divide-gray-200"> </tbody> 
                 </table> 
-            </div> 
+            </div>
+
+            <div class="mb-4 p-4 bg-gray-50 rounded border border-gray-200">
+                <h3 class="text-sm font-semibold text-gray-700 mb-2">Delivery Options 🚚</h3>
+                
+                <div class="flex gap-4 mb-3">
+                    <label class="flex items-center text-sm">
+                        <input type="radio" name="deliveryMode" value="zip" checked class="mr-1"> Download ZIP
+                    </label>
+                    <label class="flex items-center text-sm">
+                        <input type="radio" name="deliveryMode" value="wordpress" class="mr-1"> Post to WordPress
+                    </label>
+                    <label class="flex items-center text-sm">
+                        <input type="radio" name="deliveryMode" value="github" class="mr-1"> Push to GitHub
+                    </label>
+                </div>
+
+                <!-- WP Options -->
+                <div id="wpOptions" class="hidden grid grid-cols-2 gap-3 text-sm">
+                    <input type="url" id="wpUrl" class="compact-input" placeholder="https://your-site.com">
+                    <input type="text" id="wpUsername" class="compact-input" placeholder="Username">
+                    <input type="password" id="wpPassword" class="compact-input" placeholder="App Password">
+                    <div class="col-span-2 flex gap-2 items-center">
+                        <label>Date Range:</label>
+                        <input type="date" id="wpDateStart" class="compact-input w-auto">
+                        <span>to</span>
+                        <input type="date" id="wpDateEnd" class="compact-input w-auto">
+                    </div>
+                </div>
+            </div>
+
             <div class="mt-4 text-right space-x-2"> 
                 <button id="startBulkGenerationBtn" class="compact-button"> Start Bulk Generation ▶️ <span id="bulkLoadingIndicator" class="hidden"><span class="loader"></span></span> </button> 
                 <button id="downloadBulkZipBtn" class="compact-button bg-green-600 hover:bg-green-700"> Download as Zip 💾 </button> 
             </div> 
+
             <div id="bulkGenerationProgress" class="text-sm text-center text-gray-600 mt-2 hidden">Generating article 
                 <span id="bulkCurrentNum">1</span> of <span id="bulkTotalNum">1</span> (<span id="bulkCurrentKeyword">...</span>)...
             </div> 
+
             <div id="bulkUploadProgressContainer" class="w-full bg-gray-200 rounded-full h-2.5 mt-2 hidden"> 
                 <div id="bulkUploadProgressBar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div> 
-            </div> 
+            </div>
+
             <div id="bulkUploadProgressText" class="text-sm text-center text-gray-600 mt-1 hidden">Uploading article 1 of 1...</div> 
         </div>
     </section>
@@ -501,6 +537,8 @@
     <script type="module" src="article-editor.js"></script>
     <script type="module" src="article-bulk.js"></script>
     <script type="module" src="article-ideas.js"></script>
+    <script type="module" src="article-planning.js"></script>
+    <script type="module" src="article-delivery.js"></script>
     <script type="module" src="article-spinner.js"></script>
     <script type="module" src="article-main.js"></script>
 

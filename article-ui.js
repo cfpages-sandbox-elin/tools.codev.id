@@ -1,4 +1,4 @@
-// article-ui.js (v9.11 google scraping)
+// article-ui.js (v9.11 orchestrator)
 import { languageOptions, defaultSettings } from './article-config.js';
 import { getState, updateState, getBulkPlan, addProviderToState, removeProviderFromState, updateProviderInState, updateCustomModelState, getCustomModelState } from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2, delay } from './article-helpers.js';
@@ -865,6 +865,24 @@ export function renderPlanningTable(plan) {
         cell = row.insertCell();
         cell.classList.add('px-3', 'py-2', 'whitespace-nowrap', 'text-xs');
         updatePlanItemStatusUI(row, item.status || 'Pending', item.error);
+
+        // Add Date Column
+        cell = row.insertCell();
+        cell.className = 'px-3 py-2 text-xs text-gray-500';
+        cell.textContent = item.scheduledDate ? new Date(item.scheduledDate).toLocaleDateString() : '-';
+
+        // Add Actions Column (Delete)
+        cell = row.insertCell();
+        const delBtn = document.createElement('button');
+        delBtn.textContent = '🗑️';
+        delBtn.className = 'text-red-500 hover:text-red-700 px-2';
+        delBtn.onclick = () => {
+            // Import dynamically to avoid circular deps if possible, or pass callback
+            // Better: Dispatch custom event
+            const event = new CustomEvent('delete-plan-row', { detail: { index } });
+            document.dispatchEvent(event);
+        };
+        cell.appendChild(delBtn);
     });
 }
 

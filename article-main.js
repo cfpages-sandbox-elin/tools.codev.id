@@ -1,4 +1,4 @@
-// article-main.js (v9.10 tabbed flow + FIX)
+// article-main.js (v9.11 orchestrator)
 import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
 import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
 import {
@@ -13,6 +13,7 @@ import { prepareKeywords, handleGeneratePlan, handleStartBulkGeneration, handleD
 import { handleGenerateIdeas } from './article-ideas.js';
 import { initStep3Editor, setViewMode, setupEditorToolbar, loadEditorFromState } from './article-editor.js';
 import { prepareSpinnerUI, addVariationColumn, removeVariationColumn, handleBulkGenerate, compileSpintax, loadSpinnerData } from './article-spinner.js';
+import { deletePlanRow, handleGeneratePlan } from './article-planning.js';
 
 function addProviderToState() {
     const currentState = getState();
@@ -429,6 +430,7 @@ function setupBulkModeListeners() {
 
     startBulkGenerationBtn?.addEventListener('click', handleStartBulkGeneration);
     downloadBulkZipBtn?.addEventListener('click', handleDownloadZip);
+
     planningTableBody?.addEventListener('change', (e) => {
         if (e.target.tagName === 'INPUT' && e.target.dataset.field) {
             const row = e.target.closest('tr');
@@ -445,13 +447,33 @@ function setupBulkModeListeners() {
             }
         }
     });
+
+    // Handle Row Deletion
+    document.addEventListener('delete-plan-row', (e) => {
+        deletePlanRow(e.detail.index);
+    });
+
+    // Handle Delivery Mode Toggle
+    const deliveryRadios = document.querySelectorAll('input[name="deliveryMode"]');
+    const wpOptions = getElement('wpOptions');
+
+    deliveryRadios.forEach(r => r.addEventListener('change', (e) => {
+        updateState({ deliveryMode: e.target.value });
+        if (wpOptions) showElement(wpOptions, e.target.value === 'wordpress');
+        // Re-calc dates if WP selected
+        if (e.target.value === 'wordpress') {
+            // Trigger recalc via planning
+            deletePlanRow(-1); // Hacky trigger to refresh table/dates? 
+            // Better: create explicit recalc function.
+        }
+    }));
 }
 
 // --- Initialize ---
 logToConsole("article-main.js evaluating. Setting up DOMContentLoaded listener.", "debug");
 document.addEventListener('DOMContentLoaded', initializeApp, { once: true });
 
-console.log("article-main.js loaded (v9.01 Refactor)");
+console.log("article-main.js loaded (v9.11 orchestrator)");
 
 // Global error handler for unhandled promise rejections
 window.addEventListener('unhandledrejection', event => {

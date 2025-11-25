@@ -1,386 +1,138 @@
-// article-bulk.js (v8.24 multi ai provider)
-import { getState, getBulkPlan, updateBulkPlanItem, addBulkArticle, saveBulkArticlesState, getBulkArticle, getAllBulkArticles, setBulkPlan, updateState } from './article-state.js';
-import { logToConsole, callAI, sanitizeFilename, slugify, getArticleOutlinesV2, constructImagePrompt, delay, showElement, disableElement } from './article-helpers.js';
-import { getElement, updatePlanItemStatusUI, updateProgressBar, hideProgressBar, renderPlanningTable } from './article-ui.js';
-import { languageOptions } from './article-config.js';
-import { getPlanPrompt, getBulkStructurePrompt, getBulkSectionTextPrompt } from './article-prompts.js';
+// article-bulk.js (v9.11 orchestrator)
+import { getState, getBulkPlan, updateBulkPlanItem, addBulkArticle, saveBulkArticlesState, getAllBulkArticles } from './article-state.js';
+import { logToConsole, callAI, delay, showElement, disableElement, getArticleOutlinesV2, slugify, constructImagePrompt } from './article-helpers.js';
+import { getElement, updatePlanItemStatusUI } from './article-ui.js';
+import { getBulkStructurePrompt, getBulkSectionTextPrompt } from './article-prompts.js';
+import { deliverArticle, generateZipBundle } from './article-delivery.js';
 
-let bulkImagesToUpload = [];
 let isBulkRunning = false;
-let currentBulkPlan = []; // Keep a local copy during generation
-
-// --- Parse and Prepare Keywords ---
-export function prepareKeywords() {
-    const ui = { bulkKeywords: getElement('bulkKeywords') };
-    if (!ui.bulkKeywords) return [];
-    const rawKeywords = ui.bulkKeywords.value.split('\n');
-    const cleanedKeywords = rawKeywords
-        .map(kw => kw
-            .replace(/\(\d+\)/g, '') // Remove numbers in parentheses, e.g., (24)
-            .replace(/\s+/g, ' ')    // Collapse consecutive whitespace characters into a single space
-            .trim()                  // Remove leading/trailing whitespace
-        )
-        .filter(kw => kw.length > 0);
-    const uniqueKeywords = [...new Set(cleanedKeywords)];
-    logToConsole(`Prepared ${uniqueKeywords.length} unique keywords for planning after cleaning.`, 'info');
-    // Also update the textarea with the cleaned keywords for user visibility
-    if (ui.bulkKeywords) {
-        const newTextareaValue = uniqueKeywords.join('\n');
-        ui.bulkKeywords.value = newTextareaValue;
-        // Since we are updating the value, we should also update the state
-        // This will prevent the uncleaned text from reappearing on reload
-        updateState({ bulkKeywordsContent: newTextareaValue });
-    }
-    return uniqueKeywords;
-}
-
-// --- Generate Planning Table ---
-export async function handleGeneratePlan() {
-    const keywords = prepareKeywords();
-    if (keywords.length === 0) { alert("Please enter keywords."); return; }
-    
-    const state = getState();
-    const selectedProviders = state.textProviders;
-    if (selectedProviders.length === 0) {
-        alert("Please configure at least one AI Provider.");
-        return;
-    }
-    const ui = {
-        loadingIndicator: getElement('planLoadingIndicator'),
-        button: getElement('generatePlanBtn'),
-        step1_5Section: getElement('step1_5Section'),
-        planningTableBody: getElement('planningTableBody'),
-        batchSizeInput: getElement('batchSizeInput')
-    };
-
-    logToConsole(`Starting batched plan generation for ${keywords.length} keywords...`, 'info');
-    showElement(ui.step1_5Section, true);
-    disableElement(ui.button, true); // Disable button during the entire process
-
-    let allPlanItems = []; // Array to accumulate results from all batches
-
-    // --- BATCHING LOGIC START ---
-    const batchSize = parseInt(ui.batchSizeInput?.value, 10) || 10;
-    logToConsole(`Using batch size of ${batchSize} and ${selectedProviders.length} providers.`, 'info');
-
-    let providerIndex = 0; // For round-robin
-
-    for (let i = 0; i < keywords.length; i += batchSize) {
-        const batch = keywords.slice(i, i + batchSize);
-        const currentProgress = Math.min(i + batchSize, keywords.length);
-
-        // --- ROUND-ROBIN LOGIC ---
-        const currentProvider = selectedProviders[providerIndex % selectedProviders.length];
-        providerIndex++;
-        // -------------------------
-
-        logToConsole(`Processing batch ${Math.floor(i / batchSize) + 1} with ${currentProvider.provider} (${currentProvider.model})...`, 'info');
-        ui.planningTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-gray-500 py-4">Generating plan for keywords ${i + 1} - ${currentProgress} of ${keywords.length}... <span class="loader inline-block"></span></td></tr>`;
-
-        try {
-            const planPrompt = getPlanPrompt(batch);
-            const planPayload = {
-                providerKey: currentProvider.provider,
-                model: currentProvider.useCustom ? currentProvider.customModel : currentProvider.model,
-                prompt: planPrompt
-            };
-            const result = await callAI('generate', planPayload, null, null);
-
-            if (result?.success && result.text) {
-                const parsedBatch = parsePlanResponse(result.text, batch);
-                allPlanItems.push(...parsedBatch); // Add batch results to the main array
-                logToConsole(`Successfully received ${parsedBatch.length} plan items for this batch.`, 'success');
-            } else {
-                logToConsole(`Failed to generate plan for batch starting with "${batch[0]}". Error: ${result?.error || 'Unknown error'}`, 'error');
-            }
-        } catch (error) {
-            logToConsole(`An exception occurred while processing batch starting with "${batch[0]}": ${error.message}`, 'error');
-        }
-
-        // Add a small delay between API calls to be a good citizen and avoid rate limits
-        await delay(250);
-    }
-    // --- BATCHING LOGIC END ---
-
-    disableElement(ui.button, false); // Re-enable button now that all batches are done
-
-    if (allPlanItems.length > 0) {
-        logToConsole(`Total plan items generated before deduplication: ${allPlanItems.length}`, 'info');
-        const uniquePlan = removeDuplicatePlanItems(allPlanItems);
-        setBulkPlan(uniquePlan.map(item => ({ ...item, status: 'Pending', filename: `${item.slug}.md` })));
-        renderPlanningTable(getBulkPlan());
-        logToConsole(`Plan generation complete. ${uniquePlan.length} unique items created.`, 'success');
-    } else {
-        logToConsole('Failed to generate any plan items after all batches.', 'error');
-        alert('Failed to generate a plan. Please check the console log for errors.');
-        ui.planningTableBody.innerHTML = `<tr><td colspan="6" class="text-center text-red-500 py-4">Failed to generate plan items.</td></tr>`;
-    }
-}
-
-async function generateSingleBulkArticle(item, index, providerConfig, state) {
-    updatePlanItemStatusUI(index, 'Generating');
-    updateBulkPlanItem(index, { status: 'Generating', error: null });
-
-    try {
-        logToConsole(`[Worker using ${providerConfig.provider}] Generating structure for: "${item.keyword}"`, 'info');
-        
-        // 1. Generate Structure
-        const structurePrompt = getBulkStructurePrompt(item);
-        const structurePayload = {
-            providerKey: providerConfig.provider,
-            model: providerConfig.model,
-            prompt: structurePrompt
-        };
-        const structureResult = await callAI('generate', structurePayload, null, null);
-        if (!structureResult?.success || !structureResult.text) {
-            throw new Error(`Structure generation failed: ${structureResult?.error || 'No text returned'}`);
-        }
-
-        const structure = structureResult.text;
-        const outlineSections = getArticleOutlinesV2(structure);
-        if (outlineSections.length === 0) {
-            throw new Error("No primary sections were parsed from the generated structure.");
-        }
-
-        // 2. Loop through sections to generate text and images
-        let combinedArticleContent = ''; 
-        let previousSectionContent = '';
-        
-        for (let j = 0; j < outlineSections.length; j++) {
-            const section = outlineSections[j];
-
-            logToConsole(`  -> [Worker] Generating section ${j+1} for "${item.keyword}"`, 'info');
-            const textPrompt = getBulkSectionTextPrompt(item, section, previousSectionContent);
-            const textPayload = {
-                providerKey: providerConfig.provider,
-                model: providerConfig.model,
-                prompt: textPrompt
-            };
-            const textResult = await callAI('generate', textPayload, null, null);
-            if (!textResult?.success || !textResult.text) {
-                throw new Error(`Text generation failed for section ${j+1} ("${section.heading}")`);
-            }
-
-            const currentSectionText = textResult.text.trim() + '\n\n';
-            combinedArticleContent += currentSectionText;
-            previousSectionContent = currentSectionText;
-            
-            // 3. Handle Image Generation (if enabled)
-            if (state.generateImages) {
-                const imagePayload = buildBulkImagePayload(item, currentSectionText, section.heading, j + 1);
-                const imageResult = await callAI('generate_image', imagePayload, null, null);
-                if (imageResult?.success && imageResult.imageData) {
-                    const filename = imagePayload.filename;
-                    if (state.imageStorage === 'github') {
-                        // `bulkImagesToUpload` is a module-level variable accessible here
-                        bulkImagesToUpload.push({ filename: filename, base64: imageResult.imageData, articleFilename: item.filename });
-                        combinedArticleContent += `[Uploading image: ${filename}...]` + '\n\n';
-                    } else {
-                        const altText = `Image for ${section.heading.substring(0, 50)}`;
-                        combinedArticleContent += `![${altText}](data:image/png;base64,${imageResult.imageData})` + '\n\n';
-                    }
-                } else {
-                    combinedArticleContent += `[Image generation failed for this section]\n\n`;
-                }
-            }
-            await delay(200); // Small delay between sections
-        } // End section loop
-
-        // 4. Save the completed article
-        const articleFilename = item.filename || `${slugify(item.slug || item.keyword)}.md`;
-        addBulkArticle(articleFilename, combinedArticleContent);
-        updatePlanItemStatusUI(index, 'Completed');
-        updateBulkPlanItem(index, { status: 'Completed', filename: articleFilename });
-        logToConsole(`[Worker] Article COMPLETED for: ${item.keyword}`, 'success');
-
-    } catch (error) {
-        logToConsole(`[Worker] FAILED processing item ${item.keyword}: ${error.message}`, 'error');
-        updatePlanItemStatusUI(index, 'Failed', error.message);
-        updateBulkPlanItem(index, { status: 'Failed', error: error.message });
-    }
-}
 
 export async function handleStartBulkGeneration() {
-    if (isBulkRunning) {
-        logToConsole("Bulk generation already running.", "warn");
-        return;
-    }
-    
     const state = getState();
-    const selectedProviders = state.textProviders;
-    if (!selectedProviders || selectedProviders.length === 0) {
-        alert("Please configure at least one AI Provider in the 'AI Configuration' section.");
-        return;
+    const plan = getBulkPlan();
+    
+    if (plan.length === 0) { alert("Plan is empty."); return; }
+    if (state.textProviders.length === 1) {
+        if (!confirm("Warning: You are using only 1 AI Provider. This might hit rate limits or take a long time. Continue?")) return;
     }
 
-    currentBulkPlan = getBulkPlan();
-    if (currentBulkPlan.length === 0) {
-        alert("Planning table is empty.");
-        return;
+    // Delivery Check
+    if (state.deliveryMode === 'wordpress') {
+        if (!state.wpUrl || !state.wpUsername || !state.wpPassword) {
+            alert("Please configure WordPress credentials."); return;
+        }
     }
 
     isBulkRunning = true;
-    const concurrencyLimit = selectedProviders.length;
-    logToConsole(`Starting CONCURRENT bulk generation with ${concurrencyLimit} providers.`, "info");
-
-    const ui = { 
-        button: getElement('startBulkGenerationBtn'),
-        downloadBulkZipBtn: getElement('downloadBulkZipBtn'),
-        bulkGenProgress: getElement('bulkGenerationProgress'),
-        bulkTotalNum: getElement('bulkTotalNum')
+    const ui = {
+        btn: getElement('startBulkGenerationBtn'),
+        progress: getElement('bulkGenerationProgress'),
+        count: getElement('bulkCurrentNum'),
+        total: getElement('bulkTotalNum'),
+        keyword: getElement('bulkCurrentKeyword')
     };
-    disableElement(ui.button, true); 
-    showElement(ui.downloadBulkZipBtn, false);
-    showElement(ui.bulkGenProgress, true);
-    bulkImagesToUpload = [];
 
-    const itemsToProcess = currentBulkPlan
-        .map((item, index) => ({ ...item, originalIndex: index }))
-        .filter(item => !(item.status?.startsWith('Completed')));
+    disableElement(ui.btn, true);
+    showElement(ui.progress, true);
+    if(ui.total) ui.total.textContent = plan.length;
 
-    if(ui.bulkTotalNum) ui.bulkTotalNum.textContent = itemsToProcess.length;
-    const taskQueue = [...itemsToProcess];
+    // Execution Loop
+    // We use a worker queue based on provider count
+    const providers = state.textProviders;
+    const concurrency = providers.length;
+    
+    const queue = plan.map((item, idx) => ({ ...item, originalIndex: idx }))
+                      .filter(i => !i.status.startsWith('Completed'));
+
     let providerIndex = 0;
 
     const worker = async () => {
-        while (taskQueue.length > 0) {
-            const item = taskQueue.shift();
-            if (!item) continue;
-
-            const providerForThisTask = selectedProviders[providerIndex % concurrencyLimit];
+        while (queue.length > 0) {
+            const task = queue.shift();
+            const provider = providers[providerIndex % concurrency];
             providerIndex++;
-            
-            await generateSingleBulkArticle(item, item.originalIndex, providerForThisTask, state);
+
+            if(ui.count) ui.count.textContent = (plan.length - queue.length);
+            if(ui.keyword) ui.keyword.textContent = task.keyword;
+
+            await processSingleArticle(task, task.originalIndex, provider);
         }
     };
 
-    const workerPromises = [];
-    for (let i = 0; i < concurrencyLimit; i++) {
-        workerPromises.push(worker());
+    const workers = Array(concurrency).fill(null).map(() => worker());
+    await Promise.all(workers);
+
+    // Final Delivery: ZIP (if selected)
+    if (state.deliveryMode === 'zip') {
+        const articles = getAllBulkArticles();
+        await generateZipBundle(articles);
     }
 
-    await Promise.all(workerPromises);
-
-    logToConsole("All concurrent workers have finished their tasks.", "info");
-    saveBulkArticlesState();
-
-    if (state.generateImages && state.imageStorage === 'github' && bulkImagesToUpload.length > 0) {
-        await uploadBulkImagesToGithub();
-    }
-
-    isBulkRunning = false; 
-    disableElement(ui.button, false); 
-    showElement(ui.bulkGenProgress, false);
-
-    const completedArticles = getBulkPlan().filter(item => item.status?.startsWith('Completed'));
-    if (completedArticles.length > 0) {
-        showElement(ui.downloadBulkZipBtn, true);
-    }
-
-    logToConsole("Bulk generation process finished.", "info");
-    alert("Concurrent bulk generation process complete. Check statuses and download ZIP if needed.");
+    isBulkRunning = false;
+    disableElement(ui.btn, false);
+    showElement(ui.progress, false);
+    logToConsole("Bulk generation complete.", "success");
 }
 
-function parsePlanResponse(responseText, originalKeywords) {
-    let plan = []; try { plan = JSON.parse(responseText); if (!Array.isArray(plan)) throw new Error("Not array."); plan = plan.filter(item => item && item.keyword && item.title && item.slug && item.intent); plan.forEach(item => { item.slug = slugify(item.slug || item.title || item.keyword); }); } catch (e) { logToConsole(`JSON parse failed: ${e.message}. Fallback parsing.`, 'warn'); originalKeywords.forEach(kw => { let title = `Title for ${kw}`, slug = slugify(kw), intent = 'Informational'; plan.push({ keyword: kw, title: title.replace(/^"|"$/g, ''), slug: slug, intent: intent.replace(/^"|"$/g, '') }); }); } return plan;
-}
-
-function removeDuplicatePlanItems(plan) {
-    const uniqueTitles = new Set(); const uniqueSlugs = new Set(); const uniquePlan = [];
-    for (const item of plan) { const lowerTitle = item.title.toLowerCase(); const lowerSlug = item.slug.toLowerCase(); if (!uniqueTitles.has(lowerTitle) && !uniqueSlugs.has(lowerSlug)) { uniqueTitles.add(lowerTitle); uniqueSlugs.add(lowerSlug); uniquePlan.push(item); } else { logToConsole(`Removed duplicate plan item for "${item.keyword}".`, 'warn'); } } return uniquePlan;
-}
-
-function buildBulkPayload(prompt) { const state = getState(); return { providerKey: state.textProvider, model: state.textModel, prompt: prompt }; }
-
-function buildBulkImagePayload(planItem, sectionContent, sectionHeading, sectionIndex) {
+async function processSingleArticle(item, index, providerConfig) {
+    updatePlanItemStatusUI(index, 'Generating');
     const state = getState();
-    const baseFilename = sanitizeFilename(`${slugify(planItem.slug || planItem.keyword)}-${slugify(sectionHeading)}`);
-    const filename = `${baseFilename}-${Date.now()}-${sectionIndex}.png`;
-    const imageSettings = { imageSubject: state.imageSubject, imageStyle: state.imageStyle, imageStyleModifiers: state.imageStyleModifiers, imageText: state.imageText };
-    const imagePrompt = constructImagePrompt(sectionContent, sectionHeading, imageSettings); // Use sectionHeading
-    const imageModel = state.useCustomImageModel ? state.customImageModel : state.imageModel;
-    return { providerKey: state.imageProvider, model: imageModel, prompt: imagePrompt, filename: filename, aspectRatio: state.imageAspectRatio };
-}
 
-// --- GitHub Image Upload Function (Bulk Mode Helper) ---
-async function uploadBulkImagesToGithub() {
-    if (bulkImagesToUpload.length === 0) return;
-    const state = getState();
-    const ui = { uploadProgressContainer: getElement('bulkUploadProgressContainer'), uploadProgressBar: getElement('bulkUploadProgressBar'), uploadProgressText: getElement('bulkUploadProgressText') };
-    const repoUrl = state.githubRepoUrl;
-    if (!repoUrl) { alert("GitHub Repo URL required."); return; }
-    const urlMatch = repoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
-    if (!urlMatch || urlMatch.length < 3) { alert("Invalid GitHub Repo URL."); return; }
-    const owner = urlMatch[1]; const repo = urlMatch[2].replace(/\.git$/, ''); const repoDomain = repo.toLowerCase();
-    const customPath = state.githubCustomPath; let basePath;
-    if (customPath) { basePath = (customPath.startsWith('/') ? customPath.substring(1) : customPath).replace(/\/$/, '') + '/'; }
-    else { const langKey = Object.keys(languageOptions).find(key => languageOptions[key].name === state.language || key === state.language) || 'English'; basePath = (languageOptions[langKey]?.defaultPath || '/articles/').replace(/^\//, '').replace(/\/$/, '') + '/'; }
-
-    logToConsole(`Starting Bulk GitHub image upload to ${owner}/${repo} path /${basePath}...`, 'info');
-    updateProgressBar(ui.uploadProgressBar, ui.uploadProgressContainer, ui.uploadProgressText, 0, bulkImagesToUpload.length, 'Uploading image ');
-
-    let uploadedCount = 0; const totalImages = bulkImagesToUpload.length; const uploadedUrls = {};
-
-    for (let i = 0; i < totalImages; i++) {
-        const img = bulkImagesToUpload[i];
-        updateProgressBar(ui.uploadProgressBar, ui.uploadProgressContainer, ui.uploadProgressText, i, totalImages, `Uploading image ${i + 1}/${totalImages} (${img.filename}) `);
-        const fullPath = basePath + img.filename;
-        const payload = { owner: owner, repo: repo, path: fullPath, content: img.base64, message: `Upload image: ${img.filename} via AI Tool` };
-        const result = await callAI('upload_image', payload, null, null);
-        if (result?.success && result.download_url) { 
-            const finalImageUrl = result.download_url;
-            logToConsole(`Uploaded ${img.filename}. URL: ${finalImageUrl}`, 'success'); 
-            uploadedUrls[img.filename] = finalImageUrl; 
-            uploadedCount++; 
-        }
-        else { logToConsole(`Failed to upload ${img.filename}. Error: ${result?.error || 'Unknown'}`, 'error'); uploadedUrls[img.filename] = `[Upload failed: ${img.filename}]`; const planIndex = getBulkPlan().findIndex(item => item.filename === img.articleFilename); if (planIndex !== -1) { updatePlanItemStatusUI(planIndex, 'Completed (Image Upload Failed)'); updateBulkPlanItem(planIndex, { status: 'Completed (Image Upload Failed)', error: `Image upload failed: ${img.filename}` }); } }
-        const progressPercent = Math.round(((i + 1) / totalImages) * 100); ui.uploadProgressBar.style.width = `${progressPercent}%`;
-    }
-
-    // Replace Placeholders
-    logToConsole("Replacing image placeholders in generated bulk articles...", "info");
-    const plan = getBulkPlan();
-    const currentBulkArticles = getAllBulkArticles(); // Get current articles from state
-
-    plan.forEach(item => {
-        if (item.filename && currentBulkArticles[item.filename]) { // Use the fetched articles
-            let content = currentBulkArticles[item.filename]; // Use the fetched articles
-            let updated = false;
-            const placeholderRegex = /\[Uploading image: (.*?)\.\.\.\]/g;
-            content = content.replace(placeholderRegex, (match, filename) => {
-                if (uploadedUrls[filename]) {
-                    updated = true;
-                    return uploadedUrls[filename].startsWith('[') ? uploadedUrls[filename] : `![${filename}](${uploadedUrls[filename]})`;
-                }
-                return match; // Keep placeholder if upload failed or filename mismatch
-            });
-            if (updated) {
-                addBulkArticle(item.filename, content); // This updates the state
-            }
-        }
-    });
-    saveBulkArticlesState(); // Persist all changes
-
-    ui.uploadProgressText.textContent = `Upload complete (${uploadedCount}/${totalImages} successful). Placeholders replaced.`;
-    logToConsole(`GitHub upload process finished. Placeholders replaced.`, 'info');
-}
-
-
-// --- Download Bulk Articles as ZIP ---
-export async function handleDownloadZip() {
-    const articles = getAllBulkArticles(); const filenames = Object.keys(articles);
-    if (filenames.length === 0) { alert("No bulk articles generated."); return; }
-    logToConsole("Preparing ZIP file...", "info");
-    const zip = new JSZip(); filenames.forEach(filename => { zip.file(filename, articles[filename]); });
     try {
-        const zipBlob = await zip.generateAsync({ type: "blob" });
-        const plan = getBulkPlan(); const firstKeyword = plan[0]?.keyword ? slugify(plan[0].keyword) : 'bulk';
-        const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-        const zipFilename = `bulk-articles-${firstKeyword}-${dateStr}.zip`;
-        const link = document.createElement("a"); link.href = URL.createObjectURL(zipBlob); link.download = zipFilename;
-        document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(link.href);
-        logToConsole(`ZIP file '${zipFilename}' download initiated.`, 'success');
-    } catch (error) { logToConsole(`Error generating ZIP: ${error.message}`, 'error'); alert("Failed to generate ZIP file."); }
-}
+        // 1. Structure
+        const structurePayload = {
+            providerKey: providerConfig.provider,
+            model: providerConfig.model,
+            prompt: getBulkStructurePrompt(item)
+        };
+        const structRes = await callAI('generate', structurePayload);
+        if (!structRes.success) throw new Error(structRes.error);
+        
+        const sections = getArticleOutlinesV2(structRes.text);
+        let articleContent = "";
+        let prevContext = "";
 
-console.log("article-bulk.js loaded (v8.21 refactor prompts)");
+        // 2. Sections
+        for (let i = 0; i < sections.length; i++) {
+            const section = sections[i];
+            const textPayload = {
+                providerKey: providerConfig.provider,
+                model: providerConfig.model,
+                prompt: getBulkSectionTextPrompt(item, section, prevContext)
+            };
+            const textRes = await callAI('generate', textPayload);
+            if (!textRes.success) throw new Error(`Section ${i} failed`);
+            
+            articleContent += textRes.text + "\n\n";
+            prevContext = textRes.text;
+            await delay(200);
+        }
+
+        // 3. Save locally
+        const filename = item.slug + (state.format === 'html' ? '.html' : '.md');
+        addBulkArticle(filename, articleContent);
+
+        // 4. Delivery (WP / GitHub)
+        // We pass the content immediately to delivery
+        const deliveryData = {
+            title: item.title,
+            content: articleContent,
+            filename: filename,
+            scheduledDate: item.scheduledDate
+        };
+
+        updatePlanItemStatusUI(index, 'Delivering...');
+        const deliveryRes = await deliverArticle(deliveryData, index);
+        
+        if (deliveryRes && !deliveryRes.success && state.deliveryMode !== 'zip') {
+             throw new Error(`Delivery failed: ${deliveryRes.error}`);
+        }
+
+        updatePlanItemStatusUI(index, 'Completed');
+        updateBulkPlanItem(index, { status: 'Completed', filename: filename });
+
+    } catch (e) {
+        logToConsole(`Error processing "${item.title}": ${e.message}`, "error");
+        updatePlanItemStatusUI(index, 'Failed', e.message);
+    }
+}
