@@ -1,4 +1,4 @@
-// article-delivery.js (v9.11 orchestrator)
+// article-delivery.js (v9.12 new delivery)
 import { getState } from './article-state.js';
 import { callAI, logToConsole, slugify, delay } from './article-helpers.js';
 
@@ -71,10 +71,10 @@ async function deliverToWordPress(articleData, index, total) {
     const payload = {
         wpUrl: state.wpUrl,
         username: state.wpUsername,
-        password: state.wpPassword, // Application Password
+        password: state.wpPassword,
         title: articleData.title,
         content: articleData.content, 
-        status: 'publish', // or 'draft' based on preference
+        status: state.wpStatus || 'publish',
         date: postDate
     };
 

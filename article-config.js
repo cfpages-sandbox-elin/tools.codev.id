@@ -1,4 +1,4 @@
-// article-config.js (v9.11 google scraping++)
+// article-config.js (v9.12 new delivery)
 export const CLOUDFLARE_FUNCTION_URL = '/ai-api';
 export const GITHUB_API_BASE = 'https://api.github.com';
 
@@ -90,8 +90,6 @@ export const defaultSettings = {
     imageStyleModifiers: '',
     imageText: '',
     imageStorage: 'base64',
-    githubRepoUrl: '',
-    githubCustomPath: '',
 
     linkTypeInternal: true,
     sitemapFetchedUrl: '',
@@ -102,7 +100,19 @@ export const defaultSettings = {
     generatedArticleContent: '',
     
     spinnerData: [], 
-    spinnerVariationCount: 1
+    spinnerVariationCount: 1,
+
+    deliveryMode: 'zip',
+    
+    wpUrl: '',
+    wpUsername: '',
+    wpPassword: '',
+    wpDateStart: '',
+    wpDateEnd: '',
+    wpStatus: 'publish',
+
+    githubRepoUrl: '',
+    githubCustomPath: '',
 };
 
 console.log("article-config.js loaded (v9.11 GScraper+)");

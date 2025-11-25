@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Article Generator & Spinner v9.11</title>
+    <title>AI Article Generator & Spinner v9.12</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <link rel="stylesheet" href="article.css">
@@ -15,7 +15,7 @@
 
     <div class="flex justify-between items-center mb-4">
         <h1 class="text-2xl font-bold text-indigo-700">
-            AI Article Generator & Spinner 🖼️ (v9.10)
+            AI Article Generator & Spinner 🖼️ (v9.12)
         </h1>
         <div class="space-x-2">
              <button id="forceReloadBtn" class="reload-button" title="Attempt to bypass cache and reload all resources">Force Reload 🔄</button>
@@ -306,9 +306,9 @@
             <svg class="chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
         </div>
         <div class="section-body">
-            <p class="text-sm text-gray-600 mb-2">Review and optionally edit the generated plan before starting bulk generation.</p> 
+            <p class="text-sm text-gray-600 mb-2">Review and optionally edit the generated plan before starting.</p> 
             
-            <div id="planningTableContainer"> 
+            <div id="planningTableContainer" class="mb-4"> 
                 <table id="planningTable" class="min-w-full divide-y divide-gray-200 text-sm"> 
                     <thead> 
                         <tr> 
@@ -318,55 +318,108 @@
                             <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Slug</th> 
                             <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Intent</th> 
                             <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Status</th> 
+                            <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Scheduled</th>
+                            <th class="px-3 py-2 text-left font-medium text-gray-500 uppercase tracking-wider bg-gray-50">Action</th>
                         </tr> 
                     </thead> 
                     <tbody class="bg-white divide-y divide-gray-200"> </tbody> 
                 </table> 
             </div>
 
+            <!-- Delivery Configuration -->
             <div class="mb-4 p-4 bg-gray-50 rounded border border-gray-200">
-                <h3 class="text-sm font-semibold text-gray-700 mb-2">Delivery Options 🚚</h3>
+                <h3 class="text-sm font-bold text-gray-700 mb-3">Delivery Options 🚚</h3>
                 
-                <div class="flex gap-4 mb-3">
-                    <label class="flex items-center text-sm">
-                        <input type="radio" name="deliveryMode" value="zip" checked class="mr-1"> Download ZIP
+                <!-- Radio Buttons -->
+                <div class="flex gap-6 mb-4">
+                    <label class="flex items-center text-sm cursor-pointer">
+                        <input type="radio" name="deliveryMode" value="zip" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 mr-2"> 
+                        <span class="font-medium">Download ZIP Bundle</span>
                     </label>
-                    <label class="flex items-center text-sm">
-                        <input type="radio" name="deliveryMode" value="wordpress" class="mr-1"> Post to WordPress
+                    <label class="flex items-center text-sm cursor-pointer">
+                        <input type="radio" name="deliveryMode" value="wordpress" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 mr-2"> 
+                        <span class="font-medium">Post to WordPress</span>
                     </label>
-                    <label class="flex items-center text-sm">
-                        <input type="radio" name="deliveryMode" value="github" class="mr-1"> Push to GitHub
+                    <label class="flex items-center text-sm cursor-pointer">
+                        <input type="radio" name="deliveryMode" value="github" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 mr-2"> 
+                        <span class="font-medium">Push to GitHub</span>
                     </label>
                 </div>
 
-                <!-- WP Options -->
-                <div id="wpOptions" class="hidden grid grid-cols-2 gap-3 text-sm">
-                    <input type="url" id="wpUrl" class="compact-input" placeholder="https://your-site.com">
-                    <input type="text" id="wpUsername" class="compact-input" placeholder="Username">
-                    <input type="password" id="wpPassword" class="compact-input" placeholder="App Password">
-                    <div class="col-span-2 flex gap-2 items-center">
-                        <label>Date Range:</label>
-                        <input type="date" id="wpDateStart" class="compact-input w-auto">
-                        <span>to</span>
-                        <input type="date" id="wpDateEnd" class="compact-input w-auto">
+                <!-- Dynamic Settings Containers -->
+                
+                <!-- 1. ZIP Settings -->
+                <div id="zipOptions" class="text-xs text-gray-500 italic ml-1 hidden">
+                    * Articles will be compiled and downloaded as a ZIP file automatically when generation finishes.
+                </div>
+
+                <!-- 2. WordPress Settings -->
+                <div id="wpOptions" class="hidden p-3 bg-white border border-gray-200 rounded-md shadow-sm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        <div class="col-span-2">
+                            <label class="compact-label">WordPress Site URL:</label>
+                            <input type="url" id="wpUrl" class="compact-input" placeholder="https://your-site.com">
+                        </div>
+                        <div>
+                            <label class="compact-label">Username:</label>
+                            <input type="text" id="wpUsername" class="compact-input" placeholder="admin">
+                        </div>
+                        <div>
+                            <label class="compact-label">Application Password:</label>
+                            <input type="password" id="wpPassword" class="compact-input" placeholder="xxxx xxxx xxxx xxxx">
+                        </div>
+                        <div>
+                            <label class="compact-label">Post Status:</label>
+                            <select id="wpStatus" class="compact-select">
+                                <option value="publish">Publish Immediately</option>
+                                <option value="draft">Draft</option>
+                                <option value="pending">Pending Review</option>
+                                <option value="private">Private</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="compact-label">Backdate Range (Optional):</label>
+                            <div class="flex gap-2 items-center">
+                                <input type="date" id="wpDateStart" class="compact-input">
+                                <span class="text-gray-400 text-xs">to</span>
+                                <input type="date" id="wpDateEnd" class="compact-input">
+                            </div>
+                        </div>
                     </div>
+                    <p class="text-xs text-gray-400 mt-2">⚠️ Requires <a href="https://make.wordpress.org/core/2020/11/05/application-passwords-integration-guide/" target="_blank" class="text-indigo-500 hover:underline">Application Password</a>, not your login password.</p>
+                </div>
+
+                <!-- 3. GitHub Settings -->
+                <div id="githubDeliveryOptions" class="hidden p-3 bg-white border border-gray-200 rounded-md shadow-sm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        <div class="col-span-2">
+                            <label class="compact-label">Repository URL:</label>
+                            <input type="url" id="githubRepoUrlDelivery" class="compact-input" placeholder="https://github.com/username/repo">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="compact-label">Folder Path (Optional):</label>
+                            <input type="text" id="githubPathDelivery" class="compact-input" placeholder="content/posts/">
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-400 mt-2">⚠️ Server must have GITHUB_PAT_API_KEY configured.</p>
                 </div>
             </div>
 
+            <!-- Action Area -->
             <div class="mt-4 text-right space-x-2"> 
-                <button id="startBulkGenerationBtn" class="compact-button"> Start Bulk Generation ▶️ <span id="bulkLoadingIndicator" class="hidden"><span class="loader"></span></span> </button> 
-                <button id="downloadBulkZipBtn" class="compact-button bg-green-600 hover:bg-green-700"> Download as Zip 💾 </button> 
+                <button id="startBulkGenerationBtn" class="compact-button bg-indigo-700 hover:bg-indigo-800 py-2 px-4 text-sm"> 
+                    🚀 Start Bulk Generation 
+                </button> 
             </div> 
-
-            <div id="bulkGenerationProgress" class="text-sm text-center text-gray-600 mt-2 hidden">Generating article 
-                <span id="bulkCurrentNum">1</span> of <span id="bulkTotalNum">1</span> (<span id="bulkCurrentKeyword">...</span>)...
+            
+            <!-- Progress UI -->
+            <div id="bulkGenerationProgress" class="text-sm text-center text-gray-600 mt-2 hidden">
+                Generating article <span id="bulkCurrentNum">1</span> of <span id="bulkTotalNum">1</span> (<span id="bulkCurrentKeyword">...</span>)...
             </div> 
-
             <div id="bulkUploadProgressContainer" class="w-full bg-gray-200 rounded-full h-2.5 mt-2 hidden"> 
                 <div id="bulkUploadProgressBar" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div> 
-            </div>
-
-            <div id="bulkUploadProgressText" class="text-sm text-center text-gray-600 mt-1 hidden">Uploading article 1 of 1...</div> 
+            </div> 
+            <div id="bulkUploadProgressText" class="text-sm text-center text-gray-600 mt-1 hidden">Initializing...</div> 
         </div>
     </section>
     

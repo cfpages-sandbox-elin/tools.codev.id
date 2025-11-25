@@ -1,4 +1,4 @@
-// article-ui.js (v9.11 orchestrator)
+// article-ui.js (v9.12 new delivery)
 import { languageOptions, defaultSettings } from './article-config.js';
 import { getState, updateState, getBulkPlan, addProviderToState, removeProviderFromState, updateProviderInState, updateCustomModelState, getCustomModelState } from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2, delay } from './article-helpers.js';
@@ -81,6 +81,20 @@ const elementIdMap = {
     bulkUploadProgressContainer: 'bulkUploadProgressContainer',
     bulkUploadProgressBar: 'bulkUploadProgressBar',
     bulkUploadProgressText: 'bulkUploadProgressText',
+    // Delivery UI
+    wpOptions: 'wpOptions',
+    zipOptions: 'zipOptions',
+    githubDeliveryOptions: 'githubDeliveryOptions',
+    // WordPress
+    wpUrl: 'wpUrl',
+    wpUsername: 'wpUsername',
+    wpPassword: 'wpPassword',
+    wpStatus: 'wpStatus',
+    wpDateStart: 'wpDateStart',
+    wpDateEnd: 'wpDateEnd',
+    // Github
+    githubRepoUrlDelivery: 'githubRepoUrlDelivery',
+    githubPathDelivery: 'githubPathDelivery',
     // Step 2
     step2Section: 'step2',
     articleTitleInput: 'articleTitle',

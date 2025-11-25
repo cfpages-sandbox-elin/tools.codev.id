@@ -1,4 +1,4 @@
-// article-main.js (v9.11 orchestrator + fix)
+// article-main.js (v9.12 new delivery)
 import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
 import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
 import {
@@ -425,12 +425,11 @@ function setupStep4Listeners() {
 
 function setupBulkModeListeners() {
     const startBulkGenerationBtn = getElement('startBulkGenerationBtn');
-    const downloadBulkZipBtn = getElement('downloadBulkZipBtn');
     const planningTableBody = getElement('planningTableBody');
 
     startBulkGenerationBtn?.addEventListener('click', handleStartBulkGeneration);
-    downloadBulkZipBtn?.addEventListener('click', handleDownloadZip);
 
+    // Table Editing Logic
     planningTableBody?.addEventListener('change', (e) => {
         if (e.target.tagName === 'INPUT' && e.target.dataset.field) {
             const row = e.target.closest('tr');
@@ -448,25 +447,69 @@ function setupBulkModeListeners() {
         }
     });
 
-    // Handle Row Deletion
+    // Handle Row Deletion Event
     document.addEventListener('delete-plan-row', (e) => {
         deletePlanRow(e.detail.index);
     });
 
-    // Handle Delivery Mode Toggle
+    // --- Delivery Option Toggles ---
     const deliveryRadios = document.querySelectorAll('input[name="deliveryMode"]');
     const wpOptions = getElement('wpOptions');
+    const zipOptions = getElement('zipOptions');
+    const githubOptions = getElement('githubDeliveryOptions');
 
-    deliveryRadios.forEach(r => r.addEventListener('change', (e) => {
-        updateState({ deliveryMode: e.target.value });
-        if (wpOptions) showElement(wpOptions, e.target.value === 'wordpress');
-        // Re-calc dates if WP selected
-        if (e.target.value === 'wordpress') {
-            // Trigger recalc via planning
-            deletePlanRow(-1); // Hacky trigger to refresh table/dates? 
-            // Better: create explicit recalc function.
+    function updateDeliveryUI(mode) {
+        if(wpOptions) showElement(wpOptions, mode === 'wordpress');
+        if(zipOptions) showElement(zipOptions, mode === 'zip');
+        if(githubOptions) showElement(githubOptions, mode === 'github');
+    }
+
+    deliveryRadios.forEach(r => {
+        r.addEventListener('change', (e) => {
+            const mode = e.target.value;
+            updateState({ deliveryMode: mode });
+            updateDeliveryUI(mode);
+        });
+    });
+
+    // Initialize UI based on current state
+    const state = getState();
+    const currentMode = state.deliveryMode || 'zip';
+    // Set radio button state
+    const activeRadio = Array.from(deliveryRadios).find(r => r.value === currentMode);
+    if (activeRadio) activeRadio.checked = true;
+    updateDeliveryUI(currentMode);
+
+    // --- Input Listeners for Delivery Fields ---
+    const deliveryInputs = [
+        { id: 'wpUrl', key: 'wpUrl' },
+        { id: 'wpUsername', key: 'wpUsername' },
+        { id: 'wpPassword', key: 'wpPassword' },
+        { id: 'wpStatus', key: 'wpStatus' },
+        { id: 'wpDateStart', key: 'wpDateStart' },
+        { id: 'wpDateEnd', key: 'wpDateEnd' },
+        { id: 'githubRepoUrlDelivery', key: 'githubRepoUrl' },
+        { id: 'githubPathDelivery', key: 'githubCustomPath' }
+    ];
+
+    deliveryInputs.forEach(input => {
+        const el = getElement(input.id);
+        if (el) {
+            // Pre-fill from state
+            el.value = state[input.key] ?? '';
+            
+            // Save on change
+            el.addEventListener('change', (e) => {
+                updateState({ [input.key]: e.target.value });
+                // Trigger date recalc if dates changed
+                if (input.key === 'wpDateStart' || input.key === 'wpDateEnd') {
+                    // We can trigger a re-render of the plan to show new dates
+                    // Import this dynamically or assume it's available
+                    import('./article-planning.js').then(mod => mod.recalculatePlanDates());
+                }
+            });
         }
-    }));
+    });
 }
 
 // --- Initialize ---

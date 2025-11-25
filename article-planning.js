@@ -1,4 +1,4 @@
-// article-planning.js (v9.11 orchestrator)
+// article-planning.js (v9.12 new delivery)
 import { getState, setBulkPlan, getBulkPlan, updateState } from './article-state.js';
 import { callAI, logToConsole, slugify, delay, showElement, disableElement } from './article-helpers.js';
 import { getElement, renderPlanningTable } from './article-ui.js';
@@ -161,4 +161,16 @@ export function prepareKeywords() {
     updateState({ bulkKeywordsContent: newTextareaValue });
     
     return uniqueKeywords;
+}
+
+export function recalculatePlanDates() {
+    const currentPlan = getBulkPlan();
+    const dates = calculateDistributionDates(currentPlan.length);
+    
+    if (dates.length > 0) {
+        currentPlan.forEach((item, i) => item.scheduledDate = dates[i]);
+        setBulkPlan(currentPlan);
+        renderPlanningTable(currentPlan);
+        logToConsole("Scheduled dates updated.", "info");
+    }
 }

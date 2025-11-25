@@ -1,4 +1,4 @@
-// article-bulk.js (v9.11 orchestrator + fix)
+// article-bulk.js (v9.12 new delivery)
 import { getState, getBulkPlan, updateBulkPlanItem, addBulkArticle, saveBulkArticlesState, getAllBulkArticles } from './article-state.js';
 import { logToConsole, callAI, delay, showElement, disableElement, getArticleOutlinesV2, slugify, constructImagePrompt } from './article-helpers.js';
 import { getElement, updatePlanItemStatusUI } from './article-ui.js';
@@ -11,18 +11,28 @@ export async function handleStartBulkGeneration() {
     const state = getState();
     const plan = getBulkPlan();
     
+    // 1. Validation
     if (plan.length === 0) { alert("Plan is empty."); return; }
     if (state.textProviders.length === 1) {
-        if (!confirm("Warning: You are using only 1 AI Provider. This might hit rate limits or take a long time. Continue?")) return;
+        if (!confirm("Warning: You are using only 1 AI Provider. This might hit rate limits. Continue?")) return;
     }
 
-    // Delivery Check
+    // Delivery Validation
     if (state.deliveryMode === 'wordpress') {
         if (!state.wpUrl || !state.wpUsername || !state.wpPassword) {
-            alert("Please configure WordPress credentials."); return;
+            alert("Please configure ALL WordPress credentials (URL, User, App Password)."); return;
+        }
+        // Basic URL check
+        if (!state.wpUrl.startsWith('http')) {
+            alert("WordPress URL must start with http:// or https://"); return;
+        }
+    } else if (state.deliveryMode === 'github') {
+        if (!state.githubRepoUrl) {
+            alert("Please enter a GitHub Repository URL."); return;
         }
     }
 
+    // 2. UI Setup
     isBulkRunning = true;
     const ui = {
         btn: getElement('startBulkGenerationBtn'),
@@ -36,11 +46,11 @@ export async function handleStartBulkGeneration() {
     showElement(ui.progress, true);
     if(ui.total) ui.total.textContent = plan.length;
 
-    // Execution Loop
-    // We use a worker queue based on provider count
+    // 3. Execution Loop
     const providers = state.textProviders;
     const concurrency = providers.length;
     
+    // Filter only non-completed items
     const queue = plan.map((item, idx) => ({ ...item, originalIndex: idx }))
                       .filter(i => !i.status.startsWith('Completed'));
 
@@ -62,16 +72,25 @@ export async function handleStartBulkGeneration() {
     const workers = Array(concurrency).fill(null).map(() => worker());
     await Promise.all(workers);
 
-    // Final Delivery: ZIP (if selected)
+    // 4. Final Delivery: ZIP (Only if mode is ZIP)
     if (state.deliveryMode === 'zip') {
+        logToConsole("All articles generated. Preparing ZIP...", "info");
         const articles = getAllBulkArticles();
-        await generateZipBundle(articles);
+        if (Object.keys(articles).length > 0) {
+            await generateZipBundle(articles);
+        } else {
+            alert("No articles were generated successfully to zip.");
+        }
     }
 
+    // 5. Cleanup
     isBulkRunning = false;
     disableElement(ui.btn, false);
     showElement(ui.progress, false);
-    logToConsole("Bulk generation complete.", "success");
+    
+    const doneMsg = state.deliveryMode === 'zip' ? "Bulk generation & download complete." : "Bulk generation & posting complete.";
+    logToConsole(doneMsg, "success");
+    alert(doneMsg);
 }
 
 async function processSingleArticle(item, index, providerConfig) {
