@@ -1,4 +1,4 @@
-// article-main.js (v9.10 powerful step 3 v2)
+// article-main.js (v9.10 tabbed flow)
 import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
 import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
 import {
@@ -149,7 +149,8 @@ function setupConfigurationListeners() {
 }
 
 function setupStep1Listeners() {
-    const bulkModeCheckbox = getElement('bulkModeCheckbox');
+    const spintaxTabBtn = getElement('spintaxTabBtn');
+    const bulkTabBtn = getElement('bulkTabBtn');
     const languageSelect = getElement('languageSelect');
     const customLanguageInput = getElement('customLanguageInput');
     const dialectSelect = getElement('dialectSelect');
@@ -168,30 +169,25 @@ function setupStep1Listeners() {
     const sitemapLoadingIndicator = getElement('sitemapLoadingIndicator');
     const bulkKeywordsTextarea = getElement('bulkKeywords');
 
-    bulkModeCheckbox?.addEventListener('change', (e) => {
-        const isBulk = e.target.checked;
+    spintaxTabBtn?.addEventListener('click', () => {
         const currentState = getState();
-        let newFormat = currentState.format; // Start with current format
+        // Switch to Spintax Mode
+        updateState({ 
+            bulkMode: false,
+            format: currentState.formatSingleMode || defaultSettings.format 
+        });
+        updateUIBasedOnMode(false);
+    });
 
-        if (isBulk) {
-            // Switching TO bulk mode
-            newFormat = 'markdown'; // Force to markdown for bulk
-            updateState({
-                bulkMode: true,
-                formatSingleMode: currentState.format, // Save current format as single mode preference
-                format: newFormat
-            });
-            logToConsole(`Switched to Bulk Mode. Format set to Markdown. Single mode format saved: ${currentState.format}`, 'info');
-        } else {
-            // Switching TO single mode
-            newFormat = currentState.formatSingleMode || defaultSettings.format; // Restore single mode format or use default
-            updateState({
-                bulkMode: false,
-                format: newFormat
-            });
-            logToConsole(`Switched to Single Mode. Format restored to: ${newFormat}`, 'info');
-        }
-        updateUIBasedOnMode(isBulk); // Update UI based on the new bulkMode state
+    bulkTabBtn?.addEventListener('click', () => {
+        const currentState = getState();
+        // Switch to Bulk Mode
+        updateState({ 
+            bulkMode: true,
+            formatSingleMode: currentState.format,
+            format: 'markdown'
+        });
+        updateUIBasedOnMode(true);
     });
 
     languageSelect?.addEventListener('change', (e) => { const newLang = e.target.value; const newLangConfig = languageOptions[newLang]; const defaultDialect = newLangConfig?.dialects?.[0] || ''; updateState({ language: newLang, dialect: defaultDialect, customLanguage: '' }); populateDialectsUI(getState()); });

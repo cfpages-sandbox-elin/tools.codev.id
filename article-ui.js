@@ -1,4 +1,4 @@
-// article-ui.js (v9.10 powerful step 3)
+// article-ui.js (v9.10 tabbed flow)
 import { languageOptions, defaultSettings } from './article-config.js';
 import { getState, updateState, getBulkPlan, addProviderToState, removeProviderFromState, updateProviderInState, updateCustomModelState, getCustomModelState } from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2, delay } from './article-helpers.js';
@@ -13,6 +13,9 @@ const elementIdMap = {
     apiStatusIndicator: 'apiStatusIndicator',
     aiProviderContainer: 'aiProviderContainer',
     addProviderBtn: 'addProviderBtn',
+    spintaxTabBtn: 'spintaxTabBtn',
+    bulkTabBtn: 'bulkTabBtn',
+    step1Header: 'step1Header',
     step1Section: 'step1',
     keywordInput: 'keyword',
     bulkModeCheckbox: 'bulkModeCheckbox',
@@ -543,17 +546,34 @@ export function populateDialectsUI(state) {
 
 export function updateUIBasedOnMode(isBulkMode) {
     const appState = getState();
+    const spintaxTabBtn = getElement('spintaxTabBtn');
+    const bulkTabBtn = getElement('bulkTabBtn');
+    const step1Header = getElement('step1Header');
+
+    // 1. Update Tabs Visuals
+    if (spintaxTabBtn && bulkTabBtn) {
+        if (isBulkMode) {
+            spintaxTabBtn.classList.remove('active');
+            bulkTabBtn.classList.add('active');
+        } else {
+            spintaxTabBtn.classList.add('active');
+            bulkTabBtn.classList.remove('active');
+        }
+    }
+
+    // 2. Update Step 1 Header
+    if (step1Header) {
+        step1Header.textContent = isBulkMode ? "Step 1: Bulk Settings 📚" : "Step 1: Article Specifications 🎯";
+    }
+
+    // 3. Toggle Step 1 Content
     const singleKeywordGroup = getElement('keywordInput')?.closest('.input-group');
     const generateSingleBtn = getElement('generateSingleBtn');
-    const step2Section = getElement('step2Section');
-    const step3Section = getElement('step3Section');
-    const step4Section = getElement('step4Section');
-    const formatSelect = getElement('formatSelect');
     const bulkKeywordsContainer = getElement('bulkKeywordsContainer');
     const generatePlanBtn = getElement('generatePlanBtn');
     const batchSizeContainer = getElement('batchSizeContainer');
-    const step1_5Section = getElement('step1_5Section');
-
+    
+    // Show/Hide specific inputs based on mode
     showElement(singleKeywordGroup, !isBulkMode);
     showElement(generateSingleBtn, !isBulkMode);
 
@@ -561,7 +581,15 @@ export function updateUIBasedOnMode(isBulkMode) {
     showElement(generatePlanBtn, isBulkMode);
     showElement(batchSizeContainer, isBulkMode);
 
+    // 4. Handle Steps Visibility
+    const step1_5Section = getElement('step1_5Section');
+    const step2Section = getElement('step2Section');
+    const step3Section = getElement('step3Section');
+    const step4Section = getElement('step4Section');
+    const formatSelect = getElement('formatSelect');
+
     if (isBulkMode) {
+        // BULK MODE: Show 1.5, Hide 2, 3, 4, 5
         showElement(step2Section, false);
         showElement(step3Section, false);
         showElement(step4Section, false);
@@ -578,6 +606,7 @@ export function updateUIBasedOnMode(isBulkMode) {
         }
 
     } else {
+        // SPINTAX MODE: Hide 1.5, Show 2, 3, 4 based on state
         showElement(step1_5Section, false);
 
         const articleStructureTextarea = getElement('articleStructureTextarea');

@@ -1,8 +1,32 @@
-/* article.css (v9.10 powerful step 3) */
+/* article.css (v9.10 tabbed flow) */
 body { font-family: 'Inter', sans-serif; }
 
 input, textarea, button { padding: 0 5px !important; }
 button, input, optgroup, select, textarea { border: 2px solid; }
+
+/* Tab Navigation */
+.tab-btn {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    color: #6b7280; /* gray-500 */
+    background-color: #f3f4f6; /* gray-100 */
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tab-btn:hover {
+    background-color: #e5e7eb; /* gray-200 */
+    color: #374151; /* gray-700 */
+}
+
+.tab-btn.active {
+    color: #4f46e5; /* indigo-600 */
+    background-color: white;
+    border-bottom-color: #4f46e5;
+}
 
 /* --- Spinner Layout (Horizontal Scroll Support) --- */
 
