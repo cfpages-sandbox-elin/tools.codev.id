@@ -1,4 +1,4 @@
-// article-main.js (v9.11 orchestrator)
+// article-main.js (v9.11 orchestrator + fix)
 import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
 import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
 import {
@@ -9,11 +9,11 @@ import {
 } from './article-ui.js';
 import { languageOptions, imageProviders, defaultSettings } from './article-config.js'; // Import defaultSettings
 import { handleGenerateStructure, handleGenerateArticle } from './article-single.js';
-import { prepareKeywords, handleGeneratePlan, handleStartBulkGeneration, handleDownloadZip } from './article-bulk.js';
+import { handleStartBulkGeneration, handleDownloadZip } from './article-bulk.js'; 
 import { handleGenerateIdeas } from './article-ideas.js';
 import { initStep3Editor, setViewMode, setupEditorToolbar, loadEditorFromState } from './article-editor.js';
 import { prepareSpinnerUI, addVariationColumn, removeVariationColumn, handleBulkGenerate, compileSpintax, loadSpinnerData } from './article-spinner.js';
-import { deletePlanRow, handleGeneratePlan } from './article-planning.js';
+import { handleGeneratePlan, deletePlanRow, prepareKeywords } from './article-planning.js'; 
 
 function addProviderToState() {
     const currentState = getState();

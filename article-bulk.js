@@ -1,4 +1,4 @@
-// article-bulk.js (v9.11 orchestrator)
+// article-bulk.js (v9.11 orchestrator + fix)
 import { getState, getBulkPlan, updateBulkPlanItem, addBulkArticle, saveBulkArticlesState, getAllBulkArticles } from './article-state.js';
 import { logToConsole, callAI, delay, showElement, disableElement, getArticleOutlinesV2, slugify, constructImagePrompt } from './article-helpers.js';
 import { getElement, updatePlanItemStatusUI } from './article-ui.js';
@@ -135,4 +135,13 @@ async function processSingleArticle(item, index, providerConfig) {
         logToConsole(`Error processing "${item.title}": ${e.message}`, "error");
         updatePlanItemStatusUI(index, 'Failed', e.message);
     }
+}
+
+export async function handleDownloadZip() {
+    const articles = getAllBulkArticles();
+    if (Object.keys(articles).length === 0) {
+        alert("No articles generated yet.");
+        return;
+    }
+    await generateZipBundle(articles);
 }

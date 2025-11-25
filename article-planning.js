@@ -140,3 +140,25 @@ export function deletePlanRow(index) {
         logToConsole("Row deleted.", "info");
     }
 }
+
+export function prepareKeywords() {
+    const ui = { bulkKeywords: getElement('bulkKeywords') };
+    if (!ui.bulkKeywords) return [];
+    const rawKeywords = ui.bulkKeywords.value.split('\n');
+    const cleanedKeywords = rawKeywords
+        .map(kw => kw
+            .replace(/\(\d+\)/g, '') 
+            .replace(/\s+/g, ' ')    
+            .trim()                  
+        )
+        .filter(kw => kw.length > 0);
+    const uniqueKeywords = [...new Set(cleanedKeywords)];
+    
+    const newTextareaValue = uniqueKeywords.join('\n');
+    ui.bulkKeywords.value = newTextareaValue;
+    
+    // Use imported updateState from article-state.js
+    updateState({ bulkKeywordsContent: newTextareaValue });
+    
+    return uniqueKeywords;
+}
