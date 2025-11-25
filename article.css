@@ -1,7 +1,7 @@
 /* article.css (v9.10 tabbed flow) */
 body { font-family: 'Inter', sans-serif; }
 
-input, textarea, button { padding: 0 5px !important; }
+input, textarea, button { padding: 0 5px; }
 button, input, optgroup, select, textarea { border: 2px solid; }
 
 /* Tab Navigation */
