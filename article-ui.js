@@ -1,4 +1,4 @@
-// article-ui.js (v9.10 tabbed flow)
+// article-ui.js (v9.10 tabbed flow + FIX)
 import { languageOptions, defaultSettings } from './article-config.js';
 import { getState, updateState, getBulkPlan, addProviderToState, removeProviderFromState, updateProviderInState, updateCustomModelState, getCustomModelState } from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2, delay } from './article-helpers.js';
@@ -13,12 +13,12 @@ const elementIdMap = {
     apiStatusIndicator: 'apiStatusIndicator',
     aiProviderContainer: 'aiProviderContainer',
     addProviderBtn: 'addProviderBtn',
+    // Tabs
     spintaxTabBtn: 'spintaxTabBtn',
     bulkTabBtn: 'bulkTabBtn',
-    step1Header: 'step1Header',
     step1Section: 'step1',
+    step1Header: 'step1Header',
     keywordInput: 'keyword',
-    bulkModeCheckbox: 'bulkModeCheckbox',
     bulkKeywordsContainer: 'bulkKeywordsContainer',
     bulkKeywords: 'bulkKeywords',
     generateIdeasBtn: 'generateIdeasBtn',
@@ -79,7 +79,6 @@ const elementIdMap = {
     bulkUploadProgressBar: 'bulkUploadProgressBar',
     bulkUploadProgressText: 'bulkUploadProgressText',
     step2Section: 'step2',
-    toggleStructureVisibilityBtn: 'toggleStructureVisibility',
     articleTitleInput: 'articleTitle',
     structureContainer: 'structureContainer',
     articleStructureTextarea: 'article_structure',
@@ -97,12 +96,12 @@ const elementIdMap = {
     
     // Step 3
     step3Section: 'step3',
-    articleOutputContainer: 'article_output_container',
     visualEditorWrapper: 'visualEditorWrapper',
     visualEditorContainer: 'visualEditorContainer',
     editorToolbar: 'editorToolbar',
     sourceHtmlTextarea: 'sourceHtmlTextarea',
     sourceMdTextarea: 'sourceMdTextarea',
+    articleOutputContainer: 'article_output_container',
     generatedArticleTextarea: 'generated_article',
     htmlPreviewDiv: 'html_preview',
     previewHtmlCheckbox: 'preview_html_checkbox',
@@ -121,10 +120,11 @@ const elementIdMap = {
 
     // Step 5
     step5Section: 'step5',
-    finalSpintaxOutput: 'finalSpintaxOutput', // NEW
-    copySpintaxBtn: 'copySpintaxBtn', // NEW
+    finalSpintaxOutput: 'finalSpintaxOutput',
+    copySpintaxBtn: 'copySpintaxBtn', 
 
-    consoleLogContainer: 'consoleLogContainer',
+    // Misc
+    consoleLogContainer: 'consoleLogSection',
     consoleLog: 'consoleLog',
     structureCountDisplay: 'structureCountDisplay',
     wordCountDisplay: 'wordCountDisplay',

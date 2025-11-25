@@ -1,4 +1,4 @@
-// article-main.js (v9.10 tabbed flow)
+// article-main.js (v9.10 tabbed flow + FIX)
 import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
 import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
 import {
@@ -48,7 +48,7 @@ async function initializeApp() {
     logToConsole("DOMContentLoaded event fired. Initializing application...", "info");
     cacheDomElements();
 
-    const criticalElementsCheck = [ 'languageSelect', 'apiStatusDiv', 'audienceInput', 'bulkModeCheckbox' ];
+    const criticalElementsCheck = [ 'languageSelect', 'apiStatusDiv', 'audienceInput' ];
     let criticalMissing = false;
     criticalElementsCheck.forEach(jsKey => { if (!getElement(jsKey)) { logToConsole(`FATAL: Critical element with JS key '${jsKey}' missing after cache attempt. Cannot initialize UI.`, "error"); criticalMissing = true; } });
     if (criticalMissing) { return; }
@@ -60,12 +60,10 @@ async function initializeApp() {
     logToConsole("Applying loaded state to UI...", "info");
     updateUIFromState(initialState);
     loadSpinnerData(initialState); 
+    try { loadEditorFromState(); } catch(e) { console.warn("Editor load skipped", e); }
 
     const addProviderBtn = getElement('addProviderBtn');
     addProviderBtn?.addEventListener('click', addProviderToState);
-    loadSpinnerData(initialState); 
-    
-    loadEditorFromState();
 
     setupStep4Listeners();
     logToConsole("Setting up other event listeners...", "info");
@@ -78,7 +76,7 @@ async function initializeApp() {
     logToConsole("Final assertion of UI mode...", "info");
     updateUIBasedOnMode(getState().bulkMode);
 
-    setupCollapsibleSections(); // Add this line
+    setupCollapsibleSections();
     logToConsole("Application Initialized successfully.", "success");
 }
 

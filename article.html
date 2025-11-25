@@ -26,10 +26,10 @@
     <!-- NEW: Mode Tabs -->
     <div class="flex mb-4 border-b border-gray-300">
         <button id="spintaxTabBtn" class="tab-btn active">
-            Spintax Article 📝
+            Spintax 📝
         </button>
         <button id="bulkTabBtn" class="tab-btn">
-            Bulk Articles 📚
+            Bulk 📚
         </button>
     </div>
 
@@ -51,13 +51,12 @@
             <div class="mt-3 text-right">
                 <button id="addProviderBtn" class="compact-button text-xs !py-1 !px-2 bg-green-600 hover:bg-green-700">+ Add Provider</button>
             </div>
-            <p class="text-xs text-gray-500 mt-2">For bulk tasks, work will be distributed among all selected providers.</p> 
+            <p class="text-xs text-gray-500 mt-2">For bulk tasks, work will be distributed among all selected providers. For single tasks, the first provider will be used.</p> 
         </div>
     </section>
     
     <section id="step1" class="compact-section"> 
         <div class="section-header">
-            <!-- Header text will be updated dynamically via JS -->
             <h2 id="step1Header" class="text-lg font-semibold text-gray-600">Step 1: Article Specifications 🎯</h2>
             <svg class="chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
         </div>
@@ -70,9 +69,10 @@
                     </div> 
                 </div> 
                 <div> 
-                    <!-- REMOVED: Bulk Mode Checkbox -->
+                    <!-- Bulk checkbox removed -->
                 </div> 
             </div> 
+            
             <div id="bulkKeywordsContainer" class="hidden mb-4"> 
                 <div class="flex justify-between items-center mb-1">
                     <label for="bulkKeywords" class="compact-label">Keywords (one per line):</label>
@@ -84,8 +84,9 @@
                 </div>
                 <div id="ideasProgressText" class="text-sm text-center text-gray-600 mt-1 hidden">Generating ideas...</div>
                 <p class="text-xs text-gray-500 mt-1">Idea generation uses the first keyword. For planning, duplicates and symbols will be removed.</p> 
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+            </div> 
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6"> 
                 <div> 
                     <div class="input-group grid grid-cols-3 items-center gap-x-2 mt-1"> 
                         <label for="language" class="compact-label">Language <span class="text-red-500">*</span>🗣️:</label> 
@@ -358,6 +359,7 @@
         </div>
     </section>
     
+    <!-- Step 3: Review & Edit Article -->
     <section id="step3" class="compact-section hidden"> 
         <div class="section-header">
             <h2 class="text-lg font-semibold text-gray-600">Step 3: Review & Edit Article 📝</h2> 
@@ -368,8 +370,8 @@
             <!-- View Mode Buttons -->
             <div class="flex gap-2 mb-2">
                 <button class="compact-button bg-indigo-600 text-white view-mode-btn" data-mode="visual">Visual Editor 👁️</button>
-                <button class="compact-button bg-white text-gray-700 border-gray-300 hover:bg-gray-50 view-mode-btn" data-mode="html">HTML Source 🇭🇹🇲🇱 </button>
-                <button class="compact-button bg-white text-gray-700 border-gray-300 hover:bg-gray-50 view-mode-btn" data-mode="markdown">MD Format 🇲🇩 </button>
+                <button class="compact-button bg-white text-gray-700 border-gray-300 hover:bg-gray-50 view-mode-btn" data-mode="html">HTML 🇭🇹🇲🇱 </button>
+                <button class="compact-button bg-white text-gray-700 border-gray-300 hover:bg-gray-50 view-mode-btn" data-mode="markdown">Markdown 🇲🇩</button>
             </div>
 
             <!-- Visual Editor Area -->
@@ -418,9 +420,13 @@
             <svg class="chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
         </div>
         <div class="section-body relative">
+            
+            <!-- Scroll Button -->
             <button id="scrollToStep5Btn" class="floating-scroll-btn hidden">
                 ⬇️ Scroll to Step 5
             </button>
+
+            <!-- Buttons -->
             <div class="flex justify-end space-x-2 mb-4">
                 <button id="removeVariationColumnBtn" class="compact-button bg-red-500 hover:bg-red-600 text-xs">
                     - Delete Column
@@ -433,6 +439,7 @@
                 </button>
             </div>
 
+            <!-- Progress Bar -->
             <div id="bulkSpinnerProgressContainer" class="w-full bg-gray-200 rounded-full h-4 mb-4 hidden relative overflow-hidden">
                 <div id="bulkSpinnerProgressBar" class="bg-indigo-600 h-4 rounded-full transition-all duration-300 ease-out text-xs font-medium text-white text-center leading-4" style="width: 0%">0%</div>
             </div>
@@ -465,7 +472,7 @@
 
     <section id="consoleLogSection" class="compact-section collapsed">
         <div class="section-header">
-            <h3 class="text-md font-semibold text-gray-400">Console Log 🪵</h3>
+            <h3 class="text-md font-semibold text-gray-400">Console Log 👨🏻‍💻</h3>
             <svg class="chevron-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
         </div>
         <div class="section-body">
@@ -479,8 +486,8 @@
     <script type="module" src="article-ui.js"></script>
     <script type="module" src="article-prompts.js"></script>
     <script type="module" src="article-single.js"></script>
-    <script type="module" src="article-bulk.js"></script>
     <script type="module" src="article-editor.js"></script>
+    <script type="module" src="article-bulk.js"></script>
     <script type="module" src="article-ideas.js"></script>
     <script type="module" src="article-spinner.js"></script>
     <script type="module" src="article-main.js"></script>
