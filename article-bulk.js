@@ -1,4 +1,4 @@
-// article-bulk.js (v9.12 new delivery)
+// article-bulk.js (v9.13 canggih)
 import { getState, getBulkPlan, updateBulkPlanItem, addBulkArticle, saveBulkArticlesState, getAllBulkArticles } from './article-state.js';
 import { logToConsole, callAI, delay, showElement, disableElement, getArticleOutlinesV2, slugify, constructImagePrompt } from './article-helpers.js';
 import { getElement, updatePlanItemStatusUI } from './article-ui.js';
@@ -98,79 +98,110 @@ async function processSingleArticle(item, index, providerConfig) {
     const state = getState();
 
     try {
-        // 1. Structure Generation
-        logToConsole(`[${item.keyword}] Generating structure...`, 'info');
-        const structurePayload = {
-            providerKey: providerConfig.provider,
-            model: providerConfig.model,
-            prompt: getBulkStructurePrompt(item)
-        };
-        const structRes = await callAI('generate', structurePayload);
-        if (!structRes.success) throw new Error(`Structure generation failed: ${structRes.error}`);
-        
-        const sections = getArticleOutlinesV2(structRes.text);
+        // --- 1. Build Internal Link Context ---
+        const plan = getBulkPlan();
+        const linkMap = {};
+
+        // A. From Current Plan (Relative URLs)
+        plan.forEach(p => {
+            // Don't link to self
+            if (p.slug && p.slug !== item.slug) {
+                const relPath = state.deliveryMode === 'wordpress' 
+                    ? `/${p.slug}` 
+                    : `/${p.slug}`; 
+                
+                linkMap[p.keyword] = relPath;
+                linkMap[p.title] = relPath;
+            }
+        });
+
+        // B. From Existing Posts (WP)
+        if (state.existingPostLinks && Array.isArray(state.existingPostLinks)) {
+            state.existingPostLinks.forEach(p => {
+                try {
+                    const urlObj = new URL(p.link);
+                    const path = urlObj.pathname;
+                    linkMap[p.title] = path;
+                } catch (e) {
+                    // Ignore invalid URLs
+                }
+            });
+        }
+
+        const linkContext = Object.entries(linkMap)
+            .slice(0, 30) 
+            .map(([k, v]) => `- Keyphrase: "${k}" -> Link: ${v}`)
+            .join('\n');
+
+
+        // --- 2. Parse Structure ---
+        if (!item.structure) {
+            throw new Error("Structure not found. Please run 'Generate Structures' phase first.");
+        }
+
+        const sections = getArticleOutlinesV2(item.structure);
         if (sections.length === 0) throw new Error("No sections parsed from structure.");
 
-        // 2. Content Generation (Section by Section)
+
+        // --- 3. Content Generation ---
         let articleBody = "";
         let prevContext = "";
 
         for (let i = 0; i < sections.length; i++) {
             const section = sections[i];
-            logToConsole(`[${item.keyword}] Generating section ${i+1}/${sections.length}...`, 'info');
-            
+            logToConsole(`[${item.keyword}] Generating section ${i + 1}/${sections.length}...`, 'info');
+
             const textPayload = {
                 providerKey: providerConfig.provider,
                 model: providerConfig.model,
-                prompt: getBulkSectionTextPrompt(item, section, prevContext)
+                prompt: getBulkSectionTextPrompt(item, section, prevContext, linkContext)
             };
-            
-            // Strict Check: Wait for response
+
             const textRes = await callAI('generate', textPayload);
-            
-            // CRITICAL FIX: If any section fails, abort the whole article
+
             if (!textRes.success || !textRes.text) {
                 throw new Error(`Generation failed at section "${section.heading}": ${textRes.error || 'Empty response'}`);
             }
-            
+
             articleBody += textRes.text + "\n\n";
             prevContext = textRes.text;
-            
-            await delay(300); // Rate limit buffer
+
+            await delay(300); 
         }
 
-        // 3. Final Assembly with Frontmatter (Metadata)
+
+        // --- 4. Final Assembly ---
         const fileExtension = state.format === 'html' ? '.html' : '.md';
         const filename = item.slug + fileExtension;
-        
-        // Construct Content
         let finalContent = articleBody;
 
-        // If Markdown/GitHub, Add Frontmatter
+        // Add Frontmatter if Markdown/GitHub
         if (state.format === 'markdown' || state.deliveryMode === 'github') {
             const dateStr = item.scheduledDate ? item.scheduledDate : new Date().toISOString();
+            // Added category to frontmatter as requested previously
+            const categoryLine = item.category ? `category: "${item.category}"\n` : '';
+            
             const frontmatter = `---
-                title: "${item.title.replace(/"/g, '\\"')}"
-                date: ${dateStr}
-                author: ${state.readerName || 'Admin'}
-                intent: ${item.intent}
-                ---\n\n`;
+title: "${item.title.replace(/"/g, '\\"')}"
+date: ${dateStr}
+${categoryLine}author: ${state.readerName || 'Admin'}
+intent: ${item.intent}
+---\n\n`;
             finalContent = frontmatter + articleBody;
         }
 
-        // 4. Validation
         if (finalContent.length < 200) {
-            throw new Error("Generated article is too short (potential error). Delivery skipped.");
+            throw new Error("Generated article is too short. Delivery skipped.");
         }
 
-        // 5. Save Locally
+        // --- 5. Save Locally ---
         addBulkArticle(filename, finalContent);
 
-        // 6. Delivery (WP / GitHub)
-        // Only runs if we reached this line (meaning all sections passed)
+
+        // --- 6. Delivery ---
         if (state.deliveryMode === 'wordpress' || state.deliveryMode === 'github') {
             updatePlanItemStatusUI(index, 'Delivering...');
-            
+
             const deliveryData = {
                 title: item.title,
                 content: finalContent,
@@ -179,9 +210,9 @@ async function processSingleArticle(item, index, providerConfig) {
             };
 
             const deliveryRes = await deliverArticle(deliveryData, index);
-            
+
             if (!deliveryRes.success) {
-                 throw new Error(`Delivery failed: ${deliveryRes.error}`);
+                throw new Error(`Delivery failed: ${deliveryRes.error}`);
             }
         }
 

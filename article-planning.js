@@ -1,30 +1,71 @@
-// article-planning.js (v9.12 new delivery)
-import { getState, setBulkPlan, getBulkPlan, updateState } from './article-state.js';
-import { callAI, logToConsole, slugify, delay, showElement, disableElement } from './article-helpers.js';
+// article-planning.js (v9.13 canggih)
+import { getState, setBulkPlan, getBulkPlan, updateBulkPlanItem, updateState } from './article-state.js';
+import { callAI, logToConsole, slugify, delay, showElement, disableElement, getArticleOutlinesV2 } from './article-helpers.js';
 import { getElement, renderPlanningTable } from './article-ui.js';
 import { calculateDistributionDates } from './article-delivery.js';
+import { getBulkStructurePrompt } from './article-prompts.js';
 
-// --- Prompts ---
-function getBrainstormPrompt(keywords, language, audience) {
-    return `Analyze the following seed keywords:
-${keywords.join(', ')}
+// --- Fetch WP Data ---
+async function fetchWpContext() {
+    const state = getState();
+    if (state.deliveryMode !== 'wordpress' || !state.wpUrl) return;
 
-Task: Brainstorm a list of unique, engaging article topics based on these seeds.
-Target Audience: ${audience}
-Language: ${language}
+    const credentials = {
+        wpUrl: state.wpUrl,
+        username: state.wpUsername,
+        password: state.wpPassword,
+        action: 'get_categories'
+    };
 
-Requirements:
-1. Avoid duplicate intents (e.g., "How to buy X" and "Buying Guide for X" are duplicates).
-2. Generate SEO-friendly Titles.
-3. Determine the Search Intent (Informational, Commercial, Transactional).
-4. Create a URL-friendly Slug.
+    logToConsole("Fetching WordPress categories...", "info");
+    
+    try {
+        // Fetch Categories
+        const catRes = await fetch('/wordpress-api', {
+            method: 'POST',
+            body: JSON.stringify(credentials)
+        }).then(r => r.json());
 
-Output strictly as a JSON Array of objects:
-[{"keyword": "seed used", "title": "The Title", "slug": "the-slug", "intent": "Informational"}]
-`;
+        if (catRes.success) {
+            const catNames = catRes.categories.map(c => c.name);
+            updateState({ availableCategories: catNames });
+            logToConsole(`Found ${catNames.length} WP categories.`, "success");
+        }
+
+        // Fetch Posts (for linking)
+        credentials.action = 'get_posts';
+        const postRes = await fetch('/wordpress-api', {
+            method: 'POST',
+            body: JSON.stringify(credentials)
+        }).then(r => r.json());
+
+        if (postRes.success) {
+            updateState({ existingPostLinks: postRes.posts });
+            logToConsole(`Found ${postRes.posts.length} existing WP posts for linking.`, "success");
+        }
+
+    } catch (e) {
+        logToConsole("Failed to fetch WP context. Proceeding without it.", "warn");
+    }
 }
 
-// --- Logic ---
+function getPlanningPrompt(keywords, categories) {
+    const catString = categories.length > 0 
+        ? `Choose the best Category from this list: [${categories.join(', ')}]. If none fit, create a new one.`
+        : `Create a relevant Category for each topic.`;
+
+    return `Analyze these keywords:
+        ${keywords.join(', ')}
+
+        Task: Plan a content calendar.
+        1. Generate a unique Title.
+        2. Create a SEO slug.
+        3. Determine User Intent.
+        4. ${catString}
+
+        Output strictly JSON Array:
+        [{"keyword": "...", "title": "...", "slug": "...", "intent": "...", "category": "..."}]`;
+}
 
 export async function handleGeneratePlan() {
     const ui = {
@@ -36,24 +77,20 @@ export async function handleGeneratePlan() {
 
     const rawText = ui.bulkKeywords.value.trim();
     if (!rawText) { alert("Please enter keywords."); return; }
-
     const keywords = rawText.split('\n').map(k => k.trim()).filter(k => k);
-    
-    // Warning check
     const state = getState();
-    const providers = state.textProviders;
-    if (providers.length === 0) { alert("No AI Provider configured."); return; }
 
     showElement(ui.step1_5, true);
     showElement(ui.loading, true);
     disableElement(ui.btn, true);
 
-    logToConsole(`Brainstorming topics for ${keywords.length} keywords...`, "info");
+    // 1. Context Fetch (if WP)
+    await fetchWpContext();
+    const freshState = getState(); // Get updated state
 
     try {
-        // We use the first provider for planning
-        const provider = providers[0]; 
-        const prompt = getBrainstormPrompt(keywords, state.language, state.audience);
+        const provider = state.textProviders[0]; 
+        const prompt = getPlanningPrompt(keywords, freshState.availableCategories);
         
         const payload = {
             providerKey: provider.provider,
@@ -61,36 +98,23 @@ export async function handleGeneratePlan() {
             prompt: prompt
         };
 
+        logToConsole("Generating content plan...", "info");
         const result = await callAI('generate', payload);
         
         let newPlanItems = [];
         if (result.success && result.text) {
             try {
-                // Attempt to find JSON
                 const jsonMatch = result.text.match(/\[.*\]/s);
-                if (jsonMatch) {
-                    newPlanItems = JSON.parse(jsonMatch[0]);
-                } else {
-                    throw new Error("No JSON found");
-                }
+                if (jsonMatch) newPlanItems = JSON.parse(jsonMatch[0]);
             } catch (e) {
-                logToConsole("Failed to parse AI plan. Fallback to simple map.", "warn");
-                // Fallback
+                logToConsole("Plan JSON parse error. Using fallback.", "warn");
                 newPlanItems = keywords.map(k => ({
-                    keyword: k,
-                    title: `Guide to ${k}`,
-                    slug: slugify(k),
-                    intent: 'Informational'
+                    keyword: k, title: k, slug: slugify(k), intent: 'Info', category: 'Uncategorized'
                 }));
             }
         }
 
-        // Deduplication Logic
-        const existingPlan = getBulkPlan(); // In case we are appending
-        // For this button, we usually overwrite or append? Let's Overwrite for a fresh plan based on input
-        // Actually, simpler to just set it fresh.
-        
-        // Deduplicate internal list based on Slug
+        // Deduplicate & Format
         const uniqueItems = [];
         const seenSlugs = new Set();
         
@@ -98,23 +122,19 @@ export async function handleGeneratePlan() {
             const s = slugify(item.slug || item.title);
             if (!seenSlugs.has(s)) {
                 seenSlugs.add(s);
-                uniqueItems.push({ ...item, slug: s, status: 'Pending' });
+                uniqueItems.push({ 
+                    ...item, 
+                    slug: s, 
+                    status: 'Pending',
+                    structure: '' // Initialize empty structure
+                });
             }
         });
 
-        // Update State
         setBulkPlan(uniqueItems);
-        
-        // Calculate Dates if WP mode (preview)
-        // We will do this dynamically in render or just update state
-        const dates = calculateDistributionDates(uniqueItems.length);
-        if (dates.length > 0) {
-            uniqueItems.forEach((item, i) => item.scheduledDate = dates[i]);
-            setBulkPlan(uniqueItems); // Save with dates
-        }
-
+        recalculatePlanDates(); // Apply dates
         renderPlanningTable(uniqueItems);
-        logToConsole(`Plan generated with ${uniqueItems.length} unique topics.`, "success");
+        logToConsole(`Plan created with ${uniqueItems.length} topics.`, "success");
 
     } catch (e) {
         logToConsole(`Planning error: ${e.message}`, "error");
@@ -122,6 +142,57 @@ export async function handleGeneratePlan() {
         showElement(ui.loading, false);
         disableElement(ui.btn, false);
     }
+}
+
+// --- Phase 1: Bulk Structure Generation ---
+export async function generateBulkStructures() {
+    const plan = getBulkPlan();
+    const state = getState();
+    const provider = state.textProviders[0];
+    
+    const queue = plan.map((item, idx) => ({ ...item, index: idx }))
+                      .filter(i => !i.structure); // Only those without structure
+
+    if (queue.length === 0) {
+        alert("All articles already have structures.");
+        return;
+    }
+
+    if(!confirm(`Generate structures for ${queue.length} articles?`)) return;
+
+    const progress = getElement('bulkGenerationProgress');
+    showElement(progress, true);
+
+    for (let i = 0; i < queue.length; i++) {
+        const item = queue[i];
+        progress.textContent = `Structuring ${i+1}/${queue.length}: ${item.keyword}...`;
+        
+        try {
+            const prompt = getBulkStructurePrompt(item);
+            const res = await callAI('generate', {
+                providerKey: provider.provider,
+                model: provider.model,
+                prompt: prompt
+            });
+
+            if (res.success) {
+                // Save structure to plan
+                updateBulkPlanItem(item.index, { structure: res.text, status: 'Structure Ready' });
+            }
+            await delay(250); // Polite delay
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    renderPlanningTable(getBulkPlan()); // Refresh UI to show "Structure Ready"
+    showElement(progress, false);
+    logToConsole("Bulk Structure Generation Complete.", "success");
+    
+    // Refresh button state
+    const btn = getElement('startBulkGenerationBtn');
+    btn.textContent = "🚀 Start Bulk Generation (Content)";
+    btn.classList.replace('bg-yellow-600', 'bg-indigo-700');
 }
 
 export function deletePlanRow(index) {

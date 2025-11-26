@@ -1,4 +1,4 @@
-// article-prompts.js v9.03 centralization
+// article-prompts.js (v9.13 canggih)
 import { getState, getBulkPlan } from './article-state.js';
 import { languageOptions } from './article-config.js';
 
@@ -88,7 +88,7 @@ export function getBulkSectionTextPrompt(planItem, section, previousContext) {
     const externalUrls = sitemapUrls.slice(0, 5); // Limit suggestions
 
     // Build Linking Instructions
-    let linkingInstructions = '\n\nLinking Instructions (Optional):\n';
+    let linkingInstructions = `\nInternal Link Opportunities (Use these if relevant):\n${linkContext}\n`;
     const linkTypePref = state.linkTypeInternal ? 'Internal (use relative paths like /slug)' : 'External (use full URLs)';
     linkingInstructions += `- Link Type Preference: ${linkTypePref}.\n`;
     if (otherSlugs.length > 0 && state.linkTypeInternal) {

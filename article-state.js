@@ -1,4 +1,4 @@
-// article-state.js (v8.24 multi ai provider) - CORRECTED
+// article-state.js (v9.13 canggih)
 import { defaultSettings as importedDefaultSettings, storageKeys } from './article-config.js';
 import { logToConsole } from './article-helpers.js';
 

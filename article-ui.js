@@ -1,6 +1,6 @@
-// article-ui.js (v9.12 new delivery)
+// article-ui.js (v9.13 canggih)
 import { languageOptions, defaultSettings } from './article-config.js';
-import { getState, updateState, getBulkPlan, addProviderToState, removeProviderFromState, updateProviderInState, updateCustomModelState, getCustomModelState } from './article-state.js';
+import { getState, updateState, getBulkPlan, addProviderToState, removeProviderFromState, updateProviderInState, updateCustomModelState, getCustomModelState, updateBulkPlanItem } from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2, delay } from './article-helpers.js';
 
 let ALL_PROVIDERS_CONFIG = { text: {}, image: {} };
@@ -97,6 +97,12 @@ const elementIdMap = {
     // Github
     githubRepoUrlDelivery: 'githubRepoUrlDelivery',
     githubPathDelivery: 'githubPathDelivery',
+    // Bulk Structure
+    structureModal: 'structureModal',
+    modalStructureText: 'modalStructureText',
+    modalRowIndex: 'modalRowIndex',
+    saveStructureBtn: 'saveStructureBtn',
+    closeModalBtn: 'closeModalBtn',
     // Step 2
     step2Section: 'step2',
     articleTitleInput: 'articleTitle',
@@ -823,82 +829,134 @@ export function updateUIFromState(state) {
 export function renderPlanningTable(plan) {
     const tableBody = getElement('planningTableBody');
     const downloadBtn = getElement('downloadBulkZipBtn');
+    const startBtn = getElement('startBulkGenerationBtn');
+    
     if (!tableBody) return;
-
-    if(downloadBtn) showElement(downloadBtn, false);
-
     tableBody.innerHTML = '';
-    if (!plan || plan.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-gray-500 py-4">No plan generated or loaded.</td></tr>';
-        return;
-    }
 
-    const hasCompletedArticles = plan.some(item => item.status?.startsWith('Completed'));
-    if (hasCompletedArticles && downloadBtn) {
-        showElement(downloadBtn, true);
+    // Check if we need to generate structures first
+    const needsStructure = plan.some(i => !i.structure);
+    if (startBtn) {
+        if (needsStructure) {
+            startBtn.textContent = "🏗️ Generate Bulk Structures";
+            startBtn.classList.remove('bg-indigo-700');
+            startBtn.classList.add('bg-yellow-600');
+            // We will handle the click logic in main.js
+        } else {
+            startBtn.textContent = "🚀 Start Bulk Generation";
+            startBtn.classList.remove('bg-yellow-600');
+            startBtn.classList.add('bg-indigo-700');
+        }
     }
 
     plan.forEach((item, index) => {
         const row = tableBody.insertRow();
-        row.dataset.index = index;
-        let cell;
-
-        cell = row.insertCell();
-        cell.textContent = index + 1;
-        cell.classList.add('px-3', 'py-2', 'text-xs', 'text-center', 'text-gray-500');
-
-        cell = row.insertCell();
-        cell.textContent = item.keyword || 'N/A';
-        cell.classList.add('px-3', 'py-2', 'whitespace-nowrap', 'text-xs');
-
-        cell = row.insertCell();
+        
+        row.insertCell().textContent = index + 1;
+        row.insertCell().textContent = item.keyword;
+        
+        let cell = row.insertCell();
         const titleInput = document.createElement('input');
-        titleInput.type = 'text';
-        titleInput.value = item.title || '';
-        titleInput.dataset.field = 'title';
-        titleInput.classList.add('compact-input', 'p-1', 'text-xs', 'w-full');
+        titleInput.type = 'text'; titleInput.value = item.title; titleInput.dataset.field='title';
+        titleInput.className = 'compact-input p-1 text-xs w-full';
         cell.appendChild(titleInput);
-        cell.classList.add('px-3', 'py-2');
 
         cell = row.insertCell();
         const slugInput = document.createElement('input');
-        slugInput.type = 'text';
-        slugInput.value = item.slug || '';
-        slugInput.dataset.field = 'slug';
-        slugInput.classList.add('compact-input', 'p-1', 'text-xs', 'w-full');
+        slugInput.type = 'text'; slugInput.value = item.slug; slugInput.dataset.field='slug';
+        slugInput.className = 'compact-input p-1 text-xs w-full';
         cell.appendChild(slugInput);
-        cell.classList.add('px-3', 'py-2');
 
+        // Category Column
         cell = row.insertCell();
-        const intentInput = document.createElement('input');
-        intentInput.type = 'text';
-        intentInput.value = item.intent || '';
-        intentInput.dataset.field = 'intent';
-        intentInput.classList.add('compact-input', 'p-1', 'text-xs', 'w-full');
-        cell.appendChild(intentInput);
-        cell.classList.add('px-3', 'py-2');
+        const catInput = document.createElement('input');
+        catInput.type = 'text'; catInput.value = item.category || ''; catInput.dataset.field='category';
+        catInput.className = 'compact-input p-1 text-xs w-24';
+        cell.appendChild(catInput);
 
+        row.insertCell().textContent = item.intent;
+        
+        // Status with Structure Indicator
         cell = row.insertCell();
-        cell.classList.add('px-3', 'py-2', 'whitespace-nowrap', 'text-xs');
-        updatePlanItemStatusUI(row, item.status || 'Pending', item.error);
+        const hasStruct = item.structure ? '✅' : '🌑';
+        cell.innerHTML = `<span title="${item.structure ? 'Structure Ready' : 'No Structure'}">${hasStruct}</span> ${item.status}`;
+        cell.className = 'text-xs whitespace-nowrap';
 
-        // Add Date Column
-        cell = row.insertCell();
-        cell.className = 'px-3 py-2 text-xs text-gray-500';
-        cell.textContent = item.scheduledDate ? new Date(item.scheduledDate).toLocaleDateString() : '-';
+        // Date
+        row.insertCell().textContent = item.scheduledDate ? new Date(item.scheduledDate).toLocaleDateString() : '-';
 
-        // Add Actions Column (Delete)
+        // Actions
         cell = row.insertCell();
+        cell.className = 'flex gap-2';
+        
+        // View/Edit Structure Button
+        const structBtn = document.createElement('button');
+        structBtn.innerHTML = '📝';
+        structBtn.title = "View/Edit Structure";
+        structBtn.className = 'hover:bg-gray-200 rounded p-1';
+        structBtn.onclick = () => openStructureModal(index);
+        cell.appendChild(structBtn);
+
+        // Delete Button
         const delBtn = document.createElement('button');
-        delBtn.textContent = '🗑️';
-        delBtn.className = 'text-red-500 hover:text-red-700 px-2';
+        delBtn.innerHTML = '🗑️';
+        delBtn.className = 'text-red-500 hover:text-red-700';
         delBtn.onclick = () => {
-            // Import dynamically to avoid circular deps if possible, or pass callback
-            // Better: Dispatch custom event
             const event = new CustomEvent('delete-plan-row', { detail: { index } });
             document.dispatchEvent(event);
         };
         cell.appendChild(delBtn);
+    });
+}
+
+export function openStructureModal(index) {
+    const plan = require('./article-state.js').getBulkPlan(); // Dynamic import to avoid cycle if possible, or passed
+    // actually imports are hoisted. Access global state safely.
+    // Better: pass data. But for now:
+    // Let's assume `getBulkPlan` is available or we access it differently. 
+    // To keep article-ui.js clean, we should probably fire an event, but direct access is easier:
+    // import { getBulkPlan } from './article-state.js'; is at top.
+    
+    // Re-import at top of file if missing: import { getBulkPlan, updateBulkPlanItem } from './article-state.js';
+    const item = getBulkPlan()[index];
+    
+    const modal = document.getElementById('structureModal');
+    const textarea = document.getElementById('modalStructureText');
+    const hiddenIdx = document.getElementById('modalRowIndex');
+    
+    textarea.value = item.structure || "";
+    hiddenIdx.value = index;
+    
+    modal.classList.remove('hidden');
+}
+
+export function setupModalListeners() {
+    const modal = getElement('structureModal');
+    const closeBtn = getElement('closeModalBtn');
+    const saveBtn = getElement('saveStructureBtn');
+    const textarea = getElement('modalStructureText');
+    const hiddenIdx = getElement('modalRowIndex');
+    
+    const closeModal = () => modal.classList.add('hidden');
+    
+    closeBtn?.addEventListener('click', closeModal);
+    
+    saveBtn?.addEventListener('click', () => {
+        const idx = parseInt(hiddenIdx.value);
+        const newStruct = textarea.value;
+        const { updateBulkPlanItem } = require('./article-state.js'); // Dynamic or import at top
+        // NOTE: It is better to import updateBulkPlanItem at the top.
+        
+        // Update State
+        // We need to update the plan item
+        // Assuming updateBulkPlanItem is imported at top:
+        // updateBulkPlanItem(idx, { structure: newStruct, status: 'Structure Edited' });
+        
+        // Fire event to update state
+        const event = new CustomEvent('update-structure', { detail: { index: idx, structure: newStruct } });
+        document.dispatchEvent(event);
+        
+        closeModal();
     });
 }
 

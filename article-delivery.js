@@ -1,4 +1,4 @@
-// article-delivery.js (v9.12 new delivery)
+// article-delivery.js (v9.13 canggih)
 import { getState } from './article-state.js';
 import { callAI, logToConsole, slugify, delay } from './article-helpers.js';
 

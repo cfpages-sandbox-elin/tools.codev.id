@@ -3,7 +3,8 @@
  * WordPress Publishing Proxy for Cloudflare Functions
  * =================================================================================
  * Securely publishes content to a WordPress site via the REST API.
- * endpoint: /wordpress-api
+ * Endpoint: /wordpress-api
+ * Version: v9.13 canggih
  */
 
 const jsonResponse = (data, status = 200) => {
@@ -43,53 +44,97 @@ export async function onRequest({ request }) {
         return jsonResponse({ success: false, error: 'Invalid JSON body' }, 400);
     }
 
-    const { wpUrl, username, password, title, content, status, date, categories, tags } = body;
+    // 4. Extract Common Credentials & Action
+    const { wpUrl, username, password, action } = body;
 
-    // 4. Validate Inputs
-    if (!wpUrl || !username || !password || !title || !content) {
-        return jsonResponse({ success: false, error: 'Missing required fields (wpUrl, username, password, title, content)' }, 400);
+    if (!wpUrl || !username || !password) {
+        return jsonResponse({ success: false, error: 'Missing WordPress credentials (URL, User, Password)' }, 400);
     }
 
-    // 5. Prepare WordPress Request
-    // Ensure URL ends with /wp-json/wp/v2/posts
-    const cleanBaseUrl = wpUrl.replace(/\/$/, ''); 
-    const endpoint = `${cleanBaseUrl}/wp-json/wp/v2/posts`;
-    
-    // Basic Auth
+    // Helper: Prepare Headers & Clean URL
+    const cleanBaseUrl = wpUrl.replace(/\/$/, '');
     const authString = btoa(`${username}:${password}`);
+    const headers = {
+        'Authorization': `Basic ${authString}`,
+        'Content-Type': 'application/json',
+        'User-Agent': 'Cloudflare-Worker-WP-Publisher/1.0'
+    };
 
+    // --- ACTION: Get Categories ---
+    if (action === 'get_categories') {
+        const endpoint = `${cleanBaseUrl}/wp-json/wp/v2/categories?per_page=100`;
+        
+        try {
+            const response = await fetch(endpoint, { method: 'GET', headers });
+            if (!response.ok) throw new Error(`WP Error ${response.status}: ${response.statusText}`);
+            
+            const categories = await response.json();
+            return jsonResponse({ 
+                success: true, 
+                categories: categories.map(c => ({ id: c.id, name: c.name, slug: c.slug })) 
+            });
+        } catch (e) {
+            return jsonResponse({ success: false, error: e.message }, 500);
+        }
+    }
+
+    // --- ACTION: Get Posts (For Internal Linking) ---
+    if (action === 'get_posts') {
+        // Get minimal fields to save bandwidth
+        const endpoint = `${cleanBaseUrl}/wp-json/wp/v2/posts?per_page=50&_fields=id,title,link,slug`;
+        
+        try {
+            const response = await fetch(endpoint, { method: 'GET', headers });
+            if (!response.ok) throw new Error(`WP Error ${response.status}: ${response.statusText}`);
+            
+            const posts = await response.json();
+            return jsonResponse({ 
+                success: true, 
+                posts: posts.map(p => ({ 
+                    id: p.id, 
+                    title: p.title.rendered, 
+                    link: p.link, 
+                    slug: p.slug 
+                })) 
+            });
+        } catch (e) {
+            return jsonResponse({ success: false, error: e.message }, 500);
+        }
+    }
+
+    // --- ACTION: Publish (Default) ---
+    // Now we validate the specific fields required for publishing
+    const { title, content, status, date } = body;
+
+    if (!title || !content) {
+        return jsonResponse({ success: false, error: 'Missing title or content for publishing.' }, 400);
+    }
+
+    const endpoint = `${cleanBaseUrl}/wp-json/wp/v2/posts`;
     const wpPayload = {
         title: title,
         content: content,
         status: status || 'draft',
-        date: date, // ISO 8601 format (YYYY-MM-DDTHH:mm:ss)
-        // categories: categories, // Array of IDs (optional)
-        // tags: tags // Array of IDs (optional)
+        date: date, // ISO 8601
     };
 
     try {
-        console.log(`Publishing to: ${endpoint} with status: ${wpPayload.status}`);
+        console.log(`Publishing to: ${endpoint}`);
 
         const response = await fetch(endpoint, {
             method: 'POST',
-            headers: {
-                'Authorization': `Basic ${authString}`,
-                'Content-Type': 'application/json',
-                'User-Agent': 'Cloudflare-Worker-WP-Publisher/1.0'
-            },
+            headers: headers,
             body: JSON.stringify(wpPayload)
         });
 
         const responseData = await response.json();
 
         if (!response.ok) {
-            // Handle WP Errors (e.g., invalid_username, empty_content)
             const errorMessage = responseData.message || responseData.code || 'Unknown WordPress Error';
             console.error(`WP Error (${response.status}):`, errorMessage);
             return jsonResponse({ success: false, error: `WordPress API Error: ${errorMessage}` }, response.status);
         }
 
-        // Success
         return jsonResponse({ 
             success: true, 
             postId: responseData.id, 

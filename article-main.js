@@ -1,11 +1,15 @@
-// article-main.js (v9.12 new delivery)
-import { loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, setBulkPlan, updateBulkPlanItem } from './article-state.js';
+// article-main.js (v9.13 canggih)
+import { 
+    loadState, updateState, resetAllData, getCustomModelState, updateCustomModelState, getState, 
+    setBulkPlan, updateBulkPlanItem, getBulkPlan 
+} from './article-state.js';
 import { logToConsole, fetchAndParseSitemap, showLoading, disableElement, slugify, showElement } from './article-helpers.js';
 import {
     cacheDomElements, getElement, renderAiProviderRows, initializeProviderUI,
     populateImageModels, updateUIFromState, updateUIBasedOnMode, toggleCustomModelUI,
     populateLanguagesUI, populateDialectsUI, toggleGithubOptions, checkApiStatus,
-    displaySitemapUrlsUI, updateCounts, updateStructureCountDisplay
+    displaySitemapUrlsUI, updateCounts, updateStructureCountDisplay, setupModalListeners, 
+    renderPlanningTable
 } from './article-ui.js';
 import { languageOptions, imageProviders, defaultSettings } from './article-config.js'; // Import defaultSettings
 import { handleGenerateStructure, handleGenerateArticle } from './article-single.js';
@@ -13,7 +17,7 @@ import { handleStartBulkGeneration, handleDownloadZip } from './article-bulk.js'
 import { handleGenerateIdeas } from './article-ideas.js';
 import { initStep3Editor, setViewMode, setupEditorToolbar, loadEditorFromState } from './article-editor.js';
 import { prepareSpinnerUI, addVariationColumn, removeVariationColumn, handleBulkGenerate, compileSpintax, loadSpinnerData } from './article-spinner.js';
-import { handleGeneratePlan, deletePlanRow, prepareKeywords } from './article-planning.js'; 
+import { handleGeneratePlan, generateBulkStructures, deletePlanRow, prepareKeywords } from './article-planning.js';
 
 function addProviderToState() {
     const currentState = getState();
@@ -424,10 +428,34 @@ function setupStep4Listeners() {
 }
 
 function setupBulkModeListeners() {
-    const startBulkGenerationBtn = getElement('startBulkGenerationBtn');
+    const startBtn = getElement('startBulkGenerationBtn');
     const planningTableBody = getElement('planningTableBody');
 
-    startBulkGenerationBtn?.addEventListener('click', handleStartBulkGeneration);
+    // SMART BUTTON LOGIC
+    startBtn?.addEventListener('click', () => {
+        const plan = getBulkPlan();
+        const needsStructure = plan.some(i => !i.structure);
+        
+        if (needsStructure) {
+            // Phase 1: Generate Structures
+            generateBulkStructures();
+        } else {
+            // Phase 2: Generate Content
+            handleStartBulkGeneration();
+        }
+    });
+
+    // Structure Modal Save Event
+    document.addEventListener('update-structure', (e) => {
+        updateBulkPlanItem(e.detail.index, { 
+            structure: e.detail.structure,
+            status: 'Structure Ready' // Mark ready so we can proceed
+        });
+        renderPlanningTable(getBulkPlan());
+    });
+
+    // Setup Modal UI
+    setupModalListeners();
 
     // Table Editing Logic
     planningTableBody?.addEventListener('change', (e) => {

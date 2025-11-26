@@ -1,4 +1,4 @@
-// article-config.js (v9.12 new delivery)
+// article-config.js (v9.13 canggih)
 export const CLOUDFLARE_FUNCTION_URL = '/ai-api';
 export const GITHUB_API_BASE = 'https://api.github.com';
 
@@ -114,6 +114,9 @@ export const defaultSettings = {
 
     githubRepoUrl: '',
     githubCustomPath: '',
+
+    availableCategories: [],
+    existingPostLinks: [],
 };
 
 console.log("article-config.js loaded (v9.11 GScraper+)");
