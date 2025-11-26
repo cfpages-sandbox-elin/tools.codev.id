@@ -1,6 +1,9 @@
-// article-ui.js (v9.13 canggih)
+// article-ui.js (v9.13 canggih + fix)
 import { languageOptions, defaultSettings } from './article-config.js';
-import { getState, updateState, getBulkPlan, addProviderToState, removeProviderFromState, updateProviderInState, updateCustomModelState, getCustomModelState, updateBulkPlanItem } from './article-state.js';
+import { 
+    getState, updateState, getBulkPlan, addProviderToState, removeProviderFromState, 
+    updateProviderInState, updateCustomModelState, getCustomModelState, updateBulkPlanItem 
+} from './article-state.js';
 import { logToConsole, showElement, findCheapestModel, callAI, disableElement, getArticleOutlinesV2, delay } from './article-helpers.js';
 
 let ALL_PROVIDERS_CONFIG = { text: {}, image: {} };
@@ -910,24 +913,22 @@ export function renderPlanningTable(plan) {
 }
 
 export function openStructureModal(index) {
-    const plan = require('./article-state.js').getBulkPlan(); // Dynamic import to avoid cycle if possible, or passed
-    // actually imports are hoisted. Access global state safely.
-    // Better: pass data. But for now:
-    // Let's assume `getBulkPlan` is available or we access it differently. 
-    // To keep article-ui.js clean, we should probably fire an event, but direct access is easier:
-    // import { getBulkPlan } from './article-state.js'; is at top.
+    const plan = getBulkPlan(); 
+    const item = plan[index];
     
-    // Re-import at top of file if missing: import { getBulkPlan, updateBulkPlanItem } from './article-state.js';
-    const item = getBulkPlan()[index];
-    
+    if (!item) return;
+
     const modal = document.getElementById('structureModal');
     const textarea = document.getElementById('modalStructureText');
     const hiddenIdx = document.getElementById('modalRowIndex');
+    const title = document.getElementById('modalTitle');
     
-    textarea.value = item.structure || "";
-    hiddenIdx.value = index;
-    
-    modal.classList.remove('hidden');
+    if (textarea && hiddenIdx && modal) {
+        textarea.value = item.structure || "";
+        hiddenIdx.value = index;
+        if(title) title.textContent = `Edit Structure for: ${item.keyword}`;
+        modal.classList.remove('hidden');
+    }
 }
 
 export function setupModalListeners() {
@@ -936,24 +937,27 @@ export function setupModalListeners() {
     const saveBtn = getElement('saveStructureBtn');
     const textarea = getElement('modalStructureText');
     const hiddenIdx = getElement('modalRowIndex');
-    
-    const closeModal = () => modal.classList.add('hidden');
-    
+
+    const closeModal = () => {
+        if (modal) modal.classList.add('hidden');
+    };
+
     closeBtn?.addEventListener('click', closeModal);
-    
+
+    // Close on click outside
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+
     saveBtn?.addEventListener('click', () => {
+        if (!textarea || !hiddenIdx) return;
+
         const idx = parseInt(hiddenIdx.value);
         const newStruct = textarea.value;
-        const { updateBulkPlanItem } = require('./article-state.js'); // Dynamic or import at top
-        // NOTE: It is better to import updateBulkPlanItem at the top.
-        
-        // Update State
-        // We need to update the plan item
-        // Assuming updateBulkPlanItem is imported at top:
-        // updateBulkPlanItem(idx, { structure: newStruct, status: 'Structure Edited' });
-        
-        // Fire event to update state
-        const event = new CustomEvent('update-structure', { detail: { index: idx, structure: newStruct } });
+
+        const event = new CustomEvent('update-structure', { 
+            detail: { index: idx, structure: newStruct } 
+        });
         document.dispatchEvent(event);
         
         closeModal();
