@@ -457,11 +457,13 @@ function setupBulkModeListeners() {
     const wpOptions = getElement('wpOptions');
     const zipOptions = getElement('zipOptions');
     const githubOptions = getElement('githubDeliveryOptions');
+    const dateScheduler = getElement('dateScheduler');
 
     function updateDeliveryUI(mode) {
         if(wpOptions) showElement(wpOptions, mode === 'wordpress');
         if(zipOptions) showElement(zipOptions, mode === 'zip');
         if(githubOptions) showElement(githubOptions, mode === 'github');
+        if(dateScheduler) showElement(dateScheduler, mode === 'wordpress' || mode === 'github');
     }
 
     deliveryRadios.forEach(r => {
@@ -486,8 +488,8 @@ function setupBulkModeListeners() {
         { id: 'wpUsername', key: 'wpUsername' },
         { id: 'wpPassword', key: 'wpPassword' },
         { id: 'wpStatus', key: 'wpStatus' },
-        { id: 'wpDateStart', key: 'wpDateStart' },
-        { id: 'wpDateEnd', key: 'wpDateEnd' },
+        { id: 'deliveryDateStart', key: 'deliveryDateStart' },
+        { id: 'deliveryDateEnd', key: 'deliveryDateEnd' },
         { id: 'githubRepoUrlDelivery', key: 'githubRepoUrl' },
         { id: 'githubPathDelivery', key: 'githubCustomPath' }
     ];
@@ -495,16 +497,11 @@ function setupBulkModeListeners() {
     deliveryInputs.forEach(input => {
         const el = getElement(input.id);
         if (el) {
-            // Pre-fill from state
             el.value = state[input.key] ?? '';
-            
-            // Save on change
             el.addEventListener('change', (e) => {
                 updateState({ [input.key]: e.target.value });
                 // Trigger date recalc if dates changed
-                if (input.key === 'wpDateStart' || input.key === 'wpDateEnd') {
-                    // We can trigger a re-render of the plan to show new dates
-                    // Import this dynamically or assume it's available
+                if (input.key === 'deliveryDateStart' || input.key === 'deliveryDateEnd') {
                     import('./article-planning.js').then(mod => mod.recalculatePlanDates());
                 }
             });

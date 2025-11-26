@@ -85,13 +85,15 @@ const elementIdMap = {
     wpOptions: 'wpOptions',
     zipOptions: 'zipOptions',
     githubDeliveryOptions: 'githubDeliveryOptions',
+    dateScheduler: 'dateScheduler',
     // WordPress
     wpUrl: 'wpUrl',
     wpUsername: 'wpUsername',
     wpPassword: 'wpPassword',
     wpStatus: 'wpStatus',
-    wpDateStart: 'wpDateStart',
-    wpDateEnd: 'wpDateEnd',
+    // Date Range
+    deliveryDateStart: 'deliveryDateStart',
+    deliveryDateEnd: 'deliveryDateEnd',
     // Github
     githubRepoUrlDelivery: 'githubRepoUrlDelivery',
     githubPathDelivery: 'githubPathDelivery',

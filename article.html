@@ -330,11 +330,11 @@
             <div class="mb-4 p-4 bg-gray-50 rounded border border-gray-200">
                 <h3 class="text-sm font-bold text-gray-700 mb-3">Delivery Options 🚚</h3>
                 
-                <!-- Radio Buttons -->
+                <!-- 1. Mode Selection -->
                 <div class="flex gap-6 mb-4">
                     <label class="flex items-center text-sm cursor-pointer">
                         <input type="radio" name="deliveryMode" value="zip" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 mr-2"> 
-                        <span class="font-medium">Download ZIP Bundle</span>
+                        <span class="font-medium">Download ZIP</span>
                     </label>
                     <label class="flex items-center text-sm cursor-pointer">
                         <input type="radio" name="deliveryMode" value="wordpress" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 mr-2"> 
@@ -346,15 +346,19 @@
                     </label>
                 </div>
 
-                <!-- Dynamic Settings Containers -->
-                
-                <!-- 1. ZIP Settings -->
-                <div id="zipOptions" class="text-xs text-gray-500 italic ml-1 hidden">
-                    * Articles will be compiled and downloaded as a ZIP file automatically when generation finishes.
+                <!-- 2. Universal Date Scheduling (Visible for WP and GitHub) -->
+                <div id="dateScheduler" class="hidden mb-4 p-3 bg-white border border-blue-100 rounded-md">
+                    <label class="compact-label text-blue-800">📅 Schedule / Backdate Posts:</label>
+                    <div class="flex gap-2 items-center">
+                        <input type="date" id="deliveryDateStart" class="compact-input w-auto">
+                        <span class="text-gray-400 text-xs">to</span>
+                        <input type="date" id="deliveryDateEnd" class="compact-input w-auto">
+                        <span class="text-xs text-gray-400 ml-2">(Dates will be distributed evenly across all articles)</span>
+                    </div>
                 </div>
 
-                <!-- 2. WordPress Settings -->
-                <div id="wpOptions" class="hidden p-3 bg-white border border-gray-200 rounded-md shadow-sm">
+                <!-- 3. Platform Specific Settings -->
+                <div id="wpOptions" class="hidden p-3 bg-white border border-gray-200 rounded-md shadow-sm mb-2">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                         <div class="col-span-2">
                             <label class="compact-label">WordPress Site URL:</label>
@@ -365,7 +369,7 @@
                             <input type="text" id="wpUsername" class="compact-input" placeholder="admin">
                         </div>
                         <div>
-                            <label class="compact-label">Application Password:</label>
+                            <label class="compact-label">App Password:</label>
                             <input type="password" id="wpPassword" class="compact-input" placeholder="xxxx xxxx xxxx xxxx">
                         </div>
                         <div>
@@ -373,24 +377,12 @@
                             <select id="wpStatus" class="compact-select">
                                 <option value="publish">Publish Immediately</option>
                                 <option value="draft">Draft</option>
-                                <option value="pending">Pending Review</option>
-                                <option value="private">Private</option>
                             </select>
                         </div>
-                        <div>
-                            <label class="compact-label">Backdate Range (Optional):</label>
-                            <div class="flex gap-2 items-center">
-                                <input type="date" id="wpDateStart" class="compact-input">
-                                <span class="text-gray-400 text-xs">to</span>
-                                <input type="date" id="wpDateEnd" class="compact-input">
-                            </div>
-                        </div>
                     </div>
-                    <p class="text-xs text-gray-400 mt-2">⚠️ Requires <a href="https://make.wordpress.org/core/2020/11/05/application-passwords-integration-guide/" target="_blank" class="text-indigo-500 hover:underline">Application Password</a>, not your login password.</p>
                 </div>
 
-                <!-- 3. GitHub Settings -->
-                <div id="githubDeliveryOptions" class="hidden p-3 bg-white border border-gray-200 rounded-md shadow-sm">
+                <div id="githubDeliveryOptions" class="hidden p-3 bg-white border border-gray-200 rounded-md shadow-sm mb-2">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                         <div class="col-span-2">
                             <label class="compact-label">Repository URL:</label>
@@ -401,7 +393,9 @@
                             <input type="text" id="githubPathDelivery" class="compact-input" placeholder="content/posts/">
                         </div>
                     </div>
-                    <p class="text-xs text-gray-400 mt-2">⚠️ Server must have GITHUB_PAT_API_KEY configured.</p>
+                    <div class="mt-2 text-xs text-gray-500">
+                        * Articles will be saved as <strong>.md</strong> files with YAML Frontmatter (title, date).
+                    </div>
                 </div>
             </div>
 

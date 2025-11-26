@@ -98,61 +98,101 @@ async function processSingleArticle(item, index, providerConfig) {
     const state = getState();
 
     try {
-        // 1. Structure
+        // 1. Structure Generation
+        logToConsole(`[${item.keyword}] Generating structure...`, 'info');
         const structurePayload = {
             providerKey: providerConfig.provider,
             model: providerConfig.model,
             prompt: getBulkStructurePrompt(item)
         };
         const structRes = await callAI('generate', structurePayload);
-        if (!structRes.success) throw new Error(structRes.error);
+        if (!structRes.success) throw new Error(`Structure generation failed: ${structRes.error}`);
         
         const sections = getArticleOutlinesV2(structRes.text);
-        let articleContent = "";
+        if (sections.length === 0) throw new Error("No sections parsed from structure.");
+
+        // 2. Content Generation (Section by Section)
+        let articleBody = "";
         let prevContext = "";
 
-        // 2. Sections
         for (let i = 0; i < sections.length; i++) {
             const section = sections[i];
+            logToConsole(`[${item.keyword}] Generating section ${i+1}/${sections.length}...`, 'info');
+            
             const textPayload = {
                 providerKey: providerConfig.provider,
                 model: providerConfig.model,
                 prompt: getBulkSectionTextPrompt(item, section, prevContext)
             };
-            const textRes = await callAI('generate', textPayload);
-            if (!textRes.success) throw new Error(`Section ${i} failed`);
             
-            articleContent += textRes.text + "\n\n";
+            // Strict Check: Wait for response
+            const textRes = await callAI('generate', textPayload);
+            
+            // CRITICAL FIX: If any section fails, abort the whole article
+            if (!textRes.success || !textRes.text) {
+                throw new Error(`Generation failed at section "${section.heading}": ${textRes.error || 'Empty response'}`);
+            }
+            
+            articleBody += textRes.text + "\n\n";
             prevContext = textRes.text;
-            await delay(200);
+            
+            await delay(300); // Rate limit buffer
         }
 
-        // 3. Save locally
-        const filename = item.slug + (state.format === 'html' ? '.html' : '.md');
-        addBulkArticle(filename, articleContent);
-
-        // 4. Delivery (WP / GitHub)
-        // We pass the content immediately to delivery
-        const deliveryData = {
-            title: item.title,
-            content: articleContent,
-            filename: filename,
-            scheduledDate: item.scheduledDate
-        };
-
-        updatePlanItemStatusUI(index, 'Delivering...');
-        const deliveryRes = await deliverArticle(deliveryData, index);
+        // 3. Final Assembly with Frontmatter (Metadata)
+        const fileExtension = state.format === 'html' ? '.html' : '.md';
+        const filename = item.slug + fileExtension;
         
-        if (deliveryRes && !deliveryRes.success && state.deliveryMode !== 'zip') {
-             throw new Error(`Delivery failed: ${deliveryRes.error}`);
+        // Construct Content
+        let finalContent = articleBody;
+
+        // If Markdown/GitHub, Add Frontmatter
+        if (state.format === 'markdown' || state.deliveryMode === 'github') {
+            const dateStr = item.scheduledDate ? item.scheduledDate : new Date().toISOString();
+            const frontmatter = `---
+                title: "${item.title.replace(/"/g, '\\"')}"
+                date: ${dateStr}
+                author: ${state.readerName || 'Admin'}
+                intent: ${item.intent}
+                ---\n\n`;
+            finalContent = frontmatter + articleBody;
+        }
+
+        // 4. Validation
+        if (finalContent.length < 200) {
+            throw new Error("Generated article is too short (potential error). Delivery skipped.");
+        }
+
+        // 5. Save Locally
+        addBulkArticle(filename, finalContent);
+
+        // 6. Delivery (WP / GitHub)
+        // Only runs if we reached this line (meaning all sections passed)
+        if (state.deliveryMode === 'wordpress' || state.deliveryMode === 'github') {
+            updatePlanItemStatusUI(index, 'Delivering...');
+            
+            const deliveryData = {
+                title: item.title,
+                content: finalContent,
+                filename: filename,
+                scheduledDate: item.scheduledDate
+            };
+
+            const deliveryRes = await deliverArticle(deliveryData, index);
+            
+            if (!deliveryRes.success) {
+                 throw new Error(`Delivery failed: ${deliveryRes.error}`);
+            }
         }
 
         updatePlanItemStatusUI(index, 'Completed');
         updateBulkPlanItem(index, { status: 'Completed', filename: filename });
+        logToConsole(`[${item.keyword}] Finished successfully.`, 'success');
 
     } catch (e) {
         logToConsole(`Error processing "${item.title}": ${e.message}`, "error");
         updatePlanItemStatusUI(index, 'Failed', e.message);
+        updateBulkPlanItem(index, { status: 'Failed', error: e.message });
     }
 }
 

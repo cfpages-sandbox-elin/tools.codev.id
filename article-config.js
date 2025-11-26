@@ -103,12 +103,13 @@ export const defaultSettings = {
     spinnerVariationCount: 1,
 
     deliveryMode: 'zip',
+
+    deliveryDateStart: '',
+    deliveryDateEnd: '',
     
     wpUrl: '',
     wpUsername: '',
     wpPassword: '',
-    wpDateStart: '',
-    wpDateEnd: '',
     wpStatus: 'publish',
 
     githubRepoUrl: '',

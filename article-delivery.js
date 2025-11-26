@@ -26,10 +26,11 @@ export async function testWordPressConnection(url, user, pass) {
 
 export function calculateDistributionDates(totalArticles) {
     const state = getState();
-    if (!state.wpDateStart || !state.wpDateEnd) return [];
+    // UPDATED KEYS
+    if (!state.deliveryDateStart || !state.deliveryDateEnd) return [];
 
-    const start = new Date(state.wpDateStart).getTime();
-    const end = new Date(state.wpDateEnd).getTime();
+    const start = new Date(state.deliveryDateStart).getTime();
+    const end = new Date(state.deliveryDateEnd).getTime();
     
     if (isNaN(start) || isNaN(end) || start > end) return [];
 
@@ -39,7 +40,6 @@ export function calculateDistributionDates(totalArticles) {
     const dates = [];
     for (let i = 0; i < totalArticles; i++) {
         const dateObj = new Date(start + (interval * i));
-        // Format to ISO 8601 for WordPress: YYYY-MM-DDTHH:mm:ss
         dates.push(dateObj.toISOString().slice(0, 19)); 
     }
     return dates;
