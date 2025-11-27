@@ -1,4 +1,4 @@
-// article-ui.js (v9.13 canggih + fix)
+// article-ui.js (v9.13 canggih + fix + counter)
 import { languageOptions, defaultSettings } from './article-config.js';
 import { 
     getState, updateState, getBulkPlan, addProviderToState, removeProviderFromState, 
@@ -106,6 +106,7 @@ const elementIdMap = {
     modalRowIndex: 'modalRowIndex',
     saveStructureBtn: 'saveStructureBtn',
     closeModalBtn: 'closeModalBtn',
+    modalSectionCount: 'modalSectionCount',
     // Step 2
     step2Section: 'step2',
     articleTitleInput: 'articleTitle',
@@ -682,6 +683,23 @@ export function updateStructureCountDisplay(structureText) {
     countDisplayEl.textContent = `Sections: ${sections.length}`;
 }
 
+function updateModalCount(text) {
+    const display = document.getElementById('modalSectionCount');
+    if (!display) return;
+    
+    const sections = getArticleOutlinesV2(text);
+    const count = sections.length;
+    
+    display.textContent = `Sections: ${count}`;
+    
+    // Visual cue: Red if 0, Green if valid
+    if (count === 0) {
+        display.className = "text-xs font-mono bg-red-100 text-red-800 px-2 py-1 rounded-full";
+    } else {
+        display.className = "text-xs font-mono bg-blue-100 text-blue-800 px-2 py-1 rounded-full";
+    }
+}
+
 export function updateUIFromState(state) {
     logToConsole("Updating UI from loaded state...", "info");
     if (!state) return;
@@ -915,7 +933,6 @@ export function renderPlanningTable(plan) {
 export function openStructureModal(index) {
     const plan = getBulkPlan(); 
     const item = plan[index];
-    
     if (!item) return;
 
     const modal = document.getElementById('structureModal');
@@ -924,9 +941,13 @@ export function openStructureModal(index) {
     const title = document.getElementById('modalTitle');
     
     if (textarea && hiddenIdx && modal) {
-        textarea.value = item.structure || "";
+        const structText = item.structure || "";
+        textarea.value = structText;
         hiddenIdx.value = index;
-        if(title) title.textContent = `Edit Structure for: ${item.keyword}`;
+        if(title) title.textContent = `Edit Structure: ${item.keyword}`;
+        
+        updateModalCount(structText);
+        
         modal.classList.remove('hidden');
     }
 }
@@ -944,9 +965,12 @@ export function setupModalListeners() {
 
     closeBtn?.addEventListener('click', closeModal);
 
-    // Close on click outside
     window.addEventListener('click', (e) => {
         if (e.target === modal) closeModal();
+    });
+
+    textarea?.addEventListener('input', (e) => {
+        updateModalCount(e.target.value);
     });
 
     saveBtn?.addEventListener('click', () => {
