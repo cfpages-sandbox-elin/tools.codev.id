@@ -1,89 +1,57 @@
 name: Update index.html from index.md
 
 on:
-  workflow_dispatch: # Manual trigger
+  workflow_dispatch:
   push:
     branches: [main]
-    paths:
-      - 'index.md' # Trigger only when index.md is modified
+    paths: [index.md]
+
+concurrency:
+  group: markdown-to-html-index-${{ github.repository }}-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions:
   contents: write
 
 jobs:
-  build:
+  update-index:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout triggering revision
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: main
+          persist-credentials: true
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
-          python-version: '3.9'
+          python-version: '3.x'
 
       - name: Install pandoc
-        run: sudo apt-get update && sudo apt-get install -y pandoc
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y pandoc
 
-      - name: Check if index.md exists
+      - name: Render Markdown fragment
+        run: pandoc index.md -t html5 -o "$RUNNER_TEMP/index-fragment.html"
+
+      - name: Run installed regression test
+        run: python -B .github/scripts/test_update_index_from_markdown_html.py
+
+      - name: Update index and publish
+        shell: bash
         run: |
-          if [ ! -f index.md ]; then
-            echo "Error: index.md not found. Workflow cannot proceed."
-            exit 1
+          set -euo pipefail
+          python -B .github/scripts/update_index_from_markdown_html.py index.html "$RUNNER_TEMP/index-fragment.html"
+          mapfile -t dirty < <(git diff --name-only)
+          for path in "${dirty[@]}"; do
+            [[ "$path" == "index.html" ]] || { echo "unexpected dirty path: $path" >&2; exit 1; }
+          done
+          if git diff --quiet -- index.html; then
+            exit 0
           fi
-
-      - name: Read index.md content
-        id: read_markdown
-        run: |
-          MARKDOWN_CONTENT=$(cat index.md)
-          echo "markdown_content<<EOF" >> "$GITHUB_OUTPUT"
-          echo "$MARKDOWN_CONTENT" >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
-          echo "index.md content (debug):"
-          cat index.md
-
-      - name: Convert Entire index.md to HTML
-        id: convert_markdown
-        run: |
-          MARKDOWN_CONTENT="${{ steps.read_markdown.outputs.markdown_content }}"
-          HTML_CONTENT=$(echo "$MARKDOWN_CONTENT" | pandoc -f markdown -t html --wrap=none)
-          echo "html_content_output<<EOF" >> "$GITHUB_OUTPUT"
-          echo "$HTML_CONTENT" >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
-          echo "Generated HTML Content (debug):"
-          echo "$HTML_CONTENT"
-
-      - name: Replace index.html Content Section (Using awk - Finalized) # Finalized awk, targeting combined closing tag
-        run: |
-          HTML_CONTENT="${{ steps.convert_markdown.outputs.html_content_output }}"
-
-          # Use awk to replace content section - targeting </div><!-- .entry-content --> closing tag
-          awk -v html_content="$HTML_CONTENT" '
-          /<div class="entry-content single-content">/ {
-              print;
-              print html_content;
-              while (getline line < "index.html") { # Read lines from index.html
-                if (line ~ /<\/div><!-- \.entry-content -->/) { # Check for combined closing tag+comment
-                  print line; # Print the combined closing tag+comment line
-                  break;      # Stop reading after finding closing tag
-                }
-              }
-              next; # Skip default print action
-          }
-          { print }
-          ' index.html > temp_index.html && mv temp_index.html index.html
-
-          echo "index.html after content replacement (awk):"
-          cat index.html
-
-      - name: Update index.html title
-        run: |
-          sed -i "s|<title>CODEV.ID.*</title>|<title>Tools</title>|" index.html
-
-      - name: Commit and Push updated index.html # <---- CORRECT COMMIT STEP - ONLY GIT COMMANDS - NO CHECKOUT
-        run: |
-          git config --local user.email "actions@github.com"
-          git config --local user.name "GitHub Actions Bot"
-          git add index.html
-          git commit -m "feat: Update index.html content from index.md"
-          git push origin main
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- index.html
+          git commit -m 'Update index.html from index.md'
+          git push origin HEAD:main
