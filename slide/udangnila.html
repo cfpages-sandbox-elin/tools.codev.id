@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
@@ -20,26 +20,29 @@ body{font-family:'Poppins',sans-serif;background-color:#f0f4f8;color:#1e293b}
 .nav-arrow,#fullscreen-btn{background-color:rgba(255,255,255,.7);color:#334155;border-color:rgba(0,0,0,.05)}
 .nav-arrow:hover,#fullscreen-btn:hover{background-color:#0e7490;color:#fff}
 #slide-counter{background-color:rgba(15,23,42,.7);color:#e2e8f0}
-.content-list li>i{color:#0e7490}
-.content-list{font-size:1.2rem;line-height:1.55}
-.slide-content{font-size:1.2rem}
-.src{font-size:.95rem;color:#64748b}
-table.harga{width:100%;font-size:1.05rem}
-table.harga th{background:#ecfeff;color:#0e7490;font-weight:600}
+.content-list li>i{color:#0e7490;font-size:120%}
+.content-list{font-size:118%;line-height:1.5}
+.content-list li{margin-bottom:1.3rem}
+.content-list li div strong{display:block;font-size:115%;line-height:1.3;margin-bottom:.3rem;color:#0f172a}
+.content-list li div{font-size:100%;line-height:1.5;color:#334155}
+.slide-content{font-size:118%}
+.src{font-size:95%;color:#64748b}
+.ud-desc{display:block;font-size:96%;line-height:1.55;color:#475569}
+table.harga{width:100%;font-size:110%}
+table.harga th{background:#ecfeff;color:#0e7490;font-weight:600;font-size:105%}
 table.harga th,table.harga td{border:1px solid #e2e8f0;padding:.55rem .65rem;text-align:left;vertical-align:top}
 :root{--theme-pattern-color:#0e7490;--theme-pattern-color-light:#67e8f9;--callout-info-bg:#f0f9ff;--callout-info-border:#0ea5e9;--callout-success-bg:#f0fdf4;--callout-success-border:#22c55e;--callout-warning-bg:#fffbeb;--callout-warning-border:#f59e0b;--callout-danger-bg:#fef2f2;--callout-danger-border:#ef4444}
-.callout p{font-size:1.15rem}
+.callout p{font-size:112%}
 </style>
 </head>
 <body>
 <div id="presentation-wrapper"><div id="presentation-container">
 <div class="nav-arrow" id="prev-slide"><i class="fas fa-chevron-left"></i></div>
 <div class="nav-arrow" id="next-slide"><i class="fas fa-chevron-right"></i></div>
-<div id="slide-counter">1 / 51</div>
+<div id="slide-counter">1 / 30</div>
 <div id="fullscreen-btn" title="Toggle Fullscreen"><i class="fas fa-expand"></i></div>
 <div id="download-btn" class="nav-arrow" title="Download as PDF"><i class="fas fa-download"></i></div>
 <div id="lightbox"><span id="lightbox-close">&times;</span><img id="lightbox-img" src="" alt="Zoomed Image"></div>
-
 <!-- 1 Cover -->
 <section class="slide bg-dots">
 <div class="h-full w-full flex flex-col justify-center items-center text-center p-10" style="background:radial-gradient(circle,rgba(255,255,255,1) 0%,rgba(224,242,254,1) 100%)">
@@ -50,296 +53,187 @@ table.harga th,table.harga td{border:1px solid #e2e8f0;padding:.55rem .65rem;tex
 <p class="text-2xl text-slate-700">Validasi murah dulu, scale belakangan.</p>
 <p class="text-2xl font-semibold mt-1">Tanpa jual tanah / pinjam bank di awal.</p>
 </div></div></section>
+
 <!-- 2 Masalah -->
 <section class="slide bg-dots">
 <div class="slide-header"><h2 class="slide-title">Masalah: Yang Dibayar Konsumen</h2></div>
 <div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-fish"></i><div><strong>Ikan pasar tidak jelas umurnya.</strong> Konsumen mau tahu kapan dipanen dan cara simpannya.</div></li>
-<li><i class="fas fa-soap"></i><div><strong>Malas menyiangi.</strong> Nila bersih dan dikemas rapi jauh lebih gampang laku.</div></li>
+<li><i class="fas fa-fish"></i><div><strong>Ikan pasar tidak jelas umurnya.</strong><span class="ud-desc">Konsumen Surabaya mau tahu kapan dipanen dan bagaimana cara simpannya. Kulak langsung dari tambak menjawab keraguan ini dengan bukti, bukan janji.</span></div></li>
+<li><i class="fas fa-soap"></i><div><strong>Ibu-ibu malas menyiangi.</strong><span class="ud-desc">Nila yang sudah bersih, ditimbang presisi, dan dikemas rapi jauh lebih gampang laku daripada ikan utuh yang merepotkan.</span></div></li>
+<li><i class="fas fa-video"></i><div><strong>Bukti mengalahkan janji.</strong><span class="ud-desc">Live kulak subuh di tambak membuat orang percaya kesegarannya tanpa perlu banyak promosi atau diskon bakar uang.</span></div></li>
 </ul></div></section>
 
 <!-- 3 Model -->
 <section class="slide bg-dots">
 <div class="slide-header"><h2 class="slide-title">Model: Lima Langkah Satu Hari</h2></div>
 <div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-shrimp"></i><div><strong>1. Kulak subuh</strong> di tambak Sidoarjo, langsung masuk es 1:1.</div></li>
-<li><i class="fas fa-soap"></i><div><strong>2. Bersihkan dan grading</strong> di rumah Surabaya.</div></li>
-<li><i class="fas fa-snowflake"></i><div><strong>3. Bekukan -18&deg;C</strong> dengan sistem FIFO.</div></li>
+<li><i class="fas fa-shrimp"></i><div><strong>1. Kulak subuh di tambak Sidoarjo.</strong><span class="ud-desc">Panen pagi langsung masuk es 1:1 supaya kesegaran terkunci, bukan ikan pasar yang sudah pindah tangan berkali-kali.</span></div></li>
+<li><i class="fas fa-soap"></i><div><strong>2. Bersihkan dan grading di rumah Surabaya.</strong><span class="ud-desc">Cuci 2x air es, sortir size udang, siangi nila sampai bersih siap masak, lalu timbang presisi dan label tanggal.</span></div></li>
+<li><i class="fas fa-snowflake"></i><div><strong>3. Bekukan -18 derajat dengan FIFO.</strong><span class="ud-desc">Yang masuk duluan keluar duluan. Semua pack dilabel tanggal dan batch tambak supaya tidak ada stok lama nyangkut.</span></div></li>
 </ul></div></section>
-<!-- 4 Model lanjut -->
+
+<!-- 4 Model jual antar -->
 <section class="slide bg-dots">
 <div class="slide-header"><h2 class="slide-title">Model: Jual dan Antar</h2></div>
 <div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-video"></i><div><strong>4. Jual</strong> lewat WA, live TikTok, dan langganan warung.</div></li>
-<li><i class="fas fa-motorcycle"></i><div><strong>5. Antar</strong> batch 2x sehari dalam styrofoam + es.</div></li>
-</ul><div class="callout callout-success"><p>Pagi kulak, siang packing, sore antar. Tidak ada stok menginap tanpa catatan.</p></div></div></section>
+<li><i class="fas fa-video"></i><div><strong>4. Jual lewat WA, live TikTok, dan langganan warung.</strong><span class="ud-desc">WA untuk repeat order, live untuk pembeli baru, langganan untuk volume pasti. Tiga mesin ini saling menutup kekurangan masing-masing.</span></div></li>
+<li><i class="fas fa-motorcycle"></i><div><strong>5. Antar batch 2x sehari dalam styrofoam plus es.</strong><span class="ud-desc">Pagi kulak, siang packing, sore antar. Tidak ada stok menginap tanpa catatan; rute digabung supaya bensin tidak memakan margin.</span></div></li>
+</ul><div class="callout callout-success"><p>Satu ritme harian yang diulang terus sampai jadi kebiasaan keluarga.</p></div></div></section>
 
-<!-- 5 Channel A -->
+<!-- 5 Channel -->
 <section class="slide bg-dots">
-<div class="slide-header"><h2 class="slide-title">Channel: WA dan Live TikTok</h2></div>
+<div class="slide-header"><h2 class="slide-title">Channel: WA, Live, Langganan, Reseller</h2></div>
 <div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-comment"></i><div><strong>WA group + broadcast.</strong> Ini mesin repeat order: arisan, RT/RW, kantor. Biaya nol, risiko basi paling kecil karena sistem PO.</div></li>
-<li><i class="fas fa-video"></i><div><strong>Live TikTok + Shop.</strong> Ini mesin pembeli baru. Fee platform sekitar 5-8 persen, tapi bisa flash sale sisa stok sore.</div></li>
+<li><i class="fas fa-comment"></i><div><strong>WA group plus broadcast untuk repeat order.</strong><span class="ud-desc">Arisan, RT/RW, kantor, dan kompleks perumahan. Biaya nol, risiko basi paling kecil karena sistem PO dan pelanggan sudah kenal kualitasnya.</span></div></li>
+<li><i class="fas fa-video"></i><div><strong>Live TikTok plus Shop untuk pembeli baru.</strong><span class="ud-desc">Fee platform sekitar 5-8 persen, tapi ampuh untuk flash sale sisa stok sore dan bukti kesegaran lewat video.</span></div></li>
+<li><i class="fas fa-utensils"></i><div><strong>Warung lalapan dan katering untuk volume pasti.</strong><span class="ud-desc">Kasih diskon 5-10 persen untuk kontrak mingguan supaya ada ritme kulak yang bisa diprediksi.</span></div></li>
 </ul></div></section>
-<!-- 6 Channel B -->
+
+<!-- 6 Channel lanjutan -->
 <section class="slide bg-dots">
-<div class="slide-header"><h2 class="slide-title">Channel: Langganan dan Reseller</h2></div>
+<div class="slide-header"><h2 class="slide-title">Channel: Buangan Stok dan Prinsip</h2></div>
 <div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-utensils"></i><div><strong>Warung lalapan dan katering.</strong> Ini mesin volume pasti. Kasih diskon 5-10 persen untuk kontrak mingguan.</div></li>
-<li><i class="fas fa-store"></i><div><strong>Grup FB, marketplace, reseller frozen.</strong> Untuk buang stok beku lebih dari 3 hari dengan margin bagi 10-15 persen.</div></li>
-</ul><div class="callout callout-info"><p>WA untuk repeat order, live untuk pembeli baru, langganan untuk volume pasti.</p></div></div></section>
+<li><i class="fas fa-store"></i><div><strong>Grup FB, marketplace, dan reseller frozen untuk buangan stok.</strong><span class="ud-desc">Stok beku lebih dari 3 hari dibuang lewat margin bagi 10-15 persen agar kas tetap berputar dan freezer tidak penuh barang lama.</span></div></li>
+<li><i class="fas fa-lightbulb"></i><div><strong>Prinsip: tiap channel punya tugas beda.</strong><span class="ud-desc">WA menjaga pelanggan lama, live mencari pelanggan baru, langganan menjaga volume, reseller menyelamatkan stok lama.</span></div></li>
+</ul><div class="callout callout-info"><p>Jangan kejar semua channel sekaligus; mulai dari WA dulu, tambah live bila WA sudah jalan.</p></div></div></section>
 
-<!-- 7 Live A -->
+<!-- 7 Live -->
 <section class="slide bg-grid">
-<div class="slide-header"><h2 class="slide-title">Live: Momen yang Di-live-kan</h2></div>
+<div class="slide-header"><h2 class="slide-title">Live: Momen, Order, dan Tim</h2></div>
 <div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-sun"></i><div><strong>Pagi: bukti kulak subuh</strong> di tambak. Ini bukti segar, bukan stok lama.</div></li>
-<li><i class="fas fa-scale-balanced"></i><div><strong>Siang: sortir dan timbang live.</strong> Penonton lihat grading size dan lelang size.</div></li>
-</ul></div></section>
-<!-- 8 Live B -->
-<section class="slide bg-grid">
-<div class="slide-header"><h2 class="slide-title">Live: Sore dan Cara Order</h2></div>
-<div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-bolt"></i><div><strong>Sore: flash sale sisa stok.</strong> Pakai harga coret dan stok terbatas sebagai pemicu.</div></li>
-<li><i class="fas fa-money-bill-wave"></i><div><strong>Order: komen MAU + kg,</strong> admin catat, bayar QRIS dulu, kirim batch sore.</div></li>
+<li><i class="fas fa-sun"></i><div><strong>Pagi bukti kulak, siang sortir, sore flash sale.</strong><span class="ud-desc">Pagi tunjukkan tambak, siang tunjukkan grading dan timbang live, sore habiskan sisa stok dengan harga coret dan stok terbatas.</span></div></li>
+<li><i class="fas fa-money-bill-wave"></i><div><strong>Order: komen MAU plus kg, bayar QRIS dulu, kirim batch sore.</strong><span class="ud-desc">Admin catat dan rekap saat live berjalan, packing standby supaya bisa kirim hari yang sama tanpa menunda.</span></div></li>
+<li><i class="fas fa-user"></i><div><strong>Tim 2 orang, jadwal 3-4x seminggu 30-45 menit.</strong><span class="ud-desc">Satu host, satu admin. Target 15-25 kg per live dengan konversi bayar di atas 50 persen; setup HP plus tripod plus ring light plus mic sekitar Rp200-300rb.</span></div></li>
 </ul></div></section>
 
-<!-- 9 Live C -->
+<!-- 8 Produk -->
 <section class="slide bg-grid">
-<div class="slide-header"><h2 class="slide-title">Live: Tim dan Jadwal</h2></div>
+<div class="slide-header"><h2 class="slide-title">Produk: Udang Vaname dan Nila</h2></div>
 <div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-user"></i><div><strong>Tim minimal 2 orang.</strong> Satu host, satu admin balas komen dan rekap order saat live.</div></li>
-<li><i class="fas fa-calendar"></i><div><strong>Jadwal 3-4x seminggu,</strong> 30-45 menit. Target 15-25 kg per live, konversi bayar di atas 50 persen.</div></li>
-</ul><div class="callout callout-warning"><p>Setup HP + tripod + ring light + mic sekitar Rp200-300rb. Akun butuh KTP dan rekening.</p></div></div></section>
-<!-- 10 Udang -->
-<section class="slide bg-grid">
-<div class="slide-header"><h2 class="slide-title">Produk: Udang Vaname Size 40 / 60 / 100</h2></div>
-<div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-shrimp"></i><div><strong>Angka = ekor per kg.</strong> Size 40 berarti 40 ekor per kg, ukurannya besar. Size 100 kecil-kecil.</div></li>
-<li><i class="fas fa-box"></i><div><strong>Dijual segar-es dan beku 500 g / 1 kg.</strong> Kemasan tebal, label tanggal dan size jelas.</div></li>
+<li><i class="fas fa-shrimp"></i><div><strong>Udang size 40 / 60 / 100 artinya ekor per kg.</strong><span class="ud-desc">Size 40 besar dan margin paling tebal, size 60 paling laris untuk warung dan keluarga, size 100 kecil tapi putaran cepat untuk flash sale. Jual segar-es dan beku 500 g / 1 kg dengan label tanggal dan size jelas.</span></div></li>
+<li><i class="fas fa-fish"></i><div><strong>Nila 300-500 gram per ekor, 2-4 ekor per kg.</strong><span class="ud-desc">Disiangi sisik dan isi perut sampai bersih siap masak. Susut cuci dan siangi 5-10 persen, rendemen bersih sekitar 88-92 persen, sudah masuk hitungan HPP.</span></div></li>
+<li><i class="fas fa-box"></i><div><strong>Dua bentuk jual: segar-es dan bersih beku.</strong><span class="ud-desc">Segar-es untuk pengiriman hari yang sama, bersih beku untuk stok 3-7 hari dan reseller. Kemasan tebal supaya tidak bocor di jalan.</span></div></li>
 </ul></div></section>
 
-<!-- 11 Nila -->
+<!-- 9 SOP dingin -->
 <section class="slide bg-grid">
-<div class="slide-header"><h2 class="slide-title">Produk: Nila 300-500 Gram per Ekor</h2></div>
+<div class="slide-header"><h2 class="slide-title">SOP Dingin: Pagi sampai Antar</h2></div>
 <div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-fish"></i><div><strong>Ukuran 2-4 ekor per kg.</strong> Disiangi sisik dan isi perut sampai bersih siap masak.</div></li>
-<li><i class="fas fa-percent"></i><div><strong>Susut 5-10 persen.</strong> Rendemen bersih nila sekitar 88-92 persen, sudah dihitung di HPP.</div></li>
-</ul></div></section>
-<!-- 12 SOP A -->
-<section class="slide bg-grid">
-<div class="slide-header"><h2 class="slide-title">SOP Dingin: Pagi sampai Siang</h2></div>
-<div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-clock"></i><div><strong>Kulak 04.30-06.30.</strong> Ikan langsung masuk es dengan rasio 1:1, satu kg es untuk satu kg ikan.</div></li>
-<li><i class="fas fa-droplet"></i><div><strong>Cuci 2x air es,</strong> lalu timbang, packing, dan tempel label tanggal serta batch tambak.</div></li>
+<li><i class="fas fa-clock"></i><div><strong>Kulak 04.30-06.30, cuci 2x air es.</strong><span class="ud-desc">Ikan langsung masuk es rasio 1:1, satu kg es untuk satu kg ikan. Lalu timbang, packing, dan tempel label tanggal serta batch tambak.</span></div></li>
+<li><i class="fas fa-temperature-low"></i><div><strong>Freezer minus 18 derajat FIFO, antar di bawah 2 jam.</strong><span class="ud-desc">Yang masuk duluan keluar duluan supaya tidak ada stok lama nyangkut. Kirim dalam styrofoam tertutup es, aman untuk rute Surabaya-Sidoarjo.</span></div></li>
+<li><i class="fas fa-clipboard-check"></i><div><strong>Aturan tolak mentah bila bau atau lembek.</strong><span class="ud-desc">Jangan campur ikan bagus dengan yang sudah turun kualitas. Pisahkan, jual murah sebagai olahan, atau buang agar reputasi tidak rusak.</span></div></li>
 </ul></div></section>
 
-<!-- 13 SOP B -->
-<section class="slide bg-grid">
-<div class="slide-header"><h2 class="slide-title">SOP Dingin: Simpan dan Antar</h2></div>
-<div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-temperature-low"></i><div><strong>Freezer -18&deg;C dengan FIFO.</strong> Yang masuk duluan keluar duluan, tidak ada stok lama nyangkut.</div></li>
-<li><i class="fas fa-truck"></i><div><strong>Antar di bawah 2 jam</strong> dalam styrofoam tertutup es. Aman untuk rute Surabaya-Sidoarjo.</div></li>
-</ul></div></section>
-<!-- 14 Es -->
+<!-- 10 Biaya es -->
 <section class="slide bg-grid">
 <div class="slide-header"><h2 class="slide-title">Biaya Es: Hitungan per Kg Ikan</h2></div>
 <div class="slide-content">
 <table class="harga"><tr><th>Jenis es</th><th>Harga 28 Sep 2026</th><th>Biaya per kg ikan</th></tr>
 <tr><td>Balok 50 kg</td><td>Rp18-24rb per balok</td><td><strong>Rp450</strong></td></tr>
 <tr><td>Kristal 10 kg</td><td>Rp10rb per kantong</td><td><strong>Rp900</strong></td></tr></table>
-<p class="src mt-2">Depot Es Kasin / Rungkut / Krian Sidoarjo, buka 03.30. Alokasi HPP: Rp700 per kg.</p>
+<p class="src mt-2">Depot Es Kasin / Rungkut / Krian Sidoarjo, buka 03.30, cocok untuk jam kulak subuh. Alokasi HPP: Rp700 per kg.</p>
+<div class="callout callout-info"><p>Es balok untuk kulak, es kristal untuk antar. Jangan tukar: kristal lebih mahal bila dipakai boros di tambak.</p></div>
 </div></section>
 
-<!-- 15 Styrofoam -->
+<!-- 11 Styrofoam -->
 <section class="slide bg-grid">
 <div class="slide-header"><h2 class="slide-title">Styrofoam: Pilih Garuda BM</h2></div>
 <div class="slide-content">
 <table class="harga"><tr><th>Tipe</th><th>Muat</th><th>Harga 28 Sep 2026</th></tr>
 <tr><td>Mini 15-20 L</td><td>Sekitar 15 kg</td><td>Rp32-36rb</td></tr>
-<tr><td><strong>Garuda BM 35 L</strong></td><td><strong>Sekitar 35 kg + es</strong></td><td><strong>Rp48-52rb</strong></td></tr>
+<tr><td><strong>Garuda BM 35 L</strong></td><td><strong>Sekitar 35 kg plus es</strong></td><td><strong>Rp48-52rb</strong></td></tr>
 <tr><td>Super 60-70 L</td><td>Sekitar 60 kg</td><td>Rp95-110rb</td></tr></table>
 <p class="src mt-2">Toko Plastik Makmur Jaya Rungkut / Tokopedia Surabaya, cek 28 Sep 2026.</p>
+<div class="callout callout-success"><p>Awal cukup 2 box Garuda BM sekitar Rp100rb. Box besar berat, boros es, dan susah dibawa motor.</p></div>
 </div></section>
-<!-- 16 Styrofoam keputusan -->
+
+<!-- 12 Freezer -->
 <section class="slide bg-grid">
-<div class="slide-header"><h2 class="slide-title">Styrofoam: Keputusan Awal</h2></div>
+<div class="slide-header"><h2 class="slide-title">Freezer: 100L vs 200L vs Bekas</h2></div>
+<div class="slide-content">
+<table class="harga"><tr><th>Kapasitas</th><th>Watt</th><th>Harga 28 Sep 2026</th></tr>
+<tr><td>100 L, sekitar 55 kg</td><td>80 W</td><td><a class="text-cyan-700 underline" href="https://myhartono.com/en/aqua-freezer-box-chest-freezer-100-l-aqf-120hc/">Rp2.209.000, Hartono Surabaya</a></td></tr>
+<tr><td><strong>200 L, sekitar 120 kg</strong></td><td><strong>110 W</strong></td><td><a class="text-cyan-700 underline" href="https://myhartono.com/en/aqua-freezer-box-chest-freezer-200-l-aqf-220hc/">Rp2.989.000, Hartono Surabaya</a></td></tr>
+<tr><td>Bekas 100-200 L</td><td>Cek unit</td><td>Rp1,1-1,8 jt, OLX Surabaya</td></tr></table>
+<p class="src mt-2">Suhu minus 26 sampai 10 derajat. Listrik 100L sekitar Rp55rb/bulan, 200L sekitar Rp76rb/bulan.</p>
+</div></section>
+
+<!-- 13 Freezer keputusan -->
+<section class="slide bg-grid">
+<div class="slide-header"><h2 class="slide-title">Freezer: Keputusan Awal</h2></div>
 <div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-check"></i><div><strong>Beli 2 box Garuda BM saja,</strong> sekitar Rp100rb. Cukup untuk kulak 20-30 kg plus es.</div></li>
-<li><i class="fas fa-ban"></i><div><strong>Jangan beli ukuran besar dulu.</strong> Box besar berat, boros es, dan susah dibawa motor.</div></li>
+<li><i class="fas fa-check"></i><div><strong>Rekomendasi awal 1x 200L, colok rumah Surabaya.</strong><span class="ud-desc">Kapasitas 120 kg cukup untuk ritme kulak 50-70 kg per rit plus stok beku cadangan. Bila validasi belum lolos, 100L atau kulkas rumah dulu.</span></div></li>
+<li><i class="fas fa-recycle"></i><div><strong>Bekas boleh asal dicek teliti.</strong><span class="ud-desc">Wajib kompresor ori, pipa tidak bocor, karet pintu rapat, dan tes dingin semalam sebelum bayar lunas.</span></div></li>
 </ul></div></section>
 
-<!-- 17 Freezer A -->
-<section class="slide bg-grid">
-<div class="slide-header"><h2 class="slide-title">Freezer: 100L Lawan 200L</h2></div>
-<div class="slide-content">
-<table class="harga"><tr><th>Kapasitas</th><th>Watt</th><th>Harga baru 28 Sep 2026</th></tr>
-<tr><td>100 L, sekitar 55 kg</td><td>80 W</td><td><a class="text-cyan-700 underline" href="https://myhartono.com/en/aqua-freezer-box-chest-freezer-100-l-aqf-120hc/">Rp2.209.000, Hartono</a></td></tr>
-<tr><td><strong>200 L, sekitar 120 kg</strong></td><td><strong>110 W</strong></td><td><a class="text-cyan-700 underline" href="https://myhartono.com/en/aqua-freezer-box-chest-freezer-200-l-aqf-220hc/">Rp2.989.000, Hartono</a></td></tr></table>
-<p class="src mt-2">Aqua AQF-120HC dan AQF-220HC, suhu -26&deg;C sampai 10&deg;C. Cek 28 Sep 2026.</p>
-</div></section>
-<!-- 18 Freezer B -->
-<section class="slide bg-grid">
-<div class="slide-header"><h2 class="slide-title">Freezer: Listrik dan Bekas</h2></div>
-<div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-bolt"></i><div><strong>Listrik 100L sekitar Rp55rb per bulan,</strong> 200L sekitar Rp76rb per bulan. Dihitung dari watt nameplate kali tarif Rp1.444.</div></li>
-<li><i class="fas fa-recycle"></i><div><strong>Bekas 100-200L Rp1,1-1,8 jt</strong> di OLX Surabaya. Wajib cek kompresor ori, pipa tidak bocor, karet rapat.</div></li>
-</ul><div class="callout callout-success"><p>Rekomendasi awal: 1x 200L. Colok di rumah Surabaya.</p></div></div></section>
-
-<!-- 19 Kendaraan A -->
+<!-- 14 Kendaraan -->
 <section class="slide bg-lines">
 <div class="slide-header"><h2 class="slide-title">Kendaraan: Jangan Beli Dulu</h2></div>
 <div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-motorcycle"></i><div><strong>Pakai motor yang sudah ada.</strong> Investasi armada nol rupiah. Box styrofoam diikat di jok belakang.</div></li>
-<li><i class="fas fa-ban"></i><div><strong>Kendaraan baru menggerus kas.</strong> Cicilan dan bensin harian bisa membunuh margin kulak kecil.</div></li>
+<li><i class="fas fa-motorcycle"></i><div><strong>Pakai motor yang sudah ada, investasi nol rupiah.</strong><span class="ud-desc">Box styrofoam diikat di jok belakang. Cicilan dan bensin harian kendaraan baru bisa membunuh margin kulak kecil.</span></div></li>
+<li><i class="fas fa-tag"></i><div><strong>Jangkar Fase 2: Viar bekas Rp12-17,5 jt, pickup bekas Rp65-85 jt.</strong><span class="ud-desc">Sumber OLX / Carmudi Surabaya-Sidoarjo dan Dealer Viar Sidoarjo, cek 28 Sep 2026. Baru dibahas bila Fase 1 lolos.</span></div></li>
 </ul></div></section>
-<!-- 20 Kendaraan B -->
-<section class="slide bg-lines">
-<div class="slide-header"><h2 class="slide-title">Kendaraan: Jangkar Harga Surabaya</h2></div>
-<div class="slide-content">
-<table class="harga"><tr><th>Opsi Fase 2</th><th>Harga 28 Sep 2026</th></tr>
-<tr><td>Viar Karya bekas 2018-22</td><td>Rp12-17,5 jt (baru Rp31,5-34 jt)</td></tr>
-<tr><td>Carry / Gran Max bekas</td><td>Rp65-85 jt (baru Rp168-182 jt)</td></tr></table>
-<p class="src mt-2">Sumber jangkar: OLX / Carmudi Surabaya-Sidoarjo dan Dealer Viar Sidoarjo.</p>
-</div></section>
 
-<!-- 21 Jasa antar A -->
+<!-- 15 Antar -->
 <section class="slide bg-lines">
-<div class="slide-header"><h2 class="slide-title">Antar: Sendiri vs Jasa</h2></div>
+<div class="slide-header"><h2 class="slide-title">Antar: Sendiri, Jasa, dan Aturan Ongkir</h2></div>
 <div class="slide-content">
 <table class="harga"><tr><th>Moda</th><th>Biaya</th><th>Cocok untuk</th></tr>
 <tr><td><strong>Antar sendiri batch</strong></td><td><strong>Bensin sekitar Rp10rb per rute</strong></td><td><strong>5-8 order searah</strong></td></tr>
 <tr><td>GrabExpress / GoSend</td><td>Rp15-35rb per trip</td><td>Order jauh satuan</td></tr>
 <tr><td>Paxel Cold Chain</td><td>Rp18-25rb per 5 kg</td><td>Antar kota dingin</td></tr></table>
+<div class="callout callout-info"><p>Gratis hanya bila min. 3 kg dan radius 5 km. Di atas itu pelanggan bayar atau harga di-markup. Batch jam 10.00 dan 16.00.</p></div>
 </div></section>
-<!-- 22 Jasa antar B -->
+
+<!-- 16 Ongkir dan tim -->
 <section class="slide bg-lines">
-<div class="slide-header"><h2 class="slide-title">Antar: Aturan Free Ongkir</h2></div>
+<div class="slide-header"><h2 class="slide-title">Ongkir dan Tim: Rumus Anti-Rugi</h2></div>
 <div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-gift"></i><div><strong>Gratis hanya bila min. 3 kg</strong> dan radius 5 km. Ini menjaga bensin tidak lebih besar dari margin.</div></li>
-<li><i class="fas fa-route"></i><div><strong>Di atas itu pelanggan bayar</strong> atau harga di-markup. Jadwal batch jam 10.00 dan 16.00.</div></li>
+<li><i class="fas fa-calculator"></i><div><strong>Ongkir sama dengan es plus bensin plus waktu plus susut.</strong><span class="ud-desc">Contoh: Rp700 + Rp4.000 + Rp3.000 + Rp1.000 = Rp8.700 per kg. Bensin dihitung per rute dibagi 6 order; jangan gratiskan ongkir tanpa hitungan ini.</span></div></li>
+<li><i class="fas fa-user"></i><div><strong>Mulai tanpa karyawan: ayah kulak dan host, anak admin dan packing.</strong><span class="ud-desc">Antar bergantian. Dua orang cukup sampai order rutin di atas 20 kg per hari, baru rekrut tukang siangi borongan harian Rp60-75rb plus bonus Rp1.000 per kg.</span></div></li>
+</ul><p class="src">Patokan UMK Surabaya sekitar Rp4.725.000, Sidoarjo sekitar Rp4.640.000 (2026).</p></div></section>
+
+<!-- 17 Modal -->
+<section class="slide bg-lines">
+<div class="slide-header"><h2 class="slide-title">Modal: Fase 0, 1, dan 2</h2></div>
+<div class="slide-content"><ul class="content-list text-slate-700">
+<li><i class="fas fa-flask"></i><div><strong>Fase 0 validasi Rp1-3 jt.</strong><span class="ud-desc">Alat sekitar Rp470rb plus kulak uji 20-30 kg sekitar Rp1-1,5 jt. Freezer pakai kulkas rumah yang sudah ada.</span></div></li>
+<li><i class="fas fa-snowflake"></i><div><strong>Fase 1 rutin Rp7-15 jt.</strong><span class="ud-desc">Freezer 200L baru Rp2.989.000 atau bekas Rp1,8 jt, tambah 4 box dan vakum sealer Rp450rb, modal kerja Rp4 jt untuk 50-70 kg per rit.</span></div></li>
+<li><i class="fas fa-arrow-up"></i><div><strong>Fase 2 scale Rp25-60 jt.</strong><span class="ud-desc">Naik bila 2 minggu habis terus dan repeat di atas 30 persen. Profit terkumpul minimal 50 persen dari kebutuhan investasi.</span></div></li>
 </ul></div></section>
 
-<!-- 23 Ongkir -->
+<!-- 18 Harga udang -->
 <section class="slide bg-lines">
-<div class="slide-header"><h2 class="slide-title">Ongkir: Rumus Anti-Rugi</h2></div>
+<div class="slide-header"><h2 class="slide-title">Harga: Vaname per Size</h2></div>
 <div class="slide-content">
-<div class="p-5 bg-slate-50 border border-slate-200 rounded-lg text-xl">
-<p class="font-semibold">Ongkir = es + bensin + waktu + susut</p>
-<p class="mt-2">Contoh: Rp700 + Rp4.000 + Rp3.000 + Rp1.000 = <strong>Rp8.700 per kg</strong>.</p>
-</div>
-<p class="src mt-3">Bensin dihitung per rute dibagi 6 order. Jangan gratiskan ongkir tanpa hitungan ini.</p>
+<table class="harga"><tr><th>Size</th><th>Kulak normal</th><th>Batas MAKS</th><th>Jual</th><th>Margin</th></tr>
+<tr><td>40 besar</td><td>Rp70-74rb</td><td><strong>Rp77rb</strong></td><td>Rp98-105rb</td><td><strong>Rp20-25rb</strong></td></tr>
+<tr><td>60 sedang</td><td>Rp54-58rb</td><td><strong>Rp62rb</strong></td><td>Rp78-85rb</td><td><strong>Rp17-21rb</strong></td></tr>
+<tr><td>100 kecil</td><td>Rp38-42rb</td><td><strong>Rp45rb</strong></td><td>Rp56-62rb</td><td><strong>Rp12-16rb</strong></td></tr></table>
+<p class="src mt-2">Size 40 paling cuan, size 60 paling laris, size 100 putaran cepat untuk flash sale. Bila kulak di atas batas MAKS: kecilkan volume atau skip.</p>
 </div></section>
-<!-- 24 Karyawan A -->
-<section class="slide bg-lines">
-<div class="slide-header"><h2 class="slide-title">Tim: Mulai Tanpa Karyawan</h2></div>
-<div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-user"></i><div><strong>Ayah kulak dan host live pagi.</strong> Anak jadi admin komen, rekap order, dan packing.</div></li>
-<li><i class="fas fa-truck"></i><div><strong>Antar bergantian.</strong> Dua orang cukup sampai order rutin di atas 20 kg per hari.</div></li>
-</ul></div></section>
 
-<!-- 25 Karyawan B -->
+<!-- 19 Harga nila dan aturan -->
 <section class="slide bg-lines">
-<div class="slide-header"><h2 class="slide-title">Tim: Kapan Rekrut Pertama</h2></div>
-<div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-plus"></i><div><strong>Rekrut tukang siangi borongan</strong> bila order live rutin di atas 20 kg per hari.</div></li>
-<li><i class="fas fa-money-bill"></i><div><strong>Sistem harian Rp60-75rb per shift</strong> plus bonus Rp1.000 per kg. SOP satu halaman wajib ditempel.</div></li>
-</ul><p class="src mt-2">Patokan UMK Surabaya sekitar Rp4.725.000, Sidoarjo sekitar Rp4.640.000 (2026).</p></div></section>
-<!-- 26 Fase 0 -->
-<section class="slide bg-lines">
-<div class="slide-header"><h2 class="slide-title">Modal: Fase 0 Validasi Rp1-3 Juta</h2></div>
-<div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-box"></i><div><strong>Alat sekitar Rp470rb:</strong> 2 box, es 3 hari, timbangan digital, plastik dan label, live kit.</div></li>
-<li><i class="fas fa-shrimp"></i><div><strong>Kulak uji 20-30 kg</strong> sekitar Rp1-1,5 jt. Freezer pakai kulkas rumah yang sudah ada.</div></li>
-</ul></div></section>
-
-<!-- 27 Fase 1 -->
-<section class="slide bg-lines">
-<div class="slide-header"><h2 class="slide-title">Modal: Fase 1 Rutin Rp7-15 Juta</h2></div>
-<div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-snowflake"></i><div><strong>Freezer 200L baru Rp2.989.000</strong> atau bekas prima Rp1,8 jt. Tambah 4 box dan vakum sealer Rp450rb.</div></li>
-<li><i class="fas fa-wallet"></i><div><strong>Modal kerja Rp4 jt</strong> untuk kulak 50-70 kg per rit. Armada tetap motor pribadi.</div></li>
-</ul></div></section>
-<!-- 28 Fase 2 -->
-<section class="slide bg-lines">
-<div class="slide-header"><h2 class="slide-title">Modal: Fase 2 Scale Rp25-60 Juta</h2></div>
-<div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-arrow-up"></i><div><strong>Naik bila 2 minggu habis terus</strong> dan repeat order di atas 30 persen. Beli freezer ke-2 dan Viar bekas.</div></li>
-<li><i class="fas fa-ban"></i><div><strong>Syarat kas:</strong> profit riil terkumpul minimal 50 persen dari kebutuhan investasi.</div></li>
-</ul></div></section>
-
-<!-- 29 Udang 40 -->
-<section class="slide bg-lines">
-<div class="slide-header"><h2 class="slide-title">Harga: Vaname Size 40 Paling Cuan</h2></div>
+<div class="slide-header"><h2 class="slide-title">Harga: Nila dan Aturan Fluktuasi</h2></div>
 <div class="slide-content">
-<table class="harga"><tr><th>Kulak normal</th><th>Batas MAKS</th><th>Jual bersih</th><th>Margin</th></tr>
-<tr><td>Rp70-74rb</td><td><strong>Rp77rb</strong></td><td>Rp98-105rb</td><td><strong>Rp20-25rb</strong></td></tr></table>
-<p class="src mt-2">Ukuran besar, pembeli berani bayar mahal. Bila kulak di atas Rp77rb, kecilkan volume atau skip.</p>
-</div></section>
-<!-- 30 Udang 60 -->
-<section class="slide bg-lines">
-<div class="slide-header"><h2 class="slide-title">Harga: Vaname Size 60 Paling Laris</h2></div>
-<div class="slide-content">
-<table class="harga"><tr><th>Kulak normal</th><th>Batas MAKS</th><th>Jual bersih</th><th>Margin</th></tr>
-<tr><td>Rp54-58rb</td><td><strong>Rp62rb</strong></td><td>Rp78-85rb</td><td><strong>Rp17-21rb</strong></td></tr></table>
-<p class="src mt-2">Ukuran sedang, cocok untuk warung dan keluarga. Volume biasanya paling stabil.</p>
+<table class="harga"><tr><th>Produk</th><th>Kulak normal</th><th>Batas MAKS</th><th>Jual</th><th>Margin</th></tr>
+<tr><td>Nila 3-4/kg</td><td>Rp24-26,5rb</td><td><strong>Rp28,5rb</strong></td><td>Rp38-44rb</td><td><strong>Rp9-13rb</strong></td></tr></table>
+<ul class="content-list text-slate-700 mt-3">
+<li><i class="fas fa-chart-line"></i><div><strong>Panen raya ambil normal, paceklik kecilkan volume.</strong><span class="ud-desc">Harga turun saat panen raya, naik saat paceklik. Bila naik: pindah ke pre-order dengan harga menyesuaikan. Update 5 menit: telepon 2-3 tambak sebelum berangkat.</span></div></li>
+</ul>
 </div></section>
 
-<!-- 31 Udang 100 -->
+<!-- 20 BEP -->
 <section class="slide bg-lines">
-<div class="slide-header"><h2 class="slide-title">Harga: Vaname Size 100 Putaran Cepat</h2></div>
-<div class="slide-content">
-<table class="harga"><tr><th>Kulak normal</th><th>Batas MAKS</th><th>Jual bersih</th><th>Margin</th></tr>
-<tr><td>Rp38-42rb</td><td><strong>Rp45rb</strong></td><td>Rp56-62rb</td><td><strong>Rp12-16rb</strong></td></tr></table>
-<p class="src mt-2">Margin tipis tapi gampang habis. Cocok untuk flash sale dan pancingan live.</p>
-</div></section>
-<!-- 32 Nila -->
-<section class="slide bg-lines">
-<div class="slide-header"><h2 class="slide-title">Harga: Nila Bersih Volume Harian</h2></div>
-<div class="slide-content">
-<table class="harga"><tr><th>Kulak normal</th><th>Batas MAKS</th><th>Jual bersih</th><th>Margin</th></tr>
-<tr><td>Rp24-26,5rb</td><td><strong>Rp28,5rb</strong></td><td>Rp38-44rb</td><td><strong>Rp9-13rb</strong></td></tr></table>
-<p class="src mt-2">Ukuran 3-4 ekor per kg. Biaya susut perut dan siangi sekitar Rp3.200 per kg.</p>
-</div></section>
-
-<!-- 33 Fluktuasi -->
-<section class="slide bg-lines">
-<div class="slide-header"><h2 class="slide-title">Harga: Aturan Panen Raya dan Paceklik</h2></div>
+<div class="slide-header"><h2 class="slide-title">BEP: 3, 6, dan 12 Bulan</h2></div>
 <div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-arrow-down"></i><div><strong>Panen raya:</strong> harga turun. Ambil volume normal, simpan sebagian beku untuk jaga stok.</div></li>
-<li><i class="fas fa-arrow-up"></i><div><strong>Paceklik:</strong> harga naik. Kecilkan volume atau pindah ke sistem pre-order dengan harga menyesuaikan.</div></li>
-</ul></div></section>
-<!-- 34 Update -->
-<section class="slide bg-lines">
-<div class="slide-header"><h2 class="slide-title">Harga: Cara Update 5 Menit</h2></div>
-<div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-phone"></i><div><strong>Telepon 2-3 tambak</strong> sebelum berangkat. Catat harga per size, jam panen, dan minimal ambil.</div></li>
-<li><i class="fas fa-check"></i><div><strong>Putuskan di rumah:</strong> hanya berangkat bila harga di bawah batas MAKS atau sudah ada PO masuk.</div></li>
+<li><i class="fas fa-fire"></i><div><strong>3 bulan agresif: 25 kg per hari.</strong><span class="ud-desc">25 kg x Rp15rb x 26 hari = Rp9,75 jt per bulan. Syarat: pegang 2-3 langganan warung atau katering plus live rutin.</span></div></li>
+<li><i class="fas fa-star"></i><div><strong>6 bulan realistis: 15 kg per hari, target utama.</strong><span class="ud-desc">15 kg x Rp14rb x 24 hari = Rp5,04 jt per bulan. Paling masuk akal untuk ritme motor plus freezer rumah tanpa karyawan.</span></div></li>
+<li><i class="fas fa-shield-halved"></i><div><strong>12 bulan konservatif: 8 kg per hari.</strong><span class="ud-desc">8 kg x Rp12rb x 22 hari = Rp2,11 jt per bulan. Jaring pengaman bila harga naik. Tidak ada klaim pasti 3 bulan.</span></div></li>
 </ul></div></section>
 
-<!-- 35 BEP 3 -->
-<section class="slide bg-lines">
-<div class="slide-header"><h2 class="slide-title">BEP: 3 Bulan Agresif</h2></div>
-<div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-fire"></i><div><strong>25 kg per hari x Rp15rb x 26 hari</strong> = Rp9,75 jt per bulan. Modal kembali sekitar 3 bulan.</div></li>
-<li><i class="fas fa-handshake"></i><div><strong>Syarat:</strong> pegang 2-3 langganan warung atau katering plus live rutin.</div></li>
-</ul></div></section>
-<!-- 36 BEP 6 -->
-<section class="slide bg-lines">
-<div class="slide-header"><h2 class="slide-title">BEP: 6 Bulan Realistis</h2></div>
-<div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-star"></i><div><strong>15 kg per hari x Rp14rb x 24 hari</strong> = Rp5,04 jt per bulan. Ini target utama keluarga.</div></li>
-<li><i class="fas fa-check"></i><div><strong>Paling masuk akal</strong> untuk ritme motor + freezer rumah tanpa karyawan.</div></li>
-</ul></div></section>
-
-<!-- 37 BEP 12 -->
-<section class="slide bg-lines">
-<div class="slide-header"><h2 class="slide-title">BEP: 12 Bulan Konservatif</h2></div>
-<div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-shield-halved"></i><div><strong>8 kg per hari x Rp12rb x 22 hari</strong> = Rp2,11 jt per bulan. Jaring pengaman bila harga naik.</div></li>
-<li><i class="fas fa-info-circle"></i><div><strong>Tidak ada klaim pasti 3 bulan.</strong> Bila syarat volume gagal, otomatis jatuh ke skenario ini.</div></li>
-</ul></div></section>
-<!-- 38 Grafik -->
+<!-- 21 Grafik -->
 <section class="slide bg-lines">
 <div class="slide-header"><h2 class="slide-title">Grafik: Arus Kas 3 Skenario</h2></div>
 <div class="slide-content grid grid-cols-2 gap-6 items-center">
@@ -351,102 +245,72 @@ table.harga th,table.harga td{border:1px solid #e2e8f0;padding:.55rem .65rem;tex
 <div class="chart-arrow"><i class="fas fa-arrow-trend-up"></i></div>
 </div><p class="text-center src mt-2">Kiri ke kanan: modal keluar, 12 bln, 6 bln, 3 bln. CSS murni.</p></div>
 <div><ul class="content-list text-slate-700">
-<li><i class="fas fa-check"></i><div>Agresif tercepat, butuh disiplin langganan.</div></li>
-<li><i class="fas fa-star"></i><div>Realistis 6 bulan = target utama.</div></li>
+<li><i class="fas fa-check"></i><div><strong>Agresif tercepat, butuh disiplin langganan.</strong><span class="ud-desc">Cocok bila sudah ada warung dan katering yang pesan rutin tiap minggu.</span></div></li>
+<li><i class="fas fa-star"></i><div><strong>Realistis 6 bulan target utama keluarga.</strong><span class="ud-desc"> Ritme santai tapi konsisten; tidak perlu lembur atau utang.</span></div></li>
 </ul></div>
 </div></section>
 
-<!-- 39 M1 -->
+<!-- 22 90 hari -->
 <section class="slide bg-dots">
-<div class="slide-header"><h2 class="slide-title">90 Hari: Bulan 1 Validasi</h2></div>
+<div class="slide-header"><h2 class="slide-title">90 Hari: Validasi, Rutin, Putuskan</h2></div>
 <div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-search"></i><div><strong>Survei tambak Buduran, Sedati, Jabon.</strong> Catat harga, jam panen, minimal ambil.</div></li>
-<li><i class="fas fa-flask"></i><div><strong>3x kulak kecil dan 4x live uji.</strong> Kumpulkan 20 pelanggan pertama dan bukti testimoni.</div></li>
-</ul></div></section>
-<!-- 40 M2 -->
-<section class="slide bg-dots">
-<div class="slide-header"><h2 class="slide-title">90 Hari: Bulan 2 Rutin</h2></div>
-<div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-repeat"></i><div><strong>Kulak 2-3x seminggu</strong> dengan jadwal antar tetap. Live terjadwal, bukan dadakan.</div></li>
-<li><i class="fas fa-handshake"></i><div><strong>Kejar 5-10 langganan.</strong> Warung, katering, dan reseller kecil.</div></li>
+<li><i class="fas fa-search"></i><div><strong>Bulan 1 validasi: survei dan uji.</strong><span class="ud-desc">Survei tambak Buduran, Sedati, Jabon; catat harga, jam panen, minimal ambil. Kulak kecil 3x dan live uji 4x, kumpulkan 20 pelanggan pertama.</span></div></li>
+<li><i class="fas fa-repeat"></i><div><strong>Bulan 2 rutin: jadwal tetap.</strong><span class="ud-desc">Kulak 2-3x seminggu dengan jadwal antar tetap. Live terjadwal bukan dadakan; kejar 5-10 langganan warung dan katering.</span></div></li>
+<li><i class="fas fa-scale-balanced"></i><div><strong>Bulan 3 putuskan: scale atau tahan.</strong><span class="ud-desc">Lihat kg mingguan, uang masuk, dan repeat order. Keputusan berbasis kas, bukan semangat; naik fase hanya bila gate terpenuhi.</span></div></li>
 </ul></div></section>
 
-<!-- 41 M3 -->
+<!-- 23 Risiko -->
 <section class="slide bg-dots">
-<div class="slide-header"><h2 class="slide-title">90 Hari: Bulan 3 Putuskan</h2></div>
+<div class="slide-header"><h2 class="slide-title">Risiko dan Mitigasi</h2></div>
 <div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-scale-balanced"></i><div><strong>Scale atau tahan.</strong> Lihat kg mingguan, uang masuk, dan repeat order.</div></li>
-<li><i class="fas fa-wallet"></i><div><strong>Keputusan berbasis kas,</strong> bukan semangat. Naik fase hanya bila gate terpenuhi.</div></li>
-</ul></div></section>
-<!-- 42 Risiko A -->
-<section class="slide bg-dots">
-<div class="slide-header"><h2 class="slide-title">Risiko: Harga dan Stok</h2></div>
-<div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-chart-line"></i><div><strong>Harga tambak naik:</strong> patuhi batas MAKS, kecilkan volume atau skip.</div></li>
-<li><i class="fas fa-box"></i><div><strong>Tidak habis:</strong> bekukan, turunkan ke olahan, flash sale live sore.</div></li>
+<li><i class="fas fa-chart-line"></i><div><strong>Harga tambak naik: patuhi batas MAKS.</strong><span class="ud-desc">Kecilkan volume, pindah ke pre-order, atau skip. Jangan berspekulasi menimbun stok mahal.</span></div></li>
+<li><i class="fas fa-box"></i><div><strong>Tidak habis: bekukan dan flash sale.</strong><span class="ud-desc">Turunkan ke olahan, gelar flash sale live sore, atau lempar ke reseller agar kas berputar.</span></div></li>
+<li><i class="fas fa-ban"></i><div><strong>Live sepi dan order fiktif.</strong><span class="ud-desc">Jadikan konten recorded dan konsisten jadwal. Wajib bayar dulu sebelum kirim, tanpa pengecualian.</span></div></li>
 </ul></div></section>
 
-<!-- 43 Risiko B -->
-<section class="slide bg-dots">
-<div class="slide-header"><h2 class="slide-title">Risiko: Live dan Order Fiktif</h2></div>
-<div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-video-slash"></i><div><strong>Live sepi:</strong> jadikan konten recorded, konsisten jadwal, uji jam berbeda.</div></li>
-<li><i class="fas fa-ban"></i><div><strong>Order fiktif:</strong> wajib bayar dulu sebelum kirim. Tanpa pengecualian.</div></li>
-</ul></div></section>
-<!-- 44 Risiko C -->
+<!-- 24 Risiko lanjutan -->
 <section class="slide bg-dots">
 <div class="slide-header"><h2 class="slide-title">Risiko: Listrik, Kualitas, Kas</h2></div>
 <div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-bolt"></i><div><strong>Listrik mati:</strong> siapkan es cadangan, prioritaskan jual segar dulu.</div></li>
-<li><i class="fas fa-wallet"></i><div><strong>Kualitas dan kas:</strong> tolak mentah bila bau atau lembek, pisah dompet usaha.</div></li>
+<li><i class="fas fa-bolt"></i><div><strong>Listrik mati: siapkan es cadangan.</strong><span class="ud-desc">Prioritaskan jual segar dulu sebelum mengandalkan freezer. Tutup freezer rapat agar dingin tahan lebih lama.</span></div></li>
+<li><i class="fas fa-magnifying-glass"></i><div><strong>Kualitas turun: tolak mentah.</strong><span class="ud-desc">Bila bau atau lembek, jangan campur dengan yang bagus. Reputasi segar lebih mahal daripada rugi satu rit.</span></div></li>
+<li><i class="fas fa-wallet"></i><div><strong>Kas campur: pisah dompet usaha.</strong><span class="ud-desc">Semua kulak, es, bensin, dan hasil jual dicatat di WA plus sheet sederhana tiap malam.</span></div></li>
 </ul></div></section>
 
-<!-- 45 Ide A -->
+<!-- 25 Ide -->
 <section class="slide bg-dots">
-<div class="slide-header"><h2 class="slide-title">Ide: Langganan dan Olahan</h2></div>
+<div class="slide-header"><h2 class="slide-title">Ide: Langganan, Olahan, Legal</h2></div>
 <div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-calendar-check"></i><div><strong>Paket langganan mingguan.</strong> Pelanggan bayar di depan, kiriman terjadwal.</div></li>
-<li><i class="fas fa-utensils"></i><div><strong>Nila fillet, ungkep frozen, udang kupas.</strong> Nilai tambah dari sisa size kecil.</div></li>
-</ul></div></section>
-<!-- 46 Ide B -->
-<section class="slide bg-dots">
-<div class="slide-header"><h2 class="slide-title">Ide: Legal dan Catatan</h2></div>
-<div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-recycle"></i><div><strong>Limbah jeroan untuk pakan lele.</strong> NIB dan label halal atau PIRT bila masuk ritel.</div></li>
-<li><i class="fas fa-book"></i><div><strong>Pembukuan WA + sheet sederhana.</strong> Foto dan video proses sebagai bukti kebersihan.</div></li>
+<li><i class="fas fa-calendar-check"></i><div><strong>Paket langganan mingguan dan olahan.</strong><span class="ud-desc">Pelanggan bayar di depan, kiriman terjadwal. Nila fillet, ungkep frozen, dan udang kupas memberi nilai tambah dari sisa size kecil.</span></div></li>
+<li><i class="fas fa-recycle"></i><div><strong>Limbah jeroan untuk pakan lele; urus NIB bila masuk ritel.</strong><span class="ud-desc">Label halal atau PIRT bila masuk toko. Foto dan video proses sebagai bukti kebersihan dan pembukuan WA plus sheet sederhana.</span></div></li>
 </ul></div></section>
 
-<!-- 47 Larangan -->
+<!-- 26 Keputusan -->
 <section class="slide bg-dots">
-<div class="slide-header"><h2 class="slide-title">Keputusan: Larangan Keras</h2></div>
+<div class="slide-header"><h2 class="slide-title">Keputusan: Larangan dan Checklist</h2></div>
 <div class="slide-content">
 <div class="callout callout-danger"><p>Jangan jual tanah dan jangan pinjam bank sebelum Fase 1 lolos 4 bulan profit.</p></div>
 <ul class="content-list text-slate-700">
-<li><i class="fas fa-users"></i><div><strong>Tambah modal di atas Rp5 jt</strong> wajib persetujuan keluarga.</div></li>
-</ul></div></section>
-<!-- 48 Gate -->
-<section class="slide bg-dots">
-<div class="slide-header"><h2 class="slide-title">Keputusan: Checklist Naik Fase</h2></div>
-<div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-check"></i><div><strong>Habis 2 minggu berturut-turut,</strong> repeat order di atas 30 persen.</div></li>
-<li><i class="fas fa-check"></i><div><strong>Kas pisah dan freezer stabil.</strong> Baru boleh bahas Fase 2.</div></li>
+<li><i class="fas fa-check"></i><div><strong>Naik fase bila habis 2 minggu dan repeat di atas 30 persen.</strong><span class="ud-desc">Kas pisah dan freezer stabil. Tambah modal di atas Rp5 jt wajib persetujuan keluarga.</span></div></li>
 </ul></div></section>
 
-<!-- 49 Minggu A -->
+<!-- 27 Minggu ini A -->
 <section class="slide bg-dots">
 <div class="slide-header"><h2 class="slide-title">Minggu Ini: Survei dan Pembeli</h2></div>
 <div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-search"></i><div><strong>Survei 3 tambak</strong> di Buduran, Sedati, atau Jabon. Minta harga per size dan jam panen.</div></li>
-<li><i class="fas fa-list"></i><div><strong>Daftar 20 calon pembeli.</strong> Tetangga, arisan, grup RT, dan 2 warung terdekat.</div></li>
+<li><i class="fas fa-search"></i><div><strong>Survei 3 tambak di Buduran, Sedati, atau Jabon.</strong><span class="ud-desc">Minta harga per size, jam panen, dan minimal ambil. Simpan kontak dan foto lokasi sebagai arsip.</span></div></li>
+<li><i class="fas fa-list"></i><div><strong>Daftar 20 calon pembeli.</strong><span class="ud-desc">Tetangga, arisan, grup RT, dan 2 warung terdekat. Tawarkan paket perdana 1 kg campuran.</span></div></li>
 </ul></div></section>
-<!-- 50 Minggu B -->
+
+<!-- 28 Minggu ini B -->
 <section class="slide bg-dots">
 <div class="slide-header"><h2 class="slide-title">Minggu Ini: Uji Kulak dan Live</h2></div>
 <div class="slide-content"><ul class="content-list text-slate-700">
-<li><i class="fas fa-shrimp"></i><div><strong>1x kulak uji 20 kg.</strong> Jual habis dalam 2 hari, catat semua biaya dan testimoni.</div></li>
-<li><i class="fas fa-video"></i><div><strong>Buat akun TikTok + 1 live uji.</strong> Rekam bukti kulak, sortir, dan timbang.</div></li>
+<li><i class="fas fa-shrimp"></i><div><strong>1x kulak uji 20 kg, jual habis 2 hari.</strong><span class="ud-desc">Catat semua biaya: kulak, es, plastik, bensin, dan susut. Kumpulkan testimoni foto dan chat pembeli.</span></div></li>
+<li><i class="fas fa-video"></i><div><strong>Buat akun TikTok plus 1 live uji.</strong><span class="ud-desc">Rekam bukti kulak, sortir, dan timbang. Tidak perlu sempurna; yang penting ada bukti dan jadwal berikutnya.</span></div></li>
 </ul></div></section>
-<!-- 51 Penutup -->
+
+<!-- 29 Penutup -->
 <section class="slide bg-dots">
 <div class="h-full w-full flex flex-col justify-center items-center text-center p-10" style="background:radial-gradient(circle,rgba(255,255,255,1) 0%,rgba(224,242,254,1) 100%)">
 <h1 class="text-5xl font-bold text-slate-900">Mulai Kecil, Catat, Ulangi</h1>
@@ -455,10 +319,9 @@ table.harga th,table.harga td{border:1px solid #e2e8f0;padding:.55rem .65rem;tex
 <p class="text-xl text-slate-600">Harga kisaran, verifikasi ulang H-1 kulak.</p>
 <p class="text-xl text-slate-600">Kontak WA usaha &bull; Pisahkan kas usaha dari kas rumah.</p>
 </div></div></section>
+
 </div></div>
 <script src="slide.js"></script>
 </body>
 </html>
-
-
 
