@@ -31,6 +31,10 @@ body{font-family:'Poppins',sans-serif;background-color:#f0f4f8;color:#1e293b}
 table.harga{width:100%;font-size:110%}
 table.harga th{background:#ecfeff;color:#0e7490;font-weight:600;font-size:105%}
 table.harga th,table.harga td{border:1px solid #e2e8f0;padding:.55rem .65rem;text-align:left;vertical-align:top}
+.css-chart-container{background-color:#f8fafc;border-color:#e2e8f0}
+.chart-bar{background-color:#0284c7}
+.chart-bar:nth-child(2),.chart-bar:nth-child(4){background-color:#0e7490}
+.chart-arrow{color:#0e7490}
 :root{--theme-pattern-color:#0e7490;--theme-pattern-color-light:#67e8f9;--callout-info-bg:#f0f9ff;--callout-info-border:#0ea5e9;--callout-success-bg:#f0fdf4;--callout-success-border:#22c55e;--callout-warning-bg:#fffbeb;--callout-warning-border:#f59e0b;--callout-danger-bg:#fef2f2;--callout-danger-border:#ef4444}
 .callout p{font-size:112%}
 </style>
@@ -39,7 +43,7 @@ table.harga th,table.harga td{border:1px solid #e2e8f0;padding:.55rem .65rem;tex
 <div id="presentation-wrapper"><div id="presentation-container">
 <div class="nav-arrow" id="prev-slide"><i class="fas fa-chevron-left"></i></div>
 <div class="nav-arrow" id="next-slide"><i class="fas fa-chevron-right"></i></div>
-<div id="slide-counter">1 / 23</div>
+<div id="slide-counter">1 / 26</div>
 <div id="fullscreen-btn" title="Toggle Fullscreen"><i class="fas fa-expand"></i></div>
 <div id="download-btn" class="nav-arrow" title="Download as PDF"><i class="fas fa-download"></i></div>
 <div id="lightbox"><span id="lightbox-close">&times;</span><img id="lightbox-img" src="" alt="Zoomed Image"></div>
@@ -171,7 +175,46 @@ table.harga th,table.harga td{border:1px solid #e2e8f0;padding:.55rem .65rem;tex
 </ul></div>
 </div></section>
 
-<!-- 11 Masalah -->
+<!-- 10b Skenario gabung Fase 0+1 -->
+<section class="slide bg-lines">
+<div class="slide-header"><h2 class="slide-title">Skenario: Langsung Fase 1 (Modal Digabung)</h2></div>
+<div class="slide-content">
+<table class="harga"><tr><th>Item</th><th>Nilai</th></tr>
+<tr><td>Modal Fase 0 + Fase 1 digabung</td><td><strong>Rp8.601.000</strong></td></tr>
+<tr><td>BEP conservative (176 kg/bln)</td><td><strong>7,9 bulan</strong></td></tr>
+<tr><td>BEP base case (360 kg/bln)</td><td><strong>3,9 bulan</strong></td></tr>
+<tr><td>BEP aggressive (650 kg/bln)</td><td><strong>2,1 bulan</strong></td></tr></table>
+<ul class="content-list text-slate-700 mt-3">
+<li><i class="fas fa-check"></i><div><strong>Kelebihan: siap volume besar sejak hari pertama.</strong><span class="ud-desc">Freezer 200L, 6 box, sealer, dan modal kerja 60kg langsung lengkap. BEP aggressive 2,1 bulan, tercepat dari semua jalur.</span></div></li>
+<li><i class="fas fa-triangle-exclamation"></i><div><strong>Risiko: Rp8,6 jt keluar sebelum validasi.</strong><span class="ud-desc">Bila ternyata live sepi atau repeat order rendah, BEP jatuh ke 7,9 bulan. Jalur ini disarankan hanya bila 2-3 langganan sudah pasti sebelum beli.</span></div></li>
+</ul>
+</div></section>
+<!-- 10c 2 karyawan harian -->
+<section class="slide bg-lines">
+<div class="slide-header"><h2 class="slide-title">Skenario: Bayar 2 Karyawan dari Awal</h2></div>
+<div class="slide-content">
+<table class="harga"><tr><th>Baris hitung</th><th>Conservative</th><th>Base case</th><th>Aggressive</th></tr>
+<tr><td>Profit sebelum upah</td><td>Rp1,09 jt</td><td>Rp2,23 jt</td><td>Rp4,03 jt</td></tr>
+<tr><td>Upah 2 orang (Rp190rb/hari x 26)</td><td>Rp4,94 jt</td><td>Rp4,94 jt</td><td>Rp4,94 jt</td></tr>
+<tr><td><strong>Profit setelah upah</strong></td><td><strong>-Rp3,85 jt</strong></td><td><strong>-Rp2,71 jt</strong></td><td><strong>-Rp0,91 jt</strong></td></tr></table>
+<ul class="content-list text-slate-700 mt-3">
+<li><i class="fas fa-xmark"></i><div><strong>Gaji harian = rugi di semua skenario.</strong><span class="ud-desc">Hanya impas upah bila volume 31 kg/hari; butuh 44 kg/hari supaya profit sama dengan base case tanpa karyawan.</span></div></li>
+</ul>
+</div></section>
+<!-- 10d sistem upah -->
+<section class="slide bg-lines">
+<div class="slide-header"><h2 class="slide-title">Skenario: Sistem Upah yang Tetap Untung</h2></div>
+<div class="slide-content">
+<table class="harga"><tr><th>Sistem upah</th><th>Biaya/kg</th><th>Profit base case</th><th>BEP Fase 1</th><th>Rugi bila volume turun?</th></tr>
+<tr><td>Gaji harian 2 orang</td><td>Naik tetap Rp4,94jt/bln</td><td><strong>-Rp2,71 jt</strong></td><td>Tidak BEP</td><td><strong>Ya, langsung</strong></td></tr>
+<tr><td><strong>Borongan 2 orang</strong></td><td><strong>Rp4.000/kg</strong></td><td><strong>+Rp792rb</strong></td><td><strong>8,5 bulan</strong></td><td><strong>Tidak</strong></td></tr>
+<tr><td>Borongan agresif (44+ kg/hr)</td><td>Rp4.000/kg</td><td>+Rp1,43 jt (25kg/hr)</td><td>4,7 bulan</td><td>Tidak</td></tr></table>
+<ul class="content-list text-slate-700 mt-3">
+<li><i class="fas fa-users"></i><div><strong>Rekomendasi: bayar borongan per kg, bukan gaji harian.</strong><span class="ud-desc">Biaya ikut volume. Volume turun = biaya turun, tidak pernah rugi. Borongan 2 orang selalu profit di 3 skenario (Rp387rb / Rp792rb / Rp1,43jt per bulan).</span></div></li>
+<li><i class="fas fa-arrow-trend-up"></i><div><strong>Upgrade ke gaji harian hanya bila 44 kg/hari konsisten.</strong><span class="ud-desc">Di 44 kg/hr, profit setelah gaji Rp2,15 jt/bln, BEP Fase 1 3,1 bulan. Sebelum itu, tetap borongan.</span></div></li>
+</ul>
+</div></section>
+
 <section class="slide bg-dots">
 <div class="slide-header"><h2 class="slide-title">Masalah: Yang Dibayar Konsumen</h2></div>
 <div class="slide-content"><ul class="content-list text-slate-700">
